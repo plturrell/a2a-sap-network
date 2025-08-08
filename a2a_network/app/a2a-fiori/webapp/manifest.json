@@ -17,7 +17,7 @@
         },
         "dataSources": {
             "mainService": {
-                "uri": "/odata/v4/a2a/",
+                "uri": "/api/v1/",
                 "type": "OData",
                 "settings": {
                     "odataVersion": "4.0",
@@ -123,10 +123,13 @@
         },
         "routing": {
             "config": {
-                "routerClass": "sap.f.routing.Router",
+                "routerClass": "sap.m.routing.Router",
                 "viewType": "XML",
-                "viewPath": "com.sap.a2a.network.view",
-                "controlId": "flexibleColumnLayout",
+                "viewPath": "a2a.network.fiori.view",
+                "controlId": "shell",
+                "controlAggregation": "app",
+                "targetControlId": "navContainer",
+                "targetAggregation": "pages",
                 "transition": "slide",
                 "bypassed": {
                     "target": "notFound"
@@ -215,7 +218,7 @@
     },
     "sap.cloud": {
         "public": true,
-        "service": "com.sap.a2a.network"
+        "service": "a2a.network.fiori"
     },
     "sap.platform.cf": {
         "ui5VersionNumber": "1.120.0"

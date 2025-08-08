@@ -1,0 +1,133 @@
+<mvc:View
+    controllerName="com.sap.a2a.portal.controller.App"
+    xmlns:mvc="sap.ui.core.mvc"
+    displayBlock="true"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:tnt="sap.tnt"
+    xmlns:core="sap.ui.core">
+    
+    <f:ShellBar
+        id="shellBar"
+        title="{i18n>appTitle}"
+        homeIcon="./resources/img/sap-logo.svg"
+        showNavButton="true"
+        navButtonPressed="onNavBack"
+        showCopilot="true"
+        showSearch="true"
+        searchFieldWidth="50%"
+        showNotifications="true"
+        notificationsNumber="{notification>/count}"
+        notificationPress="onNotificationPress"
+        showProductSwitcher="true"
+        productSwitcherPress="onProductSwitcherPress">
+        <f:menu>
+            <Menu>
+                <MenuItem text="{i18n>userSettings}" icon="sap-icon://person-placeholder" press="onUserSettingsPress"/>
+                <MenuItem text="{i18n>systemSettings}" icon="sap-icon://action-settings" press="onSystemSettingsPress"/>
+                <MenuItem text="{i18n>help}" icon="sap-icon://sys-help" press="onHelpPress"/>
+                <MenuItem text="{i18n>logout}" icon="sap-icon://log" press="onLogoutPress"/>
+            </Menu>
+        </f:menu>
+        <f:profile>
+            <Avatar initials="{user>/initials}" backgroundColor="Accent6"/>
+        </f:profile>
+        <f:searchManager>
+            <f:SearchManager 
+                liveChange="onSearch" 
+                search="onSearch"
+                suggest="onSearchSuggest"
+                enableSuggestions="true"
+                placeholder="{i18n>searchPlaceholder}"/>
+        </f:searchManager>
+    </f:ShellBar>
+    
+    <App id="app">
+        <pages>
+            <tnt:ToolPage id="toolPage">
+                <tnt:header>
+                    <tnt:ToolHeader visible="false">
+                        <!-- Header is replaced by ShellBar -->
+                    </tnt:ToolHeader>
+                </tnt:header>
+                
+                <tnt:sideContent>
+                    <tnt:SideNavigation
+                        id="sideNavigation"
+                        expanded="true"
+                        itemSelect="onNavigationItemSelect">
+                        <tnt:NavigationList>
+                            <!-- Projects Section -->
+                            <tnt:NavigationListItem 
+                                text="{i18n>navProjects}" 
+                                icon="sap-icon://folder-blank" 
+                                key="projects"
+                                expanded="true">
+                                <tnt:NavigationListItem text="{i18n>navMyProjects}" key="myProjects"/>
+                                <tnt:NavigationListItem text="{i18n>navAllProjects}" key="allProjects"/>
+                                <tnt:NavigationListItem text="{i18n>navTemplates}" key="templates"/>
+                            </tnt:NavigationListItem>
+                            
+                            <!-- Agents Section -->
+                            <tnt:NavigationListItem 
+                                text="{i18n>navAgents}" 
+                                icon="sap-icon://group" 
+                                key="agents"
+                                expanded="false">
+                                <tnt:NavigationListItem text="{i18n>navAgent0}" key="agent0"/>
+                                <tnt:NavigationListItem text="{i18n>navAgent1}" key="agent1"/>
+                                <tnt:NavigationListItem text="{i18n>navAgent2}" key="agent2"/>
+                                <tnt:NavigationListItem text="{i18n>navAgent3}" key="agent3"/>
+                                <tnt:NavigationListItem text="{i18n>navAgent4}" key="agent4"/>
+                                <tnt:NavigationListItem text="{i18n>navAgent5}" key="agent5"/>
+                                <tnt:NavigationListItem text="{i18n>navAgentManager}" key="agentManager"/>
+                                <tnt:NavigationListItem text="{i18n>navDataManager}" key="dataManager"/>
+                                <tnt:NavigationListItem text="{i18n>navCatalogManager}" key="catalogManager"/>
+                            </tnt:NavigationListItem>
+                            
+                            <!-- Tools Section -->
+                            <tnt:NavigationListItem 
+                                text="{i18n>navTools}" 
+                                icon="sap-icon://wrench" 
+                                key="tools">
+                                <tnt:NavigationListItem text="{i18n>navAgentBuilder}" key="agentBuilder"/>
+                                <tnt:NavigationListItem text="{i18n>navWorkflowDesigner}" key="workflowDesigner"/>
+                                <tnt:NavigationListItem text="{i18n>navTesting}" key="testing"/>
+                                <tnt:NavigationListItem text="{i18n>navDeployment}" key="deployment"/>
+                            </tnt:NavigationListItem>
+                            
+                            <!-- Monitoring Section -->
+                            <tnt:NavigationListItem 
+                                text="{i18n>navMonitoring}" 
+                                icon="sap-icon://line-charts" 
+                                key="monitoring">
+                                <tnt:NavigationListItem text="{i18n>navDashboard}" key="dashboard"/>
+                                <tnt:NavigationListItem text="{i18n>navMetrics}" key="metrics"/>
+                                <tnt:NavigationListItem text="{i18n>navLogs}" key="logs"/>
+                                <tnt:NavigationListItem text="{i18n>navAlerts}" key="alerts"/>
+                            </tnt:NavigationListItem>
+                            
+                            <!-- Network -->
+                            <tnt:NavigationListItem 
+                                text="{i18n>navA2ANetwork}" 
+                                icon="sap-icon://chain-link" 
+                                key="network"/>
+                            
+                            <!-- ORD Registry -->
+                            <tnt:NavigationListItem 
+                                text="{i18n>navORDRegistry}" 
+                                icon="sap-icon://database" 
+                                key="ordRegistry"/>
+                        </tnt:NavigationList>
+                    </tnt:SideNavigation>
+                </tnt:sideContent>
+                
+                <tnt:mainContents>
+                    <NavContainer id="navContainer">
+                        <!-- Dynamic content will be loaded here -->
+                    </NavContainer>
+                </tnt:mainContents>
+            </tnt:ToolPage>
+        </pages>
+    </App>
+</mvc:View>

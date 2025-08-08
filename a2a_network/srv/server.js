@@ -19,6 +19,14 @@ cds.on('bootstrap', (app) => {
     // User API endpoints for BTP integration
     app.use('/user-api', require('./user-service'));
     
+    // Serve UI5 app
+    const path = require('path');
+    const express = require('express');
+    app.use('/app/a2a-fiori', express.static(path.join(__dirname, '../app/a2a-fiori/webapp')));
+    
+    // Serve launchpad
+    app.use('/launchpad.html', express.static(path.join(__dirname, '../app/launchpad.html')));
+    
     // Health endpoint
     app.get('/health', async (req, res) => {
         const services = {

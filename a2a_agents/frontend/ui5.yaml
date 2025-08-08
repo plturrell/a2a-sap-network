@@ -1,0 +1,60 @@
+specVersion: "3.0"
+metadata:
+  name: a2a-portal-ui
+  copyright: |-
+   FinSight CIB A2A Portal
+    Copyright (c) 2024 SAP SE or an SAP affiliate company.
+type: application
+resources:
+  configuration:
+    propertiesFileSourceEncoding: UTF-8
+framework:
+  name: SAPUI5
+  version: "1.120.0"
+  libraries:
+    - name: sap.m
+    - name: sap.ui.core
+    - name: sap.ui.layout
+    - name: sap.f
+    - name: sap.tnt
+    - name: sap.uxap
+    - name: sap.ui.table
+    - name: sap.ui.comp
+    - name: sap.fe.core
+    - name: sap.fe.templates
+server:
+  customMiddleware:
+    - name: fiori-tools-proxy
+      afterMiddleware: compression
+      configuration:
+        backend:
+          - path: /api
+            url: http://localhost:8000
+        ui5:
+          path: 
+            - /resources
+            - /test-resources
+          url: https://ui5.sap.com
+    - name: fiori-tools-appreload
+      afterMiddleware: compression
+      configuration:
+        port: 35729
+        path: webapp
+        delay: 300
+    - name: ui5-middleware-livereload
+      afterMiddleware: compression
+      configuration:
+        debug: true
+        extraExts: "xml,json,properties"
+        port: 35729
+builder:
+  customTasks:
+    - name: ui5-tooling-transpile-task
+      afterTask: replaceVersion
+      configuration:
+        transformModulesToUI5: true
+        targetBrowsers:
+          - "Chrome >= 80"
+          - "Edge >= 80"
+          - "Firefox >= 75"
+          - "Safari >= 13"

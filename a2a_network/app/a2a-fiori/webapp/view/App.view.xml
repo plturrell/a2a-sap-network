@@ -103,7 +103,7 @@
                     </tnt:sideContent>
                     
                     <tnt:mainContents>
-                        <NavContainer id="pageContainer" initialPage="home">
+                        <NavContainer id="navContainer">
                             <!-- Pages will be added here by the router -->
                         </NavContainer>
                     </tnt:mainContents>
