@@ -94,8 +94,9 @@ tmp/
 temp/
 
 # Logs
-logs
+logs/
 *.log
+anvil.log
 
 # Runtime data
 pids
@@ -384,8 +385,11 @@ out/
 
 # Test artifacts
 test-results/
+test_results/
 coverage/
 .nyc_output/
+.pytest_cache/
+**/test-failures
 
 # Deployment artifacts
 *.mtar
@@ -396,6 +400,8 @@ coverage/
 *.bak
 *.backup
 *.old
+*_backup/
+backup_*/
 
 # Lock files (optional - uncomment if you want to ignore them)
 # package-lock.json
