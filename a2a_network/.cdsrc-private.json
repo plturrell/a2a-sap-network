@@ -1,0 +1,45 @@
+{
+    "requires": {
+        "db": {
+            "[development]": {
+                "kind": "hana-cloud",
+                "credentials": {
+                    "host": "localhost",
+                    "port": 30015,
+                    "database": "A2A_DEV",
+                    "user": "SYSTEM",
+                    "password": "manager"
+                }
+            },
+            "[production]": {
+                "kind": "hana-cloud"
+            }
+        },
+        "auth": {
+            "[development]": {
+                "kind": "xsuaa",
+                "credentials": {
+                    "clientid": "${XSUAA_CLIENT_ID}",
+                    "clientsecret": "${XSUAA_CLIENT_SECRET}",
+                    "url": "${XSUAA_URL}",
+                    "uaadomain": "${XSUAA_UAA_DOMAIN}",
+                    "verificationkey": "${XSUAA_VERIFICATION_KEY}",
+                    "xsappname": "a2a-network-dev",
+                    "identityzone": "sap-provisioning",
+                    "tenantmode": "dedicated"
+                }
+            },
+            "[production]": {
+                "kind": "xsuaa"
+            }
+        }
+    },
+    "development": {
+        "auth": {
+            "passport": {
+                "strategy": "JWT",
+                "implementation": "@sap/xssec"
+            }
+        }
+    }
+}

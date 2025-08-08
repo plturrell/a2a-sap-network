@@ -1,0 +1,53 @@
+<core:FragmentDefinition 
+    xmlns="sap.m" 
+    xmlns:core="sap.ui.core">
+    
+    <Dialog id="importProjectDialog"
+           title="{i18n>importProject}"
+           contentWidth="35rem">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <MessageStrip text="{i18n>importProjectInfo}"
+                            type="Information"
+                            showIcon="true"
+                            class="sapUiMediumMarginBottom"/>
+                
+                <RadioButtonGroup id="importTypeGroup"
+                                columns="1"
+                                selectedIndex="0"
+                                class="sapUiMediumMarginBottom">
+                    <RadioButton text="{i18n>importFromFile}" />
+                    <RadioButton text="{i18n>importFromGit}" />
+                    <RadioButton text="{i18n>importFromTemplate}" />
+                </RadioButtonGroup>
+                
+                <Label text="{i18n>selectFile}" 
+                       required="true" 
+                       class="sapUiSmallMarginBottom"/>
+                <FileUploader id="projectFileUploader"
+                            placeholder="{i18n>chooseFile}"
+                            fileType="zip,json"
+                            class="sapUiMediumMarginBottom"/>
+                
+                <Label text="{i18n>projectName}" 
+                       class="sapUiSmallMarginBottom"/>
+                <Input id="importProjectName" 
+                      value=""
+                      placeholder="{i18n>optionalOverrideName}"
+                      maxLength="50"/>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button text="{i18n>import}"
+                   type="Emphasized"
+                   press="onImportProjectConfirm"/>
+        </beginButton>
+        
+        <endButton>
+            <Button text="{i18n>cancel}"
+                   press="onImportProjectCancel"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

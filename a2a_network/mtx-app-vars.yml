@@ -1,0 +1,113 @@
+# Multi-tenancy configuration for A2A Network
+# Used with: cf deploy mta_archives/*mtar -e mtx-app-vars.yml
+
+applications:
+  - name: a2a-network-mtx
+    env:
+      CDS_MULTITENANCY:
+        t0: 
+          endpoint: https://a2a-network-t0.cfapps.eu10.hana.ondemand.com
+          features:
+            - blockchain
+            - ai
+            - analytics
+          limits:
+            maxAgents: 1000
+            maxServices: 100
+            maxWorkflows: 50
+        t1:
+          endpoint: https://a2a-network-t1.cfapps.eu10.hana.ondemand.com
+          features:
+            - blockchain
+            - analytics
+          limits:
+            maxAgents: 500
+            maxServices: 50
+            maxWorkflows: 25
+        t2:
+          endpoint: https://a2a-network-t2.cfapps.eu10.hana.ondemand.com
+          features:
+            - analytics
+          limits:
+            maxAgents: 100
+            maxServices: 20
+            maxWorkflows: 10
+      
+      TENANT_HOST_PATTERN: "^(.*)-a2a-network.cfapps.eu10.hana.ondemand.com"
+      
+      CDS_FEATURES:
+        kind: "mtxs"
+        folder: "./gen/mtx/sidecar"
+        
+      NODE_ENV: production
+      
+      # Feature toggles per tenant
+      FEATURE_TOGGLES:
+        blockchain_integration:
+          default: true
+          tenants:
+            t2: false
+        ai_enhancement:
+          default: true
+          tenants:
+            t1: false
+            t2: false
+        advanced_analytics:
+          default: true
+        real_time_sync:
+          default: true
+        workflow_designer:
+          default: true
+          tenants:
+            t2: false
+
+services:
+  - name: a2a-network-registry
+    parameters:
+      appName: a2a-network
+      displayName: A2A Network - Agent Coordination Platform
+      description: Enterprise-grade agent orchestration on SAP BTP
+      category: Extension Suite
+      
+  - name: a2a-network-sm
+    parameters:
+      shared: true
+      
+  - name: a2a-network-xsuaa
+    parameters:
+      config:
+        xsappname: a2a-network-${space}
+        tenant-mode: shared
+        scopes:
+          - name: $XSAPPNAME.Admin
+            description: Administrator
+          - name: $XSAPPNAME.Developer
+            description: Developer
+          - name: $XSAPPNAME.User
+            description: User
+          - name: $XSAPPNAME.ProjectManager
+            description: Project Manager
+        role-templates:
+          - name: Admin
+            description: Administrator role
+            scope-references:
+              - $XSAPPNAME.Admin
+              - $XSAPPNAME.Developer
+              - $XSAPPNAME.User
+          - name: Developer
+            description: Developer role
+            scope-references:
+              - $XSAPPNAME.Developer
+              - $XSAPPNAME.User
+          - name: User
+            description: User role
+            scope-references:
+              - $XSAPPNAME.User
+          - name: ProjectManager
+            description: Project Manager role
+            scope-references:
+              - $XSAPPNAME.ProjectManager
+              - $XSAPPNAME.User
+        oauth2-configuration:
+          token-validity: 7200
+          refresh-token-validity: 2592000

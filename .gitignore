@@ -1,8 +1,6 @@
 # A2A Developer Portal - Git Ignore File
 
-# Embedded repositories (handled separately)
-a2a_agents/
-a2a_network/
+# Note: a2a_agents/ and a2a_network/ directories are now included in this repository
 
 # Dependencies
 node_modules/

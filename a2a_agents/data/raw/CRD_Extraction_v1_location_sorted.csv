@@ -1,0 +1,78 @@
+Location (L0),Location (L1),Location (L2),Location (L3),Location (L4),_row_number
+AM,AM,Americas,R/o Americas,Americas - Inp,1
+AM,AM,Americas,R/o Americas,Brazil,2
+AM,AM,Americas,United States,United States,3
+AME,AFRICA,East Africa,Kenya,Kenya,4
+AME,AFRICA,East Africa,Tanzania,Tanzania,5
+AME,AFRICA,East Africa,Uganda,Uganda,6
+AME,AFRICA,Other Africa,R/o Africa,Africa - Inp,7
+AME,AFRICA,Other Africa,R/o Africa,Africa Other,8
+AME,AFRICA,Southern Africa,Botswana,Botswana,9
+AME,AFRICA,Southern Africa,Mauritius,Mauritius,10
+AME,AFRICA,Southern Africa,South Africa,South Africa,11
+AME,AFRICA,Southern Africa,Zambia,Zambia,12
+AME,AFRICA,Southern Africa_EXIM,R/o Africa,Angola,13
+AME,AFRICA,Southern Africa_EXIM,R/o Africa,Zimbabwe,14
+AME,AFRICA,West Africa,Ghana,Ghana,15
+AME,AFRICA,West Africa,Nigeria,Nigeria,16
+AME,AFRICA,West Africa,R/o Africa,Cote DIvoire,17
+AME,AFRICA,West Africa_EXIM,R/o Africa,Cameroon,18
+AME,AFRICA,West Africa_EXIM,R/o Africa,Gambia,19
+AME,AFRICA,West Africa_EXIM,R/o Africa,Sierra Leone,20
+AME,MENAP,MENA,Bahrain,Bahrain,21
+AME,MENAP,MENA,Qatar,Qatar,22
+AME,MENAP,MENA,R/o MENAP,ADGM_,23
+AME,MENAP,MENA,R/o MENAP,Egypt,24
+AME,MENAP,MENA,R/o MENAP,Iran Kish_,25
+AME,MENAP,MENA,R/o MENAP,Iraq,26
+AME,MENAP,MENA,R/o MENAP,MESA Other,27
+AME,MENAP,MENA,R/o MENAP,Oman,28
+AME,MENAP,MENA,R/o MENAP,Saudi Arabia,29
+AME,MENAP,MENA,UAE (inc DIFC),Dubai Int Fin Centre_,30
+AME,MENAP,MENA,UAE (inc DIFC),UAE,31
+AME,MENAP,MENA_EXIM,Jordan,Jordan,32
+AME,MENAP,MENA_EXIM,R/o MENAP,Lebanon,33
+AME,MENAP,Rest of MENA,Pakistan,Pakistan,34
+AME,MENAP,Rest of MENA,R/o MENAP,MENAP - Inp,35
+AME,MENAP,Rest of MENA,R/o MENAP,MESA Other,36
+Asia,ASA,ASEAN,Australia,Australia,37
+Asia,ASA,ASEAN,Indonesia,Indonesia,38
+Asia,ASA,ASEAN,Malaysia,Malaysia,39
+Asia,ASA,ASEAN,Philippines,Philippines,40
+Asia,ASA,ASEAN,R/o ASA,ASEAN - Inp,41
+Asia,ASA,ASEAN,R/o ASA,Brunei,42
+Asia,ASA,ASEAN,R/o ASA,Cambodia,43
+Asia,ASA,ASEAN,R/o ASA,Laos,44
+Asia,ASA,ASEAN,R/o ASA,Myanmar,45
+Asia,ASA,ASEAN,Singapore,Singapore,46
+Asia,ASA,ASEAN,Thailand,Thailand,47
+Asia,ASA,ASEAN,Vietnam,Vietnam,48
+Asia,ASA,South Asia,Bangladesh,Bangladesh,49
+Asia,ASA,South Asia,India,India,50
+Asia,ASA,South Asia,Nepal,Nepal,51
+Asia,ASA,South Asia,R/o ASA,South Asia - Inp,52
+Asia,ASA,South Asia,Sri Lanka,Sri Lanka,53
+Asia,GCNA,Greater China,China,China,54
+Asia,GCNA,Greater China,Hong Kong,Hong Kong,55
+Asia,GCNA,Greater China,R/o GCNA,Greater China - Inp,56
+Asia,GCNA,Greater China,Taiwan,Taiwan,57
+Asia,GCNA,Greater China & NE Asia R,R/o GCNA,Greater China & NE Asia C,58
+Asia,GCNA,North East Asia,Japan,Japan,59
+Asia,GCNA,North East Asia,Korea,Korea,60
+Asia,GCNA,North East Asia,R/o GCNA,Mongolia,61
+Asia,GCNA,North East Asia,R/o GCNA,North East Asia - Inp,62
+EU,EU,Europe,Germany,Germany,63
+EU,EU,Europe,R/o Europe,Europe - Inp,64
+EU,EU,Europe,R/o Europe,Europe Other,65
+EU,EU,Europe,R/o Europe,Falklands,66
+EU,EU,Europe,R/o Europe,France,67
+EU,EU,Europe,R/o Europe,Guernsey,68
+EU,EU,Europe,R/o Europe,Ireland,69
+EU,EU,Europe,R/o Europe,Jersey,70
+EU,EU,Europe,R/o Europe,Luxembourg,71
+EU,EU,Europe,R/o Europe,SC GBS Poland,72
+EU,EU,Europe,R/o Europe,Sweden,73
+EU,EU,Europe,R/o Europe,Switzerland,74
+EU,EU,Europe,R/o Europe,Turkey,75
+EU,EU,Europe,UK,UK,76
+EU,EU Other (Global),EU Other (Global),EU Other (Global),EU Other (Global),77

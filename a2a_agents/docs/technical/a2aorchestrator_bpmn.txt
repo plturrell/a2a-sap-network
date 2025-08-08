@@ -1,0 +1,887 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="A2ARuntimeOrchestratorProcesses"
+                  targetNamespace="http://a2a.runtime.orchestrator.processes">
+
+  <!-- Main Process: Distributed Workflow Execution -->
+  <bpmn:process id="WorkflowExecutionOrchestrationProcess" name="Distributed Workflow Execution Orchestration Process" isExecutable="true">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_WorkflowSubmission" name="Workflow Execution Request">
+      <bpmn:outgoing>SequenceFlow_ToValidateWorkflowRequest</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_WorkflowExecutionRequest"/>
+    </bpmn:startEvent>
+
+    <!-- Validate Workflow Request -->
+    <bpmn:serviceTask id="ServiceTask_ValidateWorkflowRequest" name="Validate Workflow Request" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToValidateWorkflowRequest</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToCheckResourceAvailability</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_WorkflowRequest" name="workflowRequest"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ValidationResult" name="validationResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Check Resource Availability -->
+    <bpmn:serviceTask id="ServiceTask_CheckResourceAvailability" name="Check Resource Availability" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToCheckResourceAvailability</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToResourceGateway</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_WorkflowRequest" name="workflowRequest"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ResourceAvailability" name="resourceAvailability"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Resource Availability Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_ResourceAvailability" name="Resources Available?">
+      <bpmn:incoming>SequenceFlow_ToResourceGateway</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ResourcesAvailable</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_ResourcesUnavailable</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Generate Execution Plan -->
+    <bpmn:serviceTask id="ServiceTask_GenerateExecutionPlan" name="Generate Optimized Execution Plan" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ResourcesAvailable</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToReserveResources</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_WorkflowRequest" name="workflowRequest"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ResourceAvailability" name="resourceAvailability"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ExecutionPlan" name="executionPlan"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Reserve Agent Resources -->
+    <bpmn:serviceTask id="ServiceTask_ReserveResources" name="Reserve Agent Resources" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToReserveResources</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToCreateWorkflowExecution</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ExecutionPlan" name="executionPlan"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ResourceReservation" name="resourceReservation"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Create Workflow Execution Record -->
+    <bpmn:serviceTask id="ServiceTask_CreateWorkflowExecution" name="Create Workflow Execution Record" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToCreateWorkflowExecution</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToInitializeState</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ExecutionPlan" name="executionPlan"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ResourceReservation" name="resourceReservation"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ExecutionRecord" name="executionRecord"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Initialize Workflow State -->
+    <bpmn:serviceTask id="ServiceTask_InitializeState" name="Initialize Workflow State" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToInitializeState</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToExecutionModeGateway</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ExecutionRecord" name="executionRecord"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_WorkflowState" name="workflowState"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Execution Mode Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_ExecutionMode" name="Execution Mode?">
+      <bpmn:incoming>SequenceFlow_ToExecutionModeGateway</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_SequentialExecution</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_ParallelExecution</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_EventDrivenExecution</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Sequential Stage Execution -->
+    <bpmn:serviceTask id="ServiceTask_ExecuteSequentialStages" name="Execute Sequential Stages" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_SequentialExecution</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToExecutionComplete</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ExecutionPlan" name="executionPlan"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_WorkflowState" name="workflowState"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ExecutionResults" name="executionResults"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Parallel Stage Execution -->
+    <bpmn:serviceTask id="ServiceTask_ExecuteParallelStages" name="Execute Parallel Stages" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ParallelExecution</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToExecutionComplete</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ExecutionPlan" name="executionPlan"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_WorkflowState" name="workflowState"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ExecutionResults" name="executionResults"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Event-Driven Execution -->
+    <bpmn:serviceTask id="ServiceTask_ExecuteEventDriven" name="Execute Event-Driven Workflow" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_EventDrivenExecution</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToExecutionComplete</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ExecutionPlan" name="executionPlan"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_WorkflowState" name="workflowState"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ExecutionResults" name="executionResults"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Execution Convergence Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_ExecutionComplete" name="Execution Complete">
+      <bpmn:incoming>SequenceFlow_ToExecutionComplete</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToFinalizeExecution</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Finalize Execution -->
+    <bpmn:serviceTask id="ServiceTask_FinalizeExecution" name="Finalize Workflow Execution" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToFinalizeExecution</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToReleaseResources</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ExecutionResults" name="executionResults"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_FinalizedExecution" name="finalizedExecution"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Release Reserved Resources -->
+    <bpmn:serviceTask id="ServiceTask_ReleaseResources" name="Release Reserved Resources" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToReleaseResources</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToUpdateMetrics</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ResourceReservation" name="resourceReservation"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ResourceReleaseResult" name="resourceReleaseResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Update Performance Metrics -->
+    <bpmn:serviceTask id="ServiceTask_UpdateMetrics" name="Update Performance Metrics" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToUpdateMetrics</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToExecutionSuccess</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_FinalizedExecution" name="finalizedExecution"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_MetricsUpdate" name="metricsUpdate"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Execution Success End -->
+    <bpmn:endEvent id="EndEvent_ExecutionSuccess" name="Workflow Execution Successful">
+      <bpmn:incoming>SequenceFlow_ToExecutionSuccess</bpmn:incoming>
+      <bpmn:messageEventDefinition messageRef="Message_WorkflowExecutionComplete"/>
+    </bpmn:endEvent>
+
+    <!-- Handle Resource Unavailability -->
+    <bpmn:serviceTask id="ServiceTask_HandleResourceUnavailability" name="Handle Resource Unavailability" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ResourcesUnavailable</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToQueueWorkflow</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Queue Workflow -->
+    <bpmn:serviceTask id="ServiceTask_QueueWorkflow" name="Queue Workflow for Later Execution" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToQueueWorkflow</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToWorkflowQueued</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Workflow Queued End -->
+    <bpmn:endEvent id="EndEvent_WorkflowQueued" name="Workflow Queued">
+      <bpmn:incoming>SequenceFlow_ToWorkflowQueued</bpmn:incoming>
+      <bpmn:messageEventDefinition messageRef="Message_WorkflowQueued"/>
+    </bpmn:endEvent>
+
+    <!-- Main Process Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToValidateWorkflowRequest" sourceRef="StartEvent_WorkflowSubmission" targetRef="ServiceTask_ValidateWorkflowRequest"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToCheckResourceAvailability" sourceRef="ServiceTask_ValidateWorkflowRequest" targetRef="ServiceTask_CheckResourceAvailability"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToResourceGateway" sourceRef="ServiceTask_CheckResourceAvailability" targetRef="ExclusiveGateway_ResourceAvailability"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ResourcesAvailable" sourceRef="ExclusiveGateway_ResourceAvailability" targetRef="ServiceTask_GenerateExecutionPlan">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${resourceAvailability.available == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ResourcesUnavailable" sourceRef="ExclusiveGateway_ResourceAvailability" targetRef="ServiceTask_HandleResourceUnavailability">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${resourceAvailability.available == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ToReserveResources" sourceRef="ServiceTask_GenerateExecutionPlan" targetRef="ServiceTask_ReserveResources"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToCreateWorkflowExecution" sourceRef="ServiceTask_ReserveResources" targetRef="ServiceTask_CreateWorkflowExecution"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToInitializeState" sourceRef="ServiceTask_CreateWorkflowExecution" targetRef="ServiceTask_InitializeState"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToExecutionModeGateway" sourceRef="ServiceTask_InitializeState" targetRef="ExclusiveGateway_ExecutionMode"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_SequentialExecution" sourceRef="ExclusiveGateway_ExecutionMode" targetRef="ServiceTask_ExecuteSequentialStages">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${executionPlan.mode == 'sequential'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ParallelExecution" sourceRef="ExclusiveGateway_ExecutionMode" targetRef="ServiceTask_ExecuteParallelStages">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${executionPlan.mode == 'parallel'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_EventDrivenExecution" sourceRef="ExclusiveGateway_ExecutionMode" targetRef="ServiceTask_ExecuteEventDriven">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${executionPlan.mode == 'event_driven'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ToExecutionComplete" sourceRef="ServiceTask_ExecuteSequentialStages" targetRef="ExclusiveGateway_ExecutionComplete"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToExecutionComplete" sourceRef="ServiceTask_ExecuteParallelStages" targetRef="ExclusiveGateway_ExecutionComplete"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToExecutionComplete" sourceRef="ServiceTask_ExecuteEventDriven" targetRef="ExclusiveGateway_ExecutionComplete"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToFinalizeExecution" sourceRef="ExclusiveGateway_ExecutionComplete" targetRef="ServiceTask_FinalizeExecution"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToReleaseResources" sourceRef="ServiceTask_FinalizeExecution" targetRef="ServiceTask_ReleaseResources"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToUpdateMetrics" sourceRef="ServiceTask_ReleaseResources" targetRef="ServiceTask_UpdateMetrics"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToExecutionSuccess" sourceRef="ServiceTask_UpdateMetrics" targetRef="EndEvent_ExecutionSuccess"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToQueueWorkflow" sourceRef="ServiceTask_HandleResourceUnavailability" targetRef="ServiceTask_QueueWorkflow"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToWorkflowQueued" sourceRef="ServiceTask_QueueWorkflow" targetRef="EndEvent_WorkflowQueued"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: Agent Assignment and Load Balancing -->
+  <bpmn:process id="AgentAssignmentProcess" name="Agent Assignment and Load Balancing Process" isExecutable="true">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_AgentAssignmentRequest" name="Agent Assignment Request">
+      <bpmn:outgoing>SequenceFlow_ToAnalyzeRequirements</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_AgentAssignmentRequest"/>
+    </bpmn:startEvent>
+
+    <!-- Analyze Stage Requirements -->
+    <bpmn:serviceTask id="ServiceTask_AnalyzeRequirements" name="Analyze Stage Requirements" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToAnalyzeRequirements</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToDiscoverAgents</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_StageRequirements" name="stageRequirements"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_RequirementAnalysis" name="requirementAnalysis"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Discover Available Agents -->
+    <bpmn:serviceTask id="ServiceTask_DiscoverAgents" name="Discover Available Agents" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToDiscoverAgents</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToScoreAgents</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RequirementAnalysis" name="requirementAnalysis"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_AvailableAgents" name="availableAgents"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Score and Rank Agents -->
+    <bpmn:serviceTask id="ServiceTask_ScoreAgents" name="Score and Rank Agents" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToScoreAgents</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToLoadBalanceCheck</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_AvailableAgents" name="availableAgents"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RequirementAnalysis" name="requirementAnalysis"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ScoredAgents" name="scoredAgents"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Check Load Balancing -->
+    <bpmn:serviceTask id="ServiceTask_CheckLoadBalancing" name="Check Load Balancing Requirements" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToLoadBalanceCheck</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToLoadBalanceGateway</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ScoredAgents" name="scoredAgents"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_LoadBalanceAnalysis" name="loadBalanceAnalysis"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Load Balance Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_LoadBalance" name="Load Balancing Required?">
+      <bpmn:incoming>SequenceFlow_ToLoadBalanceGateway</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_LoadBalanceRequired</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_DirectAssignment</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Apply Load Balancing Algorithm -->
+    <bpmn:serviceTask id="ServiceTask_ApplyLoadBalancing" name="Apply Load Balancing Algorithm" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_LoadBalanceRequired</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToSelectOptimalAgent</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ScoredAgents" name="scoredAgents"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_LoadBalanceAnalysis" name="loadBalanceAnalysis"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_LoadBalancedAgents" name="loadBalancedAgents"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Select Optimal Agent -->
+    <bpmn:serviceTask id="ServiceTask_SelectOptimalAgent" name="Select Optimal Agent" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToSelectOptimalAgent</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_DirectAssignment</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToReserveAgent</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_LoadBalancedAgents" name="loadBalancedAgents"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_SelectedAgent" name="selectedAgent"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Reserve Agent Capacity -->
+    <bpmn:serviceTask id="ServiceTask_ReserveAgent" name="Reserve Agent Capacity" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToReserveAgent</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToVerifyReservation</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_SelectedAgent" name="selectedAgent"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ReservationResult" name="reservationResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Verify Reservation -->
+    <bpmn:serviceTask id="ServiceTask_VerifyReservation" name="Verify Agent Reservation" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToVerifyReservation</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToAssignmentComplete</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ReservationResult" name="reservationResult"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_AssignmentResult" name="assignmentResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Assignment Complete End -->
+    <bpmn:endEvent id="EndEvent_AssignmentComplete" name="Agent Assignment Complete">
+      <bpmn:incoming>SequenceFlow_ToAssignmentComplete</bpmn:incoming>
+      <bpmn:messageEventDefinition messageRef="Message_AgentAssignmentComplete"/>
+    </bpmn:endEvent>
+
+    <!-- Agent Assignment Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToAnalyzeRequirements" sourceRef="StartEvent_AgentAssignmentRequest" targetRef="ServiceTask_AnalyzeRequirements"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToDiscoverAgents" sourceRef="ServiceTask_AnalyzeRequirements" targetRef="ServiceTask_DiscoverAgents"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToScoreAgents" sourceRef="ServiceTask_DiscoverAgents" targetRef="ServiceTask_ScoreAgents"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToLoadBalanceCheck" sourceRef="ServiceTask_ScoreAgents" targetRef="ServiceTask_CheckLoadBalancing"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToLoadBalanceGateway" sourceRef="ServiceTask_CheckLoadBalancing" targetRef="ExclusiveGateway_LoadBalance"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_LoadBalanceRequired" sourceRef="ExclusiveGateway_LoadBalance" targetRef="ServiceTask_ApplyLoadBalancing">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${loadBalanceAnalysis.required == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_DirectAssignment" sourceRef="ExclusiveGateway_LoadBalance" targetRef="ServiceTask_SelectOptimalAgent">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${loadBalanceAnalysis.required == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ToSelectOptimalAgent" sourceRef="ServiceTask_ApplyLoadBalancing" targetRef="ServiceTask_SelectOptimalAgent"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToReserveAgent" sourceRef="ServiceTask_SelectOptimalAgent" targetRef="ServiceTask_ReserveAgent"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToVerifyReservation" sourceRef="ServiceTask_ReserveAgent" targetRef="ServiceTask_VerifyReservation"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToAssignmentComplete" sourceRef="ServiceTask_VerifyReservation" targetRef="EndEvent_AssignmentComplete"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: Failure Recovery and Retry -->
+  <bpmn:process id="FailureRecoveryProcess" name="Failure Recovery and Retry Process" isExecutable="true">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_FailureDetected" name="Failure Detected">
+      <bpmn:outgoing>SequenceFlow_ToAnalyzeFailure</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_FailureDetected"/>
+    </bpmn:startEvent>
+
+    <!-- Analyze Failure -->
+    <bpmn:serviceTask id="ServiceTask_AnalyzeFailure" name="Analyze Failure Type and Cause" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToAnalyzeFailure</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToFailureTypeGateway</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_FailureEvent" name="failureEvent"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_FailureAnalysis" name="failureAnalysis"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Failure Type Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_FailureType" name="Failure Type?">
+      <bpmn:incoming>SequenceFlow_ToFailureTypeGateway</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_TransientFailure</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_AgentFailure</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_SystemFailure</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Handle Transient Failure -->
+    <bpmn:serviceTask id="ServiceTask_HandleTransientFailure" name="Handle Transient Failure" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_TransientFailure</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToRetryPolicy</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_FailureAnalysis" name="failureAnalysis"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_TransientHandling" name="transientHandling"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Handle Agent Failure -->
+    <bpmn:serviceTask id="ServiceTask_HandleAgentFailure" name="Handle Agent Failure" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_AgentFailure</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToFindReplacement</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_FailureAnalysis" name="failureAnalysis"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_AgentHandling" name="agentHandling"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Handle System Failure -->
+    <bpmn:serviceTask id="ServiceTask_HandleSystemFailure" name="Handle System Failure" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_SystemFailure</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToEscalateFailure</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_FailureAnalysis" name="failureAnalysis"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_SystemHandling" name="systemHandling"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Apply Retry Policy -->
+    <bpmn:serviceTask id="ServiceTask_ApplyRetryPolicy" name="Apply Retry Policy" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToRetryPolicy</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToRetryGateway</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_TransientHandling" name="transientHandling"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_RetryDecision" name="retryDecision"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Retry Decision Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_RetryDecision" name="Should Retry?">
+      <bpmn:incoming>SequenceFlow_ToRetryGateway</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_PerformRetry</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_MaxRetriesExceeded</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Perform Retry -->
+    <bpmn:serviceTask id="ServiceTask_PerformRetry" name="Perform Retry with Backoff" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_PerformRetry</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToRecoveryComplete</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RetryDecision" name="retryDecision"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_RetryResult" name="retryResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Find Replacement Agent -->
+    <bpmn:serviceTask id="ServiceTask_FindReplacement" name="Find Replacement Agent" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToFindReplacement</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToReassignStage</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_AgentHandling" name="agentHandling"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ReplacementAgent" name="replacementAgent"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Reassign Stage to New Agent -->
+    <bpmn:serviceTask id="ServiceTask_ReassignStage" name="Reassign Stage to New Agent" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToReassignStage</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToRecoveryComplete</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ReplacementAgent" name="replacementAgent"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ReassignmentResult" name="reassignmentResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Escalate Failure -->
+    <bpmn:serviceTask id="ServiceTask_EscalateFailure" name="Escalate System Failure" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToEscalateFailure</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_MaxRetriesExceeded</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToFailureEscalated</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_SystemHandling" name="systemHandling"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_EscalationResult" name="escalationResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Recovery Complete End -->
+    <bpmn:endEvent id="EndEvent_RecoveryComplete" name="Recovery Complete">
+      <bpmn:incoming>SequenceFlow_ToRecoveryComplete</bpmn:incoming>
+      <bpmn:messageEventDefinition messageRef="Message_RecoveryComplete"/>
+    </bpmn:endEvent>
+
+    <!-- Failure Escalated End -->
+    <bpmn:endEvent id="EndEvent_FailureEscalated" name="Failure Escalated">
+      <bpmn:incoming>SequenceFlow_ToFailureEscalated</bpmn:incoming>
+      <bpmn:errorEventDefinition errorRef="Error_SystemFailureEscalation"/>
+    </bpmn:endEvent>
+
+    <!-- Failure Recovery Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToAnalyzeFailure" sourceRef="StartEvent_FailureDetected" targetRef="ServiceTask_AnalyzeFailure"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToFailureTypeGateway" sourceRef="ServiceTask_AnalyzeFailure" targetRef="ExclusiveGateway_FailureType"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_TransientFailure" sourceRef="ExclusiveGateway_FailureType" targetRef="ServiceTask_HandleTransientFailure">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${failureAnalysis.type == 'transient'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_AgentFailure" sourceRef="ExclusiveGateway_FailureType" targetRef="ServiceTask_HandleAgentFailure">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${failureAnalysis.type == 'agent'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_SystemFailure" sourceRef="ExclusiveGateway_FailureType" targetRef="ServiceTask_HandleSystemFailure">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${failureAnalysis.type == 'system'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ToRetryPolicy" sourceRef="ServiceTask_HandleTransientFailure" targetRef="ServiceTask_ApplyRetryPolicy"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToRetryGateway" sourceRef="ServiceTask_ApplyRetryPolicy" targetRef="ExclusiveGateway_RetryDecision"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_PerformRetry" sourceRef="ExclusiveGateway_RetryDecision" targetRef="ServiceTask_PerformRetry">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${retryDecision.shouldRetry == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_MaxRetriesExceeded" sourceRef="ExclusiveGateway_RetryDecision" targetRef="ServiceTask_EscalateFailure">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${retryDecision.shouldRetry == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ToFindReplacement" sourceRef="ServiceTask_HandleAgentFailure" targetRef="ServiceTask_FindReplacement"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToReassignStage" sourceRef="ServiceTask_FindReplacement" targetRef="ServiceTask_ReassignStage"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToEscalateFailure" sourceRef="ServiceTask_HandleSystemFailure" targetRef="ServiceTask_EscalateFailure"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToRecoveryComplete" sourceRef="ServiceTask_PerformRetry" targetRef="EndEvent_RecoveryComplete"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToRecoveryComplete" sourceRef="ServiceTask_ReassignStage" targetRef="EndEvent_RecoveryComplete"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToFailureEscalated" sourceRef="ServiceTask_EscalateFailure" targetRef="EndEvent_FailureEscalated"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: Real-time Monitoring and Alerting -->
+  <bpmn:process id="RealTimeMonitoringProcess" name="Real-time Monitoring and Alerting Process" isExecutable="true">
+    
+    <!-- Start Event (Timer-based) -->
+    <bpmn:startEvent id="StartEvent_MonitoringCycle" name="Monitoring Cycle Timer">
+      <bpmn:outgoing>SequenceFlow_ToCollectMetrics</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">R/PT5S</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+
+    <!-- Collect System Metrics -->
+    <bpmn:serviceTask id="ServiceTask_CollectMetrics" name="Collect Real-time System Metrics" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToCollectMetrics</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToAnalyzeMetrics</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_SystemMetrics" name="systemMetrics"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Analyze Metrics for Anomalies -->
+    <bpmn:serviceTask id="ServiceTask_AnalyzeMetrics" name="Analyze Metrics for Anomalies" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToAnalyzeMetrics</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToAnomalyGateway</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_SystemMetrics" name="systemMetrics"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_MetricsAnalysis" name="metricsAnalysis"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Anomaly Detection Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_AnomalyDetection" name="Anomalies Detected?">
+      <bpmn:incoming>SequenceFlow_ToAnomalyGateway</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_AnomaliesDetected</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_NoAnomalies</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Process Anomalies -->
+    <bpmn:serviceTask id="ServiceTask_ProcessAnomalies" name="Process Detected Anomalies" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_AnomaliesDetected</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToSeverityGateway</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_MetricsAnalysis" name="metricsAnalysis"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ProcessedAnomalies" name="processedAnomalies"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Severity Assessment Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_SeverityAssessment" name="Alert Severity?">
+      <bpmn:incoming>SequenceFlow_ToSeverityGateway</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_CriticalAlert</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_WarningAlert</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_InfoAlert</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Handle Critical Alert -->
+    <bpmn:serviceTask id="ServiceTask_HandleCriticalAlert" name="Handle Critical Alert" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_CriticalAlert</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToTriggerIncidentResponse</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ProcessedAnomalies" name="processedAnomalies"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_CriticalAlert" name="criticalAlert"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Handle Warning Alert -->
+    <bpmn:serviceTask id="ServiceTask_HandleWarningAlert" name="Handle Warning Alert" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_WarningAlert</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToNotifyOperators</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ProcessedAnomalies" name="processedAnomalies"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_WarningAlert" name="warningAlert"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Handle Info Alert -->
+    <bpmn:serviceTask id="ServiceTask_HandleInfoAlert" name="Handle Info Alert" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_InfoAlert</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToLogAlert</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ProcessedAnomalies" name="processedAnomalies"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_InfoAlert" name="infoAlert"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Trigger Incident Response -->
+    <bpmn:serviceTask id="ServiceTask_TriggerIncidentResponse" name="Trigger Automated Incident Response" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToTriggerIncidentResponse</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToUpdateDashboard</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_CriticalAlert" name="criticalAlert"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_IncidentResponse" name="incidentResponse"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Notify Operators -->
+    <bpmn:serviceTask id="ServiceTask_NotifyOperators" name="Notify System Operators" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToNotifyOperators</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToUpdateDashboard</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_WarningAlert" name="warningAlert"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_OperatorNotification" name="operatorNotification"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Log Alert -->
+    <bpmn:serviceTask id="ServiceTask_LogAlert" name="Log Alert Information" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToLogAlert</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToUpdateDashboard</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_InfoAlert" name="infoAlert"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_AlertLog" name="alertLog"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Update Dashboard -->
+    <bpmn:serviceTask id="ServiceTask_UpdateDashboard" name="Update Real-time Dashboard" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToUpdateDashboard</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_NoAnomalies</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToMonitoringComplete</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_SystemMetrics" name="systemMetrics"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_DashboardUpdate" name="dashboardUpdate"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Monitoring Complete End -->
+    <bpmn:endEvent id="EndEvent_MonitoringComplete" name="Monitoring Cycle Complete">
+      <bpmn:incoming>SequenceFlow_ToMonitoringComplete</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Monitoring Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToCollectMetrics" sourceRef="StartEvent_MonitoringCycle" targetRef="ServiceTask_CollectMetrics"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToAnalyzeMetrics" sourceRef="ServiceTask_CollectMetrics" targetRef="ServiceTask_AnalyzeMetrics"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToAnomalyGateway" sourceRef="ServiceTask_AnalyzeMetrics" targetRef="ExclusiveGateway_AnomalyDetection"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_AnomaliesDetected" sourceRef="ExclusiveGateway_AnomalyDetection" targetRef="ServiceTask_ProcessAnomalies">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${metricsAnalysis.anomaliesDetected == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_NoAnomalies" sourceRef="ExclusiveGateway_AnomalyDetection" targetRef="ServiceTask_UpdateDashboard">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${metricsAnalysis.anomaliesDetected == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ToSeverityGateway" sourceRef="ServiceTask_ProcessAnomalies" targetRef="ExclusiveGateway_SeverityAssessment"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_CriticalAlert" sourceRef="ExclusiveGateway_SeverityAssessment" targetRef="ServiceTask_HandleCriticalAlert">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${processedAnomalies.severity == 'critical'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_WarningAlert" sourceRef="ExclusiveGateway_SeverityAssessment" targetRef="ServiceTask_HandleWarningAlert">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${processedAnomalies.severity == 'warning'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_InfoAlert" sourceRef="ExclusiveGateway_SeverityAssessment" targetRef="ServiceTask_HandleInfoAlert">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${processedAnomalies.severity == 'info'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ToTriggerIncidentResponse" sourceRef="ServiceTask_HandleCriticalAlert" targetRef="ServiceTask_TriggerIncidentResponse"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToNotifyOperators" sourceRef="ServiceTask_HandleWarningAlert" targetRef="ServiceTask_NotifyOperators"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToLogAlert" sourceRef="ServiceTask_HandleInfoAlert" targetRef="ServiceTask_LogAlert"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToUpdateDashboard" sourceRef="ServiceTask_TriggerIncidentResponse" targetRef="ServiceTask_UpdateDashboard"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToUpdateDashboard" sourceRef="ServiceTask_NotifyOperators" targetRef="ServiceTask_UpdateDashboard"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToUpdateDashboard" sourceRef="ServiceTask_LogAlert" targetRef="ServiceTask_UpdateDashboard"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToMonitoringComplete" sourceRef="ServiceTask_UpdateDashboard" targetRef="EndEvent_MonitoringComplete"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: System Auto-scaling -->
+  <bpmn:process id="SystemAutoScalingProcess" name="System Auto-scaling Process" isExecutable="true">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_ScalingTrigger" name="Auto-scaling Trigger">
+      <bpmn:outgoing>SequenceFlow_ToAnalyzeResourceUtilization</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_AutoScalingTrigger"/>
+    </bpmn:startEvent>
+
+    <!-- Analyze Resource Utilization -->
+    <bpmn:serviceTask id="ServiceTask_AnalyzeResourceUtilization" name="Analyze Resource Utilization" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToAnalyzeResourceUtilization</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToScalingDecisionGateway</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ResourceMetrics" name="resourceMetrics"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_UtilizationAnalysis" name="utilizationAnalysis"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Scaling Decision Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_ScalingDecision" name="Scaling Action Required?">
+      <bpmn:incoming>SequenceFlow_ToScalingDecisionGateway</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ScaleUp</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_ScaleDown</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_NoScaling</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Scale Up Resources -->
+    <bpmn:serviceTask id="ServiceTask_ScaleUpResources" name="Scale Up System Resources" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ScaleUp</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToValidateScaleUp</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_UtilizationAnalysis" name="utilizationAnalysis"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ScaleUpResult" name="scaleUpResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Scale Down Resources -->
+    <bpmn:serviceTask id="ServiceTask_ScaleDownResources" name="Scale Down System Resources" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ScaleDown</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToValidateScaleDown</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_UtilizationAnalysis" name="utilizationAnalysis"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ScaleDownResult" name="scaleDownResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Validate Scale Up -->
+    <bpmn:serviceTask id="ServiceTask_ValidateScaleUp" name="Validate Scale Up Operation" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToValidateScaleUp</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToUpdateCapacity</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ScaleUpResult" name="scaleUpResult"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ScaleUpValidation" name="scaleUpValidation"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Validate Scale Down -->
+    <bpmn:serviceTask id="ServiceTask_ValidateScaleDown" name="Validate Scale Down Operation" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToValidateScaleDown</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToUpdateCapacity</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ScaleDownResult" name="scaleDownResult"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ScaleDownValidation" name="scaleDownValidation"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Update System Capacity -->
+    <bpmn:serviceTask id="ServiceTask_UpdateCapacity" name="Update System Capacity Metrics" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToUpdateCapacity</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToNotifyScaling</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ScaleUpValidation" name="scaleUpValidation"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ScaleDownValidation" name="scaleDownValidation"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_CapacityUpdate" name="capacityUpdate"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Notify Scaling Event -->
+    <bpmn:serviceTask id="ServiceTask_NotifyScaling" name="Notify Scaling Event" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToNotifyScaling</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToScalingComplete</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_CapacityUpdate" name="capacityUpdate"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ScalingNotification" name="scalingNotification"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Log No Scaling Action -->
+    <bpmn:serviceTask id="ServiceTask_LogNoScaling" name="Log No Scaling Required" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_NoScaling</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToScalingComplete</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_UtilizationAnalysis" name="utilizationAnalysis"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_NoScalingLog" name="noScalingLog"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Scaling Complete End -->
+    <bpmn:endEvent id="EndEvent_ScalingComplete" name="Auto-scaling Complete">
+      <bpmn:incoming>SequenceFlow_ToScalingComplete</bpmn:incoming>
+      <bpmn:messageEventDefinition messageRef="Message_AutoScalingComplete"/>
+    </bpmn:endEvent>
+
+    <!-- Auto-scaling Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToAnalyzeResourceUtilization" sourceRef="StartEvent_ScalingTrigger" targetRef="ServiceTask_AnalyzeResourceUtilization"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToScalingDecisionGateway" sourceRef="ServiceTask_AnalyzeResourceUtilization" targetRef="ExclusiveGateway_ScalingDecision"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ScaleUp" sourceRef="ExclusiveGateway_ScalingDecision" targetRef="ServiceTask_ScaleUpResources">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${utilizationAnalysis.action == 'scale_up'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ScaleDown" sourceRef="ExclusiveGateway_ScalingDecision" targetRef="ServiceTask_ScaleDownResources">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${utilizationAnalysis.action == 'scale_down'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_NoScaling" sourceRef="ExclusiveGateway_ScalingDecision" targetRef="ServiceTask_LogNoScaling">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${utilizationAnalysis.action == 'none'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ToValidateScaleUp" sourceRef="ServiceTask_ScaleUpResources" targetRef="ServiceTask_ValidateScaleUp"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToValidateScaleDown" sourceRef="ServiceTask_ScaleDownResources" targetRef="ServiceTask_ValidateScaleDown"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToUpdateCapacity" sourceRef="ServiceTask_ValidateScaleUp" targetRef="ServiceTask_UpdateCapacity"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToUpdateCapacity" sourceRef="ServiceTask_ValidateScaleDown" targetRef="ServiceTask_UpdateCapacity"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToNotifyScaling" sourceRef="ServiceTask_UpdateCapacity" targetRef="ServiceTask_NotifyScaling"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToScalingComplete" sourceRef="ServiceTask_NotifyScaling" targetRef="EndEvent_ScalingComplete"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToScalingComplete" sourceRef="ServiceTask_LogNoScaling" targetRef="EndEvent_ScalingComplete"/>
+
+  </bpmn:process>
+
+  <!-- Message Definitions -->
+  <bpmn:message id="Message_WorkflowExecutionRequest" name="Workflow Execution Request"/>
+  <bpmn:message id="Message_WorkflowExecutionComplete" name="Workflow Execution Complete"/>
+  <bpmn:message id="Message_WorkflowQueued" name="Workflow Queued"/>
+  <bpmn:message id="Message_AgentAssignmentRequest" name="Agent Assignment Request"/>
+  <bpmn:message id="Message_AgentAssignmentComplete" name="Agent Assignment Complete"/>
+  <bpmn:message id="Message_FailureDetected" name="Failure Detected"/>
+  <bpmn:message id="Message_RecoveryComplete" name="Recovery Complete"/>
+  <bpmn:message id="Message_AutoScalingTrigger" name="Auto-scaling Trigger"/>
+  <bpmn:message id="Message_AutoScalingComplete" name="Auto-scaling Complete"/>
+
+  <!-- Error Definitions -->
+  <bpmn:error id="Error_SystemFailureEscalation" name="System Failure Escalation" errorCode="SYSTEM_FAILURE_ESCALATION"/>
+  <bpmn:error id="Error_ResourceUnavailable" name="Resource Unavailable" errorCode="RESOURCE_UNAVAILABLE"/>
+  <bpmn:error id="Error_AgentAssignmentFailure" name="Agent Assignment Failure" errorCode="AGENT_ASSIGNMENT_FAILURE"/>
+
+  <!-- Data Item Definitions -->
+  <bpmn:itemDefinition id="ItemDefinition_WorkflowRequest" structureRef="WorkflowRequest"/>
+  <bpmn:itemDefinition id="ItemDefinition_ValidationResult" structureRef="ValidationResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_ResourceAvailability" structureRef="ResourceAvailability"/>
+  <bpmn:itemDefinition id="ItemDefinition_ExecutionPlan" structureRef="ExecutionPlan"/>
+  <bpmn:itemDefinition id="ItemDefinition_ResourceReservation" structureRef="ResourceReservation"/>
+  <bpmn:itemDefinition id="ItemDefinition_ExecutionRecord" structureRef="ExecutionRecord"/>
+  <bpmn:itemDefinition id="ItemDefinition_WorkflowState" structureRef="WorkflowState"/>
+  <bpmn:itemDefinition id="ItemDefinition_ExecutionResults" structureRef="ExecutionResults"/>
+  <bpmn:itemDefinition id="ItemDefinition_FinalizedExecution" structureRef="FinalizedExecution"/>
+  <bpmn:itemDefinition id="ItemDefinition_StageRequirements" structureRef="StageRequirements"/>
+  <bpmn:itemDefinition id="ItemDefinition_RequirementAnalysis" structureRef="RequirementAnalysis"/>
+  <bpmn:itemDefinition id="ItemDefinition_AvailableAgents" structureRef="AvailableAgents"/>
+  <bpmn:itemDefinition id="ItemDefinition_ScoredAgents" structureRef="ScoredAgents"/>
+  <bpmn:itemDefinition id="ItemDefinition_LoadBalanceAnalysis" structureRef="LoadBalanceAnalysis"/>
+  <bpmn:itemDefinition id="ItemDefinition_LoadBalancedAgents" structureRef="LoadBalancedAgents"/>
+  <bpmn:itemDefinition id="ItemDefinition_SelectedAgent" structureRef="SelectedAgent"/>
+  <bpmn:itemDefinition id="ItemDefinition_ReservationResult" structureRef="ReservationResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_AssignmentResult" structureRef="AssignmentResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_FailureEvent" structureRef="FailureEvent"/>
+  <bpmn:itemDefinition id="ItemDefinition_FailureAnalysis" structureRef="FailureAnalysis"/>
+  <bpmn:itemDefinition id="ItemDefinition_TransientHandling" structureRef="TransientHandling"/>
+  <bpmn:itemDefinition id="ItemDefinition_AgentHandling" structureRef="AgentHandling"/>
+  <bpmn:itemDefinition id="ItemDefinition_SystemHandling" structureRef="SystemHandling"/>
+  <bpmn:itemDefinition id="ItemDefinition_RetryDecision" structureRef="RetryDecision"/>
+  <bpmn:itemDefinition id="ItemDefinition_RetryResult" structureRef="RetryResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_ReplacementAgent" structureRef="ReplacementAgent"/>
+  <bpmn:itemDefinition id="ItemDefinition_ReassignmentResult" structureRef="ReassignmentResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_EscalationResult" structureRef="EscalationResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_SystemMetrics" structureRef="SystemMetrics"/>
+  <bpmn:itemDefinition id="ItemDefinition_MetricsAnalysis" structureRef="MetricsAnalysis"/>
+  <bpmn:itemDefinition id="ItemDefinition_ProcessedAnomalies" structureRef="ProcessedAnomalies"/>
+  <bpmn:itemDefinition id="ItemDefinition_CriticalAlert" structureRef="CriticalAlert"/>
+  <bpmn:itemDefinition id="ItemDefinition_WarningAlert" structureRef="WarningAlert"/>
+  <bpmn:itemDefinition id="ItemDefinition_InfoAlert" structureRef="InfoAlert"/>
+  <bpmn:itemDefinition id="ItemDefinition_IncidentResponse" structureRef="IncidentResponse"/>
+  <bpmn:itemDefinition id="ItemDefinition_OperatorNotification" structureRef="OperatorNotification"/>
+  <bpmn:itemDefinition id="ItemDefinition_AlertLog" structureRef="AlertLog"/>
+  <bpmn:itemDefinition id="ItemDefinition_DashboardUpdate" structureRef="DashboardUpdate"/>
+  <bpmn:itemDefinition id="ItemDefinition_ResourceMetrics" structureRef="ResourceMetrics"/>
+  <bpmn:itemDefinition id="ItemDefinition_UtilizationAnalysis" structureRef="UtilizationAnalysis"/>
+  <bpmn:itemDefinition id="ItemDefinition_ScaleUpResult" structureRef="ScaleUpResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_ScaleDownResult" structureRef="ScaleDownResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_ScaleUpValidation" structureRef="ScaleUpValidation"/>
+  <bpmn:itemDefinition id="ItemDefinition_ScaleDownValidation" structureRef="ScaleDownValidation"/>
+  <bpmn:itemDefinition id="ItemDefinition_CapacityUpdate" structureRef="CapacityUpdate"/>
+  <bpmn:itemDefinition id="ItemDefinition_ScalingNotification" structureRef="ScalingNotification"/>
+  <bpmn:itemDefinition id="ItemDefinition_NoScalingLog" structureRef="NoScalingLog"/>
+  <bpmn:itemDefinition id="ItemDefinition_MetricsUpdate" structureRef="MetricsUpdate"/>
+  <bpmn:itemDefinition id="ItemDefinition_ResourceReleaseResult" structureRef="ResourceReleaseResult"/>
+
+</bpmn:definitions></bpmn:parameter>
+</invoke>

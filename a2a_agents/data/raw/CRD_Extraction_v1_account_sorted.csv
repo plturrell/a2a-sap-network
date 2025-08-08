@@ -1,0 +1,88 @@
+Account (L0),Account (L1),Account (L2),Account (L3),_row_number
+Impairments,Impairments,Credit Impairments,ECL P/L Provision,1
+Impairments,Impairments,Credit Impairments,Other Credit Risk Provisions,2
+Impairments,Impairments,Credit Impairments,Spec Debt net charge,3
+Impairments,Impairments,Other Impairments,Other Impairments,4
+Income,DVA,Fee Income,Fee Income,5
+Income,DVA,Net Interest Income,Net Interest Income,6
+Income,Fee Income,Fee Income,Fee Income,7
+Income,Fee Income,Fee Income,Portfolio Fee,8
+Income,Fee Income,Fee Income,Transaction Fee,9
+Income,Fee Income,TP Fee In (0L),TP Fee In (0L),10
+Income,Fee Income,TP Fee In (ZM),TP Fee In (ZM),11
+Income,Fee Income,TP Fee Out,TP Fee Out,12
+Income,Fee Income,TP Fee Out (0L),TP Fee Out (0L),13
+Income,Fee Income,TP Fee Out (ZM),TP Fee Out (ZM),14
+Income,Fee Income,TP Profit Split In (0L),TP Profit Split In (0L),15
+Income,Fee Income,TP Profit Split In (ZM),TP Profit Split In (ZM),16
+Income,Fee Income,TP Profit Split Out (0L),TP Profit Split Out (0L),17
+Income,Fee Income,TP Profit Split Out (ZM),TP Profit Split Out (ZM),18
+Income,Net Interest Income,Net Interest Income,Net Interest Income,19
+Net Interest Income,CLO Fees,CLO Fees,CLO Fees,20
+Net Interest Income,FVTPL Funding Cost,FVTPL Funding Cost,FVTPL Funding Cost,21
+Net Interest Income,Funding (Cost) / Income,Funding (Cost) / Income,Funding (Cost) / Income,22
+Net Interest Income,GIE APM adj,GIE APM adj,GIE APM adj,23
+Net Interest Income,Interest (Paid) / Income,Gross Interest Expense,Gross Interest Expense,24
+Net Interest Income,Interest (Paid) / Income,Gross Interest Income,Gross Interest Income,25
+Non-Group Assets,Funded Assets,Derivative Assets,Derivative Assets,26
+Non-Group Assets,Funded Assets,Loans Other,Loans to Banks Other,27
+Non-Group Assets,Funded Assets,Loans Other,Loans to Customers Other,28
+Non-Group Assets,Funded Assets,Loans Rev Repo,Loans To Customers Rev Repo,29
+Non-Group Assets,Funded Assets,Loans Rev Repo,Loans to Banks Rev Repo,30
+Non-Group Assets,Funded Assets,Other NGA,Other NGA,31
+Non-Group Assets,Un-Funded Assets,Derivative Assets,Derivative Assets,32
+Non-Group Assets,Un-Funded Assets,Other NGA,Other NGA,33
+Non-Group Assets Av,Non-Group Assets Av,Non-Group Assets Av,Non-Group Assets Av,34
+Non-Group Contingents,Non-Group Contingents,Non-Group Contingents,Non-Group Contingents,35
+Non-Group Contingents Av,Non-Group Contingents Av,Non-Group Contingents Av,Non-Group Contingents Av,36
+Non-Group Liabilities,Funded Liabilities,Deposits Other,Bank Deposits Other,37
+Non-Group Liabilities,Funded Liabilities,Deposits Other,Customer Deposits Other,38
+Non-Group Liabilities,Funded Liabilities,Deposits Repo,Bank Deposits Repo,39
+Non-Group Liabilities,Funded Liabilities,Deposits Repo,Customer Deposits Repo,40
+Non-Group Liabilities,Funded Liabilities,Derivative Liabs,Derivative Liabs,41
+Non-Group Liabilities,Funded Liabilities,Other NGL,Other NGL,42
+Non-Group Liabilities,Un-Funded Liabilities,Derivative Liabs,Derivative Liabs,43
+Non-Group Liabilities,Un-Funded Liabilities,Other NGL,Other NGL,44
+Non-Group Liabilities Av,Non-Group Liabilities Av,Non-Group Liabilities Av,Non-Group Liabilities Av,45
+Risk Weighted Assets,Credit RWA,Credit RWA - BAU,Credit RWA - BAU,46
+Risk Weighted Assets,Credit RWA,Credit RWA - CDO/CLO,Credit RWA - CDO/CLO,47
+Risk Weighted Assets,Credit RWA,Credit RWA - Chakra,Credit RWA - Chakra,48
+Risk Weighted Assets,Credit RWA,Credit RWA - Models,Credit RWA - Models,49
+Risk Weighted Assets,Credit RWA,Credit RWA - Others,Credit RWA - Others,50
+Risk Weighted Assets,Market RWA,Market RWA,Market RWA - BAU,51
+Risk Weighted Assets,Market RWA,Market RWA,Market RWA - Models,52
+Risk Weighted Assets,Market RWA,Market RWA,Market RWA - Others,53
+Risk Weighted Assets,Operational RWA,Operational RWA,Operational RWA - BAU,54
+Risk Weighted Assets,Operational RWA,Operational RWA,Operational RWA - Others,55
+Risk Weighted Assets Av,Credit RWA Av,Credit RWA Av,Credit RWA Av,56
+Risk Weighted Assets Av,Market RWA Av,Market RWA Av,Market RWA Av,57
+Risk Weighted Assets Av,Operational RWA Av,Operational RWA Av,Operational RWA Av,58
+Total Cost,Incurred Cost,Controllable Cost,Airline Depreciation,59
+Total Cost,Incurred Cost,Controllable Cost,Branch Recharges,60
+Total Cost,Incurred Cost,Controllable Cost,GBS Recharges,61
+Total Cost,Incurred Cost,Controllable Cost,Legal & Professional Fees,62
+Total Cost,Incurred Cost,Controllable Cost,Other Direct Costs,63
+Total Cost,Incurred Cost,Controllable Cost,Other Recharges,64
+Total Cost,Incurred Cost,Controllable Cost,Premises,65
+Total Cost,Incurred Cost,Controllable Cost,Staff Costs exc Bonus,66
+Total Cost,Incurred Cost,Controllable Cost,Training,67
+Total Cost,Incurred Cost,Controllable Cost,Travel & Entertainment,68
+Total Cost,Incurred Cost,Investment Recoveries,Investment Recoveries,69
+Total Cost,Incurred Cost,Investments,Project Amortisation,70
+Total Cost,Incurred Cost,Investments,Project Opex,71
+Total Cost,Incurred Cost,Staff Bonus,Staff Bonus,72
+Total Cost,Service Charge,Allocation - WRB,Allocation - WRB,73
+Total Cost,Service Charge,Business Support,Business Support,74
+Total Cost,Service Charge,CCC Allocated,CCC Allocated,75
+Total Cost,Service Charge,CEO & Others,CEO & Others,76
+Total Cost,Service Charge,CFO Services,CFO Services,77
+Total Cost,Service Charge,Compliance,Compliance,78
+Total Cost,Service Charge,Corporate,Corporate,79
+Total Cost,Service Charge,Corporate Affaires & Marketing ( CABM),Corporate Affaires & Marketing ( CABM),80
+Total Cost,Service Charge,Human Resources,Human Resources,81
+Total Cost,Service Charge,Internal Audit,Internal Audit,82
+Total Cost,Service Charge,Legal,Legal,83
+Total Cost,Service Charge,Operations,Operations,84
+Total Cost,Service Charge,Risk,Risk,85
+Total Cost,Service Charge,Serv Chrg Oth,Serv Chrg Oth,86
+Total Cost,Service Charge,T&I Services,T&I Services,87

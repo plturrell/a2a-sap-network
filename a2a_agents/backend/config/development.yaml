@@ -1,0 +1,51 @@
+# Development Environment Configuration
+environment: "development"
+debug: true
+log_level: "DEBUG"
+
+# Network settings
+host: "localhost"
+base_port: 8000
+
+# Agent settings
+agent_timeout: 30
+max_retries: 3
+circuit_breaker_threshold: 5
+
+# Database
+database_url: "postgresql://a2a_user:a2a_password@localhost:5432/a2a_dev"
+redis_url: "redis://localhost:6379/0"
+
+# Blockchain
+blockchain_network: "development"
+contract_address: null
+
+# Security (development only - weak security)
+jwt_secret: "development-jwt-secret-key"
+cors_origins:
+  - "http://localhost:3000"
+  - "http://localhost:3001"
+  - "http://127.0.0.1:3000"
+rate_limit_requests: 1000  # Relaxed for development
+rate_limit_window: 60
+
+# Telemetry
+telemetry_enabled: true
+telemetry_endpoint: "http://localhost:4317"
+metrics_port: 9090
+
+# Agent ports
+agent0_port: 8001
+agent1_port: 8002
+agent2_port: 8003
+agent3_port: 8004
+agent4_port: 8009
+agent5_port: 8010
+data_manager_port: 8005
+catalog_manager_port: 8006
+agent_manager_port: 8007
+
+# Development-specific features
+hot_reload: true
+mock_external_services: true
+skip_blockchain_validation: true

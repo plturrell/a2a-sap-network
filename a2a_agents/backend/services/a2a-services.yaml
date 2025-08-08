@@ -1,0 +1,129 @@
+# A2A Services Configuration
+# Defines all A2A agents and their relationships
+
+version: "0.2.9"
+protocol: "a2a"
+
+services:
+  # Core A2A Processing Pipeline
+  agent0_data_product:
+    name: "Data Product Registration Agent"
+    id: "data_product_agent_0"
+    port: 8001
+    type: "ingestion"
+    downstream:
+      - agent1_standardization
+    capabilities:
+      - "dublin_core_extraction"
+      - "data_quality_assessment"
+      - "ord_registration"
+
+  agent1_standardization:
+    name: "Data Standardization Agent"
+    id: "data_standardization_agent_1"
+    port: 8002
+    type: "transformation"
+    upstream:
+      - agent0_data_product
+    downstream:
+      - agent2_ai_preparation
+    capabilities:
+      - "account_standardization"
+      - "book_standardization"
+      - "location_standardization"
+      - "measure_standardization"
+      - "product_standardization"
+
+  agent2_ai_preparation:
+    name: "AI Preparation Agent"
+    id: "ai_preparation_agent_2"
+    port: 8003
+    type: "enrichment"
+    upstream:
+      - agent1_standardization
+    downstream:
+      - agent3_vector_processing
+    capabilities:
+      - "semantic_enrichment"
+      - "embedding_generation"
+      - "relationship_extraction"
+
+  agent3_vector_processing:
+    name: "Vector Processing Agent"
+    id: "vector_processing_agent_3"
+    port: 8004
+    type: "storage"
+    upstream:
+      - agent2_ai_preparation
+    capabilities:
+      - "vector_storage"
+      - "similarity_search"
+      - "knowledge_graph"
+    external_dependencies:
+      - "sap_hana_cloud"
+
+  # Supporting A2A Services
+  agent_manager:
+    name: "Agent Manager"
+    id: "agent_manager"
+    port: 8007
+    type: "orchestration"
+    capabilities:
+      - "service_discovery"
+      - "workflow_management"
+      - "trust_contracts"
+      - "health_monitoring"
+
+  data_manager:
+    name: "Data Manager"
+    id: "data_manager"
+    port: 8005
+    type: "storage"
+    capabilities:
+      - "filesystem_crud"
+      - "database_operations"
+      - "cache_management"
+    external_dependencies:
+      - "supabase"
+      - "redis"
+
+  catalog_manager:
+    name: "Catalog Manager"
+    id: "catalog_manager"
+    port: 8006
+    type: "registry"
+    capabilities:
+      - "ord_catalog_management"
+      - "metadata_search"
+      - "catalog_sync"
+
+# A2A Network Configuration
+network:
+  discovery:
+    type: "agent_manager"
+    endpoint: "http://agent-manager:8007/a2a/discovery"
+  
+  trust:
+    type: "smart_contract"
+    blockchain: "ethereum_compatible"
+    contract_address: "${TRUST_CONTRACT_ADDRESS}"
+  
+  monitoring:
+    type: "prometheus"
+    endpoint: "http://prometheus:9090"
+  
+  tracing:
+    type: "opentelemetry"
+    endpoint: "http://otel-collector:4317"
+
+# A2A Protocol Settings
+protocol:
+  version: "0.2.9"
+  rpc_version: "2.0"
+  message_format: "json"
+  encoding: "utf-8"
+  max_message_size: "10MB"
+  timeout: 30000  # 30 seconds
+  retry_policy:
+    max_attempts: 3
+    backoff: "exponential"

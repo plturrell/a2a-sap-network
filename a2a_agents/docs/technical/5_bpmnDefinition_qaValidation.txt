@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="A2ATestingAgentProcesses"
+                  targetNamespace="http://a2a.testing.agent.processes">
+
+  <!-- Main Process: A2A Dynamic Testing Task Execution -->
+  <bpmn:process id="A2ATestingTaskProcess" name="A2A Dynamic Testing Task Execution Process" isExecutable="true">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_A2ATaskRequest" name="A2A Task Request Received">
+      <bpmn:outgoing>SequenceFlow_ToValidateTask</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_A2ATaskRequest"/>
+    </bpmn:startEvent>
+
+    <!-- Validate A2A Task Request -->
+    <bpmn:serviceTask id="ServiceTask_ValidateA2ATask" name="Validate A2A Task Request" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToValidateTask</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToInitializeTask</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_A2ATaskRequest" name="taskRequest"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_TaskValidation" name="taskValidation"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Initialize Task Context -->
+    <bpmn:serviceTask id="ServiceTask_InitializeTaskContext" name="Initialize Task Context & Streaming" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToInitializeTask</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToORDDiscovery</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_TaskValidation" name="taskValidation"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_TaskContext" name="taskContext"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- ORD Discovery Subprocess -->
+    <bpmn:callActivity id="CallActivity_ORDDiscovery" name="ORD Registry Discovery" calledElement="ORDDiscoveryProcess">
+      <bpmn:incoming>SequenceFlow_ToORDDiscovery</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToValidateDiscovery</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_TaskContext" name="taskContext"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_DiscoveredProducts" name="discoveredProducts"/>
+      </bpmn:ioSpecification>
+    </bpmn:callActivity>
+
+    <!-- Validate Discovery Results -->
+    <bpmn:serviceTask id="ServiceTask_ValidateDiscoveryResults" name="Validate Discovery Results" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToValidateDiscovery</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToDiscoveryGateway</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DiscoveredProducts" name="discoveredProducts"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_DiscoveryValidation" name="discoveryValidation"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Discovery Results Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_DiscoveryResults" name="Products Discovered?">
+      <bpmn:incoming>SequenceFlow_ToDiscoveryGateway</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ProductsFound</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_NoProducts</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Vector Embedding Generation -->
+    <bpmn:callActivity id="CallActivity_VectorEmbedding" name="Generate Vector Embeddings" calledElement="VectorEmbeddingProcess">
+      <bpmn:incoming>SequenceFlow_ProductsFound</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToDynamicGeneration</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DiscoveredProducts" name="discoveredProducts"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_VectorEmbeddings" name="vectorEmbeddings"/>
+      </bpmn:ioSpecification>
+    </bpmn:callActivity>
+
+    <!-- Dynamic Test Generation -->
+    <bpmn:callActivity id="CallActivity_DynamicTestGeneration" name="Dynamic Test Generation" calledElement="DynamicTestGenerationProcess">
+      <bpmn:incoming>SequenceFlow_ToDynamicGeneration</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToTestExecution</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DiscoveredProducts" name="discoveredProducts"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_VectorEmbeddings" name="vectorEmbeddings"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_GeneratedTests" name="generatedTests"/>
+      </bpmn:ioSpecification>
+    </bpmn:callActivity>
+
+    <!-- Test Execution & Validation -->
+    <bpmn:callActivity id="CallActivity_TestExecution" name="Execute Tests & Validate" calledElement="TestExecutionProcess">
+      <bpmn:incoming>SequenceFlow_ToTestExecution</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToReportGeneration</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_GeneratedTests" name="generatedTests"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_TestResults" name="testResults"/>
+      </bpmn:ioSpecification>
+    </bpmn:callActivity>
+
+    <!-- Generate Test Report -->
+    <bpmn:serviceTask id="ServiceTask_GenerateTestReport" name="Generate Comprehensive Test Report" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToReportGeneration</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToNotifyCompletion</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_TestResults" name="testResults"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DiscoveredProducts" name="discoveredProducts"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_TestReport" name="testReport"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Notify Task Completion -->
+    <bpmn:serviceTask id="ServiceTask_NotifyTaskCompletion" name="Notify A2A Task Completion" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToNotifyCompletion</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToSuccessEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_TestReport" name="testReport"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_TaskContext" name="taskContext"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_CompletionNotification" name="completionNotification"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Success End Event -->
+    <bpmn:endEvent id="EndEvent_TaskSuccess" name="A2A Task Completed Successfully">
+      <bpmn:incoming>SequenceFlow_ToSuccessEnd</bpmn:incoming>
+      <bpmn:messageEventDefinition messageRef="Message_TaskCompletion"/>
+    </bpmn:endEvent>
+
+    <!-- Handle No Products Found -->
+    <bpmn:serviceTask id="ServiceTask_HandleNoProducts" name="Handle No Products Discovery" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_NoProducts</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToNoProductsEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DiscoveryValidation" name="discoveryValidation"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_NoProductsResponse" name="noProductsResponse"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- No Products End Event -->
+    <bpmn:endEvent id="EndEvent_NoProducts" name="No Products Found">
+      <bpmn:incoming>SequenceFlow_ToNoProductsEnd</bpmn:incoming>
+      <bpmn:messageEventDefinition messageRef="Message_NoProductsFound"/>
+    </bpmn:endEvent>
+
+    <!-- Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToValidateTask" sourceRef="StartEvent_A2ATaskRequest" targetRef="ServiceTask_ValidateA2ATask"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToInitializeTask" sourceRef="ServiceTask_ValidateA2ATask" targetRef="ServiceTask_InitializeTaskContext"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToORDDiscovery" sourceRef="ServiceTask_InitializeTaskContext" targetRef="CallActivity_ORDDiscovery"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToValidateDiscovery" sourceRef="CallActivity_ORDDiscovery" targetRef="ServiceTask_ValidateDiscoveryResults"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToDiscoveryGateway" sourceRef="ServiceTask_ValidateDiscoveryResults" targetRef="ExclusiveGateway_DiscoveryResults"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ProductsFound" sourceRef="ExclusiveGateway_DiscoveryResults" targetRef="CallActivity_VectorEmbedding">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${discoveredProducts.size() > 0}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_NoProducts" sourceRef="ExclusiveGateway_DiscoveryResults" targetRef="ServiceTask_HandleNoProducts">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${discoveredProducts.size() == 0}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ToDynamicGeneration" sourceRef="CallActivity_VectorEmbedding" targetRef="CallActivity_DynamicTestGeneration"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToTestExecution" sourceRef="CallActivity_DynamicTestGeneration" targetRef="CallActivity_TestExecution"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToReportGeneration" sourceRef="CallActivity_TestExecution" targetRef="ServiceTask_GenerateTestReport"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToNotifyCompletion" sourceRef="ServiceTask_GenerateTestReport" targetRef="ServiceTask_NotifyTaskCompletion"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToSuccessEnd" sourceRef="ServiceTask_NotifyTaskCompletion" targetRef="EndEvent_TaskSuccess"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToNoProductsEnd" sourceRef="ServiceTask_HandleNoProducts" targetRef="EndEvent_NoProducts"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: ORD Registry Discovery -->
+  <bpmn:process id="ORDDiscoveryProcess" name="ORD Registry Discovery Process" isExecutable="true">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_ORDDiscovery" name="Start ORD Discovery">
+      <bpmn:outgoing>SequenceFlow_ToParseEndpoints</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- Parse ORD Endpoints -->
+    <bpmn:serviceTask id="ServiceTask_ParseORDEndpoints" name="Parse ORD Registry Endpoints" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToParseEndpoints</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToDiscoverWellKnown</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_TaskContext" name="taskContext"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ParsedEndpoints" name="parsedEndpoints"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Discover Well-Known ORD Config -->
+    <bpmn:serviceTask id="ServiceTask_DiscoverWellKnownConfig" name="Discover .well-known ORD Configuration" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToDiscoverWellKnown</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToFetchDocuments</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ParsedEndpoints" name="parsedEndpoints"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ORDConfigurations" name="ordConfigurations"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Fetch ORD Documents -->
+    <bpmn:serviceTask id="ServiceTask_FetchORDDocuments" name="Fetch ORD Documents" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToFetchDocuments</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToExtractMetadata</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ORDConfigurations" name="ordConfigurations"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ORDDocuments" name="ordDocuments"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Extract & Enrich Metadata -->
+    <bpmn:serviceTask id="ServiceTask_ExtractMetadata" name="Extract & Enrich Product Metadata" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToExtractMetadata</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToValidateProducts</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ORDDocuments" name="ordDocuments"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ExtractedProducts" name="extractedProducts"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Validate & Filter Products -->
+    <bpmn:serviceTask id="ServiceTask_ValidateProducts" name="Validate & Filter Products" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToValidateProducts</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToCacheProducts</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ExtractedProducts" name="extractedProducts"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ValidatedProducts" name="validatedProducts"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Cache Products -->
+    <bpmn:serviceTask id="ServiceTask_CacheProducts" name="Cache Discovered Products" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToCacheProducts</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToDiscoveryEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ValidatedProducts" name="validatedProducts"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_CachedProducts" name="cachedProducts"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Discovery End Event -->
+    <bpmn:endEvent id="EndEvent_DiscoveryComplete" name="ORD Discovery Complete">
+      <bpmn:incoming>SequenceFlow_ToDiscoveryEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Discovery Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToParseEndpoints" sourceRef="StartEvent_ORDDiscovery" targetRef="ServiceTask_ParseORDEndpoints"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToDiscoverWellKnown" sourceRef="ServiceTask_ParseORDEndpoints" targetRef="ServiceTask_DiscoverWellKnownConfig"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToFetchDocuments" sourceRef="ServiceTask_DiscoverWellKnownConfig" targetRef="ServiceTask_FetchORDDocuments"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToExtractMetadata" sourceRef="ServiceTask_FetchORDDocuments" targetRef="ServiceTask_ExtractMetadata"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToValidateProducts" sourceRef="ServiceTask_ExtractMetadata" targetRef="ServiceTask_ValidateProducts"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToCacheProducts" sourceRef="ServiceTask_ValidateProducts" targetRef="ServiceTask_CacheProducts"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToDiscoveryEnd" sourceRef="ServiceTask_CacheProducts" targetRef="EndEvent_DiscoveryComplete"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: Vector Embedding Generation -->
+  <bpmn:process id="VectorEmbeddingProcess" name="Vector Embedding Generation Process" isExecutable="true">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_VectorEmbedding" name="Start Vector Embedding">
+      <bpmn:outgoing>SequenceFlow_ToInitializeEmbedding</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- Initialize Embedding Models -->
+    <bpmn:serviceTask id="ServiceTask_InitializeEmbeddingModels" name="Initialize Embedding Models" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToInitializeEmbedding</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToGenerateHierarchical</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DiscoveredProducts" name="discoveredProducts"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_EmbeddingConfig" name="embeddingConfig"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Generate Hierarchical Embeddings -->
+    <bpmn:serviceTask id="ServiceTask_GenerateHierarchicalEmbeddings" name="Generate Hierarchical Embeddings" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToGenerateHierarchical</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToStoreVectors</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DiscoveredProducts" name="discoveredProducts"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_EmbeddingConfig" name="embeddingConfig"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_GeneratedEmbeddings" name="generatedEmbeddings"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Store Vector Embeddings -->
+    <bpmn:serviceTask id="ServiceTask_StoreVectorEmbeddings" name="Store Vector Embeddings in Database" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToStoreVectors</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToEmbeddingEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_GeneratedEmbeddings" name="generatedEmbeddings"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_StoredVectors" name="storedVectors"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Embedding End Event -->
+    <bpmn:endEvent id="EndEvent_EmbeddingComplete" name="Vector Embedding Complete">
+      <bpmn:incoming>SequenceFlow_ToEmbeddingEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Embedding Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToInitializeEmbedding" sourceRef="StartEvent_VectorEmbedding" targetRef="ServiceTask_InitializeEmbeddingModels"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToGenerateHierarchical" sourceRef="ServiceTask_InitializeEmbeddingModels" targetRef="ServiceTask_GenerateHierarchicalEmbeddings"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToStoreVectors" sourceRef="ServiceTask_GenerateHierarchicalEmbeddings" targetRef="ServiceTask_StoreVectorEmbeddings"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToEmbeddingEnd" sourceRef="ServiceTask_StoreVectorEmbeddings" targetRef="EndEvent_EmbeddingComplete"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: Dynamic Test Generation -->
+  <bpmn:process id="DynamicTestGenerationProcess" name="Dynamic Test Generation Process" isExecutable="true">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_TestGeneration" name="Start Test Generation">
+      <bpmn:outgoing>SequenceFlow_ToAnalyzeMetadata</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- Analyze Product Metadata -->
+    <bpmn:serviceTask id="ServiceTask_AnalyzeProductMetadata" name="Analyze Product Metadata Structures" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToAnalyzeMetadata</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToSelectTemplates</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DiscoveredProducts" name="discoveredProducts"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_MetadataAnalysis" name="metadataAnalysis"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Select Question Templates -->
+    <bpmn:serviceTask id="ServiceTask_SelectQuestionTemplates" name="Select & Customize Question Templates" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToSelectTemplates</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToGenerateDublinCore</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_MetadataAnalysis" name="metadataAnalysis"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_SelectedTemplates" name="selectedTemplates"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Generate Dublin Core Tests -->
+    <bpmn:serviceTask id="ServiceTask_GenerateDublinCoreTests" name="Generate Dublin Core Element Tests" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToGenerateDublinCore</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToGenerateTechnical</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DiscoveredProducts" name="discoveredProducts"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_SelectedTemplates" name="selectedTemplates"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_DublinCoreTests" name="dublinCoreTests"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Generate Technical Tests -->
+    <bpmn:serviceTask id="ServiceTask_GenerateTechnicalTests" name="Generate Technical Metadata Tests" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToGenerateTechnical</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToGenerateRelationship</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DiscoveredProducts" name="discoveredProducts"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_SelectedTemplates" name="selectedTemplates"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_TechnicalTests" name="technicalTests"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Generate Relationship Tests -->
+    <bpmn:serviceTask id="ServiceTask_GenerateRelationshipTests" name="Generate API & Relationship Tests" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToGenerateRelationship</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToScoreTests</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DiscoveredProducts" name="discoveredProducts"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_SelectedTemplates" name="selectedTemplates"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_RelationshipTests" name="relationshipTests"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Score & Rank Tests -->
+    <bpmn:serviceTask id="ServiceTask_ScoreAndRankTests" name="Score & Rank Generated Tests" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToScoreTests</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToCreateEmbeddings</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DublinCoreTests" name="dublinCoreTests"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_TechnicalTests" name="technicalTests"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RelationshipTests" name="relationshipTests"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ScoredTests" name="scoredTests"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Create Test Embeddings -->
+    <bpmn:serviceTask id="ServiceTask_CreateTestEmbeddings" name="Create Test Question Embeddings" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToCreateEmbeddings</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToGenerationEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ScoredTests" name="scoredTests"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_VectorEmbeddings" name="vectorEmbeddings"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_EmbeddedTests" name="embeddedTests"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Generation End Event -->
+    <bpmn:endEvent id="EndEvent_GenerationComplete" name="Test Generation Complete">
+      <bpmn:incoming>SequenceFlow_ToGenerationEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Generation Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToAnalyzeMetadata" sourceRef="StartEvent_TestGeneration" targetRef="ServiceTask_AnalyzeProductMetadata"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToSelectTemplates" sourceRef="ServiceTask_AnalyzeProductMetadata" targetRef="ServiceTask_SelectQuestionTemplates"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToGenerateDublinCore" sourceRef="ServiceTask_SelectQuestionTemplates" targetRef="ServiceTask_GenerateDublinCoreTests"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToGenerateTechnical" sourceRef="ServiceTask_GenerateDublinCoreTests" targetRef="ServiceTask_GenerateTechnicalTests"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToGenerateRelationship" sourceRef="ServiceTask_GenerateTechnicalTests" targetRef="ServiceTask_GenerateRelationshipTests"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToScoreTests" sourceRef="ServiceTask_GenerateRelationshipTests" targetRef="ServiceTask_ScoreAndRankTests"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToCreateEmbeddings" sourceRef="ServiceTask_ScoreAndRankTests" targetRef="ServiceTask_CreateTestEmbeddings"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToGenerationEnd" sourceRef="ServiceTask_CreateTestEmbeddings" targetRef="EndEvent_GenerationComplete"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: Test Execution & Validation -->
+  <bpmn:process id="TestExecutionProcess" name="Test Execution & Validation Process" isExecutable="true">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_TestExecution" name="Start Test Execution">
+      <bpmn:outgoing>SequenceFlow_ToSetupExecution</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- Setup Test Execution Environment -->
+    <bpmn:serviceTask id="ServiceTask_SetupTestEnvironment" name="Setup Test Execution Environment" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToSetupExecution</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToExecuteGroundTruth</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_GeneratedTests" name="generatedTests"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ExecutionEnvironment" name="executionEnvironment"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Execute Ground Truth Validation -->
+    <bpmn:serviceTask id="ServiceTask_ExecuteGroundTruthValidation" name="Execute Ground Truth Validation" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToExecuteGroundTruth</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToCalculateMetrics</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_GeneratedTests" name="generatedTests"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ExecutionEnvironment" name="executionEnvironment"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ValidationResults" name="validationResults"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Calculate Accuracy Metrics -->
+    <bpmn:serviceTask id="ServiceTask_CalculateAccuracyMetrics" name="Calculate Accuracy & Coverage Metrics" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToCalculateMetrics</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToAnalyzeErrors</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ValidationResults" name="validationResults"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_AccuracyMetrics" name="accuracyMetrics"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Analyze Error Patterns -->
+    <bpmn:serviceTask id="ServiceTask_AnalyzeErrorPatterns" name="Analyze Error Patterns & Quality" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToAnalyzeErrors</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToGenerateInsights</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ValidationResults" name="validationResults"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ErrorAnalysis" name="errorAnalysis"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Generate Test Insights -->
+    <bpmn:serviceTask id="ServiceTask_GenerateTestInsights" name="Generate Test Quality Insights" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToGenerateInsights</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToExecutionEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_AccuracyMetrics" name="accuracyMetrics"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ErrorAnalysis" name="errorAnalysis"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_TestInsights" name="testInsights"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Execution End Event -->
+    <bpmn:endEvent id="EndEvent_ExecutionComplete" name="Test Execution Complete">
+      <bpmn:incoming>SequenceFlow_ToExecutionEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Execution Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToSetupExecution" sourceRef="StartEvent_TestExecution" targetRef="ServiceTask_SetupTestEnvironment"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToExecuteGroundTruth" sourceRef="ServiceTask_SetupTestEnvironment" targetRef="ServiceTask_ExecuteGroundTruthValidation"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToCalculateMetrics" sourceRef="ServiceTask_ExecuteGroundTruthValidation" targetRef="ServiceTask_CalculateAccuracyMetrics"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToAnalyzeErrors" sourceRef="ServiceTask_CalculateAccuracyMetrics" targetRef="ServiceTask_AnalyzeErrorPatterns"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToGenerateInsights" sourceRef="ServiceTask_AnalyzeErrorPatterns" targetRef="ServiceTask_GenerateTestInsights"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToExecutionEnd" sourceRef="ServiceTask_GenerateTestInsights" targetRef="EndEvent_ExecutionComplete"/>
+
+  </bpmn:process>
+
+  <!-- Message Definitions -->
+  <bpmn:message id="Message_A2ATaskRequest" name="A2A Task Request"/>
+  <bpmn:message id="Message_TaskCompletion" name="A2A Task Completion"/>
+  <bpmn:message id="Message_NoProductsFound" name="No Products Found"/>
+
+  <!-- Error Definitions -->
+  <bpmn:error id="Error_ORDDiscoveryFailure" name="ORD Discovery Failure" errorCode="ORD_DISCOVERY_FAILURE"/>
+  <bpmn:error id="Error_TestGenerationFailure" name="Test Generation Failure" errorCode="TEST_GENERATION_FAILURE"/>
+  <bpmn:error id="Error_VectorEmbeddingFailure" name="Vector Embedding Failure" errorCode="VECTOR_EMBEDDING_FAILURE"/>
+
+  <!-- Data Item Definitions -->
+  <bpmn:itemDefinition id="ItemDefinition_A2ATaskRequest" structureRef="A2ATaskRequest"/>
+  <bpmn:itemDefinition id="ItemDefinition_TaskValidation" structureRef="TaskValidation"/>
+  <bpmn:itemDefinition id="ItemDefinition_TaskContext" structureRef="TaskContext"/>
+  <bpmn:itemDefinition id="ItemDefinition_DiscoveredProducts" structureRef="DiscoveredProducts"/>
+  <bpmn:itemDefinition id="ItemDefinition_DiscoveryValidation" structureRef="DiscoveryValidation"/>
+  <bpmn:itemDefinition id="ItemDefinition_VectorEmbeddings" structureRef="VectorEmbeddings"/>
+  <bpmn:itemDefinition id="ItemDefinition_GeneratedTests" structureRef="GeneratedTests"/>
+  <bpmn:itemDefinition id="ItemDefinition_TestResults" structureRef="TestResults"/>
+  <bpmn:itemDefinition id="ItemDefinition_TestReport" structureRef="TestReport"/>
+  <bpmn:itemDefinition id="ItemDefinition_ParsedEndpoints" structureRef="ParsedEndpoints"/>
+  <bpmn:itemDefinition id="ItemDefinition_ORDConfigurations" structureRef="ORDConfigurations"/>
+  <bpmn:itemDefinition id="ItemDefinition_ORDDocuments" structureRef="ORDDocuments"/>
+  <bpmn:itemDefinition id="ItemDefinition_ExtractedProducts" structureRef="ExtractedProducts"/>
+  <bpmn:itemDefinition id="ItemDefinition_ValidatedProducts" structureRef="ValidatedProducts"/>
+  <bpmn:itemDefinition id="ItemDefinition_MetadataAnalysis" structureRef="MetadataAnalysis"/>
+  <bpmn:itemDefinition id="ItemDefinition_SelectedTemplates" structureRef="SelectedTemplates"/>
+  <bpmn:itemDefinition id="ItemDefinition_DublinCoreTests" structureRef="DublinCoreTests"/>
+  <bpmn:itemDefinition id="ItemDefinition_TechnicalTests" structureRef="TechnicalTests"/>
+  <bpmn:itemDefinition id="ItemDefinition_RelationshipTests" structureRef="RelationshipTests"/>
+  <bpmn:itemDefinition id="ItemDefinition_ScoredTests" structureRef="ScoredTests"/>
+  <bpmn:itemDefinition id="ItemDefinition_ValidationResults" structureRef="ValidationResults"/>
+  <bpmn:itemDefinition id="ItemDefinition_AccuracyMetrics" structureRef="AccuracyMetrics"/>
+
+</bpmn:definitions>

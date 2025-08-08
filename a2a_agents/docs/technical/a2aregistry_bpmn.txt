@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="A2ARegistryProcesses"
+                  targetNamespace="http://a2a.registry.processes">
+
+  <!-- Main Process: Agent Registration -->
+  <bpmn:process id="AgentRegistrationProcess" name="A2A Agent Registration Process" isExecutable="true">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_AgentRegistration" name="Agent Registration Request">
+      <bpmn:outgoing>SequenceFlow_ToValidateAgentCard</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_AgentRegistrationRequest"/>
+    </bpmn:startEvent>
+
+    <!-- Validate Agent Card -->
+    <bpmn:serviceTask id="ServiceTask_ValidateAgentCard" name="Validate A2A Agent Card" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToValidateAgentCard</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToTestConnectivity</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_AgentCard" name="agentCard"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ValidationResult" name="validationResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Test Agent Connectivity -->
+    <bpmn:serviceTask id="ServiceTask_TestConnectivity" name="Test Agent Connectivity" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToTestConnectivity</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToConnectivityGateway</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_AgentCard" name="agentCard"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ConnectivityResult" name="connectivityResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Connectivity Decision Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_ConnectivityCheck" name="Agent Reachable?">
+      <bpmn:incoming>SequenceFlow_ToConnectivityGateway</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ConnectivitySuccess</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_ConnectivityFailed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Generate Agent ID -->
+    <bpmn:serviceTask id="ServiceTask_GenerateAgentId" name="Generate Agent ID" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ConnectivitySuccess</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToStoreRegistration</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_AgentCard" name="agentCard"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_AgentId" name="agentId"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Store Agent Registration -->
+    <bpmn:serviceTask id="ServiceTask_StoreRegistration" name="Store Agent Registration" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToStoreRegistration</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToIndexCapabilities</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_AgentCard" name="agentCard"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_AgentId" name="agentId"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_RegistrationRecord" name="registrationRecord"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Index Agent Capabilities -->
+    <bpmn:serviceTask id="ServiceTask_IndexCapabilities" name="Index Agent Capabilities" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToIndexCapabilities</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToScheduleHealthCheck</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_AgentCard" name="agentCard"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_AgentId" name="agentId"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_IndexResult" name="indexResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Schedule Health Monitoring -->
+    <bpmn:serviceTask id="ServiceTask_ScheduleHealthCheck" name="Schedule Health Monitoring" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToScheduleHealthCheck</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToRegistrationSuccess</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_AgentId" name="agentId"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_HealthSchedule" name="healthSchedule"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Registration Success End -->
+    <bpmn:endEvent id="EndEvent_RegistrationSuccess" name="Agent Registered Successfully">
+      <bpmn:incoming>SequenceFlow_ToRegistrationSuccess</bpmn:incoming>
+      <bpmn:messageEventDefinition messageRef="Message_RegistrationSuccess"/>
+    </bpmn:endEvent>
+
+    <!-- Handle Connectivity Failure -->
+    <bpmn:serviceTask id="ServiceTask_HandleConnectivityFailure" name="Handle Connectivity Failure" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ConnectivityFailed</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToRegistrationFailure</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Registration Failure End -->
+    <bpmn:endEvent id="EndEvent_RegistrationFailure" name="Registration Failed">
+      <bpmn:incoming>SequenceFlow_ToRegistrationFailure</bpmn:incoming>
+      <bpmn:errorEventDefinition errorRef="Error_RegistrationFailure"/>
+    </bpmn:endEvent>
+
+    <!-- Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToValidateAgentCard" sourceRef="StartEvent_AgentRegistration" targetRef="ServiceTask_ValidateAgentCard"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToTestConnectivity" sourceRef="ServiceTask_ValidateAgentCard" targetRef="ServiceTask_TestConnectivity"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToConnectivityGateway" sourceRef="ServiceTask_TestConnectivity" targetRef="ExclusiveGateway_ConnectivityCheck"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ConnectivitySuccess" sourceRef="ExclusiveGateway_ConnectivityCheck" targetRef="ServiceTask_GenerateAgentId">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${connectivityResult.reachable == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ConnectivityFailed" sourceRef="ExclusiveGateway_ConnectivityCheck" targetRef="ServiceTask_HandleConnectivityFailure">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${connectivityResult.reachable == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ToStoreRegistration" sourceRef="ServiceTask_GenerateAgentId" targetRef="ServiceTask_StoreRegistration"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToIndexCapabilities" sourceRef="ServiceTask_StoreRegistration" targetRef="ServiceTask_IndexCapabilities"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToScheduleHealthCheck" sourceRef="ServiceTask_IndexCapabilities" targetRef="ServiceTask_ScheduleHealthCheck"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToRegistrationSuccess" sourceRef="ServiceTask_ScheduleHealthCheck" targetRef="EndEvent_RegistrationSuccess"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToRegistrationFailure" sourceRef="ServiceTask_HandleConnectivityFailure" targetRef="EndEvent_RegistrationFailure"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: Agent Discovery -->
+  <bpmn:process id="AgentDiscoveryProcess" name="Agent Discovery Process" isExecutable="true">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_DiscoveryRequest" name="Agent Discovery Request">
+      <bpmn:outgoing>SequenceFlow_ToParseDiscoveryQuery</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_DiscoveryRequest"/>
+    </bpmn:startEvent>
+
+    <!-- Parse Discovery Query -->
+    <bpmn:serviceTask id="ServiceTask_ParseDiscoveryQuery" name="Parse Discovery Query" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToParseDiscoveryQuery</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToSearchCapabilities</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DiscoveryRequest" name="discoveryRequest"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ParsedQuery" name="parsedQuery"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Search Agent Capabilities -->
+    <bpmn:serviceTask id="ServiceTask_SearchCapabilities" name="Search Agent Capabilities" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToSearchCapabilities</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToFilterHealthyAgents</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ParsedQuery" name="parsedQuery"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_CapabilityMatches" name="capabilityMatches"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Filter Healthy Agents -->
+    <bpmn:serviceTask id="ServiceTask_FilterHealthyAgents" name="Filter by Health Status" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToFilterHealthyAgents</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToRankAgents</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_CapabilityMatches" name="capabilityMatches"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_HealthyAgents" name="healthyAgents"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Rank and Score Agents -->
+    <bpmn:serviceTask id="ServiceTask_RankAgents" name="Rank and Score Agents" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToRankAgents</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToLogDiscovery</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_HealthyAgents" name="healthyAgents"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_RankedAgents" name="rankedAgents"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Log Discovery Request -->
+    <bpmn:serviceTask id="ServiceTask_LogDiscovery" name="Log Discovery Request" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToLogDiscovery</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToDiscoveryComplete</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RankedAgents" name="rankedAgents"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_DiscoveryResponse" name="discoveryResponse"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Discovery Complete End -->
+    <bpmn:endEvent id="EndEvent_DiscoveryComplete" name="Discovery Complete">
+      <bpmn:incoming>SequenceFlow_ToDiscoveryComplete</bpmn:incoming>
+      <bpmn:messageEventDefinition messageRef="Message_DiscoveryResponse"/>
+    </bpmn:endEvent>
+
+    <!-- Discovery Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToParseDiscoveryQuery" sourceRef="StartEvent_DiscoveryRequest" targetRef="ServiceTask_ParseDiscoveryQuery"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToSearchCapabilities" sourceRef="ServiceTask_ParseDiscoveryQuery" targetRef="ServiceTask_SearchCapabilities"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToFilterHealthyAgents" sourceRef="ServiceTask_SearchCapabilities" targetRef="ServiceTask_FilterHealthyAgents"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToRankAgents" sourceRef="ServiceTask_FilterHealthyAgents" targetRef="ServiceTask_RankAgents"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToLogDiscovery" sourceRef="ServiceTask_RankAgents" targetRef="ServiceTask_LogDiscovery"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToDiscoveryComplete" sourceRef="ServiceTask_LogDiscovery" targetRef="EndEvent_DiscoveryComplete"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: Health Monitoring -->
+  <bpmn:process id="HealthMonitoringProcess" name="Agent Health Monitoring Process" isExecutable="true">
+    
+    <!-- Start Event (Timer-based) -->
+    <bpmn:startEvent id="StartEvent_HealthCheckTimer" name="Health Check Timer">
+      <bpmn:outgoing>SequenceFlow_ToGetActiveAgents</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">R/PT30S</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+
+    <!-- Get Active Agents -->
+    <bpmn:serviceTask id="ServiceTask_GetActiveAgents" name="Get Active Agents List" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToGetActiveAgents</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToParallelHealthCheck</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ActiveAgentsList" name="activeAgentsList"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Parallel Health Check Gateway -->
+    <bpmn:parallelGateway id="ParallelGateway_HealthCheck" name="Parallel Health Checks">
+      <bpmn:incoming>SequenceFlow_ToParallelHealthCheck</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToIndividualHealthCheck</bpmn:outgoing>
+    </bpmn:parallelGateway>
+
+    <!-- Individual Agent Health Check -->
+    <bpmn:serviceTask id="ServiceTask_IndividualHealthCheck" name="Check Individual Agent Health" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToIndividualHealthCheck</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToParallelConvergence</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_AgentInfo" name="agentInfo"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_HealthCheckResult" name="healthCheckResult"/>
+      </bpmn:ioSpecification>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false">
+        <bpmn:loopDataInputRef>activeAgentsList</bpmn:loopDataInputRef>
+        <bpmn:inputDataItem name="agentInfo"/>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:serviceTask>
+
+    <!-- Parallel Convergence Gateway -->
+    <bpmn:parallelGateway id="ParallelGateway_HealthConvergence" name="Health Check Convergence">
+      <bpmn:incoming>SequenceFlow_ToParallelConvergence</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToUpdateHealthStatus</bpmn:outgoing>
+    </bpmn:parallelGateway>
+
+    <!-- Update Health Status -->
+    <bpmn:serviceTask id="ServiceTask_UpdateHealthStatus" name="Update Agent Health Status" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToUpdateHealthStatus</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToGenerateAlerts</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_HealthCheckResults" name="healthCheckResults"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_HealthUpdateResult" name="healthUpdateResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Generate Health Alerts -->
+    <bpmn:serviceTask id="ServiceTask_GenerateAlerts" name="Generate Health Alerts" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToGenerateAlerts</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToHealthComplete</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_HealthUpdateResult" name="healthUpdateResult"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_AlertsGenerated" name="alertsGenerated"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Health Check Complete End -->
+    <bpmn:endEvent id="EndEvent_HealthComplete" name="Health Check Complete">
+      <bpmn:incoming>SequenceFlow_ToHealthComplete</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Health Monitoring Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToGetActiveAgents" sourceRef="StartEvent_HealthCheckTimer" targetRef="ServiceTask_GetActiveAgents"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToParallelHealthCheck" sourceRef="ServiceTask_GetActiveAgents" targetRef="ParallelGateway_HealthCheck"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToIndividualHealthCheck" sourceRef="ParallelGateway_HealthCheck" targetRef="ServiceTask_IndividualHealthCheck"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToParallelConvergence" sourceRef="ServiceTask_IndividualHealthCheck" targetRef="ParallelGateway_HealthConvergence"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToUpdateHealthStatus" sourceRef="ParallelGateway_HealthConvergence" targetRef="ServiceTask_UpdateHealthStatus"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToGenerateAlerts" sourceRef="ServiceTask_UpdateHealthStatus" targetRef="ServiceTask_GenerateAlerts"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToHealthComplete" sourceRef="ServiceTask_GenerateAlerts" targetRef="EndEvent_HealthComplete"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: Workflow Orchestration -->
+  <bpmn:process id="WorkflowOrchestrationProcess" name="Workflow Orchestration Process" isExecutable="true">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_WorkflowRequest" name="Workflow Execution Request">
+      <bpmn:outgoing>SequenceFlow_ToParseWorkflow</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_WorkflowRequest"/>
+    </bpmn:startEvent>
+
+    <!-- Parse Workflow Requirements -->
+    <bpmn:serviceTask id="ServiceTask_ParseWorkflow" name="Parse Workflow Requirements" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToParseWorkflow</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToCreateExecutionPlan</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_WorkflowRequest" name="workflowRequest"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_WorkflowRequirements" name="workflowRequirements"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Create Execution Plan -->
+    <bpmn:serviceTask id="ServiceTask_CreateExecutionPlan" name="Create Workflow Execution Plan" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToCreateExecutionPlan</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToValidateAgentAvailability</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_WorkflowRequirements" name="workflowRequirements"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ExecutionPlan" name="executionPlan"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Validate Agent Availability -->
+    <bpmn:serviceTask id="ServiceTask_ValidateAgentAvailability" name="Validate Agent Availability" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToValidateAgentAvailability</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToAvailabilityGateway</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ExecutionPlan" name="executionPlan"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_AvailabilityCheck" name="availabilityCheck"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Availability Decision Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_AgentAvailability" name="All Agents Available?">
+      <bpmn:incoming>SequenceFlow_ToAvailabilityGateway</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_AgentsAvailable</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_AgentsUnavailable</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Execute Workflow Stages -->
+    <bpmn:serviceTask id="ServiceTask_ExecuteWorkflowStages" name="Execute Workflow Stages" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_AgentsAvailable</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToWorkflowComplete</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ExecutionPlan" name="executionPlan"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_WorkflowResult" name="workflowResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Workflow Complete End -->
+    <bpmn:endEvent id="EndEvent_WorkflowComplete" name="Workflow Execution Complete">
+      <bpmn:incoming>SequenceFlow_ToWorkflowComplete</bpmn:incoming>
+      <bpmn:messageEventDefinition messageRef="Message_WorkflowComplete"/>
+    </bpmn:endEvent>
+
+    <!-- Handle Agent Unavailability -->
+    <bpmn:serviceTask id="ServiceTask_HandleUnavailability" name="Handle Agent Unavailability" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_AgentsUnavailable</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToWorkflowFailure</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Workflow Failure End -->
+    <bpmn:endEvent id="EndEvent_WorkflowFailure" name="Workflow Execution Failed">
+      <bpmn:incoming>SequenceFlow_ToWorkflowFailure</bpmn:incoming>
+      <bpmn:errorEventDefinition errorRef="Error_WorkflowExecutionFailure"/>
+    </bpmn:endEvent>
+
+    <!-- Workflow Orchestration Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToParseWorkflow" sourceRef="StartEvent_WorkflowRequest" targetRef="ServiceTask_ParseWorkflow"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToCreateExecutionPlan" sourceRef="ServiceTask_ParseWorkflow" targetRef="ServiceTask_CreateExecutionPlan"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToValidateAgentAvailability" sourceRef="ServiceTask_CreateExecutionPlan" targetRef="ServiceTask_ValidateAgentAvailability"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToAvailabilityGateway" sourceRef="ServiceTask_ValidateAgentAvailability" targetRef="ExclusiveGateway_AgentAvailability"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_AgentsAvailable" sourceRef="ExclusiveGateway_AgentAvailability" targetRef="ServiceTask_ExecuteWorkflowStages">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${availabilityCheck.allAvailable == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_AgentsUnavailable" sourceRef="ExclusiveGateway_AgentAvailability" targetRef="ServiceTask_HandleUnavailability">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${availabilityCheck.allAvailable == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ToWorkflowComplete" sourceRef="ServiceTask_ExecuteWorkflowStages" targetRef="EndEvent_WorkflowComplete"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToWorkflowFailure" sourceRef="ServiceTask_HandleUnavailability" targetRef="EndEvent_WorkflowFailure"/>
+
+  </bpmn:process>
+
+  <!-- Message Definitions -->
+  <bpmn:message id="Message_AgentRegistrationRequest" name="Agent Registration Request"/>
+  <bpmn:message id="Message_RegistrationSuccess" name="Registration Success"/>
+  <bpmn:message id="Message_DiscoveryRequest" name="Agent Discovery Request"/>
+  <bpmn:message id="Message_DiscoveryResponse" name="Discovery Response"/>
+  <bpmn:message id="Message_WorkflowRequest" name="Workflow Execution Request"/>
+  <bpmn:message id="Message_WorkflowComplete" name="Workflow Complete"/>
+
+  <!-- Error Definitions -->
+  <bpmn:error id="Error_RegistrationFailure" name="Registration Failure" errorCode="REGISTRATION_FAILURE"/>
+  <bpmn:error id="Error_WorkflowExecutionFailure" name="Workflow Execution Failure" errorCode="WORKFLOW_EXECUTION_FAILURE"/>
+
+  <!-- Data Item Definitions -->
+  <bpmn:itemDefinition id="ItemDefinition_AgentCard" structureRef="AgentCard"/>
+  <bpmn:itemDefinition id="ItemDefinition_ValidationResult" structureRef="ValidationResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_ConnectivityResult" structureRef="ConnectivityResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_AgentId" structureRef="AgentId"/>
+  <bpmn:itemDefinition id="ItemDefinition_RegistrationRecord" structureRef="RegistrationRecord"/>
+  <bpmn:itemDefinition id="ItemDefinition_DiscoveryRequest" structureRef="DiscoveryRequest"/>
+  <bpmn:itemDefinition id="ItemDefinition_ParsedQuery" structureRef="ParsedQuery"/>
+  <bpmn:itemDefinition id="ItemDefinition_CapabilityMatches" structureRef="CapabilityMatches"/>
+  <bpmn:itemDefinition id="ItemDefinition_HealthyAgents" structureRef="HealthyAgents"/>
+  <bpmn:itemDefinition id="ItemDefinition_RankedAgents" structureRef="RankedAgents"/>
+  <bpmn:itemDefinition id="ItemDefinition_ActiveAgentsList" structureRef="ActiveAgentsList"/>
+  <bpmn:itemDefinition id="ItemDefinition_HealthCheckResult" structureRef="HealthCheckResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_WorkflowRequest" structureRef="WorkflowRequest"/>
+  <bpmn:itemDefinition id="ItemDefinition_ExecutionPlan" structureRef="ExecutionPlan"/>
+  <bpmn:itemDefinition id="ItemDefinition_WorkflowResult" structureRef="WorkflowResult"/>
+
+</bpmn:definitions>

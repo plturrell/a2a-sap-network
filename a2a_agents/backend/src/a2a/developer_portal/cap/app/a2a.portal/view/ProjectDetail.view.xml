@@ -1,0 +1,200 @@
+<mvc:View
+    controllerName="a2a.portal.controller.ProjectDetail"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:l="sap.ui.layout"
+    xmlns:core="sap.ui.core">
+    
+    <f:DynamicPage id="projectDetailPage" 
+                   headerExpanded="true" 
+                   showFooter="false">
+        
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{/name}" level="H2"/>
+                </f:heading>
+                <f:breadcrumbs>
+                    <Breadcrumbs>
+                        <Link text="{i18n>navProjects}" press="onNavBack"/>
+                    </Breadcrumbs>
+                </f:breadcrumbs>
+                <f:actions>
+                    <Button text="{i18n>edit}" 
+                           type="Emphasized" 
+                           icon="sap-icon://edit" 
+                           press="onEditProject"/>
+                    <Button text="{i18n>deploy}" 
+                           icon="sap-icon://upload-to-cloud" 
+                           press="onDeployProject"/>
+                    <Button icon="sap-icon://action" 
+                           tooltip="{i18n>moreActions}"
+                           press="onMoreActions"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <l:VerticalLayout>
+                    <ObjectAttribute title="{i18n>projectId}" text="{/project_id}"/>
+                    <ObjectAttribute title="{i18n>created}" text="{path: '/created', formatter: '.formatDate'}"/>
+                    <ObjectAttribute title="{i18n>lastModified}" text="{path: '/last_modified', formatter: '.formatDate'}"/>
+                    <ObjectStatus title="{i18n>status}" 
+                                text="{/status}" 
+                                state="{path: '/status', formatter: '.formatStatusState'}"/>
+                </l:VerticalLayout>
+            </f:DynamicPageHeader>
+        </f:header>
+
+        <f:content>
+            <IconTabBar id="projectTabBar" 
+                       select="onTabSelect"
+                       class="sapUiNoContentPadding">
+                
+                <items>
+                    <!-- Overview Tab -->
+                    <IconTabFilter text="{i18n>overview}" 
+                                  icon="sap-icon://hint"
+                                  key="overview">
+                        <Panel headerText="{i18n>projectDescription}" 
+                               class="sapUiMediumMargin">
+                            <Text text="{/description}"/>
+                        </Panel>
+                        
+                        <Panel headerText="{i18n>projectStatistics}" 
+                               class="sapUiMediumMargin">
+                            <l:Grid defaultSpan="L6 M12 S12">
+                                <VBox class="sapUiMediumMargin">
+                                    <Title text="{= ${/agents}.length }" level="H1"/>
+                                    <Text text="{i18n>totalAgents}"/>
+                                </VBox>
+                                <VBox class="sapUiMediumMargin">
+                                    <Title text="{= ${/workflows}.length }" level="H1"/>
+                                    <Text text="{i18n>totalWorkflows}"/>
+                                </VBox>
+                            </l:Grid>
+                        </Panel>
+                    </IconTabFilter>
+                    
+                    <!-- Agents Tab -->
+                    <IconTabFilter text="{i18n>agents}" 
+                                  icon="sap-icon://collaborate"
+                                  key="agents">
+                        <Table items="{/agents}"
+                               class="sapUiMediumMargin">
+                            <headerToolbar>
+                                <Toolbar>
+                                    <Title text="{i18n>agentsList}"/>
+                                    <ToolbarSpacer/>
+                                    <Button text="{i18n>createAgent}" 
+                                           icon="sap-icon://add" 
+                                           press="onCreateAgent"/>
+                                </Toolbar>
+                            </headerToolbar>
+                            <columns>
+                                <Column><Text text="{i18n>agentName}"/></Column>
+                                <Column><Text text="{i18n>agentType}"/></Column>
+                                <Column><Text text="{i18n>status}"/></Column>
+                                <Column><Text text="{i18n>actions}"/></Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{name}"/>
+                                        <Text text="{type}"/>
+                                        <ObjectStatus text="{status}" 
+                                                    state="{path: 'status', formatter: '.formatStatusState'}"/>
+                                        <HBox>
+                                            <Button icon="sap-icon://edit" 
+                                                   type="Transparent"
+                                                   press="onEditAgent"/>
+                                            <Button icon="sap-icon://delete" 
+                                                   type="Transparent"
+                                                   press="onDeleteAgent"/>
+                                        </HBox>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </IconTabFilter>
+                    
+                    <!-- Workflows Tab -->
+                    <IconTabFilter text="{i18n>workflows}" 
+                                  icon="sap-icon://process"
+                                  key="workflows">
+                        <Table items="{/workflows}"
+                               class="sapUiMediumMargin">
+                            <headerToolbar>
+                                <Toolbar>
+                                    <Title text="{i18n>workflowsList}"/>
+                                    <ToolbarSpacer/>
+                                    <Button text="{i18n>createWorkflow}" 
+                                           icon="sap-icon://add" 
+                                           press="onCreateWorkflow"/>
+                                </Toolbar>
+                            </headerToolbar>
+                            <columns>
+                                <Column><Text text="{i18n>workflowName}"/></Column>
+                                <Column><Text text="{i18n>workflowType}"/></Column>
+                                <Column><Text text="{i18n>status}"/></Column>
+                                <Column><Text text="{i18n>actions}"/></Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{name}"/>
+                                        <Text text="{type}"/>
+                                        <ObjectStatus text="{status}" 
+                                                    state="{path: 'status', formatter: '.formatStatusState'}"/>
+                                        <HBox>
+                                            <Button icon="sap-icon://edit" 
+                                                   type="Transparent"
+                                                   press="onEditWorkflow"/>
+                                            <Button icon="sap-icon://play" 
+                                                   type="Transparent"
+                                                   press="onRunWorkflow"/>
+                                        </HBox>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </IconTabFilter>
+                    
+                    <!-- Settings Tab -->
+                    <IconTabFilter text="{i18n>settings}" 
+                                  icon="sap-icon://action-settings"
+                                  key="settings">
+                        <l:VerticalLayout class="sapUiMediumMargin">
+                            <Panel headerText="{i18n>generalSettings}">
+                                <f:SimpleForm editable="true">
+                                    <Label text="{i18n>projectName}"/>
+                                    <Input value="{/name}"/>
+                                    <Label text="{i18n>description}"/>
+                                    <TextArea value="{/description}" rows="4"/>
+                                </f:SimpleForm>
+                            </Panel>
+                            
+                            <Panel headerText="{i18n>deploymentSettings}" 
+                                   class="sapUiMediumMarginTop">
+                                <f:SimpleForm editable="true">
+                                    <Label text="{i18n>targetEnvironment}"/>
+                                    <Select selectedKey="{/deployment/environment}">
+                                        <items>
+                                            <core:Item key="dev" text="{i18n>development}"/>
+                                            <core:Item key="staging" text="{i18n>staging}"/>
+                                            <core:Item key="prod" text="{i18n>production}"/>
+                                        </items>
+                                    </Select>
+                                    <Label text="{i18n>autoDeployEnabled}"/>
+                                    <Switch state="{/deployment/autoDeploy}"/>
+                                </f:SimpleForm>
+                            </Panel>
+                        </l:VerticalLayout>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

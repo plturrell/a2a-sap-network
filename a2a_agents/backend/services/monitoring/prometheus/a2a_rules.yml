@@ -1,0 +1,66 @@
+groups:
+  - name: a2a_agent_health
+    interval: 30s
+    rules:
+      - alert: A2AAgentDown
+        expr: up{job=~"agent.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          network: a2a
+        annotations:
+          summary: "A2A Agent {{ $labels.job }} is down"
+          description: "A2A Agent {{ $labels.job }} on instance {{ $labels.instance }} has been down for more than 2 minutes."
+      
+      - alert: A2AHighErrorRate
+        expr: rate(a2a_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          network: a2a
+        annotations:
+          summary: "High error rate in {{ $labels.agent_id }}"
+          description: "Agent {{ $labels.agent_id }} is experiencing {{ $value }} errors per second"
+      
+      - alert: A2AProcessingLatency
+        expr: histogram_quantile(0.95, rate(a2a_processing_duration_seconds_bucket[5m])) > 5
+        for: 10m
+        labels:
+          severity: warning
+          network: a2a
+        annotations:
+          summary: "High processing latency in {{ $labels.agent_id }}"
+          description: "95th percentile latency is {{ $value }}s for agent {{ $labels.agent_id }}"
+
+  - name: a2a_pipeline_health
+    interval: 1m
+    rules:
+      - alert: A2APipelineStalled
+        expr: rate(a2a_messages_processed_total[5m]) == 0
+        for: 10m
+        labels:
+          severity: warning
+          network: a2a
+        annotations:
+          summary: "A2A pipeline appears stalled"
+          description: "No messages processed by {{ $labels.agent_id }} in the last 10 minutes"
+      
+      - alert: A2ABackpressure
+        expr: a2a_active_tasks > 100
+        for: 5m
+        labels:
+          severity: warning
+          network: a2a
+        annotations:
+          summary: "High backpressure in {{ $labels.agent_id }}"
+          description: "Agent {{ $labels.agent_id }} has {{ $value }} active tasks"
+      
+      - alert: A2AMemoryUsage
+        expr: container_memory_usage_bytes{pod=~"agent.*"} / container_spec_memory_limit_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          network: a2a
+        annotations:
+          summary: "High memory usage in {{ $labels.pod }}"
+          description: "Pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its memory limit"

@@ -1,0 +1,206 @@
+<mvc:View
+    controllerName="a2a.portal.controller.CodeEditor"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:l="sap.ui.layout"
+    xmlns:core="sap.ui.core">
+    
+    <f:DynamicPage id="codeEditorPage" 
+                   headerExpanded="false" 
+                   showFooter="false">
+        
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>codeEditor}" level="H2"/>
+                </f:heading>
+                <f:breadcrumbs>
+                    <Breadcrumbs>
+                        <Link text="{i18n>navProjects}" press="onNavToProjects"/>
+                        <Link text="{/projectName}" press="onNavToProject"/>
+                    </Breadcrumbs>
+                </f:breadcrumbs>
+                <f:actions>
+                    <Button text="{i18n>save}" 
+                           type="Emphasized" 
+                           icon="sap-icon://save" 
+                           press="onSaveFile"
+                           enabled="{/isDirty}"/>
+                    <Button text="{i18n>run}" 
+                           icon="sap-icon://play" 
+                           press="onRunFile"/>
+                    <Button icon="sap-icon://search" 
+                           tooltip="{i18n>findReplace}"
+                           press="onFindReplace"/>
+                    <Button icon="sap-icon://action-settings" 
+                           tooltip="{i18n>editorSettings}"
+                           press="onEditorSettings"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <f:content>
+            <l:Splitter height="100%">
+                <!-- Left Panel: File Explorer -->
+                <Panel headerText="{i18n>fileExplorer}" width="250px">
+                    <Toolbar>
+                        <Button icon="sap-icon://add-document" 
+                               tooltip="{i18n>newFile}"
+                               press="onNewFile"/>
+                        <Button icon="sap-icon://create-folder" 
+                               tooltip="{i18n>newFolder}"
+                               press="onNewFolder"/>
+                        <Button icon="sap-icon://refresh" 
+                               tooltip="{i18n>refresh}"
+                               press="onRefreshFiles"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://collapse-all" 
+                               tooltip="{i18n>collapseAll}"
+                               press="onCollapseAll"/>
+                    </Toolbar>
+                    
+                    <Tree id="fileTree"
+                          items="{/fileTree}"
+                          mode="SingleSelectMaster"
+                          selectionChange="onFileSelect"
+                          class="a2aFileTree">
+                        <StandardTreeItem title="{name}" 
+                                        icon="{icon}"
+                                        type="Active"/>
+                    </Tree>
+                </Panel>
+                
+                <!-- Center: Editor with Tabs -->
+                <VBox width="100%">
+                    <!-- Tab Bar -->
+                    <ScrollContainer horizontal="true" 
+                                   vertical="false" 
+                                   height="3rem"
+                                   class="sapUiNoContentPadding">
+                        <HBox>
+                            <HBox items="{/openTabs}">
+                                <Button text="{name}" 
+                                       type="{= ${/activeTab} === ${id} ? 'Emphasized' : 'Transparent' }"
+                                       press="onTabSelect"
+                                       class="sapUiTinyMarginEnd">
+                                    <customData>
+                                        <core:CustomData key="tabId" value="{id}"/>
+                                    </customData>
+                                    <layoutData>
+                                        <FlexItemData growFactor="0"/>
+                                    </layoutData>
+                                </Button>
+                                <Button icon="sap-icon://decline" 
+                                       type="Transparent"
+                                       press="onCloseTab"
+                                       tooltip="{i18n>closeTab}"
+                                       visible="{modified}">
+                                    <customData>
+                                        <core:CustomData key="tabId" value="{id}"/>
+                                    </customData>
+                                    <layoutData>
+                                        <FlexItemData growFactor="0"/>
+                                    </layoutData>
+                                </Button>
+                            </HBox>
+                        </HBox>
+                    </ScrollContainer>
+                    
+                    <!-- Editor Area -->
+                    <VBox height="100%" class="sapUiNoContentPadding">
+                        <Toolbar>
+                            <Text text="{/currentFile/path}"/>
+                            <ToolbarSpacer/>
+                            <Text text="{i18n>line}: {/cursorPosition/line}, {i18n>column}: {/cursorPosition/column}"/>
+                            <ToolbarSeparator/>
+                            <Select selectedKey="{/editorLanguage}" 
+                                   width="150px"
+                                   change="onLanguageChange">
+                                <items>
+                                    <core:Item key="python" text="Python"/>
+                                    <core:Item key="javascript" text="JavaScript"/>
+                                    <core:Item key="json" text="JSON"/>
+                                    <core:Item key="yaml" text="YAML"/>
+                                    <core:Item key="xml" text="XML"/>
+                                    <core:Item key="markdown" text="Markdown"/>
+                                </items>
+                            </Select>
+                        </Toolbar>
+                        
+                        <!-- Monaco Editor Container -->
+                        <FlexBox id="editorContainer" 
+                                height="100%" 
+                                width="100%"
+                                class="a2aCodeEditor"
+                                alignItems="Stretch">
+                            <TextArea value="{/editorContent}" 
+                                    rows="30"
+                                    width="100%"
+                                    liveChange="onEditorChange"
+                                    placeholder="{i18n>monacoEditorPlaceholder}"/>
+                        </FlexBox>
+                    </VBox>
+                </VBox>
+                
+                <!-- Right Panel: Outline/Problems -->
+                <Panel width="250px">
+                    <IconTabBar>
+                        <items>
+                            <!-- Outline Tab -->
+                            <IconTabFilter text="{i18n>outline}" 
+                                          icon="sap-icon://tree"
+                                          key="outline">
+                                <Tree items="{/outline}"
+                                     class="sapUiSmallMargin">
+                                    <StandardTreeItem title="{name}" 
+                                                    icon="{icon}"
+                                                    type="Active"
+                                                    press="onOutlineSelect"/>
+                                </Tree>
+                            </IconTabFilter>
+                            
+                            <!-- Problems Tab -->
+                            <IconTabFilter text="{i18n>problems}" 
+                                          icon="sap-icon://alert"
+                                          key="problems"
+                                          count="{/problemCount}">
+                                <List items="{/problems}"
+                                     class="sapUiSmallMargin">
+                                    <StandardListItem title="{message}" 
+                                                    description="{path} [{line}:{column}]"
+                                                    icon="{= ${severity} === 'error' ? 'sap-icon://error' : 'sap-icon://warning' }"
+                                                    iconInset="false"
+                                                    type="Active"
+                                                    press="onProblemSelect"/>
+                                </List>
+                            </IconTabFilter>
+                            
+                            <!-- Git Tab -->
+                            <IconTabFilter text="{i18n>git}" 
+                                          icon="sap-icon://source-code"
+                                          key="git">
+                                <VBox class="sapUiSmallMargin">
+                                    <Label text="{i18n>branch}:"/>
+                                    <Text text="{/gitBranch}" class="sapUiSmallMarginBottom"/>
+                                    
+                                    <Label text="{i18n>changes}:"/>
+                                    <List items="{/gitChanges}">
+                                        <StandardListItem title="{file}" 
+                                                        description="{status}"
+                                                        icon="{= ${status} === 'modified' ? 'sap-icon://edit' : 'sap-icon://add' }"/>
+                                    </List>
+                                    
+                                    <Button text="{i18n>commit}" 
+                                           icon="sap-icon://accept"
+                                           press="onCommit"
+                                           class="sapUiMediumMarginTop"/>
+                                </VBox>
+                            </IconTabFilter>
+                        </items>
+                    </IconTabBar>
+                </Panel>
+            </l:Splitter>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

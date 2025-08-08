@@ -1,0 +1,57 @@
+# Production Environment Configuration
+environment: "production"
+debug: false
+log_level: "INFO"
+
+# Network settings
+host: "0.0.0.0"
+base_port: 8000
+
+# Agent settings
+agent_timeout: 60
+max_retries: 5
+circuit_breaker_threshold: 3
+
+# Database (use environment variables in production)
+database_url: null  # Set via A2A_DATABASE_URL env var
+redis_url: null     # Set via A2A_REDIS_URL env var
+
+# Blockchain
+blockchain_network: "mainnet"
+contract_address: null  # Set via A2A_CONTRACT_ADDRESS env var
+
+# Security (production - use environment variables)
+jwt_secret: null  # Set via A2A_JWT_SECRET env var
+cors_origins:
+  - "https://a2a-network.com"
+  - "https://portal.a2a-network.com"
+rate_limit_requests: 100
+rate_limit_window: 60
+
+# Telemetry
+telemetry_enabled: true
+telemetry_endpoint: null  # Set via A2A_TELEMETRY_ENDPOINT env var
+metrics_port: 9090
+
+# Agent ports (production)
+agent0_port: 8001
+agent1_port: 8002
+agent2_port: 8003
+agent3_port: 8004
+agent4_port: 8009
+agent5_port: 8010
+data_manager_port: 8005
+catalog_manager_port: 8006
+agent_manager_port: 8007
+
+# Production-specific features
+hot_reload: false
+mock_external_services: false
+skip_blockchain_validation: false
+
+# Security hardening
+enable_https: true
+ssl_cert_path: "/etc/ssl/certs/a2a-network.pem"
+ssl_key_path: "/etc/ssl/private/a2a-network.key"
+enable_security_headers: true
+enable_request_logging: true

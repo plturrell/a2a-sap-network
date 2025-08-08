@@ -1,0 +1,57 @@
+# SAP BTP CI/CD Pipeline Configuration
+# Automated deployment pipeline for A2A Developer Portal
+
+general:
+  buildTool: "mta"
+  productiveBranch: "main"
+  collectTelemetryData: false
+
+stages:
+  Build:
+    npmExecuteScripts: true
+    mtaBuild: true
+    
+  Additional Unit Tests:
+    npmExecuteScripts: true
+    
+  Integration:
+    credentials:
+      - alias: "mySystemAlias"
+        credentialId: "mySystemCredentialId"
+    npmExecuteScripts: true
+    
+  Acceptance:
+    cfApiEndpoint: "https://api.cf.sap.hana.ondemand.com"
+    cfOrg: "A2A-Organization"
+    cfSpace: "acceptance"
+    cfServiceKeyName: "a2a-portal-acceptance-key"
+    deployUser: "technical-user"
+    npmExecuteScripts: true
+    
+  Compliance:
+    sonarExecuteScan: true
+    
+  Release:
+    cfApiEndpoint: "https://api.cf.sap.hana.ondemand.com"
+    cfOrg: "A2A-Organization" 
+    cfSpace: "production"
+    cfServiceKeyName: "a2a-portal-production-key"
+    deployUser: "technical-user"
+    tmsUpload: true
+
+steps:
+  mtaBuild:
+    buildTarget: "CF"
+    
+  sonarExecuteScan:
+    serverUrl: "https://sonarcloud.io"
+    organization: "a2a-developer-portal"
+    
+  npmExecuteScripts:
+    runScripts:
+      - "ci-build"
+      - "ci-test"
+      
+  cloudFoundryDeploy:
+    deployType: "blue-green"
+    keepOldInstance: true

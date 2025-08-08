@@ -1,0 +1,76 @@
+# Configuration for Financial Data Standardization Agent v2
+# Enables catalog integration and multi-platform synchronization
+
+agent:
+  id: "financial_standardization_agent_1"
+  name: "Financial Data Standardization Agent"
+  version: "2.0.0"
+  namespace: "com.finsight"
+
+# Downstream catalog targets
+downstream_targets:
+  - target_id: "sap-datasphere-prod"
+    platform_type: "sap_datasphere"
+    endpoint: "${SAP_DATASPHERE_ENDPOINT}"
+    enabled: true
+    auth_config:
+      method: "oauth2"
+      client_id: "${SAP_CLIENT_ID}"
+      client_secret: "${SAP_CLIENT_SECRET}"
+      token_url: "${SAP_TOKEN_URL}"
+    retry_policy:
+      max_attempts: 3
+      backoff_seconds: 2
+      
+  - target_id: "databricks-unity-prod"
+    platform_type: "databricks"
+    workspace_url: "${DATABRICKS_WORKSPACE_URL}"
+    enabled: true
+    auth_config:
+      token: "${DATABRICKS_TOKEN}"
+      
+  - target_id: "hana-cloud-prod"
+    platform_type: "sap_hana"
+    endpoint: "${HANA_CLOUD_ENDPOINT}"
+    enabled: true
+    auth_config:
+      method: "oauth2"
+      client_id: "${HANA_CLIENT_ID}"
+      client_secret: "${HANA_CLIENT_SECRET}"
+      token_url: "${HANA_TOKEN_URL}"
+    
+  - target_id: "cloudera-atlas-prod"
+    platform_type: "cloudera"
+    endpoint: "${ATLAS_ENDPOINT}"
+    enabled: false  # Disabled by default
+    auth_config:
+      method: "basic"
+      username: "${ATLAS_USERNAME}"
+      password: "${ATLAS_PASSWORD}"
+
+# Catalog integration settings
+catalog_integration:
+  emit_events: true
+  batch_size: 100
+  sync_interval_seconds: 300
+  
+# Transformation settings
+transformations:
+  ord:
+    version: "1.9"
+    include_metadata: true
+  csn:
+    version: "1.0"
+    validate: true
+
+# Standardization settings
+standardization:
+  l4_enabled: true
+  semantic_matching: true
+  confidence_threshold: 0.85
+  
+# Performance settings
+performance:
+  max_concurrent_standardizations: 10
+  max_concurrent_syncs: 5
+  timeout_seconds: 300

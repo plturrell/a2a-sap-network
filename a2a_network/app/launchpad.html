@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <title>A2A Network - SAP Fiori Launchpad</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SAP Fiori Launchpad Configuration -->
+    <script>
+        window["sap-ushell-config"] = {
+            defaultRenderer: "fiori2",
+            bootstrapPlugins: {
+                "RuntimeAuthoringPlugin": {
+                    component: "sap.ushell.plugins.rta",
+                    config: {
+                        validateAppVersion: false
+                    }
+                }
+            },
+            renderers: {
+                fiori2: {
+                    componentData: {
+                        config: {
+                            enableSearch: true,
+                            enablePersonalization: true,
+                            enableSetTheme: true,
+                            enableSetLanguage: true,
+                            enableUserActivityLog: true,
+                            enableNotifications: true,
+                            enableRecentActivity: true,
+                            rootIntent: "Shell-home",
+                            applications: {
+                                "Shell-home": {
+                                    enableHideGroups: false,
+                                    enableTileActionsIcon: false,
+                                    enableLinkPersonalization: true
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            services: {
+                "LaunchPage": {
+                    adapter: {
+                        config: {
+                            groups: [{
+                                id: "a2a_network_main",
+                                title: "A2A Network Management",
+                                isPreset: true,
+                                tiles: [{
+                                    id: "AgentsDashboard",
+                                    tileType: "sap.ushell.ui.tile.DynamicTile",
+                                    properties: {
+                                        title: "Agent Management",
+                                        subtitle: "Manage Network Agents",
+                                        icon: "sap-icon://group",
+                                        targetURL: "#A2ANetwork-manage&/agents"
+                                    }
+                                }, {
+                                    id: "ServicesMarketplace",
+                                    tileType: "sap.ushell.ui.tile.DynamicTile",
+                                    properties: {
+                                        title: "Service Marketplace",
+                                        subtitle: "Browse Available Services",
+                                        icon: "sap-icon://cart",
+                                        targetURL: "#A2ANetwork-manage&/services"
+                                    }
+                                }, {
+                                    id: "WorkflowDesigner",
+                                    tileType: "sap.ushell.ui.tile.DynamicTile",
+                                    properties: {
+                                        title: "Workflow Designer",
+                                        subtitle: "Design & Execute Workflows",
+                                        icon: "sap-icon://workflow-tasks",
+                                        targetURL: "#A2ANetwork-manage&/workflows"
+                                    }
+                                }, {
+                                    id: "NetworkAnalytics",
+                                    tileType: "sap.ushell.ui.tile.DynamicTile",
+                                    properties: {
+                                        title: "Network Analytics",
+                                        subtitle: "Performance & Statistics",
+                                        icon: "sap-icon://bar-chart",
+                                        targetURL: "#A2ANetwork-manage&/analytics"
+                                    }
+                                }]
+                            }, {
+                                id: "a2a_network_config",
+                                title: "Configuration & Settings",
+                                isPreset: true,
+                                tiles: [{
+                                    id: "CapabilityRegistry",
+                                    tileType: "sap.ushell.ui.tile.StaticTile",
+                                    properties: {
+                                        title: "Capability Registry",
+                                        subtitle: "Manage Agent Capabilities",
+                                        icon: "sap-icon://puzzle",
+                                        targetURL: "#A2ANetwork-manage&/capabilities"
+                                    }
+                                }, {
+                                    id: "NetworkConfiguration",
+                                    tileType: "sap.ushell.ui.tile.StaticTile",
+                                    properties: {
+                                        title: "Network Settings",
+                                        subtitle: "Configure Network Parameters",
+                                        icon: "sap-icon://settings",
+                                        targetURL: "#A2ANetwork-manage&/settings"
+                                    }
+                                }, {
+                                    id: "SecurityAudit",
+                                    tileType: "sap.ushell.ui.tile.StaticTile",
+                                    properties: {
+                                        title: "Security & Audit",
+                                        subtitle: "Audit Logs & Security",
+                                        icon: "sap-icon://shield",
+                                        targetURL: "#A2ANetwork-manage&/audit"
+                                    }
+                                }]
+                            }]
+                        }
+                    }
+                },
+                "ClientSideTargetResolution": {
+                    adapter: {
+                        config: {
+                            inbounds: {
+                                "A2ANetwork-manage": {
+                                    semanticObject: "A2ANetwork",
+                                    action: "manage",
+                                    title: "A2A Network Management",
+                                    signature: {
+                                        parameters: {},
+                                        additionalParameters: "allowed"
+                                    },
+                                    resolutionResult: {
+                                        applicationType: "URL",
+                                        url: "/app/a2a-fiori/webapp/index.html"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "NavTargetResolution": {
+                    config: {
+                        enableClientSideTargetResolution: true
+                    }
+                },
+                "UserInfo": {
+                    adapter: {
+                        config: {
+                            themes: [
+                                { id: "sap_horizon", name: "SAP Horizon" },
+                                { id: "sap_horizon_dark", name: "SAP Horizon Dark" },
+                                { id: "sap_horizon_hcb", name: "SAP Horizon High Contrast Black" },
+                                { id: "sap_horizon_hcw", name: "SAP Horizon High Contrast White" }
+                            ],
+                            bootTheme: {
+                                theme: "sap_horizon_dark",
+                                root: "https://ui5.sap.com/1.120.0/resources/"
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+
+    <script src="https://ui5.sap.com/1.120.0/test-resources/sap/ushell/bootstrap/sandbox.js"></script>
+    <script id="sap-ui-bootstrap"
+        src="https://ui5.sap.com/1.120.0/resources/sap-ui-core.js"
+        data-sap-ui-libs="sap.m,sap.ushell,sap.f,sap.ui.fl,sap.ui.comp,sap.ui.table,sap.uxap,sap.viz"
+        data-sap-ui-theme="sap_horizon_dark"
+        data-sap-ui-compatVersion="edge"
+        data-sap-ui-async="true"
+        data-sap-ui-frameOptions="trusted"
+        data-sap-ui-flexibilityServices='[{
+            "url": "/sap/opu/odata/sap/UI_FLEX_PERS_SRV",
+            "connector": "PersonalizationConnector"
+        }]'>
+    </script>
+
+    <script>
+        sap.ui.getCore().attachInit(function() {
+            // Initialize the FLP sandbox
+            sap.ushell.Container.createRenderer().placeAt("content");
+        });
+    </script>
+
+    <style>
+        html, body, #content {
+            height: 100%;
+            margin: 0;
+            font-family: "72", "72full", Arial, Helvetica, sans-serif;
+        }
+        
+        /* Custom FLP styling */
+        .sapUshellTileBase {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+            transition: all 0.3s ease;
+        }
+        
+        .sapUshellTileBase:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        /* A2A Network branding */
+        .sapUshellShellHeader::after {
+            content: "A2A Network";
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 18px;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.9);
+        }
+    </style>
+</head>
+<body class="sapUiBody" id="content">
+</body>
+</html>

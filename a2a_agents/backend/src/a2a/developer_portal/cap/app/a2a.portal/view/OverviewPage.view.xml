@@ -1,0 +1,402 @@
+<mvc:View
+    controllerName="com.sap.a2a.developerportal.controller.OverviewPage"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:ovp="sap.ovp"
+    xmlns:suite="sap.suite.ui.commons"
+    xmlns:layout="sap.ui.layout">
+    
+    <Page title="A2A Agents - Overview" showNavButton="false">
+        <headerContent>
+            <Button 
+                icon="sap-icon://refresh" 
+                tooltip="Refresh Dashboard"
+                press="onRefresh"/>
+            <Button 
+                icon="sap-icon://action-settings" 
+                tooltip="Customize Dashboard"
+                press="onCustomizeDashboard"/>
+        </headerContent>
+        
+        <content>
+            <ScrollContainer height="100%" width="100%" horizontal="false" vertical="true">
+                <VBox class="sapUiMediumMargin">
+                    
+                    <!-- Welcome Header -->
+                    <f:Card class="sapUiMediumMarginBottom">
+                        <f:header>
+                            <f:Header title="Welcome to A2A Agents">
+                                <f:actions>
+                                    <Button 
+                                        text="Quick Start Guide" 
+                                        type="Emphasized"
+                                        press="onQuickStart"/>
+                                </f:actions>
+                            </f:Header>
+                        </f:header>
+                        
+                        <f:content>
+                            <VBox class="sapUiMediumMargin">
+                                <Text text="Manage your A2A agents, workflows, and deployments from this central dashboard." class="sapUiMediumMarginBottom"/>
+                                <HBox>
+                                    <Button 
+                                        text="Create New Project" 
+                                        type="Emphasized" 
+                                        icon="sap-icon://add"
+                                        press="onCreateProject"
+                                        class="sapUiTinyMarginEnd"/>
+                                    <Button 
+                                        text="Import Project" 
+                                        icon="sap-icon://upload"
+                                        press="onImportProject"
+                                        class="sapUiTinyMarginEnd"/>
+                                    <Button 
+                                        text="View Documentation" 
+                                        icon="sap-icon://document"
+                                        press="onViewDocs"/>
+                                </HBox>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
+                    
+                    <!-- Key Performance Indicators -->
+                    <f:GridContainer class="sapUiMediumMarginBottom">
+                        <f:GridContainerSettings rowSize="5rem" columnSize="5rem" gap="1rem"/>
+                        
+                        <!-- Active Projects KPI -->
+                        <f:Card class="sapUiTinyMargin">
+                            <f:header>
+                                <f:Header title="Active Projects">
+                                    <f:actions>
+                                        <Button 
+                                            icon="sap-icon://drill-down" 
+                                            type="Transparent"
+                                            press="onDrillDownProjects"/>
+                                    </f:actions>
+                                </f:Header>
+                            </f:header>
+                            
+                            <f:content>
+                                <VBox alignItems="Center" class="sapUiMediumMargin">
+                                    <suite:NumericTile
+                                        headerText="Projects"
+                                        subHeaderText="Currently Active"
+                                        value="{/kpis/active_projects}"
+                                        valueColor="Good"
+                                        indicator="Up"
+                                        press="onProjectsKPIPress"/>
+                                </VBox>
+                            </f:content>
+                        </f:Card>
+                        
+                        <!-- Total Agents KPI -->
+                        <f:Card class="sapUiTinyMargin">
+                            <f:header>
+                                <f:Header title="Total Agents"/>
+                            </f:header>
+                            
+                            <f:content>
+                                <VBox alignItems="Center" class="sapUiMediumMargin">
+                                    <suite:NumericTile
+                                        headerText="Agents"
+                                        subHeaderText="Across All Projects"
+                                        value="{/kpis/total_agents}"
+                                        valueColor="Neutral"
+                                        press="onAgentsKPIPress"/>
+                                </VBox>
+                            </f:content>
+                        </f:Card>
+                        
+                        <!-- Deployments KPI -->
+                        <f:Card class="sapUiTinyMargin">
+                            <f:header>
+                                <f:Header title="Deployments"/>
+                            </f:header>
+                            
+                            <f:content>
+                                <VBox alignItems="Center" class="sapUiMediumMargin">
+                                    <suite:NumericTile
+                                        headerText="Deployed"
+                                        subHeaderText="This Month"
+                                        value="{/kpis/deployments_this_month}"
+                                        valueColor="Good"
+                                        indicator="Up"
+                                        press="onDeploymentsKPIPress"/>
+                                </VBox>
+                            </f:content>
+                        </f:Card>
+                        
+                        <!-- Success Rate KPI -->
+                        <f:Card class="sapUiTinyMargin">
+                            <f:header>
+                                <f:Header title="Success Rate"/>
+                            </f:header>
+                            
+                            <f:content>
+                                <VBox alignItems="Center" class="sapUiMediumMargin">
+                                    <suite:NumericTile
+                                        headerText="Success Rate"
+                                        subHeaderText="Last 30 Days"
+                                        value="{/kpis/success_rate}"
+                                        valueColor="Good"
+                                        indicator="Up"
+                                        press="onSuccessRateKPIPress"/>
+                                </VBox>
+                            </f:content>
+                        </f:Card>
+                    </f:GridContainer>
+                    
+                    <!-- Main Dashboard Grid -->
+                    <layout:Grid 
+                        defaultSpan="L6 M12 S12"
+                        class="sapUiMediumMarginBottom">
+                        
+                        <!-- Recent Projects Card -->
+                        <f:Card class="sapUiTinyMargin">
+                            <f:header>
+                                <f:Header title="Recent Projects">
+                                    <f:actions>
+                                        <Button 
+                                            text="View All" 
+                                            type="Transparent"
+                                            press="onViewAllProjects"/>
+                                    </f:actions>
+                                </f:Header>
+                            </f:header>
+                            
+                            <f:content>
+                                <List 
+                                    items="{/recent_projects}"
+                                    showNoData="true"
+                                    noDataText="No recent projects">
+                                    
+                                    <StandardListItem
+                                        title="{name}"
+                                        description="{description}"
+                                        info="{status}"
+                                        infoState="{path: 'status', formatter: '.formatStatusState'}"
+                                        icon="sap-icon://folder"
+                                        type="Navigation"
+                                        press="onProjectPress">
+                                        
+                                        <attributes>
+                                            <ObjectAttribute text="{type}"/>
+                                            <ObjectAttribute text="{path: 'updated_at', formatter: '.formatRelativeTime'}"/>
+                                        </attributes>
+                                        
+                                        <firstStatus>
+                                            <ObjectStatus 
+                                                text="{agents_count} agents"
+                                                state="{path: 'agents_count', formatter: '.formatAgentsState'}"/>
+                                        </firstStatus>
+                                    </StandardListItem>
+                                </List>
+                            </f:content>
+                        </f:Card>
+                        
+                        <!-- System Health Card -->
+                        <f:Card class="sapUiTinyMargin">
+                            <f:header>
+                                <f:Header title="System Health">
+                                    <f:actions>
+                                        <Button 
+                                            text="Details" 
+                                            type="Transparent"
+                                            press="onViewSystemHealth"/>
+                                    </f:actions>
+                                </f:Header>
+                            </f:header>
+                            
+                            <f:content>
+                                <VBox class="sapUiMediumMargin">
+                                    <!-- CPU Usage -->
+                                    <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+                                        <Label text="CPU Usage:" class="sapUiTinyMarginEnd"/>
+                                        <ProgressIndicator 
+                                            percentValue="{/system_health/cpu_usage}"
+                                            displayValue="{/system_health/cpu_usage}%"
+                                            state="{path: '/system_health/cpu_usage', formatter: '.formatHealthState'}"
+                                            width="60%"/>
+                                    </HBox>
+                                    
+                                    <!-- Memory Usage -->
+                                    <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+                                        <Label text="Memory:" class="sapUiTinyMarginEnd"/>
+                                        <ProgressIndicator 
+                                            percentValue="{/system_health/memory_usage}"
+                                            displayValue="{/system_health/memory_usage}%"
+                                            state="{path: '/system_health/memory_usage', formatter: '.formatHealthState'}"
+                                            width="60%"/>
+                                    </HBox>
+                                    
+                                    <!-- Active Connections -->
+                                    <HBox alignItems="Center">
+                                        <Label text="Active Connections:" class="sapUiTinyMarginEnd"/>
+                                        <ObjectNumber 
+                                            number="{/system_health/active_connections}"
+                                            state="Success"/>
+                                    </HBox>
+                                </VBox>
+                            </f:content>
+                        </f:Card>
+                        
+                        <!-- Recent Activity Card -->
+                        <f:Card class="sapUiTinyMargin">
+                            <f:header>
+                                <f:Header title="Recent Activity">
+                                    <f:actions>
+                                        <Button 
+                                            text="View All" 
+                                            type="Transparent"
+                                            press="onViewAllActivity"/>
+                                    </f:actions>
+                                </f:Header>
+                            </f:header>
+                            
+                            <f:content>
+                                <List 
+                                    items="{/recent_activity}"
+                                    showNoData="true"
+                                    noDataText="No recent activity">
+                                    
+                                    <FeedListItem
+                                        sender="{user}"
+                                        text="{description}"
+                                        timestamp="{path: 'timestamp', formatter: '.formatRelativeTime'}"
+                                        icon="{path: 'type', formatter: '.formatActivityIcon'}"
+                                        press="onActivityPress"/>
+                                </List>
+                            </f:content>
+                        </f:Card>
+                        
+                        <!-- Quick Actions Card -->
+                        <f:Card class="sapUiTinyMargin">
+                            <f:header>
+                                <f:Header title="Quick Actions"/>
+                            </f:header>
+                            
+                            <f:content>
+                                <VBox class="sapUiMediumMargin">
+                                    <Button 
+                                        text="Agent Builder" 
+                                        icon="sap-icon://add"
+                                        type="Emphasized"
+                                        press="onQuickAgentBuilder"
+                                        class="sapUiTinyMarginBottom"/>
+                                    
+                                    <Button 
+                                        text="BPMN Designer" 
+                                        icon="sap-icon://process"
+                                        press="onQuickBPMNDesigner"
+                                        class="sapUiTinyMarginBottom"/>
+                                    
+                                    <Button 
+                                        text="Test & Validate" 
+                                        icon="sap-icon://test"
+                                        press="onQuickTesting"
+                                        class="sapUiTinyMarginBottom"/>
+                                    
+                                    <Button 
+                                        text="Deploy Project" 
+                                        icon="sap-icon://cloud"
+                                        press="onQuickDeploy"/>
+                                </VBox>
+                            </f:content>
+                        </f:Card>
+                        
+                        <!-- Performance Chart Card -->
+                        <f:Card class="sapUiTinyMargin">
+                            <f:header>
+                                <f:Header title="Performance Trends">
+                                    <f:actions>
+                                        <Button 
+                                            text="Detailed View" 
+                                            type="Transparent"
+                                            press="onViewPerformanceDetails"/>
+                                    </f:actions>
+                                </f:Header>
+                            </f:header>
+                            
+                            <f:content>
+                                <VBox class="sapUiMediumMargin">
+                                    <!-- Placeholder for chart - in real implementation, use sap.viz or sap.suite.ui.commons charts -->
+                                    <Text text="Performance chart visualization would be displayed here" class="sapUiMediumMarginBottom"/>
+                                    
+                                    <HBox justifyContent="SpaceBetween">
+                                        <VBox alignItems="Center">
+                                            <Text text="Avg Response Time" class="sapUiTinyText"/>
+                                            <ObjectNumber 
+                                                number="245"
+                                                unit="ms"
+                                                state="Success"/>
+                                        </VBox>
+                                        
+                                        <VBox alignItems="Center">
+                                            <Text text="Throughput" class="sapUiTinyText"/>
+                                            <ObjectNumber 
+                                                number="1.2K"
+                                                unit="req/min"
+                                                state="Success"/>
+                                        </VBox>
+                                        
+                                        <VBox alignItems="Center">
+                                            <Text text="Error Rate" class="sapUiTinyText"/>
+                                            <ObjectNumber 
+                                                number="0.5"
+                                                unit="%"
+                                                state="Success"/>
+                                        </VBox>
+                                    </HBox>
+                                </VBox>
+                            </f:content>
+                        </f:Card>
+                    </layout:Grid>
+                    
+                    <!-- Notifications and Alerts -->
+                    <f:Card class="sapUiMediumMarginBottom">
+                        <f:header>
+                            <f:Header title="Notifications & Alerts">
+                                <f:actions>
+                                    <Button 
+                                        text="Mark All Read" 
+                                        type="Transparent"
+                                        press="onMarkAllRead"/>
+                                    <Button 
+                                        text="Settings" 
+                                        icon="sap-icon://action-settings"
+                                        type="Transparent"
+                                        press="onNotificationSettings"/>
+                                </f:actions>
+                            </f:Header>
+                        </f:header>
+                        
+                        <f:content>
+                            <List 
+                                items="{/notifications}"
+                                showNoData="true"
+                                noDataText="No new notifications">
+                                
+                                <NotificationListItem
+                                    title="{title}"
+                                    description="{description}"
+                                    datetime="{path: 'timestamp', formatter: '.formatRelativeTime'}"
+                                    priority="{priority}"
+                                    showCloseButton="true"
+                                    close="onCloseNotification"
+                                    press="onNotificationPress">
+                                    
+                                    <customData>
+                                        <core:CustomData key="notificationId" value="{id}"/>
+                                    </customData>
+                                </NotificationListItem>
+                            </List>
+                        </f:content>
+                    </f:Card>
+                    
+                </VBox>
+            </ScrollContainer>
+        </content>
+    </Page>
+</mvc:View>

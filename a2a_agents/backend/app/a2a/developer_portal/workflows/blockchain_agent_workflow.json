@@ -1,0 +1,153 @@
+{
+  "id": "blockchain-agent-workflow",
+  "name": "Blockchain Agent Registration and Communication",
+  "description": "Production workflow for registering agents on A2A blockchain and enabling secure communication",
+  "version": "1.0",
+  "elements": [
+    {
+      "id": "start",
+      "name": "Start Blockchain Agent Process",
+      "type": "startEvent",
+      "x": 100,
+      "y": 100,
+      "outgoing": ["flow1"]
+    },
+    {
+      "id": "register-agent",
+      "name": "Register Agent on Blockchain",
+      "type": "serviceTask",
+      "x": 300,
+      "y": 100,
+      "incoming": ["flow1"],
+      "outgoing": ["flow2"],
+      "properties": {
+        "implementationType": "blockchain",
+        "contractTaskType": "agent_registration",
+        "network": "local",
+        "agentName": "${agentName}",
+        "agentEndpoint": "${agentEndpoint}",
+        "capabilities": "${agentCapabilities}",
+        "gasLimit": 500000
+      }
+    },
+    {
+      "id": "discovery-gateway",
+      "name": "Agent Discovery Required?",
+      "type": "exclusiveGateway",
+      "x": 500,
+      "y": 100,
+      "incoming": ["flow2"],
+      "outgoing": ["flow3", "flow7"]
+    },
+    {
+      "id": "discover-agents",
+      "name": "Discover Agents by Capability",
+      "type": "serviceTask",
+      "x": 700,
+      "y": 100,
+      "incoming": ["flow3"],
+      "outgoing": ["flow4"],
+      "properties": {
+        "implementationType": "blockchain",
+        "contractTaskType": "capability_query",
+        "network": "local",
+        "capability": "${requiredCapability}"
+      }
+    },
+    {
+      "id": "send-message",
+      "name": "Send Message to Agent",
+      "type": "serviceTask",
+      "x": 900,
+      "y": 100,
+      "incoming": ["flow4"],
+      "outgoing": ["flow5"],
+      "properties": {
+        "implementationType": "blockchain",
+        "contractTaskType": "message_routing",
+        "network": "local",
+        "toAgent": "${targetAgent}",
+        "content": "${messageContent}",
+        "messageType": "collaboration_request",
+        "gasLimit": 200000
+      }
+    },
+    {
+      "id": "update-reputation",
+      "name": "Update Agent Reputation",
+      "type": "serviceTask",
+      "x": 1100,
+      "y": 100,
+      "incoming": ["flow5"],
+      "outgoing": ["flow6"],
+      "properties": {
+        "implementationType": "blockchain",
+        "contractTaskType": "reputation_update",
+        "network": "local",
+        "agentAddress": "${targetAgent}",
+        "reputationDelta": 10,
+        "gasLimit": 100000
+      }
+    },
+    {
+      "id": "end",
+      "name": "Process Complete",
+      "type": "endEvent",
+      "x": 1300,
+      "y": 100,
+      "incoming": ["flow6", "flow7"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "flow1",
+      "source_id": "start",
+      "target_id": "register-agent"
+    },
+    {
+      "id": "flow2",
+      "source_id": "register-agent",
+      "target_id": "discovery-gateway"
+    },
+    {
+      "id": "flow3",
+      "name": "Discovery Required",
+      "source_id": "discovery-gateway",
+      "target_id": "discover-agents",
+      "condition": "variables.requireDiscovery === true"
+    },
+    {
+      "id": "flow4",
+      "source_id": "discover-agents",
+      "target_id": "send-message"
+    },
+    {
+      "id": "flow5",
+      "source_id": "send-message",
+      "target_id": "update-reputation"
+    },
+    {
+      "id": "flow6",
+      "source_id": "update-reputation",
+      "target_id": "end"
+    },
+    {
+      "id": "flow7",
+      "name": "Skip Discovery",
+      "source_id": "discovery-gateway",
+      "target_id": "end",
+      "condition": "variables.requireDiscovery !== true"
+    }
+  ],
+  "variables": {
+    "agentName": "Workflow Agent",
+    "agentEndpoint": "http://localhost:8080/agent",
+    "agentCapabilities": ["workflow", "bpmn", "automation"],
+    "requireDiscovery": true,
+    "requiredCapability": "data_processing",
+    "targetAgent": "",
+    "messageContent": "Requesting collaboration for data processing task"
+  },
+  "deployment_id": null,
+  "status": "active"
+}

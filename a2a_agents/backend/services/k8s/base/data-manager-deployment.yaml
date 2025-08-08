@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-manager
+  namespace: a2a-network
+  labels:
+    app: data-manager
+    component: storage
+    a2a-agent: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-manager
+  template:
+    metadata:
+      labels:
+        app: data-manager
+        component: storage
+        a2a-agent: "true"
+    spec:
+      containers:
+      - name: data-manager
+        image: a2a/data-manager:latest
+        ports:
+        - containerPort: 8008
+        env:
+        - name: AGENT_PORT
+          value: "8008"
+        - name: AGENT_BASE_URL
+          value: "http://data-manager:8008"
+        - name: AGENT_MANAGER_URL
+          value: "http://agent-manager:8007"
+        - name: STORAGE_BACKEND
+          value: "sqlite"
+        - name: DATA_MANAGER_DB_PATH
+          value: "/data/a2a_data.db"
+        - name: REDIS_URL
+          value: "redis://redis:6379"
+        - name: CACHE_TTL
+          value: "3600"
+        volumeMounts:
+        - name: data-storage
+          mountPath: /data
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8008
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8008
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      volumes:
+      - name: data-storage
+        persistentVolumeClaim:
+          claimName: data-manager-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-manager
+  namespace: a2a-network
+  labels:
+    app: data-manager
+    component: storage
+spec:
+  selector:
+    app: data-manager
+  ports:
+  - port: 8008
+    targetPort: 8008
+    name: http
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-manager-pvc
+  namespace: a2a-network
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
