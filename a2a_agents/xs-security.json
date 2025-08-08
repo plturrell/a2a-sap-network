@@ -1,0 +1,243 @@
+{
+  "xsappname": "a2a-agents",
+  "tenant-mode": "shared",
+  "description": "A2A Agent Platform Security Configuration",
+  
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.Admin",
+      "description": "Administrator access to all platform functions"
+    },
+    {
+      "name": "$XSAPPNAME.AgentOperator",
+      "description": "Operate agents and manage workflows"
+    },
+    {
+      "name": "$XSAPPNAME.DataViewer",
+      "description": "View data products and reports"
+    },
+    {
+      "name": "$XSAPPNAME.Agent0.Execute",
+      "description": "Execute Agent 0 (Data Product Registration)"
+    },
+    {
+      "name": "$XSAPPNAME.Agent1.Execute",
+      "description": "Execute Agent 1 (Data Standardization)"
+    },
+    {
+      "name": "$XSAPPNAME.Agent2.Execute",
+      "description": "Execute Agent 2 (AI Data Preparation)"
+    },
+    {
+      "name": "$XSAPPNAME.Agent3.Execute",
+      "description": "Execute Agent 3 (Vector Processing)"
+    },
+    {
+      "name": "$XSAPPNAME.Agent4.Execute",
+      "description": "Execute Agent 4 (Calculation & Validation)"
+    },
+    {
+      "name": "$XSAPPNAME.Agent5.Execute",
+      "description": "Execute Agent 5 (Quality Assurance)"
+    },
+    {
+      "name": "$XSAPPNAME.AgentManager.Manage",
+      "description": "Manage agent orchestration"
+    },
+    {
+      "name": "$XSAPPNAME.DataManager.Manage",
+      "description": "Manage data storage and lifecycle"
+    },
+    {
+      "name": "$XSAPPNAME.CatalogManager.Manage",
+      "description": "Manage data catalog"
+    },
+    {
+      "name": "$XSAPPNAME.TrustSystem.Manage",
+      "description": "Manage trust relationships"
+    },
+    {
+      "name": "$XSAPPNAME.ORDRegistry.Manage",
+      "description": "Manage ORD service registry"
+    }
+  ],
+  
+  "attributes": [
+    {
+      "name": "CostCenter",
+      "description": "User cost center for billing",
+      "valueType": "string"
+    },
+    {
+      "name": "Department",
+      "description": "User department",
+      "valueType": "string"
+    },
+    {
+      "name": "DataClassification",
+      "description": "Allowed data classification levels",
+      "valueType": "string"
+    },
+    {
+      "name": "Region",
+      "description": "Geographic region",
+      "valueType": "string"
+    }
+  ],
+  
+  "role-templates": [
+    {
+      "name": "PlatformAdmin",
+      "description": "Platform Administrator - Full access",
+      "scope-references": [
+        "$XSAPPNAME.Admin",
+        "$XSAPPNAME.AgentOperator",
+        "$XSAPPNAME.DataViewer",
+        "$XSAPPNAME.Agent0.Execute",
+        "$XSAPPNAME.Agent1.Execute",
+        "$XSAPPNAME.Agent2.Execute",
+        "$XSAPPNAME.Agent3.Execute",
+        "$XSAPPNAME.Agent4.Execute",
+        "$XSAPPNAME.Agent5.Execute",
+        "$XSAPPNAME.AgentManager.Manage",
+        "$XSAPPNAME.DataManager.Manage",
+        "$XSAPPNAME.CatalogManager.Manage",
+        "$XSAPPNAME.TrustSystem.Manage",
+        "$XSAPPNAME.ORDRegistry.Manage"
+      ],
+      "attribute-references": [
+        "CostCenter",
+        "Department",
+        "DataClassification",
+        "Region"
+      ]
+    },
+    {
+      "name": "AgentOperator",
+      "description": "Agent Operator - Manage agents and workflows",
+      "scope-references": [
+        "$XSAPPNAME.AgentOperator",
+        "$XSAPPNAME.DataViewer",
+        "$XSAPPNAME.Agent0.Execute",
+        "$XSAPPNAME.Agent1.Execute",
+        "$XSAPPNAME.Agent2.Execute",
+        "$XSAPPNAME.Agent3.Execute",
+        "$XSAPPNAME.Agent4.Execute",
+        "$XSAPPNAME.Agent5.Execute",
+        "$XSAPPNAME.AgentManager.Manage"
+      ],
+      "attribute-references": [
+        "CostCenter",
+        "Department",
+        "DataClassification"
+      ]
+    },
+    {
+      "name": "DataManager",
+      "description": "Data Manager - Manage data and catalog",
+      "scope-references": [
+        "$XSAPPNAME.DataViewer",
+        "$XSAPPNAME.DataManager.Manage",
+        "$XSAPPNAME.CatalogManager.Manage"
+      ],
+      "attribute-references": [
+        "CostCenter",
+        "Department",
+        "DataClassification"
+      ]
+    },
+    {
+      "name": "BusinessUser",
+      "description": "Business User - View data and reports",
+      "scope-references": [
+        "$XSAPPNAME.DataViewer"
+      ],
+      "attribute-references": [
+        "CostCenter",
+        "Department"
+      ]
+    },
+    {
+      "name": "SystemIntegrator",
+      "description": "System Integrator - Configure integrations",
+      "scope-references": [
+        "$XSAPPNAME.AgentOperator",
+        "$XSAPPNAME.DataViewer",
+        "$XSAPPNAME.TrustSystem.Manage",
+        "$XSAPPNAME.ORDRegistry.Manage"
+      ],
+      "attribute-references": [
+        "CostCenter",
+        "Department"
+      ]
+    }
+  ],
+  
+  "role-collections": [
+    {
+      "name": "A2A_Platform_Administrator",
+      "description": "Complete platform administration access",
+      "role-template-references": [
+        "$XSAPPNAME.PlatformAdmin"
+      ]
+    },
+    {
+      "name": "A2A_Agent_Operator",
+      "description": "Agent operations and workflow management",
+      "role-template-references": [
+        "$XSAPPNAME.AgentOperator"
+      ]
+    },
+    {
+      "name": "A2A_Data_Manager",
+      "description": "Data and catalog management",
+      "role-template-references": [
+        "$XSAPPNAME.DataManager"
+      ]
+    },
+    {
+      "name": "A2A_Business_User",
+      "description": "Business user access to data and reports",
+      "role-template-references": [
+        "$XSAPPNAME.BusinessUser"
+      ]
+    },
+    {
+      "name": "A2A_System_Integrator",
+      "description": "System integration and configuration",
+      "role-template-references": [
+        "$XSAPPNAME.SystemIntegrator"
+      ]
+    }
+  ],
+  
+  "oauth2-configuration": {
+    "token-validity": 1800,
+    "refresh-token-validity": 7200,
+    "redirect-uris": [
+      "https://*.cfapps.us10.hana.ondemand.com/**",
+      "https://*.company.com/**",
+      "http://localhost:3000/**",
+      "http://localhost:8080/**"
+    ],
+    "system-attributes": [
+      "rolecollections",
+      "groups"
+    ],
+    "credential-types": [
+      "binding-secret",
+      "x509",
+      "instance-secret"
+    ],
+    "grant-types": [
+      "authorization_code",
+      "client_credentials",
+      "refresh_token",
+      "urn:ietf:params:oauth:grant-type:jwt-bearer"
+    ]
+  },
+  
+  "foreign-scope-references": [
+    "$ACCEPT_GRANTED_SCOPES"
+  ]
+}

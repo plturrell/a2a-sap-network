@@ -20,7 +20,7 @@ from functools import lru_cache
 from pydantic import BaseModel, Field
 from app.core.config import settings
 from app.api.deps import get_current_user
-from app.a2a.core.telemetry import trace_async, add_span_attributes, get_trace_context
+from src.a2a.core.telemetry import trace_async, add_span_attributes, get_trace_context
 from app.api.middleware.telemetry import get_trace_headers
 
 logger = logging.getLogger(__name__)

@@ -7,12 +7,12 @@ import pytest_asyncio
 import tempfile
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.a2a.core.ai_decision_logger_database import (
+from src.a2a.core.ai_decision_logger_database import (
     AIDecisionDatabaseLogger
 )
 
 try:
-    from app.a2a.core.ai_decision_database_integration import (
+    from src.a2a.core.ai_decision_database_integration import (
         DatabaseAIDecisionIntegration,
         AIDatabaseDecisionIntegrationMixin
     )
@@ -21,11 +21,11 @@ except ImportError:
     AIDatabaseDecisionIntegrationMixin = None
 
 # Import types and enums from the regular logger for compatibility
-from app.a2a.core.ai_decision_logger import (
+from src.a2a.core.ai_decision_logger import (
     DecisionType, 
     OutcomeStatus
 )
-from app.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
+from src.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
 
 
 # -------------------------

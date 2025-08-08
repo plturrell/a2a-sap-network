@@ -1,0 +1,115 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:custom="com.sap.a2a.portal.control">
+    
+    <!-- Consistent Loading State Manager Fragment -->
+    <!-- Use this fragment to ensure consistent loading states across all views -->
+    
+    <VBox id="loadingStateContainer" class="sapUiContentPadding">
+        
+        <!-- Main Content Loading -->
+        <custom:LoadingIndicator 
+            id="mainContentLoader"
+            type="spinner"
+            size="large" 
+            message="Loading content..."
+            showText="true"
+            overlay="false"
+            visible="false" />
+        
+        <!-- Data Loading -->
+        <custom:LoadingIndicator 
+            id="dataLoader"
+            type="skeleton"
+            size="medium"
+            message="Loading data..."
+            showText="true"
+            overlay="false"
+            visible="false" />
+        
+        <!-- Chart Loading -->
+        <custom:LoadingIndicator 
+            id="chartLoader"
+            type="shimmer"
+            size="large"
+            message="Preparing visualization..."
+            showText="true"
+            overlay="false"
+            visible="false" />
+        
+        <!-- Agent Processing Loading -->
+        <custom:LoadingIndicator 
+            id="agentProcessingLoader"
+            type="dots"
+            size="medium"
+            message="Processing with AI agents..."
+            showText="true"
+            overlay="false"
+            visible="false" />
+        
+        <!-- Search Loading -->
+        <custom:LoadingIndicator 
+            id="searchLoader"
+            type="pulse"
+            size="small"
+            message="Searching..."
+            showText="false"
+            overlay="false"
+            visible="false" />
+        
+        <!-- Upload Progress -->
+        <custom:LoadingIndicator 
+            id="uploadProgressLoader"
+            type="progress"
+            size="medium"
+            message="Uploading file..."
+            showText="true"
+            progress="0"
+            overlay="false"
+            visible="false" />
+        
+        <!-- Page Transition Loading -->
+        <custom:LoadingIndicator 
+            id="pageTransitionLoader"
+            type="spinner"
+            size="medium"
+            message="Loading page..."
+            showText="true"
+            overlay="true"
+            visible="false" />
+        
+        <!-- Network Request Loading -->
+        <custom:LoadingIndicator 
+            id="networkLoader"
+            type="dots"
+            size="small"
+            message="Connecting..."
+            showText="false"
+            overlay="false"
+            visible="false" />
+        
+        <!-- Heavy Computation Loading -->
+        <custom:LoadingIndicator 
+            id="computationLoader"
+            type="pulse"
+            size="large"
+            message="Processing complex calculations..."
+            showText="true"
+            speed="slow"
+            overlay="false"
+            visible="false" />
+            
+        <!-- Inline Loading for Lists -->
+        <HBox id="inlineLoader" alignItems="Center" justifyContent="Center" visible="false">
+            <custom:LoadingIndicator 
+                type="spinner"
+                size="small"
+                message="Loading more items..."
+                showText="true"
+                overlay="false" />
+        </HBox>
+        
+    </VBox>
+    
+</core:FragmentDefinition>

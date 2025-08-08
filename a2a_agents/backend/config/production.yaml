@@ -1,57 +1,118 @@
 # Production Environment Configuration
-environment: "production"
-debug: false
-log_level: "INFO"
+# Secure settings for production deployment
 
-# Network settings
-host: "0.0.0.0"
-base_port: 8000
+# Database settings for production
+database:
+  # All database credentials must be provided via environment variables
+  # DATABASE_URL is required and must be secured
+  pool_min_size: 10
+  pool_max_size: 50
+  pool_timeout: 60
+  ssl_mode: "require"
+  connect_timeout: 15
+  command_timeout: 60
 
-# Agent settings
-agent_timeout: 60
-max_retries: 5
-circuit_breaker_threshold: 3
+# Redis settings for production
+redis:
+  # REDIS_URL must be provided via environment variable
+  max_connections: 200
+  timeout: 10
+  retry_on_timeout: true
+  health_check_interval: 15
 
-# Database (use environment variables in production)
-database_url: null  # Set via A2A_DATABASE_URL env var
-redis_url: null     # Set via A2A_REDIS_URL env var
+# Security settings for production (strict)
+security:
+  # JWT_SECRET must be provided and be at least 32 characters
+  jwt_expiry_hours: 12
+  jwt_refresh_expiry_days: 3
+  password_min_length: 16
+  session_timeout_minutes: 15
+  max_login_attempts: 3
+  lockout_duration_minutes: 30
 
-# Blockchain
-blockchain_network: "mainnet"
-contract_address: null  # Set via A2A_CONTRACT_ADDRESS env var
+# CORS settings for production (restrictive)
+cors:
+  origins:
+    - "https://a2a-network.com"
+    - "https://portal.a2a-network.com"
+  credentials: true
+  max_age: 1800
 
-# Security (production - use environment variables)
-jwt_secret: null  # Set via A2A_JWT_SECRET env var
-cors_origins:
-  - "https://a2a-network.com"
-  - "https://portal.a2a-network.com"
-rate_limit_requests: 100
-rate_limit_window: 60
+# SAP settings for production
+sap:
+  # All SAP credentials must be provided via environment variables
+  # SAP_GRAPH_CLIENT_SECRET, SAP_HANA_URL, etc. are required
+  # No default values for security
 
-# Telemetry
-telemetry_enabled: true
-telemetry_endpoint: null  # Set via A2A_TELEMETRY_ENDPOINT env var
-metrics_port: 9090
+# Agent settings for production
+agents:
+  timeout_seconds: 30
+  max_retries: 2
+  retry_delay_seconds: 3
+  max_concurrent_requests: 200
+  health_check_interval: 15
+  processing_batch_size: 20
 
-# Agent ports (production)
-agent0_port: 8001
-agent1_port: 8002
-agent2_port: 8003
-agent3_port: 8004
-agent4_port: 8009
-agent5_port: 8010
-data_manager_port: 8005
-catalog_manager_port: 8006
-agent_manager_port: 8007
+# External services for production
+external_services:
+  # All API keys must be provided via environment variables
+  api_timeout_seconds: 20
+  max_requests_per_minute: 300
+  circuit_breaker_threshold: 3
+  circuit_breaker_timeout: 120
 
-# Production-specific features
-hot_reload: false
-mock_external_services: false
-skip_blockchain_validation: false
+# Monitoring for production (comprehensive)
+monitoring:
+  enable_metrics: true
+  enable_tracing: true
+  enable_logging: true
+  # OTEL_ENDPOINT must be provided via environment variable
+  log_level: "INFO"
+  log_format: "json"
+  log_file_max_size: 500
+  log_file_backup_count: 10
+  health_check_timeout: 3
+  health_check_interval: 15
 
-# Security hardening
-enable_https: true
-ssl_cert_path: "/etc/ssl/certs/a2a-network.pem"
-ssl_key_path: "/etc/ssl/private/a2a-network.key"
-enable_security_headers: true
-enable_request_logging: true
+# Notifications for production
+notifications:
+  page_size: 50
+  max_notifications: 5000
+  retention_days: 90
+  batch_size: 500
+  error_threshold: 5
+  warning_threshold: 15
+  performance_threshold_ms: 500
+
+# UI settings for production
+ui:
+  default_page_size: 25
+  max_page_size: 200
+  api_timeout_ms: 20000
+  chart_load_timeout_ms: 8000
+  file_upload_timeout_ms: 180000
+  max_file_size_mb: 25
+  max_concurrent_uploads: 2
+  enable_dark_mode: true
+  enable_analytics: true
+  enable_debug_mode: false
+
+# Production-specific security settings
+production:
+  require_https: true
+  enable_security_headers: true
+  enable_rate_limiting: true
+  max_request_size_mb: 10
+  enable_audit_logging: true
+  
+# Agent port assignments
+agent_ports:
+  agent0: 8001
+  agent1: 8002
+  agent2: 8003
+  agent3: 8004
+  agent4: 8009
+  agent5: 8010
+  data_manager: 8005
+  catalog_manager: 8006
+  agent_manager: 8007

@@ -7,8 +7,8 @@ import pytest
 import tempfile
 from unittest.mock import AsyncMock, patch
 
-from app.a2a.core.ai_decision_logger import DecisionType, OutcomeStatus
-from app.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
+from src.a2a.core.ai_decision_logger import DecisionType, OutcomeStatus
+from src.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
 
 
 class TestAIDecisionIntegration:
@@ -30,7 +30,7 @@ class TestAIDecisionIntegration:
             assert agent.ai_decision_logger.agent_id == agent.agent_id
             
             # Verify logger is registered globally (agent uses database registry)
-            from app.a2a.core.ai_decision_logger_database import get_global_database_decision_registry
+            from src.a2a.core.ai_decision_logger_database import get_global_database_decision_registry
             registry = get_global_database_decision_registry()
             assert agent.agent_id in registry.agent_loggers
     
@@ -204,7 +204,7 @@ class TestAIDecisionIntegration:
     async def test_persistence_works(self, mock_create_advisor):
         """Test that decision data persists correctly"""
         from app.a2a.agents.data_standardization_agent import FinancialStandardizationAgent
-        from app.a2a.core.ai_decision_logger import AIDecisionLogger
+        from src.a2a.core.ai_decision_logger import AIDecisionLogger
         
         # Mock AI advisor
         mock_advisor = AsyncMock()

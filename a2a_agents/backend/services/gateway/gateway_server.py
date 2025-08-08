@@ -11,7 +11,7 @@ import os
 from app.api.gateway.router import router as gateway_router
 from app.api.middleware.telemetry import TelemetryMiddleware
 from app.api.middleware.auth import JWTMiddleware
-from app.a2a.core.telemetry import init_telemetry, instrument_fastapi, instrument_httpx
+from src.a2a.core.telemetry import init_telemetry, instrument_fastapi, instrument_httpx
 from app.a2a.config.telemetry_config import telemetry_config
 from app.core.config import settings
 

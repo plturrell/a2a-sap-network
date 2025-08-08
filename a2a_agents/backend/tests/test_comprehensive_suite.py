@@ -13,7 +13,7 @@ import jwt
 
 from app.core.config import settings
 from app.core.sap_cloud_sdk import SAPCloudSDK, get_sap_cloud_sdk
-from app.a2a.core.a2a_types import (
+from src.a2a.core.a2a_types import (
     A2AMessage, MessagePart, MessageRole, TaskStatus,
     AgentCapability, AgentInfo, AgentRegistration
 )

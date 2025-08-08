@@ -5,7 +5,7 @@ import asyncio
 import pytest
 from unittest.mock import AsyncMock, patch
 
-from app.a2a.core.ai_decision_logger_database import AIDecisionDatabaseLogger, get_global_database_decision_registry
+from src.a2a.core.ai_decision_logger_database import AIDecisionDatabaseLogger, get_global_database_decision_registry
 
 
 class TestAllAgentsDatabaseIntegration:
@@ -301,7 +301,7 @@ class TestAllAgentsDatabaseIntegration:
             mock_client_class.return_value = mock_http_client
             
             from app.a2a.agents.data_standardization_agent import FinancialStandardizationAgent
-            from app.a2a.core.ai_decision_logger import DecisionType, OutcomeStatus
+            from src.a2a.core.ai_decision_logger import DecisionType, OutcomeStatus
             
             # Test with one representative agent
             agent = FinancialStandardizationAgent(base_url="http://localhost:8001")
@@ -399,7 +399,7 @@ class TestAgentSpecificFeatures:
             mock_client_class.return_value = mock_http_client
             
             from app.a2a.agents.data_manager_agent import DataManagerAgent
-            from app.a2a.core.ai_decision_logger import DecisionType
+            from src.a2a.core.ai_decision_logger import DecisionType
             
             agent = DataManagerAgent(
                 base_url="http://localhost:8000",
@@ -427,7 +427,7 @@ class TestAgentSpecificFeatures:
             
             from app.a2a.agents.data_standardization_agent import FinancialStandardizationAgent
             from app.a2a.agents.catalog_manager_agent import CatalogManagerAgent
-            from app.a2a.core.ai_decision_logger import DecisionType
+            from src.a2a.core.ai_decision_logger import DecisionType
             
             # Create two different agents
             standardization_agent = FinancialStandardizationAgent(base_url="http://localhost:8001")

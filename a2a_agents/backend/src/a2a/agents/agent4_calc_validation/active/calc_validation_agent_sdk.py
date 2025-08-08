@@ -43,9 +43,9 @@ from app.a2a.sdk import (
     A2AMessage, MessageRole, create_agent_id
 )
 from app.a2a.sdk.utils import create_success_response, create_error_response
-from app.a2a.core.workflow_context import workflow_context_manager
-from app.a2a.core.workflow_monitor import workflow_monitor
-from app.a2a.core.circuit_breaker import CircuitBreaker, get_breaker_manager
+from src.a2a.core.workflow_context import workflow_context_manager
+from src.a2a.core.workflow_monitor import workflow_monitor
+from src.a2a.core.circuit_breaker import CircuitBreaker, get_breaker_manager
 from app.a2a.security.smart_contract_trust import sign_a2a_message, initialize_agent_trust, verify_a2a_message
 from prometheus_client import Counter, Histogram, Gauge, start_http_server
 

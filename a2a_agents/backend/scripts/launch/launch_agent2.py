@@ -19,7 +19,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.a2a.agents.agent2_router import router as agent2_router
 from a2a_network.python_sdk.blockchain import get_blockchain_client, initialize_blockchain_client
 from a2a_network.python_sdk.blockchain.agent_adapter import create_blockchain_adapter
-from app.a2a.core.a2a_types import A2AMessage
+from src.a2a.core.a2a_types import A2AMessage
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

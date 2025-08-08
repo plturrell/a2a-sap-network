@@ -29,8 +29,8 @@ from app.a2a.agents.agent5_qa_validation.active.agent5_router import router, ini
 
 # Configuration
 from app.a2a.config.production_config import get_agent_config
-from app.a2a.core.telemetry import setup_telemetry
-from app.a2a.core.auth_manager import AuthManager
+from src.a2a.core.telemetry import setup_telemetry
+from src.a2a.core.auth_manager import AuthManager
 from prometheus_client import start_http_server, Counter, Histogram, Gauge
 
 # Setup logging

@@ -259,7 +259,7 @@ class TestSAPMonitoring:
     @pytest.mark.asyncio
     async def test_sap_metrics_export(self):
         """Test metrics export for SAP monitoring"""
-        from app.a2a.core.telemetry import get_meter
+        from src.a2a.core.telemetry import get_meter
         
         meter = get_meter("test-sap-metrics")
         counter = meter.create_counter(

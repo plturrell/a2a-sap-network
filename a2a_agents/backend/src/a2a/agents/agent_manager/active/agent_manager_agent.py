@@ -18,8 +18,8 @@ from pydantic import BaseModel, Field
 
 from ..core.a2a_types import A2AMessage, MessagePart, MessageRole
 from .data_standardization_agent import TaskState, TaskStatus, TaskArtifact, AgentCard
-from app.a2a.core.workflow_context import workflow_context_manager, DataArtifact
-from app.a2a.core.workflow_monitor import workflow_monitor
+from src.a2a.core.workflow_context import workflow_context_manager, DataArtifact
+from src.a2a.core.workflow_monitor import workflow_monitor
 from ..security.smart_contract_trust import initialize_agent_trust, sign_a2a_message, get_trust_contract, verify_a2a_message
 from ..security.delegation_contracts import get_delegation_contract, DelegationAction, can_agent_delegate, record_delegation_usage, create_delegation_contract
 from app.a2a_registry.client import get_registry_client

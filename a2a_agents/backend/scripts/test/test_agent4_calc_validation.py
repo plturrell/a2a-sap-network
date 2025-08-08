@@ -21,7 +21,7 @@ from app.a2a.agents.agent4_calc_validation.active.calc_validation_agent_sdk impo
     ServiceType,
     ComputationTestRequest
 )
-from app.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
+from src.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

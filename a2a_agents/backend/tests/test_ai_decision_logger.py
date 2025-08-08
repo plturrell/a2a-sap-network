@@ -7,7 +7,7 @@ import pytest_asyncio
 import tempfile
 from unittest.mock import AsyncMock
 
-from app.a2a.core.ai_decision_logger import (
+from src.a2a.core.ai_decision_logger import (
     AIDecisionLogger, 
     DecisionType, 
     OutcomeStatus,
@@ -15,12 +15,12 @@ from app.a2a.core.ai_decision_logger import (
     AIDecisionRegistry,
     get_global_decision_registry
 )
-from app.a2a.core.ai_decision_integration_example import (
+from src.a2a.core.ai_decision_integration_example import (
     ExampleEnhancedAgent,
     log_ai_advisor_interaction,
     log_help_seeking_interaction
 )
-from app.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
+from src.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
 
 
 class TestAIDecisionLogger:

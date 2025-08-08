@@ -15,7 +15,7 @@ from typing import Dict, Any
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.a2a.agents.vector_processing_agent import VectorProcessingAgent
-from app.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
+from src.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
 
 
 def create_mock_ai_ready_data() -> Dict[str, Any]:

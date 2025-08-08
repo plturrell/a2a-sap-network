@@ -7,8 +7,8 @@ import pytest
 import tempfile
 from unittest.mock import AsyncMock, patch
 
-from app.a2a.core.ai_decision_logger import DecisionType, OutcomeStatus
-from app.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
+from src.a2a.core.ai_decision_logger import DecisionType, OutcomeStatus
+from src.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
 
 
 class TestDatabaseAIDecisionIntegration:
@@ -31,7 +31,7 @@ class TestDatabaseAIDecisionIntegration:
             assert agent.ai_decision_logger.agent_id == agent.agent_id
             
             # Verify it's the database version
-            from app.a2a.core.ai_decision_logger_database import AIDecisionDatabaseLogger
+            from src.a2a.core.ai_decision_logger_database import AIDecisionDatabaseLogger
             assert isinstance(agent.ai_decision_logger, AIDecisionDatabaseLogger)
             
             # Verify data manager URL was set
@@ -39,7 +39,7 @@ class TestDatabaseAIDecisionIntegration:
             assert agent.ai_decision_logger.data_manager_url == expected_url
             
             # Verify logger is registered globally
-            from app.a2a.core.ai_decision_logger_database import get_global_database_decision_registry
+            from src.a2a.core.ai_decision_logger_database import get_global_database_decision_registry
             registry = get_global_database_decision_registry()
             assert agent.agent_id in registry.agent_loggers
     
@@ -333,7 +333,7 @@ class TestDatabaseAIDecisionIntegration:
             mock_client_class.return_value = mock_client
             
             from app.a2a.agents.data_standardization_agent import FinancialStandardizationAgent
-            from app.a2a.core.ai_decision_logger_database import get_global_database_decision_registry
+            from src.a2a.core.ai_decision_logger_database import get_global_database_decision_registry
             
             # Mock AI advisor
             mock_advisor = AsyncMock()
@@ -489,7 +489,7 @@ class TestDatabaseSchemaAndMigration:
             mock_client.post.return_value = mock_response
             mock_client_class.return_value.__aenter__.return_value = mock_client
             
-            from app.a2a.core.ai_decision_database_integration import initialize_ai_decision_database_schema
+            from src.a2a.core.ai_decision_database_integration import initialize_ai_decision_database_schema
             
             success = await initialize_ai_decision_database_schema("http://localhost:8000/data-manager")
             
@@ -574,7 +574,7 @@ class TestDatabaseSchemaAndMigration:
                 mock_logger.shutdown = AsyncMock()
                 mock_logger_class.return_value = mock_logger
                 
-                from app.a2a.core.ai_decision_database_integration import migrate_json_data_to_database
+                from src.a2a.core.ai_decision_database_integration import migrate_json_data_to_database
                 
                 # Run migration
                 result = await migrate_json_data_to_database(

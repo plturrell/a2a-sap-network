@@ -22,8 +22,8 @@ from .calc_validation_agent_sdk import (
     TestExecutionResult,
     QualityReport
 )
-from app.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
-from app.a2a.core.response_mapper import ResponseMapper
+from src.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
+from src.a2a.core.response_mapper import ResponseMapper
 from app.a2a.security.smart_contract_trust import verify_a2a_message
 
 logger = logging.getLogger(__name__)

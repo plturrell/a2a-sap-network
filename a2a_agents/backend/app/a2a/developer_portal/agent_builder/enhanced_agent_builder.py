@@ -20,7 +20,7 @@ from jinja2 import Template, Environment, FileSystemLoader
 
 # Import A2A types for message handling
 try:
-    from app.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
+    from src.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
 except ImportError:
     # Define basic types if core module not available
     class MessageRole(str, Enum):
@@ -267,7 +267,7 @@ from typing import Dict, Any, List
 from datetime import datetime
 
 from app.a2a.agents.data_standardization_agent import DataStandardizationAgent
-from app.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
+from src.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
 
 class {{ agent_class_name }}(DataStandardizationAgent):
     \"\"\"{{ agent_description }}\"\"\"
@@ -597,7 +597,7 @@ from typing import Dict, Any, List
 from datetime import datetime
 
 from app.a2a.agents.base_agent import BaseAgent
-from app.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
+from src.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
 
 class {self._to_class_name(config.name)}(BaseAgent):
     """

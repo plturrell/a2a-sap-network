@@ -9,7 +9,7 @@ from opentelemetry.propagate import extract, inject
 from typing import Dict
 import logging
 
-from app.a2a.core.telemetry import add_span_attributes, add_span_event
+from src.a2a.core.telemetry import add_span_attributes, add_span_event
 
 logger = logging.getLogger(__name__)
 

@@ -19,7 +19,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from app.a2a.agents.vector_processing_agent import VectorProcessingAgent
 from app.a2a.agents import agent3_router
 from a2a_network.python_sdk.blockchain.enhanced_agent_discovery import EnhancedBlockchainAgentRegistry
-from app.a2a.core.message_queue import initialize_message_queue
+from src.a2a.core.message_queue import initialize_message_queue
 from app.a2a.security.smart_contract_trust import initialize_agent_trust
 from app.config import get_settings
 

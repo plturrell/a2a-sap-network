@@ -12,10 +12,10 @@ from datetime import datetime
 import httpx
 
 from app.a2a.agents.data_standardization_agent_v2 import FinancialStandardizationAgentV2
-from app.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
-from app.a2a.core.auth_manager import get_auth_manager
-from app.a2a.core.circuit_breaker import get_breaker_manager
-from app.a2a.core.response_mapper import get_response_mapper_registry
+from src.a2a.core.a2a_types import A2AMessage, MessagePart, MessageRole
+from src.a2a.core.auth_manager import get_auth_manager
+from src.a2a.core.circuit_breaker import get_breaker_manager
+from src.a2a.core.response_mapper import get_response_mapper_registry
 
 
 class TestAgentIntegration:

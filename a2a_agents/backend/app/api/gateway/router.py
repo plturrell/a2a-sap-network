@@ -12,7 +12,7 @@ import logging
 from app.api.deps import get_current_user_optional
 from app.models.user import User
 from .gateway import gateway, RateLimitConfig
-from app.a2a.core.telemetry import trace_async, add_span_attributes
+from src.a2a.core.telemetry import trace_async, add_span_attributes
 
 logger = logging.getLogger(__name__)
 

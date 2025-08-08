@@ -18,8 +18,8 @@ from a2a_common import (
     A2AMessage, MessageRole
 )
 from a2a_common.sdk.utils import create_success_response, create_error_response, create_agent_id
-from a2a_common.core.workflow_context import workflow_context_manager
-from a2a_common.core.workflow_monitor import workflow_monitor
+from src.a2a.core.workflow_context import workflow_context_manager
+from src.a2a.core.workflow_monitor import workflow_monitor
 from a2a_common.security.smart_contract_trust import sign_a2a_message
 from a2a_common.security.delegation_contracts import DelegationAction
 from a2a_common.skills.account_standardizer import AccountStandardizer

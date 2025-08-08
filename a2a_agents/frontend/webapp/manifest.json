@@ -39,7 +39,7 @@
     },
     "crossNavigation": {
       "inbounds": {
-        "a2a-portal-inbound": {
+        "A2APortal-display": {
           "title": "{{flpTitle}}",
           "subTitle": "{{flpSubtitle}}",
           "signature": {
@@ -48,6 +48,145 @@
           },
           "semanticObject": "A2APortal",
           "action": "display"
+        },
+        "Project-display": {
+          "title": "{{projects.title}}",
+          "subTitle": "View project details",
+          "signature": {
+            "parameters": {
+              "projectId": {
+                "required": true,
+                "renameTo": "id"
+              }
+            },
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "Project",
+          "action": "display"
+        },
+        "Project-manage": {
+          "title": "{{projects.list}}",
+          "subTitle": "Manage all projects",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "Project",
+          "action": "manage"
+        },
+        "Project-create": {
+          "title": "{{projects.create}}",
+          "subTitle": "Create new project",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "Project",
+          "action": "create"
+        },
+        "Agent-display": {
+          "title": "{{agents.title}}",
+          "subTitle": "View agent details",
+          "signature": {
+            "parameters": {
+              "agentId": {
+                "required": true,
+                "renameTo": "id"
+              },
+              "agentType": {
+                "required": false
+              }
+            },
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "Agent",
+          "action": "display"
+        },
+        "Agent-manage": {
+          "title": "{{agents.overview}}",
+          "subTitle": "Manage all agents",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "Agent",
+          "action": "manage"
+        },
+        "Analytics-display": {
+          "title": "{{analytics.title}}",
+          "subTitle": "View analytics dashboard",
+          "signature": {
+            "parameters": {
+              "analyticsType": {
+                "required": false
+              },
+              "timeRange": {
+                "required": false
+              }
+            },
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "Analytics",
+          "action": "display"
+        },
+        "Workflow-manage": {
+          "title": "Workflow Management",
+          "subTitle": "Manage A2A workflows",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "Workflow",
+          "action": "manage"
+        },
+        "Settings-display": {
+          "title": "{{settings.title}}",
+          "subTitle": "Application settings",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "Settings",
+          "action": "display"
+        }
+      },
+      "outbounds": {
+        "navigateToProject": {
+          "semanticObject": "Project",
+          "action": "display",
+          "parameters": {
+            "projectId": ""
+          }
+        },
+        "navigateToAgent": {
+          "semanticObject": "Agent", 
+          "action": "display",
+          "parameters": {
+            "agentId": "",
+            "agentType": ""
+          }
+        },
+        "navigateToAnalytics": {
+          "semanticObject": "Analytics",
+          "action": "display",
+          "parameters": {
+            "analyticsType": "",
+            "timeRange": ""
+          }
+        },
+        "navigateToSAPBusinessPartner": {
+          "semanticObject": "BusinessPartner",
+          "action": "display",
+          "parameters": {
+            "businessPartnerId": ""
+          }
+        },
+        "navigateToSAPCustomer": {
+          "semanticObject": "Customer",
+          "action": "display", 
+          "parameters": {
+            "customerId": ""
+          }
         }
       }
     }
