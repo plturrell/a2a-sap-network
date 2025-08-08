@@ -2,6 +2,11 @@
 
 # Note: a2a_agents/ and a2a_network/ directories are now included in this repository
 
+# Large data files (exceeding GitHub 100MB limit)
+*.csv
+a2a_agents/data/raw/
+a2a_agents/data/processed/
+
 # Dependencies
 node_modules/
 npm-debug.log*
