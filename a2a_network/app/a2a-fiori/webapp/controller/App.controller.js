@@ -69,6 +69,10 @@ sap.ui.define([
                 "capabilities": "capabilities",
                 "workflows": "workflows",
                 "analytics": "analytics",
+                "blockchain": "blockchain",
+                "agentVisualization": "agentVisualization",
+                "contracts": "contracts",
+                "transactions": "transactions",
                 "settings": "settings"
             };
             

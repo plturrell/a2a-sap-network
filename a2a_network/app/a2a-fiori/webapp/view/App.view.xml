@@ -95,6 +95,16 @@
                                     icon="sap-icon://line-chart"
                                     key="analytics"/>
                                 <tnt:NavigationListItem
+                                    text="Blockchain"
+                                    icon="sap-icon://chain-link"
+                                    key="blockchain"
+                                    items="{undefined}">
+                                    <tnt:NavigationListItem text="Dashboard" key="blockchain"/>
+                                    <tnt:NavigationListItem text="Agent Network" key="agentVisualization"/>
+                                    <tnt:NavigationListItem text="Smart Contracts" key="contracts"/>
+                                    <tnt:NavigationListItem text="Transactions" key="transactions"/>
+                                </tnt:NavigationListItem>
+                                <tnt:NavigationListItem
                                     text="Settings"
                                     icon="sap-icon://action-settings"
                                     key="settings"/>

@@ -171,6 +171,21 @@
                     "name": "analytics",
                     "pattern": "analytics",
                     "target": "analytics"
+                },
+                {
+                    "name": "blockchain",
+                    "pattern": "blockchain",
+                    "target": "blockchain"
+                },
+                {
+                    "name": "agentVisualization",
+                    "pattern": "agent-visualization",
+                    "target": "agentVisualization"
+                },
+                {
+                    "name": "contractDetail",
+                    "pattern": "contracts/{address}",
+                    "target": "contractDetail"
                 }
             ],
             "targets": {
@@ -208,6 +223,21 @@
                     "viewType": "XML",
                     "viewName": "Analytics",
                     "viewLevel": 2
+                },
+                "blockchain": {
+                    "viewType": "XML",
+                    "viewName": "BlockchainDashboard",
+                    "viewLevel": 2
+                },
+                "agentVisualization": {
+                    "viewType": "XML",
+                    "viewName": "AgentVisualization",
+                    "viewLevel": 2
+                },
+                "contractDetail": {
+                    "viewType": "XML",
+                    "viewName": "ContractDetail",
+                    "viewLevel": 3
                 }
             }
         }

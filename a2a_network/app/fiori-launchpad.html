@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>A2A Network - SAP Fiori Launchpad</title>
+    
+    <!-- Bootstrap UI5 -->
+    <script id="sap-ui-bootstrap"
+        src="https://ui5.sap.com/1.120.0/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-libs="sap.m,sap.f,sap.ushell"
+        data-sap-ui-compatVersion="edge"
+        data-sap-ui-async="true"
+        data-sap-ui-resourceroots='{
+            "a2a.network.fiori": "./a2a-fiori/webapp"
+        }'>
+    </script>
+    
+    <script>
+        sap.ui.getCore().attachInit(function() {
+            // Configure FLP-like shell
+            sap.ushell.Container.createRenderer("fiori2").placeAt("content");
+        });
+        
+        // Minimal FLP configuration
+        window["sap-ushell-config"] = {
+            defaultRenderer: "fiori2",
+            renderers: {
+                fiori2: {
+                    componentData: {
+                        config: {
+                            rootIntent: "Shell-home",
+                            enableNotifications: false,
+                            enableSearch: false,
+                            enablePersonalization: false
+                        }
+                    }
+                }
+            },
+            services: {
+                LaunchPage: {
+                    adapter: {
+                        config: {
+                            groups: [
+                                {
+                                    id: "a2a-network-group",
+                                    title: "A2A Network",
+                                    tiles: [
+                                        {
+                                            id: "a2a-network-tile",
+                                            title: "A2A Network",
+                                            subtitle: "Enterprise Agent Coordination",
+                                            icon: "sap-icon://collaborate",
+                                            targetURL: "#A2ANetwork-manage"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                ClientSideTargetResolution: {
+                    adapter: {
+                        config: {
+                            inbounds: {
+                                "A2ANetwork-manage": {
+                                    semanticObject: "A2ANetwork",
+                                    action: "manage",
+                                    title: "A2A Network",
+                                    signature: {
+                                        parameters: {},
+                                        additionalParameters: "allowed"
+                                    },
+                                    resolutionResult: {
+                                        applicationType: "SAPUI5",
+                                        additionalInformation: "SAPUI5.Component=a2a.network.fiori",
+                                        url: "./a2a-fiori/webapp"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                NavTargetResolution: {
+                    config: {
+                        enableClientSideTargetResolution: true
+                    }
+                }
+            }
+        };
+    </script>
+    
+    <style>
+        html, body, #content {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body class="sapUiBody sapUShellFullHeight" id="content">
+</body>
+</html>

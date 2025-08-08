@@ -2,6 +2,7 @@
 pragma solidity ^0.8.23;
 
 import "forge-std/Script.sol";
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "../src/AgentRegistry.sol";
 import "../src/MessageRouter.sol";
 import "../contracts/AgentServiceMarketplace.sol";
@@ -44,19 +45,30 @@ contract DeployScript is Script {
             address(registry)
         );
         
-        // Note: In production, use proper UUPS proxy deployment
-        // For now, deploying implementations directly
-        AgentServiceMarketplace marketplace = marketplaceImpl;
-        marketplace.initialize(address(registry));
-        console.log("AgentServiceMarketplace deployed to:", address(marketplace));
+        // Deploy UUPS proxy for AgentServiceMarketplace using ERC1967Proxy
+        ERC1967Proxy marketplaceProxy = new ERC1967Proxy(
+            address(marketplaceImpl),
+            marketplaceInit
+        );
+        AgentServiceMarketplace marketplace = AgentServiceMarketplace(address(marketplaceProxy));
+        console.log("AgentServiceMarketplace proxy deployed to:", address(marketplace));
+        console.log("AgentServiceMarketplace implementation at:", address(marketplaceImpl));
         
-        CapabilityMatcher matcher = matcherImpl;
-        matcher.initialize(address(registry));
-        console.log("CapabilityMatcher deployed to:", address(matcher));
+        ERC1967Proxy matcherProxy = new ERC1967Proxy(
+            address(matcherImpl),
+            matcherInit
+        );
+        CapabilityMatcher matcher = CapabilityMatcher(address(matcherProxy));
+        console.log("CapabilityMatcher proxy deployed to:", address(matcher));
+        console.log("CapabilityMatcher implementation at:", address(matcherImpl));
         
-        PerformanceReputationSystem reputation = reputationImpl;
-        reputation.initialize(address(registry));
-        console.log("PerformanceReputationSystem deployed to:", address(reputation));
+        ERC1967Proxy reputationProxy = new ERC1967Proxy(
+            address(reputationImpl),
+            reputationInit
+        );
+        PerformanceReputationSystem reputation = PerformanceReputationSystem(address(reputationProxy));
+        console.log("PerformanceReputationSystem proxy deployed to:", address(reputation));
+        console.log("PerformanceReputationSystem implementation at:", address(reputationImpl));
         
         // Grant necessary roles
         registry.grantRole(registry.DEFAULT_ADMIN_ROLE(), address(reputation));

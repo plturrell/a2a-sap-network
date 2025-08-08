@@ -91,6 +91,7 @@ const helmetConfig = helmet({
       scriptSrc: [
         "'self'",
         "'unsafe-inline'", // Required for SAP UI5
+        "https://ui5.sap.com",
         "https://sapui5.hana.ondemand.com",
         "https://openui5.hana.ondemand.com",
         "https://sdk.openui5.org"
@@ -98,6 +99,7 @@ const helmetConfig = helmet({
       styleSrc: [
         "'self'",
         "'unsafe-inline'", // Required for SAP UI5
+        "https://ui5.sap.com",
         "https://sapui5.hana.ondemand.com",
         "https://openui5.hana.ondemand.com",
         "https://sdk.openui5.org"
@@ -110,13 +112,16 @@ const helmetConfig = helmet({
       ],
       fontSrc: [
         "'self'",
+        "https://ui5.sap.com",
         "https://sapui5.hana.ondemand.com",
         "https://openui5.hana.ondemand.com",
         "https://sdk.openui5.org"
       ],
       connectSrc: [
         "'self'",
-        "wss://", // WebSocket connections
+        "ws://localhost:*",
+        "wss://localhost:*",
+        "https://ui5.sap.com",
         "https://sapui5.hana.ondemand.com",
         process.env.BLOCKCHAIN_RPC_URL || "http://localhost:8545"
       ],

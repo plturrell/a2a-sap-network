@@ -3,50 +3,53 @@ const { Web3 } = require('web3');
 const { ethers } = require('ethers');
 const fs = require('fs').promises;
 const path = require('path');
+const BaseService = require('./lib/base-service');
 
-class BlockchainService extends cds.Service {
-    async init() {
+class BlockchainService extends BaseService {
+    async initializeService() {
+        const log = cds.log('blockchain-service');
+        
         // Initialize Web3
         const { blockchain } = cds.env.requires;
         this.web3 = new Web3(blockchain.rpc || process.env.BLOCKCHAIN_RPC_URL);
         this.provider = new ethers.JsonRpcProvider(blockchain.rpc || process.env.BLOCKCHAIN_RPC_URL);
         
         // Setup default account
-        if (process.env.DEFAULT_PRIVATE_KEY) {
-            try {
-                const account = this.web3.eth.accounts.privateKeyToAccount(process.env.DEFAULT_PRIVATE_KEY);
-                this.web3.eth.accounts.wallet.add(account);
-                this.web3.eth.defaultAccount = account.address;
-                this.defaultSigner = new ethers.Wallet(process.env.DEFAULT_PRIVATE_KEY, this.provider);
-                console.log(`Blockchain service initialized with account: ${account.address}`);
-            } catch (error) {
-                console.warn('Failed to initialize blockchain account:', error.message);
-                console.warn('Blockchain service will run in limited mode');
-            }
-        } else {
-            console.warn('No DEFAULT_PRIVATE_KEY provided - blockchain service running without default account');
-        }
+        await this.executeWithErrorHandling(
+            () => this.initializeBlockchainAccount(),
+            'Failed to initialize blockchain account'
+        );
         
         // Load contract ABIs
         this.contracts = {};
-        try {
-            await this.loadContracts(blockchain.contracts);
-        } catch (error) {
-            console.warn('Failed to load contracts:', error.message);
-            console.warn('Blockchain service will continue without contracts');
-        }
+        await this.executeWithErrorHandling(
+            () => this.loadContracts(blockchain.contracts),
+            'Failed to load contracts',
+            { contracts: blockchain.contracts }
+        );
         
         // Start event listeners
-        try {
-            this.startEventListeners();
-        } catch (error) {
-            console.warn('Failed to start event listeners:', error.message);
-        }
+        await this.executeWithErrorHandling(
+            () => this.startEventListeners(),
+            'Failed to start event listeners'
+        );
         
         // Register service handlers
         this.registerHandlers();
+    }
+    
+    async initializeBlockchainAccount() {
+        const log = cds.log('blockchain-service');
         
-        await super.init();
+        if (process.env.DEFAULT_PRIVATE_KEY) {
+            const account = this.web3.eth.accounts.privateKeyToAccount(process.env.DEFAULT_PRIVATE_KEY);
+            this.web3.eth.accounts.wallet.add(account);
+            this.web3.eth.defaultAccount = account.address;
+            this.defaultSigner = new ethers.Wallet(process.env.DEFAULT_PRIVATE_KEY, this.provider);
+            log.info('Blockchain service initialized', { account: account.address });
+        } else {
+            log.warn('No DEFAULT_PRIVATE_KEY provided - blockchain service running without default account');
+        }
     }
     
     async loadContracts(contractConfigs) {
@@ -75,7 +78,8 @@ class BlockchainService extends cds.Service {
                     address = envAddresses[name];
                     
                     if (!address) {
-                        console.warn(`No deployment or env address found for ${name}`);
+                        const log = cds.log('blockchain-service');
+                        log.warn(`No deployment or env address found for contract`, { contractName: name });
                         address = '0x' + '0'.repeat(40);
                     }
                 }
@@ -87,9 +91,11 @@ class BlockchainService extends cds.Service {
                     address
                 };
                 
-                console.log(`Loaded contract ${name} at ${address}`);
+                const log = cds.log('blockchain-service');
+                log.info(`Loaded contract ${name}`, { address });
             } catch (error) {
-                console.error(`Failed to load contract ${name}:`, error);
+                const log = cds.log('blockchain-service');
+                log.error(`Failed to load contract ${name}`, error.message);
             }
         }
     }

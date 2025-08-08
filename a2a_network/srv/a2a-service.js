@@ -1,7 +1,8 @@
 const cds = require('@sap/cds')
 const LOG = cds.log('a2a-service')
-
 const { inspect } = require('util')
+const transactionCoordinator = require('./lib/transaction-coordinator')
+const BaseService = require('./lib/base-service')
 
 // Internal state symbols following SAP patterns
 const $blockchain = Symbol('blockchain')
@@ -14,23 +15,13 @@ const $services = Symbol('services')
  * 
  * Following SAP internal code patterns and standards
  */
-class A2AService extends cds.ApplicationService {
+class A2AService extends BaseService {
 
-  async init() {
+  async initializeService() {
     const { Agents, Services, Capabilities, Messages, Workflows, WorkflowExecutions } = this.entities
 
-    // Connect to blockchain service following SAP service connection patterns
-    try {
-      this[$blockchain] = await cds.connect.to('BlockchainService')
-      if (!this[$blockchain]) {
-        LOG.error('BlockchainService not available - running in limited mode')
-      } else {
-        LOG.info('Connected to BlockchainService')
-      }
-    } catch (error) {
-      LOG.error('Failed to connect to BlockchainService', error)
-      // Continue without blockchain - graceful degradation
-    }
+    // Connect to blockchain service
+    this[$blockchain] = this.blockchain
 
     // Input validation handlers
     this.before('CREATE', Agents, req => this._validateAgent(req))
@@ -54,82 +45,73 @@ class A2AService extends cds.ApplicationService {
     this.on('syncBlockchain', req => this._syncBlockchain(req))
 
     this[$initialized] = true
-    await super.init()
   }
 
   _validateAgent(req) {
-    const { data } = req
-
-    if (!data.name?.trim()) {
-      req.error(400, 'AGENT_NAME_REQUIRED', 'Agent name is required')
-    }
-
-    if (data.address && !this._isValidEthereumAddress(data.address)) {
-      req.error(400, 'INVALID_ETHEREUM_ADDRESS', `Invalid Ethereum address: ${data.address}`)
-    }
-
-    if (data.endpoint && !this._isValidURL(data.endpoint)) {
-      req.error(400, 'INVALID_ENDPOINT_URL', 'Invalid endpoint URL format')
-    }
-
-    LOG.debug('Agent validation passed', { name: data.name })
+    this.validation.validateAgent(req.data, req);
+    LOG.debug('Agent validation passed', { name: req.data.name });
   }
 
   async _validateAgentUpdate(req) {
-    const { data, params } = req
-    const agentId = params[0]
+    const { data, params } = req;
+    const agentId = params[0];
 
-    const existing = await SELECT.one.from(this.entities.Agents).where({ ID: agentId })
+    // Check if agent exists
+    const existing = await SELECT.one.from(this.entities.Agents).where({ ID: agentId });
     if (!existing) {
-      req.error(404, 'AGENT_NOT_FOUND', `Agent ${agentId} not found`)
+      req.error(404, 'AGENT_NOT_FOUND', `Agent ${agentId} not found`);
     }
 
-    if (data.address && data.address !== existing.address) {
-      if (!this._isValidEthereumAddress(data.address)) {
-        req.error(400, 'INVALID_ETHEREUM_ADDRESS', `Invalid Ethereum address: ${data.address}`)
-      }
-    }
+    // Validate update data
+    this.validation.validateAgentUpdate(data, req);
   }
 
   async _validateService(req) {
-    const { data } = req
+    const { data } = req;
 
-    if (!data.name?.trim()) {
-      req.error(400, 'SERVICE_NAME_REQUIRED', 'Service name is required')
-    }
+    // Use shared validation
+    this.validation.validateService(data, req);
 
+    // Additional business logic validation
     if (data.provider_ID) {
-      const provider = await SELECT.one.from(this.entities.Agents).where({ ID: data.provider_ID })
+      const provider = await SELECT.one.from(this.entities.Agents).where({ ID: data.provider_ID });
       if (!provider) {
-        req.error(400, 'PROVIDER_NOT_FOUND', `Provider agent ${data.provider_ID} not found`)
+        req.error(400, 'PROVIDER_NOT_FOUND', `Provider agent ${data.provider_ID} not found`);
       }
-    }
-
-    if (data.pricePerCall !== undefined && data.pricePerCall < 0) {
-      req.error(400, 'INVALID_PRICE', 'Price must be non-negative')
     }
   }
 
   async _validateServiceUpdate(req) {
-    const { data, params } = req
-    const serviceId = params[0]
+    const { data, params } = req;
+    const serviceId = params[0];
 
-    const existing = await SELECT.one.from(this.entities.Services).where({ ID: serviceId })
+    // Check if service exists
+    const existing = await SELECT.one.from(this.entities.Services).where({ ID: serviceId });
     if (!existing) {
-      req.error(404, 'SERVICE_NOT_FOUND', `Service ${serviceId} not found`)
+      req.error(404, 'SERVICE_NOT_FOUND', `Service ${serviceId} not found`);
     }
 
-    if (data.pricePerCall !== undefined && data.pricePerCall < 0) {
-      req.error(400, 'INVALID_PRICE', 'Price must be non-negative')
-    }
+    // Validate update data
+    this.validation.validateServiceUpdate(data, req);
   }
 
   async _afterAgentCreate(data, req) {
     try {
-      // Auto-register on blockchain if requested
+      // Auto-register on blockchain if requested using distributed transaction
       if (req.data.registerOnBlockchain && this[$blockchain]) {
-        const txHash = await this._registerAgentOnBlockchain(data)
-        LOG.info('Agent registered on blockchain', { agentId: data.ID, txHash })
+        const result = await transactionCoordinator.executeSaga('agent-registration', {
+          agentId: data.ID,
+          name: data.name,
+          endpoint: data.endpoint,
+          capabilities: data.capabilities
+        }, {
+          correlationId: req.id || 'agent-create-' + data.ID
+        })
+        
+        LOG.info('Agent registration saga completed', { 
+          agentId: data.ID, 
+          transactionId: result.transactionId 
+        })
       }
 
       // Emit business event
@@ -217,39 +199,58 @@ class A2AService extends cds.ApplicationService {
   }
 
   async _executeWorkflow(req) {
-    const { ID } = req.params[0]
-    const { parameters } = req.data
-
-    const workflow = await SELECT.one.from(this.entities.Workflows).where({ ID })
-    if (!workflow) {
-      req.error(404, 'WORKFLOW_NOT_FOUND', `Workflow ${ID} not found`)
-    }
-
-    // Validate workflow definition
-    let definition
+    const span = tracing.startSpan('execute-workflow')
+    
     try {
-      definition = JSON.parse(workflow.definition)
+      const { ID } = req.params[0]
+      const { parameters } = req.data
+
+      span.setTags({
+        'workflow.id': ID,
+        'parameters.count': Object.keys(parameters || {}).length
+      })
+
+      const workflow = await SELECT.one.from(this.entities.Workflows).where({ ID })
+      if (!workflow) {
+        span.setStatus('ERROR')
+        req.error(404, 'WORKFLOW_NOT_FOUND', `Workflow ${ID} not found`)
+      }
+
+      // Validate workflow definition
+      let definition
+      try {
+        definition = JSON.parse(workflow.definition)
+        span.setTag('workflow.steps', definition.steps?.length || 0)
+      } catch (error) {
+        span.logError(error)
+        req.error(400, 'INVALID_WORKFLOW_DEFINITION', 'Invalid workflow definition JSON')
+      }
+
+      // Create execution record
+      const execution = await INSERT.into(this.entities.WorkflowExecutions).entries({
+        workflow_ID: ID,
+        status: 'running',
+        startedAt: new Date(),
+        parameters: JSON.stringify(parameters || {})
+      })
+
+      span.setTag('execution.id', execution.ID)
+      LOG.info('Workflow execution started', { workflowId: ID, executionId: execution.ID })
+
+      // Execute asynchronously
+      setImmediate(() => {
+        this._executeWorkflowAsync(execution.ID, definition, parameters || {})
+          .catch(error => LOG.error('Workflow execution failed', { executionId: execution.ID, error: error.message }))
+      })
+
+      span.finish()
+      return execution.ID
+      
     } catch (error) {
-      req.error(400, 'INVALID_WORKFLOW_DEFINITION', 'Invalid workflow definition JSON')
+      span.logError(error)
+      span.finish()
+      throw error
     }
-
-    // Create execution record
-    const execution = await INSERT.into(this.entities.WorkflowExecutions).entries({
-      workflow_ID: ID,
-      status: 'running',
-      startedAt: new Date(),
-      parameters: JSON.stringify(parameters || {})
-    })
-
-    LOG.info('Workflow execution started', { workflowId: ID, executionId: execution.ID })
-
-    // Execute asynchronously
-    setImmediate(() => {
-      this._executeWorkflowAsync(execution.ID, definition, parameters || {})
-        .catch(error => LOG.error('Workflow execution failed', { executionId: execution.ID, error: error.message }))
-    })
-
-    return execution.ID
   }
 
   async _getNetworkHealth() {
@@ -290,9 +291,17 @@ class A2AService extends cds.ApplicationService {
   }
 
   async _searchAgents(req) {
-    const { capabilities, minReputation, maxPrice } = req.data
-
+    const span = tracing.startSpan('search-agents')
+    
     try {
+      const { capabilities, minReputation, maxPrice } = req.data
+
+      span.setTags({
+        'search.capabilities': capabilities?.length || 0,
+        'search.minReputation': minReputation || 0,
+        'search.maxPrice': maxPrice || 'unlimited'
+      })
+
       let query = SELECT.from(this.entities.Agents).where({ isActive: true })
 
       if (minReputation) {
@@ -300,40 +309,69 @@ class A2AService extends cds.ApplicationService {
       }
 
       const agents = await query
+      span.setTag('agents.found', agents.length)
 
       // Filter by capabilities if specified
       if (capabilities?.length > 0) {
         const filtered = await this._filterAgentsByCapabilities(agents, capabilities)
+        span.setTag('agents.filtered', filtered.length)
+        span.finish()
         return JSON.stringify(filtered.map(a => a.ID))
       }
 
+      span.finish()
       return JSON.stringify(agents.map(a => a.ID))
 
     } catch (error) {
+      span.logError(error)
+      span.finish()
       LOG.error('Agent search failed', { error: error.message, criteria: req.data })
       return JSON.stringify([])
     }
   }
 
   async _matchCapabilities(req) {
-    const { requirements } = req.data
-
-    if (!requirements?.length) {
-      return JSON.stringify([])
-    }
-
+    const span = tracing.startSpan('match-capabilities')
+    
     try {
+      const { requirements } = req.data
+
+      if (!requirements?.length) {
+        span.setTag('requirements.empty', true)
+        span.finish()
+        return JSON.stringify([])
+      }
+
+      span.setTags({
+        'requirements.count': requirements.length,
+        'requirements.list': requirements.join(',')
+      })
+
       // Use blockchain capability matcher if available
       if (this[$blockchain]) {
-        const matches = await this[$blockchain].send('matchCapabilities', { requirements })
-        return JSON.stringify(matches)
+        const instrumentation = tracing.instrumentServiceCall('BlockchainService', 'matchCapabilities')
+        try {
+          const matches = await this[$blockchain].send('matchCapabilities', { requirements })
+          instrumentation.finish(matches)
+          span.setTag('matches.count', matches?.length || 0)
+          span.finish()
+          return JSON.stringify(matches)
+        } catch (error) {
+          instrumentation.finish(null, error)
+          throw error
+        }
       }
 
       // Fallback to local matching
-      return await this._localCapabilityMatching(requirements)
+      span.setTag('matching.method', 'local')
+      const result = await this._localCapabilityMatching(requirements)
+      span.finish()
+      return result
 
     } catch (error) {
-      LOG.error('Capability matching failed', { error: error.message, requirements })
+      span.logError(error)
+      span.finish()
+      LOG.error('Capability matching failed', { error: error.message, requirements: req.data.requirements })
       return JSON.stringify([])
     }
   }
@@ -533,11 +571,25 @@ class A2AService extends cds.ApplicationService {
   }
 
   async _executeRemoteStep(agent, step, parameters) {
+    const span = tracing.startSpan('execute-remote-step')
+    
     try {
+      span.setTags({
+        'agent.name': agent.name,
+        'agent.endpoint': agent.endpoint,
+        'step.action': step.action,
+        'http.method': 'POST'
+      })
+
       const fetch = (await import('node-fetch')).default
+      const headers = {
+        'Content-Type': 'application/json',
+        ...tracing.injectTraceHeaders()
+      }
+      
       const response = await fetch(agent.endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           action: step.action,
           input: step.input,
@@ -546,11 +598,17 @@ class A2AService extends cds.ApplicationService {
         timeout: 30000
       })
 
+      span.setTag('http.status_code', response.status)
+
       if (!response.ok) {
+        span.setStatus('ERROR')
         throw new Error(`Agent returned ${response.status}: ${response.statusText}`)
       }
 
       const result = await response.json()
+      span.setTag('response.success', true)
+      span.finish()
+      
       return {
         success: true,
         data: result,
@@ -559,6 +617,8 @@ class A2AService extends cds.ApplicationService {
       }
 
     } catch (error) {
+      span.logError(error)
+      span.finish()
       LOG.error('Remote step execution failed', {
         agent: agent.name,
         step: step.action,

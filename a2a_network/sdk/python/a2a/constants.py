@@ -71,14 +71,23 @@ DEFAULT_CONFIG = {
     'performance_sample_rate': 0.1
 }
 
-# Contract event signatures
+# Contract event signatures - Generated from contract ABIs
+# Use: web3.keccak(text="EventName(type1,type2,...)").hex()
 CONTRACT_EVENTS = {
-    'AgentRegistered': '0x...',  # Event signatures would be filled in
-    'MessageSent': '0x...',
-    'MessageDelivered': '0x...',
-    'TaskCreated': '0x...',
-    'TaskCompleted': '0x...',
-    'ReputationUpdated': '0x...'
+    # AgentRegistry contract events
+    'AgentRegistered': "0xd983b353843079ea72b0607ed788e429e4b01c5c7f6156f061b2989604f319ea",  # AgentRegistered(address,string,string[],uint256)
+    'AgentUpdated': "0xbaef45cead810df032ca6f6dc22d0fa78f7bc08a3e2f3177cfe2f37f4b08071a",     # AgentUpdated(address,uint256)
+    
+    # MessageRouter contract events  
+    'MessageSent': "0xd8331239dcfe177d02e949e3cfa5969f4a3c658a80554db93c64ab76f7acf9c5",      # MessageSent(bytes32,address,address,bytes,uint256)
+    'MessageDelivered': "0x3556f710055b94163d2468428dd83a9be7548047bb5242c0fb714773ee86497b", # MessageDelivered(bytes32,address,bool)
+    
+    # Task management events
+    'TaskCreated': "0x5a4db692818f1938ef550c82b67bf87d982f1b039bee7bd09502498ac9b80936",      # TaskCreated(bytes32,address,address,string,uint256)
+    'TaskCompleted': "0xa9442c3bfbd3ea4b685ba0781c4cf38e46e10d27d6b11fea6b9f05eee402fbcc",    # TaskCompleted(bytes32,address,bool,bytes)
+    
+    # Reputation events
+    'ReputationUpdated': "0x5b88a2e3fc1a53234357ab78c104df11c33ccfa79886793654565ad70b8afb6e" # ReputationUpdated(address,uint256,uint256)
 }
 
 # Error codes

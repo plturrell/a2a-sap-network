@@ -130,9 +130,7 @@
     "refresh-token-validity": 86400,
     "redirect-uris": [
       "https://*.cfapps.sap.hana.ondemand.com/**",
-      "https://*.hana.ondemand.com/**",
-      "http://localhost:4004/**",
-      "http://localhost:4005/**"
+      "https://*.hana.ondemand.com/**"
     ],
     "system-attributes": [
       "groups",

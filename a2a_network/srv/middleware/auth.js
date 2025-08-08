@@ -16,8 +16,14 @@ const sessionConfig = {
   }
 };
 
-// Environment flag to enable/disable XSUAA validation (for local development)
+// Environment flag to enable/disable XSUAA validation
+// SECURITY: This should always be 'true' in production
 const ENABLE_XSUAA_VALIDATION = process.env.ENABLE_XSUAA_VALIDATION === 'true';
+
+// Production safety check
+if (process.env.NODE_ENV === 'production' && !ENABLE_XSUAA_VALIDATION) {
+  throw new Error('SECURITY ERROR: XSUAA validation MUST be enabled in production environment');
+}
 
 // XSUAA JWT validation middleware
 const validateJWT = (req, res, next) => {
@@ -31,7 +37,15 @@ const validateJWT = (req, res, next) => {
   
   // Development mode fallback when XSUAA is not enabled
   if (!ENABLE_XSUAA_VALIDATION) {
-    console.warn('XSUAA validation disabled - using development authentication');
+    if (process.env.NODE_ENV === 'production') {
+      // This should never happen due to the check above, but double safety
+      return res.status(500).json({ error: 'SECURITY ERROR: Development authentication in production' });
+    }
+    
+    // Log security warning for development
+    if (process.env.LOG_LEVEL !== 'silent') {
+      console.warn('⚠️  SECURITY WARNING: XSUAA validation disabled - development mode only');
+    }
     try {
       // Simple JWT decode for development (no signature verification)
       const decoded = jwt.decode(token, { complete: true });
@@ -45,17 +59,21 @@ const validateJWT = (req, res, next) => {
         email: decoded.payload.email || 'developer@a2a-network.com',
         givenName: decoded.payload.given_name || 'Developer',
         familyName: decoded.payload.family_name || 'User',
-        roles: decoded.payload.groups || ['authenticated-user'],
+        roles: ['authenticated-user'], // Limited roles in dev mode
         scopes: decoded.payload.scope ? decoded.payload.scope.split(' ') : ['user.access'],
         tenant: decoded.payload.zid || 'local-dev',
         zoneId: decoded.payload.zid || 'local-dev',
-        sapRoles: ['Developer', 'Admin'] // Full access in dev mode
+        sapRoles: ['User'], // Limited SAP roles in dev mode
+        isDevelopment: true // Flag for development context
       };
       
-      console.log(`Development auth for user: ${req.user.id}`);
+      // Development authentication (logged to audit trail)
+      if (process.env.LOG_LEVEL === 'debug') {
+        console.log(`Development authentication for user: ${req.user.id}`);
+      }
       return next();
     } catch (error) {
-      console.error('Development JWT decode failed:', error);
+      console.error('Development JWT decode failed:', error.message);
       return res.status(401).json({ error: 'Invalid development token' });
     }
   }
