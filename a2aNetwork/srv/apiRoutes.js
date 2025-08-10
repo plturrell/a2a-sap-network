@@ -290,7 +290,7 @@ router.get('/api/v1/monitoring/status', async (req, res) => {
     try {
         // Get monitoring status from monitoring service
         const health = monitoring.getHealthStatus();
-        const metrics = monitoring.getMetrics();
+        // const metrics = monitoring.getMetrics(); // Not used currently
         
         res.json({
             monitoring: health.status === 'healthy' ? 'active' : 'degraded',
@@ -333,7 +333,7 @@ router.get('/api/v1/blockchain/status', async (req, res) => {
  */
 router.post('/api/v1/test-connection', async (req, res) => {
     try {
-        const { rpcUrl, networkId } = req.body;
+        const { rpcUrl } = req.body;
         const startTime = Date.now();
         
         // Test blockchain connection if provided

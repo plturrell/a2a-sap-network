@@ -256,7 +256,7 @@ class TranslationService extends cds.ApplicationService {
     /**
      * Update translation and create audit log
      */
-    async _updateTranslation(existing, newValue, context, req) {
+    async _updateTranslation(existing, newValue, context, _req) {
         if (existing.value !== newValue) {
             await INSERT.into(this.entities.TranslationAuditLog).entries({
                 namespace: existing.namespace,
@@ -428,7 +428,7 @@ class TranslationService extends cds.ApplicationService {
     /**
      * Process imported translations
      */
-    async _processImport(translations, overwrite, req) {
+    async _processImport(translations, overwrite, _req) {
         let created = 0;
         let updated = 0;
         let skipped = 0;

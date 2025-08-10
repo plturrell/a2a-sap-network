@@ -25,7 +25,7 @@ class I18nMiddleware {
      * Initialize i18n middleware for CDS services
      */
     async init() {
-        const { i18n } = require('./i18n-config');
+        // const { i18n } = require('./i18n-config'); // Not used currently
         
         // Add i18n to CDS request context
         cds.on('bootstrap', (app) => {
