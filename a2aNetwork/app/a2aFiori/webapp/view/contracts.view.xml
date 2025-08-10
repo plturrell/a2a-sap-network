@@ -1,0 +1,800 @@
+<mvc:View
+    controllerName="a2a.network.fiori.controller.Contracts"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.f"
+    xmlns:layout="sap.ui.layout"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:unified="sap.ui.unified"
+    xmlns:viz="sap.viz.ui5.controls"
+    xmlns:viz.feeds="sap.viz.ui5.controls.common.feeds"
+    xmlns:viz.data="sap.viz.ui5.data"
+    displayBlock="true">
+    
+    <Page
+        id="contractsPage"
+        title="{i18n>contracts.title}"
+        showNavButton="true"
+        navButtonPress="onNavBack"
+        class="a2a-tablet-page sapUiContentPadding">
+        
+        <headerContent>
+            <SegmentedButton
+                id="contractViewToggle"
+                selectedKey="{ui>/contractView}">
+                <items>
+                    <SegmentedButtonItem key="deployed" text="{i18n>contracts.view.deployed}" icon="sap-icon://accept"/>
+                    <SegmentedButtonItem key="templates" text="{i18n>contracts.view.templates}" icon="sap-icon://document-text"/>
+                    <SegmentedButtonItem key="development" text="{i18n>contracts.view.development}" icon="sap-icon://edit"/>
+                    <SegmentedButtonItem key="audit" text="{i18n>contracts.view.audit}" icon="sap-icon://stethoscope"/>
+                </items>
+            </SegmentedButton>
+            <ToolbarSpacer/>
+            <Button
+                id="deployContractButton"
+                icon="sap-icon://upload-to-cloud"
+                text="{i18n>contracts.action.deploy}"
+                type="Emphasized"
+                press="onDeployContract"
+                visible="{= ${ui>/contractView} === 'development' }"/>
+            <Button
+                id="createContractButton"
+                icon="sap-icon://add"
+                text="{i18n>contracts.action.create}"
+                type="Transparent"
+                press="onCreateContract"/>
+        </headerContent>
+        
+        <content>
+            <!-- Deployed Contracts View -->
+            <VBox visible="{= ${ui>/contractView} === 'deployed' }">
+                <!-- Contract Statistics -->
+                <layout:Grid
+                    defaultSpan="L3 M6 S12"
+                    class="sapUiMediumMarginBottom">
+                    <ObjectStatus
+                        title="{i18n>contracts.stats.total}"
+                        text="{contracts>/statistics/total}"
+                        state="Information"
+                        icon="sap-icon://documents"/>
+                    <ObjectStatus
+                        title="{i18n>contracts.stats.active}"
+                        text="{contracts>/statistics/active}"
+                        state="Success"
+                        icon="sap-icon://sys-enter-2"/>
+                    <ObjectStatus
+                        title="{i18n>contracts.stats.executions}"
+                        text="{contracts>/statistics/executions}"
+                        state="Warning"
+                        icon="sap-icon://activity-items"/>
+                    <ObjectStatus
+                        title="{i18n>contracts.stats.gasUsed}"
+                        text="{contracts>/statistics/gasUsed} ETH"
+                        state="Error"
+                        icon="sap-icon://money-bills"/>
+                </layout:Grid>
+                
+                <!-- Deployed Contracts Table -->
+                <Table
+                    id="deployedContractsTable"
+                    items="{
+                        path: 'contracts>/deployedContracts',
+                        sorter: {
+                            path: 'deploymentDate',
+                            descending: true
+                        }
+                    }"
+                    growing="true"
+                    growingThreshold="20"
+                    mode="SingleSelectMaster"
+                    selectionChange="onContractSelect">
+                    
+                    <headerToolbar>
+                        <OverflowToolbar>
+                            <Title text="{i18n>contracts.deployed.title}" level="H2"/>
+                            <ToolbarSpacer/>
+                            <SearchField
+                                id="contractSearchField"
+                                width="300px"
+                                placeholder="{i18n>contracts.search.placeholder}"
+                                search="onSearchContracts"/>
+                            <Select
+                                id="networkFilter"
+                                selectedKey="{ui>/selectedNetwork}"
+                                change="onNetworkFilter">
+                                <core:Item key="all" text="{i18n>contracts.network.all}"/>
+                                <core:Item key="mainnet" text="{i18n>contracts.network.mainnet}"/>
+                                <core:Item key="testnet" text="{i18n>contracts.network.testnet}"/>
+                                <core:Item key="polygon" text="{i18n>contracts.network.polygon}"/>
+                                <core:Item key="bsc" text="{i18n>contracts.network.bsc}"/>
+                            </Select>
+                            <Button
+                                icon="sap-icon://refresh"
+                                tooltip="{i18n>common.refresh}"
+                                press="onRefreshContracts"/>
+                        </OverflowToolbar>
+                    </headerToolbar>
+                    
+                    <columns>
+                        <Column width="200px">
+                            <Text text="{i18n>contracts.column.name}"/>
+                        </Column>
+                        <Column width="120px">
+                            <Text text="{i18n>contracts.column.type}"/>
+                        </Column>
+                        <Column width="100px">
+                            <Text text="{i18n>contracts.column.network}"/>
+                        </Column>
+                        <Column>
+                            <Text text="{i18n>contracts.column.address}"/>
+                        </Column>
+                        <Column width="100px">
+                            <Text text="{i18n>contracts.column.status}"/>
+                        </Column>
+                        <Column width="120px">
+                            <Text text="{i18n>contracts.column.deploymentDate}"/>
+                        </Column>
+                        <Column width="100px">
+                            <Text text="{i18n>contracts.column.executions}"/>
+                        </Column>
+                        <Column width="100px">
+                            <Text text="{i18n>contracts.column.gasUsed}"/>
+                        </Column>
+                    </columns>
+                    
+                    <items>
+                        <ColumnListItem type="Navigation" press="onContractPress">
+                            <cells>
+                                <VBox>
+                                    <Text text="{contracts>name}" class="sapMTextBold"/>
+                                    <Text text="{contracts>version}"/>
+                                </VBox>
+                                <Text text="{contracts>type}"/>
+                                <HBox>
+                                    <core:Icon src="{= ${contracts>network} === 'mainnet' ? 'sap-icon://globe' : 'sap-icon://lab' }" class="sapUiTinyMarginEnd"/>
+                                    <Text text="{contracts>network}"/>
+                                </HBox>
+                                <HBox>
+                                    <Text text="{= ${contracts>address}.substring(0, 10) + '...' + ${contracts>address}.substring(38) }"/>
+                                    <Button
+                                        icon="sap-icon://copy"
+                                        type="Transparent"
+                                        tooltip="{i18n>contracts.action.copyAddress}"
+                                        press="onCopyAddress"/>
+                                </HBox>
+                                <ObjectStatus
+                                    text="{contracts>status}"
+                                    state="{= ${contracts>status} === 'Active' ? 'Success' : ${contracts>status} === 'Paused' ? 'Warning' : 'Error' }"/>
+                                <Text text="{
+                                    path: 'contracts>deploymentDate',
+                                    type: 'sap.ui.model.type.DateTime',
+                                    formatOptions: {
+                                        style: 'medium'
+                                    }
+                                }"/>
+                                <Text text="{contracts>executions}"/>
+                                <Text text="{contracts>gasUsed} ETH"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+                
+                <!-- Contract Details Panel -->
+                <Panel
+                    id="contractDetailsPanel"
+                    headerText="{i18n>contracts.details.title}"
+                    visible="{= !!${contracts>/selectedContract} }"
+                    expandable="true"
+                    expanded="true"
+                    class="sapUiMediumMarginTop">
+                    <content>
+                        <layout:Grid
+                            defaultSpan="L6 M12 S12"
+                            hSpacing="2"
+                            class="sapUiMediumMargin">
+                            
+                            <!-- Contract Info -->
+                            <VBox>
+                                <Title text="{i18n>contracts.details.info}" level="H3"/>
+                                <form:SimpleForm
+                                    editable="false"
+                                    layout="ResponsiveGridLayout">
+                                    <Label text="{i18n>contracts.details.owner}:"/>
+                                    <Text text="{contracts>/selectedContract/owner}"/>
+                                    <Label text="{i18n>contracts.details.balance}:"/>
+                                    <ObjectNumber
+                                        number="{contracts>/selectedContract/balance}"
+                                        unit="ETH"
+                                        state="Success"/>
+                                    <Label text="{i18n>contracts.details.lastExecution}:"/>
+                                    <Text text="{
+                                        path: 'contracts>/selectedContract/lastExecution',
+                                        type: 'sap.ui.model.type.DateTime',
+                                        formatOptions: {
+                                            relative: true
+                                        }
+                                    }"/>
+                                    <Label text="{i18n>contracts.details.compiler}:"/>
+                                    <Text text="{contracts>/selectedContract/compiler}"/>
+                                </form:SimpleForm>
+                            </VBox>
+                            
+                            <!-- Execution Chart -->
+                            <VBox>
+                                <Title text="{i18n>contracts.details.executionHistory}" level="H3"/>
+                                <viz:VizFrame
+                                    id="executionChart"
+                                    height="250px"
+                                    vizType="line"
+                                    uiConfig="{applicationSet:'fiori'}">
+                                    <viz:dataset>
+                                        <viz.data:FlattenedDataset data="{contracts>/selectedContract/executionHistory}">
+                                            <viz.data:dimensions>
+                                                <viz.data:DimensionDefinition name="Date" value="{date}"/>
+                                            </viz.data:dimensions>
+                                            <viz.data:measures>
+                                                <viz.data:MeasureDefinition name="Executions" value="{count}"/>
+                                                <viz.data:MeasureDefinition name="Gas Used" value="{gasUsed}"/>
+                                            </viz.data:measures>
+                                        </viz.data:FlattenedDataset>
+                                    </viz:dataset>
+                                    <viz:feeds>
+                                        <viz.feeds:FeedItem uid="valueAxis" type="Measure" values="Executions"/>
+                                        <viz.feeds:FeedItem uid="categoryAxis" type="Dimension" values="Date"/>
+                                    </viz:feeds>
+                                </viz:VizFrame>
+                            </VBox>
+                        </layout:Grid>
+                        
+                        <!-- Contract Actions -->
+                        <Toolbar class="sapUiMediumMarginTop">
+                            <ToolbarSpacer/>
+                            <Button
+                                text="{i18n>contracts.action.execute}"
+                                icon="sap-icon://play"
+                                type="Accept"
+                                press="onExecuteContract"
+                                enabled="{= ${contracts>/selectedContract/status} === 'Active' }"/>
+                            <Button
+                                text="{i18n>contracts.action.pause}"
+                                icon="sap-icon://pause"
+                                type="Attention"
+                                press="onPauseContract"
+                                visible="{= ${contracts>/selectedContract/status} === 'Active' }"/>
+                            <Button
+                                text="{i18n>contracts.action.resume}"
+                                icon="sap-icon://play"
+                                type="Success"
+                                press="onResumeContract"
+                                visible="{= ${contracts>/selectedContract/status} === 'Paused' }"/>
+                            <Button
+                                text="{i18n>contracts.action.upgrade}"
+                                icon="sap-icon://upload"
+                                press="onUpgradeContract"
+                                enabled="{contracts>/selectedContract/upgradeable}"/>
+                            <Button
+                                text="{i18n>contracts.action.viewCode}"
+                                icon="sap-icon://source-code"
+                                press="onViewContractCode"/>
+                            <Button
+                                text="{i18n>contracts.action.viewOnExplorer}"
+                                icon="sap-icon://chain-link"
+                                press="onViewOnExplorer"/>
+                        </Toolbar>
+                    </content>
+                </Panel>
+            </VBox>
+            
+            <!-- Contract Templates View -->
+            <VBox visible="{= ${ui>/contractView} === 'templates' }">
+                <Title text="{i18n>contracts.templates.subtitle}" level="H2" class="sapUiMediumMarginBottom"/>
+                
+                <layout:Grid
+                    defaultSpan="L4 M6 S12"
+                    hSpacing="1"
+                    vSpacing="1">
+                    
+                    <f:Card
+                        class="sapUiSmallMargin"
+                        press="onTemplatePress">
+                        <f:header>
+                            <card:Header
+                                title="{i18n>contracts.template.token}"
+                                subtitle="{i18n>contracts.template.token.description}"
+                                iconSrc="sap-icon://badge"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin">
+                                <List showSeparators="None">
+                                    <StandardListItem title="ERC-20 Compliant" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Mintable & Burnable" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Access Control" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Pausable" icon="sap-icon://accept"/>
+                                </List>
+                                <Button
+                                    text="{i18n>contracts.template.useTemplate}"
+                                    type="Emphasized"
+                                    width="100%"
+                                    press="onUseTemplate"
+                                    class="sapUiSmallMarginTop"/>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
+                    
+                    <f:Card
+                        class="sapUiSmallMargin"
+                        press="onTemplatePress">
+                        <f:header>
+                            <card:Header
+                                title="{i18n>contracts.template.escrow}"
+                                subtitle="{i18n>contracts.template.escrow.description}"
+                                iconSrc="sap-icon://locked"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin">
+                                <List showSeparators="None">
+                                    <StandardListItem title="Multi-party Support" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Time-locked Release" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Dispute Resolution" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Fee Management" icon="sap-icon://accept"/>
+                                </List>
+                                <Button
+                                    text="{i18n>contracts.template.useTemplate}"
+                                    type="Emphasized"
+                                    width="100%"
+                                    press="onUseTemplate"
+                                    class="sapUiSmallMarginTop"/>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
+                    
+                    <f:Card
+                        class="sapUiSmallMargin"
+                        press="onTemplatePress">
+                        <f:header>
+                            <card:Header
+                                title="{i18n>contracts.template.dao}"
+                                subtitle="{i18n>contracts.template.dao.description}"
+                                iconSrc="sap-icon://group"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin">
+                                <List showSeparators="None">
+                                    <StandardListItem title="Voting Mechanism" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Proposal System" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Treasury Management" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Member Roles" icon="sap-icon://accept"/>
+                                </List>
+                                <Button
+                                    text="{i18n>contracts.template.useTemplate}"
+                                    type="Emphasized"
+                                    width="100%"
+                                    press="onUseTemplate"
+                                    class="sapUiSmallMarginTop"/>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
+                    
+                    <f:Card
+                        class="sapUiSmallMargin"
+                        press="onTemplatePress">
+                        <f:header>
+                            <card:Header
+                                title="{i18n>contracts.template.marketplace}"
+                                subtitle="{i18n>contracts.template.marketplace.description}"
+                                iconSrc="sap-icon://cart"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin">
+                                <List showSeparators="None">
+                                    <StandardListItem title="Listing Management" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Payment Processing" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Reputation System" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Royalty Distribution" icon="sap-icon://accept"/>
+                                </List>
+                                <Button
+                                    text="{i18n>contracts.template.useTemplate}"
+                                    type="Emphasized"
+                                    width="100%"
+                                    press="onUseTemplate"
+                                    class="sapUiSmallMarginTop"/>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
+                    
+                    <f:Card
+                        class="sapUiSmallMargin"
+                        press="onTemplatePress">
+                        <f:header>
+                            <card:Header
+                                title="{i18n>contracts.template.oracle}"
+                                subtitle="{i18n>contracts.template.oracle.description}"
+                                iconSrc="sap-icon://cloud"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin">
+                                <List showSeparators="None">
+                                    <StandardListItem title="Data Feed Integration" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Price Updates" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Aggregation Logic" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Access Control" icon="sap-icon://accept"/>
+                                </List>
+                                <Button
+                                    text="{i18n>contracts.template.useTemplate}"
+                                    type="Emphasized"
+                                    width="100%"
+                                    press="onUseTemplate"
+                                    class="sapUiSmallMarginTop"/>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
+                    
+                    <f:Card
+                        class="sapUiSmallMargin"
+                        press="onTemplatePress">
+                        <f:header>
+                            <card:Header
+                                title="{i18n>contracts.template.supplyChain}"
+                                subtitle="{i18n>contracts.template.supplyChain.description}"
+                                iconSrc="sap-icon://shipping-status"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin">
+                                <List showSeparators="None">
+                                    <StandardListItem title="Product Tracking" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Provenance Verification" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Multi-party Workflow" icon="sap-icon://accept"/>
+                                    <StandardListItem title="Audit Trail" icon="sap-icon://accept"/>
+                                </List>
+                                <Button
+                                    text="{i18n>contracts.template.useTemplate}"
+                                    type="Emphasized"
+                                    width="100%"
+                                    press="onUseTemplate"
+                                    class="sapUiSmallMarginTop"/>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
+                </layout:Grid>
+            </VBox>
+            
+            <!-- Development View -->
+            <VBox visible="{= ${ui>/contractView} === 'development' }">
+                <SplitContainer id="developmentSplitContainer">
+                    <!-- Contract Editor -->
+                    <contentAreas>
+                        <VBox>
+                            <Toolbar>
+                                <Title text="{i18n>contracts.development.editor}" level="H3"/>
+                                <ToolbarSpacer/>
+                                <Select
+                                    selectedKey="{ui>/selectedFile}"
+                                    change="onFileSelect">
+                                    <core:Item key="main" text="AgentRegistry.sol"/>
+                                    <core:Item key="interface" text="IAgentRegistry.sol"/>
+                                    <core:Item key="library" text="AgentLib.sol"/>
+                                </Select>
+                                <Button
+                                    icon="sap-icon://save"
+                                    tooltip="{i18n>contracts.action.save}"
+                                    press="onSaveContract"/>
+                            </Toolbar>
+                            <CodeEditor
+                                id="contractEditor"
+                                type="javascript"
+                                value="{contracts>/contractCode}"
+                                height="600px"
+                                width="100%"
+                                editable="true"
+                                syntaxHints="true"
+                                lineNumbers="true"
+                                valueSelection="true"
+                                class="sapUiSmallMargin"/>
+                        </VBox>
+                        
+                        <!-- Compilation Output -->
+                        <VBox>
+                            <IconTabBar id="developmentTabBar">
+                                <items>
+                                    <IconTabFilter text="{i18n>contracts.development.compilation}" icon="sap-icon://syntax">
+                                        <VBox class="sapUiMediumMargin">
+                                            <Toolbar>
+                                                <Title text="{i18n>contracts.development.compiler}" level="H4"/>
+                                                <ToolbarSpacer/>
+                                                <Select selectedKey="{ui>/compilerVersion}">
+                                                    <core:Item key="0.8.19" text="Solidity 0.8.19"/>
+                                                    <core:Item key="0.8.18" text="Solidity 0.8.18"/>
+                                                    <core:Item key="0.8.17" text="Solidity 0.8.17"/>
+                                                </Select>
+                                                <Button
+                                                    text="{i18n>contracts.action.compile}"
+                                                    icon="sap-icon://synchronize"
+                                                    type="Emphasized"
+                                                    press="onCompileContract"/>
+                                            </Toolbar>
+                                            
+                                            <TextArea
+                                                id="compilationOutput"
+                                                value="{contracts>/compilationOutput}"
+                                                rows="20"
+                                                editable="false"
+                                                width="100%"
+                                                class="sapUiSmallMarginTop"/>
+                                        </VBox>
+                                    </IconTabFilter>
+                                    
+                                    <IconTabFilter text="{i18n>contracts.development.testing}" icon="sap-icon://lab">
+                                        <VBox class="sapUiMediumMargin">
+                                            <Toolbar>
+                                                <Title text="{i18n>contracts.development.tests}" level="H4"/>
+                                                <ToolbarSpacer/>
+                                                <Button
+                                                    text="{i18n>contracts.action.runTests}"
+                                                    icon="sap-icon://begin"
+                                                    type="Accept"
+                                                    press="onRunTests"/>
+                                            </Toolbar>
+                                            
+                                            <List
+                                                items="{contracts>/testResults}"
+                                                showSeparators="Inner"
+                                                class="sapUiSmallMarginTop">
+                                                <StandardListItem
+                                                    title="{contracts>name}"
+                                                    description="{contracts>description}"
+                                                    info="{contracts>duration} ms"
+                                                    infoState="{= ${contracts>passed} ? 'Success' : 'Error' }"
+                                                    icon="{= ${contracts>passed} ? 'sap-icon://accept' : 'sap-icon://error' }"/>
+                                            </List>
+                                        </VBox>
+                                    </IconTabFilter>
+                                    
+                                    <IconTabFilter text="{i18n>contracts.development.gas}" icon="sap-icon://money-bills">
+                                        <VBox class="sapUiMediumMargin">
+                                            <Title text="{i18n>contracts.development.gasEstimates}" level="H4"/>
+                                            <Table
+                                                items="{contracts>/gasEstimates}"
+                                                class="sapUiSmallMarginTop">
+                                                <columns>
+                                                    <Column>
+                                                        <Text text="{i18n>contracts.gas.function}"/>
+                                                    </Column>
+                                                    <Column width="100px">
+                                                        <Text text="{i18n>contracts.gas.estimated}"/>
+                                                    </Column>
+                                                    <Column width="100px">
+                                                        <Text text="{i18n>contracts.gas.cost}"/>
+                                                    </Column>
+                                                </columns>
+                                                <items>
+                                                    <ColumnListItem>
+                                                        <cells>
+                                                            <Text text="{contracts>function}"/>
+                                                            <Text text="{contracts>gas}"/>
+                                                            <ObjectNumber
+                                                                number="{contracts>cost}"
+                                                                unit="USD"
+                                                                state="{= ${contracts>cost} > 10 ? 'Error' : ${contracts>cost} > 5 ? 'Warning' : 'Success' }"/>
+                                                        </cells>
+                                                    </ColumnListItem>
+                                                </items>
+                                            </Table>
+                                        </VBox>
+                                    </IconTabFilter>
+                                </items>
+                            </IconTabBar>
+                        </VBox>
+                    </contentAreas>
+                </SplitContainer>
+            </VBox>
+            
+            <!-- Audit View -->
+            <VBox visible="{= ${ui>/contractView} === 'audit' }">
+                <MessageStrip
+                    text="{i18n>contracts.audit.disclaimer}"
+                    type="Information"
+                    showIcon="true"
+                    class="sapUiMediumMarginBottom"/>
+                
+                <Table
+                    id="auditTable"
+                    items="{contracts>/auditReports}"
+                    mode="SingleSelectMaster">
+                    
+                    <headerToolbar>
+                        <OverflowToolbar>
+                            <Title text="{i18n>contracts.audit.reports}" level="H2"/>
+                            <ToolbarSpacer/>
+                            <Button
+                                text="{i18n>contracts.audit.requestAudit}"
+                                icon="sap-icon://stethoscope"
+                                type="Emphasized"
+                                press="onRequestAudit"/>
+                        </OverflowToolbar>
+                    </headerToolbar>
+                    
+                    <columns>
+                        <Column>
+                            <Text text="{i18n>contracts.audit.column.contract}"/>
+                        </Column>
+                        <Column width="150px">
+                            <Text text="{i18n>contracts.audit.column.auditor}"/>
+                        </Column>
+                        <Column width="120px">
+                            <Text text="{i18n>contracts.audit.column.date}"/>
+                        </Column>
+                        <Column width="100px">
+                            <Text text="{i18n>contracts.audit.column.severity}"/>
+                        </Column>
+                        <Column width="80px">
+                            <Text text="{i18n>contracts.audit.column.issues}"/>
+                        </Column>
+                        <Column width="100px">
+                            <Text text="{i18n>contracts.audit.column.status}"/>
+                        </Column>
+                        <Column width="100px">
+                            <Text text="{i18n>contracts.audit.column.actions}"/>
+                        </Column>
+                    </columns>
+                    
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <VBox>
+                                    <Text text="{contracts>contractName}" class="sapMTextBold"/>
+                                    <Text text="{contracts>contractAddress}"/>
+                                </VBox>
+                                <Text text="{contracts>auditor}"/>
+                                <Text text="{
+                                    path: 'contracts>auditDate',
+                                    type: 'sap.ui.model.type.Date',
+                                    formatOptions: {
+                                        style: 'medium'
+                                    }
+                                }"/>
+                                <ObjectStatus
+                                    text="{contracts>severity}"
+                                    state="{= ${contracts>severity} === 'Critical' ? 'Error' : ${contracts>severity} === 'High' ? 'Warning' : 'Success' }"/>
+                                <ObjectNumber
+                                    number="{contracts>issueCount}"
+                                    emphasized="true"
+                                    state="{= ${contracts>issueCount} > 5 ? 'Error' : ${contracts>issueCount} > 0 ? 'Warning' : 'Success' }"/>
+                                <ObjectStatus
+                                    text="{contracts>status}"
+                                    state="{= ${contracts>status} === 'Passed' ? 'Success' : ${contracts>status} === 'Failed' ? 'Error' : 'Warning' }"/>
+                                <HBox>
+                                    <Button
+                                        icon="sap-icon://document"
+                                        tooltip="{i18n>contracts.audit.viewReport}"
+                                        type="Transparent"
+                                        press="onViewAuditReport"/>
+                                    <Button
+                                        icon="sap-icon://download"
+                                        tooltip="{i18n>contracts.audit.downloadReport}"
+                                        type="Transparent"
+                                        press="onDownloadAuditReport"/>
+                                </HBox>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+                
+                <!-- Vulnerability Scanner -->
+                <Panel
+                    headerText="{i18n>contracts.audit.scanner}"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiMediumMarginTop">
+                    <content>
+                        <VBox class="sapUiMediumMargin">
+                            <ComboBox
+                                id="scanContractSelect"
+                                placeholder="{i18n>contracts.audit.selectContract}"
+                                items="{contracts>/deployedContracts}">
+                                <core:Item key="{contracts>address}" text="{contracts>name}"/>
+                            </ComboBox>
+                            <Button
+                                text="{i18n>contracts.audit.runScan}"
+                                icon="sap-icon://search"
+                                type="Emphasized"
+                                press="onRunSecurityScan"
+                                class="sapUiSmallMarginTop"/>
+                            
+                            <List
+                                items="{contracts>/scanResults}"
+                                visible="{= ${contracts>/scanResults}.length > 0 }"
+                                showSeparators="Inner"
+                                class="sapUiMediumMarginTop">
+                                <NotificationListItem
+                                    title="{contracts>vulnerability}"
+                                    description="{contracts>description}"
+                                    priority="{= ${contracts>severity} === 'Critical' ? 'High' : ${contracts>severity} === 'High' ? 'Medium' : 'Low' }"
+                                    showButtons="true"
+                                    authorName="{contracts>detector}">
+                                    <buttons>
+                                        <Button text="{i18n>contracts.audit.viewDetails}" press="onViewVulnerabilityDetails"/>
+                                    </buttons>
+                                </NotificationListItem>
+                            </List>
+                        </VBox>
+                    </content>
+                </Panel>
+            </VBox>
+            
+            <!-- Contract Execution Dialog -->
+            <Dialog
+                id="executeContractDialog"
+                title="{i18n>contracts.execute.title}"
+                contentWidth="90%"
+                maxWidth="35rem"
+                class="a2a-tablet-dialog">
+                <content>
+                    <VBox class="sapUiMediumMargin">
+                        <Select
+                            id="functionSelect"
+                            selectedKey="{ui>/selectedFunction}"
+                            change="onFunctionSelect"
+                            width="100%">
+                            <core:Item key="transfer" text="transfer(address to, uint256 amount)"/>
+                            <core:Item key="approve" text="approve(address spender, uint256 amount)"/>
+                            <core:Item key="mint" text="mint(address to, uint256 amount)"/>
+                            <core:Item key="burn" text="burn(uint256 amount)"/>
+                        </Select>
+                        
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout"
+                            class="sapUiSmallMarginTop">
+                            <Label text="{i18n>contracts.execute.parameter}: to" visible="{= ${ui>/selectedFunction} !== 'burn' }"/>
+                            <Input value="{ui>/parameterTo}" placeholder="0x..." visible="{= ${ui>/selectedFunction} !== 'burn' }"/>
+                            <Label text="{i18n>contracts.execute.parameter}: amount"/>
+                            <Input value="{ui>/parameterAmount}" placeholder="0"/>
+                            <Label text="{i18n>contracts.execute.gasPrice}:"/>
+                            <Input value="{ui>/gasPrice}" placeholder="20 Gwei"/>
+                            <Label text="{i18n>contracts.execute.gasLimit}:"/>
+                            <Input value="{ui>/gasLimit}" placeholder="100000"/>
+                        </form:SimpleForm>
+                        
+                        <MessageStrip
+                            text="{i18n>contracts.execute.estimatedCost}: {ui>/estimatedCost} ETH"
+                            type="Warning"
+                            showIcon="true"
+                            class="sapUiSmallMarginTop"/>
+                    </VBox>
+                </content>
+                <buttons>
+                    <Button text="{i18n>contracts.execute.simulate}" icon="sap-icon://simulate" press="onSimulateExecution" type="Ghost"/>
+                    <Button text="{i18n>contracts.execute.confirm}" type="Emphasized" press="onConfirmExecution"/>
+                    <Button text="{i18n>common.cancel}" press="onCloseExecuteDialog"/>
+                </buttons>
+            </Dialog>
+        </content>
+        
+        <!-- Loading States -->
+        <dependents>
+            <!-- Blockchain Loading -->
+            <VBox
+                id="blockchainLoading"
+                visible="{ui>/isLoadingBlockchain}"
+                class="sapUiContentPadding"
+                alignItems="Center"
+                justifyContent="Center"
+                height="100%">
+                <IllustratedMessage
+                    illustrationType="sapIllus-Connection"
+                    illustrationSize="Spot">
+                    <additionalContent>
+                        <Label text="{ui>/blockchainStep}"/>
+                        <ProgressIndicator
+                            percentValue="{ui>/blockchainProgress}"
+                            displayValue="{ui>/blockchainProgress}%"
+                            showValue="true"
+                            state="Success"
+                            class="sapUiMediumMarginTop"/>
+                    </additionalContent>
+                </IllustratedMessage>
+            </VBox>
+        </dependents>
+    </Page>
+</mvc:View>

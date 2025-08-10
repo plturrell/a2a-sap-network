@@ -1,0 +1,521 @@
+/* A2A Style Guide CSS */
+
+/* Base Styles */
+.style-guide-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0;
+    background-color: var(--sapBackgroundColor);
+    color: var(--sapTextColor);
+    font-family: var(--sapFontFamily);
+}
+
+/* Header */
+.style-guide-header {
+    background-color: var(--sapShellColor);
+    color: white;
+    padding: 48px 32px;
+    text-align: center;
+}
+
+.style-guide-header h1 {
+    font-size: var(--sapFontHeader1Size);
+    margin: 0 0 8px 0;
+    font-weight: 300;
+}
+
+.style-guide-header p {
+    font-size: var(--sapFontLargeSize);
+    opacity: 0.8;
+    margin: 0;
+}
+
+/* Navigation */
+.style-guide-nav {
+    background-color: white;
+    border-bottom: 1px solid var(--sapGroup_ContentBorderColor);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.style-guide-nav ul {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-x: auto;
+}
+
+.style-guide-nav li {
+    flex-shrink: 0;
+}
+
+.style-guide-nav a {
+    display: block;
+    padding: 16px 24px;
+    color: var(--sapContent_LabelColor);
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    transition: all 200ms ease;
+}
+
+.style-guide-nav a:hover {
+    color: var(--sapLinkColor);
+    background-color: var(--sapList_Hover_Background);
+}
+
+.style-guide-nav a:focus {
+    outline: 2px solid var(--sapContent_FocusColor);
+    outline-offset: -2px;
+}
+
+/* Content */
+.style-guide-content {
+    padding: 32px;
+}
+
+.style-section {
+    margin-bottom: 64px;
+}
+
+.style-section h2 {
+    font-size: var(--sapFontHeader2Size);
+    color: var(--sapTitleColor);
+    margin: 0 0 24px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--sapContent_ForegroundBorderColor);
+}
+
+.style-section h3 {
+    font-size: var(--sapFontHeader3Size);
+    color: var(--sapTitleColor);
+    margin: 32px 0 16px 0;
+}
+
+/* Design Principles */
+.principle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+}
+
+.principle-card {
+    background: white;
+    padding: 24px;
+    border-radius: 8px;
+    border: 1px solid var(--sapGroup_ContentBorderColor);
+    transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.principle-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.principle-card h3 {
+    margin-top: 0;
+    color: var(--sapBrandColor);
+}
+
+/* Color System */
+.color-palette {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.color-swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--sapGroup_ContentBorderColor);
+    background: white;
+    min-height: 120px;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.color-swatch::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: inherit;
+    z-index: 0;
+}
+
+.color-swatch span {
+    position: relative;
+    z-index: 1;
+}
+
+.color-name {
+    font-weight: 500;
+    margin-top: 40px;
+}
+
+.color-value {
+    font-size: var(--sapFontSmallSize);
+    color: var(--sapContent_LabelColor);
+    font-family: var(--sapContent_MonospaceFontFamily);
+}
+
+.color-var {
+    font-size: var(--sapFontSmallSize);
+    color: var(--sapContent_LabelColor);
+    font-family: var(--sapContent_MonospaceFontFamily);
+    opacity: 0.7;
+}
+
+/* Typography */
+.type-scale {
+    background: white;
+    padding: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--sapGroup_ContentBorderColor);
+}
+
+.type-example {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--sapGroup_ContentBorderColor);
+}
+
+.type-example:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.type-label {
+    display: inline-block;
+    font-size: var(--sapFontSmallSize);
+    color: var(--sapContent_LabelColor);
+    margin-bottom: 4px;
+}
+
+.type-spec {
+    display: inline-block;
+    font-size: var(--sapFontSmallSize);
+    color: var(--sapContent_LabelColor);
+    font-family: var(--sapContent_MonospaceFontFamily);
+    margin-left: 16px;
+}
+
+.type-example p {
+    margin: 8px 0 0 0;
+}
+
+/* Spacing */
+.spacing-scale {
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    flex-wrap: wrap;
+    background: white;
+    padding: 24px;
+    border-radius: 8px;
+}
+
+.spacing-example {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.spacing-box {
+    background-color: var(--sapBrandColor);
+    border-radius: 2px;
+}
+
+/* Grid Demo */
+.grid-demo {
+    background: white;
+    padding: 24px;
+    border-radius: 8px;
+    border: 1px solid var(--sapGroup_ContentBorderColor);
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 16px;
+}
+
+.grid-column {
+    background-color: var(--sapContent_ForegroundColor);
+    padding: 16px 8px;
+    text-align: center;
+    border-radius: 4px;
+    font-size: var(--sapFontSmallSize);
+    color: var(--sapContent_LabelColor);
+}
+
+/* Component Examples */
+.component-example {
+    background: white;
+    padding: 24px;
+    border-radius: 8px;
+    border: 1px solid var(--sapGroup_ContentBorderColor);
+    margin-bottom: 24px;
+}
+
+.component-example pre {
+    margin-top: 16px;
+    padding: 16px;
+    background-color: var(--sapGroup_ContentBackground);
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.component-example code {
+    font-family: var(--sapContent_MonospaceFontFamily);
+    font-size: var(--sapFontSmallSize);
+    color: var(--sapTextColor);
+}
+
+/* Guidelines */
+.guidelines {
+    background: var(--sapList_Background);
+    padding: 24px;
+    border-radius: 8px;
+    border: 1px solid var(--sapGroup_ContentBorderColor);
+}
+
+.guidelines li {
+    margin-bottom: 8px;
+    position: relative;
+    padding-left: 24px;
+}
+
+.guidelines li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--sapPositiveColor);
+    font-weight: bold;
+}
+
+/* Animation Examples */
+.animation-examples {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.animation-box {
+    width: 120px;
+    height: 120px;
+    background-color: var(--sapBrandColor);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.fade-in {
+    animation: fadeIn 200ms ease-in-out;
+}
+
+.slide-in {
+    animation: slideIn 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scale-in {
+    animation: scaleIn 250ms ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Loading Examples */
+.loading-examples {
+    display: flex;
+    gap: 32px;
+    align-items: center;
+}
+
+.skeleton-loader {
+    width: 200px;
+    height: 20px;
+    background: linear-gradient(90deg, 
+        var(--sapContent_ForegroundColor) 25%, 
+        var(--sapContent_ForegroundBorderColor) 50%, 
+        var(--sapContent_ForegroundColor) 75%);
+    background-size: 200% 100%;
+    animation: skeleton 1.5s infinite;
+    border-radius: 4px;
+}
+
+@keyframes skeleton {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.spinner-loader {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--sapContent_ForegroundColor);
+    border-top-color: var(--sapBrandColor);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.progress-loader {
+    width: 200px;
+    height: 4px;
+    background-color: var(--sapContent_ForegroundColor);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-loader::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 40%;
+    background-color: var(--sapBrandColor);
+    animation: progress 1.5s ease-in-out infinite;
+}
+
+@keyframes progress {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(250%); }
+}
+
+/* Accessibility Examples */
+.contrast-examples {
+    display: flex;
+    gap: 24px;
+}
+
+.contrast-pass,
+.contrast-fail {
+    padding: 24px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.contrast-pass {
+    background-color: #1a1a1a;
+    color: white;
+}
+
+.contrast-fail {
+    background-color: #f0f0f0;
+    color: #cccccc;
+}
+
+.focus-examples {
+    display: flex;
+    gap: 16px;
+    margin: 16px 0;
+}
+
+.focus-example:focus {
+    outline: 2px solid var(--sapContent_FocusColor);
+    outline-offset: 2px;
+}
+
+/* Keyboard Shortcuts Table */
+.keyboard-shortcuts {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border: 1px solid var(--sapGroup_ContentBorderColor);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.keyboard-shortcuts th {
+    background-color: var(--sapList_HeaderBackground);
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 500;
+    border-bottom: 1px solid var(--sapGroup_ContentBorderColor);
+}
+
+.keyboard-shortcuts td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--sapGroup_ContentBorderColor);
+}
+
+.keyboard-shortcuts tr:last-child td {
+    border-bottom: none;
+}
+
+.keyboard-shortcuts kbd {
+    display: inline-block;
+    padding: 2px 8px;
+    background-color: var(--sapGroup_ContentBackground);
+    border: 1px solid var(--sapGroup_ContentBorderColor);
+    border-radius: 4px;
+    font-family: var(--sapContent_MonospaceFontFamily);
+    font-size: var(--sapFontSmallSize);
+}
+
+/* Footer */
+.style-guide-footer {
+    background-color: var(--sapGroup_ContentBackground);
+    padding: 32px;
+    text-align: center;
+    border-top: 1px solid var(--sapGroup_ContentBorderColor);
+    margin-top: 64px;
+}
+
+.style-guide-footer p {
+    margin: 4px 0;
+    color: var(--sapContent_LabelColor);
+    font-size: var(--sapFontSmallSize);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .style-guide-content {
+        padding: 16px;
+    }
+    
+    .principle-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .color-palette {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+    
+    .animation-examples,
+    .loading-examples,
+    .contrast-examples {
+        flex-direction: column;
+    }
+}

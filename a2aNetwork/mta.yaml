@@ -1,0 +1,223 @@
+_schema-version: "3.1"
+ID: a2a-network
+description: A2A Network - Agent-to-Agent Coordination Platform
+version: 1.0.0
+modules:
+  - name: a2a-network-srv
+    type: nodejs
+    path: gen/srv
+    requires:
+      - name: a2a-network-db
+      - name: a2a-network-xsuaa
+      - name: a2a-network-destination-service
+      - name: a2a-network-connectivity-service
+      - name: a2a-network-application-logging
+      - name: a2a-network-alert-notification
+      - name: a2a-network-autoscaler
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+    parameters:
+      buildpack: nodejs_buildpack
+      memory: 512M
+      disk-quota: 1024M
+    build-parameters:
+      builder: npm-ci
+  
+  - name: a2a-network-db-deployer
+    type: hdb
+    path: gen/db
+    requires:
+      - name: a2a-network-db
+    parameters:
+      buildpack: nodejs_buildpack
+  
+  - name: a2a-network-app
+    type: approuter.nodejs
+    path: app/
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api
+          url: ~{srv-url}
+          forwardAuthToken: true
+      - name: a2a-network-xsuaa
+      - name: a2a-network-destination-service
+        group: destinations
+        properties:
+          forwardAuthToken: false
+          name: ui5
+          url: https://ui5.sap.com
+    parameters:
+      memory: 256M
+      disk-quota: 512M
+    build-parameters:
+      builder: npm-ci
+
+resources:
+  - name: a2a-network-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hanatrial
+      service-plan: hdi-shared
+  
+  - name: a2a-network-xsuaa
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      config:
+        xsappname: a2a-network-${space}
+        tenant-mode: dedicated
+        description: Security profile of A2A Network application
+        scopes:
+          - name: $XSAPPNAME.Admin
+            description: Admin scope
+          - name: $XSAPPNAME.User
+            description: User scope
+        attributes:
+          - name: Department
+            description: Department
+            valueType: string
+        role-templates:
+          - name: Admin
+            description: Administrator Role
+            scope-references:
+              - $XSAPPNAME.Admin
+            attribute-references:
+              - Department
+          - name: User
+            description: User Role
+            scope-references:
+              - $XSAPPNAME.User
+        oauth2-configuration:
+          redirect-uris:
+            - https://**.${default-domain}/**
+  
+  - name: a2a-network-destination-service
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+  
+  - name: a2a-network-connectivity-service
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: connectivity
+      service-plan: lite
+  
+  - name: a2a-network-application-logging
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: application-logs
+      service-plan: lite
+      config:
+        appLogs:
+          loggers:
+            - name: "a2a-network"
+              level: "info"
+            - name: "blockchain"
+              level: "debug"
+            - name: "agents"
+              level: "info"
+          retentionPeriod: 7
+          forwardToSiem: true
+  
+  - name: a2a-network-alert-notification
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: alert-notification
+      service-plan: standard
+      config:
+        configuration:
+          actions:
+            - name: email-action
+              type: EMAIL
+              properties:
+                destination: ops-team@company.com
+                useHtml: true
+            - name: webhook-action
+              type: WEBHOOK
+              properties:
+                url: https://webhook.company.com/alerts
+          conditions:
+            - name: high-cpu-condition
+              description: CPU usage above 80%
+              predicate: GREATER_THAN
+              threshold: 80
+              propertyKey: cpu.utilization
+            - name: memory-condition
+              description: Memory usage above 85%
+              predicate: GREATER_THAN
+              threshold: 85
+              propertyKey: memory.utilization
+            - name: response-time-condition
+              description: Response time above 1000ms
+              predicate: GREATER_THAN
+              threshold: 1000
+              propertyKey: http.server.request.duration
+            - name: error-rate-condition
+              description: Error rate above 5%
+              predicate: GREATER_THAN
+              threshold: 5
+              propertyKey: error.rate
+          subscriptions:
+            - name: high-priority-alerts
+              conditions:
+                - high-cpu-condition
+                - memory-condition
+                - error-rate-condition
+              actions:
+                - email-action
+                - webhook-action
+            - name: performance-alerts
+              conditions:
+                - response-time-condition
+              actions:
+                - email-action
+  
+  - name: a2a-network-autoscaler
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: autoscaler
+      service-plan: standard
+      config:
+        instance_min_count: 1
+        instance_max_count: 5
+        scaling_rules:
+          - metric_type: cpu
+            threshold: 80
+            operator: ">"
+            adjustment: "+1"
+          - metric_type: memory
+            threshold: 85
+            operator: ">"
+            adjustment: "+1"
+          - metric_type: responsetime
+            threshold: 1000
+            operator: ">"
+            adjustment: "+1"
+          - metric_type: cpu
+            threshold: 20
+            operator: "<"
+            adjustment: "-1"
+        schedules:
+          - recurrence: "0 8 * * 1-5"
+            min_instance_count: 2
+            max_instance_count: 10
+          - recurrence: "0 20 * * 1-5"
+            min_instance_count: 1
+            max_instance_count: 3
+
+parameters:
+  deploy_mode: html5-repo
+  enable-parallel-deployments: true
+
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npm run build:cf

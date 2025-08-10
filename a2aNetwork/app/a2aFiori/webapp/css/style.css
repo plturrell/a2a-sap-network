@@ -1,0 +1,538 @@
+/* SAP Fiori 3.0 Compliant Styles for A2A Network */
+/* Enhanced with Comprehensive Tablet Optimization */
+
+/* 
+ * SAP Fiori Design Guidelines:
+ * - Use semantic colors from theme
+ * - Avoid custom shadows and borders
+ * - Follow SAP spacing system (0.5rem increments)
+ * - Use SAP motion guidelines
+ */
+
+/* Semantic spacing classes following SAP standards */
+.sapUiTinyMarginBeginEnd { margin-left: 0.5rem; margin-right: 0.5rem; }
+.sapUiSmallMarginBeginEnd { margin-left: 1rem; margin-right: 1rem; }
+.sapUiMediumMarginBeginEnd { margin-left: 2rem; margin-right: 2rem; }
+.sapUiLargeMarginBeginEnd { margin-left: 3rem; margin-right: 3rem; }
+
+/* Responsive helpers following SAP patterns */
+.sapUiHideOnPhone { }
+.sapUiVisibleOnlyOnPhone { display: none; }
+
+@media (max-width: 599px) {
+    .sapUiHideOnPhone { display: none !important; }
+    .sapUiVisibleOnlyOnPhone { display: inherit; }
+}
+
+/* Tablet-specific optimizations - COMPREHENSIVE */
+@media (min-width: 600px) and (max-width: 1023px) {
+    .sapUiResponsiveContentPadding > * {
+        padding: var(--sapContent_Padding);
+    }
+    
+    /* Tablet navigation enhancements */
+    .sapTntToolPage .sapTntSideNavigation {
+        width: 15rem;
+    }
+    
+    .sapTntNavigationListItem {
+        min-height: 2.75rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    /* Card layouts for tablet screens */
+    .sapFCard {
+        min-height: 12rem;
+        margin: 0.5rem;
+    }
+    
+    /* Enhanced touch targets */
+    .sapMBtn {
+        min-height: 2.75rem;
+        min-width: 2.75rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    .sapMBtn.sapMBtnCompact {
+        min-height: 2.25rem;
+        min-width: 2.25rem;
+    }
+    
+    /* Tablet-optimized tables */
+    .sapMTable .sapMListTblRow .sapMListTblCell {
+        padding: 0.75rem 0.5rem;
+        min-height: 3rem;
+    }
+    
+    /* Hide less important table columns on tablet */
+    .sapMTable .sapMListTblRow .sapMListTblCell:nth-child(n+6) {
+        display: none;
+    }
+    
+    /* Grid optimizations */
+    .sapUiLayoutCSSGrid {
+        grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+        gap: 1rem;
+    }
+    
+    /* Dynamic Page optimizations for tablets */
+    .sapFDynamicPageHeader {
+        padding: 1rem;
+    }
+    
+    .sapFDynamicPageTitle .sapFDynamicPageTitleWrapper {
+        padding: 0.75rem 0;
+    }
+    
+    /* Form enhancements for tablets */
+    .sapMInput,
+    .sapMTextArea,
+    .sapMSelect {
+        min-height: 2.75rem;
+        font-size: 1rem;
+    }
+    
+    /* Enhanced IconTabBar for tablets */
+    .sapMIconTabBar .sapMITBHeader .sapMITBTab {
+        min-height: 3rem;
+        min-width: 8rem;
+    }
+    
+    /* List item enhancements */
+    .sapMListItem {
+        min-height: 3rem;
+    }
+    
+    .sapMListItemBase .sapMLIBContent {
+        padding: 0.75rem 1rem;
+    }
+    
+    /* Tile container optimizations */
+    .sapMTile {
+        min-height: 8rem;
+        margin: 0.5rem;
+    }
+    
+    /* Toolbar enhancements */
+    .sapMIBar .sapMIBarMiddle {
+        padding: 0 1rem;
+    }
+    
+    /* Panel optimizations */
+    .sapMPanel .sapMPanelContent {
+        padding: 1rem;
+    }
+}
+
+/* Tablet portrait specific */
+@media (min-width: 600px) and (max-width: 1023px) and (orientation: portrait) {
+    .sapTntToolPage .sapTntSideNavigation {
+        width: 18rem;
+    }
+    
+    .sapUiLayoutCSSGrid {
+        grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+    }
+    
+    /* More vertical spacing in portrait */
+    .sapFCard {
+        margin: 1rem 0.5rem;
+        min-height: 14rem;
+    }
+    
+    /* Larger text for better readability in portrait */
+    .sapMText {
+        font-size: 1rem;
+    }
+    
+    /* Enhanced touch targets in portrait */
+    .sapMBtn {
+        min-height: 3rem;
+        padding: 0.75rem 1.25rem;
+    }
+}
+
+/* Tablet landscape specific */
+@media (min-width: 600px) and (max-width: 1023px) and (orientation: landscape) {
+    .sapTntToolPage .sapTntSideNavigation {
+        width: 12rem;
+    }
+    
+    .sapUiLayoutCSSGrid {
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    }
+    
+    /* Compact layout for landscape */
+    .sapFCard {
+        min-height: 10rem;
+        margin: 0.25rem;
+    }
+    
+    .sapFDynamicPageTitle .sapFDynamicPageTitleWrapper {
+        padding: 0.5rem 0;
+    }
+    
+    /* More columns in landscape tables */
+    .sapMTable .sapMListTblRow .sapMListTblCell:nth-child(n+8) {
+        display: none;
+    }
+}
+
+/* Touch-friendly interactions for A2A Network */
+@media (hover: none) and (pointer: coarse) {
+    /* Remove hover effects on touch devices */
+    .sapFCard:hover,
+    .sapMTile:hover,
+    .sapMListItem:hover {
+        transform: none;
+        box-shadow: initial;
+        background-color: initial;
+    }
+    
+    /* Touch feedback for interactive elements */
+    .sapFCard:active,
+    .sapMTile:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
+    }
+    
+    .sapMBtn:active {
+        transform: scale(0.95);
+        transition: transform 0.1s ease;
+    }
+    
+    .sapMListItem:active {
+        background-color: var(--sapList_Active_Background);
+        transition: background-color 0.1s ease;
+    }
+}
+
+/* Gesture support styles for A2A Network */
+.a2a-pull-to-refresh {
+    position: relative;
+    overflow: hidden;
+    touch-action: pan-y;
+}
+
+.a2a-pull-to-refresh-indicator {
+    position: absolute;
+    top: -3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: top 0.3s ease;
+    color: var(--sapContent_LabelColor);
+    font-size: 1rem;
+    font-weight: var(--sapFontSemiboldWeight);
+}
+
+.a2a-pull-to-refresh.pulling .a2a-pull-to-refresh-indicator {
+    top: 0;
+}
+
+/* Swipe gesture support */
+.a2a-swipe-container {
+    position: relative;
+    overflow: hidden;
+    touch-action: pan-x;
+}
+
+.a2a-swipe-actions {
+    position: absolute;
+    top: 0;
+    right: -100%;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    background-color: var(--sapButton_Emphasized_Background);
+    transition: right 0.3s ease;
+    padding: 0 1rem;
+}
+
+.a2a-swipe-container.swiped .a2a-swipe-actions {
+    right: 0;
+}
+
+.a2a-swipe-actions .sapMBtn {
+    margin-left: 0.5rem;
+    min-height: 2.5rem;
+}
+
+/* Print optimization following SAP standards */
+@media print {
+    .sapUiHiddenPrint {
+        display: none !important;
+    }
+    
+    /* Hide non-essential elements */
+    .sapTntToolHeader,
+    .sapTntSideNavigation,
+    .a2a-pull-to-refresh-indicator,
+    .a2a-swipe-actions {
+        display: none !important;
+    }
+    
+    /* Ensure readable print output */
+    .sapFCard {
+        border: 1px solid var(--sapList_BorderColor);
+        page-break-inside: avoid;
+        margin: 0.5rem 0;
+    }
+}
+
+/* Skeleton placeholder sizes - using rem units for SAP compliance */
+.skeleton-title {
+    width: 12.5rem;
+    height: 1rem;
+}
+
+.skeleton-title-medium {
+    width: 11.25rem;
+    height: 1rem;
+}
+
+.skeleton-title-large {
+    width: 13.75rem;
+    height: 1rem;
+}
+
+.skeleton-badge {
+    width: 5rem;
+    height: 1rem;
+}
+
+.skeleton-badge-medium {
+    width: 5.625rem;
+    height: 1rem;
+}
+
+.skeleton-badge-large {
+    width: 6.25rem;
+    height: 1rem;
+}
+
+.skeleton-text {
+    height: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.skeleton-text-45 {
+    width: 45%;
+}
+
+.skeleton-text-60 {
+    width: 60%;
+}
+
+.skeleton-text-70 {
+    width: 70%;
+}
+
+/* Loading container */
+.a2a-loading-container {
+    height: 12.5rem;
+}
+
+/* 
+ * All visual styling should be done through:
+ * 1. SAP UI5 control properties
+ * 2. Semantic colors from theme
+ * 3. Standard SAP CSS classes
+ * 
+ * Avoid:
+ * - Custom colors
+ * - Custom shadows
+ * - Custom animations
+ * - Custom borders
+ */
+
+/* SAP-compliant skeleton loading placeholders */
+.skeleton-placeholder {
+    background: var(--sapUiContentForegroundColor);
+    opacity: 0.1;
+    border-radius: 0.25rem;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+    0% { opacity: 0.1; }
+    50% { opacity: 0.2; }
+    100% { opacity: 0.1; }
+}
+
+/* Blockchain-specific semantic styling - Enhanced for tablets */
+.blockchain-status-pending {
+    color: var(--sapUiNeutralText);
+}
+
+.blockchain-status-confirmed {
+    color: var(--sapUiPositiveText);
+}
+
+.blockchain-status-failed {
+    color: var(--sapUiNegativeText);
+}
+
+/* Web3 educational helpers - Tablet optimized */
+.web3-info-icon {
+    cursor: help;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive blockchain cards for mobile and tablet */
+@media (max-width: 599px) {
+    .blockchain-card-content {
+        padding: 0.5rem;
+    }
+    
+    .blockchain-address {
+        font-size: 0.75rem;
+        word-break: break-all;
+    }
+}
+
+/* Tablet-specific blockchain components */
+@media (min-width: 600px) and (max-width: 1023px) {
+    .blockchain-card-content {
+        padding: 1rem;
+        min-height: 8rem;
+    }
+    
+    .blockchain-address {
+        font-size: 0.875rem;
+        word-break: break-all;
+        padding: 0.5rem;
+        background-color: var(--sapGroup_ContentBackground);
+        border-radius: 0.25rem;
+    }
+    
+    .blockchain-transaction-list .sapMListItem {
+        min-height: 4rem;
+    }
+    
+    .blockchain-network-status {
+        min-height: 3rem;
+        display: flex;
+        align-items: center;
+    }
+}
+
+/* Enhanced focus indicators for tablet accessibility */
+@media (min-width: 600px) and (max-width: 1023px) {
+    .sapMBtn:focus,
+    .sapMLink:focus,
+    .sapMInput:focus,
+    .sapMSelect:focus {
+        outline: 2px solid var(--sapContent_FocusColor);
+        outline-offset: 2px;
+    }
+    
+    /* Enhanced focus for touch devices */
+    @media (hover: none) and (pointer: coarse) {
+        .sapMBtn:focus,
+        .sapMLink:focus {
+            outline-width: 3px;
+            outline-offset: 3px;
+        }
+    }
+}
+
+/* A2A Network specific tablet classes */
+@media (min-width: 600px) and (max-width: 1023px) {
+    /* Tablet page optimizations */
+    .a2a-tablet-page {
+        touch-action: manipulation;
+    }
+    
+    .a2a-tablet-page .sapFDynamicPageHeader {
+        padding: 1rem 2rem;
+    }
+    
+    /* Tablet search field */
+    .a2a-tablet-search {
+        min-height: 2.75rem;
+        font-size: 1rem;
+    }
+    
+    /* Tablet grid layouts */
+    .a2a-tablet-grid {
+        gap: 1.5rem;
+        padding: 1rem;
+    }
+    
+    /* Tablet table enhancements */
+    .a2a-tablet-table .sapMListTblRow {
+        min-height: 3.5rem;
+    }
+    
+    .a2a-tablet-table .sapMListTblCell {
+        padding: 1rem 0.75rem;
+        font-size: 1rem;
+    }
+    
+    /* Tablet actions container */
+    .a2a-tablet-actions .sapMTile {
+        min-width: 10rem;
+        min-height: 8rem;
+        margin: 0.5rem;
+    }
+    
+    .a2a-tablet-actions .sapMTileContent {
+        padding: 1rem;
+    }
+    
+    /* Enhanced button groups for tablets */
+    .sapMSegmentedButton .sapMSegBtnItem {
+        min-height: 2.75rem;
+        min-width: 5rem;
+        font-size: 1rem;
+    }
+    
+    /* Tablet-friendly panels */
+    .a2a-tablet-panel {
+        margin: 0.75rem 0;
+    }
+    
+    .a2a-tablet-panel .sapMPanelContent {
+        padding: 1.5rem;
+    }
+    
+    /* Tablet loading states */
+    .a2a-tablet-loading {
+        padding: 2rem;
+    }
+    
+    .a2a-tablet-loading .sapMTitle {
+        font-size: 1.125rem;
+    }
+    
+    .a2a-tablet-loading .sapMBusyIndicator {
+        width: 3rem;
+        height: 3rem;
+    }
+}
+
+/* High contrast improvements for tablets */
+@media (prefers-contrast: high) and (min-width: 600px) and (max-width: 1023px) {
+    .sapFCard,
+    .sapMTile {
+        border-width: 2px;
+    }
+    
+    .blockchain-address {
+        border: 2px solid var(--sapContent_ForegroundBorderColor);
+    }
+    
+    .a2a-tablet-table {
+        border: 2px solid var(--sapList_BorderColor);
+    }
+}

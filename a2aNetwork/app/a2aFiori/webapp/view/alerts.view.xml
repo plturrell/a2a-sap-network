@@ -1,0 +1,524 @@
+<mvc:View
+    controllerName="a2a.network.fiori.controller.Alerts"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.f"
+    xmlns:layout="sap.ui.layout"
+    xmlns:unified="sap.ui.unified"
+    xmlns:tnt="sap.tnt"
+    displayBlock="true">
+    
+    <Page
+        id="alertsPage"
+        class="a2a-tablet-page sapUiContentPadding"
+        title="{i18n>alerts.title}"
+        showNavButton="true"
+        navButtonPress="onNavBack">
+        
+        <headerContent>
+            <SegmentedButton
+                id="alertViewToggle"
+                selectedKey="{ui>/alertView}">
+                <items>
+                    <SegmentedButtonItem key="active" text="{i18n>alerts.view.active}" icon="sap-icon://alert"/>
+                    <SegmentedButtonItem key="history" text="{i18n>alerts.view.history}" icon="sap-icon://history"/>
+                    <SegmentedButtonItem key="rules" text="{i18n>alerts.view.rules}" icon="sap-icon://business-objects-experience"/>
+                </items>
+            </SegmentedButton>
+            <ToolbarSpacer/>
+            <Button
+                id="createRuleButton"
+                icon="sap-icon://add"
+                text="{i18n>alerts.action.createRule}"
+                type="Transparent"
+                press="onCreateAlertRule"
+                visible="{= ${ui>/alertView} === 'rules' }"/>
+            <Button
+                id="notificationSettingsButton"
+                icon="sap-icon://settings"
+                tooltip="{i18n>alerts.action.notificationSettings}"
+                type="Transparent"
+                press="onNotificationSettings"/>
+        </headerContent>
+        
+        <content>
+            <!-- Active Alerts View -->
+            <VBox visible="{= ${ui>/alertView} === 'active' }">
+                <!-- Alert Statistics -->
+                <layout:Grid
+                    defaultSpan="L3 M6 S12"
+                    class="sapUiSmallMarginBottom">
+                    <tnt:InfoLabel
+                        text="{alerts>/statistics/critical}"
+                        colorScheme="2"
+                        icon="sap-icon://error"
+                        displayOnly="true">
+                        <tnt:layoutData>
+                            <layout:GridData span="L3 M6 S12"/>
+                        </tnt:layoutData>
+                    </tnt:InfoLabel>
+                    <tnt:InfoLabel
+                        text="{alerts>/statistics/high}"
+                        colorScheme="1"
+                        icon="sap-icon://warning"
+                        displayOnly="true">
+                        <tnt:layoutData>
+                            <layout:GridData span="L3 M6 S12"/>
+                        </tnt:layoutData>
+                    </tnt:InfoLabel>
+                    <tnt:InfoLabel
+                        text="{alerts>/statistics/medium}"
+                        colorScheme="7"
+                        icon="sap-icon://message-warning"
+                        displayOnly="true">
+                        <tnt:layoutData>
+                            <layout:GridData span="L3 M6 S12"/>
+                        </tnt:layoutData>
+                    </tnt:InfoLabel>
+                    <tnt:InfoLabel
+                        text="{alerts>/statistics/low}"
+                        colorScheme="8"
+                        icon="sap-icon://information"
+                        displayOnly="true">
+                        <tnt:layoutData>
+                            <layout:GridData span="L3 M6 S12"/>
+                        </tnt:layoutData>
+                    </tnt:InfoLabel>
+                </layout:Grid>
+                
+                <!-- Active Alerts List -->
+                <List
+                    id="activeAlertsList"
+                    items="{
+                        path: 'alerts>/activeAlerts',
+                        sorter: {
+                            path: 'priority',
+                            descending: false,
+                            group: true
+                        }
+                    }"
+                    growing="true"
+                    growingThreshold="20"
+                    noDataText="{i18n>alerts.noActiveAlerts}">
+                    
+                    <headerToolbar>
+                        <OverflowToolbar>
+                            <Title text="{i18n>alerts.activeAlerts.title}" level="H2"/>
+                            <ToolbarSpacer/>
+                            <SearchField
+                                id="alertSearchField"
+                                width="300px"
+                                placeholder="{i18n>alerts.search.placeholder}"
+                                search="onSearchAlerts"/>
+                            <Button
+                                icon="sap-icon://filter"
+                                tooltip="{i18n>alerts.filter.tooltip}"
+                                press="onFilterAlerts"/>
+                            <Button
+                                icon="sap-icon://refresh"
+                                tooltip="{i18n>common.refresh}"
+                                press="onRefreshAlerts"/>
+                        </OverflowToolbar>
+                    </headerToolbar>
+                    
+                    <items>
+                        <NotificationListItem
+                            title="{alerts>title}"
+                            description="{alerts>description}"
+                            datetime="{
+                                path: 'alerts>timestamp',
+                                type: 'sap.ui.model.type.DateTime',
+                                formatOptions: {
+                                    relative: true
+                                }
+                            }"
+                            priority="{= ${alerts>severity} === 'critical' ? 'High' : ${alerts>severity} === 'high' ? 'Medium' : 'Low' }"
+                            showButtons="true"
+                            showCloseButton="true"
+                            close="onDismissAlert"
+                            press="onAlertPress"
+                            authorName="{alerts>source}"
+                            authorPicture="sap-icon://alert">
+                            <buttons>
+                                <Button
+                                    text="{i18n>alerts.action.acknowledge}"
+                                    type="Accept"
+                                    press="onAcknowledgeAlert"
+                                    visible="{= !${alerts>acknowledged} }"/>
+                                <Button
+                                    text="{i18n>alerts.action.resolve}"
+                                    type="Success"
+                                    press="onResolveAlert"/>
+                                <Button
+                                    text="{i18n>alerts.action.escalate}"
+                                    type="Reject"
+                                    press="onEscalateAlert"
+                                    visible="{= ${alerts>severity} !== 'critical' }"/>
+                            </buttons>
+                        </NotificationListItem>
+                    </items>
+                </List>
+            </VBox>
+            
+            <!-- Alert History View -->
+            <VBox visible="{= ${ui>/alertView} === 'history' }">
+                <Table
+                    id="alertHistoryTable"
+                    items="{
+                        path: 'alerts>/alertHistory',
+                        sorter: {
+                            path: 'timestamp',
+                            descending: true
+                        }
+                    }"
+                    growing="true"
+                    growingThreshold="50"
+                    alternateRowColors="true">
+                    
+                    <headerToolbar>
+                        <OverflowToolbar>
+                            <Title text="{i18n>alerts.history.title}" level="H2"/>
+                            <ToolbarSpacer/>
+                            <DateRangeSelection
+                                id="historyDateRange"
+                                change="onHistoryDateRangeChange"/>
+                            <Button
+                                icon="sap-icon://excel-attachment"
+                                tooltip="{i18n>alerts.export.tooltip}"
+                                press="onExportHistory"/>
+                        </OverflowToolbar>
+                    </headerToolbar>
+                    
+                    <columns>
+                        <Column width="120px">
+                            <Text text="{i18n>alerts.column.timestamp}"/>
+                        </Column>
+                        <Column width="100px">
+                            <Text text="{i18n>alerts.column.severity}"/>
+                        </Column>
+                        <Column>
+                            <Text text="{i18n>alerts.column.title}"/>
+                        </Column>
+                        <Column width="150px">
+                            <Text text="{i18n>alerts.column.source}"/>
+                        </Column>
+                        <Column width="100px">
+                            <Text text="{i18n>alerts.column.status}"/>
+                        </Column>
+                        <Column width="150px">
+                            <Text text="{i18n>alerts.column.resolvedBy}"/>
+                        </Column>
+                        <Column width="100px">
+                            <Text text="{i18n>alerts.column.duration}"/>
+                        </Column>
+                    </columns>
+                    
+                    <items>
+                        <ColumnListItem type="Navigation" press="onHistoryItemPress">
+                            <cells>
+                                <Text text="{
+                                    path: 'alerts>timestamp',
+                                    type: 'sap.ui.model.type.DateTime',
+                                    formatOptions: {
+                                        style: 'medium'
+                                    }
+                                }"/>
+                                <ObjectStatus
+                                    text="{alerts>severity}"
+                                    state="{= ${alerts>severity} === 'critical' ? 'Error' : ${alerts>severity} === 'high' ? 'Warning' : 'Success' }"/>
+                                <Text text="{alerts>title}" maxLines="2"/>
+                                <Text text="{alerts>source}"/>
+                                <ObjectStatus
+                                    text="{alerts>status}"
+                                    state="{= ${alerts>status} === 'resolved' ? 'Success' : ${alerts>status} === 'acknowledged' ? 'Warning' : 'Error' }"/>
+                                <Text text="{alerts>resolvedBy}"/>
+                                <Text text="{alerts>duration}"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+            </VBox>
+            
+            <!-- Alert Rules View -->
+            <VBox visible="{= ${ui>/alertView} === 'rules' }">
+                <Table
+                    id="alertRulesTable"
+                    items="{alerts>/alertRules}"
+                    mode="SingleSelectMaster"
+                    selectionChange="onRuleSelectionChange">
+                    
+                    <headerToolbar>
+                        <OverflowToolbar>
+                            <Title text="{i18n>alerts.rules.title}" level="H2"/>
+                            <ToolbarSpacer/>
+                            <Switch
+                                state="{ui>/showActiveRulesOnly}"
+                                customTextOn="{i18n>alerts.rules.activeOnly}"
+                                customTextOff="{i18n>alerts.rules.all}"
+                                change="onToggleActiveRules"/>
+                        </OverflowToolbar>
+                    </headerToolbar>
+                    
+                    <columns>
+                        <Column width="50px">
+                            <Text text=""/>
+                        </Column>
+                        <Column>
+                            <Text text="{i18n>alerts.rules.column.name}"/>
+                        </Column>
+                        <Column width="150px">
+                            <Text text="{i18n>alerts.rules.column.type}"/>
+                        </Column>
+                        <Column width="100px">
+                            <Text text="{i18n>alerts.rules.column.severity}"/>
+                        </Column>
+                        <Column>
+                            <Text text="{i18n>alerts.rules.column.condition}"/>
+                        </Column>
+                        <Column width="120px">
+                            <Text text="{i18n>alerts.rules.column.lastTriggered}"/>
+                        </Column>
+                        <Column width="100px">
+                            <Text text="{i18n>alerts.rules.column.actions}"/>
+                        </Column>
+                    </columns>
+                    
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <Switch
+                                    state="{alerts>active}"
+                                    change="onToggleRule"/>
+                                <VBox>
+                                    <Text text="{alerts>name}" class="sapMTextBold"/>
+                                    <Text text="{alerts>description}" class="sapUiTinyMarginTop"/>
+                                </VBox>
+                                <Text text="{alerts>type}"/>
+                                <ObjectStatus
+                                    text="{alerts>severity}"
+                                    state="{= ${alerts>severity} === 'critical' ? 'Error' : ${alerts>severity} === 'high' ? 'Warning' : 'Success' }"/>
+                                <Text text="{alerts>conditionDisplay}"/>
+                                <Text text="{
+                                    path: 'alerts>lastTriggered',
+                                    type: 'sap.ui.model.type.DateTime',
+                                    formatOptions: {
+                                        relative: true
+                                    }
+                                }"/>
+                                <HBox>
+                                    <Button
+                                        icon="sap-icon://edit"
+                                        type="Transparent"
+                                        press="onEditRule"/>
+                                    <Button
+                                        icon="sap-icon://delete"
+                                        type="Transparent"
+                                        press="onDeleteRule"/>
+                                </HBox>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+                
+                <!-- Rule Details Panel -->
+                <Panel
+                    id="ruleDetailsPanel"
+                    headerText="{i18n>alerts.rules.details.title}"
+                    visible="{= !!${alerts>/selectedRule} }"
+                    class="sapUiMediumMarginTop">
+                    <content>
+                        <layout:Grid defaultSpan="L6 M12 S12" hSpacing="1" class="sapUiSmallMargin">
+                            <VBox>
+                                <Label text="{i18n>alerts.rules.details.notifications}:" design="Bold"/>
+                                <List
+                                    items="{alerts>/selectedRule/notifications}"
+                                    showSeparators="None">
+                                    <StandardListItem
+                                        icon="{= ${alerts>type} === 'email' ? 'sap-icon://email' : ${alerts>type} === 'sms' ? 'sap-icon://iphone' : 'sap-icon://bell' }"
+                                        title="{alerts>recipient}"
+                                        info="{alerts>type}"/>
+                                </List>
+                            </VBox>
+                            <VBox>
+                                <Label text="{i18n>alerts.rules.details.statistics}:" design="Bold"/>
+                                <ObjectStatus
+                                    title="{i18n>alerts.rules.details.triggered}"
+                                    text="{alerts>/selectedRule/triggerCount} times"
+                                    state="Information"/>
+                                <ObjectStatus
+                                    title="{i18n>alerts.rules.details.avgResponseTime}"
+                                    text="{alerts>/selectedRule/avgResponseTime}"
+                                    state="Success"
+                                    class="sapUiTinyMarginTop"/>
+                            </VBox>
+                        </layout:Grid>
+                    </content>
+                </Panel>
+            </VBox>
+            
+            <!-- Alert Detail Dialog -->
+            <Dialog
+                id="alertDetailDialog"
+                title="{i18n>alerts.detail.title}"
+                contentWidth="90%"
+                maxWidth="35rem"
+                contentHeight="60%"
+                class="a2a-tablet-dialog"
+                resizable="true">
+                <content>
+                    <VBox class="sapUiMediumMargin">
+                        <layout:Grid defaultSpan="L6 M12 S12" hSpacing="1">
+                            <VBox>
+                                <Label text="{i18n>alerts.detail.id}:" design="Bold"/>
+                                <Text text="{alerts>/selectedAlert/id}"/>
+                            </VBox>
+                            <VBox>
+                                <Label text="{i18n>alerts.detail.severity}:" design="Bold"/>
+                                <ObjectStatus
+                                    text="{alerts>/selectedAlert/severity}"
+                                    state="{= ${alerts>/selectedAlert/severity} === 'critical' ? 'Error' : ${alerts>/selectedAlert/severity} === 'high' ? 'Warning' : 'Success' }"/>
+                            </VBox>
+                            <VBox>
+                                <Label text="{i18n>alerts.detail.source}:" design="Bold"/>
+                                <Text text="{alerts>/selectedAlert/source}"/>
+                            </VBox>
+                            <VBox>
+                                <Label text="{i18n>alerts.detail.timestamp}:" design="Bold"/>
+                                <Text text="{
+                                    path: 'alerts>/selectedAlert/timestamp',
+                                    type: 'sap.ui.model.type.DateTime',
+                                    formatOptions: {
+                                        style: 'long'
+                                    }
+                                }"/>
+                            </VBox>
+                        </layout:Grid>
+                        
+                        <VBox class="sapUiMediumMarginTop">
+                            <Label text="{i18n>alerts.detail.description}:" design="Bold"/>
+                            <Text text="{alerts>/selectedAlert/description}" class="sapUiTinyMarginTop"/>
+                        </VBox>
+                        
+                        <VBox class="sapUiMediumMarginTop" visible="{= !!${alerts>/selectedAlert/metrics} }">
+                            <Label text="{i18n>alerts.detail.metrics}:" design="Bold"/>
+                            <layout:Grid defaultSpan="L4 M6 S12" class="sapUiTinyMarginTop">
+                                <ObjectStatus
+                                    title="CPU Usage"
+                                    text="{alerts>/selectedAlert/metrics/cpu}%"
+                                    state="{= ${alerts>/selectedAlert/metrics/cpu} > 80 ? 'Error' : 'Success' }"/>
+                                <ObjectStatus
+                                    title="Memory Usage"
+                                    text="{alerts>/selectedAlert/metrics/memory}%"
+                                    state="{= ${alerts>/selectedAlert/metrics/memory} > 80 ? 'Error' : 'Success' }"/>
+                                <ObjectStatus
+                                    title="Response Time"
+                                    text="{alerts>/selectedAlert/metrics/responseTime} ms"
+                                    state="{= ${alerts>/selectedAlert/metrics/responseTime} > 1000 ? 'Warning' : 'Success' }"/>
+                            </layout:Grid>
+                        </VBox>
+                        
+                        <VBox class="sapUiMediumMarginTop">
+                            <Label text="{i18n>alerts.detail.actions}:" design="Bold"/>
+                            <List
+                                items="{alerts>/selectedAlert/actionsTaken}"
+                                showSeparators="None"
+                                class="sapUiTinyMarginTop">
+                                <StandardListItem
+                                    title="{alerts>action}"
+                                    description="{alerts>user}"
+                                    info="{
+                                        path: 'alerts>timestamp',
+                                        type: 'sap.ui.model.type.DateTime',
+                                        formatOptions: {
+                                            relative: true
+                                        }
+                                    }"/>
+                            </List>
+                        </VBox>
+                    </VBox>
+                </content>
+                <buttons>
+                    <Button text="{i18n>alerts.detail.runbook}" icon="sap-icon://document-text" press="onViewRunbook" type="Emphasized"/>
+                    <Button text="{i18n>common.close}" press="onCloseAlertDetail"/>
+                </buttons>
+            </Dialog>
+            
+            <!-- Notification Settings Dialog -->
+            <Dialog
+                id="notificationSettingsDialog"
+                title="{i18n>alerts.notifications.settings.title}"
+                contentWidth="90%"
+                maxWidth="35rem"
+                class="a2a-tablet-dialog">
+                <content>
+                    <VBox class="sapUiMediumMargin">
+                        <CheckBox
+                            text="{i18n>alerts.notifications.email}"
+                            selected="{settings>/notifications/email/enabled}"/>
+                        <Input
+                            placeholder="{i18n>alerts.notifications.email.address}"
+                            value="{settings>/notifications/email/address}"
+                            enabled="{settings>/notifications/email/enabled}"
+                            class="sapUiSmallMarginLeft sapUiTinyMarginTop"/>
+                        
+                        <CheckBox
+                            text="{i18n>alerts.notifications.sms}"
+                            selected="{settings>/notifications/sms/enabled}"
+                            class="sapUiSmallMarginTop"/>
+                        <Input
+                            placeholder="{i18n>alerts.notifications.sms.number}"
+                            value="{settings>/notifications/sms/number}"
+                            enabled="{settings>/notifications/sms/enabled}"
+                            class="sapUiSmallMarginLeft sapUiTinyMarginTop"/>
+                        
+                        <CheckBox
+                            text="{i18n>alerts.notifications.push}"
+                            selected="{settings>/notifications/push/enabled}"
+                            class="sapUiSmallMarginTop"/>
+                        
+                        <CheckBox
+                            text="{i18n>alerts.notifications.slack}"
+                            selected="{settings>/notifications/slack/enabled}"
+                            class="sapUiSmallMarginTop"/>
+                        <Input
+                            placeholder="{i18n>alerts.notifications.slack.webhook}"
+                            value="{settings>/notifications/slack/webhook}"
+                            enabled="{settings>/notifications/slack/enabled}"
+                            class="sapUiSmallMarginLeft sapUiTinyMarginTop"/>
+                        
+                        <VBox class="sapUiMediumMarginTop">
+                            <Label text="{i18n>alerts.notifications.severity.threshold}:" design="Bold"/>
+                            <RadioButtonGroup
+                                selectedIndex="{settings>/notifications/severityThreshold}"
+                                class="sapUiTinyMarginTop">
+                                <RadioButton text="{i18n>alerts.severity.all}"/>
+                                <RadioButton text="{i18n>alerts.severity.mediumAndAbove}"/>
+                                <RadioButton text="{i18n>alerts.severity.highAndAbove}"/>
+                                <RadioButton text="{i18n>alerts.severity.criticalOnly}"/>
+                            </RadioButtonGroup>
+                        </VBox>
+                    </VBox>
+                </content>
+                <buttons>
+                    <Button text="{i18n>common.save}" type="Emphasized" press="onSaveNotificationSettings"/>
+                    <Button text="{i18n>common.cancel}" press="onCloseNotificationSettings"/>
+                </buttons>
+            </Dialog>
+        </content>
+        
+        <!-- Loading States -->
+        <dependents>
+            <!-- Real-time Alert Notification -->
+            <MessageStrip
+                id="realtimeAlertStrip"
+                visible="{ui>/showRealtimeAlert}"
+                text="{ui>/realtimeAlertMessage}"
+                type="{ui>/realtimeAlertType}"
+                showIcon="true"
+                showCloseButton="true"
+                close="onCloseRealtimeAlert"
+                class="sapUiMediumMargin"/>
+        </dependents>
+    </Page>
+</mvc:View>

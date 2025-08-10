@@ -1,0 +1,139 @@
+<mvc:View
+    controllerName="a2a.network.fiori.controller.Workflows"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:l="sap.ui.layout"
+    xmlns:core="sap.ui.core">
+    
+    <f:DynamicPage id="workflowsPage" class="a2a-tablet-page">
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>workflows}"/>
+                </f:heading>
+                <f:actions>
+                    <Button
+                        text="Create Workflow"
+                        type="Emphasized"
+                        icon="sap-icon://create"
+                        press="onCreateWorkflow"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+        
+        <f:content>
+            <l:Splitter>
+                <l:contentAreas>
+                    <ScrollContainer
+                        width="30%"
+                        height="100%"
+                        vertical="true">
+                        <List
+                            id="workflowList"
+                            items="{/Workflows}"
+                            mode="SingleSelectMaster"
+                            selectionChange="onWorkflowSelect">
+                            <headerToolbar>
+                                <OverflowToolbar>
+                                    <SearchField placeholder="Search workflows..." width="100%"/>
+                                </OverflowToolbar>
+                            </headerToolbar>
+                            <StandardListItem
+                                title="{name}"
+                                description="{description}"
+                                icon="sap-icon://workflow-tasks"
+                                info="{= ${isActive} ? 'Active' : 'Inactive' }"
+                                infoState="{= ${isActive} ? 'Success' : 'Error' }"/>
+                        </List>
+                    </ScrollContainer>
+                    <VBox width="70%" class="sapUiMediumMargin">
+                        <ObjectHeader
+                            id="workflowHeader"
+                            title="Select a workflow"
+                            icon="sap-icon://workflow-tasks">
+                            <attributes>
+                                <ObjectAttribute title="Category" text="{category}"/>
+                                <ObjectAttribute title="Owner" text="{owner/name}"/>
+                                <ObjectAttribute title="Executions" text="{= ${executions}.length }"/>
+                            </attributes>
+                        </ObjectHeader>
+                        <IconTabBar class="sapUiMediumMarginTop">
+                            <items>
+                                <IconTabFilter text="Definition" icon="sap-icon://tree">
+                                    <VBox>
+                                        <Text text="Workflow steps will be displayed here"/>
+                                    </VBox>
+                                </IconTabFilter>
+                                <IconTabFilter text="Executions" icon="sap-icon://history">
+                                    <Table
+                                        id="executionsTable"
+                                        items="{executions}">
+                                        <columns>
+                                            <Column>
+                                                <Text text="Execution ID"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="Status"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="Started"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="Duration"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="Gas Used"/>
+                                            </Column>
+                                        </columns>
+                                        <items>
+                                            <ColumnListItem>
+                                                <cells>
+                                                    <Text text="{executionId}"/>
+                                                    <ObjectStatus
+                                                        text="{status}"
+                                                        state="{= ${status} === 'completed' ? 'Success' : ${status} === 'running' ? 'Warning' : 'Error'}"/>
+                                                    <Text text="{
+                                                        path: 'startedAt',
+                                                        formatter: '.formatter.formatDateTime'
+                                                    }"/>
+                                                    <Text text="{
+                                                        parts: ['startedAt', 'completedAt'],
+                                                        formatter: '.formatter.calculateDuration'
+                                                    }"/>
+                                                    <ObjectNumber number="{gasUsed}"/>
+                                                </cells>
+                                            </ColumnListItem>
+                                        </items>
+                                    </Table>
+                                </IconTabFilter>
+                                <IconTabFilter text="Analytics" icon="sap-icon://line-chart">
+                                    <VBox>
+                                        <Text text="Workflow analytics will be displayed here"/>
+                                    </VBox>
+                                </IconTabFilter>
+                            </items>
+                        </IconTabBar>
+                        <OverflowToolbar class="sapUiMediumMarginTop">
+                            <ToolbarSpacer/>
+                            <Button
+                                text="Execute"
+                                type="Emphasized"
+                                icon="sap-icon://play"
+                                press="onExecuteWorkflow"/>
+                            <Button
+                                text="Edit"
+                                icon="sap-icon://edit"
+                                press="onEditWorkflow"/>
+                            <Button
+                                text="Delete"
+                                type="Reject"
+                                icon="sap-icon://delete"
+                                press="onDeleteWorkflow"/>
+                        </OverflowToolbar>
+                    </VBox>
+                </l:contentAreas>
+            </l:Splitter>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

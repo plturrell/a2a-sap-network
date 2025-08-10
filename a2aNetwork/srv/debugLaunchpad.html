@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Debug Launchpad</title>
+    <script>
+        // Minimal configuration for debugging
+        window["sap-ushell-config"] = {
+            defaultRenderer: "fiori2",
+            renderers: {
+                fiori2: {
+                    componentData: {
+                        config: {
+                            rootIntent: "Shell-home"
+                        }
+                    }
+                }
+            },
+            services: {
+                LaunchPage: {
+                    adapter: {
+                        config: {
+                            groups: [
+                                {
+                                    id: "test-group",
+                                    title: "Test Group",
+                                    isPreset: true,
+                                    tiles: [
+                                        {
+                                            id: "TestTile",
+                                            tileType: "sap.ushell.ui.tile.StaticTile",
+                                            properties: {
+                                                title: "Test Tile",
+                                                subtitle: "Test Subtitle",
+                                                icon: "sap-icon://home",
+                                                targetURL: "#Test-test"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    
+    <script src="https://ui5.sap.com/1.120.0/test-resources/sap/ushell/bootstrap/sandbox.js"></script>
+    <script id="sap-ui-bootstrap"
+        src="https://ui5.sap.com/1.120.0/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-libs="sap.m,sap.ushell"
+        data-sap-ui-async="true">
+    </script>
+    
+    <script>
+        sap.ui.getCore().attachInit(function() {
+            console.log("UI5 Core initialized");
+            console.log("sap.ushell.Container:", !!sap.ushell.Container);
+            
+            // Check if container is initialized
+            sap.ushell.Container.createRenderer(undefined, true).then(function(renderer) {
+                console.log("Renderer created successfully", renderer);
+                renderer.placeAt("content");
+                console.log("Renderer placed in content div");
+            }).catch(function(error) {
+                console.error("Failed to create renderer:", error);
+            });
+        });
+    </script>
+    
+    <style>
+        html, body, #content {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body class="sapUiBody">
+    <div id="content"></div>
+</body>
+</html>

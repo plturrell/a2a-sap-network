@@ -1,0 +1,377 @@
+<mvc:View
+    controllerName="a2a.network.fiori.controller.Logs"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.f"
+    xmlns:layout="sap.ui.layout"
+    xmlns:unified="sap.ui.unified"
+    xmlns:fb="sap.ui.comp.filterbar"
+    displayBlock="true">
+    
+    <Page
+        id="logsPage"
+        title="{i18n>logs.title}"
+        showNavButton="true"
+        navButtonPress="onNavBack"
+        class="a2a-tablet-page sapUiContentPadding">
+        
+        <headerContent>
+            <Button
+                id="downloadLogsButton"
+                icon="sap-icon://download"
+                text="{i18n>logs.action.download}"
+                type="Transparent"
+                press="onDownloadLogs"
+                visible="{= ${ui>/selectedLogs}.length > 0 }"/>
+            <Button
+                id="clearLogsButton"
+                icon="sap-icon://delete"
+                text="{i18n>logs.action.clear}"
+                type="Transparent"
+                press="onClearLogs"
+                enabled="{= ${permissions>/canClearLogs} }"/>
+            <ToolbarSpacer/>
+            <SearchField
+                id="logSearchField"
+                width="300px"
+                placeholder="{i18n>logs.search.placeholder}"
+                search="onSearchLogs"
+                liveChange="onSearchLogs"/>
+        </headerContent>
+        
+        <content>
+            <!-- Filter Bar -->
+            <fb:FilterBar
+                id="logsFilterBar"
+                showRestoreButton="true"
+                showClearButton="true"
+                showGoOnFB="false"
+                search="onFilterLogs"
+                clear="onClearFilters">
+                <fb:filterGroupItems>
+                    <fb:FilterGroupItem
+                        groupName="Basic"
+                        name="level"
+                        label="{i18n>logs.filter.level}"
+                        visibleInFilterBar="true">
+                        <fb:control>
+                            <MultiComboBox
+                                id="levelFilter"
+                                width="200px"
+                                selectionChange="onFilterLogs">
+                                <items>
+                                    <core:Item key="ERROR" text="{i18n>logs.level.error}"/>
+                                    <core:Item key="WARNING" text="{i18n>logs.level.warning}"/>
+                                    <core:Item key="INFO" text="{i18n>logs.level.info}"/>
+                                    <core:Item key="DEBUG" text="{i18n>logs.level.debug}"/>
+                                    <core:Item key="TRACE" text="{i18n>logs.level.trace}"/>
+                                </items>
+                            </MultiComboBox>
+                        </fb:control>
+                    </fb:FilterGroupItem>
+                    <fb:FilterGroupItem
+                        groupName="Basic"
+                        name="source"
+                        label="{i18n>logs.filter.source}"
+                        visibleInFilterBar="true">
+                        <fb:control>
+                            <MultiComboBox
+                                id="sourceFilter"
+                                width="200px"
+                                items="{logs>/sources}"
+                                selectionChange="onFilterLogs">
+                                <items>
+                                    <core:Item key="{name}" text="{name}"/>
+                                </items>
+                            </MultiComboBox>
+                        </fb:control>
+                    </fb:FilterGroupItem>
+                    <fb:FilterGroupItem
+                        groupName="Basic"
+                        name="dateRange"
+                        label="{i18n>logs.filter.dateRange}"
+                        visibleInFilterBar="true">
+                        <fb:control>
+                            <DateRangeSelection
+                                id="dateRangeFilter"
+                                change="onFilterLogs"/>
+                        </fb:control>
+                    </fb:FilterGroupItem>
+                    <fb:FilterGroupItem
+                        groupName="Advanced"
+                        name="correlation"
+                        label="{i18n>logs.filter.correlationId}">
+                        <fb:control>
+                            <Input
+                                id="correlationFilter"
+                                placeholder="{i18n>logs.filter.correlationId.placeholder}"
+                                change="onFilterLogs"/>
+                        </fb:control>
+                    </fb:FilterGroupItem>
+                </fb:filterGroupItems>
+            </fb:FilterBar>
+            
+            <!-- Log Statistics Panel -->
+            <Panel
+                id="logStatisticsPanel"
+                headerText="{i18n>logs.statistics.title}"
+                expandable="true"
+                expanded="false"
+                class="sapUiMediumMarginBottom">
+                <content>
+                    <layout:Grid
+                        defaultSpan="L3 M6 S12"
+                        class="sapUiSmallMargin">
+                        <ObjectStatus
+                            title="{i18n>logs.statistics.total}"
+                            text="{logs>/statistics/total}"
+                            state="Information"
+                            icon="sap-icon://sum"/>
+                        <ObjectStatus
+                            title="{i18n>logs.statistics.errors}"
+                            text="{logs>/statistics/errors}"
+                            state="Error"
+                            icon="sap-icon://error"/>
+                        <ObjectStatus
+                            title="{i18n>logs.statistics.warnings}"
+                            text="{logs>/statistics/warnings}"
+                            state="Warning"
+                            icon="sap-icon://warning"/>
+                        <ObjectStatus
+                            title="{i18n>logs.statistics.info}"
+                            text="{logs>/statistics/info}"
+                            state="Success"
+                            icon="sap-icon://information"/>
+                    </layout:Grid>
+                </content>
+            </Panel>
+            
+            <!-- Real-time Log Stream Toggle -->
+            <Toolbar>
+                <ToolbarSpacer/>
+                <Label text="{i18n>logs.realtime.label}:"/>
+                <Switch
+                    id="realtimeSwitch"
+                    state="{ui>/realtimeEnabled}"
+                    change="onToggleRealtime"
+                    customTextOn="{i18n>common.on}"
+                    customTextOff="{i18n>common.off}"/>
+                <ToolbarSeparator/>
+                <Label text="{i18n>logs.autoScroll.label}:"/>
+                <Switch
+                    id="autoScrollSwitch"
+                    state="{ui>/autoScroll}"
+                    customTextOn="{i18n>common.on}"
+                    customTextOff="{i18n>common.off}"/>
+            </Toolbar>
+            
+            <!-- Logs Table -->
+            <Table
+                id="logsTable"
+                items="{
+                    path: 'logs>/entries',
+                    sorter: {
+                        path: 'timestamp',
+                        descending: true
+                    }
+                }"
+                growing="true"
+                growingThreshold="100"
+                growingScrollToLoad="true"
+                mode="MultiSelect"
+                selectionChange="onLogSelectionChange"
+                alternateRowColors="true"
+                sticky="ColumnHeaders,HeaderToolbar">
+                
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>logs.table.title}" level="H2"/>
+                        <ToolbarSpacer/>
+                        <Label text="{i18n>logs.table.showing}: "/>
+                        <Label text="{= ${logs>/entries}.length } / {logs>/totalCount}"/>
+                        <ToolbarSeparator/>
+                        <Button
+                            icon="sap-icon://refresh"
+                            tooltip="{i18n>common.refresh}"
+                            press="onRefreshLogs"/>
+                        <Button
+                            icon="sap-icon://excel-attachment"
+                            tooltip="{i18n>logs.export.tooltip}"
+                            press="onExportLogs"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+                
+                <columns>
+                    <Column width="120px" importance="High">
+                        <Text text="{i18n>logs.column.timestamp}"/>
+                    </Column>
+                    <Column width="80px" importance="High">
+                        <Text text="{i18n>logs.column.level}"/>
+                    </Column>
+                    <Column width="150px" importance="Medium">
+                        <Text text="{i18n>logs.column.source}"/>
+                    </Column>
+                    <Column importance="High">
+                        <Text text="{i18n>logs.column.message}"/>
+                    </Column>
+                    <Column width="100px" importance="Low">
+                        <Text text="{i18n>logs.column.user}"/>
+                    </Column>
+                    <Column width="150px" importance="Low">
+                        <Text text="{i18n>logs.column.correlationId}"/>
+                    </Column>
+                    <Column width="80px" importance="Low">
+                        <Text text="{i18n>logs.column.duration}"/>
+                    </Column>
+                </columns>
+                
+                <items>
+                    <ColumnListItem
+                        type="Active"
+                        press="onLogPress"
+                        highlight="{= ${logs>level} === 'ERROR' ? 'Error' : ${logs>level} === 'WARNING' ? 'Warning' : 'None' }">
+                        <cells>
+                            <Text text="{
+                                path: 'logs>timestamp',
+                                type: 'sap.ui.model.type.DateTime',
+                                formatOptions: {
+                                    style: 'medium'
+                                }
+                            }"/>
+                            <ObjectStatus
+                                text="{logs>level}"
+                                state="{= ${logs>level} === 'ERROR' ? 'Error' : ${logs>level} === 'WARNING' ? 'Warning' : ${logs>level} === 'INFO' ? 'Success' : 'None' }"
+                                icon="{= ${logs>level} === 'ERROR' ? 'sap-icon://error' : ${logs>level} === 'WARNING' ? 'sap-icon://warning' : ${logs>level} === 'INFO' ? 'sap-icon://information' : 'sap-icon://detail-view' }"/>
+                            <Text text="{logs>source}"/>
+                            <Text text="{logs>message}" maxLines="2"/>
+                            <Text text="{logs>user}"/>
+                            <Link text="{logs>correlationId}" press="onCorrelationPress" enabled="{= !!${logs>correlationId} }"/>
+                            <Text text="{logs>duration} ms" visible="{= !!${logs>duration} }"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+            
+            <!-- Log Detail Dialog -->
+            <Dialog
+                id="logDetailDialog"
+                title="{i18n>logs.detail.title}"
+                contentWidth="90%"
+                maxWidth="35rem"
+                contentHeight="70%"
+                class="a2a-tablet-dialog"
+                resizable="true"
+                draggable="true">
+                <content>
+                    <VBox class="sapUiMediumMargin">
+                        <layout:Grid defaultSpan="L6 M12 S12" hSpacing="1">
+                            <VBox>
+                                <Label text="{i18n>logs.detail.timestamp}:" design="Bold"/>
+                                <Text text="{
+                                    path: 'logs>/selectedLog/timestamp',
+                                    type: 'sap.ui.model.type.DateTime',
+                                    formatOptions: {
+                                        style: 'long'
+                                    }
+                                }"/>
+                            </VBox>
+                            <VBox>
+                                <Label text="{i18n>logs.detail.level}:" design="Bold"/>
+                                <ObjectStatus
+                                    text="{logs>/selectedLog/level}"
+                                    state="{= ${logs>/selectedLog/level} === 'ERROR' ? 'Error' : ${logs>/selectedLog/level} === 'WARNING' ? 'Warning' : 'Success' }"/>
+                            </VBox>
+                            <VBox>
+                                <Label text="{i18n>logs.detail.source}:" design="Bold"/>
+                                <Text text="{logs>/selectedLog/source}"/>
+                            </VBox>
+                            <VBox>
+                                <Label text="{i18n>logs.detail.user}:" design="Bold"/>
+                                <Text text="{logs>/selectedLog/user}"/>
+                            </VBox>
+                            <VBox>
+                                <Label text="{i18n>logs.detail.correlationId}:" design="Bold"/>
+                                <Text text="{logs>/selectedLog/correlationId}"/>
+                            </VBox>
+                            <VBox>
+                                <Label text="{i18n>logs.detail.sessionId}:" design="Bold"/>
+                                <Text text="{logs>/selectedLog/sessionId}"/>
+                            </VBox>
+                        </layout:Grid>
+                        
+                        <VBox class="sapUiMediumMarginTop">
+                            <Label text="{i18n>logs.detail.message}:" design="Bold"/>
+                            <Text text="{logs>/selectedLog/message}" class="sapUiTinyMarginTop"/>
+                        </VBox>
+                        
+                        <VBox class="sapUiMediumMarginTop" visible="{= !!${logs>/selectedLog/stackTrace} }">
+                            <Label text="{i18n>logs.detail.stackTrace}:" design="Bold"/>
+                            <TextArea
+                                value="{logs>/selectedLog/stackTrace}"
+                                rows="10"
+                                editable="false"
+                                width="100%"
+                                class="sapUiTinyMarginTop"/>
+                        </VBox>
+                        
+                        <VBox class="sapUiMediumMarginTop" visible="{= !!${logs>/selectedLog/context} }">
+                            <Label text="{i18n>logs.detail.context}:" design="Bold"/>
+                            <TextArea
+                                value="{logs>/selectedLog/contextFormatted}"
+                                rows="8"
+                                editable="false"
+                                width="100%"
+                                class="sapUiTinyMarginTop"/>
+                        </VBox>
+                    </VBox>
+                </content>
+                <buttons>
+                    <Button text="{i18n>logs.detail.copyToClipboard}" icon="sap-icon://copy" press="onCopyLogDetail"/>
+                    <Button text="{i18n>logs.detail.viewRelated}" icon="sap-icon://chain-link" press="onViewRelatedLogs" enabled="{= !!${logs>/selectedLog/correlationId} }"/>
+                    <Button text="{i18n>common.close}" press="onCloseLogDetail"/>
+                </buttons>
+            </Dialog>
+        </content>
+        
+        <!-- Loading States -->
+        <dependents>
+            <!-- Skeleton Loading -->
+            <VBox
+                id="skeletonLoading"
+                visible="{ui>/isLoadingSkeleton}"
+                class="sapUiContentPadding"
+                alignItems="Center"
+                justifyContent="Center"
+                height="100%">
+                <IllustratedMessage
+                    illustrationType="sapIllus-SearchEarth"
+                    illustrationSize="Spot">
+                    <additionalContent>
+                        <Label text="{ui>/loadingMessage}"/>
+                        <BusyIndicator size="Medium" class="sapUiMediumMarginTop"/>
+                    </additionalContent>
+                </IllustratedMessage>
+            </VBox>
+            
+            <!-- Error State -->
+            <VBox
+                id="errorState"
+                visible="{ui>/hasError}"
+                class="sapUiContentPadding"
+                alignItems="Center"
+                justifyContent="Center"
+                height="100%">
+                <IllustratedMessage
+                    illustrationType="sapIllus-ErrorScreen"
+                    illustrationSize="Spot"
+                    title="{ui>/errorTitle}"
+                    description="{ui>/errorMessage}">
+                    <additionalContent>
+                        <Button text="{i18n>common.retry}" type="Emphasized" press="onRetry"/>
+                    </additionalContent>
+                </IllustratedMessage>
+            </VBox>
+        </dependents>
+    </Page>
+</mvc:View>

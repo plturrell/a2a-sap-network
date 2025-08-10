@@ -1,0 +1,723 @@
+<mvc:View
+    controllerName="a2a.network.fiori.controller.Settings"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:core="sap.ui.core"
+    xmlns:card="sap.f.cards"
+    xmlns:grid="sap.ui.layout.cssgrid"
+    xmlns:micro="sap.suite.ui.microchart"
+    xmlns:viz="sap.viz">
+    
+    <f:DynamicPage id="settingsPage" class="a2a-tablet-page" headerExpanded="true" showFooter="true">
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>networkSettings}" level="H1"/>
+                </f:heading>
+                <f:expandedContent>
+                    <ObjectAttribute title="{i18n>lastSaved}" text="{
+                        path: 'ui>/lastSaved',
+                        formatter: '.formatter.formatDateTime'
+                    }"/>
+                    <ObjectAttribute title="{i18n>configurationStatus}" text="{= ${ui>/unsavedChanges} ? ${i18n>unsavedChanges} : ${i18n>saved} }"/>
+                    <ObjectAttribute title="{i18n>autoSave}" text="{= ${ui>/autoSaveEnabled} ? ${i18n>enabled} : ${i18n>disabled} }"/>
+                </f:expandedContent>
+                <f:snappedContent>
+                    <MessageStrip 
+                        text="{= ${ui>/unsavedChanges} ? ${i18n>hasUnsavedChanges} : ${i18n>allChangesSaved} }"
+                        type="{= ${ui>/unsavedChanges} ? 'Warning' : 'Success' }"
+                        showIcon="true"/>
+                </f:snappedContent>
+                <f:actions>
+                    <Button
+                        text="{i18n>testConnection}"
+                        icon="sap-icon://test-automation"
+                        press="onTestConnection"
+                        enabled="{= !${ui>/isLoadingSpinner} }"/>
+                    <Button
+                        text="{i18n>importConfig}"
+                        icon="sap-icon://upload"
+                        press="onImportConfig"/>
+                    <Button
+                        text="{i18n>exportConfig}"
+                        icon="sap-icon://download"
+                        press="onExportConfig"/>
+                    <Button
+                        text="{i18n>resetToDefaults}"
+                        icon="sap-icon://reset"
+                        press="onResetToDefaults"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+        
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <f:content>
+                    <grid:CSSGrid gridTemplateColumns="1fr 1fr 1fr" gridGap="1rem">
+                        <grid:items>
+                            <!-- System Health Card -->
+                            <f:Card class="sapUiMediumMarginEnd">
+                                <f:header>
+                                    <card:Header
+                                        title="{i18n>systemHealth}"
+                                        subtitle="{i18n>currentStatus}"
+                                        iconSrc="sap-icon://heart"/>
+                                </f:header>
+                                <f:content>
+                                    <VBox class="sapUiSmallMargin">
+                                        <micro:RadialMicroChart
+                                            size="M"
+                                            percentage="{performance>/systemHealth/overall}"
+                                            press="onSystemHealthPress">
+                                            <micro:RadialMicroChartItem
+                                                color="{= ${performance>/systemHealth/overall} > 80 ? 'Good' : ${performance>/systemHealth/overall} > 60 ? 'Critical' : 'Error' }"
+                                                fraction="{performance>/systemHealth/overall}"/>
+                                        </micro:RadialMicroChart>
+                                        
+                                        <VBox class="sapUiTinyMarginTop">
+                                            <ObjectStatus
+                                                text="Services: {performance>/systemHealth/services}%"
+                                                state="{= ${performance>/systemHealth/services} > 95 ? 'Success' : 'Warning' }"/>
+                                            <ObjectStatus
+                                                text="Database: {performance>/systemHealth/database}%"
+                                                state="{= ${performance>/systemHealth/database} > 90 ? 'Success' : 'Warning' }"/>
+                                            <ObjectStatus
+                                                text="Blockchain: {performance>/systemHealth/blockchain}%"
+                                                state="{= ${performance>/systemHealth/blockchain} > 95 ? 'Success' : 'Warning' }"/>
+                                        </VBox>
+                                    </VBox>
+                                </f:content>
+                            </f:Card>
+                            
+                            <!-- Performance Metrics Card -->
+                            <f:Card class="sapUiMediumMarginEnd">
+                                <f:header>
+                                    <card:Header
+                                        title="{i18n>performanceMetrics}"
+                                        subtitle="{i18n>realTimeData}"
+                                        iconSrc="sap-icon://performance"/>
+                                </f:header>
+                                <f:content>
+                                    <VBox class="sapUiSmallMargin">
+                                        <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                            <Label text="CPU"/>
+                                            <ObjectNumber
+                                                number="{performance>/currentMetrics/cpu}"
+                                                unit="%"
+                                                state="{= ${performance>/currentMetrics/cpu} > 80 ? 'Error' : ${performance>/currentMetrics/cpu} > 60 ? 'Warning' : 'Success' }"/>
+                                        </HBox>
+                                        <ProgressIndicator
+                                            percentValue="{performance>/currentMetrics/cpu}"
+                                            state="{= ${performance>/currentMetrics/cpu} > 80 ? 'Error' : ${performance>/currentMetrics/cpu} > 60 ? 'Warning' : 'Success' }"
+                                            class="sapUiTinyMarginBottom"/>
+                                        
+                                        <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                            <Label text="Memory"/>
+                                            <ObjectNumber
+                                                number="{performance>/currentMetrics/memory}"
+                                                unit="%"
+                                                state="{= ${performance>/currentMetrics/memory} > 85 ? 'Error' : ${performance>/currentMetrics/memory} > 70 ? 'Warning' : 'Success' }"/>
+                                        </HBox>
+                                        <ProgressIndicator
+                                            percentValue="{performance>/currentMetrics/memory}"
+                                            state="{= ${performance>/currentMetrics/memory} > 85 ? 'Error' : ${performance>/currentMetrics/memory} > 70 ? 'Warning' : 'Success' }"
+                                            class="sapUiTinyMarginBottom"/>
+                                        
+                                        <HBox justifyContent="SpaceBetween">
+                                            <ObjectNumber
+                                                number="{performance>/currentMetrics/requestsPerSecond}"
+                                                unit="req/s"
+                                                state="Information"/>
+                                            <ObjectNumber
+                                                number="{performance>/currentMetrics/errorsPerMinute}"
+                                                unit="err/min"
+                                                state="{= ${performance>/currentMetrics/errorsPerMinute} > 5 ? 'Error' : 'Success' }"/>
+                                        </HBox>
+                                    </VBox>
+                                </f:content>
+                            </f:Card>
+                            
+                            <!-- Configuration Status Card -->
+                            <f:Card>
+                                <f:header>
+                                    <card:Header
+                                        title="{i18n>configurationStatus}"
+                                        subtitle="{i18n>backupInformation}"
+                                        iconSrc="sap-icon://settings"/>
+                                </f:header>
+                                <f:content>
+                                    <VBox class="sapUiSmallMargin">
+                                        <ObjectStatus
+                                            title="{i18n>currentStatus}"
+                                            text="{= ${ui>/unsavedChanges} ? ${i18n>unsavedChanges} : ${i18n>saved} }"
+                                            state="{= ${ui>/unsavedChanges} ? 'Warning' : 'Success' }"
+                                            icon="{= ${ui>/unsavedChanges} ? 'sap-icon://warning' : 'sap-icon://accept' }"/>
+                                        
+                                        <ObjectAttribute 
+                                            title="{i18n>backupsAvailable}" 
+                                            text="{= ${ui>/configBackups}.length }"
+                                            class="sapUiTinyMarginTop"/>
+                                        
+                                        <ObjectAttribute 
+                                            title="{i18n>autoSave}" 
+                                            text="{= ${ui>/autoSaveEnabled} ? ${i18n>enabled} : ${i18n>disabled} }"
+                                            class="sapUiTinyMarginTop"/>
+                                        
+                                        <Button
+                                            text="{i18n>validateConfig}"
+                                            type="Transparent"
+                                            icon="sap-icon://validate"
+                                            press="onValidateConfig"
+                                            class="sapUiTinyMarginTop"/>
+                                    </VBox>
+                                </f:content>
+                            </f:Card>
+                        </grid:items>
+                    </grid:CSSGrid>
+                </f:content>
+            </f:DynamicPageHeader>
+        </f:header>
+        
+        <f:content>
+            <!-- Loading States -->
+            <core:Fragment fragmentName="a2a.network.fiori.fragment.LoadingIndicator" type="XML"/>
+            
+            <!-- Performance Chart (when monitoring tab is selected) -->
+            <Panel headerText="{i18n>performanceChart}" 
+                   visible="{= ${ui>/selectedTab} === 'monitoring' }"
+                   expandable="true" 
+                   expanded="true" 
+                   class="sapUiMediumMarginBottom">
+                <viz:VizFrame 
+                    id="performanceChart"
+                    height="300px"
+                    width="100%"
+                    vizType="line"
+                    uiConfig="{applicationSet:'fiori'}">
+                </viz:VizFrame>
+            </Panel>
+            
+            <IconTabBar id="settingsTabBar" select="onTabSelect" selectedKey="{ui>/selectedTab}" 
+                       visible="{= !${ui>/isLoadingSkeleton} && !${ui>/isLoadingSpinner} && !${ui>/isLoadingProgress}}">
+                <items>
+                    <!-- Network Settings Tab -->
+                    <IconTabFilter
+                        key="network"
+                        text="{i18n>networkSettings}"
+                        icon="sap-icon://network">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="{i18n>generalSettings}" expandable="true" expanded="true">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    labelSpanXL="3"
+                                    labelSpanL="3"
+                                    labelSpanM="4"
+                                    adjustLabelSpan="false"
+                                    emptySpanXL="0"
+                                    emptySpanL="0"
+                                    emptySpanM="0"
+                                    columnsXL="2"
+                                    columnsL="2"
+                                    columnsM="1">
+                                    <form:content>
+                                        <Label text="{i18n>networkName}" required="true"/>
+                                        <Input
+                                            value="{settings>/network/name}"
+                                            placeholder="{i18n>enterNetworkName}"
+                                            change="onSettingChange"
+                                            valueState="{= ${ui>/validationErrors/network/name} ? 'Error' : 'None' }"
+                                            valueStateText="{ui>/validationErrors/network/name}"/>
+                                        
+                                        <Label text="{i18n>networkDescription}"/>
+                                        <TextArea
+                                            value="{settings>/network/description}"
+                                            rows="3"
+                                            placeholder="{i18n>enterNetworkDescription}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>maxAgents}"/>
+                                        <StepInput
+                                            value="{settings>/network/maxAgents}"
+                                            min="1"
+                                            max="10000"
+                                            step="10"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>networkRegion}"/>
+                                        <Select
+                                            selectedKey="{settings>/network/networkRegion}"
+                                            change="onSettingChange">
+                                            <core:Item key="us-east-1" text="US East (N. Virginia)"/>
+                                            <core:Item key="us-west-2" text="US West (Oregon)"/>
+                                            <core:Item key="eu-west-1" text="Europe (Ireland)"/>
+                                            <core:Item key="ap-southeast-1" text="Asia Pacific (Singapore)"/>
+                                        </Select>
+                                        
+                                        <Label text="{i18n>autoDiscovery}"/>
+                                        <Switch
+                                            state="{settings>/network/autoDiscovery}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>loadBalancing}"/>
+                                        <Switch
+                                            state="{settings>/network/loadBalancingEnabled}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>networkTimeout}"/>
+                                        <Slider
+                                            value="{settings>/network/timeoutSeconds}"
+                                            min="5"
+                                            max="300"
+                                            step="5"
+                                            width="300px"
+                                            showAdvancedTooltip="true"
+                                            inputsAsTooltips="true"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>healthCheckInterval}"/>
+                                        <StepInput
+                                            value="{settings>/network/healthCheckInterval}"
+                                            min="10"
+                                            max="300"
+                                            step="10"
+                                            change="onSettingChange"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                            </Panel>
+                            
+                            <Panel headerText="{i18n>performanceSettings}" expandable="true" expanded="true" class="sapUiMediumMarginTop">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    labelSpanXL="3"
+                                    labelSpanL="3"
+                                    labelSpanM="4"
+                                    adjustLabelSpan="false"
+                                    emptySpanXL="0"
+                                    emptySpanL="0"
+                                    emptySpanM="0"
+                                    columnsXL="2"
+                                    columnsL="2"
+                                    columnsM="1">
+                                    <form:content>
+                                        <Label text="{i18n>messagePoolSize}"/>
+                                        <StepInput
+                                            value="{settings>/performance/messagePoolSize}"
+                                            min="100"
+                                            max="10000"
+                                            step="100"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>maxConnections}"/>
+                                        <StepInput
+                                            value="{settings>/performance/maxConcurrentConnections}"
+                                            min="50"
+                                            max="2000"
+                                            step="50"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>cacheEnabled}"/>
+                                        <Switch
+                                            state="{settings>/performance/cacheEnabled}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>cacheTTL}"/>
+                                        <StepInput
+                                            value="{settings>/performance/cacheTTLMinutes}"
+                                            min="5"
+                                            max="1440"
+                                            step="5"
+                                            enabled="{settings>/performance/cacheEnabled}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>loadBalancingStrategy}"/>
+                                        <Select
+                                            selectedKey="{settings>/performance/loadBalancingStrategy}"
+                                            change="onSettingChange">
+                                            <core:Item key="roundRobin" text="{i18n>roundRobin}"/>
+                                            <core:Item key="leastConnections" text="{i18n>leastConnections}"/>
+                                            <core:Item key="weighted" text="{i18n>weighted}"/>
+                                            <core:Item key="ipHash" text="{i18n>ipHash}"/>
+                                        </Select>
+                                        
+                                        <Label text="{i18n>circuitBreaker}"/>
+                                        <Switch
+                                            state="{settings>/performance/circuitBreakerEnabled}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>compressionEnabled}"/>
+                                        <Switch
+                                            state="{settings>/performance/compressionEnabled}"
+                                            change="onSettingChange"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Security Settings Tab -->
+                    <IconTabFilter
+                        key="security"
+                        text="{i18n>securitySettings}"
+                        icon="sap-icon://shield">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="{i18n>authenticationSettings}" expandable="true" expanded="true">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    labelSpanXL="3"
+                                    labelSpanL="3"
+                                    labelSpanM="4"
+                                    adjustLabelSpan="false"
+                                    emptySpanXL="0"
+                                    emptySpanL="0"
+                                    emptySpanM="0"
+                                    columnsXL="2"
+                                    columnsL="2"
+                                    columnsM="1">
+                                    <form:content>
+                                        <Label text="{i18n>requireAuthentication}"/>
+                                        <Switch
+                                            state="{settings>/security/requireAuth}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>sessionTimeout}"/>
+                                        <StepInput
+                                            value="{settings>/security/sessionTimeoutMinutes}"
+                                            min="5"
+                                            max="480"
+                                            step="5"
+                                            enabled="{settings>/security/requireAuth}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>maxLoginAttempts}"/>
+                                        <StepInput
+                                            value="{settings>/security/maxLoginAttempts}"
+                                            min="3"
+                                            max="10"
+                                            step="1"
+                                            enabled="{settings>/security/requireAuth}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>encryptMessages}"/>
+                                        <Switch
+                                            state="{settings>/security/encryptMessages}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>sslEnabled}"/>
+                                        <Switch
+                                            state="{settings>/security/sslEnabled}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>certificateValidation}"/>
+                                        <Switch
+                                            state="{settings>/security/certificateValidation}"
+                                            enabled="{settings>/security/sslEnabled}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>auditLogging}"/>
+                                        <Switch
+                                            state="{settings>/security/auditLoggingEnabled}"
+                                            change="onSettingChange"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                            </Panel>
+                            
+                            <Panel headerText="{i18n>rateLimiting}" expandable="true" expanded="true" class="sapUiMediumMarginTop">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    labelSpanXL="3"
+                                    labelSpanL="3"
+                                    labelSpanM="4"
+                                    adjustLabelSpan="false"
+                                    emptySpanXL="0"
+                                    emptySpanL="0"
+                                    emptySpanM="0"
+                                    columnsXL="2"
+                                    columnsL="2"
+                                    columnsM="1">
+                                    <form:content>
+                                        <Label text="{i18n>enableRateLimit}"/>
+                                        <Switch
+                                            state="{settings>/security/rateLimitEnabled}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>maxRequestsPerHour}"/>
+                                        <StepInput
+                                            value="{settings>/security/maxRequestsPerHour}"
+                                            min="100"
+                                            max="10000"
+                                            step="100"
+                                            enabled="{settings>/security/rateLimitEnabled}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>blockDuration}"/>
+                                        <StepInput
+                                            value="{settings>/security/blockDurationMinutes}"
+                                            min="5"
+                                            max="1440"
+                                            step="5"
+                                            enabled="{settings>/security/rateLimitEnabled}"
+                                            change="onSettingChange"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Blockchain Settings Tab -->
+                    <IconTabFilter
+                        key="blockchain"
+                        text="{i18n>blockchainSettings}"
+                        icon="sap-icon://chain-link">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="{i18n>connectionSettings}" expandable="true" expanded="true">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    labelSpanXL="3"
+                                    labelSpanL="3"
+                                    labelSpanM="4"
+                                    adjustLabelSpan="false"
+                                    emptySpanXL="0"
+                                    emptySpanL="0"
+                                    emptySpanM="0"
+                                    columnsXL="2"
+                                    columnsL="2"
+                                    columnsM="1">
+                                    <form:content>
+                                        <Label text="{i18n>rpcUrl}" required="true"/>
+                                        <Input
+                                            value="{settings>/blockchain/rpcUrl}"
+                                            placeholder="http://localhost:8545"
+                                            change="onSettingChange"
+                                            valueState="{= ${ui>/validationErrors/blockchain/rpcUrl} ? 'Error' : 'None' }"
+                                            valueStateText="{ui>/validationErrors/blockchain/rpcUrl}"/>
+                                        
+                                        <Label text="{i18n>networkId}"/>
+                                        <StepInput
+                                            value="{settings>/blockchain/networkId}"
+                                            min="1"
+                                            max="999999"
+                                            step="1"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>gasLimit}"/>
+                                        <StepInput
+                                            value="{settings>/blockchain/gasLimit}"
+                                            min="21000"
+                                            max="10000000"
+                                            step="10000"
+                                            change="onSettingChange"
+                                            valueState="{= ${ui>/validationErrors/blockchain/gasLimit} ? 'Error' : 'None' }"/>
+                                        
+                                        <Label text="{i18n>gasPrice}"/>
+                                        <StepInput
+                                            value="{settings>/blockchain/gasPriceGwei}"
+                                            min="1"
+                                            max="500"
+                                            step="1"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>blockConfirmations}"/>
+                                        <StepInput
+                                            value="{settings>/blockchain/blockConfirmations}"
+                                            min="1"
+                                            max="12"
+                                            step="1"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>transactionTimeout}"/>
+                                        <StepInput
+                                            value="{settings>/blockchain/transactionTimeout}"
+                                            min="30000"
+                                            max="600000"
+                                            step="30000"
+                                            change="onSettingChange"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                            </Panel>
+                            
+                            <Panel headerText="{i18n>smartContractSettings}" expandable="true" expanded="true" class="sapUiMediumMarginTop">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    labelSpanXL="3"
+                                    labelSpanL="3"
+                                    labelSpanM="4"
+                                    adjustLabelSpan="false"
+                                    emptySpanXL="0"
+                                    emptySpanL="0"
+                                    emptySpanM="0"
+                                    columnsXL="2"
+                                    columnsL="2"
+                                    columnsM="1">
+                                    <form:content>
+                                        <Label text="{i18n>autoDeployContracts}"/>
+                                        <Switch
+                                            state="{settings>/blockchain/autoDeployContracts}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>contractUpgradeEnabled}"/>
+                                        <Switch
+                                            state="{settings>/blockchain/contractUpgradeEnabled}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>enableEvents}"/>
+                                        <Switch
+                                            state="{settings>/blockchain/enableEvents}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>maxRetries}"/>
+                                        <StepInput
+                                            value="{settings>/blockchain/maxRetries}"
+                                            min="1"
+                                            max="10"
+                                            step="1"
+                                            change="onSettingChange"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Monitoring Settings Tab -->
+                    <IconTabFilter
+                        key="monitoring"
+                        text="{i18n>monitoringSettings}"
+                        icon="sap-icon://monitor-payments">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="{i18n>loggingSettings}" expandable="true" expanded="true">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    labelSpanXL="3"
+                                    labelSpanL="3"
+                                    labelSpanM="4"
+                                    adjustLabelSpan="false"
+                                    emptySpanXL="0"
+                                    emptySpanL="0"
+                                    emptySpanM="0"
+                                    columnsXL="2"
+                                    columnsL="2"
+                                    columnsM="1">
+                                    <form:content>
+                                        <Label text="{i18n>logLevel}"/>
+                                        <Select
+                                            selectedKey="{settings>/monitoring/logLevel}"
+                                            change="onSettingChange">
+                                            <core:Item key="error" text="Error"/>
+                                            <core:Item key="warn" text="Warning"/>
+                                            <core:Item key="info" text="Info"/>
+                                            <core:Item key="debug" text="Debug"/>
+                                        </Select>
+                                        
+                                        <Label text="{i18n>enableMetrics}"/>
+                                        <Switch
+                                            state="{settings>/monitoring/metricsEnabled}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>metricsInterval}"/>
+                                        <StepInput
+                                            value="{settings>/monitoring/metricsIntervalSeconds}"
+                                            min="5"
+                                            max="300"
+                                            step="5"
+                                            enabled="{settings>/monitoring/metricsEnabled}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>logRetention}"/>
+                                        <StepInput
+                                            value="{settings>/monitoring/logRetentionDays}"
+                                            min="1"
+                                            max="365"
+                                            step="1"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>prometheusEnabled}"/>
+                                        <Switch
+                                            state="{settings>/monitoring/prometheusEnabled}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>grafanaEnabled}"/>
+                                        <Switch
+                                            state="{settings>/monitoring/grafanaEnabled}"
+                                            change="onSettingChange"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                            </Panel>
+                            
+                            <Panel headerText="{i18n>alertSettings}" expandable="true" expanded="true" class="sapUiMediumMarginTop">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    labelSpanXL="3"
+                                    labelSpanL="3"
+                                    labelSpanM="4"
+                                    adjustLabelSpan="false"
+                                    emptySpanXL="0"
+                                    emptySpanL="0"
+                                    emptySpanM="0"
+                                    columnsXL="2"
+                                    columnsL="2"
+                                    columnsM="1">
+                                    <form:content>
+                                        <Label text="{i18n>enableAlerts}"/>
+                                        <Switch
+                                            state="{settings>/monitoring/alertsEnabled}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>alertThreshold}"/>
+                                        <Slider
+                                            value="{settings>/monitoring/alertThresholdPercent}"
+                                            min="50"
+                                            max="100"
+                                            step="5"
+                                            width="300px"
+                                            enabled="{settings>/monitoring/alertsEnabled}"
+                                            change="onSettingChange"/>
+                                        
+                                        <Label text="{i18n>notificationEmail}"/>
+                                        <Input
+                                            value="{settings>/monitoring/notificationEmail}"
+                                            type="Email"
+                                            placeholder="admin@example.com"
+                                            enabled="{settings>/monitoring/alertsEnabled}"
+                                            change="onSettingChange"
+                                            valueState="{= ${ui>/validationErrors/monitoring/notificationEmail} ? 'Error' : 'None' }"
+                                            valueStateText="{ui>/validationErrors/monitoring/notificationEmail}"/>
+                                        
+                                        <Label text="{i18n>healthCheckEndpoint}"/>
+                                        <Switch
+                                            state="{settings>/monitoring/healthCheckEndpoint}"
+                                            change="onSettingChange"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </f:content>
+        
+        <f:footer>
+            <OverflowToolbar>
+                <ToolbarSpacer/>
+                <Button
+                    text="{i18n>save}"
+                    type="Emphasized"
+                    icon="sap-icon://save"
+                    press="onSaveSettings"
+                    enabled="{= ${ui>/unsavedChanges} && !${ui>/isLoadingProgress} && !${ui>/isLoadingSpinner} }"/>
+                <Button
+                    text="{i18n>cancel}"
+                    icon="sap-icon://cancel"
+                    press="onCancel"/>
+            </OverflowToolbar>
+        </f:footer>
+    </f:DynamicPage>
+</mvc:View>

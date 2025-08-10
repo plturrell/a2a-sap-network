@@ -1,0 +1,475 @@
+{
+  "common": {
+    "welcome": "Welcome to A2A Network",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Information",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "update": "Update",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "download": "Download",
+    "upload": "Upload",
+    "refresh": "Refresh",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "apply": "Apply",
+    "reset": "Reset",
+    "clear": "Clear",
+    "select": "Select",
+    "selectAll": "Select All",
+    "unselectAll": "Unselect All",
+    "actions": "Actions",
+    "status": "Status",
+    "date": "Date",
+    "time": "Time",
+    "from": "From",
+    "to": "To",
+    "name": "Name",
+    "description": "Description",
+    "type": "Type",
+    "value": "Value",
+    "required": "Required",
+    "optional": "Optional"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "agents": "Agents",
+    "services": "Services",
+    "workflows": "Workflows",
+    "messages": "Messages",
+    "analytics": "Analytics",
+    "settings": "Settings",
+    "help": "Help",
+    "logout": "Logout",
+    "profile": "Profile",
+    "notifications": "Notifications",
+    "administration": "Administration"
+  },
+  "agents": {
+    "title": "Agents",
+    "listTitle": "Agent List",
+    "createTitle": "Create New Agent",
+    "editTitle": "Edit Agent",
+    "detailsTitle": "Agent Details",
+    "fields": {
+      "id": "Agent ID",
+      "name": "Agent Name",
+      "endpoint": "Endpoint URL",
+      "address": "Blockchain Address",
+      "reputation": "Reputation Score",
+      "status": "Status",
+      "owner": "Owner",
+      "capabilities": "Capabilities",
+      "services": "Services",
+      "performance": "Performance",
+      "createdAt": "Created At",
+      "modifiedAt": "Modified At"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "busy": "Busy",
+      "offline": "Offline",
+      "pending": "Pending",
+      "deactivated": "Deactivated"
+    },
+    "actions": {
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "registerBlockchain": "Register on Blockchain",
+      "updateReputation": "Update Reputation",
+      "viewDetails": "View Details",
+      "editAgent": "Edit Agent",
+      "deleteAgent": "Delete Agent"
+    },
+    "messages": {
+      "createSuccess": "Agent created successfully",
+      "updateSuccess": "Agent updated successfully",
+      "deleteSuccess": "Agent deleted successfully",
+      "activateSuccess": "Agent activated successfully",
+      "deactivateSuccess": "Agent deactivated successfully",
+      "blockchainSuccess": "Agent registered on blockchain successfully",
+      "reputationSuccess": "Reputation updated successfully",
+      "createError": "Failed to create agent",
+      "updateError": "Failed to update agent",
+      "deleteError": "Failed to delete agent",
+      "notFound": "Agent not found",
+      "confirmDelete": "Are you sure you want to delete this agent?",
+      "confirmDeactivate": "Are you sure you want to deactivate this agent?"
+    },
+    "validation": {
+      "nameRequired": "Agent name is required",
+      "nameLength": "Agent name must be between 3 and 50 characters",
+      "endpointRequired": "Endpoint URL is required",
+      "endpointInvalid": "Please enter a valid URL",
+      "reputationRange": "Reputation must be between 0 and 200"
+    }
+  },
+  "services": {
+    "title": "Services",
+    "marketplace": "Service Marketplace",
+    "myServices": "My Services",
+    "createTitle": "Create New Service",
+    "editTitle": "Edit Service",
+    "detailsTitle": "Service Details",
+    "fields": {
+      "id": "Service ID",
+      "name": "Service Name",
+      "description": "Description",
+      "provider": "Provider",
+      "price": "Price",
+      "currency": "Currency",
+      "availability": "Availability",
+      "minReputation": "Minimum Reputation",
+      "maxCallsPerDay": "Max Calls/Day",
+      "responseTime": "Avg Response Time",
+      "successRate": "Success Rate",
+      "tags": "Tags",
+      "category": "Category"
+    },
+    "categories": {
+      "data": "Data Processing",
+      "ai": "AI & Machine Learning",
+      "integration": "Integration",
+      "automation": "Automation",
+      "analytics": "Analytics",
+      "security": "Security",
+      "other": "Other"
+    },
+    "actions": {
+      "subscribe": "Subscribe",
+      "unsubscribe": "Unsubscribe",
+      "execute": "Execute",
+      "listMarketplace": "List on Marketplace",
+      "viewDetails": "View Details",
+      "editService": "Edit Service",
+      "deleteService": "Delete Service"
+    },
+    "subscription": {
+      "types": {
+        "payPerUse": "Pay Per Use",
+        "monthly": "Monthly",
+        "annual": "Annual",
+        "enterprise": "Enterprise"
+      },
+      "status": {
+        "active": "Active",
+        "expired": "Expired",
+        "cancelled": "Cancelled",
+        "pending": "Pending"
+      }
+    },
+    "messages": {
+      "subscribeSuccess": "Successfully subscribed to service",
+      "unsubscribeSuccess": "Successfully unsubscribed from service",
+      "executeSuccess": "Service executed successfully",
+      "listSuccess": "Service listed on marketplace",
+      "createSuccess": "Service created successfully",
+      "updateSuccess": "Service updated successfully",
+      "deleteSuccess": "Service deleted successfully",
+      "subscribeError": "Failed to subscribe to service",
+      "executeError": "Failed to execute service",
+      "insufficientReputation": "Your agent does not meet the minimum reputation requirement",
+      "quotaExceeded": "Daily quota exceeded for this service"
+    }
+  },
+  "workflows": {
+    "title": "Workflows",
+    "listTitle": "Workflow List",
+    "createTitle": "Create New Workflow",
+    "editTitle": "Edit Workflow",
+    "designer": "Workflow Designer",
+    "executions": "Executions",
+    "fields": {
+      "id": "Workflow ID",
+      "name": "Workflow Name",
+      "description": "Description",
+      "version": "Version",
+      "status": "Status",
+      "createdBy": "Created By",
+      "lastModified": "Last Modified",
+      "executionCount": "Execution Count"
+    },
+    "status": {
+      "draft": "Draft",
+      "published": "Published",
+      "deprecated": "Deprecated",
+      "archived": "Archived"
+    },
+    "execution": {
+      "status": {
+        "pending": "Pending",
+        "running": "Running",
+        "completed": "Completed",
+        "failed": "Failed",
+        "cancelled": "Cancelled"
+      },
+      "fields": {
+        "id": "Execution ID",
+        "startTime": "Start Time",
+        "endTime": "End Time",
+        "duration": "Duration",
+        "status": "Status",
+        "progress": "Progress",
+        "output": "Output"
+      }
+    },
+    "designer": {
+      "addStep": "Add Step",
+      "deleteStep": "Delete Step",
+      "stepTypes": {
+        "agent": "Agent Task",
+        "condition": "Condition",
+        "loop": "Loop",
+        "parallel": "Parallel",
+        "wait": "Wait",
+        "transform": "Transform"
+      },
+      "validation": {
+        "nameRequired": "Step name is required",
+        "agentRequired": "Please select an agent",
+        "conditionRequired": "Please define a condition",
+        "invalidConnection": "Invalid connection between steps"
+      }
+    },
+    "actions": {
+      "execute": "Execute",
+      "validate": "Validate",
+      "publish": "Publish",
+      "duplicate": "Duplicate",
+      "export": "Export",
+      "import": "Import",
+      "viewExecutions": "View Executions",
+      "stopExecution": "Stop Execution"
+    },
+    "messages": {
+      "executeSuccess": "Workflow execution started",
+      "validateSuccess": "Workflow is valid",
+      "publishSuccess": "Workflow published successfully",
+      "saveSuccess": "Workflow saved successfully",
+      "deleteSuccess": "Workflow deleted successfully",
+      "executeError": "Failed to execute workflow",
+      "validateError": "Workflow validation failed",
+      "publishError": "Failed to publish workflow"
+    }
+  },
+  "messages": {
+    "title": "Messages",
+    "inbox": "Inbox",
+    "sent": "Sent",
+    "drafts": "Drafts",
+    "compose": "Compose",
+    "fields": {
+      "id": "Message ID",
+      "from": "From",
+      "to": "To",
+      "subject": "Subject",
+      "content": "Content",
+      "priority": "Priority",
+      "status": "Status",
+      "timestamp": "Timestamp",
+      "attachments": "Attachments"
+    },
+    "priority": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "status": {
+      "pending": "Pending",
+      "delivered": "Delivered",
+      "read": "Read",
+      "failed": "Failed"
+    },
+    "actions": {
+      "send": "Send",
+      "reply": "Reply",
+      "forward": "Forward",
+      "delete": "Delete",
+      "markRead": "Mark as Read",
+      "markUnread": "Mark as Unread",
+      "retry": "Retry"
+    },
+    "messages": {
+      "sendSuccess": "Message sent successfully",
+      "deleteSuccess": "Message deleted successfully",
+      "retrySuccess": "Message retry initiated",
+      "sendError": "Failed to send message",
+      "recipientNotFound": "Recipient not found",
+      "attachmentTooLarge": "Attachment size exceeds limit"
+    }
+  },
+  "analytics": {
+    "title": "Analytics",
+    "dashboard": "Analytics Dashboard",
+    "reports": "Reports",
+    "metrics": {
+      "totalAgents": "Total Agents",
+      "activeAgents": "Active Agents",
+      "totalServices": "Total Services",
+      "serviceExecutions": "Service Executions",
+      "workflowRuns": "Workflow Runs",
+      "messageVolume": "Message Volume",
+      "averageResponseTime": "Avg Response Time",
+      "successRate": "Success Rate",
+      "systemUptime": "System Uptime",
+      "blockchainTransactions": "Blockchain Transactions"
+    },
+    "charts": {
+      "agentActivity": "Agent Activity Over Time",
+      "serviceUsage": "Service Usage Distribution",
+      "workflowPerformance": "Workflow Performance",
+      "reputationDistribution": "Reputation Distribution",
+      "costAnalysis": "Cost Analysis"
+    },
+    "filters": {
+      "timeRange": "Time Range",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "last7Days": "Last 7 Days",
+      "last30Days": "Last 30 Days",
+      "last90Days": "Last 90 Days",
+      "custom": "Custom Range"
+    },
+    "export": {
+      "pdf": "Export as PDF",
+      "excel": "Export as Excel",
+      "csv": "Export as CSV"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "tabs": {
+      "general": "General",
+      "security": "Security",
+      "notifications": "Notifications",
+      "integrations": "Integrations",
+      "billing": "Billing",
+      "advanced": "Advanced"
+    },
+    "general": {
+      "language": "Language",
+      "timezone": "Timezone",
+      "dateFormat": "Date Format",
+      "theme": "Theme",
+      "themes": {
+        "light": "Light",
+        "dark": "Dark",
+        "auto": "Auto"
+      }
+    },
+    "security": {
+      "changePassword": "Change Password",
+      "twoFactor": "Two-Factor Authentication",
+      "apiKeys": "API Keys",
+      "sessions": "Active Sessions",
+      "loginHistory": "Login History"
+    },
+    "notifications": {
+      "email": "Email Notifications",
+      "push": "Push Notifications",
+      "types": {
+        "agentStatus": "Agent Status Changes",
+        "serviceAlerts": "Service Alerts",
+        "workflowComplete": "Workflow Completions",
+        "messageReceived": "New Messages",
+        "systemAlerts": "System Alerts"
+      }
+    },
+    "messages": {
+      "saveSuccess": "Settings saved successfully",
+      "passwordChanged": "Password changed successfully",
+      "twoFactorEnabled": "Two-factor authentication enabled",
+      "apiKeyCreated": "API key created successfully",
+      "sessionTerminated": "Session terminated successfully"
+    }
+  },
+  "errors": {
+    "general": "An error occurred. Please try again.",
+    "network": "Network error. Please check your connection.",
+    "unauthorized": "You are not authorized to perform this action.",
+    "forbidden": "Access forbidden.",
+    "notFound": "Resource not found.",
+    "validation": "Please check your input and try again.",
+    "serverError": "Server error. Please contact support.",
+    "timeout": "Request timeout. Please try again.",
+    "maintenance": "System is under maintenance. Please try again later.",
+    "blockchain": {
+      "connectionFailed": "Failed to connect to blockchain",
+      "transactionFailed": "Blockchain transaction failed",
+      "insufficientFunds": "Insufficient funds for transaction",
+      "contractError": "Smart contract execution error"
+    },
+    "api": {
+      "invalidRequest": "Invalid request format",
+      "missingParameters": "Missing required parameters",
+      "rateLimitExceeded": "Rate limit exceeded. Please try again later.",
+      "invalidApiKey": "Invalid API key"
+    }
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email address",
+    "url": "Please enter a valid URL",
+    "number": "Please enter a valid number",
+    "min": "Value must be at least {{min}}",
+    "max": "Value must be at most {{max}}",
+    "minLength": "Must be at least {{min}} characters",
+    "maxLength": "Must be at most {{max}} characters",
+    "pattern": "Invalid format",
+    "unique": "This value already exists",
+    "password": {
+      "min": "Password must be at least 8 characters",
+      "uppercase": "Password must contain at least one uppercase letter",
+      "lowercase": "Password must contain at least one lowercase letter",
+      "number": "Password must contain at least one number",
+      "special": "Password must contain at least one special character",
+      "match": "Passwords do not match"
+    }
+  },
+  "help": {
+    "title": "Help & Support",
+    "documentation": "Documentation",
+    "tutorials": "Tutorials",
+    "faq": "Frequently Asked Questions",
+    "contact": "Contact Support",
+    "community": "Community Forum",
+    "feedback": "Send Feedback",
+    "version": "Version",
+    "about": "About A2A Network"
+  },
+  "formats": {
+    "date": {
+      "short": "MM/DD/YYYY",
+      "medium": "MMM D, YYYY",
+      "long": "MMMM D, YYYY",
+      "full": "dddd, MMMM D, YYYY"
+    },
+    "time": {
+      "short": "h:mm A",
+      "medium": "h:mm:ss A",
+      "long": "h:mm:ss A z"
+    },
+    "number": {
+      "decimal": ".",
+      "thousand": ",",
+      "currency": "${{amount}}"
+    }
+  }
+}

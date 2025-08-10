@@ -1,0 +1,250 @@
+<mvc:View
+    controllerName="a2a.network.fiori.controller.Home"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:card="sap.f.cards"
+    xmlns:core="sap.ui.core">
+    
+    <f:DynamicPage id="dynamicPageId" headerExpanded="false" class="a2a-tablet-page">
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="A2A Network Dashboard"/>
+                </f:heading>
+                <f:expandedContent>
+                    <Text text="Real-time overview of the Agent-to-Agent coordination network"/>
+                </f:expandedContent>
+                <f:snappedContent>
+                    <Text text="Network Status: {app>/networkStatus}"/>
+                </f:snappedContent>
+                <f:actions>
+                    <Button 
+                        text="Sync Blockchain" 
+                        type="Emphasized" 
+                        press="onSyncBlockchain"
+                        icon="sap-icon://synchronize"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+        
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <f:content>
+                    <FlexBox alignItems="Center" justifyContent="SpaceBetween">
+                        <items>
+                            <VBox>
+                                <Text text="Network Health"/>
+                                <ObjectStatus 
+                                    text="{app>/networkStatus}" 
+                                    state="{= ${app>/networkStatus} === 'healthy' ? 'Success' : ${app>/networkStatus} === 'degraded' ? 'Warning' : 'Error'}"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Active Agents"/>
+                                <NumericContent 
+                                    value="{app>/stats/activeAgents}" 
+                                    scale="/ {app>/stats/totalAgents}"
+                                    valueColor="Good"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Network Load"/>
+                                <ProgressIndicator 
+                                    percentValue="{= ${app>/stats/networkLoad} * 100}" 
+                                    showValue="true"
+                                    state="{= ${app>/stats/networkLoad} > 0.8 ? 'Error' : ${app>/stats/networkLoad} > 0.6 ? 'Warning' : 'Success'}"/>
+                            </VBox>
+                        </items>
+                    </FlexBox>
+                </f:content>
+            </f:DynamicPageHeader>
+        </f:header>
+        
+        <f:content>
+            <VBox class="sapUiMediumMargin a2a-pull-to-refresh" id="homeContainer">
+                <!-- Pull-to-refresh indicator -->
+                <HBox class="a2a-pull-to-refresh-indicator" visible="false" id="pullToRefreshIndicator">
+                    <BusyIndicator size="1rem" class="sapUiTinyMarginEnd"/>
+                    <Text text="Pull to refresh"/>
+                </HBox>
+                <!-- Quick Actions - Tablet Optimized -->
+                <Title text="Quick Actions" class="sapUiMediumMarginBottom"/>
+                <HBox wrap="Wrap" class="sapUiSmallMarginBottom sapUiLayoutCSSGrid">
+                    <GenericTile 
+                        class="sapUiTinyMarginEnd sapUiTinyMarginBottom"
+                        header="Register Agent"
+                        subheader="Deploy new agent to network"
+                        press="onNavToAgents">
+                        <TileContent>
+                            <ImageContent src="sap-icon://add-equipment"/>
+                        </TileContent>
+                    </GenericTile>
+                    
+                    <GenericTile 
+                        class="sapUiTinyMarginEnd sapUiTinyMarginBottom"
+                        header="List Service"
+                        subheader="Offer agent services"
+                        press="onNavToServices">
+                        <TileContent>
+                            <ImageContent src="sap-icon://cart-3"/>
+                        </TileContent>
+                    </GenericTile>
+                    
+                    <GenericTile 
+                        class="sapUiTinyMarginEnd sapUiTinyMarginBottom"
+                        header="Create Workflow"
+                        subheader="Design agent workflows"
+                        press="onNavToWorkflows">
+                        <TileContent>
+                            <ImageContent src="sap-icon://workflow-tasks"/>
+                        </TileContent>
+                    </GenericTile>
+                    
+                    <GenericTile 
+                        class="sapUiTinyMarginEnd sapUiTinyMarginBottom"
+                        header="View Analytics"
+                        subheader="Network performance"
+                        press="onNavToAnalytics">
+                        <TileContent>
+                            <ImageContent src="sap-icon://line-chart"/>
+                        </TileContent>
+                    </GenericTile>
+                </HBox>
+                
+                <!-- Top Agents - Tablet Optimized -->
+                <Title text="Top Performing Agents" class="sapUiMediumMarginTop sapUiMediumMarginBottom"/>
+                <Table
+                    id="topAgentsTable"
+                    items="{/TopAgents}"
+                    mode="SingleSelectMaster"
+                    itemPress="onAgentPress"
+                    class="sapMTable a2a-tablet-table"
+                    swipeDirection="BeginToEnd"
+                    swipe="onAgentSwipe">
+                    <columns>
+                        <Column>
+                            <Text text="Name"/>
+                        </Column>
+                        <Column>
+                            <Text text="Address"/>
+                        </Column>
+                        <Column>
+                            <Text text="Reputation"/>
+                        </Column>
+                        <Column>
+                            <Text text="Completed Tasks"/>
+                        </Column>
+                        <Column>
+                            <Text text="Avg Response Time"/>
+                        </Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <Text text="{name}"/>
+                                <Text text="{= ${address}.substring(0, 10) + '...'}"/>
+                                <ObjectNumber 
+                                    number="{reputation}" 
+                                    state="{= ${reputation} > 150 ? 'Success' : ${reputation} > 100 ? 'Warning' : 'Error'}"/>
+                                <ObjectNumber number="{completedTasks}"/>
+                                <Text text="{avgResponseTime} ms"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+                
+                <!-- Active Services -->
+                <Title text="Popular Services" class="sapUiMediumMarginTop sapUiMediumMarginBottom"/>
+                <Table
+                    id="activeServicesTable"
+                    items="{
+                        path: '/ActiveServices',
+                        sorter: {
+                            path: 'totalCalls',
+                            descending: true
+                        }
+                    }">
+                    <columns>
+                        <Column>
+                            <Text text="Service"/>
+                        </Column>
+                        <Column>
+                            <Text text="Provider"/>
+                        </Column>
+                        <Column>
+                            <Text text="Category"/>
+                        </Column>
+                        <Column>
+                            <Text text="Price"/>
+                        </Column>
+                        <Column>
+                            <Text text="Total Calls"/>
+                        </Column>
+                        <Column>
+                            <Text text="Rating"/>
+                        </Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <Text text="{name}"/>
+                                <Text text="{providerName}"/>
+                                <Text text="{category}"/>
+                                <ObjectNumber number="{pricePerCall}" unit="ETH"/>
+                                <ObjectNumber number="{totalCalls}"/>
+                                <RatingIndicator 
+                                    value="{averageRating}" 
+                                    editable="false"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+                
+                <!-- Recent Workflows -->
+                <Title text="Recent Workflow Executions" class="sapUiMediumMarginTop sapUiMediumMarginBottom"/>
+                <Table
+                    id="recentWorkflowsTable"
+                    items="{
+                        path: '/RecentWorkflows',
+                        length: 10
+                    }">
+                    <columns>
+                        <Column>
+                            <Text text="Workflow"/>
+                        </Column>
+                        <Column>
+                            <Text text="Status"/>
+                        </Column>
+                        <Column>
+                            <Text text="Started"/>
+                        </Column>
+                        <Column>
+                            <Text text="Duration"/>
+                        </Column>
+                        <Column>
+                            <Text text="Gas Used"/>
+                        </Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <Text text="{workflowName}"/>
+                                <ObjectStatus 
+                                    text="{status}" 
+                                    state="{= ${status} === 'completed' ? 'Success' : ${status} === 'running' ? 'Warning' : 'Error'}"/>
+                                <Text text="{
+                                    path: 'startedAt',
+                                    formatter: '.formatter.formatDateTime'
+                                }"/>
+                                <Text text="{
+                                    parts: ['startedAt', 'completedAt'],
+                                    formatter: '.formatter.calculateDuration'
+                                }"/>
+                                <ObjectNumber number="{gasUsed}"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+            </VBox>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

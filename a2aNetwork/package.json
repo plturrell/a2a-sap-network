@@ -1,0 +1,259 @@
+{
+  "name": "a2a-network",
+  "version": "1.0.0",
+  "description": "A2A Network - Autonomous Agent Orchestration Platform",
+  "main": "srv/server.js",
+  "scripts": {
+    "start": "cds-serve",
+    "watch": "cds watch",
+    "build": "cds build && npm run build:ui",
+    "build:ui": "cd app/a2a-fiori && npm run build",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:unit": "jest --testPathPattern=unit",
+    "test:memory": "node --expose-gc --inspect test/memory-test.js",
+    "lint": "eslint srv/ app/ --ext .js,.ts",
+    "lint:fix": "eslint srv/ app/ --ext .js,.ts --fix",
+    "format": "prettier --write \"**/*.{js,ts,json,md}\"",
+    "deploy": "cds deploy",
+    "deploy:cf": "cf push",
+    "db:migrate": "cds deploy --to hana",
+    "db:seed": "node scripts/seed-data.js",
+    "i18n:populate": "node scripts/populate-translations.js",
+    "i18n:export": "node scripts/export-translations.js",
+    "i18n:validate": "node scripts/validate-translations.js",
+    "security:audit": "npm audit && node scripts/security-scan.js",
+    "performance:profile": "node --prof srv/server.js",
+    "docs:generate": "jsdoc -c jsdoc.config.json",
+    "blockchain:compile": "cd contracts && forge build",
+    "blockchain:test": "cd contracts && forge test",
+    "blockchain:deploy": "cd contracts && forge script script/Deploy.s.sol --broadcast",
+    "monitoring:setup": "node scripts/setup-monitoring.js",
+    "backup:create": "node scripts/create-backup.js",
+    "backup:restore": "node scripts/restore-backup.js",
+    "health:check": "curl -f http://localhost:4004/health || exit 1",
+    "logs": "cf logs a2a-network",
+    "clean": "rimraf dist/ coverage/ .nyc_output/",
+    "precommit": "npm run lint && npm run test",
+    "prepush": "npm run test:coverage",
+    "postinstall": "npm run i18n:populate",
+    "enterprise:validate": "node scripts/validate-enterprise-config.js",
+    "enterprise:setup": "node scripts/setup-enterprise.js",
+    "cache:warm": "node scripts/cache-warmup.js",
+    "cache:clear": "node scripts/cache-clear.js",
+    "security:scan": "node scripts/security-scan.js",
+    "compliance:check": "node scripts/compliance-check.js",
+    "metrics:export": "node scripts/export-metrics.js",
+    "audit:generate": "node scripts/generate-audit-report.js"
+  },
+  "keywords": [
+    "autonomous-agents",
+    "orchestration",
+    "blockchain",
+    "sap-btp",
+    "microservices",
+    "ai",
+    "workflow-automation",
+    "enterprise-integration",
+    "multi-agent-systems",
+    "distributed-computing"
+  ],
+  "author": "SAP A2A Team",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sap/a2a-network.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sap/a2a-network/issues"
+  },
+  "homepage": "https://a2a-network.sap.com",
+  "engines": {
+    "node": "^18 || ^20",
+    "npm": ">=9.0.0"
+  },
+  "dependencies": {
+    "@opentelemetry/auto-instrumentations-node": "^0.24.0",
+    "@opentelemetry/sdk-node": "^0.52.1",
+    "@opentelemetry/resources": "^1.25.1",
+    "@opentelemetry/semantic-conventions": "^1.25.1",
+    "@opentelemetry/exporter-otlp-http": "^0.52.1",
+    "@opentelemetry/sdk-metrics": "^1.25.1",
+    "@sap/audit-logging": "^5.8.0",
+    "@sap/cds": "^7.4.0",
+    "@sap/cds-hana": "^2.0.0",
+    "@sap/hana-client": "^2.19.0",
+    "@sap/logging": "^7.0.0",
+    "@sap/xsenv": "^4.2.0",
+    "@sap/xssec": "^3.2.17",
+    "async": "^3.2.4",
+    "axios": "^1.6.0",
+    "bcrypt": "^5.1.1",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.8.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "express-session": "^1.18.2",
+    "express-slow-down": "^2.0.1",
+    "helmet": "^7.1.0",
+    "i18n": "^0.15.1",
+    "ioredis": "^5.3.2",
+    "isomorphic-dompurify": "^2.26.0",
+    "joi": "^17.11.0",
+    "jsonwebtoken": "^9.0.2",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "moment-timezone": "^0.5.43",
+    "multer": "^1.4.5-lts.1",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
+    "prom-client": "^15.0.0",
+    "puppeteer": "^24.16.0",
+    "redis": "^4.6.10",
+    "socket.io": "^4.7.4",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
+    "uuid": "^9.0.1",
+    "validator": "^13.11.0",
+    "web3": "^4.2.2",
+    "winston": "^3.11.0",
+    "winston-daily-rotate-file": "^4.7.1",
+    "ws": "^8.14.2",
+    "yaml": "^2.3.4"
+  },
+  "devDependencies": {
+    "@cap-js/sqlite": "^1.4.0",
+    "@sap/eslint-plugin-ui5-jsdocs": "^2.0.0",
+    "@sap/hdi-deploy": "^5.5.0",
+    "@sap/ux-specification": "^1.108.0",
+    "@sap/ux-ui5-tooling": "^1.11.0",
+    "@sapui5/ts-types": "^1.120.0",
+    "@types/node": "^20.10.0",
+    "axios": "^1.11.0",
+    "chai": "^4.3.10",
+    "chai-as-promised": "^7.1.1",
+    "chai-subset": "^1.6.0",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.1.1",
+    "rimraf": "^5.0.5",
+    "sqlite3": "^5.1.6",
+    "supertest": "^6.3.3",
+    "typescript": "^5.3.0"
+  },
+  "cds": {
+    "requires": {
+      "db": {
+        "[development]": {
+          "kind": "hana-cloud",
+          "credentials": {
+            "host": "d93a8739-44a8-4845-bef3-8ec724dea2ce.hana.prod-us10.hanacloud.ondemand.com",
+            "port": 443,
+            "user": "DBADMIN",
+            "password": "Initial@1",
+            "encrypt": true,
+            "sslValidateCertificate": false
+          }
+        },
+        "[production]": {
+          "kind": "hana-cloud"
+        }
+      },
+      "sqlite": {
+        "[development]": {
+          "kind": "sqlite",
+          "credentials": {
+            "database": "./data/a2a_fallback.db"
+          }
+        }
+      },
+      "auth": {
+        "[production]": {
+          "kind": "xsuaa"
+        }
+      },
+      "approuter": {
+        "kind": "cloudfoundry"
+      }
+    },
+    "features": {
+      "assert_integrity": "db"
+    },
+    "hana": {
+      "deploy-format": "hdbtable"
+    },
+    "i18n": {
+      "default_language": "en",
+      "folders": [
+        "_i18n",
+        "i18n",
+        "assets/i18n"
+      ],
+      "supported_languages": [
+        "en",
+        "de",
+        "fr",
+        "es",
+        "it",
+        "pt",
+        "zh",
+        "zh-TW",
+        "ja",
+        "ko",
+        "ru",
+        "ar",
+        "he"
+      ]
+    }
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "srv/**/*.js",
+      "!srv/node_modules/**",
+      "!srv/coverage/**"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 90,
+        "functions": 90,
+        "lines": 90,
+        "statements": 90
+      }
+    },
+    "testMatch": [
+      "**/test/**/*.test.js",
+      "**/tests/**/*.test.js"
+    ]
+  },
+  "prettier": {
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "tabWidth": 2,
+    "semi": true,
+    "printWidth": 100
+  },
+  "eslintConfig": {
+    "extends": [
+      "eslint:recommended"
+    ],
+    "env": {
+      "node": true,
+      "es2022": true,
+      "jest": true
+    },
+    "parserOptions": {
+      "ecmaVersion": 2022,
+      "sourceType": "module"
+    },
+    "rules": {
+      "no-console": "warn",
+      "no-unused-vars": "error",
+      "no-undef": "error"
+    }
+  }
+}

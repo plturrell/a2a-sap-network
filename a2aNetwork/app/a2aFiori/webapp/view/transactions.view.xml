@@ -1,0 +1,279 @@
+<mvc:View
+    controllerName="a2a.network.fiori.controller.Transactions"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core">
+    
+    <f:DynamicPage id="transactionsPage" class="a2a-tablet-page" headerExpanded="true" showFooter="false">
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>blockchainTransactions}"/>
+                </f:heading>
+                <f:expandedContent>
+                    <ObjectAttribute title="{i18n>totalTransactions}" text="{transactions>/totalCount}"/>
+                    <ObjectAttribute title="{i18n>successfulTransactions}" text="{transactions>/successCount}"/>
+                    <ObjectAttribute title="{i18n>failedTransactions}" text="{transactions>/failedCount}"/>
+                </f:expandedContent>
+                <f:snappedContent>
+                    <MessageStrip text="{i18n>transactionsLoaded}" type="Information" showIcon="true"/>
+                </f:snappedContent>
+                <f:actions>
+                    <Button
+                        text="{i18n>refresh}"
+                        type="Emphasized"
+                        icon="sap-icon://refresh"
+                        press="onRefresh"/>
+                    <Button
+                        text="{i18n>export}"
+                        icon="sap-icon://download"
+                        press="onExport"/>
+                    <OverflowToolbarButton
+                        text="{i18n>settings}"
+                        icon="sap-icon://action-settings"
+                        press="onSettings"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+        
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <f:content>
+                    <VBox>
+                        <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                            <SearchField
+                                width="400px"
+                                placeholder="{i18n>searchTransactions}"
+                                search="onSearch"
+                                class="sapUiSmallMarginEnd"/>
+                            <ComboBox
+                                placeholder="{i18n>filterByType}"
+                                class="sapUiSmallMarginEnd"
+                                change="onTypeFilterChange">
+                                <items>
+                                    <core:Item key="all" text="{i18n>allTypes}"/>
+                                    <core:Item key="AgentRegistration" text="{i18n>agentRegistration}"/>
+                                    <core:Item key="ServiceListing" text="{i18n>serviceListing}"/>
+                                    <core:Item key="MessageRouting" text="{i18n>messageRouting}"/>
+                                    <core:Item key="ContractDeployment" text="{i18n>contractDeployment}"/>
+                                </items>
+                            </ComboBox>
+                            <ComboBox
+                                placeholder="{i18n>filterByStatus}"
+                                class="sapUiSmallMarginEnd"
+                                change="onStatusFilterChange">
+                                <items>
+                                    <core:Item key="all" text="{i18n>allStatuses}"/>
+                                    <core:Item key="success" text="{i18n>successful}"/>
+                                    <core:Item key="failed" text="{i18n>failed}"/>
+                                    <core:Item key="pending" text="{i18n>pending}"/>
+                                </items>
+                            </ComboBox>
+                            <DateRangeSelection
+                                id="dateRange"
+                                placeholder="{i18n>selectDateRange}"
+                                change="onDateRangeChange"/>
+                        </HBox>
+                        <HBox alignItems="Center">
+                            <SegmentedButton selectedKey="24h" select="onTimeRangeSelect">
+                                <items>
+                                    <SegmentedButtonItem key="1h" text="{i18n>last1Hour}"/>
+                                    <SegmentedButtonItem key="24h" text="{i18n>last24Hours}"/>
+                                    <SegmentedButtonItem key="7d" text="{i18n>last7Days}"/>
+                                    <SegmentedButtonItem key="30d" text="{i18n>last30Days}"/>
+                                </items>
+                            </SegmentedButton>
+                        </HBox>
+                    </VBox>
+                </f:content>
+            </f:DynamicPageHeader>
+        </f:header>
+        
+        <f:content>
+            <Table
+                id="transactionsTable"
+                items="{
+                    path: 'transactions>/items',
+                    sorter: {
+                        path: 'timestamp',
+                        descending: true
+                    }
+                }"
+                growing="true"
+                growingThreshold="50"
+                sticky="ColumnHeaders,HeaderToolbar">
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <content>
+                            <Title text="{i18n>transactionHistory}" level="H2"/>
+                            <ToolbarSpacer/>
+                            <Text text="{i18n>showing} {transactions>/displayedCount} {i18n>of} {transactions>/totalCount} {i18n>transactions}"/>
+                            <Button
+                                icon="sap-icon://table-view"
+                                tooltip="{i18n>tableSettings}"
+                                press="onTableSettings"/>
+                        </content>
+                    </OverflowToolbar>
+                </headerToolbar>
+                <columns>
+                    <Column sortProperty="hash" filterProperty="hash">
+                        <Text text="{i18n>transactionHash}"/>
+                    </Column>
+                    <Column sortProperty="type" filterProperty="type">
+                        <Text text="{i18n>type}"/>
+                    </Column>
+                    <Column sortProperty="from" filterProperty="from">
+                        <Text text="{i18n>from}"/>
+                    </Column>
+                    <Column sortProperty="to" filterProperty="to">
+                        <Text text="{i18n>to}"/>
+                    </Column>
+                    <Column sortProperty="value" filterProperty="value">
+                        <Text text="{i18n>value}"/>
+                    </Column>
+                    <Column sortProperty="gasUsed" filterProperty="gasUsed">
+                        <Text text="{i18n>gasUsed}"/>
+                    </Column>
+                    <Column sortProperty="status" filterProperty="status">
+                        <Text text="{i18n>status}"/>
+                    </Column>
+                    <Column sortProperty="timestamp" filterProperty="timestamp">
+                        <Text text="{i18n>timestamp}"/>
+                    </Column>
+                    <Column>
+                        <Text text="{i18n>actions}"/>
+                    </Column>
+                </columns>
+                <items>
+                    <ColumnListItem press="onTransactionPress" type="Navigation">
+                        <cells>
+                            <!-- Transaction Hash with copy functionality -->
+                            <HBox alignItems="Center">
+                                <core:Icon src="sap-icon://chain-link" class="sapUiTinyMarginEnd" color="Accent6"/>
+                                <Link
+                                    text="{
+                                        path: 'transactions>hash',
+                                        formatter: '.formatter.formatAddress'
+                                    }"
+                                    press="onHashPress"
+                                    class="blockchain-address"/>
+                                <Button 
+                                    icon="sap-icon://copy"
+                                    type="Transparent"
+                                    tooltip="{i18n>copyHash}"
+                                    press="onCopyHash"
+                                    class="sapUiTinyMarginBegin sapUiTinySize"/>
+                            </HBox>
+                            <!-- Transaction Type with icon -->
+                            <HBox alignItems="Center">
+                                <core:Icon 
+                                    src="{
+                                        path: 'transactions>type',
+                                        formatter: '.formatter.getTransactionTypeIcon'
+                                    }"
+                                    class="sapUiTinyMarginEnd"
+                                    color="{
+                                        path: 'transactions>type',
+                                        formatter: '.formatter.getTransactionTypeColor'
+                                    }"/>
+                                <Text text="{transactions>type}"/>
+                            </HBox>
+                            <!-- From Address -->
+                            <VBox>
+                                <Link
+                                    text="{
+                                        path: 'transactions>from',
+                                        formatter: '.formatter.formatAddress'
+                                    }"
+                                    press="onAddressPress"
+                                    class="blockchain-address"/>
+                                <Text text="{
+                                    path: 'transactions>fromLabel',
+                                    formatter: '.formatter.formatAgentLabel'
+                                }" class="sapUiSmallText"/>
+                            </VBox>
+                            <!-- To Address -->
+                            <VBox>
+                                <Link
+                                    text="{
+                                        path: 'transactions>to',
+                                        formatter: '.formatter.formatAddress'
+                                    }"
+                                    press="onAddressPress"
+                                    class="blockchain-address"/>
+                                <Text text="{
+                                    path: 'transactions>toLabel',
+                                    formatter: '.formatter.formatAgentLabel'
+                                }" class="sapUiSmallText"/>
+                            </VBox>
+                            <!-- Value -->
+                            <ObjectNumber
+                                number="{
+                                    path: 'transactions>value',
+                                    formatter: '.formatter.formatEther'
+                                }"
+                                unit="ETH"
+                                state="{= ${transactions>value} > 0 ? 'Success' : 'None' }"/>
+                            <!-- Gas Used -->
+                            <VBox>
+                                <ObjectNumber
+                                    number="{transactions>gasUsed}"
+                                    unit="gas"
+                                    state="{= ${transactions>gasUsed} > 100000 ? 'Warning' : 'Success' }"/>
+                                <Text text="Fee: {
+                                    path: 'transactions>gasFee',
+                                    formatter: '.formatter.formatEther'
+                                } ETH" class="sapUiSmallText"/>
+                            </VBox>
+                            <!-- Status -->
+                            <ObjectStatus
+                                text="{transactions>status}"
+                                state="{
+                                    path: 'transactions>status',
+                                    formatter: '.formatter.formatTransactionStatus'
+                                }"
+                                icon="{
+                                    path: 'transactions>status',
+                                    formatter: '.formatter.getTransactionStatusIcon'
+                                }"/>
+                            <!-- Timestamp -->
+                            <VBox>
+                                <Text text="{
+                                    path: 'transactions>timestamp',
+                                    formatter: '.formatter.formatDateTime'
+                                }"/>
+                                <Text text="{
+                                    path: 'transactions>timestamp',
+                                    formatter: '.formatter.formatRelativeTime'
+                                }" class="sapUiSmallText"/>
+                            </VBox>
+                            <!-- Actions -->
+                            <HBox>
+                                <Button
+                                    icon="sap-icon://detail-view"
+                                    tooltip="{i18n>viewDetails}"
+                                    press="onViewDetails"
+                                    type="Transparent"
+                                    class="sapUiTinySize"/>
+                                <Button
+                                    icon="sap-icon://inspect"
+                                    tooltip="{i18n>viewOnExplorer}"
+                                    press="onViewOnExplorer"
+                                    type="Transparent"
+                                    class="sapUiTinySize"/>
+                                <Button
+                                    icon="sap-icon://refresh"
+                                    tooltip="{i18n>checkStatus}"
+                                    press="onCheckStatus"
+                                    type="Transparent"
+                                    class="sapUiTinySize"
+                                    visible="{= ${transactions>status} === 'pending' }"/>
+                            </HBox>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

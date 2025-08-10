@@ -1,0 +1,366 @@
+# A2A Network Enterprise Configuration
+# SAP-compliant enterprise settings for production deployment
+
+metadata:
+  version: "1.0.0"
+  last_updated: "2024-01-15"
+  compliance_level: "SAP_ENTERPRISE"
+
+# Application Configuration
+application:
+  name: "a2a-network"
+  version: "${APP_VERSION:-1.0.0}"
+  environment: "${NODE_ENV:-production}"
+  description: "A2A Network - Enterprise Agent Coordination Platform"
+  
+  # SAP BTP Configuration
+  btp:
+    subdomain: "${BTP_SUBDOMAIN}"
+    region: "${BTP_REGION:-eu10}"
+    landscape: "${BTP_LANDSCAPE:-eu10.hana.ondemand.com}"
+    org: "${CF_ORG}"
+    space: "${CF_SPACE}"
+
+# Security Configuration
+security:
+  # Authentication
+  authentication:
+    provider: "xsuaa"
+    token_validation: true
+    audience_validation: true
+    issuer_validation: true
+    
+  # Authorization
+  authorization:
+    rbac_enabled: true
+    attribute_based: true
+    tenant_isolation: true
+    
+  # Security Headers
+  headers:
+    hsts:
+      max_age: 31536000
+      include_subdomains: true
+      preload: true
+    csp:
+      default_src: ["'self'"]
+      script_src: ["'self'", "'strict-dynamic'", "https://ui5.sap.com"]
+      style_src: ["'self'", "'unsafe-inline'", "https://ui5.sap.com"]
+      img_src: ["'self'", "data:", "https:"]
+      connect_src: ["'self'", "https://*.sap.com"]
+    
+  # Rate Limiting
+  rate_limiting:
+    enabled: true
+    window_ms: 900000  # 15 minutes
+    max_requests:
+      standard: 1000
+      strict: 100
+      auth: 5
+    
+  # Input Validation
+  validation:
+    max_payload_size: "1mb"
+    sanitize_html: true
+    validate_addresses: true
+    injection_detection: true
+
+# Database Configuration
+database:
+  # Primary Database (HANA Cloud)
+  primary:
+    type: "hana-cloud"
+    pool:
+      min: 2
+      max: 20
+      idle_timeout: 30000
+      acquire_timeout: 60000
+    retry:
+      attempts: 3
+      delay: 1000
+    
+  # Fallback Database (SQLite)
+  fallback:
+    type: "sqlite"
+    path: "./data/a2a_fallback.db"
+    
+  # Performance
+  performance:
+    query_timeout: 30000
+    index_optimization: true
+    connection_pooling: true
+
+# Caching Configuration
+cache:
+  # Redis Configuration
+  redis:
+    enabled: true
+    host: "${REDIS_HOST:-localhost}"
+    port: "${REDIS_PORT:-6379}"
+    password: "${REDIS_PASSWORD}"
+    db: 0
+    retry_delay: 100
+    max_retries: 3
+    
+  # Cache Strategies
+  strategies:
+    agents:
+      ttl: 300  # 5 minutes
+      strategy: "write-through"
+    capabilities:
+      ttl: 1800  # 30 minutes
+      strategy: "write-behind"
+    services:
+      ttl: 600  # 10 minutes
+      strategy: "write-through"
+    network_stats:
+      ttl: 60  # 1 minute
+      strategy: "write-behind"
+      
+  # Memory Cache
+  memory:
+    max_size: 1000
+    default_ttl: 300
+
+# Monitoring & Observability
+monitoring:
+  # OpenTelemetry
+  opentelemetry:
+    enabled: true
+    service_name: "a2a-network-srv"
+    traces_endpoint: "${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT}"
+    metrics_endpoint: "${OTEL_EXPORTER_OTLP_METRICS_ENDPOINT}"
+    export_interval: 30000
+    
+  # SAP Cloud ALM
+  cloud_alm:
+    enabled: true
+    endpoint: "${SAP_CLOUD_ALM_ENDPOINT}"
+    token: "${SAP_CLOUD_ALM_TOKEN}"
+    alerts_endpoint: "${SAP_CLOUD_ALM_ALERTS_ENDPOINT}"
+    
+  # Health Checks
+  health_checks:
+    interval: 30000
+    timeout: 10000
+    endpoints:
+      - name: "database"
+        critical: true
+      - name: "blockchain"
+        critical: false
+      - name: "cache"
+        critical: false
+      - name: "external_services"
+        critical: false
+        
+  # Metrics Collection
+  metrics:
+    prometheus:
+      enabled: true
+      endpoint: "/metrics"
+      prefix: "a2a_"
+    
+    business_metrics:
+      - "agents_total"
+      - "services_total" 
+      - "workflow_executions"
+      - "message_delivery_time"
+      - "blockchain_transactions"
+      - "cache_hit_ratio"
+
+# Logging Configuration
+logging:
+  # Log Levels
+  levels:
+    application: "info"
+    security: "warn"
+    audit: "info"
+    error: "error"
+    performance: "info"
+    
+  # Log Rotation
+  rotation:
+    max_size: "100m"
+    max_files: 30
+    compress: true
+    
+  # Log Retention
+  retention:
+    application: "30d"
+    security: "365d"
+    audit: "2555d"  # 7 years
+    error: "90d"
+    
+  # Structured Logging
+  format: "json"
+  include_stack_traces: true
+  sanitize_sensitive_data: true
+  
+  # Log Forwarding
+  forwarding:
+    enabled: true
+    destination: "${LOG_FORWARDING_ENDPOINT}"
+    format: "json"
+    batch_size: 100
+
+# Performance Configuration
+performance:
+  # Connection Timeouts
+  timeouts:
+    http: 30000
+    database: 30000
+    cache: 5000
+    blockchain: 60000
+    
+  # Concurrency
+  concurrency:
+    max_concurrent_requests: 1000
+    max_db_connections: 20
+    max_cache_connections: 10
+    
+  # Optimization
+  optimization:
+    gzip_compression: true
+    etag_enabled: true
+    response_caching: true
+    static_file_caching: true
+
+# Internationalization
+i18n:
+  default_language: "en"
+  supported_languages:
+    - "en"
+    - "de" 
+    - "fr"
+    - "es"
+    - "it"
+    - "pt"
+    - "zh"
+    - "ja"
+    - "ko"
+  fallback_language: "en"
+  auto_detect: true
+
+# Blockchain Configuration
+blockchain:
+  networks:
+    mainnet:
+      enabled: false
+      rpc_url: "${MAINNET_RPC_URL}"
+      chain_id: 1
+    testnet:
+      enabled: true
+      rpc_url: "${TESTNET_RPC_URL:-http://localhost:8545}"
+      chain_id: 31337
+      
+  # Gas Configuration
+  gas:
+    price: "auto"
+    limit: 500000
+    multiplier: 1.2
+    
+  # Contract Configuration
+  contracts:
+    agent_registry: "${AGENT_REGISTRY_ADDRESS}"
+    message_router: "${MESSAGE_ROUTER_ADDRESS}"
+    service_marketplace: "${SERVICE_MARKETPLACE_ADDRESS}"
+
+# Feature Flags
+features:
+  blockchain_integration: true
+  ai_capabilities: true
+  analytics_dashboard: true
+  cross_chain_support: true
+  privacy_features: true
+  multi_tenancy: true
+  advanced_monitoring: true
+  enterprise_security: true
+
+# Resource Limits
+resources:
+  memory:
+    heap_size: "1g"
+    max_old_space_size: "1g"
+  
+  cpu:
+    max_cpu_percent: 80
+    
+  disk:
+    max_log_size: "10g"
+    max_cache_size: "1g"
+
+# Compliance & Audit
+compliance:
+  data_residency:
+    enforce: true
+    allowed_regions: ["EU", "US"]
+    
+  gdpr:
+    enabled: true
+    data_retention_days: 365
+    right_to_be_forgotten: true
+    
+  audit_logging:
+    enabled: true
+    events:
+      - "data_access"
+      - "data_modification"
+      - "authentication"
+      - "authorization"
+      - "configuration_changes"
+      
+  data_classification:
+    default_level: "restricted"
+    automatic_classification: true
+
+# Disaster Recovery
+disaster_recovery:
+  backup:
+    enabled: true
+    frequency: "daily"
+    retention: "30d"
+    encryption: true
+    
+  replication:
+    enabled: true
+    regions: ["${DR_REGION}"]
+    sync_frequency: "hourly"
+    
+  failover:
+    automatic: true
+    health_check_interval: 60000
+    failure_threshold: 3
+
+# Environment-Specific Overrides
+environments:
+  development:
+    logging:
+      levels:
+        application: "debug"
+    security:
+      rate_limiting:
+        enabled: false
+    monitoring:
+      cloud_alm:
+        enabled: false
+        
+  staging:
+    database:
+      primary:
+        pool:
+          max: 10
+    performance:
+      concurrency:
+        max_concurrent_requests: 500
+        
+  production:
+    security:
+      headers:
+        hsts:
+          preload: true
+    monitoring:
+      health_checks:
+        interval: 15000
+    performance:
+      optimization:
+        response_caching: true

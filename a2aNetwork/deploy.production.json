@@ -1,0 +1,171 @@
+{
+  "networks": {
+    "ethereum_mainnet": {
+      "name": "Ethereum Mainnet",
+      "chain_id": 1,
+      "rpc_url": "https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+      "explorer_url": "https://etherscan.io",
+      "gas_price_gwei": 20,
+      "confirmation_blocks": 12,
+      "timeout_minutes": 10,
+      "contracts": {
+        "deploy_order": [
+          "AgentRegistry",
+          "MessageRouter", 
+          "AgentServiceMarketplace",
+          "CapabilityMatcher",
+          "PerformanceReputationSystem"
+        ],
+        "constructor_args": {
+          "AgentRegistry": [2],
+          "MessageRouter": ["${AgentRegistry}", 2],
+          "AgentServiceMarketplace": [],
+          "CapabilityMatcher": [],
+          "PerformanceReputationSystem": []
+        },
+        "initialize_args": {
+          "AgentServiceMarketplace": ["${AgentRegistry}"],
+          "CapabilityMatcher": ["${AgentRegistry}"],
+          "PerformanceReputationSystem": ["${AgentRegistry}"]
+        }
+      }
+    },
+    "ethereum_sepolia": {
+      "name": "Ethereum Sepolia Testnet",
+      "chain_id": 11155111,
+      "rpc_url": "https://sepolia.infura.io/v3/${INFURA_API_KEY}",
+      "explorer_url": "https://sepolia.etherscan.io",
+      "gas_price_gwei": 10,
+      "confirmation_blocks": 3,
+      "timeout_minutes": 5,
+      "contracts": {
+        "deploy_order": [
+          "AgentRegistry",
+          "MessageRouter",
+          "AgentServiceMarketplace", 
+          "CapabilityMatcher",
+          "PerformanceReputationSystem"
+        ],
+        "constructor_args": {
+          "AgentRegistry": [1],
+          "MessageRouter": ["${AgentRegistry}", 1],
+          "AgentServiceMarketplace": [],
+          "CapabilityMatcher": [],
+          "PerformanceReputationSystem": []
+        },
+        "initialize_args": {
+          "AgentServiceMarketplace": ["${AgentRegistry}"],
+          "CapabilityMatcher": ["${AgentRegistry}"],
+          "PerformanceReputationSystem": ["${AgentRegistry}"]
+        }
+      }
+    },
+    "polygon_mainnet": {
+      "name": "Polygon Mainnet",
+      "chain_id": 137,
+      "rpc_url": "https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+      "explorer_url": "https://polygonscan.com",
+      "gas_price_gwei": 30,
+      "confirmation_blocks": 6,
+      "timeout_minutes": 5,
+      "contracts": {
+        "deploy_order": [
+          "AgentRegistry",
+          "MessageRouter",
+          "AgentServiceMarketplace",
+          "CapabilityMatcher", 
+          "PerformanceReputationSystem"
+        ],
+        "constructor_args": {
+          "AgentRegistry": [2],
+          "MessageRouter": ["${AgentRegistry}", 2],
+          "AgentServiceMarketplace": [],
+          "CapabilityMatcher": [],
+          "PerformanceReputationSystem": []
+        },
+        "initialize_args": {
+          "AgentServiceMarketplace": ["${AgentRegistry}"],
+          "CapabilityMatcher": ["${AgentRegistry}"],
+          "PerformanceReputationSystem": ["${AgentRegistry}"]
+        }
+      }
+    }
+  },
+  "deployment": {
+    "verify_contracts": true,
+    "save_deployments": true,
+    "deployment_file": "deployments.json",
+    "environment_file": ".env.production",
+    "required_env_vars": [
+      "PRIVATE_KEY",
+      "ALCHEMY_API_KEY",
+      "ETHERSCAN_API_KEY"
+    ],
+    "pre_deployment_checks": [
+      "check_balance",
+      "validate_network",
+      "verify_env_vars",
+      "estimate_gas_costs"
+    ],
+    "post_deployment_actions": [
+      "verify_contracts",
+      "save_addresses",
+      "update_frontend_config",
+      "run_integration_tests"
+    ]
+  },
+  "security": {
+    "multi_sig_threshold": 2,
+    "admin_accounts": [
+      "${ADMIN_WALLET_1}",
+      "${ADMIN_WALLET_2}",
+      "${ADMIN_WALLET_3}"
+    ],
+    "pause_guardians": [
+      "${GUARDIAN_WALLET_1}",
+      "${GUARDIAN_WALLET_2}"
+    ],
+    "upgrade_delay_hours": 48,
+    "emergency_pause_enabled": true
+  },
+  "monitoring": {
+    "event_monitoring": {
+      "enabled": true,
+      "events": [
+        "AgentRegistered",
+        "AgentUpdated",
+        "MessageSent",
+        "MessageDelivered",
+        "TaskCreated",
+        "TaskCompleted",
+        "ReputationUpdated"
+      ],
+      "webhook_url": "${MONITORING_WEBHOOK_URL}"
+    },
+    "health_checks": {
+      "interval_seconds": 60,
+      "endpoints": [
+        "/health/contracts",
+        "/health/network",
+        "/health/balances"
+      ]
+    },
+    "alerting": {
+      "low_balance_threshold_eth": "0.1",
+      "failed_transaction_threshold": 3,
+      "network_lag_threshold_seconds": 300
+    }
+  },
+  "estimated_costs": {
+    "ethereum_mainnet": {
+      "deployment_gas": "~4.5M gas",
+      "estimated_cost_usd": "$180-450",
+      "monthly_operations_usd": "$50-200"
+    },
+    "polygon_mainnet": {
+      "deployment_gas": "~4.5M gas", 
+      "estimated_cost_usd": "$5-15",
+      "monthly_operations_usd": "$2-10"
+    }
+  }
+}

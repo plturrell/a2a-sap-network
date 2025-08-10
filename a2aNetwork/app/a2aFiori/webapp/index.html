@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>A2A Network - Enterprise Agent Coordination Platform</title>
+    
+    <!-- Bootstrap UI5 -->
+    <script id="sap-ui-bootstrap"
+        src="https://ui5.sap.com/1.120.0/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-resourceroots='{
+            "a2a.network.fiori": "./"
+        }'
+        data-sap-ui-libs="sap.m,sap.f,sap.tnt,sap.ui.comp,sap.ui.table,sap.uxap,sap.viz,sap.suite.ui.microchart,sap.ui.fl"
+        data-sap-ui-compatVersion="edge"
+        data-sap-ui-language="en"
+        data-sap-ui-async="true"
+        data-sap-ui-preload="async"
+        data-sap-ui-frameOptions="trusted"
+        data-sap-ui-xx-bindingSyntax="complex"
+        data-sap-ui-xx-componentPreload="off">
+    </script>
+    
+    <!-- Socket.IO for real-time updates -->
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <!-- Custom styles -->
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        #content {
+            height: 100%;
+        }
+    </style>
+    
+    <script>
+        sap.ui.getCore().attachInit(function() {
+            // Create component container
+            new sap.ui.core.ComponentContainer({
+                name: "a2a.network.fiori",
+                settings: {
+                    id: "a2a.network.fiori"
+                },
+                async: true,
+                manifest: true,
+                height: "100%"
+            }).placeAt("content");
+        });
+    </script>
+</head>
+<body class="sapUiBody" id="content">
+</body>
+</html>

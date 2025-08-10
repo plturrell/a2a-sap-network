@@ -1,0 +1,475 @@
+{
+  "common": {
+    "welcome": "Willkommen im A2A-Netzwerk",
+    "loading": "Wird geladen...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "warning": "Warnung",
+    "info": "Information",
+    "confirm": "Bestätigen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "create": "Erstellen",
+    "update": "Aktualisieren",
+    "search": "Suchen",
+    "filter": "Filtern",
+    "export": "Exportieren",
+    "import": "Importieren",
+    "download": "Herunterladen",
+    "upload": "Hochladen",
+    "refresh": "Aktualisieren",
+    "back": "Zurück",
+    "next": "Weiter",
+    "previous": "Zurück",
+    "close": "Schließen",
+    "yes": "Ja",
+    "no": "Nein",
+    "ok": "OK",
+    "apply": "Anwenden",
+    "reset": "Zurücksetzen",
+    "clear": "Löschen",
+    "select": "Auswählen",
+    "selectAll": "Alle auswählen",
+    "unselectAll": "Auswahl aufheben",
+    "actions": "Aktionen",
+    "status": "Status",
+    "date": "Datum",
+    "time": "Zeit",
+    "from": "Von",
+    "to": "Bis",
+    "name": "Name",
+    "description": "Beschreibung",
+    "type": "Typ",
+    "value": "Wert",
+    "required": "Erforderlich",
+    "optional": "Optional"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "agents": "Agenten",
+    "services": "Services",
+    "workflows": "Workflows",
+    "messages": "Nachrichten",
+    "analytics": "Analysen",
+    "settings": "Einstellungen",
+    "help": "Hilfe",
+    "logout": "Abmelden",
+    "profile": "Profil",
+    "notifications": "Benachrichtigungen",
+    "administration": "Verwaltung"
+  },
+  "agents": {
+    "title": "Agenten",
+    "listTitle": "Agentenliste",
+    "createTitle": "Neuen Agenten erstellen",
+    "editTitle": "Agent bearbeiten",
+    "detailsTitle": "Agentendetails",
+    "fields": {
+      "id": "Agenten-ID",
+      "name": "Agentenname",
+      "endpoint": "Endpunkt-URL",
+      "address": "Blockchain-Adresse",
+      "reputation": "Reputationswert",
+      "status": "Status",
+      "owner": "Besitzer",
+      "capabilities": "Fähigkeiten",
+      "services": "Services",
+      "performance": "Leistung",
+      "createdAt": "Erstellt am",
+      "modifiedAt": "Geändert am"
+    },
+    "status": {
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "busy": "Beschäftigt",
+      "offline": "Offline",
+      "pending": "Ausstehend",
+      "deactivated": "Deaktiviert"
+    },
+    "actions": {
+      "activate": "Aktivieren",
+      "deactivate": "Deaktivieren",
+      "registerBlockchain": "Auf Blockchain registrieren",
+      "updateReputation": "Reputation aktualisieren",
+      "viewDetails": "Details anzeigen",
+      "editAgent": "Agent bearbeiten",
+      "deleteAgent": "Agent löschen"
+    },
+    "messages": {
+      "createSuccess": "Agent erfolgreich erstellt",
+      "updateSuccess": "Agent erfolgreich aktualisiert",
+      "deleteSuccess": "Agent erfolgreich gelöscht",
+      "activateSuccess": "Agent erfolgreich aktiviert",
+      "deactivateSuccess": "Agent erfolgreich deaktiviert",
+      "blockchainSuccess": "Agent erfolgreich auf Blockchain registriert",
+      "reputationSuccess": "Reputation erfolgreich aktualisiert",
+      "createError": "Fehler beim Erstellen des Agenten",
+      "updateError": "Fehler beim Aktualisieren des Agenten",
+      "deleteError": "Fehler beim Löschen des Agenten",
+      "notFound": "Agent nicht gefunden",
+      "confirmDelete": "Möchten Sie diesen Agenten wirklich löschen?",
+      "confirmDeactivate": "Möchten Sie diesen Agenten wirklich deaktivieren?"
+    },
+    "validation": {
+      "nameRequired": "Agentenname ist erforderlich",
+      "nameLength": "Agentenname muss zwischen 3 und 50 Zeichen lang sein",
+      "endpointRequired": "Endpunkt-URL ist erforderlich",
+      "endpointInvalid": "Bitte geben Sie eine gültige URL ein",
+      "reputationRange": "Reputation muss zwischen 0 und 200 liegen"
+    }
+  },
+  "services": {
+    "title": "Services",
+    "marketplace": "Service-Marktplatz",
+    "myServices": "Meine Services",
+    "createTitle": "Neuen Service erstellen",
+    "editTitle": "Service bearbeiten",
+    "detailsTitle": "Service-Details",
+    "fields": {
+      "id": "Service-ID",
+      "name": "Service-Name",
+      "description": "Beschreibung",
+      "provider": "Anbieter",
+      "price": "Preis",
+      "currency": "Währung",
+      "availability": "Verfügbarkeit",
+      "minReputation": "Mindestreputation",
+      "maxCallsPerDay": "Max. Aufrufe/Tag",
+      "responseTime": "Durchschn. Antwortzeit",
+      "successRate": "Erfolgsrate",
+      "tags": "Tags",
+      "category": "Kategorie"
+    },
+    "categories": {
+      "data": "Datenverarbeitung",
+      "ai": "KI & Machine Learning",
+      "integration": "Integration",
+      "automation": "Automatisierung",
+      "analytics": "Analytik",
+      "security": "Sicherheit",
+      "other": "Sonstiges"
+    },
+    "actions": {
+      "subscribe": "Abonnieren",
+      "unsubscribe": "Abonnement kündigen",
+      "execute": "Ausführen",
+      "listMarketplace": "Auf Marktplatz listen",
+      "viewDetails": "Details anzeigen",
+      "editService": "Service bearbeiten",
+      "deleteService": "Service löschen"
+    },
+    "subscription": {
+      "types": {
+        "payPerUse": "Pro Nutzung",
+        "monthly": "Monatlich",
+        "annual": "Jährlich",
+        "enterprise": "Enterprise"
+      },
+      "status": {
+        "active": "Aktiv",
+        "expired": "Abgelaufen",
+        "cancelled": "Gekündigt",
+        "pending": "Ausstehend"
+      }
+    },
+    "messages": {
+      "subscribeSuccess": "Service erfolgreich abonniert",
+      "unsubscribeSuccess": "Abonnement erfolgreich gekündigt",
+      "executeSuccess": "Service erfolgreich ausgeführt",
+      "listSuccess": "Service auf Marktplatz gelistet",
+      "createSuccess": "Service erfolgreich erstellt",
+      "updateSuccess": "Service erfolgreich aktualisiert",
+      "deleteSuccess": "Service erfolgreich gelöscht",
+      "subscribeError": "Fehler beim Abonnieren des Service",
+      "executeError": "Fehler beim Ausführen des Service",
+      "insufficientReputation": "Ihr Agent erfüllt nicht die Mindestanforderungen an die Reputation",
+      "quotaExceeded": "Tägliches Kontingent für diesen Service überschritten"
+    }
+  },
+  "workflows": {
+    "title": "Workflows",
+    "listTitle": "Workflow-Liste",
+    "createTitle": "Neuen Workflow erstellen",
+    "editTitle": "Workflow bearbeiten",
+    "designer": "Workflow-Designer",
+    "executions": "Ausführungen",
+    "fields": {
+      "id": "Workflow-ID",
+      "name": "Workflow-Name",
+      "description": "Beschreibung",
+      "version": "Version",
+      "status": "Status",
+      "createdBy": "Erstellt von",
+      "lastModified": "Zuletzt geändert",
+      "executionCount": "Anzahl Ausführungen"
+    },
+    "status": {
+      "draft": "Entwurf",
+      "published": "Veröffentlicht",
+      "deprecated": "Veraltet",
+      "archived": "Archiviert"
+    },
+    "execution": {
+      "status": {
+        "pending": "Ausstehend",
+        "running": "Läuft",
+        "completed": "Abgeschlossen",
+        "failed": "Fehlgeschlagen",
+        "cancelled": "Abgebrochen"
+      },
+      "fields": {
+        "id": "Ausführungs-ID",
+        "startTime": "Startzeit",
+        "endTime": "Endzeit",
+        "duration": "Dauer",
+        "status": "Status",
+        "progress": "Fortschritt",
+        "output": "Ausgabe"
+      }
+    },
+    "designer": {
+      "addStep": "Schritt hinzufügen",
+      "deleteStep": "Schritt löschen",
+      "stepTypes": {
+        "agent": "Agenten-Aufgabe",
+        "condition": "Bedingung",
+        "loop": "Schleife",
+        "parallel": "Parallel",
+        "wait": "Warten",
+        "transform": "Transformieren"
+      },
+      "validation": {
+        "nameRequired": "Schrittname ist erforderlich",
+        "agentRequired": "Bitte wählen Sie einen Agenten",
+        "conditionRequired": "Bitte definieren Sie eine Bedingung",
+        "invalidConnection": "Ungültige Verbindung zwischen Schritten"
+      }
+    },
+    "actions": {
+      "execute": "Ausführen",
+      "validate": "Validieren",
+      "publish": "Veröffentlichen",
+      "duplicate": "Duplizieren",
+      "export": "Exportieren",
+      "import": "Importieren",
+      "viewExecutions": "Ausführungen anzeigen",
+      "stopExecution": "Ausführung stoppen"
+    },
+    "messages": {
+      "executeSuccess": "Workflow-Ausführung gestartet",
+      "validateSuccess": "Workflow ist gültig",
+      "publishSuccess": "Workflow erfolgreich veröffentlicht",
+      "saveSuccess": "Workflow erfolgreich gespeichert",
+      "deleteSuccess": "Workflow erfolgreich gelöscht",
+      "executeError": "Fehler beim Ausführen des Workflows",
+      "validateError": "Workflow-Validierung fehlgeschlagen",
+      "publishError": "Fehler beim Veröffentlichen des Workflows"
+    }
+  },
+  "messages": {
+    "title": "Nachrichten",
+    "inbox": "Posteingang",
+    "sent": "Gesendet",
+    "drafts": "Entwürfe",
+    "compose": "Verfassen",
+    "fields": {
+      "id": "Nachrichten-ID",
+      "from": "Von",
+      "to": "An",
+      "subject": "Betreff",
+      "content": "Inhalt",
+      "priority": "Priorität",
+      "status": "Status",
+      "timestamp": "Zeitstempel",
+      "attachments": "Anhänge"
+    },
+    "priority": {
+      "low": "Niedrig",
+      "normal": "Normal",
+      "high": "Hoch",
+      "urgent": "Dringend"
+    },
+    "status": {
+      "pending": "Ausstehend",
+      "delivered": "Zugestellt",
+      "read": "Gelesen",
+      "failed": "Fehlgeschlagen"
+    },
+    "actions": {
+      "send": "Senden",
+      "reply": "Antworten",
+      "forward": "Weiterleiten",
+      "delete": "Löschen",
+      "markRead": "Als gelesen markieren",
+      "markUnread": "Als ungelesen markieren",
+      "retry": "Erneut versuchen"
+    },
+    "messages": {
+      "sendSuccess": "Nachricht erfolgreich gesendet",
+      "deleteSuccess": "Nachricht erfolgreich gelöscht",
+      "retrySuccess": "Wiederholungsversuch gestartet",
+      "sendError": "Fehler beim Senden der Nachricht",
+      "recipientNotFound": "Empfänger nicht gefunden",
+      "attachmentTooLarge": "Anhangsgröße überschreitet Limit"
+    }
+  },
+  "analytics": {
+    "title": "Analysen",
+    "dashboard": "Analyse-Dashboard",
+    "reports": "Berichte",
+    "metrics": {
+      "totalAgents": "Gesamte Agenten",
+      "activeAgents": "Aktive Agenten",
+      "totalServices": "Gesamte Services",
+      "serviceExecutions": "Service-Ausführungen",
+      "workflowRuns": "Workflow-Läufe",
+      "messageVolume": "Nachrichtenvolumen",
+      "averageResponseTime": "Durchschn. Antwortzeit",
+      "successRate": "Erfolgsrate",
+      "systemUptime": "Systemverfügbarkeit",
+      "blockchainTransactions": "Blockchain-Transaktionen"
+    },
+    "charts": {
+      "agentActivity": "Agentenaktivität im Zeitverlauf",
+      "serviceUsage": "Service-Nutzungsverteilung",
+      "workflowPerformance": "Workflow-Leistung",
+      "reputationDistribution": "Reputationsverteilung",
+      "costAnalysis": "Kostenanalyse"
+    },
+    "filters": {
+      "timeRange": "Zeitbereich",
+      "today": "Heute",
+      "yesterday": "Gestern",
+      "last7Days": "Letzte 7 Tage",
+      "last30Days": "Letzte 30 Tage",
+      "last90Days": "Letzte 90 Tage",
+      "custom": "Benutzerdefiniert"
+    },
+    "export": {
+      "pdf": "Als PDF exportieren",
+      "excel": "Als Excel exportieren",
+      "csv": "Als CSV exportieren"
+    }
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "tabs": {
+      "general": "Allgemein",
+      "security": "Sicherheit",
+      "notifications": "Benachrichtigungen",
+      "integrations": "Integrationen",
+      "billing": "Abrechnung",
+      "advanced": "Erweitert"
+    },
+    "general": {
+      "language": "Sprache",
+      "timezone": "Zeitzone",
+      "dateFormat": "Datumsformat",
+      "theme": "Design",
+      "themes": {
+        "light": "Hell",
+        "dark": "Dunkel",
+        "auto": "Automatisch"
+      }
+    },
+    "security": {
+      "changePassword": "Passwort ändern",
+      "twoFactor": "Zwei-Faktor-Authentifizierung",
+      "apiKeys": "API-Schlüssel",
+      "sessions": "Aktive Sitzungen",
+      "loginHistory": "Anmeldeverlauf"
+    },
+    "notifications": {
+      "email": "E-Mail-Benachrichtigungen",
+      "push": "Push-Benachrichtigungen",
+      "types": {
+        "agentStatus": "Agentenstatusänderungen",
+        "serviceAlerts": "Service-Warnungen",
+        "workflowComplete": "Workflow-Abschlüsse",
+        "messageReceived": "Neue Nachrichten",
+        "systemAlerts": "Systemwarnungen"
+      }
+    },
+    "messages": {
+      "saveSuccess": "Einstellungen erfolgreich gespeichert",
+      "passwordChanged": "Passwort erfolgreich geändert",
+      "twoFactorEnabled": "Zwei-Faktor-Authentifizierung aktiviert",
+      "apiKeyCreated": "API-Schlüssel erfolgreich erstellt",
+      "sessionTerminated": "Sitzung erfolgreich beendet"
+    }
+  },
+  "errors": {
+    "general": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+    "network": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
+    "unauthorized": "Sie sind nicht berechtigt, diese Aktion auszuführen.",
+    "forbidden": "Zugriff verweigert.",
+    "notFound": "Ressource nicht gefunden.",
+    "validation": "Bitte überprüfen Sie Ihre Eingabe und versuchen Sie es erneut.",
+    "serverError": "Serverfehler. Bitte kontaktieren Sie den Support.",
+    "timeout": "Zeitüberschreitung. Bitte versuchen Sie es erneut.",
+    "maintenance": "System wird gewartet. Bitte versuchen Sie es später erneut.",
+    "blockchain": {
+      "connectionFailed": "Verbindung zur Blockchain fehlgeschlagen",
+      "transactionFailed": "Blockchain-Transaktion fehlgeschlagen",
+      "insufficientFunds": "Unzureichende Mittel für Transaktion",
+      "contractError": "Smart Contract Ausführungsfehler"
+    },
+    "api": {
+      "invalidRequest": "Ungültiges Anfrageformat",
+      "missingParameters": "Fehlende erforderliche Parameter",
+      "rateLimitExceeded": "Rate-Limit überschritten. Bitte versuchen Sie es später erneut.",
+      "invalidApiKey": "Ungültiger API-Schlüssel"
+    }
+  },
+  "validation": {
+    "required": "Dieses Feld ist erforderlich",
+    "email": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+    "url": "Bitte geben Sie eine gültige URL ein",
+    "number": "Bitte geben Sie eine gültige Zahl ein",
+    "min": "Wert muss mindestens {{min}} sein",
+    "max": "Wert darf höchstens {{max}} sein",
+    "minLength": "Muss mindestens {{min}} Zeichen lang sein",
+    "maxLength": "Darf höchstens {{max}} Zeichen lang sein",
+    "pattern": "Ungültiges Format",
+    "unique": "Dieser Wert existiert bereits",
+    "password": {
+      "min": "Passwort muss mindestens 8 Zeichen lang sein",
+      "uppercase": "Passwort muss mindestens einen Großbuchstaben enthalten",
+      "lowercase": "Passwort muss mindestens einen Kleinbuchstaben enthalten",
+      "number": "Passwort muss mindestens eine Zahl enthalten",
+      "special": "Passwort muss mindestens ein Sonderzeichen enthalten",
+      "match": "Passwörter stimmen nicht überein"
+    }
+  },
+  "help": {
+    "title": "Hilfe & Support",
+    "documentation": "Dokumentation",
+    "tutorials": "Tutorials",
+    "faq": "Häufig gestellte Fragen",
+    "contact": "Support kontaktieren",
+    "community": "Community-Forum",
+    "feedback": "Feedback senden",
+    "version": "Version",
+    "about": "Über A2A-Netzwerk"
+  },
+  "formats": {
+    "date": {
+      "short": "DD.MM.YYYY",
+      "medium": "D. MMM YYYY",
+      "long": "D. MMMM YYYY",
+      "full": "dddd, D. MMMM YYYY"
+    },
+    "time": {
+      "short": "HH:mm",
+      "medium": "HH:mm:ss",
+      "long": "HH:mm:ss z"
+    },
+    "number": {
+      "decimal": ",",
+      "thousand": ".",
+      "currency": "{{amount}} €"
+    }
+  }
+}

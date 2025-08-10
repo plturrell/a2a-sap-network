@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A2A UI Style Guide & Pattern Library</title>
+    <link rel="stylesheet" href="../../a2aAgents/frontend/webapp/css/designTokens.css">
+    <link rel="stylesheet" href="style-guide.css">
+    <script src="https://openui5.hana.ondemand.com/1.120.0/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-libs="sap.m,sap.f,sap.tnt"
+        data-sap-ui-preload="async"
+        data-sap-ui-resourceroots='{
+            "com.sap.a2a": "../../a2aAgents/frontend/webapp"
+        }'>
+    </script>
+</head>
+<body class="sapUiBody">
+    <div class="style-guide-container">
+        <header class="style-guide-header">
+            <h1>A2A UI Style Guide & Pattern Library</h1>
+            <p>Version 1.0 | SAP Fiori 3.0 Horizon Theme</p>
+        </header>
+
+        <nav class="style-guide-nav">
+            <ul>
+                <li><a href="#design-principles">Design Principles</a></li>
+                <li><a href="#color-system">Color System</a></li>
+                <li><a href="#typography">Typography</a></li>
+                <li><a href="#spacing">Spacing & Layout</a></li>
+                <li><a href="#components">Components</a></li>
+                <li><a href="#patterns">UI Patterns</a></li>
+                <li><a href="#animations">Animations</a></li>
+                <li><a href="#accessibility">Accessibility</a></li>
+            </ul>
+        </nav>
+
+        <main class="style-guide-content">
+            <!-- Design Principles -->
+            <section id="design-principles" class="style-section">
+                <h2>Design Principles</h2>
+                <div class="principle-grid">
+                    <div class="principle-card">
+                        <h3>Clarity</h3>
+                        <p>Interfaces should be clear and self-explanatory, reducing cognitive load.</p>
+                    </div>
+                    <div class="principle-card">
+                        <h3>Consistency</h3>
+                        <p>Maintain consistent patterns across all applications and touchpoints.</p>
+                    </div>
+                    <div class="principle-card">
+                        <h3>Efficiency</h3>
+                        <p>Enable users to complete tasks with minimal effort and maximum speed.</p>
+                    </div>
+                    <div class="principle-card">
+                        <h3>Accessibility</h3>
+                        <p>Design for all users, regardless of ability or context.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Color System -->
+            <section id="color-system" class="style-section">
+                <h2>Color System</h2>
+                
+                <h3>Primary Colors</h3>
+                <div class="color-palette">
+                    <div class="color-swatch" style="background-color: var(--sapBrandColor);">
+                        <span class="color-name">Brand Color</span>
+                        <span class="color-value">#0070f2</span>
+                        <span class="color-var">--sapBrandColor</span>
+                    </div>
+                    <div class="color-swatch" style="background-color: var(--sapHighlightColor);">
+                        <span class="color-name">Highlight</span>
+                        <span class="color-value">#0064d9</span>
+                        <span class="color-var">--sapHighlightColor</span>
+                    </div>
+                    <div class="color-swatch" style="background-color: var(--sapBaseColor);">
+                        <span class="color-name">Base</span>
+                        <span class="color-value">#ffffff</span>
+                        <span class="color-var">--sapBaseColor</span>
+                    </div>
+                    <div class="color-swatch" style="background-color: var(--sapShellColor);">
+                        <span class="color-name">Shell</span>
+                        <span class="color-value">#354a5f</span>
+                        <span class="color-var">--sapShellColor</span>
+                    </div>
+                </div>
+
+                <h3>Semantic Colors</h3>
+                <div class="color-palette">
+                    <div class="color-swatch" style="background-color: var(--sapPositiveColor);">
+                        <span class="color-name">Positive</span>
+                        <span class="color-value">#30914c</span>
+                        <span class="color-var">--sapPositiveColor</span>
+                    </div>
+                    <div class="color-swatch" style="background-color: var(--sapNegativeColor);">
+                        <span class="color-name">Negative</span>
+                        <span class="color-value">#bb0000</span>
+                        <span class="color-var">--sapNegativeColor</span>
+                    </div>
+                    <div class="color-swatch" style="background-color: var(--sapCriticalColor);">
+                        <span class="color-name">Critical</span>
+                        <span class="color-value">#e76500</span>
+                        <span class="color-var">--sapCriticalColor</span>
+                    </div>
+                    <div class="color-swatch" style="background-color: var(--sapNeutralColor);">
+                        <span class="color-name">Neutral</span>
+                        <span class="color-value">#6a6d70</span>
+                        <span class="color-var">--sapNeutralColor</span>
+                    </div>
+                </div>
+
+                <h3>Usage Guidelines</h3>
+                <ul class="guidelines">
+                    <li>Use brand color for primary actions and key interactive elements</li>
+                    <li>Apply semantic colors consistently for status indicators</li>
+                    <li>Maintain WCAG AA contrast ratios (4.5:1 for normal text, 3:1 for large text)</li>
+                    <li>Use color with additional indicators (icons, text) for accessibility</li>
+                </ul>
+            </section>
+
+            <!-- Typography -->
+            <section id="typography" class="style-section">
+                <h2>Typography</h2>
+                
+                <h3>Type Scale</h3>
+                <div class="type-scale">
+                    <div class="type-example" style="font-size: var(--sapFontHeader1Size);">
+                        <span class="type-label">Header 1</span>
+                        <span class="type-spec">36px / 1.2 / -0.02em</span>
+                        <p>The quick brown fox jumps over the lazy dog</p>
+                    </div>
+                    <div class="type-example" style="font-size: var(--sapFontHeader2Size);">
+                        <span class="type-label">Header 2</span>
+                        <span class="type-spec">28px / 1.2 / -0.02em</span>
+                        <p>The quick brown fox jumps over the lazy dog</p>
+                    </div>
+                    <div class="type-example" style="font-size: var(--sapFontHeader3Size);">
+                        <span class="type-label">Header 3</span>
+                        <span class="type-spec">22px / 1.2 / -0.01em</span>
+                        <p>The quick brown fox jumps over the lazy dog</p>
+                    </div>
+                    <div class="type-example" style="font-size: var(--sapFontHeader4Size);">
+                        <span class="type-label">Header 4</span>
+                        <span class="type-spec">18px / 1.2 / 0</span>
+                        <p>The quick brown fox jumps over the lazy dog</p>
+                    </div>
+                    <div class="type-example" style="font-size: var(--sapFontSize);">
+                        <span class="type-label">Body</span>
+                        <span class="type-spec">14px / 1.4 / 0</span>
+                        <p>The quick brown fox jumps over the lazy dog</p>
+                    </div>
+                    <div class="type-example" style="font-size: var(--sapFontSmallSize);">
+                        <span class="type-label">Small</span>
+                        <span class="type-spec">12px / 1.4 / 0</span>
+                        <p>The quick brown fox jumps over the lazy dog</p>
+                    </div>
+                </div>
+
+                <h3>Font Families</h3>
+                <div class="font-families">
+                    <div class="font-example">
+                        <h4>Primary: 72</h4>
+                        <p style="font-family: var(--sapFontFamily);">Regular, Medium, Bold weights available</p>
+                    </div>
+                    <div class="font-example">
+                        <h4>Monospace: 72Mono</h4>
+                        <p style="font-family: var(--sapContent_MonospaceFontFamily);">Used for code and technical content</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Spacing & Layout -->
+            <section id="spacing" class="style-section">
+                <h2>Spacing & Layout</h2>
+                
+                <h3>Spacing Scale</h3>
+                <div class="spacing-scale">
+                    <div class="spacing-example">
+                        <div class="spacing-box" style="width: 4px; height: 4px;"></div>
+                        <span>XXS - 4px</span>
+                    </div>
+                    <div class="spacing-example">
+                        <div class="spacing-box" style="width: 8px; height: 8px;"></div>
+                        <span>XS - 8px</span>
+                    </div>
+                    <div class="spacing-example">
+                        <div class="spacing-box" style="width: 12px; height: 12px;"></div>
+                        <span>S - 12px</span>
+                    </div>
+                    <div class="spacing-example">
+                        <div class="spacing-box" style="width: 16px; height: 16px;"></div>
+                        <span>M - 16px</span>
+                    </div>
+                    <div class="spacing-example">
+                        <div class="spacing-box" style="width: 24px; height: 24px;"></div>
+                        <span>L - 24px</span>
+                    </div>
+                    <div class="spacing-example">
+                        <div class="spacing-box" style="width: 32px; height: 32px;"></div>
+                        <span>XL - 32px</span>
+                    </div>
+                    <div class="spacing-example">
+                        <div class="spacing-box" style="width: 48px; height: 48px;"></div>
+                        <span>XXL - 48px</span>
+                    </div>
+                </div>
+
+                <h3>Grid System</h3>
+                <div class="grid-demo">
+                    <div class="grid-container">
+                        <div class="grid-column">1</div>
+                        <div class="grid-column">2</div>
+                        <div class="grid-column">3</div>
+                        <div class="grid-column">4</div>
+                        <div class="grid-column">5</div>
+                        <div class="grid-column">6</div>
+                        <div class="grid-column">7</div>
+                        <div class="grid-column">8</div>
+                        <div class="grid-column">9</div>
+                        <div class="grid-column">10</div>
+                        <div class="grid-column">11</div>
+                        <div class="grid-column">12</div>
+                    </div>
+                </div>
+                <p>12-column grid with 16px gutters, responsive breakpoints at 600px, 1024px, and 1440px</p>
+            </section>
+
+            <!-- Components -->
+            <section id="components" class="style-section">
+                <h2>Components</h2>
+                
+                <h3>Buttons</h3>
+                <div class="component-example">
+                    <div id="buttonExamples"></div>
+                    <pre><code>&lt;Button text="Default" /&gt;
+&lt;Button text="Emphasized" type="Emphasized" /&gt;
+&lt;Button text="Accept" type="Accept" /&gt;
+&lt;Button text="Reject" type="Reject" /&gt;
+&lt;Button text="Ghost" type="Ghost" /&gt;</code></pre>
+                </div>
+
+                <h3>Cards</h3>
+                <div class="component-example">
+                    <div id="cardExample"></div>
+                    <pre><code>&lt;Card&gt;
+    &lt;header&gt;
+        &lt;Title text="Agent Performance" /&gt;
+    &lt;/header&gt;
+    &lt;content&gt;
+        &lt;NumericContent value="98.5" valueColor="Good" /&gt;
+    &lt;/content&gt;
+&lt;/Card&gt;</code></pre>
+                </div>
+
+                <h3>Forms</h3>
+                <div class="component-example">
+                    <div id="formExample"></div>
+                    <pre><code>&lt;SimpleForm&gt;
+    &lt;Label text="Agent Name" /&gt;
+    &lt;Input value="{/name}" /&gt;
+    &lt;Label text="Type" /&gt;
+    &lt;Select&gt;
+        &lt;Item key="1" text="Processing" /&gt;
+        &lt;Item key="2" text="Analytics" /&gt;
+    &lt;/Select&gt;
+&lt;/SimpleForm&gt;</code></pre>
+                </div>
+            </section>
+
+            <!-- UI Patterns -->
+            <section id="patterns" class="style-section">
+                <h2>UI Patterns</h2>
+                
+                <h3>Master-Detail</h3>
+                <div class="pattern-example">
+                    <img src="patterns/master-detail.png" alt="Master-Detail Pattern">
+                    <p>Use for browsing and editing collections of items</p>
+                </div>
+
+                <h3>Worklist</h3>
+                <div class="pattern-example">
+                    <img src="patterns/worklist.png" alt="Worklist Pattern">
+                    <p>For task management and batch operations</p>
+                </div>
+
+                <h3>Object Page</h3>
+                <div class="pattern-example">
+                    <img src="patterns/object-page.png" alt="Object Page Pattern">
+                    <p>Detailed view of a single business object</p>
+                </div>
+
+                <h3>Overview Page</h3>
+                <div class="pattern-example">
+                    <img src="patterns/overview-page.png" alt="Overview Page Pattern">
+                    <p>Dashboard-style aggregated information display</p>
+                </div>
+            </section>
+
+            <!-- Animations -->
+            <section id="animations" class="style-section">
+                <h2>Animations</h2>
+                
+                <h3>Transition Timing</h3>
+                <div class="animation-examples">
+                    <div class="animation-box fade-in">Fade In - 200ms</div>
+                    <div class="animation-box slide-in">Slide In - 300ms</div>
+                    <div class="animation-box scale-in">Scale In - 250ms</div>
+                </div>
+
+                <h3>Loading States</h3>
+                <div class="loading-examples">
+                    <div class="skeleton-loader"></div>
+                    <div class="spinner-loader"></div>
+                    <div class="progress-loader"></div>
+                </div>
+
+                <pre><code>/* Standard transitions */
+.fade-transition {
+    transition: opacity 200ms ease-in-out;
+}
+
+.slide-transition {
+    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.expand-transition {
+    transition: height 250ms ease-out;
+}</code></pre>
+            </section>
+
+            <!-- Accessibility -->
+            <section id="accessibility" class="style-section">
+                <h2>Accessibility</h2>
+                
+                <h3>Color Contrast</h3>
+                <div class="contrast-examples">
+                    <div class="contrast-pass">
+                        <span>Pass WCAG AA</span>
+                        <span>4.5:1 ratio</span>
+                    </div>
+                    <div class="contrast-fail">
+                        <span>Fail WCAG AA</span>
+                        <span>2.1:1 ratio</span>
+                    </div>
+                </div>
+
+                <h3>Focus Indicators</h3>
+                <div class="focus-examples">
+                    <button class="focus-example">Keyboard Focus</button>
+                    <input class="focus-example" placeholder="Input Focus">
+                </div>
+
+                <h3>Screen Reader Support</h3>
+                <ul class="guidelines">
+                    <li>All interactive elements have descriptive labels</li>
+                    <li>Form fields connected to labels via id/for attributes</li>
+                    <li>Status messages announced via ARIA live regions</li>
+                    <li>Logical heading hierarchy maintained</li>
+                    <li>Alternative text for all informative images</li>
+                </ul>
+
+                <h3>Keyboard Navigation</h3>
+                <table class="keyboard-shortcuts">
+                    <thead>
+                        <tr>
+                            <th>Key</th>
+                            <th>Action</th>
+                            <th>Context</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><kbd>Tab</kbd></td>
+                            <td>Navigate forward</td>
+                            <td>All contexts</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Shift + Tab</kbd></td>
+                            <td>Navigate backward</td>
+                            <td>All contexts</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Enter</kbd></td>
+                            <td>Activate element</td>
+                            <td>Buttons, links</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Space</kbd></td>
+                            <td>Toggle selection</td>
+                            <td>Checkboxes, buttons</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Arrow keys</kbd></td>
+                            <td>Navigate options</td>
+                            <td>Lists, menus, grids</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Esc</kbd></td>
+                            <td>Close/Cancel</td>
+                            <td>Dialogs, dropdowns</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </main>
+
+        <footer class="style-guide-footer">
+            <p>&copy; 2024 SAP SE. All rights reserved.</p>
+            <p>Style Guide Version 1.0 | Last Updated: January 2024</p>
+        </footer>
+    </div>
+
+    <script src="style-guide.js"></script>
+</body>
+</html>

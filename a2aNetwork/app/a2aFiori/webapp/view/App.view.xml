@@ -1,0 +1,124 @@
+<mvc:View
+    controllerName="a2a.network.fiori.controller.App"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:tnt="sap.tnt"
+    displayBlock="true">
+    
+    <Shell id="shell">
+        <App id="app" busy="{app>/busy}" busyIndicatorDelay="0">
+            <pages>
+                <tnt:ToolPage id="toolPage" class="a2a-tablet-page">
+                    <tnt:header>
+                        <tnt:ToolHeader>
+                            <Button
+                                id="sideNavigationToggleButton"
+                                icon="sap-icon://menu2"
+                                type="Transparent"
+                                press="onSideNavButtonPress">
+                                <layoutData>
+                                    <OverflowToolbarLayoutData priority="NeverOverflow"/>
+                                </layoutData>
+                            </Button>
+                            <Title text="{i18n>appTitle}" level="H2">
+                                <layoutData>
+                                    <OverflowToolbarLayoutData priority="NeverOverflow"/>
+                                </layoutData>
+                            </Title>
+                            <ToolbarSpacer/>
+                            <Button
+                                text="Network: {app>/networkStatus}"
+                                type="Transparent"
+                                icon="{= ${app>/networkStatus} === 'connected' ? 'sap-icon://connected' : 'sap-icon://disconnected'}">
+                                <layoutData>
+                                    <OverflowToolbarLayoutData priority="NeverOverflow"/>
+                                </layoutData>
+                            </Button>
+                            <Button
+                                icon="sap-icon://bell"
+                                type="Transparent"
+                                press="onNotificationPress">
+                                <layoutData>
+                                    <OverflowToolbarLayoutData priority="NeverOverflow"/>
+                                </layoutData>
+                            </Button>
+                            <Avatar
+                                src="sap-icon://person-placeholder"
+                                displaySize="XS"
+                                press="onAvatarPress"/>
+                        </tnt:ToolHeader>
+                    </tnt:header>
+                    
+                    <tnt:sideContent>
+                        <tnt:SideNavigation
+                            id="sideNavigation"
+                            selectedKey="{/selectedKey}"
+                            itemSelect="onItemSelect">
+                            <tnt:NavigationList>
+                                <tnt:NavigationListItem
+                                    text="Home"
+                                    icon="sap-icon://home"
+                                    key="home"/>
+                                <tnt:NavigationListItem
+                                    text="Agents"
+                                    icon="sap-icon://group"
+                                    key="agents"
+                                    items="{undefined}">
+                                    <tnt:NavigationListItem text="All Agents" key="agents"/>
+                                    <tnt:NavigationListItem text="Register Agent" key="registerAgent"/>
+                                    <tnt:NavigationListItem text="Performance" key="agentPerformance"/>
+                                </tnt:NavigationListItem>
+                                <tnt:NavigationListItem
+                                    text="Services"
+                                    icon="sap-icon://cart"
+                                    key="services"
+                                    items="{undefined}">
+                                    <tnt:NavigationListItem text="Marketplace" key="services"/>
+                                    <tnt:NavigationListItem text="List Service" key="listService"/>
+                                    <tnt:NavigationListItem text="My Services" key="myServices"/>
+                                </tnt:NavigationListItem>
+                                <tnt:NavigationListItem
+                                    text="Capabilities"
+                                    icon="sap-icon://puzzle"
+                                    key="capabilities"/>
+                                <tnt:NavigationListItem
+                                    text="Workflows"
+                                    icon="sap-icon://workflow-tasks"
+                                    key="workflows"
+                                    items="{undefined}">
+                                    <tnt:NavigationListItem text="All Workflows" key="workflows"/>
+                                    <tnt:NavigationListItem text="Designer" key="workflowDesigner"/>
+                                    <tnt:NavigationListItem text="Executions" key="workflowExecutions"/>
+                                </tnt:NavigationListItem>
+                                <tnt:NavigationListItem
+                                    text="Analytics"
+                                    icon="sap-icon://line-chart"
+                                    key="analytics"/>
+                                <tnt:NavigationListItem
+                                    text="Blockchain"
+                                    icon="sap-icon://chain-link"
+                                    key="blockchain"
+                                    items="{undefined}">
+                                    <tnt:NavigationListItem text="Dashboard" key="blockchain"/>
+                                    <tnt:NavigationListItem text="Agent Network" key="agentVisualization"/>
+                                    <tnt:NavigationListItem text="Smart Contracts" key="contracts"/>
+                                    <tnt:NavigationListItem text="Transactions" key="transactions"/>
+                                </tnt:NavigationListItem>
+                                <tnt:NavigationListItem
+                                    text="Settings"
+                                    icon="sap-icon://action-settings"
+                                    key="settings"/>
+                            </tnt:NavigationList>
+                        </tnt:SideNavigation>
+                    </tnt:sideContent>
+                    
+                    <tnt:mainContents>
+                        <NavContainer id="navContainer">
+                            <!-- Pages will be added here by the router -->
+                        </NavContainer>
+                    </tnt:mainContents>
+                </tnt:ToolPage>
+            </pages>
+        </App>
+    </Shell>
+</mvc:View>

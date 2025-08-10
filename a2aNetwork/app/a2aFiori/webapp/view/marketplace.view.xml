@@ -1,0 +1,665 @@
+<mvc:View
+    controllerName="a2a.network.fiori.controller.Marketplace"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.f"
+    xmlns:layout="sap.ui.layout"
+    xmlns:card="sap.f.cards"
+    xmlns:grid="sap.ui.layout.cssgrid"
+    displayBlock="true">
+    
+    <Page
+        id="marketplacePage"
+        title="{i18n>marketplace.title}"
+        showNavButton="true"
+        navButtonPress="onNavBack"
+        class="a2a-tablet-page sapUiContentPadding">
+        
+        <headerContent>
+            <SegmentedButton
+                id="marketplaceViewToggle"
+                selectedKey="{ui>/marketplaceView}">
+                <items>
+                    <SegmentedButtonItem key="services" text="{i18n>marketplace.view.services}" icon="sap-icon://puzzle"/>
+                    <SegmentedButtonItem key="data" text="{i18n>marketplace.view.data}" icon="sap-icon://database"/>
+                    <SegmentedButtonItem key="myListings" text="{i18n>marketplace.view.myListings}" icon="sap-icon://my-sales-order"/>
+                </items>
+            </SegmentedButton>
+            <ToolbarSpacer/>
+            <Button
+                id="publishButton"
+                icon="sap-icon://add"
+                text="{i18n>marketplace.action.publish}"
+                type="Emphasized"
+                press="onPublishListing"/>
+            <Button
+                id="cartButton"
+                icon="sap-icon://cart"
+                text="{= ${marketplace>/cart/items}.length > 0 ? ${marketplace>/cart/items}.length : '' }"
+                type="Transparent"
+                press="onOpenCart"/>
+        </headerContent>
+        
+        <content>
+            <!-- Search and Filter Bar -->
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <SearchField
+                        id="marketplaceSearch"
+                        width="400px"
+                        placeholder="{i18n>marketplace.search.placeholder}"
+                        search="onSearch"
+                        liveChange="onSearch"/>
+                </f:heading>
+                <f:actions>
+                    <ComboBox
+                        id="categoryFilter"
+                        placeholder="{i18n>marketplace.filter.category}"
+                        items="{marketplace>/categories}"
+                        selectionChange="onCategoryFilter">
+                        <core:Item key="{marketplace>id}" text="{marketplace>name}"/>
+                    </ComboBox>
+                    <ComboBox
+                        id="priceRangeFilter"
+                        placeholder="{i18n>marketplace.filter.priceRange}"
+                        selectionChange="onPriceFilter">
+                        <core:Item key="free" text="{i18n>marketplace.price.free}"/>
+                        <core:Item key="0-50" text="$0 - $50"/>
+                        <core:Item key="50-200" text="$50 - $200"/>
+                        <core:Item key="200-1000" text="$200 - $1000"/>
+                        <core:Item key="1000+" text="$1000+"/>
+                    </ComboBox>
+                    <RatingIndicator
+                        id="ratingFilter"
+                        iconSize="1rem"
+                        tooltip="{i18n>marketplace.filter.rating}"
+                        change="onRatingFilter"/>
+                    <Button
+                        icon="sap-icon://sort"
+                        tooltip="{i18n>marketplace.sort.tooltip}"
+                        press="onSort"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+            
+            <!-- Services Marketplace View -->
+            <VBox visible="{= ${ui>/marketplaceView} === 'services' }">
+                <!-- Featured Services Carousel -->
+                <Carousel
+                    id="featuredCarousel"
+                    pages="{marketplace>/featuredServices}"
+                    pageIndicatorPlacement="Bottom"
+                    showPageIndicator="true"
+                    loop="true"
+                    height="300px"
+                    class="sapUiMediumMarginBottom">
+                    <pages>
+                        <VBox alignItems="Center" justifyContent="Center" class="sapUiMediumMargin">
+                            <Image src="{marketplace>image}" height="150px" class="sapUiMediumMarginBottom"/>
+                            <Title text="{marketplace>name}" level="H2"/>
+                            <Text text="{marketplace>description}" class="sapUiSmallMarginTop"/>
+                            <Button text="{i18n>marketplace.action.viewDetails}" type="Emphasized" press="onServicePress" class="sapUiSmallMarginTop"/>
+                        </VBox>
+                    </pages>
+                </Carousel>
+                
+                <!-- Service Grid -->
+                <grid:CSSGrid
+                    id="serviceGrid"
+                    gridTemplateColumns="repeat(auto-fill, minmax(350px, 1fr))"
+                    gridGap="1rem">
+                    <grid:items>
+                        <f:Card
+                            class="sapUiSmallMargin"
+                            visible="{= ${marketplace>visible} !== false }">
+                            <f:header>
+                                <card:Header
+                                    title="{marketplace>name}"
+                                    subtitle="{marketplace>provider}"
+                                    iconSrc="{marketplace>icon}">
+                                    <card:statusText>
+                                        <ObjectStatus text="{marketplace>status}" state="{= ${marketplace>status} === 'Active' ? 'Success' : 'Warning' }"/>
+                                    </card:statusText>
+                                </card:Header>
+                            </f:header>
+                            <f:content>
+                                <VBox class="sapUiSmallMargin">
+                                    <Text text="{marketplace>description}" maxLines="3"/>
+                                    <HBox class="sapUiTinyMarginTop">
+                                        <RatingIndicator value="{marketplace>rating}" iconSize="0.875rem" editable="false"/>
+                                        <Text text="({marketplace>reviewCount})" class="sapUiTinyMarginLeft"/>
+                                    </HBox>
+                                    <HBox justifyContent="SpaceBetween" class="sapUiSmallMarginTop">
+                                        <VBox>
+                                            <ObjectNumber
+                                                number="{marketplace>price}"
+                                                unit="{= ${marketplace>pricing} === 'subscription' ? '/month' : '' }"
+                                                emphasized="true"
+                                                state="{= ${marketplace>price} === 0 ? 'Success' : 'Warning' }"/>
+                                            <Text text="{marketplace>pricing}" class="sapUiTinyMarginTop"/>
+                                        </VBox>
+                                        <VBox alignItems="End">
+                                            <Button
+                                                text="{i18n>marketplace.action.details}"
+                                                press="onServicePress"/>
+                                            <Button
+                                                text="{= ${marketplace>price} === 0 ? ${i18n>marketplace.action.useNow} : ${i18n>marketplace.action.subscribe} }"
+                                                type="Emphasized"
+                                                press="onSubscribeService"
+                                                class="sapUiTinyMarginTop"/>
+                                        </VBox>
+                                    </HBox>
+                                    <HBox class="sapUiTinyMarginTop">
+                                        <Token text="{marketplace>category}" class="sapUiTinyMarginRight"/>
+                                        <Token text="{marketplace>capability1}" class="sapUiTinyMarginRight"/>
+                                        <Token text="{marketplace>capability2}"/>
+                                    </HBox>
+                                </VBox>
+                            </f:content>
+                        </f:Card>
+                    </grid:items>
+                    <grid:customLayout>
+                        <grid:GridBoxLayout/>
+                    </grid:customLayout>
+                </grid:CSSGrid>
+            </VBox>
+            
+            <!-- Data Marketplace View -->
+            <VBox visible="{= ${ui>/marketplaceView} === 'data' }">
+                <!-- Data Categories -->
+                <HBox class="sapUiMediumMarginBottom">
+                    <f:Card width="250px" class="sapUiTinyMarginEnd" press="onDataCategoryPress">
+                        <f:header>
+                            <card:Header title="{i18n>marketplace.data.financial}" iconSrc="sap-icon://loan"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin">
+                                <Text text="{marketplace>/dataStats/financial/datasets} datasets"/>
+                                <Text text="{marketplace>/dataStats/financial/size} TB"/>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
+                    <f:Card width="250px" class="sapUiTinyMarginEnd" press="onDataCategoryPress">
+                        <f:header>
+                            <card:Header title="{i18n>marketplace.data.operational}" iconSrc="sap-icon://factory"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin">
+                                <Text text="{marketplace>/dataStats/operational/datasets} datasets"/>
+                                <Text text="{marketplace>/dataStats/operational/size} TB"/>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
+                    <f:Card width="250px" class="sapUiTinyMarginEnd" press="onDataCategoryPress">
+                        <f:header>
+                            <card:Header title="{i18n>marketplace.data.market}" iconSrc="sap-icon://line-chart"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin">
+                                <Text text="{marketplace>/dataStats/market/datasets} datasets"/>
+                                <Text text="{marketplace>/dataStats/market/size} TB"/>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
+                    <f:Card width="250px" press="onDataCategoryPress">
+                        <f:header>
+                            <card:Header title="{i18n>marketplace.data.iot}" iconSrc="sap-icon://internet-of-things"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin">
+                                <Text text="{marketplace>/dataStats/iot/datasets} datasets"/>
+                                <Text text="{marketplace>/dataStats/iot/size} TB"/>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
+                </HBox>
+                
+                <!-- Data Products Table -->
+                <Table
+                    id="dataProductsTable"
+                    items="{marketplace>/dataProducts}"
+                    growing="true"
+                    growingThreshold="20"
+                    mode="MultiSelect">
+                    
+                    <headerToolbar>
+                        <OverflowToolbar>
+                            <Title text="{i18n>marketplace.data.availableDatasets}" level="H2"/>
+                            <ToolbarSpacer/>
+                            <Label text="{i18n>marketplace.data.format}:"/>
+                            <Select selectedKey="{ui>/dataFormatFilter}" change="onDataFormatFilter">
+                                <core:Item key="all" text="{i18n>marketplace.data.format.all}"/>
+                                <core:Item key="csv" text="CSV"/>
+                                <core:Item key="json" text="JSON"/>
+                                <core:Item key="parquet" text="Parquet"/>
+                                <core:Item key="api" text="API"/>
+                            </Select>
+                            <ToolbarSeparator/>
+                            <Label text="{i18n>marketplace.data.updateFrequency}:"/>
+                            <Select selectedKey="{ui>/dataFrequencyFilter}" change="onDataFrequencyFilter">
+                                <core:Item key="all" text="{i18n>marketplace.data.frequency.all}"/>
+                                <core:Item key="realtime" text="{i18n>marketplace.data.frequency.realtime}"/>
+                                <core:Item key="daily" text="{i18n>marketplace.data.frequency.daily}"/>
+                                <core:Item key="weekly" text="{i18n>marketplace.data.frequency.weekly}"/>
+                                <core:Item key="monthly" text="{i18n>marketplace.data.frequency.monthly}"/>
+                            </Select>
+                        </OverflowToolbar>
+                    </headerToolbar>
+                    
+                    <columns>
+                        <Column>
+                            <Text text="{i18n>marketplace.data.column.name}"/>
+                        </Column>
+                        <Column width="120px">
+                            <Text text="{i18n>marketplace.data.column.provider}"/>
+                        </Column>
+                        <Column width="100px">
+                            <Text text="{i18n>marketplace.data.column.category}"/>
+                        </Column>
+                        <Column width="80px">
+                            <Text text="{i18n>marketplace.data.column.format}"/>
+                        </Column>
+                        <Column width="100px">
+                            <Text text="{i18n>marketplace.data.column.size}"/>
+                        </Column>
+                        <Column width="120px">
+                            <Text text="{i18n>marketplace.data.column.lastUpdated}"/>
+                        </Column>
+                        <Column width="100px">
+                            <Text text="{i18n>marketplace.data.column.price}"/>
+                        </Column>
+                        <Column width="120px">
+                            <Text text="{i18n>marketplace.data.column.actions}"/>
+                        </Column>
+                    </columns>
+                    
+                    <items>
+                        <ColumnListItem type="Navigation" press="onDataProductPress">
+                            <cells>
+                                <VBox>
+                                    <Text text="{marketplace>name}" class="sapMTextBold"/>
+                                    <Text text="{marketplace>description}" maxLines="2"/>
+                                </VBox>
+                                <Text text="{marketplace>provider}"/>
+                                <Text text="{marketplace>category}"/>
+                                <HBox>
+                                    <core:Icon src="{= ${marketplace>format} === 'csv' ? 'sap-icon://excel-attachment' : ${marketplace>format} === 'api' ? 'sap-icon://cloud' : 'sap-icon://document' }" class="sapUiTinyMarginEnd"/>
+                                    <Text text="{marketplace>format}"/>
+                                </HBox>
+                                <Text text="{marketplace>size}"/>
+                                <Text text="{
+                                    path: 'marketplace>lastUpdated',
+                                    type: 'sap.ui.model.type.DateTime',
+                                    formatOptions: {
+                                        relative: true
+                                    }
+                                }"/>
+                                <ObjectNumber
+                                    number="{marketplace>price}"
+                                    unit="{= ${marketplace>pricing} === 'subscription' ? '/month' : '' }"
+                                    state="{= ${marketplace>price} === 0 ? 'Success' : 'Warning' }"/>
+                                <HBox>
+                                    <Button
+                                        icon="sap-icon://show"
+                                        tooltip="{i18n>marketplace.data.preview}"
+                                        type="Transparent"
+                                        press="onPreviewData"/>
+                                    <Button
+                                        icon="sap-icon://cart-add"
+                                        tooltip="{i18n>marketplace.action.addToCart}"
+                                        type="Transparent"
+                                        press="onAddDataToCart"/>
+                                </HBox>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+            </VBox>
+            
+            <!-- My Listings View -->
+            <VBox visible="{= ${ui>/marketplaceView} === 'myListings' }">
+                <!-- Listing Statistics -->
+                <layout:Grid defaultSpan="L3 M6 S12" class="sapUiMediumMarginBottom">
+                    <f:Card>
+                        <f:header>
+                            <card:NumericHeader
+                                title="{i18n>marketplace.myListings.activeServices}"
+                                number="{marketplace>/myStats/activeServices}"
+                                state="Good"
+                                subtitle="{i18n>marketplace.myListings.totalSubscribers}: {marketplace>/myStats/totalSubscribers}"/>
+                        </f:header>
+                    </f:Card>
+                    <f:Card>
+                        <f:header>
+                            <card:NumericHeader
+                                title="{i18n>marketplace.myListings.dataProducts}"
+                                number="{marketplace>/myStats/dataProducts}"
+                                state="Good"
+                                subtitle="{i18n>marketplace.myListings.totalDownloads}: {marketplace>/myStats/totalDownloads}"/>
+                        </f:header>
+                    </f:Card>
+                    <f:Card>
+                        <f:header>
+                            <card:NumericHeader
+                                title="{i18n>marketplace.myListings.revenue}"
+                                number="{marketplace>/myStats/monthlyRevenue}"
+                                unit="USD"
+                                state="Good"
+                                subtitle="{i18n>marketplace.myListings.growth}: {marketplace>/myStats/growth}%"/>
+                        </f:header>
+                    </f:Card>
+                    <f:Card>
+                        <f:header>
+                            <card:NumericHeader
+                                title="{i18n>marketplace.myListings.rating}"
+                                number="{marketplace>/myStats/averageRating}"
+                                scale="/5"
+                                state="Good"
+                                subtitle="{i18n>marketplace.myListings.reviews}: {marketplace>/myStats/totalReviews}"/>
+                        </f:header>
+                    </f:Card>
+                </layout:Grid>
+                
+                <!-- My Listings Table -->
+                <IconTabBar id="myListingsTabBar">
+                    <items>
+                        <IconTabFilter text="{i18n>marketplace.myListings.services}" count="{marketplace>/myListings/services/length}">
+                            <Table
+                                items="{marketplace>/myListings/services}"
+                                mode="SingleSelectMaster">
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>marketplace.myListings.column.name}"/>
+                                    </Column>
+                                    <Column width="100px">
+                                        <Text text="{i18n>marketplace.myListings.column.status}"/>
+                                    </Column>
+                                    <Column width="100px">
+                                        <Text text="{i18n>marketplace.myListings.column.subscribers}"/>
+                                    </Column>
+                                    <Column width="100px">
+                                        <Text text="{i18n>marketplace.myListings.column.revenue}"/>
+                                    </Column>
+                                    <Column width="100px">
+                                        <Text text="{i18n>marketplace.myListings.column.rating}"/>
+                                    </Column>
+                                    <Column width="150px">
+                                        <Text text="{i18n>marketplace.myListings.column.actions}"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <VBox>
+                                                <Text text="{marketplace>name}" class="sapMTextBold"/>
+                                                <Text text="{marketplace>category}"/>
+                                            </VBox>
+                                            <ObjectStatus text="{marketplace>status}" state="{= ${marketplace>status} === 'Active' ? 'Success' : 'Warning' }"/>
+                                            <Text text="{marketplace>subscribers}"/>
+                                            <ObjectNumber number="{marketplace>monthlyRevenue}" unit="USD"/>
+                                            <RatingIndicator value="{marketplace>rating}" editable="false" iconSize="0.875rem"/>
+                                            <HBox>
+                                                <Button icon="sap-icon://edit" type="Transparent" press="onEditListing"/>
+                                                <Button icon="sap-icon://analytics-cloud" type="Transparent" press="onViewAnalytics"/>
+                                                <Button icon="sap-icon://pause" type="Transparent" press="onToggleListing" visible="{= ${marketplace>status} === 'Active' }"/>
+                                                <Button icon="sap-icon://play" type="Transparent" press="onToggleListing" visible="{= ${marketplace>status} !== 'Active' }"/>
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </IconTabFilter>
+                        <IconTabFilter text="{i18n>marketplace.myListings.data}" count="{marketplace>/myListings/data/length}">
+                            <Table
+                                items="{marketplace>/myListings/data}"
+                                mode="SingleSelectMaster">
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>marketplace.myListings.column.name}"/>
+                                    </Column>
+                                    <Column width="100px">
+                                        <Text text="{i18n>marketplace.myListings.column.status}"/>
+                                    </Column>
+                                    <Column width="100px">
+                                        <Text text="{i18n>marketplace.myListings.column.downloads}"/>
+                                    </Column>
+                                    <Column width="100px">
+                                        <Text text="{i18n>marketplace.myListings.column.revenue}"/>
+                                    </Column>
+                                    <Column width="120px">
+                                        <Text text="{i18n>marketplace.myListings.column.lastUpdated}"/>
+                                    </Column>
+                                    <Column width="150px">
+                                        <Text text="{i18n>marketplace.myListings.column.actions}"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <VBox>
+                                                <Text text="{marketplace>name}" class="sapMTextBold"/>
+                                                <Text text="{marketplace>format} - {marketplace>size}"/>
+                                            </VBox>
+                                            <ObjectStatus text="{marketplace>status}" state="{= ${marketplace>status} === 'Active' ? 'Success' : 'Warning' }"/>
+                                            <Text text="{marketplace>downloads}"/>
+                                            <ObjectNumber number="{marketplace>totalRevenue}" unit="USD"/>
+                                            <Text text="{
+                                                path: 'marketplace>lastUpdated',
+                                                type: 'sap.ui.model.type.DateTime',
+                                                formatOptions: {
+                                                    relative: true
+                                                }
+                                            }"/>
+                                            <HBox>
+                                                <Button icon="sap-icon://edit" type="Transparent" press="onEditDataProduct"/>
+                                                <Button icon="sap-icon://upload" type="Transparent" press="onUpdateData"/>
+                                                <Button icon="sap-icon://analytics-cloud" type="Transparent" press="onViewDataAnalytics"/>
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </IconTabFilter>
+                    </items>
+                </IconTabBar>
+            </VBox>
+            
+            <!-- Service Detail Dialog -->
+            <Dialog
+                id="serviceDetailDialog"
+                title="{marketplace>/selectedService/name}"
+                contentWidth="90%"
+                maxWidth="35rem"
+                contentHeight="70%"
+                class="a2a-tablet-dialog"
+                resizable="true">
+                <content>
+                    <VBox class="sapUiMediumMargin">
+                        <layout:Grid defaultSpan="L8 M12 S12" hSpacing="2">
+                            <VBox>
+                                <Image src="{marketplace>/selectedService/image}" width="100%" height="200px" class="sapUiMediumMarginBottom"/>
+                                <Text text="{marketplace>/selectedService/detailedDescription}"/>
+                                
+                                <Title text="{i18n>marketplace.detail.features}" level="H3" class="sapUiMediumMarginTop"/>
+                                <List items="{marketplace>/selectedService/features}" showSeparators="None">
+                                    <StandardListItem title="{marketplace>}" icon="sap-icon://accept"/>
+                                </List>
+                                
+                                <Title text="{i18n>marketplace.detail.requirements}" level="H3" class="sapUiMediumMarginTop"/>
+                                <List items="{marketplace>/selectedService/requirements}" showSeparators="None">
+                                    <StandardListItem title="{marketplace>}" icon="sap-icon://request"/>
+                                </List>
+                            </VBox>
+                            <VBox>
+                                <f:Card>
+                                    <f:header>
+                                        <card:Header title="{i18n>marketplace.detail.pricing}"/>
+                                    </f:header>
+                                    <f:content>
+                                        <VBox class="sapUiSmallMargin">
+                                            <ObjectNumber
+                                                number="{marketplace>/selectedService/price}"
+                                                unit="{= ${marketplace>/selectedService/pricing} === 'subscription' ? '/month' : '' }"
+                                                emphasized="true"
+                                                state="{= ${marketplace>/selectedService/price} === 0 ? 'Success' : 'Warning' }"/>
+                                            <Text text="{marketplace>/selectedService/pricing}"/>
+                                            <Button
+                                                text="{= ${marketplace>/selectedService/price} === 0 ? ${i18n>marketplace.action.useNow} : ${i18n>marketplace.action.subscribe} }"
+                                                type="Emphasized"
+                                                width="100%"
+                                                press="onSubscribeFromDetail"
+                                                class="sapUiSmallMarginTop"/>
+                                        </VBox>
+                                    </f:content>
+                                </f:Card>
+                                
+                                <f:Card class="sapUiSmallMarginTop">
+                                    <f:header>
+                                        <card:Header
+                                            title="{i18n>marketplace.detail.provider}"
+                                            subtitle="{marketplace>/selectedService/provider}"/>
+                                    </f:header>
+                                    <f:content>
+                                        <VBox class="sapUiSmallMargin">
+                                            <HBox>
+                                                <RatingIndicator value="{marketplace>/selectedService/providerRating}" editable="false"/>
+                                                <Text text="({marketplace>/selectedService/providerReviews})" class="sapUiTinyMarginLeft"/>
+                                            </HBox>
+                                            <Text text="{marketplace>/selectedService/providerDescription}" class="sapUiTinyMarginTop"/>
+                                            <Link text="{i18n>marketplace.detail.viewAllFromProvider}" press="onViewProvider" class="sapUiTinyMarginTop"/>
+                                        </VBox>
+                                    </f:content>
+                                </f:Card>
+                                
+                                <Title text="{i18n>marketplace.detail.reviews}" level="H3" class="sapUiMediumMarginTop"/>
+                                <List items="{marketplace>/selectedService/reviews}" showSeparators="Inner">
+                                    <FeedListItem
+                                        sender="{marketplace>user}"
+                                        timestamp="{
+                                            path: 'marketplace>date',
+                                            type: 'sap.ui.model.type.DateTime',
+                                            formatOptions: {
+                                                relative: true
+                                            }
+                                        }"
+                                        text="{marketplace>comment}">
+                                        <FeedListItem>
+                                            <RatingIndicator value="{marketplace>rating}" editable="false" iconSize="0.875rem"/>
+                                        </FeedListItem>
+                                    </FeedListItem>
+                                </List>
+                            </VBox>
+                        </layout:Grid>
+                    </VBox>
+                </content>
+                <buttons>
+                    <Button text="{i18n>marketplace.detail.tryDemo}" icon="sap-icon://play" press="onTryDemo" type="Ghost"/>
+                    <Button text="{i18n>marketplace.detail.contact}" icon="sap-icon://email" press="onContactProvider"/>
+                    <Button text="{i18n>common.close}" press="onCloseServiceDetail"/>
+                </buttons>
+            </Dialog>
+            
+            <!-- Shopping Cart Dialog -->
+            <Dialog
+                id="cartDialog"
+                title="{i18n>marketplace.cart.title}"
+                contentWidth="90%"
+                maxWidth="35rem"
+                contentHeight="60%"
+                class="a2a-tablet-dialog">
+                <content>
+                    <Table
+                        id="cartTable"
+                        items="{marketplace>/cart/items}"
+                        mode="Delete"
+                        delete="onRemoveFromCart">
+                        <columns>
+                            <Column>
+                                <Text text="{i18n>marketplace.cart.column.item}"/>
+                            </Column>
+                            <Column width="100px">
+                                <Text text="{i18n>marketplace.cart.column.type}"/>
+                            </Column>
+                            <Column width="120px">
+                                <Text text="{i18n>marketplace.cart.column.pricing}"/>
+                            </Column>
+                            <Column width="100px">
+                                <Text text="{i18n>marketplace.cart.column.price}"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <VBox>
+                                        <Text text="{marketplace>name}" class="sapMTextBold"/>
+                                        <Text text="{marketplace>provider}"/>
+                                    </VBox>
+                                    <Text text="{marketplace>type}"/>
+                                    <Text text="{marketplace>pricing}"/>
+                                    <ObjectNumber
+                                        number="{marketplace>price}"
+                                        unit="{= ${marketplace>pricing} === 'subscription' ? '/month' : '' }"
+                                        state="{= ${marketplace>price} === 0 ? 'Success' : 'Warning' }"/>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                    <Toolbar class="sapUiMediumMarginTop">
+                        <ToolbarSpacer/>
+                        <Label text="{i18n>marketplace.cart.total}:" design="Bold"/>
+                        <ObjectNumber
+                            number="{marketplace>/cart/total}"
+                            unit="USD"
+                            emphasized="true"
+                            state="Warning"
+                            class="sapUiSmallMarginLeft"/>
+                    </Toolbar>
+                </content>
+                <buttons>
+                    <Button text="{i18n>marketplace.cart.continueShopping}" press="onCloseCart"/>
+                    <Button text="{i18n>marketplace.cart.checkout}" type="Emphasized" press="onCheckout" enabled="{= ${marketplace>/cart/items}.length > 0 }"/>
+                </buttons>
+            </Dialog>
+        </content>
+        
+        <!-- Loading States -->
+        <dependents>
+            <!-- Skeleton Loading -->
+            <VBox
+                id="skeletonLoading"
+                visible="{ui>/isLoadingSkeleton}"
+                class="sapUiContentPadding"
+                alignItems="Center"
+                justifyContent="Center"
+                height="100%">
+                <IllustratedMessage
+                    illustrationType="sapIllus-SearchEarth"
+                    illustrationSize="Spot">
+                    <additionalContent>
+                        <Label text="{ui>/loadingMessage}"/>
+                        <BusyIndicator size="Medium" class="sapUiMediumMarginTop"/>
+                    </additionalContent>
+                </IllustratedMessage>
+            </VBox>
+            
+            <!-- No Data State -->
+            <VBox
+                id="noDataState"
+                visible="{ui>/hasNoData}"
+                class="sapUiContentPadding"
+                alignItems="Center"
+                justifyContent="Center"
+                height="100%">
+                <IllustratedMessage
+                    illustrationType="sapIllus-NoSearchResults"
+                    illustrationSize="Spot"
+                    title="{ui>/noDataTitle}"
+                    description="{ui>/noDataMessage}">
+                    <additionalContent>
+                        <Button text="{i18n>marketplace.action.clearFilters}" type="Emphasized" press="onClearFilters"/>
+                    </additionalContent>
+                </IllustratedMessage>
+            </VBox>
+        </dependents>
+    </Page>
+</mvc:View>

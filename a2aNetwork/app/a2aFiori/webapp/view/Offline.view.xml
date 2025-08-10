@@ -1,0 +1,227 @@
+<mvc:View
+    controllerName="com.sap.a2a.portal.controller.Offline"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core"
+    displayBlock="true">
+    
+    <Page
+        id="offlinePage"
+        title="{i18n>offlineTitle}"
+        class="offlinePage">
+        
+        <content>
+            <f:DynamicPage id="dynamicPage">
+                <f:title>
+                    <f:DynamicPageTitle>
+                        <f:heading>
+                            <Title text="{i18n>offlineHeading}"/>
+                        </f:heading>
+                    </f:DynamicPageTitle>
+                </f:title>
+
+                <f:content>
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Connection Status -->
+                        <Panel
+                            headerText="{i18n>connectionStatus}"
+                            class="sapUiResponsiveMargin sapUiNoContentPadding">
+                            <content>
+                                <VBox class="sapUiMediumMargin">
+                                    <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+                                        <core:Icon 
+                                            src="{offline>/connectionIcon}" 
+                                            color="{offline>/connectionColor}"
+                                            class="sapUiTinyMarginEnd"/>
+                                        <Text text="{offline>/connectionText}"/>
+                                    </HBox>
+                                    
+                                    <ProgressIndicator
+                                        visible="{offline>/isReconnecting}"
+                                        showValue="false"
+                                        state="Information"
+                                        width="100%"
+                                        class="sapUiTinyMarginTop"/>
+                                    
+                                    <Button
+                                        text="{i18n>retryConnection}"
+                                        type="Emphasized"
+                                        icon="sap-icon://refresh"
+                                        press="onRetryConnection"
+                                        class="sapUiTinyMarginTop"/>
+                                </VBox>
+                            </content>
+                        </Panel>
+
+                        <!-- Available Offline Features -->
+                        <Panel
+                            headerText="{i18n>offlineFeatures}"
+                            class="sapUiResponsiveMargin sapUiNoContentPadding">
+                            <content>
+                                <List items="{offline>/availableFeatures}">
+                                    <StandardListItem
+                                        title="{title}"
+                                        description="{description}"
+                                        icon="{icon}"
+                                        type="Active"
+                                        press="onOfflineFeaturePress"
+                                        customData>
+                                        <core:CustomData
+                                            key="featureId"
+                                            value="{id}"/>
+                                    </StandardListItem>
+                                </List>
+                            </content>
+                        </Panel>
+
+                        <!-- Cached Data -->
+                        <Panel
+                            headerText="{i18n>cachedData}"
+                            class="sapUiResponsiveMargin sapUiNoContentPadding">
+                            <content>
+                                <VBox class="sapUiMediumMargin">
+                                    <Label 
+                                        text="{i18n>cacheSize}"
+                                        class="sapUiTinyMarginBottom"/>
+                                    <Text 
+                                        text="{offline>/cacheSize}"
+                                        class="sapUiTinyMarginBottom"/>
+                                    
+                                    <Label 
+                                        text="{i18n>lastSync}"
+                                        class="sapUiTinyMarginBottom"/>
+                                    <Text 
+                                        text="{offline>/lastSyncTime}"
+                                        class="sapUiTinyMarginBottom"/>
+                                    
+                                    <HBox class="sapUiTinyMarginTop">
+                                        <Button
+                                            text="{i18n>clearCache}"
+                                            icon="sap-icon://delete"
+                                            press="onClearCache"
+                                            class="sapUiTinyMarginEnd"/>
+                                        <Button
+                                            text="{i18n>exportData}"
+                                            icon="sap-icon://download"
+                                            press="onExportOfflineData"/>
+                                    </HBox>
+                                </VBox>
+                            </content>
+                        </Panel>
+
+                        <!-- Sync Queue -->
+                        <Panel
+                            headerText="{i18n>syncQueue}"
+                            class="sapUiResponsiveMargin sapUiNoContentPadding"
+                            visible="{= ${offline>/queuedRequests}.length > 0 }">
+                            <content>
+                                <VBox class="sapUiMediumMargin">
+                                    <Text 
+                                        text="{i18n>queuedRequestsInfo}"
+                                        class="sapUiTinyMarginBottom"/>
+                                    
+                                    <List items="{offline>/queuedRequests}">
+                                        <StandardListItem
+                                            title="{method} {path}"
+                                            description="{i18n>queuedAt}: {timestamp}"
+                                            icon="sap-icon://pending"
+                                            iconInset="false"/>
+                                    </List>
+                                    
+                                    <Button
+                                        text="{i18n>processSyncQueue}"
+                                        type="Accept"
+                                        icon="sap-icon://synchronize"
+                                        press="onProcessSyncQueue"
+                                        enabled="{offline>/isOnline}"
+                                        class="sapUiTinyMarginTop"/>
+                                </VBox>
+                            </content>
+                        </Panel>
+
+                        <!-- Offline Help -->
+                        <Panel
+                            headerText="{i18n>offlineHelp}"
+                            class="sapUiResponsiveMargin sapUiNoContentPadding"
+                            expandable="true"
+                            expanded="false">
+                            <content>
+                                <VBox class="sapUiMediumMargin">
+                                    <Text text="{i18n>offlineHelpText}" class="sapUiTinyMarginBottom"/>
+                                    
+                                    <List items="{offline>/helpItems}">
+                                        <StandardListItem
+                                            title="{title}"
+                                            description="{description}"
+                                            icon="{icon}"/>
+                                    </List>
+                                    
+                                    <Link
+                                        text="{i18n>moreHelp}"
+                                        href="#/help/offline"
+                                        class="sapUiTinyMarginTop"/>
+                                </VBox>
+                            </content>
+                        </Panel>
+
+                        <!-- Settings -->
+                        <Panel
+                            headerText="{i18n>offlineSettings}"
+                            class="sapUiResponsiveMargin sapUiNoContentPadding"
+                            expandable="true"
+                            expanded="false">
+                            <content>
+                                <f:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    class="sapUiMediumMargin">
+                                    
+                                    <Label text="{i18n>enableOfflineMode}"/>
+                                    <Switch
+                                        state="{offline>/settings/enableOffline}"
+                                        change="onOfflineModeToggle"/>
+                                    
+                                    <Label text="{i18n>autoSync}"/>
+                                    <Switch
+                                        state="{offline>/settings/autoSync}"
+                                        change="onAutoSyncToggle"/>
+                                    
+                                    <Label text="{i18n>cacheTimeout}"/>
+                                    <Select
+                                        selectedKey="{offline>/settings/cacheTimeout}"
+                                        change="onCacheTimeoutChange">
+                                        <core:Item key="3600" text="1 {i18n>hour}"/>
+                                        <core:Item key="7200" text="2 {i18n>hours}"/>
+                                        <core:Item key="21600" text="6 {i18n>hours}"/>
+                                        <core:Item key="86400" text="24 {i18n>hours}"/>
+                                    </Select>
+                                    
+                                    <Label text="{i18n>maxCacheSize}"/>
+                                    <Select
+                                        selectedKey="{offline>/settings/maxCacheSize}"
+                                        change="onMaxCacheSizeChange">
+                                        <core:Item key="10" text="10 MB"/>
+                                        <core:Item key="25" text="25 MB"/>
+                                        <core:Item key="50" text="50 MB"/>
+                                        <core:Item key="100" text="100 MB"/>
+                                    </Select>
+                                </f:SimpleForm>
+                            </content>
+                        </Panel>
+                    </VBox>
+                </f:content>
+            </f:DynamicPage>
+        </content>
+
+        <footer>
+            <Toolbar>
+                <ToolbarSpacer/>
+                <Button
+                    text="{i18n>backToApp}"
+                    icon="sap-icon://home"
+                    press="onBackToApp"/>
+            </Toolbar>
+        </footer>
+    </Page>
+</mvc:View>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Shell Test</title>
+    <script>
+        window["sap-ushell-config"] = {
+            defaultRenderer: "fiori2"
+        };
+    </script>
+    <script src="https://ui5.sap.com/test-resources/sap/ushell/bootstrap/sandbox.js"></script>
+    <script src="https://ui5.sap.com/resources/sap-ui-core.js"
+            data-sap-ui-theme="sap_horizon"
+            data-sap-ui-libs="sap.m,sap.ushell"
+            data-sap-ui-async="true">
+    </script>
+    <script>
+        sap.ui.getCore().attachInit(function() {
+            console.log("UI5 Core initialized");
+            sap.ushell.Container.createRenderer(undefined, true).then(function(oRenderer) {
+                console.log("Renderer created successfully");
+                oRenderer.placeAt("content");
+                console.log("Renderer placed in content");
+                
+                // Check what's rendered
+                setTimeout(function() {
+                    var shell = document.querySelector('.sapUShellShell');
+                    var tiles = document.querySelectorAll('.sapUshellTile');
+                    console.log("Shell found:", !!shell);
+                    console.log("Tiles found:", tiles.length);
+                }, 2000);
+            }).catch(function(err) {
+                console.error("Failed to create renderer:", err);
+            });
+        });
+    </script>
+</head>
+<body class="sapUiBody">
+    <div id="content"></div>
+</body>
+</html>

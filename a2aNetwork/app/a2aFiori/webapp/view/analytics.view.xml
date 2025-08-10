@@ -1,0 +1,190 @@
+<mvc:View
+    controllerName="a2a.network.fiori.controller.Analytics"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:viz="sap.viz.ui5.controls"
+    xmlns:viz.data="sap.viz.ui5.data"
+    xmlns:viz.feeds="sap.viz.ui5.controls.common.feeds"
+    xmlns:mc="sap.suite.ui.microchart"
+    xmlns:core="sap.ui.core">
+    
+    <f:DynamicPage id="analyticsPage" class="a2a-tablet-page">
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>analytics}"/>
+                </f:heading>
+                <f:expandedContent>
+                    <Text text="Network performance and insights"/>
+                </f:expandedContent>
+                <f:actions>
+                    <Button
+                        text="Export Report"
+                        icon="sap-icon://excel-attachment"
+                        press="onExportReport"/>
+                    <DateRangeSelection
+                        value="{/dateRange}"
+                        change="onDateRangeChange"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+        
+        <f:content>
+            <VBox class="sapUiMediumMargin">
+                <!-- KPI Tiles -->
+                <HBox wrap="Wrap" class="sapUiSmallMarginBottom">
+                    <VBox class="sapUiSmallMarginEnd">
+                        <GenericTile
+                            header="Total Agents"
+                            subheader="Active in network"
+                            frameType="TwoByOne">
+                            <TileContent>
+                                <NumericContent
+                                    value="{/NetworkStats/0/totalAgents}"
+                                    scale="Agents"
+                                    indicator="Up"
+                                    valueColor="Good"/>
+                            </TileContent>
+                        </GenericTile>
+                    </VBox>
+                    <VBox class="sapUiSmallMarginEnd">
+                        <GenericTile
+                            header="Active Services"
+                            subheader="Available now"
+                            frameType="TwoByOne">
+                            <TileContent>
+                                <NumericContent
+                                    value="{/NetworkStats/0/totalServices}"
+                                    scale="Services"
+                                    valueColor="Good"/>
+                            </TileContent>
+                        </GenericTile>
+                    </VBox>
+                    <VBox class="sapUiSmallMarginEnd">
+                        <GenericTile
+                            header="Network Load"
+                            subheader="Current utilization"
+                            frameType="TwoByOne">
+                            <TileContent>
+                                <mc:RadialMicroChart
+                                    percentage="{= ${/NetworkStats/0/networkLoad} * 100 }"
+                                    valueColor="{= ${/NetworkStats/0/networkLoad} > 0.8 ? 'Error' : 'Good'}"/>
+                            </TileContent>
+                        </GenericTile>
+                    </VBox>
+                    <VBox>
+                        <GenericTile
+                            header="Avg Reputation"
+                            subheader="Network average"
+                            frameType="TwoByOne">
+                            <TileContent>
+                                <NumericContent
+                                    value="{/NetworkStats/0/averageReputation}"
+                                    scale="/200"
+                                    valueColor="Good"/>
+                            </TileContent>
+                        </GenericTile>
+                    </VBox>
+                </HBox>
+                
+                <!-- Charts -->
+                <Panel headerText="Agent Activity Trends" class="sapUiMediumMarginBottom">
+                    <viz:VizFrame
+                        id="agentTrendChart"
+                        height="400px"
+                        width="100%"
+                        uiConfig="{applicationSet:'fiori'}"
+                        vizType="line">
+                        <viz:dataset>
+                            <viz.data:FlattenedDataset>
+                                <viz.data:dimensions>
+                                    <viz.data:DimensionDefinition
+                                        name="Date"
+                                        value="{date}"/>
+                                </viz.data:dimensions>
+                                <viz.data:measures>
+                                    <viz.data:MeasureDefinition
+                                        name="Active Agents"
+                                        value="{activeAgents}"/>
+                                    <viz.data:MeasureDefinition
+                                        name="Total Messages"
+                                        value="{totalMessages}"/>
+                                </viz.data:measures>
+                            </viz.data:FlattenedDataset>
+                        </viz:dataset>
+                        <viz:feeds>
+                            <viz.feeds:FeedItem
+                                uid="valueAxis"
+                                type="Measure"
+                                values="Active Agents,Total Messages"/>
+                            <viz.feeds:FeedItem
+                                uid="categoryAxis"
+                                type="Dimension"
+                                values="Date"/>
+                        </viz:feeds>
+                    </viz:VizFrame>
+                </Panel>
+                
+                <HBox>
+                    <Panel headerText="Service Categories" class="sapUiSmallMarginEnd">
+                        <viz:VizFrame
+                            id="serviceCategoryChart"
+                            height="300px"
+                            width="400px"
+                            uiConfig="{applicationSet:'fiori'}"
+                            vizType="donut">
+                            <viz:dataset>
+                                <viz.data:FlattenedDataset>
+                                    <viz.data:dimensions>
+                                        <viz.data:DimensionDefinition
+                                            name="Category"
+                                            value="{category}"/>
+                                    </viz.data:dimensions>
+                                    <viz.data:measures>
+                                        <viz.data:MeasureDefinition
+                                            name="Count"
+                                            value="{count}"/>
+                                    </viz.data:measures>
+                                </viz.data:FlattenedDataset>
+                            </viz:dataset>
+                        </viz:VizFrame>
+                    </Panel>
+                    
+                    <Panel headerText="Top Performing Agents">
+                        <Table
+                            items="{/TopAgents}"
+                            mode="None">
+                            <columns>
+                                <Column>
+                                    <Text text="Agent"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Reputation"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Tasks"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Avg Response"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{name}"/>
+                                        <ObjectNumber
+                                            number="{reputation}"
+                                            state="Success"/>
+                                        <Text text="{completedTasks}"/>
+                                        <Text text="{avgResponseTime} ms"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </Panel>
+                </HBox>
+            </VBox>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

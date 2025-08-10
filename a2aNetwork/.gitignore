@@ -1,0 +1,65 @@
+# Compiler files
+cache/
+out/
+
+# Ignores development broadcast logs
+!/broadcast
+/broadcast/*/31337/
+/broadcast/**/dry-run/
+
+# Docs
+docs/
+
+# Environment and secrets
+.env
+.env.local
+.env.production
+.cdsrc-private.json
+*.pem
+*.key
+*.p12
+
+# Node modules
+node_modules
+
+# Log files
+*.log
+server.log
+startup_test*.log
+logs/
+
+# Debug and development artifacts
+.nyc_output
+coverage/
+.coverage
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+
+# Production build artifacts
+build/
+dist/
+gen/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# SAP specific
+.cdsrc-private.json
+default-*.json
+mta_archives/
+.mta/

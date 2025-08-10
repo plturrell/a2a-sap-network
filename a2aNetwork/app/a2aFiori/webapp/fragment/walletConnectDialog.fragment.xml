@@ -1,0 +1,170 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:layout="sap.ui.layout">
+    
+    <Dialog id="walletConnectDialog"
+           title="{i18n>connectWallet}"
+           contentWidth="90%"
+           maxWidth="32rem"
+           contentHeight="auto"
+           class="a2a-tablet-dialog">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <!-- Current Connection Status -->
+                <Panel headerText="{i18n>walletStatus}" 
+                      visible="{/isConnected}"
+                      class="sapUiMediumMarginBottom">
+                    <HBox alignItems="Center" class="sapUiSmallMargin">
+                        <core:Icon src="sap-icon://connected" 
+                                  color="Good"
+                                  size="1.5rem"
+                                  class="sapUiMediumMarginEnd"/>
+                        <VBox>
+                            <Text text="{i18n>connectedTo}: {/walletName}"/>
+                            <HBox alignItems="Center">
+                                <Text text="{/walletAddress}" class="a2a-monospace-text"/>
+                                <Button icon="sap-icon://copy" 
+                                       type="Transparent"
+                                       tooltip="{i18n>copyAddress}"
+                                       press="onCopyAddress"
+                                       class="sapUiTinyMarginBegin"/>
+                            </HBox>
+                            <Text text="{i18n>balance}: {/balance} ETH" 
+                                 class="sapUiSmallText"/>
+                        </VBox>
+                    </HBox>
+                </Panel>
+                
+                <!-- Wallet Provider Selection -->
+                <VBox visible="{path: '/isConnected', formatter: '.invertBoolean'}">
+                    <Title text="{i18n>selectWallet}" level="H4" class="sapUiMediumMarginBottom"/>
+                    
+                    <!-- Desktop Wallets -->
+                    <VBox class="sapUiMediumMarginBottom">
+                        <Text text="{i18n>desktopWallets}" class="sapUiSmallText sapUiSmallMarginBottom"/>
+                        
+                        <!-- MetaMask -->
+                        <Button text="MetaMask"
+                               icon="data:image/svg+xml;base64,..."
+                               width="100%"
+                               press="onConnectMetaMask"
+                               enabled="{/metamaskAvailable}"
+                               class="sapUiTinyMarginBottom a2a-wallet-button">
+                            <layoutData>
+                                <layout:GridData span="L12 M12 S12"/>
+                            </layoutData>
+                        </Button>
+                        
+                        <!-- Coinbase Wallet -->
+                        <Button text="Coinbase Wallet"
+                               icon="data:image/svg+xml;base64,..."
+                               width="100%"
+                               press="onConnectCoinbase"
+                               enabled="{/coinbaseAvailable}"
+                               class="sapUiTinyMarginBottom a2a-wallet-button"/>
+                        
+                        <!-- Trust Wallet -->
+                        <Button text="Trust Wallet"
+                               icon="data:image/svg+xml;base64,..."
+                               width="100%"
+                               press="onConnectTrust"
+                               enabled="{/trustAvailable}"
+                               class="sapUiTinyMarginBottom a2a-wallet-button"/>
+                    </VBox>
+                    
+                    <!-- Mobile Wallets -->
+                    <VBox>
+                        <Text text="{i18n>mobileWallets}" class="sapUiSmallText sapUiSmallMarginBottom"/>
+                        
+                        <Button text="WalletConnect"
+                               icon="data:image/svg+xml;base64,..."
+                               width="100%"
+                               press="onConnectWalletConnect"
+                               class="sapUiTinyMarginBottom a2a-wallet-button"/>
+                    </VBox>
+                </VBox>
+                
+                <!-- WalletConnect QR Code -->
+                <VBox visible="{/showQRCode}" 
+                     alignItems="Center"
+                     class="sapUiMediumMarginTop">
+                    <Title text="{i18n>scanQRCode}" level="H4"/>
+                    <Text text="{i18n>scanWithMobileWallet}" 
+                         textAlign="Center"
+                         class="sapUiSmallMarginBottom"/>
+                    
+                    <!-- QR Code placeholder - would need QR library -->
+                    <VBox width="200px" 
+                         height="200px"
+                         alignItems="Center"
+                         justifyContent="Center"
+                         class="a2a-qr-container">
+                        <core:HTML content="{/qrCodeHTML}"/>
+                    </VBox>
+                    
+                    <Button text="{i18n>copyConnectionLink}"
+                           icon="sap-icon://copy"
+                           press="onCopyWalletConnectLink"
+                           class="sapUiSmallMarginTop"/>
+                </VBox>
+                
+                <!-- Connection Progress -->
+                <MessageStrip text="{/connectionMessage}"
+                            type="{/messageType}"
+                            showIcon="true"
+                            visible="{/showMessage}"
+                            class="sapUiSmallMarginTop"/>
+                
+                <!-- Network Selection -->
+                <Panel headerText="{i18n>networkSettings}" 
+                      expandable="true"
+                      expanded="false"
+                      class="sapUiSmallMarginTop">
+                    <VBox class="sapUiSmallMargin">
+                        <Label text="{i18n>selectNetwork}:"/>
+                        <Select selectedKey="{/selectedNetwork}" width="100%">
+                            <items>
+                                <core:Item key="mainnet" text="Ethereum Mainnet"/>
+                                <core:Item key="goerli" text="Goerli Testnet"/>
+                                <core:Item key="sepolia" text="Sepolia Testnet"/>
+                                <core:Item key="polygon" text="Polygon"/>
+                                <core:Item key="bsc" text="Binance Smart Chain"/>
+                            </items>
+                        </Select>
+                        
+                        <CheckBox text="{i18n>switchNetworkAutomatically}"
+                                 selected="{/autoSwitchNetwork}"
+                                 class="sapUiSmallMarginTop"/>
+                    </VBox>
+                </Panel>
+                
+                <!-- Security Notice -->
+                <MessageStrip text="{i18n>securityNotice}"
+                            type="Information"
+                            showIcon="true"
+                            class="sapUiSmallMarginTop"/>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button text="{i18n>disconnect}"
+                   icon="sap-icon://disconnected"
+                   press="onDisconnectWallet"
+                   visible="{/isConnected}"/>
+        </beginButton>
+        
+        <buttons>
+            <Button text="{i18n>switchAccount}"
+                   icon="sap-icon://switch-views"
+                   press="onSwitchAccount"
+                   visible="{/isConnected}"/>
+        </buttons>
+        
+        <endButton>
+            <Button text="{i18n>close}"
+                   press="onWalletDialogClose"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>
