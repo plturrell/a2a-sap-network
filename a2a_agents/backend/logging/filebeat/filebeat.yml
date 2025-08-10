@@ -1,0 +1,258 @@
+# A2A Network Filebeat Configuration
+# Collects logs from containers, files, and system sources
+
+filebeat.inputs:
+# Docker container logs
+- type: container
+  enabled: true
+  paths:
+    - '/var/lib/docker/containers/*/*.log'
+  
+  # Container-specific processing
+  processors:
+    - add_docker_metadata:
+        host: "unix:///var/run/docker.sock"
+    
+    - script:
+        lang: javascript
+        source: >
+          function process(event) {
+            var containerName = event.Get("container.name");
+            if (containerName && containerName.startsWith("a2a-")) {
+              event.Put("a2a.service", true);
+              
+              // Extract agent type from container name
+              var agentMatch = containerName.match(/^a2a-(.+?)(-\d+)?$/);
+              if (agentMatch) {
+                event.Put("a2a.agent_type", agentMatch[1]);
+                event.Put("fields.log_category", "agent");
+              }
+            }
+          }
+    
+    - drop_event:
+        when:
+          not:
+            or:
+              - contains:
+                  container.name: "a2a-"
+              - contains:
+                  container.image.name: "a2a"
+              - equals:
+                  container.labels.service: "a2a"
+
+  # JSON log parsing
+  json.keys_under_root: true
+  json.add_error_key: true
+  json.message_key: message
+
+  # Multiline pattern for stack traces
+  multiline.pattern: '^\s'
+  multiline.negate: false
+  multiline.match: after
+
+  fields:
+    log_source: docker
+    environment: ${ENVIRONMENT:development}
+  fields_under_root: true
+
+# Application log files
+- type: log
+  enabled: true
+  paths:
+    - /var/log/a2a/*.log
+    - /var/log/a2a/*/*.log
+    - /app/logs/*.log
+  
+  fields:
+    log_source: file
+    service: a2a
+  fields_under_root: true
+
+  # Exclude certain log files
+  exclude_files: ['\.gz$', '\.zip$']
+  
+  # Include specific patterns
+  include_lines: ['^(DEBUG|INFO|WARN|ERROR|FATAL)']
+  
+  # Multiline configuration for Java stack traces
+  multiline.pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+  multiline.negate: true
+  multiline.match: after
+  multiline.max_lines: 500
+  multiline.timeout: 5s
+
+# System logs
+- type: log
+  enabled: true
+  paths:
+    - /var/log/syslog
+    - /var/log/auth.log
+    - /var/log/kern.log
+  
+  fields:
+    log_source: system
+    log_type: syslog
+  fields_under_root: true
+
+# Nginx access logs (if present)
+- type: log
+  enabled: true
+  paths:
+    - /var/log/nginx/access.log
+    - /var/log/nginx/error.log
+  
+  fields:
+    log_source: nginx
+    service: web_server
+  fields_under_root: true
+
+# Redis logs
+- type: log
+  enabled: true
+  paths:
+    - /var/log/redis/*.log
+  
+  fields:
+    log_source: redis
+    service: cache
+  fields_under_root: true
+
+# PostgreSQL logs
+- type: log
+  enabled: true
+  paths:
+    - /var/log/postgresql/*.log
+  
+  fields:
+    log_source: postgresql
+    service: database
+  fields_under_root: true
+
+# Kubernetes audit logs (if in K8s environment)
+- type: log
+  enabled: false
+  paths:
+    - /var/log/audit/audit.log
+  
+  fields:
+    log_source: k8s_audit
+    service: kubernetes
+  fields_under_root: true
+
+# Global processors
+processors:
+- add_host_metadata:
+    when.not.contains.tags: forwarded
+
+- add_cloud_metadata: ~
+
+- add_fields:
+    target: a2a
+    fields:
+      version: "2.0.0"
+      component: "logging"
+      pipeline: "filebeat"
+
+- timestamp:
+    field: json.timestamp
+    layouts:
+      - '2006-01-02T15:04:05.000Z'
+      - '2006-01-02T15:04:05Z'
+      - '2006-01-02 15:04:05'
+    test:
+      - '2023-12-01T14:12:34.123Z'
+
+- script:
+    lang: javascript
+    source: >
+      function process(event) {
+        // Add processing timestamp
+        event.Put("filebeat.processed_at", new Date().toISOString());
+        
+        // Extract log level from message
+        var message = event.Get("message");
+        if (message) {
+          var levelMatch = message.match(/\[(DEBUG|INFO|WARN|ERROR|FATAL)\]/);
+          if (levelMatch) {
+            event.Put("log.level", levelMatch[1].toLowerCase());
+          }
+          
+          // Extract correlation ID
+          var correlationMatch = message.match(/correlation-id:\s*([a-f0-9-]+)/i);
+          if (correlationMatch) {
+            event.Put("trace.id", correlationMatch[1]);
+          }
+        }
+      }
+
+# Output configuration
+output.logstash:
+  hosts: ["${LOGSTASH_HOST:logstash:5044}"]
+  
+  # Load balancing
+  loadbalance: true
+  
+  # Compression
+  compression_level: 3
+  
+  # Worker configuration
+  worker: 2
+  bulk_max_size: 1024
+  
+  # Timeout settings
+  timeout: 30s
+  
+# Alternative output to Elasticsearch directly
+# output.elasticsearch:
+#   hosts: ["${ELASTICSEARCH_HOST:elasticsearch:9200}"]
+#   index: "filebeat-a2a-%{+yyyy.MM.dd}"
+#   template.name: "filebeat-a2a"
+#   template.pattern: "filebeat-a2a-*"
+
+# Logging configuration
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /usr/share/filebeat/logs
+  name: filebeat.log
+  keepfiles: 7
+  permissions: 0644
+
+# Monitoring
+monitoring:
+  enabled: true
+  elasticsearch:
+    hosts: ["${ELASTICSEARCH_HOST:elasticsearch:9200}"]
+    index: ".monitoring-beats"
+
+# Performance tuning
+queue.mem:
+  events: 4096
+  flush.min_events: 512
+  flush.timeout: 1s
+
+# Registry file location
+filebeat.registry.path: /usr/share/filebeat/data/registry
+
+# HTTP endpoint for health checks
+http.enabled: true
+http.host: 0.0.0.0
+http.port: 5066
+
+# Setup template and dashboards
+setup.template.enabled: true
+setup.template.name: "filebeat-a2a"
+setup.template.pattern: "filebeat-a2a-*"
+
+setup.kibana:
+  host: "kibana:5601"
+
+setup.dashboards.enabled: true
+setup.dashboards.index: ".kibana"
+
+# ILM policy
+setup.ilm.enabled: auto
+setup.ilm.rollover_alias: "filebeat-a2a"
+setup.ilm.pattern: "{now/d}-000001"
+setup.ilm.policy: "filebeat-a2a-policy"

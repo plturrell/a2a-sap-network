@@ -7,6 +7,7 @@
  */
 
 const cds = require('@sap/cds');
+const { SELECT, INSERT, UPDATE, DELETE, UPSERT } = cds.ql;
 const LOG = cds.log('draft-service');
 const { BaseApplicationService } = require('./lib/sapBaseService');
 const draftHandler = require('./lib/sapDraftHandler');

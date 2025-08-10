@@ -1,0 +1,394 @@
+# A2A Network Service Level Objectives (SLO) and Service Level Indicators (SLI)
+# Comprehensive monitoring and alerting for A2A agent platform
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: a2a-slo-definitions
+  namespace: a2a-network
+data:
+  slo-config.yaml: |
+    # A2A Network SLO/SLI Configuration
+    version: "2.0.0"
+    
+    # Global SLO settings
+    global:
+      evaluation_interval: "30s"
+      alert_retention: "30d"
+      dashboard_refresh: "10s"
+      error_budget_burn_rate_thresholds:
+        - threshold: 14.4  # 2% in 1 hour (30-day window)
+          severity: "critical"
+          window: "1h"
+        - threshold: 6     # 5% in 6 hours
+          severity: "critical" 
+          window: "6h"
+        - threshold: 1     # 10% in 3 days
+          severity: "warning"
+          window: "3d"
+
+    # Service Level Indicators (SLIs)
+    slis:
+      # Agent Communication SLIs
+      agent_message_delivery:
+        description: "Successful A2A message delivery between agents"
+        query: |
+          sum(rate(a2a_messages_delivered_total{status="success"}[5m])) /
+          sum(rate(a2a_messages_sent_total[5m]))
+        unit: "ratio"
+        good_bad_ratio: true
+
+      agent_response_time:
+        description: "Agent response time for message processing"
+        query: |
+          histogram_quantile(0.99, 
+            sum(rate(a2a_message_processing_duration_seconds_bucket[5m])) by (le, agent_id)
+          )
+        unit: "seconds"
+        threshold: 2.0
+
+      agent_availability:
+        description: "Agent uptime and availability"
+        query: |
+          avg_over_time(up{job=~"a2a-agent.*"}[5m])
+        unit: "ratio"
+        good_bad_ratio: true
+
+      # Blockchain SLIs
+      blockchain_transaction_success:
+        description: "Successful blockchain transactions"
+        query: |
+          sum(rate(a2a_blockchain_transactions_total{status="success"}[5m])) /
+          sum(rate(a2a_blockchain_transactions_total[5m]))
+        unit: "ratio"
+        good_bad_ratio: true
+
+      blockchain_confirmation_time:
+        description: "Time for blockchain transaction confirmation"
+        query: |
+          histogram_quantile(0.95,
+            sum(rate(a2a_blockchain_confirmation_duration_seconds_bucket[5m])) by (le)
+          )
+        unit: "seconds"
+        threshold: 30.0
+
+      # API Gateway SLIs
+      api_request_success:
+        description: "Successful API requests (non-5xx responses)"
+        query: |
+          sum(rate(http_requests_total{status!~"5.."}[5m])) /
+          sum(rate(http_requests_total[5m]))
+        unit: "ratio"
+        good_bad_ratio: true
+
+      api_response_time:
+        description: "API response time P99"
+        query: |
+          histogram_quantile(0.99,
+            sum(rate(http_request_duration_seconds_bucket{job="a2a-api"}[5m])) by (le)
+          )
+        unit: "seconds"
+        threshold: 1.0
+
+      # Data Processing SLIs
+      data_pipeline_success:
+        description: "Successful data pipeline executions"
+        query: |
+          sum(rate(a2a_data_pipeline_executions_total{status="success"}[5m])) /
+          sum(rate(a2a_data_pipeline_executions_total[5m]))
+        unit: "ratio"
+        good_bad_ratio: true
+
+      data_freshness:
+        description: "Data freshness (time since last update)"
+        query: |
+          time() - max(a2a_last_data_update_timestamp)
+        unit: "seconds"
+        threshold: 3600  # 1 hour
+
+      # Message Queue SLIs
+      message_queue_processing:
+        description: "Message queue processing success rate"
+        query: |
+          sum(rate(a2a_queue_messages_processed_total{status="success"}[5m])) /
+          sum(rate(a2a_queue_messages_processed_total[5m]))
+        unit: "ratio"
+        good_bad_ratio: true
+
+      dead_letter_queue_rate:
+        description: "Rate of messages going to dead letter queue"
+        query: |
+          sum(rate(a2a_dlq_messages_total[5m])) /
+          sum(rate(a2a_queue_messages_total[5m]))
+        unit: "ratio"
+        threshold: 0.01  # 1% maximum
+
+    # Service Level Objectives (SLOs)
+    slos:
+      # Critical A2A Platform SLOs
+      agent_communication:
+        objective: 99.9
+        description: "Agent-to-agent communication reliability"
+        sli: "agent_message_delivery"
+        window: "30d"
+        error_budget: 0.1  # 0.1% error budget
+        alerting:
+          burn_rate_alerts: true
+          error_budget_alerts: true
+        
+      agent_performance:
+        objective: 99.0
+        description: "Agent response time performance"
+        sli: "agent_response_time"
+        window: "30d"
+        error_budget: 1.0
+        threshold: "< 2s"
+        alerting:
+          burn_rate_alerts: true
+          
+      system_availability:
+        objective: 99.95
+        description: "Overall A2A system availability"
+        sli: "agent_availability"
+        window: "30d"
+        error_budget: 0.05
+        alerting:
+          burn_rate_alerts: true
+          error_budget_alerts: true
+
+      # Blockchain SLOs
+      blockchain_reliability:
+        objective: 99.5
+        description: "Blockchain transaction reliability"
+        sli: "blockchain_transaction_success"
+        window: "30d"
+        error_budget: 0.5
+        alerting:
+          burn_rate_alerts: true
+
+      blockchain_performance:
+        objective: 95.0
+        description: "Blockchain confirmation time performance"
+        sli: "blockchain_confirmation_time"
+        window: "7d"
+        threshold: "< 30s"
+        error_budget: 5.0
+
+      # API SLOs
+      api_availability:
+        objective: 99.9
+        description: "API endpoint availability"
+        sli: "api_request_success"
+        window: "30d"
+        error_budget: 0.1
+        alerting:
+          burn_rate_alerts: true
+          error_budget_alerts: true
+
+      api_latency:
+        objective: 95.0
+        description: "API response time performance"
+        sli: "api_response_time"
+        window: "7d"
+        threshold: "< 1s"
+        error_budget: 5.0
+
+      # Data Processing SLOs
+      data_reliability:
+        objective: 99.5
+        description: "Data processing pipeline reliability"
+        sli: "data_pipeline_success"
+        window: "30d"
+        error_budget: 0.5
+        alerting:
+          burn_rate_alerts: true
+
+      data_timeliness:
+        objective: 99.0
+        description: "Data freshness and timeliness"
+        sli: "data_freshness"
+        window: "7d"
+        threshold: "< 1h"
+        error_budget: 1.0
+
+    # Alert Rules
+    alert_rules:
+      # Critical SLO Violations
+      - alert: A2A_SLO_ErrorBudgetExhausted
+        expr: |
+          (
+            slo_error_budget_remaining{slo=~"agent_communication|system_availability|api_availability"} < 0
+          )
+        for: 0m
+        labels:
+          severity: "critical"
+          service: "a2a-platform"
+        annotations:
+          summary: "SLO error budget exhausted for {{ $labels.slo }}"
+          description: "Error budget for SLO {{ $labels.slo }} has been exhausted. Current remaining: {{ $value }}%"
+          runbook_url: "https://docs.a2a.network/runbooks/slo-budget-exhausted"
+
+      - alert: A2A_SLO_BurnRateCritical
+        expr: |
+          (
+            slo_burn_rate_1h{slo=~"agent_communication|system_availability"} > 14.4
+          )
+        for: 2m
+        labels:
+          severity: "critical"
+          service: "a2a-platform"
+        annotations:
+          summary: "Critical SLO burn rate detected for {{ $labels.slo }}"
+          description: "SLO {{ $labels.slo }} is burning error budget at {{ $value }}x the acceptable rate"
+
+      # Performance Degradation
+      - alert: A2A_Agent_ResponseTime_High
+        expr: |
+          histogram_quantile(0.99, 
+            sum(rate(a2a_message_processing_duration_seconds_bucket[5m])) by (le, agent_id)
+          ) > 2
+        for: 5m
+        labels:
+          severity: "warning"
+          service: "a2a-agent"
+        annotations:
+          summary: "High response time for agent {{ $labels.agent_id }}"
+          description: "Agent {{ $labels.agent_id }} P99 response time is {{ $value }}s"
+
+      - alert: A2A_API_Latency_High
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_request_duration_seconds_bucket{job="a2a-api"}[5m])) by (le)
+          ) > 1
+        for: 5m
+        labels:
+          severity: "warning"
+          service: "a2a-api"
+        annotations:
+          summary: "High API latency detected"
+          description: "API P99 latency is {{ $value }}s, exceeding 1s threshold"
+
+      # Availability Issues
+      - alert: A2A_Agent_Down
+        expr: up{job=~"a2a-agent.*"} == 0
+        for: 1m
+        labels:
+          severity: "critical"
+          service: "a2a-agent"
+        annotations:
+          summary: "A2A Agent is down"
+          description: "Agent {{ $labels.instance }} has been down for more than 1 minute"
+
+      - alert: A2A_Service_LowAvailability
+        expr: |
+          avg_over_time(up{job=~"a2a-.*"}[10m]) < 0.95
+        for: 5m
+        labels:
+          severity: "warning"
+          service: "a2a-platform"
+        annotations:
+          summary: "Low service availability detected"
+          description: "Service {{ $labels.job }} availability is {{ $value | humanizePercentage }}"
+
+      # Business Logic Alerts
+      - alert: A2A_MessageDelivery_Low
+        expr: |
+          sum(rate(a2a_messages_delivered_total{status="success"}[10m])) /
+          sum(rate(a2a_messages_sent_total[10m])) < 0.95
+        for: 5m
+        labels:
+          severity: "warning"
+          service: "a2a-messaging"
+        annotations:
+          summary: "Low message delivery success rate"
+          description: "Message delivery success rate is {{ $value | humanizePercentage }}"
+
+      - alert: A2A_DeadLetterQueue_High
+        expr: |
+          sum(rate(a2a_dlq_messages_total[10m])) /
+          sum(rate(a2a_queue_messages_total[10m])) > 0.05
+        for: 3m
+        labels:
+          severity: "warning"
+          service: "a2a-messaging"
+        annotations:
+          summary: "High dead letter queue rate"
+          description: "Dead letter queue rate is {{ $value | humanizePercentage }}"
+
+      # Blockchain Specific
+      - alert: A2A_Blockchain_TransactionFailures
+        expr: |
+          sum(rate(a2a_blockchain_transactions_total{status="failed"}[10m])) > 5
+        for: 2m
+        labels:
+          severity: "warning"
+          service: "a2a-blockchain"
+        annotations:
+          summary: "High blockchain transaction failure rate"
+          description: "{{ $value }} blockchain transactions failing per second"
+
+      - alert: A2A_Blockchain_ConfirmationSlow
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(a2a_blockchain_confirmation_duration_seconds_bucket[5m])) by (le)
+          ) > 60
+        for: 5m
+        labels:
+          severity: "warning"
+          service: "a2a-blockchain"
+        annotations:
+          summary: "Slow blockchain confirmations"
+          description: "P95 blockchain confirmation time is {{ $value }}s"
+
+    # SLO Dashboard Configuration
+    dashboards:
+      slo_overview:
+        title: "A2A Platform SLO Overview"
+        panels:
+          - title: "SLO Compliance"
+            type: "stat"
+            targets:
+              - expr: "slo_compliance_ratio"
+                legend: "{{ slo }}"
+            thresholds:
+              - value: 99.0
+                color: "red"
+              - value: 99.5
+                color: "yellow"
+              - value: 99.9
+                color: "green"
+
+          - title: "Error Budget Remaining"
+            type: "graph"
+            targets:
+              - expr: "slo_error_budget_remaining"
+                legend: "{{ slo }}"
+
+          - title: "Burn Rate"
+            type: "graph"
+            targets:
+              - expr: "slo_burn_rate_5m"
+                legend: "5m"
+              - expr: "slo_burn_rate_1h"
+                legend: "1h"
+              - expr: "slo_burn_rate_6h"
+                legend: "6h"
+
+      agent_performance:
+        title: "A2A Agent Performance"
+        panels:
+          - title: "Message Processing Time"
+            type: "graph"
+            targets:
+              - expr: 'histogram_quantile(0.50, sum(rate(a2a_message_processing_duration_seconds_bucket[5m])) by (le, agent_id))'
+                legend: "P50 - {{ agent_id }}"
+              - expr: 'histogram_quantile(0.95, sum(rate(a2a_message_processing_duration_seconds_bucket[5m])) by (le, agent_id))'
+                legend: "P95 - {{ agent_id }}"
+              - expr: 'histogram_quantile(0.99, sum(rate(a2a_message_processing_duration_seconds_bucket[5m])) by (le, agent_id))'
+                legend: "P99 - {{ agent_id }}"
+
+          - title: "Agent Availability"
+            type: "stat"
+            targets:
+              - expr: 'avg_over_time(up{job=~"a2a-agent.*"}[1h])'
+                legend: "{{ instance }}"

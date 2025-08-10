@@ -9,6 +9,7 @@
  */
 
 const cds = require('@sap/cds');
+const { SELECT, INSERT, UPDATE, DELETE, UPSERT } = cds.ql;
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');

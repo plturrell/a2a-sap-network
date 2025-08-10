@@ -365,7 +365,7 @@ cds.on('bootstrap', async (app) => {
     // Serve UI5 app
     const path = require('path');
     const express = require('express');
-    app.use('/app/a2a-fiori', express.static(path.join(__dirname, '../app/a2a-fiori/webapp')));
+    app.use('/app/a2a-fiori', express.static(path.join(__dirname, '../app/a2aFiori/webapp')));
     app.use('/app/launchpad', express.static(path.join(__dirname, '../app/launchpad')));
     
     // Serve launchpad pages
@@ -373,13 +373,13 @@ cds.on('bootstrap', async (app) => {
         res.sendFile(path.join(__dirname, '../app/launchpad.html'));
     });
     app.get('/fiori-launchpad.html', (req, res) => {
-        res.sendFile(path.join(__dirname, '../app/fiori-launchpad.html'));
+        res.sendFile(path.join(__dirname, '../app/fioriLaunchpad.html'));
     });
     app.get('/debug-launchpad.html', (req, res) => {
-        res.sendFile(path.join(__dirname, 'debug-launchpad.html'));
+        res.sendFile(path.join(__dirname, 'debugLaunchpad.html'));
     });
     app.get('/launchpad-simple.html', (req, res) => {
-        res.sendFile(path.join(__dirname, '../app/launchpad-simple.html'));
+        res.sendFile(path.join(__dirname, '../app/launchpadSimple.html'));
     });
     
     // SAP Fiori flexibility services stub endpoints

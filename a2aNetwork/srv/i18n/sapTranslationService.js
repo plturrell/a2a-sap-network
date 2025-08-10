@@ -9,6 +9,7 @@
  */
 
 const cds = require('@sap/cds');
+const { SELECT, INSERT, UPDATE, DELETE, UPSERT } = cds.ql;
 const { normalizeLocale } = require('./i18n-config');
 
 /**
