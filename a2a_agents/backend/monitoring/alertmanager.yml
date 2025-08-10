@@ -1,0 +1,131 @@
+global:
+  smtp_smarthost: 'localhost:587'
+  smtp_from: 'a2a-alerts@example.com'
+  smtp_auth_username: 'a2a-alerts@example.com'
+  smtp_auth_password: 'your-smtp-password'
+
+# The directory from which notification templates are read
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'default-receiver'
+  routes:
+    # Critical alerts go to immediate notification channels
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 0s
+      repeat_interval: 5m
+    
+    # Agent-specific alerts
+    - match:
+        component: agent
+      receiver: 'agent-alerts'
+    
+    # Performance alerts
+    - match:
+        component: performance
+      receiver: 'performance-alerts'
+      repeat_interval: 15m
+    
+    # Resource alerts
+    - match:
+        component: resources
+      receiver: 'resource-alerts'
+      repeat_interval: 30m
+
+receivers:
+  - name: 'default-receiver'
+    email_configs:
+      - to: 'admin@example.com'
+        subject: 'A2A Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Labels: {{ range .Labels.SortedPairs }}{{ .Name }}: {{ .Value }} {{ end }}
+          {{ end }}
+
+  - name: 'critical-alerts'
+    email_configs:
+      - to: 'ops-team@example.com,admin@example.com'
+        subject: 'CRITICAL A2A Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          🚨 CRITICAL ALERT 🚨
+          
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          Component: {{ .Labels.component }}
+          Labels: {{ range .Labels.SortedPairs }}{{ .Name }}: {{ .Value }} {{ end }}
+          {{ end }}
+    slack_configs:
+      - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+        channel: '#a2a-alerts'
+        title: 'Critical A2A Alert'
+        text: |
+          {{ range .Alerts }}
+          🚨 {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+          {{ end }}
+
+  - name: 'agent-alerts'
+    email_configs:
+      - to: 'agent-team@example.com'
+        subject: 'A2A Agent Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          Agent Alert Detected
+          
+          {{ range .Alerts }}
+          Agent ID: {{ .Labels.agent_id }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          {{ end }}
+
+  - name: 'performance-alerts'
+    email_configs:
+      - to: 'performance-team@example.com'
+        subject: 'A2A Performance Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          Performance Issue Detected
+          
+          {{ range .Alerts }}
+          Service: {{ .Labels.job }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          {{ end }}
+
+  - name: 'resource-alerts'
+    email_configs:
+      - to: 'infra-team@example.com'
+        subject: 'A2A Resource Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          Resource Usage Alert
+          
+          {{ range .Alerts }}
+          Container: {{ .Labels.name }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          {{ end }}
+
+# Inhibition rules allow to mute a set of alerts given that another alert is firing
+inhibit_rules:
+  # Inhibit any alert if the service is down
+  - source_match:
+      alertname: A2AServiceDown
+    target_match_re:
+      alertname: High.*
+    equal: ['job']
+  
+  # Inhibit agent-specific alerts if the agent is down
+  - source_match:
+      alertname: AgentDown
+    target_match_re:
+      alertname: Agent.*
+    equal: ['agent_id']

@@ -1,0 +1,1095 @@
+openapi: 3.0.3
+info:
+  title: SAP A2A Developer Portal API
+  description: |
+    Enterprise API for the SAP A2A (Agent-to-Agent) Developer Portal.
+    Provides comprehensive project management, agent orchestration, and business process integration capabilities.
+    
+    ## Authentication
+    This API uses SAP XSUAA OAuth 2.0 for authentication. Include your bearer token in the Authorization header.
+    
+    ## Rate Limiting
+    - General endpoints: 1000 requests per 15 minutes
+    - Authentication endpoints: 10 requests per 15 minutes  
+    - API endpoints: 100 requests per minute
+    
+    ## Error Handling
+    All errors follow RFC 7807 Problem Details format with additional SAP-specific context.
+    
+    ## Tracing
+    Include X-Correlation-Id header for distributed tracing across SAP systems.
+  version: 2.1.0
+  contact:
+    name: SAP A2A Development Team
+    email: a2a-support@sap.com
+    url: https://help.sap.com/a2a
+  license:
+    name: SAP Developer License
+    url: https://tools.eu1.hana.ondemand.com/developer-license-3_1.txt
+
+servers:
+  - url: https://a2a-portal.cfapps.sap.hana.ondemand.com/api/v1
+    description: Production server
+  - url: https://a2a-portal-staging.cfapps.sap.hana.ondemand.com/api/v1
+    description: Staging server
+  - url: http://localhost:4004/api/v1
+    description: Development server
+
+security:
+  - OAuth2: [read, write, admin]
+
+tags:
+  - name: Projects
+    description: Project management operations
+  - name: Agents
+    description: Agent lifecycle management
+  - name: Templates
+    description: Agent template operations
+  - name: Workflows
+    description: BPMN workflow management
+  - name: Testing
+    description: Test execution and results
+  - name: Deployments
+    description: Deployment operations
+  - name: Monitoring
+    description: System monitoring and metrics
+
+paths:
+  /projects:
+    get:
+      tags: [Projects]
+      summary: List all projects
+      description: Retrieves a paginated list of projects accessible to the authenticated user
+      operationId: listProjects
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SortParam'
+        - $ref: '#/components/parameters/FilterParam'
+        - name: status
+          in: query
+          description: Filter by project status
+          schema:
+            type: string
+            enum: [DRAFT, ACTIVE, TESTING, DEPLOYED, ARCHIVED]
+        - name: businessUnit
+          in: query
+          description: Filter by business unit ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+    
+    post:
+      tags: [Projects]
+      summary: Create a new project
+      description: Creates a new project with the specified configuration
+      operationId: createProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectRequest'
+            examples:
+              basic:
+                summary: Basic project
+                value:
+                  name: "Customer Analytics Platform"
+                  description: "Multi-agent system for customer behavior analysis"
+                  businessUnitId: "BU_001"
+                  departmentId: "DEPT_IT_001"
+      responses:
+        '201':
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          headers:
+            Location:
+              description: URL of the created project
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+
+  /projects/{projectId}:
+    get:
+      tags: [Projects]
+      summary: Get project details
+      description: Retrieves detailed information about a specific project
+      operationId: getProject
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+        - name: expand
+          in: query
+          description: Expand related entities
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [agents, workflows, members, deployments]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDetail'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    
+    put:
+      tags: [Projects]
+      summary: Update project
+      description: Updates an existing project's configuration
+      operationId: updateProject
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectRequest'
+      responses:
+        '200':
+          description: Project updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    
+    delete:
+      tags: [Projects]
+      summary: Delete project
+      description: Deletes a project and all associated resources
+      operationId: deleteProject
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+        - name: force
+          in: query
+          description: Force delete even if project has active deployments
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '204':
+          description: Project deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+
+  /projects/{projectId}/agents:
+    get:
+      tags: [Agents]
+      summary: List project agents
+      description: Retrieves all agents associated with a project
+      operationId: listProjectAgents
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+        - name: status
+          in: query
+          description: Filter by agent status
+          schema:
+            type: string
+            enum: [DRAFT, CONFIGURED, TESTING, DEPLOYED, FAILED]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Agent'
+    
+    post:
+      tags: [Agents]
+      summary: Create project agent
+      description: Creates a new agent within a project
+      operationId: createProjectAgent
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAgentRequest'
+      responses:
+        '201':
+          description: Agent created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+
+  /agents/{agentId}:
+    get:
+      tags: [Agents]
+      summary: Get agent details
+      description: Retrieves detailed information about a specific agent
+      operationId: getAgent
+      parameters:
+        - $ref: '#/components/parameters/AgentIdParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDetail'
+    
+    patch:
+      tags: [Agents]
+      summary: Update agent configuration
+      description: Updates an agent's configuration
+      operationId: updateAgent
+      parameters:
+        - $ref: '#/components/parameters/AgentIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAgentRequest'
+      responses:
+        '200':
+          description: Agent updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+
+  /agents/{agentId}/execute:
+    post:
+      tags: [Agents]
+      summary: Execute agent
+      description: Triggers agent execution with specified parameters
+      operationId: executeAgent
+      parameters:
+        - $ref: '#/components/parameters/AgentIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecuteAgentRequest'
+      responses:
+        '202':
+          description: Execution started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentExecution'
+          headers:
+            Location:
+              description: URL to check execution status
+              schema:
+                type: string
+
+  /templates:
+    get:
+      tags: [Templates]
+      summary: List agent templates
+      description: Retrieves available agent templates
+      operationId: listTemplates
+      parameters:
+        - name: category
+          in: query
+          description: Filter by template category
+          schema:
+            type: string
+            enum: [data-product, standardization, ai-processing, validation, integration, custom]
+        - name: certified
+          in: query
+          description: Filter SAP certified templates only
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AgentTemplate'
+
+  /workflows/{workflowId}/execute:
+    post:
+      tags: [Workflows]
+      summary: Execute workflow
+      description: Starts a new workflow execution
+      operationId: executeWorkflow
+      parameters:
+        - $ref: '#/components/parameters/WorkflowIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecuteWorkflowRequest'
+      responses:
+        '202':
+          description: Workflow execution started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowExecution'
+
+  /monitoring/metrics:
+    get:
+      tags: [Monitoring]
+      summary: Get system metrics
+      description: Retrieves current system performance metrics
+      operationId: getMetrics
+      parameters:
+        - name: resource
+          in: query
+          description: Filter metrics by resource type
+          schema:
+            type: string
+            enum: [system, agent, workflow, database]
+        - name: period
+          in: query
+          description: Time period for metrics
+          schema:
+            type: string
+            enum: [1h, 6h, 24h, 7d, 30d]
+            default: 24h
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.sap.com/oauth/authorize
+          tokenUrl: https://auth.sap.com/oauth/token
+          scopes:
+            read: Read access to resources
+            write: Write access to resources
+            admin: Administrative access
+
+  parameters:
+    ProjectIdParam:
+      name: projectId
+      in: path
+      required: true
+      description: Project identifier
+      schema:
+        type: string
+        pattern: '^[A-Z0-9_]+$'
+        example: PROJ_001
+    
+    AgentIdParam:
+      name: agentId
+      in: path
+      required: true
+      description: Agent identifier
+      schema:
+        type: string
+        pattern: '^agent_[0-9]+$'
+        example: agent_1234567890
+    
+    WorkflowIdParam:
+      name: workflowId
+      in: path
+      required: true
+      description: Workflow identifier
+      schema:
+        type: string
+        pattern: '^wf_[0-9]+$'
+        example: wf_1234567890
+    
+    PageParam:
+      name: page
+      in: query
+      description: Page number (1-based)
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    
+    LimitParam:
+      name: limit
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    
+    SortParam:
+      name: sort
+      in: query
+      description: Sort order (field:direction)
+      schema:
+        type: string
+        pattern: '^[a-zA-Z]+:(asc|desc)$'
+        example: createdAt:desc
+    
+    FilterParam:
+      name: filter
+      in: query
+      description: OData-style filter expression
+      schema:
+        type: string
+        example: "status eq 'ACTIVE' and priority eq 'HIGH'"
+
+  schemas:
+    Project:
+      type: object
+      required: [id, name, status, createdAt, createdBy]
+      properties:
+        id:
+          type: string
+          description: Unique project identifier
+          example: PROJ_001
+        name:
+          type: string
+          description: Project name
+          maxLength: 255
+          example: Customer Analytics Platform
+        description:
+          type: string
+          description: Project description
+          maxLength: 2000
+        status:
+          type: string
+          enum: [DRAFT, ACTIVE, TESTING, DEPLOYED, ARCHIVED]
+          description: Current project status
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+          default: MEDIUM
+        businessUnitId:
+          type: string
+          description: Associated business unit
+        departmentId:
+          type: string
+          description: Associated department
+        budget:
+          type: number
+          format: decimal
+          description: Project budget
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          example: EUR
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          description: User ID of creator
+        modifiedAt:
+          type: string
+          format: date-time
+        modifiedBy:
+          type: string
+          description: User ID of last modifier
+    
+    ProjectDetail:
+      allOf:
+        - $ref: '#/components/schemas/Project'
+        - type: object
+          properties:
+            agents:
+              type: array
+              items:
+                $ref: '#/components/schemas/Agent'
+            workflows:
+              type: array
+              items:
+                $ref: '#/components/schemas/Workflow'
+            members:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProjectMember'
+            metrics:
+              $ref: '#/components/schemas/ProjectMetrics'
+    
+    CreateProjectRequest:
+      type: object
+      required: [name, businessUnitId, departmentId]
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 2000
+        businessUnitId:
+          type: string
+        departmentId:
+          type: string
+        templateId:
+          type: string
+          description: Optional template to use
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+        budget:
+          type: number
+          format: decimal
+        currency:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+    
+    UpdateProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [DRAFT, ACTIVE, TESTING, DEPLOYED, ARCHIVED]
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+        budget:
+          type: number
+        endDate:
+          type: string
+          format: date
+    
+    Agent:
+      type: object
+      required: [id, projectId, name, type, status]
+      properties:
+        id:
+          type: string
+          example: agent_1234567890
+        projectId:
+          type: string
+        templateId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [reactive, proactive, collaborative]
+        status:
+          type: string
+          enum: [DRAFT, CONFIGURED, TESTING, DEPLOYED, FAILED]
+        configuration:
+          type: object
+          description: Agent-specific configuration
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentSkill'
+        lastDeployed:
+          type: string
+          format: date-time
+        healthStatus:
+          type: string
+          enum: [HEALTHY, DEGRADED, UNHEALTHY, UNKNOWN]
+        metrics:
+          $ref: '#/components/schemas/AgentMetrics'
+    
+    AgentDetail:
+      allOf:
+        - $ref: '#/components/schemas/Agent'
+        - type: object
+          properties:
+            executions:
+              type: array
+              items:
+                $ref: '#/components/schemas/AgentExecution'
+            integrations:
+              type: array
+              items:
+                $ref: '#/components/schemas/AgentIntegration'
+    
+    CreateAgentRequest:
+      type: object
+      required: [name, type]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [reactive, proactive, collaborative]
+        templateId:
+          type: string
+          description: Template to base agent on
+        configuration:
+          type: object
+        skills:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              required:
+                type: boolean
+    
+    UpdateAgentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        configuration:
+          type: object
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentSkill'
+    
+    ExecuteAgentRequest:
+      type: object
+      required: [input]
+      properties:
+        input:
+          type: object
+          description: Input data for agent execution
+        parameters:
+          type: object
+          description: Execution parameters
+          properties:
+            timeout:
+              type: integer
+              description: Timeout in milliseconds
+              minimum: 1000
+              maximum: 3600000
+            priority:
+              type: string
+              enum: [LOW, NORMAL, HIGH]
+            async:
+              type: boolean
+              default: true
+    
+    AgentExecution:
+      type: object
+      properties:
+        executionId:
+          type: string
+          example: exec_1234567890
+        agentId:
+          type: string
+        status:
+          type: string
+          enum: [RUNNING, SUCCESS, FAILED, TIMEOUT]
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+          description: Duration in milliseconds
+        input:
+          type: object
+        output:
+          type: object
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+    
+    AgentTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        version:
+          type: string
+        author:
+          type: string
+        sapCertified:
+          type: boolean
+        downloads:
+          type: integer
+        rating:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+        configuration:
+          type: object
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentSkill'
+    
+    AgentSkill:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+        icon:
+          type: string
+        required:
+          type: boolean
+        async:
+          type: boolean
+        configuration:
+          type: object
+    
+    AgentIntegration:
+      type: object
+      properties:
+        id:
+          type: string
+        systemConnectionId:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, ERROR]
+        configuration:
+          type: object
+    
+    Workflow:
+      type: object
+      properties:
+        id:
+          type: string
+        projectId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        bpmnDefinition:
+          type: string
+          description: BPMN XML definition
+        status:
+          type: string
+          enum: [DRAFT, PUBLISHED, DEPRECATED]
+        version:
+          type: string
+    
+    ExecuteWorkflowRequest:
+      type: object
+      required: [businessKey]
+      properties:
+        businessKey:
+          type: string
+        variables:
+          type: object
+        correlationId:
+          type: string
+    
+    WorkflowExecution:
+      type: object
+      properties:
+        executionId:
+          type: string
+        workflowId:
+          type: string
+        processInstanceId:
+          type: string
+        businessKey:
+          type: string
+        status:
+          type: string
+          enum: [RUNNING, COMPLETED, FAILED, SUSPENDED]
+        startTime:
+          type: string
+          format: date-time
+        currentActivity:
+          type: string
+    
+    ProjectMember:
+      type: object
+      properties:
+        userId:
+          type: string
+        role:
+          type: string
+          enum: [OWNER, DEVELOPER, TESTER, VIEWER]
+        permissions:
+          type: array
+          items:
+            type: string
+        joinedDate:
+          type: string
+          format: date
+    
+    ProjectMetrics:
+      type: object
+      properties:
+        agentCount:
+          type: integer
+        workflowCount:
+          type: integer
+        executionCount:
+          type: integer
+        successRate:
+          type: number
+          format: float
+        avgResponseTime:
+          type: number
+          format: float
+          description: Average response time in milliseconds
+    
+    AgentMetrics:
+      type: object
+      properties:
+        executionCount:
+          type: integer
+        successRate:
+          type: number
+          format: float
+        avgResponseTime:
+          type: number
+          format: float
+        lastExecution:
+          type: string
+          format: date-time
+        cpuUsage:
+          type: number
+          format: float
+        memoryUsage:
+          type: integer
+          description: Memory usage in MB
+    
+    MetricsResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        period:
+          type: string
+        metrics:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              value:
+                type: number
+              unit:
+                type: string
+              tags:
+                type: object
+    
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+        hasNext:
+          type: boolean
+        hasPrevious:
+          type: boolean
+    
+    ErrorResponse:
+      type: object
+      required: [error, message, timestamp, path]
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error details
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+          description: Request path that caused the error
+        requestId:
+          type: string
+          description: Request ID for tracking
+
+  responses:
+    BadRequestError:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: BAD_REQUEST
+            message: Invalid project name - must be between 3 and 255 characters
+            timestamp: "2024-01-15T10:30:00Z"
+            path: /api/v1/projects
+            requestId: req_123456
+    
+    UnauthorizedError:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: UNAUTHORIZED
+            message: Invalid or expired authentication token
+            timestamp: "2024-01-15T10:30:00Z"
+            path: /api/v1/projects
+            requestId: req_123456
+    
+    ForbiddenError:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: FORBIDDEN
+            message: You do not have permission to access this resource
+            timestamp: "2024-01-15T10:30:00Z"
+            path: /api/v1/projects/PROJ_001
+            requestId: req_123456
+    
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: NOT_FOUND
+            message: Project not found
+            timestamp: "2024-01-15T10:30:00Z"
+            path: /api/v1/projects/PROJ_999
+            requestId: req_123456
+    
+    ConflictError:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: CONFLICT
+            message: Project with this name already exists
+            timestamp: "2024-01-15T10:30:00Z"
+            path: /api/v1/projects
+            requestId: req_123456
+    
+    RateLimitError:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: RATE_LIMIT_EXCEEDED
+            message: Too many requests - please try again later
+            details:
+              limit: 100
+              window: "15m"
+              retryAfter: "2024-01-15T10:45:00Z"
+            timestamp: "2024-01-15T10:30:00Z"
+            path: /api/v1/projects
+            requestId: req_123456
+      headers:
+        X-RateLimit-Limit:
+          description: Request limit per window
+          schema:
+            type: integer
+        X-RateLimit-Remaining:
+          description: Remaining requests in window
+          schema:
+            type: integer
+        X-RateLimit-Reset:
+          description: Time when the rate limit resets
+          schema:
+            type: string
+            format: date-time

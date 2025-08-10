@@ -1,0 +1,16 @@
+{
+  "addresses": {
+    "agent_registry": "0x5fbdb2315678afecb367f032d93f642f64180aa3",
+    "message_router": "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
+    "business_data_cloud": null
+  },
+  "verified": {
+    "agent_registry": true,
+    "message_router": true
+  },
+  "deployment_success": false,
+  "all_verified": false,
+  "blockchain": "anvil",
+  "rpc_url": "http://localhost:8545",
+  "chain_id": 31337
+}

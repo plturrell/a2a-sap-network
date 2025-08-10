@@ -1,0 +1,183 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog id="settingsDialog"
+            title="{i18n>settingsTitle}"
+            contentWidth="90%"
+            maxWidth="35rem"
+            contentHeight="500px"
+            class="a2a-tablet-dialog"
+            resizable="true"
+            draggable="true">
+        
+        <content>
+            <IconTabBar id="settingsTabBar" class="sapUiResponsiveContentPadding">
+                
+                <!-- General Settings Tab -->
+                <items>
+                    <IconTabFilter key="general" text="{i18n>settingsGeneral}" icon="sap-icon://settings">
+                        <content>
+                            <form:SimpleForm
+                                editable="true"
+                                layout="ResponsiveGridLayout"
+                                labelSpanXL="4"
+                                labelSpanL="4"
+                                labelSpanM="12"
+                                adjustLabelSpan="false"
+                                emptySpanXL="0"
+                                emptySpanL="0"
+                                emptySpanM="0"
+                                columnsXL="2"
+                                columnsL="1"
+                                columnsM="1"
+                                singleContainerFullSize="false">
+                                
+                                <content>
+                                    <!-- Theme Settings -->
+                                    <Label text="{i18n>settingsTheme}"/>
+                                    <Select id="themeSelect" selectedKey="{settings>/theme}">
+                                        <items>
+                                            <core:Item key="sap_horizon" text="SAP Horizon"/>
+                                            <core:Item key="sap_fiori_3" text="SAP Fiori 3"/>
+                                            <core:Item key="sap_fiori_3_dark" text="SAP Fiori 3 Dark"/>
+                                            <core:Item key="sap_belize" text="SAP Belize"/>
+                                        </items>
+                                    </Select>
+                                    
+                                    <!-- Language Settings -->
+                                    <Label text="{i18n>settingsLanguage}"/>
+                                    <Select id="languageSelect" selectedKey="{settings>/language}">
+                                        <items>
+                                            <core:Item key="en" text="English"/>
+                                            <core:Item key="de" text="Deutsch"/>
+                                            <core:Item key="fr" text="Français"/>
+                                            <core:Item key="es" text="Español"/>
+                                            <core:Item key="zh" text="中文"/>
+                                        </items>
+                                    </Select>
+                                    
+                                    <!-- Timezone Settings -->
+                                    <Label text="{i18n>settingsTimezone}"/>
+                                    <Select id="timezoneSelect" selectedKey="{settings>/timezone}">
+                                        <items>
+                                            <core:Item key="UTC" text="UTC"/>
+                                            <core:Item key="America/New_York" text="Eastern Time"/>
+                                            <core:Item key="America/Chicago" text="Central Time"/>
+                                            <core:Item key="America/Denver" text="Mountain Time"/>
+                                            <core:Item key="America/Los_Angeles" text="Pacific Time"/>
+                                            <core:Item key="Europe/London" text="London"/>
+                                            <core:Item key="Europe/Berlin" text="Berlin"/>
+                                            <core:Item key="Asia/Tokyo" text="Tokyo"/>
+                                            <core:Item key="Asia/Shanghai" text="Shanghai"/>
+                                        </items>
+                                    </Select>
+                                    
+                                    <!-- Auto-save Settings -->
+                                    <Label text="{i18n>settingsAutoSave}"/>
+                                    <Switch id="autoSaveSwitch" state="{settings>/autoSave}"/>
+                                </content>
+                            </form:SimpleForm>
+                        </content>
+                    </IconTabFilter>
+                    
+                    <!-- Notification Settings Tab -->
+                    <IconTabFilter key="notifications" text="{i18n>settingsNotifications}" icon="sap-icon://bell">
+                        <content>
+                            <form:SimpleForm
+                                editable="true"
+                                layout="ResponsiveGridLayout"
+                                labelSpanXL="4"
+                                labelSpanL="4"
+                                labelSpanM="12"
+                                adjustLabelSpan="false"
+                                emptySpanXL="0"
+                                emptySpanL="0"
+                                emptySpanM="0"
+                                columnsXL="2"
+                                columnsL="1"
+                                columnsM="1"
+                                singleContainerFullSize="false">
+                                
+                                <content>
+                                    <!-- Email Notifications -->
+                                    <Label text="{i18n>settingsEmailNotifications}"/>
+                                    <Switch id="emailNotificationsSwitch" state="{settings>/notifications/email}"/>
+                                    
+                                    <!-- Push Notifications -->
+                                    <Label text="{i18n>settingsPushNotifications}"/>
+                                    <Switch id="pushNotificationsSwitch" state="{settings>/notifications/push}"/>
+                                    
+                                    <!-- Deployment Notifications -->
+                                    <Label text="{i18n>settingsDeploymentNotifications}"/>
+                                    <Switch id="deploymentNotificationsSwitch" state="{settings>/notifications/deployment}"/>
+                                    
+                                    <!-- Security Notifications -->
+                                    <Label text="{i18n>settingsSecurityNotifications}"/>
+                                    <Switch id="securityNotificationsSwitch" state="{settings>/notifications/security}"/>
+                                    
+                                    <!-- Agent Status Notifications -->
+                                    <Label text="{i18n>settingsAgentNotifications}"/>
+                                    <Switch id="agentNotificationsSwitch" state="{settings>/notifications/agents}"/>
+                                </content>
+                            </form:SimpleForm>
+                        </content>
+                    </IconTabFilter>
+                    
+                    <!-- Developer Settings Tab -->
+                    <IconTabFilter key="developer" text="{i18n>settingsDeveloper}" icon="sap-icon://developer-settings">
+                        <content>
+                            <form:SimpleForm
+                                editable="true"
+                                layout="ResponsiveGridLayout"
+                                labelSpanXL="4"
+                                labelSpanL="4"
+                                labelSpanM="12"
+                                adjustLabelSpan="false"
+                                emptySpanXL="0"
+                                emptySpanL="0"
+                                emptySpanM="0"
+                                columnsXL="2"
+                                columnsL="1"
+                                columnsM="1"
+                                singleContainerFullSize="false">
+                                
+                                <content>
+                                    <!-- Debug Mode -->
+                                    <Label text="{i18n>settingsDebugMode}"/>
+                                    <Switch id="debugModeSwitch" state="{settings>/developer/debugMode}"/>
+                                    
+                                    <!-- Console Logging -->
+                                    <Label text="{i18n>settingsConsoleLogging}"/>
+                                    <Switch id="consoleLoggingSwitch" state="{settings>/developer/consoleLogging}"/>
+                                    
+                                    <!-- Performance Monitoring -->
+                                    <Label text="{i18n>settingsPerformanceMonitoring}"/>
+                                    <Switch id="performanceMonitoringSwitch" state="{settings>/developer/performanceMonitoring}"/>
+                                    
+                                    <!-- API Timeout -->
+                                    <Label text="{i18n>settingsApiTimeout}"/>
+                                    <Input id="apiTimeoutInput" 
+                                           value="{settings>/developer/apiTimeout}" 
+                                           type="Number"
+                                           description="seconds"/>
+                                </content>
+                            </form:SimpleForm>
+                        </content>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <buttons>
+            <Button text="{i18n>buttonSave}" 
+                    type="Emphasized" 
+                    press="onSaveSettings"/>
+            <Button text="{i18n>buttonReset}" 
+                    press="onResetSettings"/>
+            <Button text="{i18n>buttonCancel}" 
+                    press="onCancelSettings"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

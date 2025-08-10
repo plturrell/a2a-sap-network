@@ -1,0 +1,393 @@
+<mvc:View
+    controllerName="com.sap.a2a.developerportal.controller.ProjectMasterDetail"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:layout="sap.ui.layout"
+    xmlns:smartTable="sap.ui.comp.smarttable"
+    xmlns:smartFilterBar="sap.ui.comp.smartfilterbar">
+    
+    <f:FlexibleColumnLayout 
+        id="fcl"
+        stateChange="onStateChanged"
+        layout="{/layout}"
+        class="sapUiSizeCompact a2a-tablet-page">
+        
+        <!-- Master Column -->
+        <f:beginColumnPages>
+            <Page 
+                id="masterPage"
+                class="a2a-tablet-page"
+                title="Projects ({masterModel>/projects/length})"
+                showNavButton="{= ${/actionButtonsInfo/midColumn/fullScreen} !== undefined }">
+                
+                <headerContent>
+                    <Button 
+                        icon="sap-icon://add" 
+                        tooltip="Create Project"
+                        press="onCreateProject"/>
+                    <Button 
+                        icon="sap-icon://refresh" 
+                        tooltip="Refresh"
+                        press="onRefresh"/>
+                </headerContent>
+                
+                <content>
+                    <VBox>
+                        <!-- Search and Filter -->
+                        <SearchField 
+                            width="100%" 
+                            search="onSearch"
+                            placeholder="Search projects..."
+                            class="sapUiMediumMargin"/>
+                        
+                        <!-- Master List -->
+                        <List 
+                            id="masterList"
+                            items="{
+                                path: 'masterModel>/projects',
+                                sorter: {
+                                    path: 'updated_at',
+                                    descending: true
+                                }
+                            }"
+                            mode="SingleSelectMaster"
+                            selectionChange="onSelectionChange"
+                            growing="true"
+                            growingThreshold="100"
+                            class="sapUiResponsiveMargin">
+                            
+                            <StandardListItem
+                                title="{masterModel>name}"
+                                description="{masterModel>description}"
+                                info="{masterModel>status}"
+                                infoState="{path: 'masterModel>status', formatter: '.formatStatusState'}"
+                                icon="sap-icon://folder"
+                                iconInset="false"
+                                type="Navigation"
+                                press="onItemPress">
+                                
+                                <customData>
+                                    <core:CustomData key="projectId" value="{masterModel>project_id}"/>
+                                </customData>
+                                
+                                <attributes>
+                                    <ObjectAttribute 
+                                        text="{masterModel>type}"/>
+                                    <ObjectAttribute 
+                                        text="{path: 'masterModel>updated_at', formatter: '.formatRelativeTime'}"/>
+                                </attributes>
+                                
+                                <firstStatus>
+                                    <ObjectStatus 
+                                        text="{masterModel>agents_count} agents"
+                                        state="{path: 'masterModel>agents_count', formatter: '.formatAgentsState'}"/>
+                                </firstStatus>
+                                
+                                <secondStatus>
+                                    <ObjectStatus 
+                                        text="{masterModel>deployment_status}"
+                                        state="{path: 'masterModel>deployment_status', formatter: '.formatDeploymentState'}"/>
+                                </secondStatus>
+                            </StandardListItem>
+                        </List>
+                    </VBox>
+                </content>
+            </Page>
+        </f:beginColumnPages>
+        
+        <!-- Detail Column -->
+        <f:midColumnPages>
+            <Page 
+                id="detailPage"
+                class="a2a-tablet-page"
+                title="{detailModel>/name}"
+                showNavButton="{= ${/actionButtonsInfo/midColumn/fullScreen} !== undefined }"
+                navButtonPress="onDetailNavButtonPress">
+                
+                <headerContent>
+                    <Button 
+                        icon="sap-icon://edit" 
+                        tooltip="Edit Project"
+                        press="onEditProject"/>
+                    <Button 
+                        icon="sap-icon://play" 
+                        tooltip="Deploy Project"
+                        press="onDeployProject"
+                        type="Emphasized"/>
+                    <Button 
+                        icon="sap-icon://action" 
+                        tooltip="More Actions"
+                        press="onMoreActions"/>
+                </headerContent>
+                
+                <content>
+                    <ScrollContainer height="100%" width="100%">
+                        <VBox class="sapUiMediumMargin">
+                            
+                            <!-- Project Overview Card -->
+                            <f:Card class="sapUiMediumMarginBottom">
+                                <f:header>
+                                    <f:Header title="Project Overview">
+                                        <f:actions>
+                                            <Button 
+                                                icon="sap-icon://full-screen" 
+                                                type="Transparent"
+                                                press="onToggleFullScreen"/>
+                                        </f:actions>
+                                    </f:Header>
+                                </f:header>
+                                
+                                <f:content>
+                                    <VBox class="sapUiMediumMargin">
+                                        <layout:Grid 
+                                            defaultSpan="L6 M6 S12"
+                                            class="sapUiMediumMarginBottom">
+                                            
+                                            <VBox>
+                                                <Label text="Status:" class="sapUiTinyMarginBottom"/>
+                                                <ObjectStatus 
+                                                    text="{detailModel>/status}"
+                                                    state="{path: 'detailModel>/status', formatter: '.formatStatusState'}"
+                                                    icon="{path: 'detailModel>/status', formatter: '.formatStatusIcon'}"/>
+                                            </VBox>
+                                            
+                                            <VBox>
+                                                <Label text="Type:" class="sapUiTinyMarginBottom"/>
+                                                <Text text="{detailModel>/type}"/>
+                                            </VBox>
+                                            
+                                            <VBox>
+                                                <Label text="Created:" class="sapUiTinyMarginBottom"/>
+                                                <Text text="{path: 'detailModel>/created_date', formatter: '.formatDate'}"/>
+                                            </VBox>
+                                            
+                                            <VBox>
+                                                <Label text="Last Modified:" class="sapUiTinyMarginBottom"/>
+                                                <Text text="{path: 'detailModel>/updated_at', formatter: '.formatRelativeTime'}"/>
+                                            </VBox>
+                                            
+                                            <VBox>
+                                                <Label text="Agents:" class="sapUiTinyMarginBottom"/>
+                                                <ObjectNumber 
+                                                    number="{detailModel>/agents_count}"
+                                                    state="{path: 'detailModel>/agents_count', formatter: '.formatAgentsState'}"/>
+                                            </VBox>
+                                            
+                                            <VBox>
+                                                <Label text="Deployment:" class="sapUiTinyMarginBottom"/>
+                                                <ObjectStatus 
+                                                    text="{detailModel>/deployment_status}"
+                                                    state="{path: 'detailModel>/deployment_status', formatter: '.formatDeploymentState'}"/>
+                                            </VBox>
+                                        </layout:Grid>
+                                        
+                                        <VBox>
+                                            <Label text="Description:" class="sapUiTinyMarginBottom"/>
+                                            <Text text="{detailModel>/description}" class="sapUiMediumMarginBottom"/>
+                                        </VBox>
+                                    </VBox>
+                                </f:content>
+                            </f:Card>
+                            
+                            <!-- Project Metrics Card -->
+                            <f:Card class="sapUiMediumMarginBottom">
+                                <f:header>
+                                    <f:Header title="Performance Metrics"/>
+                                </f:header>
+                                
+                                <f:content>
+                                    <layout:Grid 
+                                        defaultSpan="L3 M6 S12"
+                                        class="sapUiMediumMargin">
+                                        
+                                        <GenericTile 
+                                            header="Success Rate"
+                                            subheader="Last 30 days">
+                                            <tileContent>
+                                                <TileContent>
+                                                    <content>
+                                                        <NumericContent 
+                                                            value="{detailModel>/metrics/success_rate}"
+                                                            valueColor="Good"
+                                                            indicator="Up"/>
+                                                    </content>
+                                                </TileContent>
+                                            </tileContent>
+                                        </GenericTile>
+                                        
+                                        <GenericTile 
+                                            header="Avg Response Time"
+                                            subheader="Milliseconds">
+                                            <tileContent>
+                                                <TileContent>
+                                                    <content>
+                                                        <NumericContent 
+                                                            value="{detailModel>/metrics/avg_response_time}"
+                                                            valueColor="Neutral"/>
+                                                    </content>
+                                                </TileContent>
+                                            </tileContent>
+                                        </GenericTile>
+                                        
+                                        <GenericTile 
+                                            header="Total Requests"
+                                            subheader="This month">
+                                            <tileContent>
+                                                <TileContent>
+                                                    <content>
+                                                        <NumericContent 
+                                                            value="{detailModel>/metrics/total_requests}"
+                                                            state="Neutral"/>
+                                                    </content>
+                                                </TileContent>
+                                            </tileContent>
+                                        </GenericTile>
+                                        
+                                        <GenericTile 
+                                            header="Error Rate"
+                                            subheader="Last 7 days">
+                                            <tileContent>
+                                                <TileContent>
+                                                    <content>
+                                                        <NumericContent 
+                                                            value="{detailModel>/metrics/error_rate}"
+                                                            valueColor="Error"
+                                                            indicator="Down"/>
+                                                    </content>
+                                                </TileContent>
+                                            </tileContent>
+                                        </GenericTile>
+                                    </layout:Grid>
+                                </f:content>
+                            </f:Card>
+                            
+                            <!-- Agents List -->
+                            <f:Card class="sapUiMediumMarginBottom">
+                                <f:header>
+                                    <f:Header title="Agents ({detailModel>/agents/length})">
+                                        <f:actions>
+                                            <Button 
+                                                text="Add Agent" 
+                                                icon="sap-icon://add"
+                                                type="Emphasized"
+                                                press="onAddAgent"/>
+                                        </f:actions>
+                                    </f:Header>
+                                </f:header>
+                                
+                                <f:content>
+                                    <Table 
+                                        items="{detailModel>/agents}"
+                                        growing="true"
+                                        growingThreshold="20">
+                                        
+                                        <columns>
+                                            <Column>
+                                                <Text text="Agent Name"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="Type"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="Status"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="Last Run"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="Actions"/>
+                                            </Column>
+                                        </columns>
+                                        
+                                        <items>
+                                            <ColumnListItem press="onAgentPress">
+                                                <cells>
+                                                    <VBox>
+                                                        <Link 
+                                                            text="{detailModel>name}"
+                                                            press="onAgentPress"/>
+                                                        <Text 
+                                                            text="{detailModel>description}"
+                                                            class="sapUiTinyText"/>
+                                                    </VBox>
+                                                    
+                                                    <Text text="{detailModel>type}"/>
+                                                    
+                                                    <ObjectStatus 
+                                                        text="{detailModel>status}"
+                                                        state="{path: 'detailModel>status', formatter: '.formatAgentStatusState'}"/>
+                                                    
+                                                    <Text text="{path: 'detailModel>last_run', formatter: '.formatRelativeTime'}"/>
+                                                    
+                                                    <HBox>
+                                                        <Button 
+                                                            icon="sap-icon://play" 
+                                                            type="Transparent"
+                                                            tooltip="Run Agent"
+                                                            press="onRunAgent"/>
+                                                        <Button 
+                                                            icon="sap-icon://edit" 
+                                                            type="Transparent"
+                                                            tooltip="Edit Agent"
+                                                            press="onEditAgent"/>
+                                                    </HBox>
+                                                </cells>
+                                            </ColumnListItem>
+                                        </items>
+                                    </Table>
+                                </f:content>
+                            </f:Card>
+                            
+                            <!-- Recent Activity -->
+                            <f:Card>
+                                <f:header>
+                                    <f:Header title="Recent Activity">
+                                        <f:actions>
+                                            <Button 
+                                                text="View All" 
+                                                type="Transparent"
+                                                press="onViewAllActivity"/>
+                                        </f:actions>
+                                    </f:Header>
+                                </f:header>
+                                
+                                <f:content>
+                                    <List items="{detailModel>/recent_activity}">
+                                        <FeedListItem
+                                            sender="{detailModel>user}"
+                                            text="{detailModel>description}"
+                                            timestamp="{path: 'detailModel>timestamp', formatter: '.formatRelativeTime'}"
+                                            icon="{path: 'detailModel>type', formatter: '.formatActivityIcon'}"/>
+                                    </List>
+                                </f:content>
+                            </f:Card>
+                            
+                        </VBox>
+                    </ScrollContainer>
+                </content>
+            </Page>
+        </f:midColumnPages>
+        
+        <!-- End Column (for additional details) -->
+        <f:endColumnPages>
+            <Page 
+                id="endPage"
+                class="a2a-tablet-page"
+                title="Agent Details"
+                showNavButton="true"
+                navButtonPress="onEndNavButtonPress">
+                
+                <content>
+                    <ScrollContainer height="100%" width="100%">
+                        <VBox class="sapUiMediumMargin">
+                            <Text text="Agent detail view will be shown here" class="sapUiMediumMarginTop"/>
+                        </VBox>
+                    </ScrollContainer>
+                </content>
+            </Page>
+        </f:endColumnPages>
+        
+    </f:FlexibleColumnLayout>
+</mvc:View>

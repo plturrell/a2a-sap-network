@@ -1,0 +1,218 @@
+<mvc:View
+    controllerName="a2a.portal.controller.Projects"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core">
+    
+    <f:DynamicPage id="projectsPage" 
+                   headerExpanded="true" 
+                   showFooter="false">
+        
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>projectsTitle}" level="H2"/>
+                </f:heading>
+                <f:actions>
+                    <Button text="{i18n>createProject}" 
+                           type="Emphasized" 
+                           icon="sap-icon://add" 
+                           press="onCreateProject"/>
+                    <Button text="{i18n>importProject}" 
+                           icon="sap-icon://upload" 
+                           press="onImportProject"/>
+                    <Button icon="sap-icon://refresh" 
+                           tooltip="{i18n>refresh}"
+                           press="onRefresh"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <MessageStrip text="{i18n>projectsDescription}" 
+                            type="Information" 
+                            showIcon="true" 
+                            class="sapUiMediumMarginBottom"/>
+                
+                <Panel headerText="{i18n>quickActions}" 
+                       expandable="true" 
+                       expanded="false"
+                       class="sapUiResponsiveMargin">
+                    <content>
+                        <HBox class="sapUiMediumMargin">
+                            <Button text="{i18n>createFromTemplate}" 
+                                   icon="sap-icon://template" 
+                                   press="onCreateFromTemplate"
+                                   class="sapUiTinyMarginEnd"/>
+                            <Button text="{i18n>cloneProject}" 
+                                   icon="sap-icon://copy" 
+                                   press="onCloneProject"
+                                   class="sapUiTinyMarginEnd"/>
+                            <Button text="{i18n>viewTutorials}" 
+                                   icon="sap-icon://learning-assistant" 
+                                   press="onViewTutorials"/>
+                        </HBox>
+                    </content>
+                </Panel>
+            </f:DynamicPageHeader>
+        </f:header>
+
+        <f:content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Search and Filter Bar -->
+                <Panel class="sapUiNoContentPadding">
+                    <Toolbar>
+                        <SearchField id="searchField" 
+                                   width="20rem" 
+                                   placeholder="{i18n>searchProjects}"
+                                   search="onSearch"/>
+                        <ToolbarSpacer/>
+                        <SegmentedButton selectedKey="tiles" 
+                                       selectionChange="onViewChange">
+                            <items>
+                                <SegmentedButtonItem key="tiles" 
+                                                   icon="sap-icon://grid" 
+                                                   tooltip="{i18n>tilesView}"/>
+                                <SegmentedButtonItem key="table" 
+                                                   icon="sap-icon://table-view" 
+                                                   tooltip="{i18n>tableView}"/>
+                            </items>
+                        </SegmentedButton>
+                        <Button icon="sap-icon://filter" 
+                               tooltip="{i18n>filter}"
+                               press="onOpenFilterDialog"/>
+                        <Button icon="sap-icon://sort" 
+                               tooltip="{i18n>sort}"
+                               press="onOpenSortDialog"/>
+                    </Toolbar>
+                </Panel>
+
+                <!-- Projects Content -->
+                <Panel class="sapUiMediumMarginTop">
+                    
+                    <!-- Tiles View -->
+                    <f:GridContainer id="tilesContainer"
+                                   snapToRow="true"
+                                   visible="{= ${view>/viewMode} === 'tiles' }">
+                        <f:layout>
+                            <f:GridContainerSettings rowSize="5rem" columnSize="20rem" gap="1rem"/>
+                        </f:layout>
+                        <f:layoutData>
+                            <f:GridContainerItemLayoutData minRows="6" columns="4"/>
+                        </f:layoutData>
+                        
+                        <!-- Project tiles will be added here dynamically -->
+                    </f:GridContainer>
+
+                    <!-- Table View -->
+                    <Table id="projectsTable" 
+                           items="{
+                               path: 'view>/projects',
+                               sorter: {
+                                   path: 'last_modified',
+                                   descending: true
+                               }
+                           }"
+                           visible="{= ${view>/viewMode} === 'table' }"
+                           growing="true"
+                           growingThreshold="20"
+                           mode="MultiSelect"
+                           itemPress="onProjectPress">
+                        
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="{i18n>projectsList} ({= ${view>/projects}.length })"/>
+                                <ToolbarSpacer/>
+                                <Button text="{i18n>export}" 
+                                       icon="sap-icon://download" 
+                                       press="onExportSelected"/>
+                                <Button text="{i18n>delete}" 
+                                       icon="sap-icon://delete" 
+                                       type="Transparent"
+                                       press="onDeleteSelected"/>
+                            </Toolbar>
+                        </headerToolbar>
+
+                        <columns>
+                            <Column>
+                                <Text text="{i18n>name}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>description}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>agents}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>lastModified}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>status}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>actions}"/>
+                            </Column>
+                        </columns>
+
+                        <items>
+                            <ColumnListItem press="onProjectPress">
+                                <cells>
+                                    <VBox>
+                                        <Link text="{name}" press="onProjectPress"/>
+                                        <Text text="{project_id}" class="sapUiSmallMarginTop"/>
+                                    </VBox>
+                                    <Text text="{description}" 
+                                          maxLines="2"/>
+                                    <ObjectNumber number="{= ${agents}.length }" 
+                                                unit="{i18n>agentsUnit}"/>
+                                    <Text text="{path: 'last_modified', formatter: '.formatDate'}"/>
+                                    <ObjectStatus text="{status}" 
+                                                state="{path: 'status', formatter: '.formatStatusState'}"/>
+                                    <HBox>
+                                        <Button icon="sap-icon://edit" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>edit}"
+                                               press="onEditProject"/>
+                                        <Button icon="sap-icon://copy" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>clone}"
+                                               press="onCloneProject"/>
+                                        <Button icon="sap-icon://delete" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>delete}"
+                                               press="onDeleteProject"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+
+                    <!-- Empty State -->
+                    <VBox alignItems="Center" 
+                          justifyContent="Center" 
+                          height="20rem"
+                          visible="{= !${view>/projects} || ${view>/projects}.length === 0 }">
+                        <core:Icon src="sap-icon://folder" 
+                                 size="4rem" 
+                                 color="Neutral"
+                                 class="sapUiMediumMarginBottom"/>
+                        <Title text="{i18n>noProjects}" 
+                              level="H3" 
+                              textAlign="Center"/>
+                        <Text text="{i18n>noProjectsDescription}" 
+                             textAlign="Center" 
+                             class="sapUiMediumMarginBottom"/>
+                        <Button text="{i18n>createFirstProject}" 
+                               type="Emphasized" 
+                               icon="sap-icon://add" 
+                               press="onCreateProject"/>
+                    </VBox>
+
+                </Panel>
+            </VBox>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

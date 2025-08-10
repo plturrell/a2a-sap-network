@@ -1,0 +1,177 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    
+    <!-- Web3/Blockchain Education Components -->
+    
+    <!-- Blockchain Address Display with Education -->
+    <VBox class="sapUiMediumMargin" visible="{ui>/showBlockchainAddress}">
+        <Label text="{i18n>blockchainAddress}" class="sapUiTinyMarginBottom">
+            <customData>
+                <core:CustomData key="help-id" value="blockchain-address"/>
+            </customData>
+        </Label>
+        <HBox alignItems="Center">
+            <Text text="{ui>/address}" class="blockchain-address sapUiMediumMarginEnd"/>
+            <Button 
+                icon="sap-icon://copy"
+                type="Transparent"
+                tooltip="{i18n>copyAddress}"
+                press="onCopyAddress"
+                class="sapUiTinyMarginEnd"/>
+            <Button 
+                icon="sap-icon://question-mark"
+                type="Transparent"
+                tooltip="{i18n>learnAboutAddresses}"
+                press="onShowAddressHelp"
+                class="web3-info-icon"/>
+        </HBox>
+        <MessageStrip 
+            text="{i18n>addressExplanation}"
+            type="Information"
+            showIcon="false"
+            class="sapUiTinyMarginTop"
+            visible="{ui>/showAddressHelp}"/>
+    </VBox>
+
+    <!-- Transaction Hash with Education -->
+    <VBox class="sapUiMediumMargin" visible="{ui>/showTransactionHash}">
+        <Label text="{i18n>transactionHash}" class="sapUiTinyMarginBottom">
+            <customData>
+                <core:CustomData key="help-id" value="transaction-hash"/>
+            </customData>
+        </Label>
+        <HBox alignItems="Center">
+            <Link 
+                text="{ui>/txHash}"
+                href="{ui>/txHashUrl}"
+                target="_blank"
+                class="sapUiMediumMarginEnd"/>
+            <Button 
+                icon="sap-icon://question-mark"
+                type="Transparent"
+                tooltip="{i18n>learnAboutTransactions}"
+                press="onShowTransactionHelp"
+                class="web3-info-icon"/>
+        </HBox>
+        <MessageStrip 
+            text="{i18n>transactionExplanation}"
+            type="Information"
+            showIcon="false"
+            class="sapUiTinyMarginTop"
+            visible="{ui>/showTransactionHelp}"/>
+    </VBox>
+
+    <!-- Smart Contract Interaction -->
+    <VBox class="sapUiMediumMargin" visible="{ui>/showContractInfo}">
+        <Label text="{i18n>smartContract}" class="sapUiTinyMarginBottom"/>
+        <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+            <core:Icon src="sap-icon://chain-link" class="sapUiTinyMarginEnd" color="Accent6"/>
+            <Text text="{ui>/contractName}" class="sapUiMediumMarginEnd"/>
+            <Button 
+                icon="sap-icon://question-mark"
+                type="Transparent"
+                tooltip="{i18n>learnAboutContracts}"
+                press="onShowContractHelp"
+                class="web3-info-icon"/>
+        </HBox>
+        <MessageStrip 
+            text="{i18n>contractExplanation}"
+            type="Information"
+            showIcon="false"
+            class="sapUiTinyMarginTop"
+            visible="{ui>/showContractHelp}"/>
+    </VBox>
+
+    <!-- Gas/Network Fees Education -->
+    <VBox class="sapUiMediumMargin" visible="{ui>/showGasInfo}">
+        <Label text="{i18n>networkFees}" class="sapUiTinyMarginBottom"/>
+        <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+            <ObjectNumber 
+                number="{ui>/gasUsed}"
+                unit="Gas"
+                state="{ui>/gasState}"
+                class="sapUiMediumMarginEnd"/>
+            <Button 
+                icon="sap-icon://question-mark"
+                type="Transparent"
+                tooltip="{i18n>learnAboutGas}"
+                press="onShowGasHelp"
+                class="web3-info-icon"/>
+        </HBox>
+        <MessageStrip 
+            text="{i18n>gasExplanation}"
+            type="Information"
+            showIcon="false"
+            class="sapUiTinyMarginTop"
+            visible="{ui>/showGasHelp}"/>
+    </VBox>
+
+    <!-- Network Status Indicator -->
+    <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiMediumMargin">
+        <VBox>
+            <Label text="{i18n>networkStatus}"/>
+            <HBox alignItems="Center" class="sapUiTinyMarginTop">
+                <core:Icon 
+                    src="sap-icon://status-positive"
+                    color="{ui>/networkStatusColor}"
+                    class="sapUiTinyMarginEnd"/>
+                <Text text="{ui>/networkStatusText}"/>
+            </HBox>
+        </VBox>
+        <Button 
+            icon="sap-icon://question-mark"
+            type="Transparent"
+            tooltip="{i18n>learnAboutNetworks}"
+            press="onShowNetworkHelp"
+            class="web3-info-icon"/>
+    </HBox>
+
+    <!-- Blockchain Transaction Status with Visual Feedback -->
+    <VBox class="sapUiMediumMargin" visible="{ui>/showTransactionStatus}">
+        <Label text="{i18n>transactionStatus}" class="sapUiTinyMarginBottom"/>
+        <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+            <ProgressIndicator 
+                percentValue="{ui>/confirmationProgress}"
+                displayValue="{ui>/confirmationsText}"
+                state="{ui>/confirmationState}"
+                width="200px"
+                class="sapUiMediumMarginEnd"/>
+            <Button 
+                icon="sap-icon://question-mark"
+                type="Transparent"
+                tooltip="{i18n>learnAboutConfirmations}"
+                press="onShowConfirmationHelp"
+                class="web3-info-icon"/>
+        </HBox>
+        <Text 
+            text="{ui>/confirmationDescription}"
+            class="sapUiSmallText"/>
+    </VBox>
+
+    <!-- Educational Dialog -->
+    <ResponsivePopover
+        id="blockchainEducationPopover"
+        title="{ui>/helpTitle}"
+        placement="Auto"
+        contentWidth="400px">
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <core:HTML 
+                    content="{ui>/helpContent}"
+                    class="sapUiMediumMarginBottom"/>
+                <HBox justifyContent="End">
+                    <Link 
+                        text="{i18n>learnMore}"
+                        href="{ui>/learnMoreUrl}"
+                        target="_blank"
+                        class="sapUiMediumMarginEnd"/>
+                    <Button 
+                        text="{i18n>close}"
+                        press="onCloseHelp"/>
+                </HBox>
+            </VBox>
+        </content>
+    </ResponsivePopover>
+
+</core:FragmentDefinition>

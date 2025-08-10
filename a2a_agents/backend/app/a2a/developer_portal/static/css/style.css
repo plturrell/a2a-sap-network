@@ -1,0 +1,334 @@
+/* 
+ * A2A Agents - SAP Fiori 3.0 Compliant Styles
+ * All styles use SAP theme parameters for consistency
+ */
+
+/* ========================================
+   Notification Badge - Fiori Compliant
+   ======================================== */
+.sapMBtn[data-badge]:not([data-badge=""]):not([data-badge="0"])::after {
+    content: attr(data-badge);
+    position: absolute;
+    top: -0.125rem;
+    right: -0.125rem;
+    background-color: var(--sapButton_Negative_Background);
+    color: var(--sapButton_Negative_TextColor);
+    border-radius: var(--sapElement_BorderCornerRadius);
+    min-width: 1.125rem;
+    height: 1.125rem;
+    font-size: var(--sapFontSmallSize);
+    font-weight: var(--sapFontBoldWeight);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.25rem;
+    box-shadow: var(--sapContent_Shadow0);
+    z-index: 1;
+    font-family: var(--sapFontFamily);
+}
+
+/* Notification Badge Animation */
+.sapMBtn[data-badge]:not([data-badge=""]):not([data-badge="0"])::after {
+    animation: notificationPulse 2s infinite;
+}
+
+@keyframes notificationPulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ========================================
+   Notification Items - Fiori Compliant
+   ======================================== */
+.sapMDialog .sapMDialogSection {
+    padding: 0;
+}
+
+.notification-item {
+    border-left: 0.25rem solid transparent;
+    transition: background-color var(--sapAnimationDuration_Default) ease;
+}
+
+.notification-item:hover {
+    background-color: var(--sapList_Hover_Background);
+}
+
+/* Use SAP semantic colors for priority */
+.notification-item[data-priority="critical"] {
+    border-left-color: var(--sapErrorBorderColor);
+}
+
+.notification-item[data-priority="high"] {
+    border-left-color: var(--sapWarningBorderColor);
+}
+
+.notification-item[data-priority="medium"] {
+    border-left-color: var(--sapSuccessBorderColor);
+}
+
+.notification-item[data-priority="low"] {
+    border-left-color: var(--sapInformationBorderColor);
+}
+
+.notification-unread {
+    background-color: var(--sapList_Highlight_Background);
+    font-weight: var(--sapFontBoldWeight);
+}
+
+/* Notification Action Buttons */
+.notification-actions .sapMBtn {
+    margin-right: 0.5rem;
+}
+
+.notification-actions .sapMBtn:last-child {
+    margin-right: 0;
+}
+
+/* Ensure proper SAP Fiori 3 styling */
+.sapUiSizeCompact .sapTntToolPage .sapTntToolHeader {
+    height: 3rem;
+}
+
+/* ========================================
+   Project Tiles - Fiori Compliant
+   ======================================== */
+.a2aProjectTile {
+    transition: box-shadow var(--sapAnimationDuration_Default) ease;
+    cursor: pointer;
+}
+
+.a2aProjectTile:hover {
+    box-shadow: var(--sapContent_Shadow1);
+}
+
+.a2aProjectTile:active {
+    box-shadow: var(--sapContent_Shadow0);
+}
+
+.a2aProjectTile .sapMGT {
+    border: 1px solid var(--sapTile_BorderColor);
+}
+
+/* ========================================
+   Development Tools - Fiori Compliant
+   ======================================== */
+.a2aCodeEditor {
+    height: 100%;
+    width: 100%;
+    border: 1px solid var(--sapField_BorderColor);
+    background-color: var(--sapField_Background);
+}
+
+/* File tree custom styling */
+.a2aFileTree .sapMTree {
+    border: none;
+}
+
+.a2aFileTree .sapMTreeItemBase {
+    border-bottom: 1px solid var(--sapList_BorderColor);
+}
+
+/* BPMN designer canvas */
+.a2aBpmnCanvas {
+    height: 100%;
+    width: 100%;
+    background: var(--sapBackgroundColor);
+    border: 1px solid var(--sapGroup_ContentBorderColor);
+}
+
+/* Agent builder form styling */
+.a2aAgentBuilderForm .sapMPanel {
+    margin-bottom: 1rem;
+}
+
+/* Monitoring dashboard widgets */
+.a2aMonitoringWidget {
+    height: 200px;
+    margin-bottom: 1rem;
+}
+
+/* ========================================
+   Status Indicators - Fiori Compliant
+   ======================================== */
+.a2aStatusSuccess {
+    color: var(--sapPositiveTextColor);
+}
+
+.a2aStatusWarning {
+    color: var(--sapCriticalTextColor);
+}
+
+.a2aStatusError {
+    color: var(--sapNegativeTextColor);
+}
+
+.a2aStatusNeutral {
+    color: var(--sapNeutralTextColor);
+}
+
+/* ========================================
+   Loading States - Fiori Compliant
+   ======================================== */
+.a2aLoadingOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--sapBlockLayer_Background);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--sapContent_ZIndex_BusyIndicator);
+}
+
+/* Responsive design adjustments */
+@media (max-width: 600px) {
+    .sapTntToolPage .sapTntSideNavigation {
+        width: 100%;
+    }
+    
+    .a2aProjectTile {
+        margin-bottom: 1rem;
+    }
+}
+
+/* ========================================
+   Dark Theme Support - Fiori Compliant
+   ======================================== */
+[data-sap-ui-theme^="sap_horizon_dark"] .a2aCodeEditor {
+    border-color: var(--sapField_BorderColor);
+    background-color: var(--sapField_Background);
+}
+
+[data-sap-ui-theme^="sap_horizon_dark"] .a2aBpmnCanvas {
+    background: var(--sapBackgroundColor);
+    border-color: var(--sapGroup_ContentBorderColor);
+}
+
+/* High contrast theme support */
+.sapUiTheme-sap_horizon_hc_black .a2aProjectTile,
+.sapUiTheme-sap_horizon_hc_white .a2aProjectTile {
+    border: 2px solid;
+}
+
+/* ========================================
+   Animations - Fiori Compliant
+   ======================================== */
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(0.625rem); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+.a2aFadeIn {
+    animation: fadeIn var(--sapAnimationDuration_Default) var(--sapAnimationTimingFunction_Default);
+}
+
+/* ========================================
+   Component Enhancements - Fiori Compliant
+   ======================================== */
+.a2aToolbar {
+    border-bottom: 1px solid var(--sapToolbar_SeparatorColor);
+}
+
+/* Panel customizations */
+.a2aPanel .sapMPanelHdr {
+    background: var(--sapGroup_TitleBackground);
+}
+
+/* Form customizations */
+.a2aForm .sapMLabel {
+    font-weight: var(--sapFontBoldWeight);
+}
+
+/* Table customizations */
+.a2aTable .sapMListTblHeaderCell {
+    font-weight: var(--sapFontHeaderWeight);
+}
+
+/* ========================================
+   Agent Visualization - Fiori Compliant
+   ======================================== */
+.sapUiAgentCard {
+    background: var(--sapTile_Background);
+    border: 1px solid var(--sapTile_BorderColor);
+    border-radius: var(--sapTile_BorderCornerRadius);
+    padding: var(--sapContent_Padding);
+    transition: all var(--sapAnimationDuration_Default) ease;
+}
+
+.sapUiAgentCard:hover {
+    box-shadow: var(--sapContent_Shadow1);
+}
+
+/* Agent health indicators */
+.sapUiAgentHealth {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sapUiAgentHealth[data-health="good"] {
+    color: var(--sapPositiveTextColor);
+}
+
+.sapUiAgentHealth[data-health="warning"] {
+    color: var(--sapCriticalTextColor);
+}
+
+.sapUiAgentHealth[data-health="error"] {
+    color: var(--sapNegativeTextColor);
+}
+
+/* Agent network connections */
+.sapUiAgentConnection {
+    stroke: var(--sapContent_LabelColor);
+    stroke-width: 2;
+    fill: none;
+}
+
+.sapUiAgentConnection.active {
+    stroke: var(--sapBrandColor);
+    stroke-width: 3;
+}
+
+.sapUiAgentConnection.error {
+    stroke: var(--sapNegativeColor);
+    stroke-dasharray: 5,5;
+}
+
+/* Focus and keyboard navigation */
+.sapUiAgentCard:focus,
+.sapUiAgentStatusIndicator:focus {
+    outline: var(--sapContent_FocusWidth) dotted var(--sapContent_FocusColor);
+    outline-offset: calc(-1 * var(--sapContent_FocusWidth));
+}
+
+/* High contrast mode adjustments */
+@media (prefers-contrast: high) {
+    .sapUiAgentCard,
+    .sapUiAgentStatusIndicator {
+        border-width: 2px;
+        border-style: solid;
+    }
+    
+    .sapUiAgentConnection {
+        stroke-width: 3;
+    }
+}

@@ -1,0 +1,387 @@
+{
+  "_version": "1.58.0",
+  "sap.app": {
+    "id": "com.sap.a2a.portal",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": {
+      "version": "1.0.0"
+    },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "resources": "resources.json",
+    "sourceTemplate": {
+      "id": "@sap/generator-fiori:lrop",
+      "version": "1.12.0",
+      "toolsId": "a2a-portal-tools"
+    },
+    "dataSources": {
+      "mainService": {
+        "uri": "/api/v1/",
+        "type": "REST",
+        "settings": {
+          "annotations": ["localAnnotations"],
+          "localUri": "localService/metadata.xml"
+        }
+      },
+      "a2aService": {
+        "uri": "/a2a/v1/",
+        "type": "REST"
+      },
+      "ordService": {
+        "uri": "/api/v1/ord/",
+        "type": "REST"
+      },
+      "localAnnotations": {
+        "uri": "annotations/annotations.xml",
+        "type": "ODataAnnotation"
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "A2APortal-display": {
+          "title": "{{flpTitle}}",
+          "subTitle": "{{flpSubtitle}}",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "A2APortal",
+          "action": "display"
+        },
+        "Project-display": {
+          "title": "{{projects.title}}",
+          "subTitle": "View project details",
+          "signature": {
+            "parameters": {
+              "projectId": {
+                "required": true,
+                "renameTo": "id"
+              }
+            },
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "Project",
+          "action": "display"
+        },
+        "Project-manage": {
+          "title": "{{projects.list}}",
+          "subTitle": "Manage all projects",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "Project",
+          "action": "manage"
+        },
+        "Project-create": {
+          "title": "{{projects.create}}",
+          "subTitle": "Create new project",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "Project",
+          "action": "create"
+        },
+        "Agent-display": {
+          "title": "{{agents.title}}",
+          "subTitle": "View agent details",
+          "signature": {
+            "parameters": {
+              "agentId": {
+                "required": true,
+                "renameTo": "id"
+              },
+              "agentType": {
+                "required": false
+              }
+            },
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "Agent",
+          "action": "display"
+        },
+        "Agent-manage": {
+          "title": "{{agents.overview}}",
+          "subTitle": "Manage all agents",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "Agent",
+          "action": "manage"
+        },
+        "Analytics-display": {
+          "title": "{{analytics.title}}",
+          "subTitle": "View analytics dashboard",
+          "signature": {
+            "parameters": {
+              "analyticsType": {
+                "required": false
+              },
+              "timeRange": {
+                "required": false
+              }
+            },
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "Analytics",
+          "action": "display"
+        },
+        "Workflow-manage": {
+          "title": "Workflow Management",
+          "subTitle": "Manage A2A workflows",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "Workflow",
+          "action": "manage"
+        },
+        "Settings-display": {
+          "title": "{{settings.title}}",
+          "subTitle": "Application settings",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "Settings",
+          "action": "display"
+        }
+      },
+      "outbounds": {
+        "navigateToProject": {
+          "semanticObject": "Project",
+          "action": "display",
+          "parameters": {
+            "projectId": ""
+          }
+        },
+        "navigateToAgent": {
+          "semanticObject": "Agent", 
+          "action": "display",
+          "parameters": {
+            "agentId": "",
+            "agentType": ""
+          }
+        },
+        "navigateToAnalytics": {
+          "semanticObject": "Analytics",
+          "action": "display",
+          "parameters": {
+            "analyticsType": "",
+            "timeRange": ""
+          }
+        },
+        "navigateToSAPBusinessPartner": {
+          "semanticObject": "BusinessPartner",
+          "action": "display",
+          "parameters": {
+            "businessPartnerId": ""
+          }
+        },
+        "navigateToSAPCustomer": {
+          "semanticObject": "Customer",
+          "action": "display", 
+          "parameters": {
+            "customerId": ""
+          }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "sap-icon://task",
+      "favIcon": "favicon.ico"
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "componentUsages": {
+      "projectComponent": {
+        "name": "sap.fe.templates.ListReport",
+        "settings": {
+          "entitySet": "Projects",
+          "navigation": {
+            "Projects": {
+              "detail": {
+                "route": "ProjectDetail"
+              }
+            }
+          }
+        }
+      },
+      "agentComponent": {
+        "name": "sap.fe.templates.ListReport",
+        "settings": {
+          "entitySet": "Agents"
+        }
+      }
+    },
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.ushell": {},
+        "sap.fe.templates": {},
+        "sap.f": {},
+        "sap.suite.ui.generic.template": {},
+        "sap.ui.comp": {},
+        "sap.ui.generic.app": {},
+        "sap.ui.table": {},
+        "sap.uxap": {},
+        "sap.tnt": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "com.sap.a2a.portal.i18n.i18n"
+        }
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "defaultBindingMode": "TwoWay",
+          "defaultCountMode": "Inline"
+        }
+      },
+      "a2a": {
+        "dataSource": "a2aService",
+        "type": "sap.ui.model.json.JSONModel",
+        "settings": {}
+      },
+      "ord": {
+        "dataSource": "ordService",
+        "type": "sap.ui.model.json.JSONModel",
+        "settings": {}
+      },
+      "@i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "uri": "i18n/i18n.properties"
+      }
+    },
+    "resources": {
+      "css": []
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "viewType": "XML",
+        "async": true,
+        "viewPath": "com.sap.a2a.portal.view",
+        "controlAggregation": "pages",
+        "controlId": "app",
+        "clearControlAggregation": false
+      },
+      "routes": [
+        {
+          "name": "ProjectsList",
+          "pattern": ":?query:",
+          "target": [
+            "TargetProjectsList"
+          ]
+        },
+        {
+          "name": "ProjectDetail",
+          "pattern": "Projects({ProjectID}):?query:",
+          "target": [
+            "TargetProjectDetail"
+          ]
+        },
+        {
+          "name": "AgentsList",
+          "pattern": "Agents:?query:",
+          "target": [
+            "TargetAgentsList"
+          ]
+        },
+        {
+          "name": "AgentBuilder",
+          "pattern": "AgentBuilder:?query:",
+          "target": [
+            "TargetAgentBuilder"
+          ]
+        },
+        {
+          "name": "A2ANetwork",
+          "pattern": "Network:?query:",
+          "target": [
+            "TargetA2ANetwork"
+          ]
+        }
+      ],
+      "targets": {
+        "TargetProjectsList": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "ProjectsList",
+          "viewName": "ProjectsList",
+          "viewLevel": 1
+        },
+        "TargetProjectDetail": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "ProjectDetail",
+          "viewName": "ProjectDetail",
+          "viewLevel": 2
+        },
+        "TargetAgentsList": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "AgentsList",
+          "viewName": "AgentsList",
+          "viewLevel": 1
+        },
+        "TargetAgentBuilder": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "AgentBuilder",
+          "viewName": "fiori.AgentBuilder",
+          "viewLevel": 1
+        },
+        "TargetA2ANetwork": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "A2ANetwork",
+          "viewName": "A2ANetwork",
+          "viewLevel": 1
+        }
+      }
+    },
+    "rootView": {
+      "viewName": "com.sap.a2a.portal.view.App",
+      "type": "XML",
+      "async": true,
+      "id": "App"
+    }
+  },
+  "sap.cloud": {
+    "public": true,
+    "service": "a2a-portal"
+  },
+  "sap.fiori": {
+    "registrationIds": ["a2a.portal"],
+    "archeType": "transactional"
+  }
+}

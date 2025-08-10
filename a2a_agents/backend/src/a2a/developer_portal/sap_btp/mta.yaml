@@ -1,0 +1,195 @@
+_schema-version: "3.1"
+ID: a2a-developer-portal
+description: A2A Developer Portal - Agent-to-Agent Development Platform
+version: 1.0.0
+author: A2A Development Team
+
+parameters:
+  enable-parallel-deployments: true
+  keep-existing-routes: true
+
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci --production
+        - npm run build:ui5
+
+modules:
+  # Application Router Module
+  - name: a2a-developer-portal-approuter
+    type: approuter.nodejs
+    path: approuter
+    parameters:
+      keep-existing-routes: true
+      disk-quota: 256M
+      memory: 256M
+    build-parameters:
+      builder: npm-ci
+      ignore: ["node_modules/"]
+    requires:
+      - name: a2a-portal-xsuaa
+      - name: a2a-portal-destination
+      - name: a2a-portal-connectivity
+      - name: a2a-portal-html5-repo-runtime
+    provides:
+      - name: approuter-url
+        properties:
+          url: ${default-url}
+
+  # UI5 Application Module
+  - name: a2a-developer-portal-ui5
+    type: html5
+    path: ui5-app
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms: []
+    requires:
+      - name: a2a-portal-html5-repo-host
+        parameters:
+          content-target: true
+
+  # Backend API Module
+  - name: a2a-developer-portal-backend
+    type: python
+    path: backend
+    parameters:
+      memory: 1024M
+      disk-quota: 1024M
+      buildpack: python_buildpack
+    build-parameters:
+      builder: custom
+      commands:
+        - pip install -r requirements.txt
+    properties:
+      FLASK_ENV: production
+      DATABASE_URL: ~{a2a-portal-db/credentials/uri}
+      XSUAA_SERVICE_NAME: a2a-portal-xsuaa
+    requires:
+      - name: a2a-portal-xsuaa
+      - name: a2a-portal-destination
+      - name: a2a-portal-db
+      - name: a2a-portal-connectivity
+    provides:
+      - name: backend-api
+        properties:
+          url: ${default-url}
+
+  # Database Deployer Module
+  - name: a2a-developer-portal-db-deployer
+    type: hdb
+    path: db
+    parameters:
+      memory: 256M
+      disk-quota: 1024M
+    requires:
+      - name: a2a-portal-db
+
+resources:
+  # XSUAA Authentication Service
+  - name: a2a-portal-xsuaa
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: a2a-developer-portal-${org}-${space}
+        tenant-mode: dedicated
+        scopes:
+          - name: "$XSAPPNAME.User"
+            description: "Basic user access"
+          - name: "$XSAPPNAME.Developer"
+            description: "Developer access"
+          - name: "$XSAPPNAME.Admin"
+            description: "Administrator access"
+          - name: "$XSAPPNAME.ProjectManager"
+            description: "Project manager access"
+
+  # Destination Service
+  - name: a2a-portal-destination
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+      config:
+        HTML5Runtime_enabled: true
+        init_data:
+          instance:
+            destinations:
+              - Name: a2a-backend
+                Description: A2A Backend API
+                URL: ~{backend-api/url}
+                Type: HTTP
+                ProxyType: Internet
+                Authentication: OAuth2UserTokenExchange
+                tokenServiceInstanceName: a2a-portal-xsuaa
+                tokenServiceKeyName: a2a-portal-xsuaa-key
+              - Name: sap-btp-services
+                Description: SAP BTP Platform Services
+                URL: https://api.cf.sap.hana.ondemand.com
+                Type: HTTP
+                ProxyType: Internet
+                Authentication: OAuth2ClientCredentials
+
+  # Connectivity Service
+  - name: a2a-portal-connectivity
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: connectivity
+      service-plan: lite
+
+  # HTML5 Application Repository (Host)
+  - name: a2a-portal-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+
+  # HTML5 Application Repository (Runtime)
+  - name: a2a-portal-html5-repo-runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-runtime
+
+  # PostgreSQL Database Service
+  - name: a2a-portal-db
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: postgresql-db
+      service-plan: development
+      config:
+        engine_version: "13"
+
+  # Application Logging Service
+  - name: a2a-portal-logging
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: application-logs
+      service-plan: lite
+
+  # Service Manager
+  - name: a2a-portal-service-manager
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: service-manager
+      service-plan: container
+
+  # Redis Cache Service
+  - name: a2a-portal-redis
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: redis-cache
+      service-plan: development
+
+  # Job Scheduler Service
+  - name: a2a-portal-jobscheduler
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: jobscheduler
+      service-plan: lite

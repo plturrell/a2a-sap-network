@@ -1,0 +1,111 @@
+<mvc:View
+    controllerName="a2a.network.fiori.controller.Capabilities"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:core="sap.ui.core">
+    
+    <f:DynamicPage id="capabilitiesPage">
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>capabilities}"/>
+                </f:heading>
+                <f:actions>
+                    <Button
+                        text="Register Capability"
+                        type="Emphasized"
+                        icon="sap-icon://add"
+                        press="onRegisterCapability"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+        
+        <f:content>
+            <IconTabBar
+                id="iconTabBar"
+                select="onTabSelect"
+                expandable="false">
+                <items>
+                    <IconTabFilter
+                        text="All"
+                        count="{/Capabilities/$count}"
+                        key="all">
+                        <Table
+                            items="{/Capabilities}"
+                            mode="MultiSelect">
+                            <headerToolbar>
+                                <OverflowToolbar>
+                                    <SearchField placeholder="Search capabilities..." search="onSearch" width="300px"/>
+                                    <ToolbarSpacer/>
+                                    <Button icon="sap-icon://group-2" press="onGroup"/>
+                                    <Button icon="sap-icon://filter" press="onFilter"/>
+                                </OverflowToolbar>
+                            </headerToolbar>
+                            <columns>
+                                <Column>
+                                    <Text text="Name"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Category"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Version"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Status"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Agents Using"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Tags"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <ObjectIdentifier
+                                            title="{name}"
+                                            text="{description}"/>
+                                        <Text text="{
+                                            path: 'category',
+                                            formatter: '.formatter.formatCapabilityCategory'
+                                        }"/>
+                                        <Text text="{version}"/>
+                                        <ObjectStatus
+                                            text="{status}"
+                                            state="{= ${status} === 'active' ? 'Success' : ${status} === 'deprecated' ? 'Warning' : 'Error'}"/>
+                                        <ObjectNumber number="{= ${agents}.length }"/>
+                                        <TokenDisplay tokens="{tags}"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </IconTabFilter>
+                    <IconTabFilter
+                        text="Computation"
+                        count="{/Capabilities/$count}"
+                        key="computation"
+                        icon="sap-icon://process"/>
+                    <IconTabFilter
+                        text="Storage"
+                        count="{/Capabilities/$count}"
+                        key="storage"
+                        icon="sap-icon://database"/>
+                    <IconTabFilter
+                        text="Analysis"
+                        count="{/Capabilities/$count}"
+                        key="analysis"
+                        icon="sap-icon://line-chart"/>
+                    <IconTabFilter
+                        text="Communication"
+                        count="{/Capabilities/$count}"
+                        key="communication"
+                        icon="sap-icon://discussion"/>
+                </items>
+            </IconTabBar>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

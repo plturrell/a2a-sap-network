@@ -1,0 +1,232 @@
+<mvc:View
+    controllerName="a2a.portal.controller.UserProfile"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:layout="sap.ui.layout">
+    
+    <Page class="a2a-tablet-page" title="User Profile" showNavButton="true" navButtonPress="onNavBack">
+        <content>
+            <ScrollContainer height="100%" width="100%" horizontal="false" vertical="true">
+                <VBox class="sapUiMediumMargin">
+                    
+                    <!-- User Information Panel -->
+                    <Panel headerText="User Information" class="sapUiResponsiveMargin" width="auto">
+                        <content>
+                            <VBox class="sapUiMediumMargin">
+                                <HBox class="sapUiSmallMarginBottom">
+                                    <Label text="User ID:" class="sapUiMediumMarginEnd" width="120px" />
+                                    <Text text="{user>/userInfo/userId}" />
+                                </HBox>
+                                
+                                <HBox class="sapUiSmallMarginBottom">
+                                    <Label text="User Name:" class="sapUiMediumMarginEnd" width="120px" />
+                                    <Text text="{user>/userInfo/userName}" />
+                                </HBox>
+                                
+                                <HBox class="sapUiSmallMarginBottom">
+                                    <Label text="Email:" class="sapUiMediumMarginEnd" width="120px" />
+                                    <Text text="{user>/userInfo/email}" />
+                                </HBox>
+                                
+                                <HBox class="sapUiSmallMarginBottom">
+                                    <Label text="First Name:" class="sapUiMediumMarginEnd" width="120px" />
+                                    <Text text="{user>/userInfo/firstName}" />
+                                </HBox>
+                                
+                                <HBox class="sapUiSmallMarginBottom">
+                                    <Label text="Last Name:" class="sapUiMediumMarginEnd" width="120px" />
+                                    <Text text="{user>/userInfo/lastName}" />
+                                </HBox>
+                                
+                                <HBox class="sapUiSmallMarginBottom">
+                                    <Label text="Roles:" class="sapUiMediumMarginEnd" width="120px" />
+                                    <Text text="{path: 'user>/userInfo/roles', formatter: '.formatRoles'}" />
+                                </HBox>
+                                
+                                <HBox class="sapUiSmallMarginBottom">
+                                    <Label text="Tenant:" class="sapUiMediumMarginEnd" width="120px" />
+                                    <Text text="{user>/userInfo/tenant}" />
+                                </HBox>
+                                
+                                <HBox class="sapUiSmallMarginBottom">
+                                    <Label text="Login Time:" class="sapUiMediumMarginEnd" width="120px" />
+                                    <Text text="{path: 'user>/userInfo/loginTime', formatter: '.formatDate'}" />
+                                </HBox>
+                                
+                                <HBox class="sapUiSmallMarginBottom">
+                                    <Label text="Token Expiry:" class="sapUiMediumMarginEnd" width="120px" />
+                                    <Text text="{path: 'user>/userInfo/tokenExpiry', formatter: '.formatDate'}" />
+                                </HBox>
+                            </VBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- User Preferences Panel -->
+                    <Panel headerText="Preferences" class="sapUiResponsiveMargin" width="auto">
+                        <content>
+                            <VBox class="sapUiMediumMargin">
+                                <HBox class="sapUiSmallMarginBottom" alignItems="Center">
+                                    <Label text="Theme:" class="sapUiMediumMarginEnd" width="150px" />
+                                    <Select selectedKey="{user>/preferences/theme}" width="200px">
+                                        <core:Item key="sap_fiori_3" text="SAP Fiori 3" />
+                                        <core:Item key="sap_fiori_3_dark" text="SAP Fiori 3 Dark" />
+                                        <core:Item key="sap_belize" text="SAP Belize" />
+                                        <core:Item key="sap_belize_plus" text="SAP Belize Plus" />
+                                    </Select>
+                                </HBox>
+                                
+                                <HBox class="sapUiSmallMarginBottom" alignItems="Center">
+                                    <Label text="Language:" class="sapUiMediumMarginEnd" width="150px" />
+                                    <Select selectedKey="{user>/preferences/language}" width="200px">
+                                        <core:Item key="en" text="English" />
+                                        <core:Item key="de" text="German" />
+                                        <core:Item key="fr" text="French" />
+                                        <core:Item key="es" text="Spanish" />
+                                        <core:Item key="ja" text="Japanese" />
+                                        <core:Item key="zh" text="Chinese" />
+                                    </Select>
+                                </HBox>
+                                
+                                <HBox class="sapUiSmallMarginBottom" alignItems="Center">
+                                    <Label text="Timezone:" class="sapUiMediumMarginEnd" width="150px" />
+                                    <Select selectedKey="{user>/preferences/timezone}" width="200px">
+                                        <core:Item key="UTC" text="UTC" />
+                                        <core:Item key="America/New_York" text="Eastern Time" />
+                                        <core:Item key="America/Chicago" text="Central Time" />
+                                        <core:Item key="America/Denver" text="Mountain Time" />
+                                        <core:Item key="America/Los_Angeles" text="Pacific Time" />
+                                        <core:Item key="Europe/London" text="London" />
+                                        <core:Item key="Europe/Berlin" text="Berlin" />
+                                        <core:Item key="Asia/Tokyo" text="Tokyo" />
+                                        <core:Item key="Asia/Shanghai" text="Shanghai" />
+                                    </Select>
+                                </HBox>
+                                
+                                <HBox class="sapUiSmallMarginBottom" alignItems="Center">
+                                    <Label text="Email Notifications:" class="sapUiMediumMarginEnd" width="150px" />
+                                    <Switch state="{user>/preferences/notifications/email}" />
+                                </HBox>
+                                
+                                <HBox class="sapUiSmallMarginBottom" alignItems="Center">
+                                    <Label text="Push Notifications:" class="sapUiMediumMarginEnd" width="150px" />
+                                    <Switch state="{user>/preferences/notifications/push}" />
+                                </HBox>
+                                
+                                <HBox class="sapUiSmallMarginBottom" alignItems="Center">
+                                    <Label text="Deployment Notifications:" class="sapUiMediumMarginEnd" width="150px" />
+                                    <Switch state="{user>/preferences/notifications/deployment}" />
+                                </HBox>
+                                
+                                <HBox class="sapUiSmallMarginBottom" alignItems="Center">
+                                    <Label text="Security Notifications:" class="sapUiMediumMarginEnd" width="150px" />
+                                    <Switch state="{user>/preferences/notifications/security}" />
+                                </HBox>
+                            </VBox>
+                            
+                            <HBox justifyContent="End" class="sapUiSmallMarginTop">
+                                <Button text="Save Preferences" type="Emphasized" press="onSavePreferences" />
+                            </HBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Active Sessions Panel -->
+                    <Panel headerText="Active Sessions" class="sapUiResponsiveMargin" width="auto">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Active Sessions" />
+                                <ToolbarSpacer />
+                                <Button text="Terminate All Other Sessions" type="Reject" press="onTerminateAllSessions" />
+                            </Toolbar>
+                        </headerToolbar>
+                        <content>
+                            <Table items="{user>/sessions}" growing="true" growingThreshold="20">
+                                <columns>
+                                    <Column>
+                                        <Text text="Session ID" />
+                                    </Column>
+                                    <Column>
+                                        <Text text="Created" />
+                                    </Column>
+                                    <Column>
+                                        <Text text="Last Accessed" />
+                                    </Column>
+                                    <Column>
+                                        <Text text="IP Address" />
+                                    </Column>
+                                    <Column>
+                                        <Text text="User Agent" />
+                                    </Column>
+                                    <Column>
+                                        <Text text="Status" />
+                                    </Column>
+                                    <Column>
+                                        <Text text="Actions" />
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{user>session_id}" />
+                                            <Text text="{path: 'user>created_at', formatter: '.formatDate'}" />
+                                            <Text text="{path: 'user>last_accessed', formatter: '.formatDate'}" />
+                                            <Text text="{user>ip_address}" />
+                                            <Text text="{user>user_agent}" maxLines="2" />
+                                            <ObjectStatus 
+                                                text="{user>status}" 
+                                                state="{path: 'user>status', formatter: '.formatSessionStatus'}" />
+                                            <Button 
+                                                text="Terminate" 
+                                                type="Reject" 
+                                                press="onTerminateSession"
+                                                customData:sessionId="{user>session_id}"
+                                                xmlns:customData="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1" />
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Session Statistics Panel -->
+                    <Panel headerText="Session Statistics" class="sapUiResponsiveMargin" width="auto">
+                        <content>
+                            <VBox class="sapUiMediumMargin">
+                                <HBox class="sapUiSmallMarginBottom">
+                                    <Label text="Total Sessions:" class="sapUiMediumMarginEnd" width="180px" />
+                                    <Text text="{user>/statistics/total_sessions}" />
+                                </HBox>
+                                
+                                <HBox class="sapUiSmallMarginBottom">
+                                    <Label text="Active Sessions:" class="sapUiMediumMarginEnd" width="180px" />
+                                    <Text text="{user>/statistics/active_sessions}" />
+                                </HBox>
+                                
+                                <HBox class="sapUiSmallMarginBottom">
+                                    <Label text="Average Session Duration:" class="sapUiMediumMarginEnd" width="180px" />
+                                    <Text text="{user>/statistics/average_session_duration} minutes" />
+                                </HBox>
+                                
+                                <HBox class="sapUiSmallMarginBottom">
+                                    <Label text="Total Activity Count:" class="sapUiMediumMarginEnd" width="180px" />
+                                    <Text text="{user>/statistics/total_activity}" />
+                                </HBox>
+                            </VBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Security Actions Panel -->
+                    <Panel headerText="Security Actions" class="sapUiResponsiveMargin" width="auto">
+                        <content>
+                            <VBox class="sapUiSmallMargin">
+                                <Button text="Change Password" type="Default" press="onChangePassword" class="sapUiTinyMarginBottom" />
+                                <Button text="Logout" type="Reject" press="onLogout" />
+                            </VBox>
+                        </content>
+                    </Panel>
+                    
+                </VBox>
+            </ScrollContainer>
+        </content>
+    </Page>
+</mvc:View>

@@ -1,0 +1,90 @@
+version: "1.0.0"
+services:
+  - name: "data_product_agent_0"
+    image: "a2a/data-product-agent:latest"
+    port: 8001
+    health_endpoint: "/health"
+    environment_variables:
+      PROMETHEUS_PORT: "8001"
+      LOG_LEVEL: "INFO"
+    resource_limits:
+      memory: "512M"
+      cpus: "0.5"
+
+  - name: "data_standardization_agent_1"
+    image: "a2a/data-standardization-agent:latest"
+    port: 8002
+    health_endpoint: "/health"
+    environment_variables:
+      PROMETHEUS_PORT: "8002"
+      LOG_LEVEL: "INFO"
+    resource_limits:
+      memory: "512M"
+      cpus: "0.5"
+
+  - name: "ai_preparation_agent_2"
+    image: "a2a/ai-preparation-agent:latest"
+    port: 8003
+    health_endpoint: "/health"
+    environment_variables:
+      PROMETHEUS_PORT: "8003"
+      LOG_LEVEL: "INFO"
+    resource_limits:
+      memory: "1G"
+      cpus: "1.0"
+
+  - name: "vector_processing_agent_3"
+    image: "a2a/vector-processing-agent:latest"
+    port: 8004
+    health_endpoint: "/health"
+    environment_variables:
+      PROMETHEUS_PORT: "8004"
+      LOG_LEVEL: "INFO"
+    resource_limits:
+      memory: "1G"
+      cpus: "1.0"
+
+  - name: "catalog_manager_agent"
+    image: "a2a/catalog-manager-agent:latest"
+    port: 8005
+    health_endpoint: "/health"
+    environment_variables:
+      PROMETHEUS_PORT: "8005"
+      LOG_LEVEL: "INFO"
+    resource_limits:
+      memory: "512M"
+      cpus: "0.5"
+
+  - name: "data_manager_agent"
+    image: "a2a/data-manager-agent:latest"
+    port: 8006
+    health_endpoint: "/health"
+    environment_variables:
+      PROMETHEUS_PORT: "8006"
+      LOG_LEVEL: "INFO"
+    resource_limits:
+      memory: "512M"
+      cpus: "0.5"
+
+  - name: "api_gateway"
+    image: "a2a/api-gateway:latest"
+    port: 8080
+    health_endpoint: "/health"
+    environment_variables:
+      LOG_LEVEL: "INFO"
+    resource_limits:
+      memory: "256M"
+      cpus: "0.25"
+
+pre_deployment_checks:
+  - "docker --version"
+  - "docker-compose --version"
+  - "curl --version"
+
+post_deployment_tests:
+  - "python3 deployment/tests/smoke_test.py"
+  - "python3 deployment/tests/integration_test.py"
+
+rollback_on_failure: true
+health_check_timeout: 300  # 5 minutes
+traffic_switch_delay: 30   # 30 seconds

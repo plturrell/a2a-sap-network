@@ -1,0 +1,20 @@
+# Cloud Foundry ignore file
+node_modules/
+.git/
+.github/
+.vscode/
+*.log
+*.tmp
+.DS_Store
+.env
+.env.local
+/coverage/
+/test/
+/tests/
+/docs/
+*.md
+!SECURITY.md
+.gitignore
+.eslintrc
+.prettierrc
+server.log*

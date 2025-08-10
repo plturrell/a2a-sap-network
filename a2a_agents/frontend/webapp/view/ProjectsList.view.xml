@@ -1,0 +1,235 @@
+<mvc:View
+    controllerName="com.sap.a2a.portal.controller.ProjectsList"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:fb="sap.ui.comp.filterbar"
+    xmlns:core="sap.ui.core"
+    xmlns:table="sap.ui.table"
+    xmlns:u="sap.ui.unified"
+    height="100%">
+    
+    <Page
+        id="projectsListPage"
+        title="{i18n>projectsTitle}"
+        showNavButton="false"
+        class="sapUiContentPadding">
+        
+        <headerContent>
+            <Button
+                text="{i18n>createProject}"
+                type="Emphasized"
+                icon="sap-icon://add"
+                press="onCreateProject"/>
+            <Button
+                text="{i18n>importProject}"
+                icon="sap-icon://upload"
+                press="onImportProject"/>
+            <ToolbarSpacer/>
+            <SearchField
+                width="300px"
+                placeholder="{i18n>searchProjects}"
+                search="onSearch"
+                liveChange="onSearchLiveChange"/>
+        </headerContent>
+        
+        <content>
+            <fb:FilterBar
+                id="projectsFilterBar"
+                persistencyKey="projectsFilter"
+                useToolbar="false"
+                search="onFilterSearch"
+                filterChange="onFilterChange"
+                afterVariantLoad="onAfterVariantLoad">
+                
+                <fb:filterGroupItems>
+                    <fb:FilterGroupItem
+                        name="Status"
+                        label="{i18n>status}"
+                        groupName="Basic"
+                        visibleInFilterBar="true">
+                        <fb:control>
+                            <MultiComboBox
+                                id="statusFilter"
+                                placeholder="{i18n>selectStatus}"
+                                items="{
+                                    path: '/ProjectStatuses',
+                                    sorter: { path: 'text' }
+                                }">
+                                <core:Item key="{key}" text="{text}"/>
+                            </MultiComboBox>
+                        </fb:control>
+                    </fb:FilterGroupItem>
+                    
+                    <fb:FilterGroupItem
+                        name="Priority"
+                        label="{i18n>priority}"
+                        groupName="Basic"
+                        visibleInFilterBar="true">
+                        <fb:control>
+                            <ComboBox
+                                id="priorityFilter"
+                                placeholder="{i18n>selectPriority}"
+                                items="{/Priorities}">
+                                <core:Item key="{key}" text="{text}"/>
+                            </ComboBox>
+                        </fb:control>
+                    </fb:FilterGroupItem>
+                    
+                    <fb:FilterGroupItem
+                        name="DateRange"
+                        label="{i18n>dateRange}"
+                        groupName="Extended"
+                        visibleInFilterBar="true">
+                        <fb:control>
+                            <DateRangeSelection
+                                id="dateRangeFilter"
+                                placeholder="{i18n>selectDateRange}"/>
+                        </fb:control>
+                    </fb:FilterGroupItem>
+                </fb:filterGroupItems>
+            </fb:FilterBar>
+            
+            <table:Table
+                id="projectsTable"
+                rows="{
+                    path: '/Projects',
+                    sorter: {
+                        path: 'createdAt',
+                        descending: true
+                    }
+                }"
+                selectionMode="Multi"
+                visibleRowCount="15"
+                alternateRowColors="true"
+                rowSelectionChange="onRowSelectionChange">
+                
+                <table:toolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>projectsList} ({/Projects/length})" level="H2"/>
+                        <ToolbarSpacer/>
+                        <Button
+                            icon="sap-icon://delete"
+                            tooltip="{i18n>deleteSelected}"
+                            press="onDeleteSelected"
+                            enabled="{= ${projectsTable>/selectedIndices}.length > 0}"/>
+                        <Button
+                            icon="sap-icon://excel-attachment"
+                            tooltip="{i18n>exportToExcel}"
+                            press="onExportToExcel"/>
+                        <Button
+                            icon="sap-icon://action-settings"
+                            tooltip="{i18n>tableSettings}"
+                            press="onTableSettings"/>
+                    </OverflowToolbar>
+                </table:toolbar>
+                
+                <table:columns>
+                    <table:Column width="11rem" sortProperty="name" filterProperty="name">
+                        <Label text="{i18n>projectName}"/>
+                        <table:template>
+                            <Link
+                                text="{name}"
+                                press="onProjectPress"/>
+                        </table:template>
+                    </table:Column>
+                    
+                    <table:Column width="20rem" sortProperty="description">
+                        <Label text="{i18n>description}"/>
+                        <table:template>
+                            <Text text="{description}" maxLines="2"/>
+                        </table:template>
+                    </table:Column>
+                    
+                    <table:Column width="6rem" sortProperty="status" filterProperty="status">
+                        <Label text="{i18n>status}"/>
+                        <table:template>
+                            <ObjectStatus
+                                text="{status}"
+                                state="{
+                                    path: 'status',
+                                    formatter: '.formatter.statusState'
+                                }"
+                                icon="{
+                                    path: 'status',
+                                    formatter: '.formatter.statusIcon'
+                                }"/>
+                        </table:template>
+                    </table:Column>
+                    
+                    <table:Column width="6rem" sortProperty="priority">
+                        <Label text="{i18n>priority}"/>
+                        <table:template>
+                            <ObjectStatus
+                                text="{priority}"
+                                state="{
+                                    path: 'priority',
+                                    formatter: '.formatter.priorityState'
+                                }"/>
+                        </table:template>
+                    </table:Column>
+                    
+                    <table:Column width="10rem" sortProperty="agents">
+                        <Label text="{i18n>agents}"/>
+                        <table:template>
+                            <HBox>
+                                <core:Icon
+                                    src="sap-icon://group"
+                                    class="sapUiTinyMarginEnd"/>
+                                <Text text="{agentCount}"/>
+                            </HBox>
+                        </table:template>
+                    </table:Column>
+                    
+                    <table:Column width="9rem" sortProperty="createdAt">
+                        <Label text="{i18n>created}"/>
+                        <table:template>
+                            <Text text="{
+                                path: 'createdAt',
+                                type: 'sap.ui.model.type.Date',
+                                formatOptions: {
+                                    style: 'short'
+                                }
+                            }"/>
+                        </table:template>
+                    </table:Column>
+                    
+                    <table:Column width="9rem" sortProperty="lastModified">
+                        <Label text="{i18n>modified}"/>
+                        <table:template>
+                            <Text text="{
+                                path: 'lastModified',
+                                type: 'sap.ui.model.type.Date',
+                                formatOptions: {
+                                    relative: true
+                                }
+                            }"/>
+                        </table:template>
+                    </table:Column>
+                    
+                    <table:Column width="8rem">
+                        <Label text="{i18n>actions}"/>
+                        <table:template>
+                            <HBox>
+                                <Button
+                                    icon="sap-icon://edit"
+                                    type="Transparent"
+                                    tooltip="{i18n>edit}"
+                                    press="onEditProject"/>
+                                <Button
+                                    icon="sap-icon://duplicate"
+                                    type="Transparent"
+                                    tooltip="{i18n>duplicate}"
+                                    press="onDuplicateProject"/>
+                                <Button
+                                    icon="sap-icon://delete"
+                                    type="Transparent"
+                                    tooltip="{i18n>delete}"
+                                    press="onDeleteProject"/>
+                            </HBox>
+                        </table:template>
+                    </table:Column>
+                </table:columns>
+            </table:Table>
+        </content>
+    </Page>
+</mvc:View>

@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "source": "financial_standardization_agent",
+    "timestamp": "2025-08-01T07:38:22.423090",
+    "records": 2,
+    "data_type": "book",
+    "upstream_registration": null
+  },
+  "data": [
+    {
+      "original": {
+        "Books": "NEWF Group Adjustment",
+        "_row_number": 1
+      },
+      "standardized": {
+        "name": "New Financial Group Adjustment",
+        "base_entity": "New Financial",
+        "entity_type": "Legal Entity",
+        "book_type": "Consolidation Adjustment",
+        "book_subtype": "Group Level Adjustment",
+        "book_purpose": "Consolidation Process",
+        "regulatory_scope": "Group Reporting",
+        "consolidation_method": "Adjustment Entry",
+        "is_adjustment_book": true,
+        "is_main_entity": false,
+        "generated_book_code": "GA01"
+      },
+      "confidence": 1.0,
+      "completeness": 1.0,
+      "metadata": {
+        "is_valid_book": true,
+        "needs_review": false,
+        "validation_issues": null,
+        "enriched_with_ai": false
+      }
+    },
+    {
+      "original": {
+        "Books": "Trading Book - Asia",
+        "_row_number": 2
+      },
+      "standardized": {
+        "name": "Trading Book - Asia",
+        "base_entity": null,
+        "entity_type": "Unknown",
+        "book_type": "Legal Entity",
+        "book_subtype": "Primary Entity",
+        "book_purpose": "Legal Structure",
+        "regulatory_scope": "Full Reporting",
+        "consolidation_method": "Full Consolidation",
+        "is_adjustment_book": false,
+        "is_main_entity": true,
+        "generated_book_code": "ME01"
+      },
+      "confidence": 0.54,
+      "completeness": 0.7333333333333333,
+      "metadata": {
+        "is_valid_book": true,
+        "needs_review": false,
+        "validation_issues": null,
+        "enriched_with_ai": true
+      }
+    }
+  ]
+}

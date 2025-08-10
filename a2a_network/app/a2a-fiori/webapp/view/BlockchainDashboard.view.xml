@@ -1,0 +1,428 @@
+<mvc:View
+    controllerName="a2a.network.fiori.controller.BlockchainDashboard"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:card="sap.f.cards"
+    xmlns:w="sap.ui.integration.widgets"
+    xmlns:core="sap.ui.core"
+    xmlns:grid="sap.ui.layout.cssgrid"
+    xmlns:form="sap.ui.layout.form">
+    
+    <f:DynamicPage id="blockchainDashboardPage" headerExpanded="true" showFooter="false">
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>blockchainDashboardTitle}"/>
+                </f:heading>
+                <f:expandedContent>
+                    <ObjectAttribute title="{i18n>networkStatus}" text="{blockchain>/networkStatus}"/>
+                    <ObjectAttribute title="{i18n>blockHeight}" text="{blockchain>/blockHeight}"/>
+                    <ObjectAttribute title="{i18n>gasPrice}" text="{blockchain>/gasPrice} Gwei"/>
+                </f:expandedContent>
+                <f:snappedContent>
+                    <MessageStrip text="{i18n>blockchainConnected}" type="Success" showIcon="true"/>
+                </f:snappedContent>
+                <f:actions>
+                    <Button
+                        text="{i18n>syncBlockchain}"
+                        type="Emphasized"
+                        icon="sap-icon://synchronize"
+                        press="onSyncBlockchain"
+                        enabled="{ui>/syncEnabled}"/>
+                    <Button
+                        text="{i18n>deployContract}"
+                        icon="sap-icon://upload"
+                        press="onDeployContract"
+                        enabled="{ui>/deployEnabled}"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+        
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <f:content>
+                    <FlexBox alignItems="Start" justifyContent="SpaceBetween">
+                        <items>
+                            <!-- Network Overview Card -->
+                            <f:Card class="sapUiMediumMarginEnd" width="20rem">
+                                <f:header>
+                                    <card:Header
+                                        title="{i18n>networkOverview}"
+                                        subtitle="{i18n>realTimeMetrics}"
+                                        iconSrc="sap-icon://cloud"/>
+                                </f:header>
+                                <f:content>
+                                    <VBox class="sapUiSmallMargin">
+                                        <ObjectStatus
+                                            title="{i18n>consensus}"
+                                            text="{blockchain>/consensusType}"
+                                            state="Success"/>
+                                        <ObjectStatus
+                                            title="{i18n>nodeCount}"
+                                            text="{blockchain>/nodeCount}"
+                                            state="Information"/>
+                                        <ObjectStatus
+                                            title="{i18n>pendingTransactions}"
+                                            text="{blockchain>/pendingTxCount}"
+                                            state="{= ${blockchain>/pendingTxCount} > 100 ? 'Warning' : 'Success'}"/>
+                                    </VBox>
+                                </f:content>
+                            </f:Card>
+                            
+                            <!-- Smart Contracts Card -->
+                            <f:Card class="sapUiMediumMarginEnd" width="20rem">
+                                <f:header>
+                                    <card:Header
+                                        title="{i18n>smartContracts}"
+                                        subtitle="{i18n>deployedContracts}"
+                                        iconSrc="sap-icon://document-text"/>
+                                </f:header>
+                                <f:content>
+                                    <List
+                                        items="{blockchain>/contracts}"
+                                        noDataText="{i18n>noContracts}">
+                                        <StandardListItem
+                                            title="{name}"
+                                            description="{address}"
+                                            info="{status}"
+                                            infoState="{= ${status} === 'Active' ? 'Success' : 'Warning'}"
+                                            type="Navigation"
+                                            press="onContractPress"/>
+                                    </List>
+                                </f:content>
+                            </f:Card>
+                            
+                            <!-- Transaction Metrics Card -->
+                            <f:Card width="20rem">
+                                <f:header>
+                                    <card:Header
+                                        title="{i18n>transactionMetrics}"
+                                        subtitle="{i18n>last24Hours}"
+                                        iconSrc="sap-icon://line-chart"/>
+                                </f:header>
+                                <f:content>
+                                    <VBox class="sapUiSmallMargin">
+                                        <NumericContent
+                                            value="{blockchain>/txCount24h}"
+                                            scale="{i18n>transactions}"
+                                            indicator="None"
+                                            valueColor="Good"/>
+                                        <ProgressIndicator
+                                            percentValue="{blockchain>/successRate}"
+                                            displayValue="{blockchain>/successRate}%"
+                                            showValue="true"
+                                            state="{= ${blockchain>/successRate} > 95 ? 'Success' : ${blockchain>/successRate} > 80 ? 'Warning' : 'Error'}"/>
+                                        <Label text="{i18n>successRate}"/>
+                                    </VBox>
+                                </f:content>
+                            </f:Card>
+                        </items>
+                    </FlexBox>
+                </f:content>
+            </f:DynamicPageHeader>
+        </f:header>
+        
+        <f:content>
+            <!-- Loading States -->
+            <core:Fragment fragmentName="a2a.network.fiori.fragment.LoadingIndicator" type="XML"/>
+            
+            <!-- Blockchain Education -->
+            <core:Fragment fragmentName="a2a.network.fiori.fragment.BlockchainEducation" type="XML"/>
+            
+            <grid:CSSGrid id="blockchainGrid" gridTemplateColumns="1fr 1fr" gridGap="1rem" visible="{= !${ui>/isLoadingSkeleton} && !${ui>/isLoadingSpinner} && !${ui>/isLoadingProgress}}">
+                <grid:items>
+                    <!-- Recent Blocks Table -->
+                    <Panel headerText="{i18n>recentBlocks}" expandable="true" expanded="true">
+                        <content>
+                            <Table
+                                id="recentBlocksTable"
+                                items="{
+                                    path: 'blockchain>/recentBlocks',
+                                    sorter: {
+                                        path: 'number',
+                                        descending: true
+                                    }
+                                }"
+                                growing="true"
+                                growingThreshold="10">
+                                <headerToolbar>
+                                    <OverflowToolbar>
+                                        <content>
+                                            <Title text="{i18n>blockExplorer}" level="H2"/>
+                                            <ToolbarSpacer/>
+                                            <Button
+                                                icon="sap-icon://refresh"
+                                                press="onRefreshBlocks"/>
+                                        </content>
+                                    </OverflowToolbar>
+                                </headerToolbar>
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>blockNumber}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>blockHash}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>transactions}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>timestamp}"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <!-- Fiori-compliant block number with icon -->
+                                            <HBox alignItems="Center">
+                                                <core:Icon src="sap-icon://chain-link" class="sapUiTinyMarginEnd" color="Accent6"/>
+                                                <ObjectIdentifier
+                                                    title="{blockchain>number}"
+                                                    titleActive="true"
+                                                    press="onBlockPress"/>
+                                            </HBox>
+                                            <!-- Shortened hash with copy functionality -->
+                                            <HBox alignItems="Center">
+                                                <Text text="{
+                                                    path: 'blockchain>hash',
+                                                    formatter: '.formatter.formatAddress'
+                                                }" class="blockchain-address"/>
+                                                <Button 
+                                                    icon="sap-icon://copy"
+                                                    type="Transparent"
+                                                    tooltip="{i18n>copyAddress}"
+                                                    press="onCopyBlockHash"
+                                                    class="sapUiTinyMarginBegin"/>
+                                            </HBox>
+                                            <!-- Transaction count with semantic state -->
+                                            <ObjectNumber 
+                                                number="{blockchain>transactionCount}"
+                                                state="{= ${blockchain>transactionCount} > 100 ? 'Success' : ${blockchain>transactionCount} > 50 ? 'Warning' : 'None'}"
+                                                unit="txs"/>
+                                            <!-- Timestamp with relative time -->
+                                            <VBox>
+                                                <Text text="{
+                                                    path: 'blockchain>timestamp',
+                                                    formatter: '.formatter.formatDateTime'
+                                                }"/>
+                                                <Text text="{
+                                                    path: 'blockchain>timestamp',
+                                                    formatter: '.formatter.formatRelativeTime'
+                                                }" class="sapUiSmallText"/>
+                                            </VBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Agent Registry Panel -->
+                    <Panel headerText="{i18n>agentRegistry}" expandable="true" expanded="true">
+                        <content>
+                            <Table
+                                id="blockchainAgentsTable"
+                                items="{
+                                    path: 'blockchain>/agents',
+                                    filters: [{
+                                        path: 'onChain',
+                                        operator: 'EQ',
+                                        value1: true
+                                    }]
+                                }">
+                                <headerToolbar>
+                                    <OverflowToolbar>
+                                        <content>
+                                            <Title text="{i18n>onChainAgents}" level="H2"/>
+                                            <ToolbarSpacer/>
+                                            <SearchField
+                                                liveChange="onSearchAgents"
+                                                width="15rem"/>
+                                        </content>
+                                    </OverflowToolbar>
+                                </headerToolbar>
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>agentName}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>address}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>reputation}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>actions}"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <!-- Agent name with type and icon -->
+                                            <VBox>
+                                                <HBox alignItems="Center">
+                                                    <core:Icon src="sap-icon://competitor" class="sapUiTinyMarginEnd" color="Accent4"/>
+                                                    <ObjectIdentifier
+                                                        title="{blockchain>name}"
+                                                        text="{blockchain>type}" 
+                                                        titleActive="true"/>
+                                                </HBox>
+                                                <!-- On-chain status indicator -->
+                                                <MessageStrip 
+                                                    text="Verified on blockchain" 
+                                                    type="Success" 
+                                                    showIcon="false"
+                                                    class="sapUiTinyMarginTop"
+                                                    visible="{blockchain>onChain}"/>
+                                            </VBox>
+                                            <!-- Blockchain address with better UX -->
+                                            <VBox>
+                                                <Link
+                                                    text="{
+                                                        path: 'blockchain>address',
+                                                        formatter: '.formatter.formatAddress'
+                                                    }"
+                                                    press="onAddressPress"
+                                                    class="blockchain-address"/>
+                                                <HBox alignItems="Center" class="sapUiTinyMarginTop">
+                                                    <Button 
+                                                        icon="sap-icon://copy"
+                                                        text="Copy"
+                                                        type="Transparent"
+                                                        tooltip="{i18n>copyAddress}"
+                                                        press="onCopyAgentAddress"
+                                                        class="sapUiTinySize"/>
+                                                    <Button 
+                                                        icon="sap-icon://detail-view"
+                                                        text="Explorer"
+                                                        type="Transparent"
+                                                        tooltip="View on block explorer"
+                                                        press="onViewOnExplorer"
+                                                        class="sapUiTinySize"/>
+                                                </HBox>
+                                            </VBox>
+                                            <!-- Reputation with progress indicator -->
+                                            <VBox>
+                                                <ObjectStatus
+                                                    text="{blockchain>reputation}/200"
+                                                    state="{
+                                                        path: 'blockchain>reputation',
+                                                        formatter: '.formatter.formatReputationState'
+                                                    }"/>
+                                                <ProgressIndicator 
+                                                    percentValue="{= ${blockchain>reputation} / 2}"
+                                                    state="{
+                                                        path: 'blockchain>reputation',
+                                                        formatter: '.formatter.formatReputationState'
+                                                    }"
+                                                    width="100px"
+                                                    class="sapUiTinyMarginTop"/>
+                                            </VBox>
+                                            <!-- Action buttons with better labels -->
+                                            <HBox>
+                                                <Button
+                                                    icon="sap-icon://synchronize"
+                                                    text="Sync"
+                                                    tooltip="{i18n>syncAgent}"
+                                                    press="onSyncAgent"
+                                                    type="Transparent"
+                                                    class="sapUiTinySize"/>
+                                                <Button
+                                                    icon="sap-icon://detail-view"
+                                                    text="Details"
+                                                    tooltip="{i18n>viewDetails}"
+                                                    press="onViewAgentDetails"
+                                                    type="Transparent"
+                                                    class="sapUiTinySize"/>
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Gas Price Chart -->
+                    <f:Card>
+                        <f:header>
+                            <card:Header
+                                title="{i18n>gasPriceTrend}"
+                                subtitle="{i18n>last7Days}"
+                                iconSrc="sap-icon://business-objects-experience"/>
+                        </f:header>
+                        <f:content>
+                            <sap.viz:VizFrame
+                                id="gasPriceChart"
+                                uiConfig="{applicationSet:'fiori'}"
+                                vizType="line"
+                                height="300px">
+                                <sap.viz:dataset>
+                                    <sap.viz:FlattenedDataset data="{blockchain>/gasPriceHistory}">
+                                        <sap.viz:dimensions>
+                                            <sap.viz:DimensionDefinition
+                                                name="Time"
+                                                value="{blockchain>timestamp}"/>
+                                        </sap.viz:dimensions>
+                                        <sap.viz:measures>
+                                            <sap.viz:MeasureDefinition
+                                                name="Gas Price (Gwei)"
+                                                value="{blockchain>price}"/>
+                                        </sap.viz:measures>
+                                    </sap.viz:FlattenedDataset>
+                                </sap.viz:dataset>
+                                <sap.viz:feeds>
+                                    <sap.viz:FeedItem
+                                        uid="valueAxis"
+                                        type="Measure"
+                                        values="Gas Price (Gwei)"/>
+                                    <sap.viz:FeedItem
+                                        uid="categoryAxis"
+                                        type="Dimension"
+                                        values="Time"/>
+                                </sap.viz:feeds>
+                            </sap.viz:VizFrame>
+                        </f:content>
+                    </f:Card>
+                    
+                    <!-- Transaction Pool -->
+                    <f:Card>
+                        <f:header>
+                            <card:Header
+                                title="{i18n>transactionPool}"
+                                subtitle="{i18n>pendingTransactions}"
+                                iconSrc="sap-icon://pending"/>
+                        </f:header>
+                        <f:content>
+                            <List
+                                items="{
+                                    path: 'blockchain>/pendingTransactions',
+                                    length: 5
+                                }"
+                                noDataText="{i18n>noPendingTransactions}">
+                                <NotificationListItem
+                                    title="{blockchain>type}"
+                                    description="From: {blockchain>from} To: {blockchain>to}"
+                                    datetime="{blockchain>submittedAt}"
+                                    priority="{= ${blockchain>gasPrice} > 50 ? 'High' : 'Medium'}"
+                                    showButtons="true"
+                                    authorPicture="sap-icon://transaction">
+                                    <buttons>
+                                        <Button
+                                            text="{i18n>speedUp}"
+                                            type="Accept"
+                                            press="onSpeedUpTransaction"/>
+                                        <Button
+                                            text="{i18n>cancel}"
+                                            type="Reject"
+                                            press="onCancelTransaction"/>
+                                    </buttons>
+                                </NotificationListItem>
+                            </List>
+                        </f:content>
+                    </f:Card>
+                </grid:items>
+            </grid:CSSGrid>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

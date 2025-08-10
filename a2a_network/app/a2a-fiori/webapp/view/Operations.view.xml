@@ -1,0 +1,317 @@
+<mvc:View
+    controllerName="a2a.network.fiori.controller.Operations"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:card="sap.f.cards"
+    xmlns:core="sap.ui.core"
+    xmlns:grid="sap.ui.layout.cssgrid"
+    xmlns:viz="sap.viz.ui5">
+    
+    <f:DynamicPage id="operationsPage" headerExpanded="true">
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>operationsDashboard}"/>
+                </f:heading>
+                <f:expandedContent>
+                    <ObjectAttribute title="{i18n>systemHealth}" text="{operations>/health/status}"/>
+                    <ObjectAttribute title="{i18n>healthScore}" text="{operations>/health/score}%"/>
+                    <ObjectAttribute title="{i18n>activeAlerts}" text="{operations>/alerts/length}"/>
+                </f:expandedContent>
+                <f:actions>
+                    <Button
+                        text="{i18n>refreshHealth}"
+                        icon="sap-icon://refresh"
+                        press="onRefreshHealth"/>
+                    <Button
+                        text="{i18n>exportMetrics}"
+                        icon="sap-icon://excel-attachment"
+                        press="onExportMetrics"/>
+                    <Button
+                        text="{i18n>cloudALM}"
+                        icon="sap-icon://cloud"
+                        press="onOpenCloudALM"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+        
+        <f:content>
+            <grid:CSSGrid gridTemplateColumns="repeat(auto-fit, minmax(20rem, 1fr))" gridGap="1rem">
+                <grid:items>
+                    <!-- System Health Card -->
+                    <f:Card>
+                        <f:header>
+                            <card:Header
+                                title="{i18n>systemHealth}"
+                                subtitle="{operations>/health/timestamp}"
+                                iconSrc="sap-icon://stethoscope"
+                                statusText="{operations>/health/status}"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin">
+                                <!-- Health Score -->
+                                <HBox justifyContent="Center" class="sapUiMediumMarginBottom">
+                                    <sap.suite.ui.microchart:RadialMicroChart
+                                        size="L"
+                                        percentage="{operations>/health/score}"
+                                        valueColor="{
+                                            path: 'operations>/health/status',
+                                            formatter: '.formatter.formatHealthColor'
+                                        }"/>
+                                </HBox>
+                                
+                                <!-- Component Status -->
+                                <List
+                                    headerText="{i18n>componentStatus}"
+                                    items="{operations>/health/components}">
+                                    <StandardListItem
+                                        title="{component}"
+                                        info="{status}"
+                                        infoState="{
+                                            path: 'status',
+                                            formatter: '.formatter.formatComponentState'
+                                        }"/>
+                                </List>
+                                
+                                <!-- Issues -->
+                                <VBox visible="{= ${operations>/health/issues}.length > 0}">
+                                    <Title text="{i18n>currentIssues}" level="H5"/>
+                                    <List items="{operations>/health/issues}">
+                                        <StandardListItem
+                                            title="{}"
+                                            type="Active"
+                                            press="onIssuePress"/>
+                                    </List>
+                                </VBox>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
+                    
+                    <!-- Performance Metrics Card -->
+                    <f:Card>
+                        <f:header>
+                            <card:Header
+                                title="{i18n>performanceMetrics}"
+                                subtitle="{i18n>realTime}"
+                                iconSrc="sap-icon://performance"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin">
+                                <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                    <Label text="{i18n>cpu}:"/>
+                                    <ObjectNumber
+                                        number="{operations>/metrics/cpu}"
+                                        unit="%"
+                                        state="{
+                                            path: 'operations>/metrics/cpu',
+                                            formatter: '.formatter.formatCPUState'
+                                        }"/>
+                                </HBox>
+                                <ProgressIndicator
+                                    percentValue="{operations>/metrics/cpu}"
+                                    displayValue="{operations>/metrics/cpu}%"
+                                    state="{
+                                        path: 'operations>/metrics/cpu',
+                                        formatter: '.formatter.formatCPUState'
+                                    }"/>
+                                
+                                <HBox justifyContent="SpaceBetween" class="sapUiSmallMarginTop sapUiTinyMarginBottom">
+                                    <Label text="{i18n>memory}:"/>
+                                    <ObjectNumber
+                                        number="{operations>/metrics/memory}"
+                                        unit="%"
+                                        state="{
+                                            path: 'operations>/metrics/memory',
+                                            formatter: '.formatter.formatMemoryState'
+                                        }"/>
+                                </HBox>
+                                <ProgressIndicator
+                                    percentValue="{operations>/metrics/memory}"
+                                    displayValue="{operations>/metrics/memory}%"
+                                    state="{
+                                        path: 'operations>/metrics/memory',
+                                        formatter: '.formatter.formatMemoryState'
+                                    }"/>
+                                
+                                <HBox justifyContent="SpaceBetween" class="sapUiSmallMarginTop">
+                                    <Text text="{i18n>responseTime}:"/>
+                                    <ObjectNumber
+                                        number="{operations>/metrics/responseTime}"
+                                        unit="ms"
+                                        state="{
+                                            path: 'operations>/metrics/responseTime',
+                                            formatter: '.formatter.formatResponseTimeState'
+                                        }"/>
+                                </HBox>
+                                
+                                <HBox justifyContent="SpaceBetween" class="sapUiSmallMarginTop">
+                                    <Text text="{i18n>requestsPerMinute}:"/>
+                                    <ObjectNumber number="{operations>/metrics/requests}"/>
+                                </HBox>
+                                
+                                <HBox justifyContent="SpaceBetween" class="sapUiSmallMarginTop">
+                                    <Text text="{i18n>errorRate}:"/>
+                                    <ObjectNumber
+                                        number="{
+                                            path: 'operations>/metrics/errors',
+                                            formatter: '.formatter.calculateErrorRate'
+                                        }"
+                                        unit="%"
+                                        state="{
+                                            path: 'operations>/metrics/errors',
+                                            formatter: '.formatter.formatErrorRateState'
+                                        }"/>
+                                </HBox>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
+                    
+                    <!-- Active Alerts Card -->
+                    <f:Card>
+                        <f:header>
+                            <card:Header
+                                title="{i18n>activeAlerts}"
+                                subtitle="{= ${operations>/alerts}.length + ' ' + ${i18n>alerts}}"
+                                iconSrc="sap-icon://alert"
+                                statusText="{
+                                    path: 'operations>/alerts',
+                                    formatter: '.formatter.formatAlertStatus'
+                                }"/>
+                        </f:header>
+                        <f:content>
+                            <List
+                                items="{operations>/alerts}"
+                                noDataText="{i18n>noActiveAlerts}">
+                                <NotificationListItem
+                                    title="{name}"
+                                    description="{message}"
+                                    datetime="{timestamp}"
+                                    priority="{
+                                        path: 'severity',
+                                        formatter: '.formatter.mapSeverityToPriority'
+                                    }"
+                                    showButtons="true">
+                                    <buttons>
+                                        <Button
+                                            text="{i18n>acknowledge}"
+                                            type="Accept"
+                                            press="onAcknowledgeAlert"/>
+                                        <Button
+                                            text="{i18n>resolve}"
+                                            type="Emphasized"
+                                            press="onResolveAlert"/>
+                                    </buttons>
+                                </NotificationListItem>
+                            </List>
+                        </f:content>
+                    </f:Card>
+                    
+                    <!-- Recent Logs Card -->
+                    <f:Card>
+                        <f:header>
+                            <card:Header
+                                title="{i18n>recentLogs}"
+                                subtitle="{i18n>last5Minutes}"
+                                iconSrc="sap-icon://activity-items"/>
+                        </f:header>
+                        <f:content>
+                            <List
+                                items="{operations>/recentLogs}"
+                                growing="true"
+                                growingThreshold="10">
+                                <StandardListItem
+                                    title="[{level}] {message}"
+                                    description="{logger} - {timestamp}"
+                                    info="{level}"
+                                    infoState="{
+                                        path: 'level',
+                                        formatter: '.formatter.formatLogLevel'
+                                    }"
+                                    type="Navigation"
+                                    press="onLogPress"/>
+                            </List>
+                        </f:content>
+                    </f:Card>
+                </grid:items>
+            </grid:CSSGrid>
+            
+            <!-- Metrics Charts Section -->
+            <Panel
+                headerText="{i18n>performanceTrends}"
+                expandable="true"
+                expanded="true"
+                class="sapUiMediumMarginTop">
+                <content>
+                    <grid:CSSGrid gridTemplateColumns="1fr 1fr" gridGap="1rem">
+                        <grid:items>
+                            <!-- CPU Trend Chart -->
+                            <viz:VizFrame
+                                id="cpuTrendChart"
+                                uiConfig="{applicationSet:'fiori'}"
+                                vizType="line"
+                                height="300px">
+                                <viz:dataset>
+                                    <viz:FlattenedDataset data="{operations>/cpuHistory}">
+                                        <viz:dimensions>
+                                            <viz:DimensionDefinition
+                                                name="Time"
+                                                value="{timestamp}"/>
+                                        </viz:dimensions>
+                                        <viz:measures>
+                                            <viz:MeasureDefinition
+                                                name="CPU %"
+                                                value="{value}"/>
+                                        </viz:measures>
+                                    </viz:FlattenedDataset>
+                                </viz:dataset>
+                                <viz:feeds>
+                                    <viz:FeedItem
+                                        uid="valueAxis"
+                                        type="Measure"
+                                        values="CPU %"/>
+                                    <viz:FeedItem
+                                        uid="categoryAxis"
+                                        type="Dimension"
+                                        values="Time"/>
+                                </viz:feeds>
+                            </viz:VizFrame>
+                            
+                            <!-- Memory Trend Chart -->
+                            <viz:VizFrame
+                                id="memoryTrendChart"
+                                uiConfig="{applicationSet:'fiori'}"
+                                vizType="line"
+                                height="300px">
+                                <viz:dataset>
+                                    <viz:FlattenedDataset data="{operations>/memoryHistory}">
+                                        <viz:dimensions>
+                                            <viz:DimensionDefinition
+                                                name="Time"
+                                                value="{timestamp}"/>
+                                        </viz:dimensions>
+                                        <viz:measures>
+                                            <viz:MeasureDefinition
+                                                name="Memory %"
+                                                value="{value}"/>
+                                        </viz:measures>
+                                    </viz:FlattenedDataset>
+                                </viz:dataset>
+                                <viz:feeds>
+                                    <viz:FeedItem
+                                        uid="valueAxis"
+                                        type="Measure"
+                                        values="Memory %"/>
+                                    <viz:FeedItem
+                                        uid="categoryAxis"
+                                        type="Dimension"
+                                        values="Time"/>
+                                </viz:feeds>
+                            </viz:VizFrame>
+                        </grid:items>
+                    </grid:CSSGrid>
+                </content>
+            </Panel>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

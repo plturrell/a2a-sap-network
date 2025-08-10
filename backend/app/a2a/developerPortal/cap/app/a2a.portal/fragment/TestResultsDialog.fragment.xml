@@ -1,0 +1,372 @@
+<core:FragmentDefinition 
+    xmlns="sap.m" 
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz"
+    xmlns:layout="sap.ui.layout">
+    
+    <Dialog id="testResultsDialog"
+           title="{i18n>testResults}"
+           contentWidth="90%"
+           maxWidth="55rem"
+           contentHeight="80vh"
+           class="a2a-tablet-dialog"
+           resizable="true"
+           draggable="true">
+        
+        <content>
+            <VBox class="sapUiMediumMargin" height="100%">
+                <!-- Test Summary Header -->
+                <Panel headerText="{i18n>testSummary}" class="sapUiMediumMarginBottom">
+                    <layout:HorizontalLayout class="sapUiSmallMargin">
+                        <!-- Overall Status -->
+                        <VBox class="sapUiMediumMarginEnd">
+                            <HBox alignItems="Center">
+                                <core:Icon src="{/overallIcon}" 
+                                          color="{/overallColor}"
+                                          size="2rem"
+                                          class="sapUiMediumMarginEnd"/>
+                                <VBox>
+                                    <Title text="{/overallStatus}" level="H3"/>
+                                    <Text text="{/testSuite}" class="sapUiSmallText"/>
+                                    <Text text="{i18n>duration}: {/totalDuration}" class="sapUiTinyText"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                        
+                        <!-- Test Metrics -->
+                        <layout:Grid defaultSpan="L3 M6 S12" class="sapUiMediumMarginBegin">
+                            <!-- Passed Tests -->
+                            <VBox alignItems="Center" class="a2a-metric-box">
+                                <core:Icon src="sap-icon://accept" 
+                                          color="Good" 
+                                          size="1.5rem"/>
+                                <Title text="{/passedCount}" level="H2" class="sapUiTinyMarginTop"/>
+                                <Text text="{i18n>passed}" class="sapUiSmallText"/>
+                            </VBox>
+                            
+                            <!-- Failed Tests -->
+                            <VBox alignItems="Center" class="a2a-metric-box">
+                                <core:Icon src="sap-icon://decline" 
+                                          color="Error" 
+                                          size="1.5rem"/>
+                                <Title text="{/failedCount}" level="H2" class="sapUiTinyMarginTop"/>
+                                <Text text="{i18n>failed}" class="sapUiSmallText"/>
+                            </VBox>
+                            
+                            <!-- Skipped Tests -->
+                            <VBox alignItems="Center" class="a2a-metric-box">
+                                <core:Icon src="sap-icon://forward" 
+                                          color="Neutral" 
+                                          size="1.5rem"/>
+                                <Title text="{/skippedCount}" level="H2" class="sapUiTinyMarginTop"/>
+                                <Text text="{i18n>skipped}" class="sapUiSmallText"/>
+                            </VBox>
+                            
+                            <!-- Coverage -->
+                            <VBox alignItems="Center" class="a2a-metric-box">
+                                <core:Icon src="sap-icon://pie-chart" 
+                                          color="Good" 
+                                          size="1.5rem"/>
+                                <Title text="{/coveragePercent}%" level="H2" class="sapUiTinyMarginTop"/>
+                                <Text text="{i18n>coverage}" class="sapUiSmallText"/>
+                            </VBox>
+                        </layout:Grid>
+                    </layout:HorizontalLayout>
+                </Panel>
+                
+                <!-- Test Results Tabs -->
+                <IconTabBar selectedKey="{/selectedTab}" 
+                           select="onTabSelect"
+                           height="100%"
+                           expandable="false">
+                    <items>
+                        <IconTabFilter key="results" 
+                                      text="{i18n>testResults}"
+                                      icon="sap-icon://list"
+                                      count="{/totalTests}"/>
+                        <IconTabFilter key="failures" 
+                                      text="{i18n>failures}"
+                                      icon="sap-icon://error"
+                                      iconColor="Negative"
+                                      count="{/failedCount}"/>
+                        <IconTabFilter key="coverage" 
+                                      text="{i18n>coverage}"
+                                      icon="sap-icon://pie-chart"
+                                      count="{/coveragePercent}%"/>
+                        <IconTabFilter key="performance" 
+                                      text="{i18n>performance}"
+                                      icon="sap-icon://performance"
+                                      count="{/slowTestCount}"/>
+                        <IconTabFilter key="history" 
+                                      text="{i18n>history}"
+                                      icon="sap-icon://history"/>
+                    </items>
+                    <content>
+                        <!-- Test Results List -->
+                        <VBox visible="{= ${/selectedTab} === 'results'}" height="100%">
+                            <Toolbar>
+                                <Title text="{i18n>allTests}"/>
+                                <ToolbarSpacer/>
+                                <SearchField width="300px" 
+                                           search="onSearchTests"
+                                           placeholder="{i18n>searchTests}"/>
+                                <Button icon="sap-icon://filter" 
+                                       tooltip="{i18n>filter}"
+                                       press="onOpenTestFilter"
+                                       type="Transparent"/>
+                                <Button icon="sap-icon://refresh" 
+                                       tooltip="{i18n>rerunTests}"
+                                       press="onRerunTests"
+                                       type="Transparent"/>
+                            </Toolbar>
+                            
+                            <Table items="{/testResults}"
+                                   growing="true"
+                                   growingThreshold="50"
+                                   mode="MultiSelect">
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>testName}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>status}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>duration}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>suite}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>actions}"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem press="onTestResultPress">
+                                        <cells>
+                                            <VBox>
+                                                <Text text="{testName}"/>
+                                                <Text text="{description}" class="sapUiSmallText"/>
+                                            </VBox>
+                                            <ObjectStatus text="{status}"
+                                                        state="{statusState}"
+                                                        icon="{statusIcon}"/>
+                                            <Text text="{duration}ms"/>
+                                            <Text text="{suiteName}"/>
+                                            <HBox>
+                                                <Button icon="sap-icon://detail-view" 
+                                                       tooltip="{i18n>viewDetails}"
+                                                       press="onViewTestDetails"
+                                                       type="Transparent"/>
+                                                <Button icon="sap-icon://restart" 
+                                                       tooltip="{i18n>rerunTest}"
+                                                       press="onRerunSingleTest"
+                                                       type="Transparent"/>
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                        
+                        <!-- Test Failures -->
+                        <VBox visible="{= ${/selectedTab} === 'failures'}">
+                            <List items="{/failedTests}">
+                                <CustomListItem press="onFailurePress">
+                                    <VBox class="sapUiMediumMargin">
+                                        <HBox alignItems="Center">
+                                            <core:Icon src="sap-icon://decline" 
+                                                      color="Error" 
+                                                      class="sapUiTinyMarginEnd"/>
+                                            <VBox>
+                                                <Text text="{testName}" class="sapUiMediumText"/>
+                                                <Text text="{suiteName}" class="sapUiSmallText"/>
+                                            </VBox>
+                                            <ToolbarSpacer/>
+                                            <Text text="{duration}ms" class="sapUiSmallText"/>
+                                        </HBox>
+                                        
+                                        <!-- Error Message -->
+                                        <MessageStrip text="{errorMessage}"
+                                                    type="Error"
+                                                    showIcon="false"
+                                                    class="sapUiSmallMarginTop"/>
+                                        
+                                        <!-- Stack Trace -->
+                                        <Panel headerText="{i18n>stackTrace}"
+                                               expandable="true"
+                                               expanded="false"
+                                               class="sapUiTinyMarginTop">
+                                            <Text text="{stackTrace}" 
+                                                 class="a2a-monospace-text"/>
+                                        </Panel>
+                                        
+                                        <!-- Suggested Fix -->
+                                        <HBox alignItems="Center" 
+                                             visible="{hasSuggestedFix}"
+                                             class="sapUiTinyMarginTop">
+                                            <core:Icon src="sap-icon://lightbulb" 
+                                                      color="Good" 
+                                                      class="sapUiTinyMarginEnd"/>
+                                            <Text text="{suggestedFix}"/>
+                                        </HBox>
+                                    </VBox>
+                                </CustomListItem>
+                            </List>
+                        </VBox>
+                        
+                        <!-- Coverage Report -->
+                        <VBox visible="{= ${/selectedTab} === 'coverage'}">
+                            <!-- Coverage Summary -->
+                            <Panel headerText="{i18n>coverageSummary}" class="sapUiMediumMarginBottom">
+                                <layout:Grid defaultSpan="L3 M6 S12" class="sapUiSmallMargin">
+                                    <VBox alignItems="Center">
+                                        <Title text="{/lineCoverage}%" level="H3"/>
+                                        <Text text="{i18n>lines}"/>
+                                    </VBox>
+                                    <VBox alignItems="Center">
+                                        <Title text="{/functionCoverage}%" level="H3"/>
+                                        <Text text="{i18n>functions}"/>
+                                    </VBox>
+                                    <VBox alignItems="Center">
+                                        <Title text="{/branchCoverage}%" level="H3"/>
+                                        <Text text="{i18n>branches}"/>
+                                    </VBox>
+                                    <VBox alignItems="Center">
+                                        <Title text="{/statementCoverage}%" level="H3"/>
+                                        <Text text="{i18n>statements}"/>
+                                    </VBox>
+                                </layout:Grid>
+                            </Panel>
+                            
+                            <!-- File Coverage -->
+                            <Table items="{/fileCoverage}">
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>fileName}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>coverage}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>uncovered}"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem press="onFileCoveragePress">
+                                        <cells>
+                                            <Text text="{fileName}"/>
+                                            <ProgressIndicator percentValue="{coveragePercent}"
+                                                              displayValue="{coveragePercent}%"
+                                                              state="{coverageState}"/>
+                                            <Text text="{uncoveredLines}"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                        
+                        <!-- Performance -->
+                        <VBox visible="{= ${/selectedTab} === 'performance'}">
+                            <Table items="{/performanceTests}">
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>testName}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>duration}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>memory}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>trend}"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{testName}"/>
+                                            <ObjectNumber number="{duration}" 
+                                                        unit="ms"
+                                                        state="{durationState}"/>
+                                            <ObjectNumber number="{memoryUsage}" 
+                                                        unit="MB"/>
+                                            <core:Icon src="{trendIcon}" 
+                                                      color="{trendColor}"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                        
+                        <!-- Test History -->
+                        <VBox visible="{= ${/selectedTab} === 'history'}">
+                            <!-- History Chart would go here -->
+                            <Panel headerText="{i18n>testTrends}">
+                                <Text text="{i18n>chartPlaceholder}" class="sapUiMediumMargin"/>
+                            </Panel>
+                            
+                            <Table items="{/testHistory}">
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>date}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>results}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>duration}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>coverage}"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{date}"/>
+                                            <HBox>
+                                                <Text text="{passedCount}" class="sapUiTinyMarginEnd"/>
+                                                <core:Icon src="sap-icon://accept" color="Good" class="sapUiTinyMarginEnd"/>
+                                                <Text text="{failedCount}" class="sapUiTinyMarginEnd"/>
+                                                <core:Icon src="sap-icon://decline" color="Error"/>
+                                            </HBox>
+                                            <Text text="{totalDuration}"/>
+                                            <Text text="{coveragePercent}%"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </content>
+                </IconTabBar>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button text="{i18n>rerunAll}"
+                   type="Emphasized"
+                   icon="sap-icon://restart"
+                   press="onRerunAllTests"/>
+        </beginButton>
+        
+        <buttons>
+            <Button text="{i18n>rerunFailed}"
+                   icon="sap-icon://decline"
+                   press="onRerunFailedTests"
+                   visible="{= ${/failedCount} > 0}"/>
+            <Button text="{i18n>exportResults}"
+                   icon="sap-icon://download"
+                   press="onExportResults"/>
+            <Button text="{i18n>generateReport}"
+                   icon="sap-icon://pdf-attachment"
+                   press="onGenerateReport"/>
+        </buttons>
+        
+        <endButton>
+            <Button text="{i18n>close}"
+                   press="onTestResultsClose"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

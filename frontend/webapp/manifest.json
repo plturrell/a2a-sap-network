@@ -1,0 +1,198 @@
+{
+  "_version": "1.58.0",
+  "sap.app": {
+    "id": "com.sap.a2a.portal",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": {
+      "version": "1.0.0"
+    },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "resources": "resources.json",
+    "sourceTemplate": {
+      "id": "@sap/generator-fiori:lrop",
+      "version": "1.12.0",
+      "toolsId": "a2a-portal-tools"
+    },
+    "dataSources": {
+      "mainService": {
+        "uri": "/api/v1/",
+        "type": "REST",
+        "settings": {
+          "annotations": ["localAnnotations"],
+          "localUri": "localService/metadata.xml"
+        }
+      },
+      "a2aService": {
+        "uri": "/a2a/v1/",
+        "type": "REST"
+      },
+      "ordService": {
+        "uri": "/api/v1/ord/",
+        "type": "REST"
+      },
+      "localAnnotations": {
+        "uri": "annotations/annotations.xml",
+        "type": "ODataAnnotation"
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "A2APortal-display": {
+          "title": "{{flpTitle}}",
+          "subTitle": "{{flpSubtitle}}",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          },
+          "semanticObject": "A2APortal",
+          "action": "display"
+        }
+      }
+    },
+    "offline": true
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "sap-icon://task",
+      "favIcon": "favicon.ico"
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.ushell": {},
+        "sap.f": {},
+        "sap.suite.ui.generic.template": {},
+        "sap.ui.comp": {},
+        "sap.ui.table": {},
+        "sap.uxap": {},
+        "sap.tnt": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "com.sap.a2a.portal.i18n.i18n"
+        }
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "defaultBindingMode": "TwoWay",
+          "defaultCountMode": "Inline"
+        }
+      },
+      "offline": {
+        "type": "sap.ui.model.json.JSONModel",
+        "preload": true
+      }
+    },
+    "resources": {
+      "css": [
+        {
+          "uri": "css/design-tokens.css"
+        },
+        {
+          "uri": "css/shared-components.css"
+        },
+        {
+          "uri": "css/style.css"
+        },
+        {
+          "uri": "css/loading-states.css"
+        }
+      ]
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "viewType": "XML",
+        "async": true,
+        "viewPath": "com.sap.a2a.portal.view",
+        "controlAggregation": "pages",
+        "controlId": "app",
+        "clearControlAggregation": false
+      },
+      "routes": [
+        {
+          "name": "ProjectsList",
+          "pattern": ":?query:",
+          "target": ["TargetProjectsList"]
+        },
+        {
+          "name": "offline",
+          "pattern": "offline",
+          "target": ["TargetOffline"]
+        }
+      ],
+      "targets": {
+        "TargetProjectsList": {
+          "viewType": "XML",
+          "viewId": "ProjectsList",
+          "viewName": "ProjectsList"
+        },
+        "TargetOffline": {
+          "viewType": "XML",
+          "viewId": "Offline",
+          "viewName": "Offline"
+        }
+      }
+    },
+    "rootView": {
+      "viewName": "com.sap.a2a.portal.view.App",
+      "type": "XML",
+      "async": true,
+      "id": "App"
+    }
+  },
+  "sap.cloud": {
+    "public": true,
+    "service": "a2a-portal"
+  },
+  "sap.fiori": {
+    "registrationIds": ["a2a.portal"],
+    "archeType": "transactional"
+  },
+  "sap.pwa": {
+    "enabled": true,
+    "appShortName": "A2A Portal",
+    "appName": "Agent-to-Agent Portal",
+    "description": "Enterprise Agent-to-Agent Communication Platform",
+    "startUrl": "./",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "themeColor": "#0070f2",
+    "backgroundColor": "#ffffff",
+    "icons": [
+      {
+        "src": "./resources/pwa/icon-192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "./resources/pwa/icon-512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }
+}

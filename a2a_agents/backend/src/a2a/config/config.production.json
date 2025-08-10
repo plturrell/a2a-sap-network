@@ -1,0 +1,41 @@
+{
+  "environment": "production",
+  "security": {
+    "private_key_encrypted": true,
+    "use_hardware_wallet": false,
+    "require_https": true,
+    "enable_rate_limiting": true,
+    "max_requests_per_minute": 100,
+    "allowed_origins": [],
+    "enable_cors": false
+  },
+  "network": {
+    "name": "localhost",
+    "rpc_url": "http://localhost:8545",
+    "ws_url": null,
+    "chain_id": 1,
+    "block_confirmation_count": 12,
+    "gas_price_strategy": "medium",
+    "max_gas_price_gwei": 100.0,
+    "timeout_seconds": 30
+  },
+  "monitoring": {
+    "enable_metrics": true,
+    "metrics_port": 9090,
+    "enable_logging": true,
+    "log_level": "WARNING",
+    "log_format": "json",
+    "enable_tracing": true,
+    "jaeger_endpoint": null,
+    "enable_health_checks": true,
+    "health_check_interval": 30
+  },
+  "contracts": {
+    "agent_registry_address": null,
+    "message_router_address": null,
+    "ord_registry_address": null,
+    "deployment_block": null,
+    "enable_upgrades": false,
+    "proxy_admin_address": null
+  }
+}

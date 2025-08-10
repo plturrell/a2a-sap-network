@@ -1,0 +1,71 @@
+specVersion: "3.1"
+metadata:
+  name: a2a.network.fiori
+  copyright: |-
+   SAP SE
+    ${copyright}
+type: application
+framework:
+  name: SAPUI5
+  version: "1.120.0"
+  libraries:
+    - name: sap.m
+    - name: sap.f
+    - name: sap.tnt
+    - name: sap.ui.core
+    - name: sap.ui.comp
+    - name: sap.ui.table
+    - name: sap.uxap
+    - name: sap.viz
+    - name: sap.suite.ui.microchart
+    - name: sap.ui.fl
+resources:
+  configuration:
+    paths:
+      webapp: webapp
+server:
+  customMiddleware:
+    - name: fiori-tools-proxy
+      afterMiddleware: compression
+      configuration:
+        ignoreCertError: false
+        ui5:
+          path:
+            - /resources
+            - /test-resources
+          url: https://ui5.sap.com
+        backend:
+          - path: /api
+            url: http://localhost:4004
+          - path: /odata
+            url: http://localhost:4004
+    - name: fiori-tools-appreload
+      afterMiddleware: compression
+      configuration:
+        port: 35729
+        path: webapp
+        delay: 300
+    - name: ui5-middleware-livereload
+      afterMiddleware: compression
+      configuration:
+        port: 35729
+        path: webapp
+builder:
+  resources:
+    excludes:
+      - "/test/**"
+      - "/localService/**"
+  customTasks:
+    - name: ui5-task-minify
+      afterTask: replaceVersion
+      configuration:
+        minify:
+          js: true
+          css: true
+          html: true
+    - name: ui5-task-zipper
+      afterTask: generateCachebusterInfo
+      configuration:
+        archiveName: a2aNetworkFiori
+        additionalFiles:
+          - xs-app.json

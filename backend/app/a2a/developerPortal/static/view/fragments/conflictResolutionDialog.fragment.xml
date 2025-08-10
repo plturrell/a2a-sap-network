@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<core:FragmentDefinition 
+    xmlns="sap.m" 
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.f"
+    xmlns:layout="sap.ui.layout">
+
+    <!-- Conflict Resolution Dialog -->
+    <Dialog id="conflictResolutionDialog"
+            title="{i18n>offline.resolveConflicts}"
+            contentWidth="90%"
+            maxWidth="35rem"
+            contentHeight="40rem"
+            class="a2a-tablet-dialog"
+            draggable="true"
+            resizable="true"
+            type="Message"
+            state="Warning">
+        
+        <!-- Dialog Content -->
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Header Information -->
+                <MessageStrip text="{i18n>offline.conflictDescription}"
+                             type="Warning"
+                             showIcon="true"
+                             class="sapUiMediumMarginBottom"/>
+                
+                <!-- Conflict Selection Table -->
+                <Table id="conflictsTable"
+                       items="{conflict>/conflicts}"
+                       mode="SingleSelect"
+                       selectionChange="onConflictSelectionChange"
+                       growing="true"
+                       growingThreshold="20">
+                    
+                    <headerToolbar>
+                        <OverflowToolbar>
+                            <Title text="{parts: ['conflict>/conflicts', 'i18n>offline.conflictsCount'], formatter: '.formatConflictsTableTitle'}" 
+                                   level="H3"/>
+                            <ToolbarSpacer/>
+                            <Button text="{i18n>offline.resolveAll}" 
+                                   type="Emphasized"
+                                   enabled="{= ${conflict>/conflicts/length} > 0}"
+                                   press="onResolveAllConflicts"/>
+                        </OverflowToolbar>
+                    </headerToolbar>
+                    
+                    <columns>
+                        <Column demandPopin="false">
+                            <header>
+                                <Text text="{i18n>offline.entityType}"/>
+                            </header>
+                        </Column>
+                        <Column demandPopin="true" 
+                               minScreenWidth="Tablet">
+                            <header>
+                                <Text text="{i18n>offline.entityId}"/>
+                            </header>
+                        </Column>
+                        <Column demandPopin="true" 
+                               minScreenWidth="Desktop">
+                            <header>
+                                <Text text="{i18n>offline.conflictDate}"/>
+                            </header>
+                        </Column>
+                        <Column demandPopin="false">
+                            <header>
+                                <Text text="{i18n>offline.status}"/>
+                            </header>
+                        </Column>
+                    </columns>
+                    
+                    <items>
+                        <ColumnListItem press="onConflictItemPress">
+                            <Text text="{conflict>entityType}"/>
+                            <Text text="{conflict>entityId}" 
+                                 maxLines="1"/>
+                            <Text text="{path: 'conflict>timestamp', formatter: '.formatDate'}"/>
+                            <ObjectStatus text="{conflict>status}"
+                                        state="{path: 'conflict>status', formatter: '.formatConflictStatus'}"/>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+                
+                <!-- Conflict Details Panel -->
+                <Panel id="conflictDetailsPanel"
+                       headerText="{i18n>offline.conflictDetails}"
+                       expandable="true"
+                       expanded="true"
+                       visible="{= !!${conflict>/selectedConflict}}"
+                       class="sapUiMediumMarginTop">
+                    
+                    <HBox class="sapUiMediumMargin">
+                        
+                        <!-- Client Version -->
+                        <VBox class="sapUiMediumMarginEnd" 
+                              width="48%">
+                            <Title text="{i18n>offline.clientVersion}" 
+                                   level="H4" 
+                                   class="sapUiTinyMarginBottom"/>
+                            
+                            <Panel backgroundDesign="Solid" 
+                                   class="sapUiTinyMarginTop">
+                                <VBox class="sapUiSmallMargin">
+                                    <Label text="{i18n>offline.lastModified}:" 
+                                          class="sapUiTinyMarginBottom"/>
+                                    <Text text="{path: 'conflict>/selectedConflict/clientData/modifiedAt', formatter: '.formatDateTime'}" 
+                                         class="sapThemeTextColorSecondary"/>
+                                    
+                                    <Label text="{i18n>offline.modifiedBy}:" 
+                                          class="sapUiTinyMarginTop sapUiTinyMarginBottom"/>
+                                    <Text text="{conflict>/selectedConflict/clientData/modifiedBy}" 
+                                         class="sapThemeTextColorSecondary"/>
+                                </VBox>
+                                
+                                <!-- Client Data Display -->
+                                <core:HTML content="{path: 'conflict>/selectedConflict/clientData', formatter: '.formatConflictData'}" 
+                                          class="sapUiSmallMargin"/>
+                            </Panel>
+                            
+                            <Button text="{i18n>offline.useClientVersion}"
+                                   type="Accept"
+                                   icon="sap-icon://accept"
+                                   press="onResolveConflict"
+                                   class="sapUiTinyMarginTop">
+                                <customData>
+                                    <core:CustomData key="resolution" value="useClient"/>
+                                </customData>
+                            </Button>
+                        </VBox>
+                        
+                        <!-- VS Separator -->
+                        <VBox alignItems="Center" 
+                              justifyContent="Center"
+                              width="4%">
+                            <core:Icon src="sap-icon://compare" 
+                                     size="2rem" 
+                                     color="Neutral"/>
+                            <Text text="VS" 
+                                 class="sapUiTinyMarginTop" 
+                                 textAlign="Center"/>
+                        </VBox>
+                        
+                        <!-- Server Version -->
+                        <VBox width="48%">
+                            <Title text="{i18n>offline.serverVersion}" 
+                                   level="H4" 
+                                   class="sapUiTinyMarginBottom"/>
+                            
+                            <Panel backgroundDesign="Solid" 
+                                   class="sapUiTinyMarginTop">
+                                <VBox class="sapUiSmallMargin">
+                                    <Label text="{i18n>offline.lastModified}:" 
+                                          class="sapUiTinyMarginBottom"/>
+                                    <Text text="{path: 'conflict>/selectedConflict/serverData/modifiedAt', formatter: '.formatDateTime'}" 
+                                         class="sapThemeTextColorSecondary"/>
+                                    
+                                    <Label text="{i18n>offline.modifiedBy}:" 
+                                          class="sapUiTinyMarginTop sapUiTinyMarginBottom"/>
+                                    <Text text="{conflict>/selectedConflict/serverData/modifiedBy}" 
+                                         class="sapThemeTextColorSecondary"/>
+                                </VBox>
+                                
+                                <!-- Server Data Display -->
+                                <core:HTML content="{path: 'conflict>/selectedConflict/serverData', formatter: '.formatConflictData'}" 
+                                          class="sapUiSmallMargin"/>
+                            </Panel>
+                            
+                            <Button text="{i18n>offline.useServerVersion}"
+                                   type="Accept"
+                                   icon="sap-icon://accept"
+                                   press="onResolveConflict"
+                                   class="sapUiTinyMarginTop">
+                                <customData>
+                                    <core:CustomData key="resolution" value="useServer"/>
+                                </customData>
+                            </Button>
+                        </VBox>
+                    </HBox>
+                    
+                    <!-- Manual Merge Option -->
+                    <HBox justifyContent="Center" 
+                          class="sapUiMediumMarginTop">
+                        <Button text="{i18n>offline.manualMerge}"
+                               icon="sap-icon://edit"
+                               press="onManualMerge"
+                               class="sapUiMediumMarginEnd"/>
+                        <Button text="{i18n>offline.skipConflict}"
+                               icon="sap-icon://skip-forward"
+                               type="Neutral"
+                               press="onSkipConflict"/>
+                    </HBox>
+                </Panel>
+                
+                <!-- Auto-Resolution Settings -->
+                <Panel id="autoResolutionPanel"
+                       headerText="{i18n>offline.autoResolution}"
+                       expandable="true"
+                       expanded="false"
+                       class="sapUiMediumMarginTop">
+                    
+                    <VBox class="sapUiMediumMargin">
+                        <Text text="{i18n>offline.autoResolutionDescription}" 
+                             class="sapUiMediumMarginBottom"/>
+                        
+                        <RadioButtonGroup id="autoResolutionGroup"
+                                        columns="1"
+                                        selectedIndex="0">
+                            <RadioButton id="clientWinsRadio"
+                                       text="{i18n>offline.clientWins}"
+                                       tooltip="{i18n>offline.clientWinsTooltip}"/>
+                            <RadioButton id="serverWinsRadio"
+                                       text="{i18n>offline.serverWins}"
+                                       tooltip="{i18n>offline.serverWinsTooltip}"/>
+                            <RadioButton id="timestampWinsRadio"
+                                       text="{i18n>offline.timestampWins}"
+                                       tooltip="{i18n>offline.timestampWinsTooltip}"/>
+                            <RadioButton id="manualRadio"
+                                       text="{i18n>offline.manualResolution}"
+                                       tooltip="{i18n>offline.manualResolutionTooltip}"/>
+                        </RadioButtonGroup>
+                        
+                        <CheckBox id="applyToAllCheckBox"
+                                text="{i18n>offline.applyToAllConflicts}"
+                                class="sapUiMediumMarginTop"/>
+                    </VBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <!-- Dialog Buttons -->
+        <buttons>
+            <Button text="{i18n>common.close}" 
+                   press="onCloseConflictDialog"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

@@ -1,0 +1,243 @@
+<mvc:View
+    controllerName="a2a.portal.controller.BPMNDesigner"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:l="sap.ui.layout"
+    xmlns:core="sap.ui.core">
+    
+    <f:DynamicPage id="bpmnDesignerPage" 
+                   class="a2a-tablet-page"
+                   headerExpanded="false" 
+                   showFooter="true">
+        
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>bpmnDesigner}" level="H2"/>
+                </f:heading>
+                <f:breadcrumbs>
+                    <Breadcrumbs>
+                        <Link text="{i18n>navProjects}" press="onNavToProjects"/>
+                        <Link text="{/projectName}" press="onNavToProject"/>
+                    </Breadcrumbs>
+                </f:breadcrumbs>
+                <f:actions>
+                    <Button text="{i18n>saveWorkflow}" 
+                           type="Emphasized" 
+                           icon="sap-icon://save" 
+                           press="onSaveWorkflow"/>
+                    <Button text="{i18n>validateWorkflow}" 
+                           icon="sap-icon://accept" 
+                           press="onValidateWorkflow"/>
+                    <Button icon="sap-icon://simulate" 
+                           tooltip="{i18n>simulateWorkflow}"
+                           press="onSimulateWorkflow"/>
+                    <OverflowToolbarButton icon="sap-icon://action" 
+                                          tooltip="{i18n>moreActions}">
+                        <menu>
+                            <Menu>
+                                <MenuItem text="{i18n>exportBPMN}" 
+                                        icon="sap-icon://download"
+                                        press="onExportBPMN"/>
+                                <MenuItem text="{i18n>importBPMN}" 
+                                        icon="sap-icon://upload"
+                                        press="onImportBPMN"/>
+                                <MenuItem text="{i18n>generateCode}" 
+                                        icon="sap-icon://source-code"
+                                        press="onGenerateCode"/>
+                            </Menu>
+                        </menu>
+                    </OverflowToolbarButton>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <f:content>
+            <l:Splitter height="100%">
+                <!-- Left Panel: Component Palette -->
+                <Panel headerText="{i18n>componentPalette}" width="250px">
+                    <VBox class="sapUiSmallMargin">
+                        <Title text="{i18n>activities}" level="H5"/>
+                        <List mode="None" class="sapUiTinyMarginBottom">
+                            <StandardListItem title="{i18n>serviceTask}" 
+                                            icon="sap-icon://activity-2"
+                                            type="Active"
+                                            press="onAddServiceTask"/>
+                            <StandardListItem title="{i18n>userTask}" 
+                                            icon="sap-icon://user-settings"
+                                            type="Active"
+                                            press="onAddUserTask"/>
+                            <StandardListItem title="{i18n>scriptTask}" 
+                                            icon="sap-icon://syntax"
+                                            type="Active"
+                                            press="onAddScriptTask"/>
+                            <StandardListItem title="{i18n>callActivity}" 
+                                            icon="sap-icon://call"
+                                            type="Active"
+                                            press="onAddCallActivity"/>
+                        </List>
+                        
+                        <Title text="{i18n>gateways}" level="H5" class="sapUiMediumMarginTop"/>
+                        <List mode="None" class="sapUiTinyMarginBottom">
+                            <StandardListItem title="{i18n>exclusiveGateway}" 
+                                            icon="sap-icon://decision"
+                                            type="Active"
+                                            press="onAddExclusiveGateway"/>
+                            <StandardListItem title="{i18n>parallelGateway}" 
+                                            icon="sap-icon://split"
+                                            type="Active"
+                                            press="onAddParallelGateway"/>
+                            <StandardListItem title="{i18n>eventGateway}" 
+                                            icon="sap-icon://flag"
+                                            type="Active"
+                                            press="onAddEventGateway"/>
+                        </List>
+                        
+                        <Title text="{i18n>events}" level="H5" class="sapUiMediumMarginTop"/>
+                        <List mode="None">
+                            <StandardListItem title="{i18n>startEvent}" 
+                                            icon="sap-icon://begin"
+                                            type="Active"
+                                            press="onAddStartEvent"/>
+                            <StandardListItem title="{i18n>endEvent}" 
+                                            icon="sap-icon://stop"
+                                            type="Active"
+                                            press="onAddEndEvent"/>
+                            <StandardListItem title="{i18n>timerEvent}" 
+                                            icon="sap-icon://history"
+                                            type="Active"
+                                            press="onAddTimerEvent"/>
+                            <StandardListItem title="{i18n>messageEvent}" 
+                                            icon="sap-icon://email"
+                                            type="Active"
+                                            press="onAddMessageEvent"/>
+                        </List>
+                    </VBox>
+                </Panel>
+                
+                <!-- Center: Canvas -->
+                <VBox width="100%">
+                    <OverflowToolbar>
+                        <Title text="{/workflowName}" level="H4"/>
+                        <ToolbarSpacer/>
+                        <Button icon="sap-icon://undo" 
+                               tooltip="{i18n>undo}"
+                               press="onUndo"/>
+                        <Button icon="sap-icon://redo" 
+                               tooltip="{i18n>redo}"
+                               press="onRedo"/>
+                        <ToolbarSeparator/>
+                        <Button icon="sap-icon://zoom-in" 
+                               tooltip="{i18n>zoomIn}"
+                               press="onZoomIn"/>
+                        <Button icon="sap-icon://zoom-out" 
+                               tooltip="{i18n>zoomOut}"
+                               press="onZoomOut"/>
+                        <Button icon="sap-icon://fit-to-screen" 
+                               tooltip="{i18n>fitToScreen}"
+                               press="onFitToScreen"/>
+                        <ToolbarSeparator/>
+                        <Button icon="sap-icon://grid" 
+                               tooltip="{i18n>toggleGrid}"
+                               press="onToggleGrid"/>
+                        <Button icon="sap-icon://resize" 
+                               tooltip="{i18n>autoLayout}"
+                               press="onAutoLayout"/>
+                    </OverflowToolbar>
+                    
+                    <ScrollContainer height="100%" width="100%" horizontal="true" vertical="true">
+                        <FlexBox id="bpmnCanvas" 
+                                height="2000px" 
+                                width="3000px"
+                                class="a2aBpmnCanvas"
+                                alignItems="Start"
+                                justifyContent="Start">
+                            <Text text="{i18n>bpmnCanvasPlaceholder}" class="sapUiLargeMargin"/>
+                        </FlexBox>
+                    </ScrollContainer>
+                </VBox>
+                
+                <!-- Right Panel: Properties -->
+                <Panel headerText="{i18n>properties}" width="300px">
+                    <VBox class="sapUiSmallMargin">
+                        <MessageStrip text="{i18n>selectElementToEdit}" 
+                                    type="Information" 
+                                    showIcon="true"
+                                    visible="{= !${/selectedElement} }"/>
+                        
+                        <VBox visible="{= !!${/selectedElement} }">
+                            <Title text="{/selectedElement/type}" level="H5"/>
+                            
+                            <Label text="{i18n>elementId}" class="sapUiSmallMarginTop"/>
+                            <Input value="{/selectedElement/id}"/>
+                            
+                            <Label text="{i18n>elementName}" class="sapUiSmallMarginTop"/>
+                            <Input value="{/selectedElement/name}"/>
+                            
+                            <Label text="{i18n>description}" class="sapUiSmallMarginTop"/>
+                            <TextArea value="{/selectedElement/description}" rows="3"/>
+                            
+                            <!-- Task-specific properties -->
+                            <VBox visible="{= ${/selectedElement/type} === 'ServiceTask' }">
+                                <Label text="{i18n>agentReference}" class="sapUiSmallMarginTop"/>
+                                <Select selectedKey="{/selectedElement/agentId}">
+                                    <items>
+                                        <core:Item key="" text="{i18n>selectAgent}"/>
+                                        <!-- Dynamic agent list -->
+                                    </items>
+                                </Select>
+                                
+                                <Label text="{i18n>skillReference}" class="sapUiSmallMarginTop"/>
+                                <Input value="{/selectedElement/skill}"/>
+                            </VBox>
+                            
+                            <!-- Gateway-specific properties -->
+                            <VBox visible="{= ${/selectedElement/type} === 'ExclusiveGateway' }">
+                                <Label text="{i18n>defaultFlow}" class="sapUiSmallMarginTop"/>
+                                <Select selectedKey="{/selectedElement/defaultFlow}">
+                                    <items>
+                                        <core:Item key="" text="{i18n>none}"/>
+                                        <!-- Dynamic flow list -->
+                                    </items>
+                                </Select>
+                            </VBox>
+                            
+                            <!-- Event-specific properties -->
+                            <VBox visible="{= ${/selectedElement/type} === 'MessageEvent' }">
+                                <Label text="{i18n>messageTopic}" class="sapUiSmallMarginTop"/>
+                                <Input value="{/selectedElement/messageTopic}"/>
+                                
+                                <Label text="{i18n>messageType}" class="sapUiSmallMarginTop"/>
+                                <Select selectedKey="{/selectedElement/messageType}">
+                                    <items>
+                                        <core:Item key="send" text="{i18n>send}"/>
+                                        <core:Item key="receive" text="{i18n>receive}"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                            
+                            <Button text="{i18n>deleteElement}" 
+                                   icon="sap-icon://delete"
+                                   type="Reject"
+                                   press="onDeleteElement"
+                                   class="sapUiMediumMarginTop"/>
+                        </VBox>
+                    </VBox>
+                </Panel>
+            </l:Splitter>
+        </f:content>
+        
+        <f:footer>
+            <OverflowToolbar>
+                <Text text="{i18n>lastSaved}: {path: '/lastSaved', formatter: '.formatDateTime'}"/>
+                <ToolbarSpacer/>
+                <Button text="{i18n>cancel}" press="onCancel"/>
+                <Button text="{i18n>saveAsDraft}" press="onSaveAsDraft"/>
+                <Button text="{i18n>saveAndActivate}" 
+                       type="Emphasized" 
+                       press="onSaveAndActivate"/>
+            </OverflowToolbar>
+        </f:footer>
+    </f:DynamicPage>
+</mvc:View>

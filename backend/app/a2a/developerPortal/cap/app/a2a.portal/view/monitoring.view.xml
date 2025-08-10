@@ -1,0 +1,393 @@
+<mvc:View
+    controllerName="a2a.portal.controller.Monitoring"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:card="sap.f.cards"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    displayBlock="true">
+    
+    <f:DynamicPage id="monitoringPage" 
+                   class="a2a-tablet-page"
+                   headerExpanded="true" 
+                   showFooter="false">
+        
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>monitoringPageTitle}" level="H2"/>
+                </f:heading>
+                <f:actions>
+                    <Button text="{i18n>refresh}" 
+                           type="Emphasized" 
+                           icon="sap-icon://refresh" 
+                           press="onRefreshMonitoring"/>
+                    <Button text="{i18n>alerts}" 
+                           icon="sap-icon://alert" 
+                           press="onViewAlerts"/>
+                    <Button text="{i18n>exportLogs}" 
+                           icon="sap-icon://download" 
+                           press="onExportLogs"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <MessageStrip text="{i18n>monitoringDescription}" 
+                            type="Information" 
+                            showIcon="true" 
+                            class="sapUiMediumMarginBottom"/>
+                
+                <Panel headerText="{i18n>quickActions}" 
+                       expandable="true" 
+                       expanded="false"
+                       class="sapUiResponsiveMargin">
+                    <content>
+                        <HBox class="sapUiMediumMargin">
+                            <Button text="{i18n>systemHealth}" 
+                                   icon="sap-icon://stethoscope" 
+                                   press="onCheckSystemHealth"
+                                   class="sapUiTinyMarginEnd"/>
+                            <Button text="{i18n>agentStatus}" 
+                                   icon="sap-icon://robot" 
+                                   press="onCheckAgentStatus"
+                                   class="sapUiTinyMarginEnd"/>
+                            <Button text="{i18n>clearAlerts}" 
+                                   icon="sap-icon://clear-all" 
+                                   press="onClearAlerts"/>
+                        </HBox>
+                    </content>
+                </Panel>
+            </f:DynamicPageHeader>
+        </f:header>
+
+        <f:content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Search and Filter Bar -->
+                <Panel class="sapUiNoContentPadding">
+                    <Toolbar>
+                        <SearchField id="searchField" 
+                                   width="20rem" 
+                                   placeholder="{i18n>searchMonitoring}"
+                                   search="onSearch"/>
+                        <ToolbarSpacer/>
+                        <SegmentedButton selectedKey="{view>/viewMode}" 
+                                       selectionChange="onViewChange">
+                            <items>
+                                <SegmentedButtonItem key="dashboard" 
+                                                   icon="sap-icon://monitor-payments" 
+                                                   tooltip="{i18n>dashboardView}"/>
+                                <SegmentedButtonItem key="agents" 
+                                                   icon="sap-icon://robot" 
+                                                   tooltip="{i18n>agentsView}"/>
+                                <SegmentedButtonItem key="performance" 
+                                                   icon="sap-icon://performance" 
+                                                   tooltip="{i18n>performanceView}"/>
+                                <SegmentedButtonItem key="logs" 
+                                                   icon="sap-icon://document" 
+                                                   tooltip="{i18n>logsView}"/>
+                            </items>
+                        </SegmentedButton>
+                        <Button icon="sap-icon://filter" 
+                               tooltip="{i18n>filter}"
+                               press="onOpenFilterDialog"/>
+                        <Button icon="sap-icon://sort" 
+                               tooltip="{i18n>sort}"
+                               press="onOpenSortDialog"/>
+                    </Toolbar>
+                </Panel>
+
+                <!-- Monitoring Content -->
+                <Panel class="sapUiMediumMarginTop">
+                    
+                    <!-- System Dashboard -->
+                    <VBox visible="{= ${view>/viewMode} === 'dashboard' }">
+                        <l:Grid defaultSpan="L3 M6 S12" class="sapUiSmallMarginTop">
+                            <f:Card class="sapUiTinyMargin">
+                                <f:header>
+                                    <card:NumericHeader
+                                        title="{i18n>systemUptime}"
+                                        subtitle="{i18n>currentSession}"
+                                        value="{view>/dashboard/uptime}"
+                                        unit="days"
+                                        state="Good"/>
+                                </f:header>
+                            </f:Card>
+                            <f:Card class="sapUiTinyMargin">
+                                <f:header>
+                                    <card:NumericHeader
+                                        title="{i18n>totalRequests}"
+                                        subtitle="{i18n>last24Hours}"
+                                        value="{view>/dashboard/totalRequests}"
+                                        state="Neutral"
+                                        trend="Up"/>
+                                </f:header>
+                            </f:Card>
+                            <f:Card class="sapUiTinyMargin">
+                                <f:header>
+                                    <card:NumericHeader
+                                        title="{i18n>avgResponseTime}"
+                                        subtitle="{i18n>milliseconds}"
+                                        value="{view>/dashboard/avgResponseTime}"
+                                        unit="ms"
+                                        state="Good"/>
+                                </f:header>
+                            </f:Card>
+                            <f:Card class="sapUiTinyMargin">
+                                <f:header>
+                                    <card:NumericHeader
+                                        title="{i18n>errorRate}"
+                                        subtitle="{i18n>percentage}"
+                                        value="{view>/dashboard/errorRate}"
+                                        unit="%"
+                                        state="{= ${view>/dashboard/errorRate} > 5 ? 'Error' : 'Good' }"/>
+                                </f:header>
+                            </f:Card>
+                        </l:Grid>
+                        
+                        <!-- Resource Usage -->
+                        <VBox class="sapUiMediumMarginTop">
+                            <Title text="{i18n>resourceUsage}" level="H3"/>
+                            <l:Grid defaultSpan="L6 M12 S12">
+                                <f:Card class="sapUiSmallMargin">
+                                    <f:header>
+                                        <card:Header title="{i18n>cpuUsage}" iconSrc="sap-icon://sys-monitor"/>
+                                    </f:header>
+                                    <f:content>
+                                        <VBox class="sapUiSmallMargin">
+                                            <ProgressIndicator
+                                                percentValue="{view>/dashboard/cpuUsage}"
+                                                displayValue="{view>/dashboard/cpuUsage}%"
+                                                showValue="true"
+                                                state="{= ${view>/dashboard/cpuUsage} > 80 ? 'Error' : ${view>/dashboard/cpuUsage} > 60 ? 'Warning' : 'Success' }"/>
+                                        </VBox>
+                                    </f:content>
+                                </f:Card>
+                                <f:Card class="sapUiSmallMargin">
+                                    <f:header>
+                                        <card:Header title="{i18n>memoryUsage}" iconSrc="sap-icon://database"/>
+                                    </f:header>
+                                    <f:content>
+                                        <VBox class="sapUiSmallMargin">
+                                            <ProgressIndicator
+                                                percentValue="{view>/dashboard/memoryUsage}"
+                                                displayValue="{view>/dashboard/memoryUsage}%"
+                                                showValue="true"
+                                                state="{= ${view>/dashboard/memoryUsage} > 85 ? 'Error' : ${view>/dashboard/memoryUsage} > 70 ? 'Warning' : 'Success' }"/>
+                                        </VBox>
+                                    </f:content>
+                                </f:Card>
+                            </l:Grid>
+                        </VBox>
+                    </VBox>
+                    
+                    <!-- Agent Monitoring -->
+                    <Table id="agentsTable" 
+                           items="{
+                               path: 'view>/agents',
+                               sorter: {
+                                   path: 'lastActivity',
+                                   descending: true
+                               }
+                           }"
+                           visible="{= ${view>/viewMode} === 'agents' }"
+                           growing="true"
+                           growingThreshold="20"
+                           itemPress="onAgentPress">
+                        
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="{i18n>agentsList} ({= ${view>/agents}.length })"/>
+                                <ToolbarSpacer/>
+                                <Button text="{i18n>restartAll}" 
+                                       icon="sap-icon://restart" 
+                                       press="onRestartAllAgents"/>
+                                <Button text="{i18n>export}" 
+                                       icon="sap-icon://download" 
+                                       press="onExportSelected"/>
+                            </Toolbar>
+                        </headerToolbar>
+
+                        <columns>
+                            <Column>
+                                <Text text="{i18n>agentName}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>environment}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>status}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>uptime}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>requests}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>avgProcessingTime}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>actions}"/>
+                            </Column>
+                        </columns>
+
+                        <items>
+                            <ColumnListItem press="onAgentPress">
+                                <cells>
+                                    <VBox>
+                                        <Link text="{name}" press="onAgentPress"/>
+                                        <Text text="{type}" class="sapUiSmallMarginTop"/>
+                                    </VBox>
+                                    <Text text="{environment}"/>
+                                    <ObjectStatus text="{status}" 
+                                                state="{path: 'status', formatter: '.formatStatusState'}"/>
+                                    <Text text="{uptime}"/>
+                                    <ObjectNumber number="{requestsHandled}" 
+                                                unit="req"/>
+                                    <Text text="{avgProcessingTime} ms"/>
+                                    <HBox>
+                                        <Button icon="sap-icon://detail-view" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>details}"
+                                               press="onViewAgentDetails"/>
+                                        <Button icon="sap-icon://restart" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>restart}"
+                                               press="onRestartAgent"/>
+                                        <Button icon="sap-icon://log" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>logs}"
+                                               press="onViewAgentLogs"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+
+                    <!-- Performance Metrics -->
+                    <VBox visible="{= ${view>/viewMode} === 'performance' }">
+                        <l:Grid defaultSpan="L6 M12 S12">
+                            <f:Card class="sapUiSmallMargin">
+                                <f:header>
+                                    <card:Header title="{i18n>requestThroughput}" iconSrc="sap-icon://performance"/>
+                                </f:header>
+                                <f:content>
+                                    <VBox class="sapUiSmallMargin">
+                                        <Text text="{i18n>current}: {view>/performance/currentThroughput} req/s"/>
+                                        <Text text="{i18n>peak}: {view>/performance/peakThroughput} req/s"/>
+                                        <Text text="{i18n>average}: {view>/performance/avgThroughput} req/s"/>
+                                    </VBox>
+                                </f:content>
+                            </f:Card>
+                            <f:Card class="sapUiSmallMargin">
+                                <f:header>
+                                    <card:Header title="{i18n>responseTimeDistribution}" iconSrc="sap-icon://time-overtime"/>
+                                </f:header>
+                                <f:content>
+                                    <VBox class="sapUiSmallMargin">
+                                        <Text text="P95: {view>/performance/p95ResponseTime} ms"/>
+                                        <Text text="P99: {view>/performance/p99ResponseTime} ms"/>
+                                        <Text text="Max: {view>/performance/maxResponseTime} ms"/>
+                                    </VBox>
+                                </f:content>
+                            </f:Card>
+                        </l:Grid>
+                    </VBox>
+
+                    <!-- Logs View -->
+                    <Table id="logsTable" 
+                           items="{
+                               path: 'view>/logs',
+                               sorter: {
+                                   path: 'timestamp',
+                                   descending: true
+                               }
+                           }"
+                           visible="{= ${view>/viewMode} === 'logs' }"
+                           growing="true"
+                           growingThreshold="50"
+                           itemPress="onLogPress">
+                        
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="{i18n>logsList} ({= ${view>/logs}.length })"/>
+                                <ToolbarSpacer/>
+                                <Switch state="{view>/liveLogsEnabled}"
+                                       customTextOn="{i18n>live}"
+                                       customTextOff="{i18n>paused}"
+                                       change="onToggleLiveLogs"/>
+                                <Select id="logLevelFilter" change="onLogLevelFilter">
+                                    <core:Item key="all" text="{i18n>allLevels}"/>
+                                    <core:Item key="error" text="ERROR"/>
+                                    <core:Item key="warn" text="WARN"/>
+                                    <core:Item key="info" text="INFO"/>
+                                    <core:Item key="debug" text="DEBUG"/>
+                                </Select>
+                            </Toolbar>
+                        </headerToolbar>
+
+                        <columns>
+                            <Column width="180px">
+                                <Text text="{i18n>timestamp}"/>
+                            </Column>
+                            <Column width="80px">
+                                <Text text="{i18n>level}"/>
+                            </Column>
+                            <Column width="150px">
+                                <Text text="{i18n>component}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>message}"/>
+                            </Column>
+                            <Column width="100px">
+                                <Text text="{i18n>actions}"/>
+                            </Column>
+                        </columns>
+
+                        <items>
+                            <ColumnListItem press="onLogPress">
+                                <cells>
+                                    <Text text="{path: 'timestamp', formatter: '.formatDate'}"/>
+                                    <ObjectStatus text="{level}" 
+                                                state="{path: 'level', formatter: '.formatLogLevelState'}"/>
+                                    <Text text="{component}"/>
+                                    <Text text="{message}" maxLines="2"/>
+                                    <Button icon="sap-icon://detail-view" 
+                                           type="Transparent" 
+                                           tooltip="{i18n>details}"
+                                           press="onViewLogDetails"/>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+
+                    <!-- Empty State -->
+                    <VBox alignItems="Center" 
+                          justifyContent="Center" 
+                          height="20rem"
+                          visible="{= ${view>/viewMode} !== 'dashboard' && (!${view>/agents} || ${view>/agents}.length === 0) && (!${view>/logs} || ${view>/logs}.length === 0) }">
+                        <core:Icon src="sap-icon://monitor-payments" 
+                                 size="4rem" 
+                                 color="Neutral"
+                                 class="sapUiMediumMarginBottom"/>
+                        <Title text="{i18n>noMonitoringData}" 
+                              level="H3" 
+                              textAlign="Center"/>
+                        <Text text="{i18n>noMonitoringDataDescription}" 
+                             textAlign="Center" 
+                             class="sapUiMediumMarginBottom"/>
+                        <Button text="{i18n>refreshMonitoring}" 
+                               type="Emphasized" 
+                               icon="sap-icon://refresh" 
+                               press="onRefreshMonitoring"/>
+                    </VBox>
+
+                </Panel>
+            </VBox>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

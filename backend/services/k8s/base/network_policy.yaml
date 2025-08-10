@@ -1,0 +1,71 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: a2a-network-policy
+  namespace: a2a-network
+spec:
+  podSelector:
+    matchLabels:
+      a2a-protocol: "0.2.9"
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow traffic between A2A agents
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: a2a-network
+    - podSelector:
+        matchLabels:
+          a2a-protocol: "0.2.9"
+    ports:
+    - protocol: TCP
+      port: 8001  # Agent 0
+    - protocol: TCP
+      port: 8002  # Agent 1
+    - protocol: TCP
+      port: 8003  # Agent 2
+    - protocol: TCP
+      port: 8004  # Agent 3
+    - protocol: TCP
+      port: 8005  # Data Manager
+    - protocol: TCP
+      port: 8006  # Catalog Manager
+    - protocol: TCP
+      port: 8007  # Agent Manager
+  # Allow Prometheus scraping
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 9090
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow traffic to A2A agents
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: a2a-network
+    - podSelector:
+        matchLabels:
+          a2a-protocol: "0.2.9"
+  # Allow external services
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443  # HTTPS
+    - protocol: TCP
+      port: 5432  # PostgreSQL
+    - protocol: TCP
+      port: 6379  # Redis
+    - protocol: TCP
+      port: 30015  # SAP HANA

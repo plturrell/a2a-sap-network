@@ -1,0 +1,65 @@
+<core:FragmentDefinition 
+    xmlns="sap.m" 
+    xmlns:core="sap.ui.core">
+    
+    <Dialog id="editProjectDialog"
+           title="{i18n>editProject}"
+           contentWidth="90%"
+           maxWidth="35rem"
+           class="a2a-tablet-dialog">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <Label text="{i18n>projectId}" 
+                       class="sapUiSmallMarginBottom"/>
+                <Text text="{project_id}"
+                     class="sapUiMediumMarginBottom"/>
+                
+                <Label text="{i18n>projectName}" 
+                       required="true" 
+                       class="sapUiSmallMarginBottom"/>
+                <Input id="editProjectName" 
+                      value="{name}"
+                      placeholder="{i18n>enterProjectName}"
+                      maxLength="50"
+                      class="sapUiMediumMarginBottom"/>
+                
+                <Label text="{i18n>description}" 
+                       class="sapUiSmallMarginBottom"/>
+                <TextArea id="editProjectDescription"
+                         value="{description}"
+                         placeholder="{i18n>enterDescription}"
+                         rows="4"
+                         maxLength="500"
+                         class="sapUiMediumMarginBottom"/>
+                
+                <Label text="{i18n>status}" 
+                       class="sapUiSmallMarginBottom"/>
+                <Select id="editProjectStatus"
+                       selectedKey="{status}"
+                       class="sapUiMediumMarginBottom">
+                    <items>
+                        <core:Item key="active" text="{i18n>active}"/>
+                        <core:Item key="inactive" text="{i18n>inactive}"/>
+                        <core:Item key="archived" text="{i18n>archived}"/>
+                    </items>
+                </Select>
+                
+                <MessageStrip text="{i18n>lastModified}: {path: 'last_modified', formatter: '.formatDate'}"
+                            type="Information"
+                            showIcon="true"/>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button text="{i18n>save}"
+                   type="Emphasized"
+                   press="onEditProjectConfirm"/>
+        </beginButton>
+        
+        <endButton>
+            <Button text="{i18n>cancel}"
+                   press="onEditProjectCancel"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

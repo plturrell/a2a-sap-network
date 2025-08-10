@@ -1,0 +1,973 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="EnhancedFinancialEntityProcessing"
+                  targetNamespace="http://a2a.enhanced.financial.processing">
+
+  <!-- Main Process: Enhanced Financial Entity Processing Orchestrator -->
+  <bpmn:process id="EnhancedFinancialEntityProcessingOrchestrator" name="Enhanced Financial Entity Processing Orchestrator" isExecutable="true">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_A2ARequestReceived" name="Enhanced A2A Request Received">
+      <bpmn:outgoing>SequenceFlow_ToInitializeMonitoring</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_EnhancedA2ARequest"/>
+    </bpmn:startEvent>
+
+    <!-- Initialize Monitoring and Context -->
+    <bpmn:serviceTask id="ServiceTask_InitializeMonitoring" name="Initialize Real-time Monitoring" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToInitializeMonitoring</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToValidateEnhancedInput</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_EnhancedA2ARequest" name="enhancedA2ARequest"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_MonitoringSession" name="monitoringSession"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Enhanced Input Validation -->
+    <bpmn:serviceTask id="ServiceTask_ValidateEnhancedInput" name="Validate Enhanced A2A Input" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToValidateEnhancedInput</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToIntelligentRouting</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_EnhancedA2ARequest" name="enhancedA2ARequest"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_EnhancedValidationResult" name="enhancedValidationResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Phase 1: Intelligent Routing -->
+    <bpmn:callActivity id="CallActivity_IntelligentRouting" name="Intelligent Entity Routing" calledElement="IntelligentRoutingProcess">
+      <bpmn:incoming>SequenceFlow_ToIntelligentRouting</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToAdvancedStandardization</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_EnhancedValidationResult" name="enhancedValidationResult"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_RoutingResult" name="routingResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:callActivity>
+
+    <!-- Phase 2: Advanced Standardization -->
+    <bpmn:callActivity id="CallActivity_AdvancedStandardization" name="Advanced Financial Standardization" calledElement="AdvancedStandardizationProcess">
+      <bpmn:incoming>SequenceFlow_ToAdvancedStandardization</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToSemanticEnrichment</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RoutingResult" name="routingResult"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_StandardizationResult" name="standardizationResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:callActivity>
+
+    <!-- Phase 3: Semantic Enrichment -->
+    <bpmn:callActivity id="CallActivity_SemanticEnrichment" name="Semantic Entity Enrichment" calledElement="SemanticEnrichmentProcess">
+      <bpmn:incoming>SequenceFlow_ToSemanticEnrichment</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToAIReadinessPreparation</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_StandardizationResult" name="standardizationResult"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_EnrichmentResult" name="enrichmentResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:callActivity>
+
+    <!-- Phase 4: AI-Readiness Preparation -->
+    <bpmn:callActivity id="CallActivity_AIReadinessPreparation" name="AI-Readiness Preparation" calledElement="AIReadinessPreparationProcess">
+      <bpmn:incoming>SequenceFlow_ToAIReadinessPreparation</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToAdaptiveQualityControl</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_EnrichmentResult" name="enrichmentResult"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_AIReadinessResult" name="aiReadinessResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:callActivity>
+
+    <!-- Phase 5: Adaptive Quality Control -->
+    <bpmn:callActivity id="CallActivity_AdaptiveQualityControl" name="Adaptive Quality Control" calledElement="AdaptiveQualityControlProcess">
+      <bpmn:incoming>SequenceFlow_ToAdaptiveQualityControl</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToFinalizeResults</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_AIReadinessResult" name="aiReadinessResult"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_QualityControlResult" name="qualityControlResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:callActivity>
+
+    <!-- Finalize Enhanced Results -->
+    <bpmn:serviceTask id="ServiceTask_FinalizeEnhancedResults" name="Finalize Enhanced Processing Results" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToFinalizeResults</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToSuccessEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_QualityControlResult" name="qualityControlResult"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_MonitoringSession" name="monitoringSession"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_EnhancedA2AResponse" name="enhancedA2AResponse"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Success End Event -->
+    <bpmn:endEvent id="EndEvent_EnhancedProcessingComplete" name="Enhanced Processing Complete">
+      <bpmn:incoming>SequenceFlow_ToSuccessEnd</bpmn:incoming>
+      <bpmn:messageEventDefinition messageRef="Message_EnhancedA2AResponse"/>
+    </bpmn:endEvent>
+
+    <!-- Error Handling -->
+    <bpmn:boundaryEvent id="BoundaryEvent_MonitoringError" name="Monitoring Error" attachedToRef="ServiceTask_InitializeMonitoring">
+      <bpmn:outgoing>SequenceFlow_ToErrorHandler</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="Error_MonitoringError"/>
+    </bpmn:boundaryEvent>
+
+    <bpmn:boundaryEvent id="BoundaryEvent_RoutingError" name="Routing Error" attachedToRef="CallActivity_IntelligentRouting">
+      <bpmn:outgoing>SequenceFlow_ToErrorHandler</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="Error_RoutingError"/>
+    </bpmn:boundaryEvent>
+
+    <bpmn:boundaryEvent id="BoundaryEvent_ProcessingTimeout" name="Processing Timeout" attachedToRef="CallActivity_AdvancedStandardization">
+      <bpmn:outgoing>SequenceFlow_ToTimeoutHandler</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT5M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+
+    <!-- Enhanced Error Handler -->
+    <bpmn:serviceTask id="ServiceTask_EnhancedErrorHandler" name="Handle Enhanced Processing Error" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToErrorHandler</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToErrorEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ProcessingError" name="processingError"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ErrorResponse" name="errorResponse"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Timeout Handler -->
+    <bpmn:serviceTask id="ServiceTask_TimeoutHandler" name="Handle Processing Timeout" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToTimeoutHandler</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToPartialResultsGateway</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_TimeoutContext" name="timeoutContext"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_PartialResults" name="partialResults"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Partial Results Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_PartialResults" name="Return Partial Results?">
+      <bpmn:incoming>SequenceFlow_ToPartialResultsGateway</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ReturnPartial</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_ToErrorEnd</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Return Partial Results -->
+    <bpmn:serviceTask id="ServiceTask_ReturnPartialResults" name="Return Partial Processing Results" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ReturnPartial</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToPartialEnd</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Error End Event -->
+    <bpmn:endEvent id="EndEvent_ProcessingFailed" name="Enhanced Processing Failed">
+      <bpmn:incoming>SequenceFlow_ToErrorEnd</bpmn:incoming>
+      <bpmn:errorEventDefinition errorRef="Error_EnhancedProcessingError"/>
+    </bpmn:endEvent>
+
+    <!-- Partial Results End Event -->
+    <bpmn:endEvent id="EndEvent_PartialResults" name="Partial Results Returned">
+      <bpmn:incoming>SequenceFlow_ToPartialEnd</bpmn:incoming>
+      <bpmn:messageEventDefinition messageRef="Message_PartialResultsResponse"/>
+    </bpmn:endEvent>
+
+    <!-- Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToInitializeMonitoring" sourceRef="StartEvent_A2ARequestReceived" targetRef="ServiceTask_InitializeMonitoring"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToValidateEnhancedInput" sourceRef="ServiceTask_InitializeMonitoring" targetRef="ServiceTask_ValidateEnhancedInput"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToIntelligentRouting" sourceRef="ServiceTask_ValidateEnhancedInput" targetRef="CallActivity_IntelligentRouting"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToAdvancedStandardization" sourceRef="CallActivity_IntelligentRouting" targetRef="CallActivity_AdvancedStandardization"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToSemanticEnrichment" sourceRef="CallActivity_AdvancedStandardization" targetRef="CallActivity_SemanticEnrichment"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToAIReadinessPreparation" sourceRef="CallActivity_SemanticEnrichment" targetRef="CallActivity_AIReadinessPreparation"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToAdaptiveQualityControl" sourceRef="CallActivity_AIReadinessPreparation" targetRef="CallActivity_AdaptiveQualityControl"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToFinalizeResults" sourceRef="CallActivity_AdaptiveQualityControl" targetRef="ServiceTask_FinalizeEnhancedResults"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToSuccessEnd" sourceRef="ServiceTask_FinalizeEnhancedResults" targetRef="EndEvent_EnhancedProcessingComplete"/>
+    
+    <!-- Error Handling Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToErrorHandler" sourceRef="BoundaryEvent_MonitoringError" targetRef="ServiceTask_EnhancedErrorHandler"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToTimeoutHandler" sourceRef="BoundaryEvent_ProcessingTimeout" targetRef="ServiceTask_TimeoutHandler"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToPartialResultsGateway" sourceRef="ServiceTask_TimeoutHandler" targetRef="ExclusiveGateway_PartialResults"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ReturnPartial" sourceRef="ExclusiveGateway_PartialResults" targetRef="ServiceTask_ReturnPartialResults">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${partialResultsAvailable == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_ToErrorEnd" sourceRef="ServiceTask_EnhancedErrorHandler" targetRef="EndEvent_ProcessingFailed"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToPartialEnd" sourceRef="ServiceTask_ReturnPartialResults" targetRef="EndEvent_PartialResults"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: Intelligent Routing Process -->
+  <bpmn:process id="IntelligentRoutingProcess" name="Intelligent Entity Routing Process" isExecutable="true">
+    
+    <bpmn:startEvent id="StartEvent_RoutingData" name="Entity Data for Routing">
+      <bpmn:outgoing>SequenceFlow_ToAnalyzeContent</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- AI-Powered Content Analysis -->
+    <bpmn:serviceTask id="ServiceTask_AnalyzeContent" name="AI-Powered Content Analysis" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToAnalyzeContent</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToClassifyEntities</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RawEntityData" name="rawEntityData"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ContentAnalysis" name="contentAnalysis"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Entity Classification with Confidence Scoring -->
+    <bpmn:serviceTask id="ServiceTask_ClassifyEntities" name="Classify Entities with AI" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToClassifyEntities</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToOptimizeProcessing</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ContentAnalysis" name="contentAnalysis"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_EntityClassification" name="entityClassification"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Processing Path Optimization -->
+    <bpmn:serviceTask id="ServiceTask_OptimizeProcessing" name="Optimize Processing Paths" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToOptimizeProcessing</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToRoutingDecision</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_EntityClassification" name="entityClassification"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ProcessingOptimization" name="processingOptimization"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Routing Decision Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_RoutingDecision" name="Routing Strategy?">
+      <bpmn:incoming>SequenceFlow_ToRoutingDecision</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_SingleTypeProcessing</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_MixedTypeProcessing</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_BatchOptimizedProcessing</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Single Type Processing Route -->
+    <bpmn:serviceTask id="ServiceTask_SingleTypeRoute" name="Configure Single Type Processing" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_SingleTypeProcessing</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToGenerateRoutingPlan</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Mixed Type Processing Route -->
+    <bpmn:serviceTask id="ServiceTask_MixedTypeRoute" name="Configure Mixed Type Processing" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_MixedTypeProcessing</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToGenerateRoutingPlan</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Batch Optimized Processing Route -->
+    <bpmn:serviceTask id="ServiceTask_BatchOptimizedRoute" name="Configure Batch Optimized Processing" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_BatchOptimizedProcessing</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToGenerateRoutingPlan</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Generate Routing Plan -->
+    <bpmn:serviceTask id="ServiceTask_GenerateRoutingPlan" name="Generate Intelligent Routing Plan" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToGenerateRoutingPlan</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToRoutingEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RoutingConfiguration" name="routingConfiguration"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_IntelligentRoutingPlan" name="intelligentRoutingPlan"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="EndEvent_RoutingComplete" name="Routing Analysis Complete">
+      <bpmn:incoming>SequenceFlow_ToRoutingEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Routing Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToAnalyzeContent" sourceRef="StartEvent_RoutingData" targetRef="ServiceTask_AnalyzeContent"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToClassifyEntities" sourceRef="ServiceTask_AnalyzeContent" targetRef="ServiceTask_ClassifyEntities"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToOptimizeProcessing" sourceRef="ServiceTask_ClassifyEntities" targetRef="ServiceTask_OptimizeProcessing"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToRoutingDecision" sourceRef="ServiceTask_OptimizeProcessing" targetRef="ExclusiveGateway_RoutingDecision"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_SingleTypeProcessing" sourceRef="ExclusiveGateway_RoutingDecision" targetRef="ServiceTask_SingleTypeRoute">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${routingStrategy == 'single_type'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_MixedTypeProcessing" sourceRef="ExclusiveGateway_RoutingDecision" targetRef="ServiceTask_MixedTypeRoute">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${routingStrategy == 'mixed_type'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_BatchOptimizedProcessing" sourceRef="ExclusiveGateway_RoutingDecision" targetRef="ServiceTask_BatchOptimizedRoute">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${routingStrategy == 'batch_optimized'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="SequenceFlow_ToGenerateRoutingPlan" sourceRef="ServiceTask_SingleTypeRoute" targetRef="ServiceTask_GenerateRoutingPlan"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToRoutingEnd" sourceRef="ServiceTask_GenerateRoutingPlan" targetRef="EndEvent_RoutingComplete"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: Advanced Standardization Process -->
+  <bpmn:process id="AdvancedStandardizationProcess" name="Advanced Financial Standardization Process" isExecutable="true">
+
+    <bpmn:startEvent id="StartEvent_StandardizationData" name="Routed Entity Data">
+      <bpmn:outgoing>SequenceFlow_ToParallelStandardization</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- Parallel Standardization Gateway -->
+    <bpmn:parallelGateway id="ParallelGateway_Standardization" name="Parallel Standardization Processing">
+      <bpmn:incoming>SequenceFlow_ToParallelStandardization</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToLocationStd</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_ToAccountStd</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_ToProductStd</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_ToInstrumentStd</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_ToCounterpartyStd</bpmn:outgoing>
+    </bpmn:parallelGateway>
+
+    <!-- Enhanced Location Standardization -->
+    <bpmn:serviceTask id="ServiceTask_EnhancedLocationStd" name="Enhanced Location Standardization" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToLocationStd</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_LocationStdDone</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_LocationEntities" name="locationEntities"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_StandardizedLocations" name="standardizedLocations"/>
+      </bpmn:ioSpecification>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false">
+        <bpmn:loopDataInputRef>locationBatchItems</bpmn:loopDataInputRef>
+        <bpmn:inputDataItem name="locationItem"/>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:serviceTask>
+
+    <!-- Enhanced Account Standardization -->
+    <bpmn:serviceTask id="ServiceTask_EnhancedAccountStd" name="Enhanced Account Standardization" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToAccountStd</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_AccountStdDone</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_AccountEntities" name="accountEntities"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_StandardizedAccounts" name="standardizedAccounts"/>
+      </bpmn:ioSpecification>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false">
+        <bpmn:loopDataInputRef>accountBatchItems</bpmn:loopDataInputRef>
+        <bpmn:inputDataItem name="accountItem"/>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:serviceTask>
+
+    <!-- Enhanced Product Standardization -->
+    <bpmn:serviceTask id="ServiceTask_EnhancedProductStd" name="Enhanced Product Standardization" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToProductStd</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ProductStdDone</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ProductEntities" name="productEntities"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_StandardizedProducts" name="standardizedProducts"/>
+      </bpmn:ioSpecification>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false">
+        <bpmn:loopDataInputRef>productBatchItems</bpmn:loopDataInputRef>
+        <bpmn:inputDataItem name="productItem"/>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:serviceTask>
+
+    <!-- Financial Instrument Standardization -->
+    <bpmn:serviceTask id="ServiceTask_InstrumentStd" name="Financial Instrument Standardization" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToInstrumentStd</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_InstrumentStdDone</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_InstrumentEntities" name="instrumentEntities"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_StandardizedInstruments" name="standardizedInstruments"/>
+      </bpmn:ioSpecification>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false">
+        <bpmn:loopDataInputRef>instrumentBatchItems</bpmn:loopDataInputRef>
+        <bpmn:inputDataItem name="instrumentItem"/>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:serviceTask>
+
+    <!-- Counterparty Standardization -->
+    <bpmn:serviceTask id="ServiceTask_CounterpartyStd" name="Counterparty Standardization" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToCounterpartyStd</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_CounterpartyStdDone</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_CounterpartyEntities" name="counterpartyEntities"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_StandardizedCounterparties" name="standardizedCounterparties"/>
+      </bpmn:ioSpecification>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false">
+        <bpmn:loopDataInputRef>counterpartyBatchItems</bpmn:loopDataInputRef>
+        <bpmn:inputDataItem name="counterpartyItem"/>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:serviceTask>
+
+    <!-- Convergence Gateway -->
+    <bpmn:parallelGateway id="ParallelGateway_StandardizationConvergence" name="Standardization Convergence">
+      <bpmn:incoming>SequenceFlow_LocationStdDone</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_AccountStdDone</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_ProductStdDone</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_InstrumentStdDone</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_CounterpartyStdDone</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToContextualProcessing</bpmn:outgoing>
+    </bpmn:parallelGateway>
+
+    <!-- Contextual Processing -->
+    <bpmn:serviceTask id="ServiceTask_ContextualProcessing" name="Apply Contextual Business Rules" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToContextualProcessing</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToComplianceValidation</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_AllStandardizedEntities" name="allStandardizedEntities"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ContextuallyProcessedEntities" name="contextuallyProcessedEntities"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Regulatory Compliance Validation -->
+    <bpmn:serviceTask id="ServiceTask_ComplianceValidation" name="Regulatory Compliance Validation" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToComplianceValidation</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToStandardizationEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ContextuallyProcessedEntities" name="contextuallyProcessedEntities"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ComplianceValidatedEntities" name="complianceValidatedEntities"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="EndEvent_StandardizationComplete" name="Advanced Standardization Complete">
+      <bpmn:incoming>SequenceFlow_ToStandardizationEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Standardization Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToParallelStandardization" sourceRef="StartEvent_StandardizationData" targetRef="ParallelGateway_Standardization"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ToLocationStd" sourceRef="ParallelGateway_Standardization" targetRef="ServiceTask_EnhancedLocationStd"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToAccountStd" sourceRef="ParallelGateway_Standardization" targetRef="ServiceTask_EnhancedAccountStd"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToProductStd" sourceRef="ParallelGateway_Standardization" targetRef="ServiceTask_EnhancedProductStd"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToInstrumentStd" sourceRef="ParallelGateway_Standardization" targetRef="ServiceTask_InstrumentStd"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToCounterpartyStd" sourceRef="ParallelGateway_Standardization" targetRef="ServiceTask_CounterpartyStd"/>
+
+    <bpmn:sequenceFlow id="SequenceFlow_LocationStdDone" sourceRef="ServiceTask_EnhancedLocationStd" targetRef="ParallelGateway_StandardizationConvergence"/>
+    <bpmn:sequenceFlow id="SequenceFlow_AccountStdDone" sourceRef="ServiceTask_EnhancedAccountStd" targetRef="ParallelGateway_StandardizationConvergence"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ProductStdDone" sourceRef="ServiceTask_EnhancedProductStd" targetRef="ParallelGateway_StandardizationConvergence"/>
+    <bpmn:sequenceFlow id="SequenceFlow_InstrumentStdDone" sourceRef="ServiceTask_InstrumentStd" targetRef="ParallelGateway_StandardizationConvergence"/>
+    <bpmn:sequenceFlow id="SequenceFlow_CounterpartyStdDone" sourceRef="ServiceTask_CounterpartyStd" targetRef="ParallelGateway_StandardizationConvergence"/>
+
+    <bpmn:sequenceFlow id="SequenceFlow_ToContextualProcessing" sourceRef="ParallelGateway_StandardizationConvergence" targetRef="ServiceTask_ContextualProcessing"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToComplianceValidation" sourceRef="ServiceTask_ContextualProcessing" targetRef="ServiceTask_ComplianceValidation"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToStandardizationEnd" sourceRef="ServiceTask_ComplianceValidation" targetRef="EndEvent_StandardizationComplete"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: Semantic Enrichment Process -->
+  <bpmn:process id="SemanticEnrichmentProcess" name="Semantic Entity Enrichment Process" isExecutable="true">
+
+    <bpmn:startEvent id="StartEvent_EnrichmentData" name="Standardized Entity Data">
+      <bpmn:outgoing>SequenceFlow_ToKnowledgeGraphLookup</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- Knowledge Graph Integration -->
+    <bpmn:serviceTask id="ServiceTask_KnowledgeGraphLookup" name="Knowledge Graph Integration" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToKnowledgeGraphLookup</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToRelationshipExtraction</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_StandardizedEntities" name="standardizedEntities"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_KnowledgeGraphLinks" name="knowledgeGraphLinks"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Relationship Extraction -->
+    <bpmn:serviceTask id="ServiceTask_RelationshipExtraction" name="Extract Entity Relationships" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToRelationshipExtraction</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToBusinessContextAnalysis</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_KnowledgeGraphLinks" name="knowledgeGraphLinks"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_EntityRelationships" name="entityRelationships"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Business Context Analysis -->
+    <bpmn:serviceTask id="ServiceTask_BusinessContextAnalysis" name="Business Context Analysis" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToBusinessContextAnalysis</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToExternalDataEnrichment</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_EntityRelationships" name="entityRelationships"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_BusinessContext" name="businessContext"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- External Data Enrichment -->
+    <bpmn:parallelGateway id="ParallelGateway_ExternalEnrichment" name="Parallel External Data Enrichment">
+      <bpmn:incoming>SequenceFlow_ToExternalDataEnrichment</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToGLEIF</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_ToOpenCorporates</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_ToWikidata</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_ToCentralBanks</bpmn:outgoing>
+    </bpmn:parallelGateway>
+
+    <!-- GLEIF Integration -->
+    <bpmn:serviceTask id="ServiceTask_GLEIFIntegration" name="GLEIF Entity Integration" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToGLEIF</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_GLEIFDone</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- OpenCorporates Integration -->
+    <bpmn:serviceTask id="ServiceTask_OpenCorporatesIntegration" name="OpenCorporates Integration" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToOpenCorporates</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_OpenCorporatesDone</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Wikidata Integration -->
+    <bpmn:serviceTask id="ServiceTask_WikidataIntegration" name="Wikidata Financial Integration" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToWikidata</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_WikidataDone</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Central Banks Integration -->
+    <bpmn:serviceTask id="ServiceTask_CentralBanksIntegration" name="Central Banks Directory Integration" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToCentralBanks</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_CentralBanksDone</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Convergence Gateway -->
+    <bpmn:parallelGateway id="ParallelGateway_EnrichmentConvergence" name="Enrichment Data Convergence">
+      <bpmn:incoming>SequenceFlow_GLEIFDone</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_OpenCorporatesDone</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_WikidataDone</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_CentralBanksDone</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToSemanticMetadataGeneration</bpmn:outgoing>
+    </bpmn:parallelGateway>
+
+    <!-- Semantic Metadata Generation -->
+    <bpmn:serviceTask id="ServiceTask_SemanticMetadataGeneration" name="Generate Semantic Metadata" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToSemanticMetadataGeneration</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToRDFGeneration</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_EnrichedEntityData" name="enrichedEntityData"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_SemanticMetadata" name="semanticMetadata"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- RDF/JSON-LD Generation -->
+    <bpmn:serviceTask id="ServiceTask_RDFGeneration" name="Generate RDF and JSON-LD" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToRDFGeneration</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToEnrichmentEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_SemanticMetadata" name="semanticMetadata"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_SemanticRepresentations" name="semanticRepresentations"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="EndEvent_EnrichmentComplete" name="Semantic Enrichment Complete">
+      <bpmn:incoming>SequenceFlow_ToEnrichmentEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Enrichment Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToKnowledgeGraphLookup" sourceRef="StartEvent_EnrichmentData" targetRef="ServiceTask_KnowledgeGraphLookup"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToRelationshipExtraction" sourceRef="ServiceTask_KnowledgeGraphLookup" targetRef="ServiceTask_RelationshipExtraction"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToBusinessContextAnalysis" sourceRef="ServiceTask_RelationshipExtraction" targetRef="ServiceTask_BusinessContextAnalysis"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToExternalDataEnrichment" sourceRef="ServiceTask_BusinessContextAnalysis" targetRef="ParallelGateway_ExternalEnrichment"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ToGLEIF" sourceRef="ParallelGateway_ExternalEnrichment" targetRef="ServiceTask_GLEIFIntegration"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToOpenCorporates" sourceRef="ParallelGateway_ExternalEnrichment" targetRef="ServiceTask_OpenCorporatesIntegration"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToWikidata" sourceRef="ParallelGateway_ExternalEnrichment" targetRef="ServiceTask_WikidataIntegration"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToCentralBanks" sourceRef="ParallelGateway_ExternalEnrichment" targetRef="ServiceTask_CentralBanksIntegration"/>
+
+    <bpmn:sequenceFlow id="SequenceFlow_GLEIFDone" sourceRef="ServiceTask_GLEIFIntegration" targetRef="ParallelGateway_EnrichmentConvergence"/>
+    <bpmn:sequenceFlow id="SequenceFlow_OpenCorporatesDone" sourceRef="ServiceTask_OpenCorporatesIntegration" targetRef="ParallelGateway_EnrichmentConvergence"/>
+    <bpmn:sequenceFlow id="SequenceFlow_WikidataDone" sourceRef="ServiceTask_WikidataIntegration" targetRef="ParallelGateway_EnrichmentConvergence"/>
+    <bpmn:sequenceFlow id="SequenceFlow_CentralBanksDone" sourceRef="ServiceTask_CentralBanksIntegration" targetRef="ParallelGateway_EnrichmentConvergence"/>
+
+    <bpmn:sequenceFlow id="SequenceFlow_ToSemanticMetadataGeneration" sourceRef="ParallelGateway_EnrichmentConvergence" targetRef="ServiceTask_SemanticMetadataGeneration"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToRDFGeneration" sourceRef="ServiceTask_SemanticMetadataGeneration" targetRef="ServiceTask_RDFGeneration"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToEnrichmentEnd" sourceRef="ServiceTask_RDFGeneration" targetRef="EndEvent_EnrichmentComplete"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: AI-Readiness Preparation Process -->
+  <bpmn:process id="AIReadinessPreparationProcess" name="AI-Readiness Preparation Process" isExecutable="true">
+
+    <bpmn:startEvent id="StartEvent_AIPreparationData" name="Enriched Entity Data">
+      <bpmn:outgoing>SequenceFlow_ToFeatureEngineering</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- Feature Engineering -->
+    <bpmn:serviceTask id="ServiceTask_FeatureEngineering" name="Advanced Feature Engineering" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToFeatureEngineering</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToVectorOptimization</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_EnrichedEntities" name="enrichedEntities"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_EngineeredFeatures" name="engineeredFeatures"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Vector Optimization -->
+    <bpmn:serviceTask id="ServiceTask_VectorOptimization" name="Vector Optimization for ML" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToVectorOptimization</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToEmbeddingGeneration</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_EngineeredFeatures" name="engineeredFeatures"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_OptimizedVectors" name="optimizedVectors"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Embedding Generation -->
+    <bpmn:serviceTask id="ServiceTask_EmbeddingGeneration" name="Generate ML-Ready Embeddings" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToEmbeddingGeneration</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToMLCompatibilityProcessing</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_OptimizedVectors" name="optimizedVectors"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_MLEmbeddings" name="mlEmbeddings"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- ML Framework Compatibility -->
+    <bpmn:parallelGateway id="ParallelGateway_MLCompatibility" name="ML Framework Compatibility Processing">
+      <bpmn:incoming>SequenceFlow_ToMLCompatibilityProcessing</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToScikitLearn</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_ToTensorFlow</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_ToPyTorch</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_ToLangChain</bpmn:outgoing>
+    </bpmn:parallelGateway>
+
+    <!-- Framework-Specific Processing -->
+    <bpmn:serviceTask id="ServiceTask_ScikitLearnCompatibility" name="Scikit-Learn Compatibility" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToScikitLearn</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ScikitLearnDone</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="ServiceTask_TensorFlowCompatibility" name="TensorFlow Compatibility" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToTensorFlow</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_TensorFlowDone</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="ServiceTask_PyTorchCompatibility" name="PyTorch Compatibility" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToPyTorch</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_PyTorchDone</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="ServiceTask_LangChainCompatibility" name="LangChain Compatibility" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToLangChain</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_LangChainDone</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Convergence Gateway -->
+    <bpmn:parallelGateway id="ParallelGateway_MLCompatibilityConvergence" name="ML Compatibility Convergence">
+      <bpmn:incoming>SequenceFlow_ScikitLearnDone</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_TensorFlowDone</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_PyTorchDone</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_LangChainDone</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToVectorDatabasePreparation</bpmn:outgoing>
+    </bpmn:parallelGateway>
+
+    <!-- Vector Database Preparation -->
+    <bpmn:serviceTask id="ServiceTask_VectorDatabasePreparation" name="Vector Database Schema Preparation" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToVectorDatabasePreparation</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToTrainingDataStructures</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_MLCompatibleData" name="mlCompatibleData"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_VectorDatabaseSchemas" name="vectorDatabaseSchemas"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Training Data Structures -->
+    <bpmn:serviceTask id="ServiceTask_TrainingDataStructures" name="Generate Training Data Structures" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToTrainingDataStructures</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToAIReadinessEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_VectorDatabaseSchemas" name="vectorDatabaseSchemas"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_TrainingDataStructures" name="trainingDataStructures"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="EndEvent_AIReadinessComplete" name="AI-Readiness Preparation Complete">
+      <bpmn:incoming>SequenceFlow_ToAIReadinessEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- AI-Readiness Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToFeatureEngineering" sourceRef="StartEvent_AIPreparationData" targetRef="ServiceTask_FeatureEngineering"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToVectorOptimization" sourceRef="ServiceTask_FeatureEngineering" targetRef="ServiceTask_VectorOptimization"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToEmbeddingGeneration" sourceRef="ServiceTask_VectorOptimization" targetRef="ServiceTask_EmbeddingGeneration"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToMLCompatibilityProcessing" sourceRef="ServiceTask_EmbeddingGeneration" targetRef="ParallelGateway_MLCompatibility"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ToScikitLearn" sourceRef="ParallelGateway_MLCompatibility" targetRef="ServiceTask_ScikitLearnCompatibility"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToTensorFlow" sourceRef="ParallelGateway_MLCompatibility" targetRef="ServiceTask_TensorFlowCompatibility"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToPyTorch" sourceRef="ParallelGateway_MLCompatibility" targetRef="ServiceTask_PyTorchCompatibility"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToLangChain" sourceRef="ParallelGateway_MLCompatibility" targetRef="ServiceTask_LangChainCompatibility"/>
+
+    <bpmn:sequenceFlow id="SequenceFlow_ScikitLearnDone" sourceRef="ServiceTask_ScikitLearnCompatibility" targetRef="ParallelGateway_MLCompatibilityConvergence"/>
+    <bpmn:sequenceFlow id="SequenceFlow_TensorFlowDone" sourceRef="ServiceTask_TensorFlowCompatibility" targetRef="ParallelGateway_MLCompatibilityConvergence"/>
+    <bpmn:sequenceFlow id="SequenceFlow_PyTorchDone" sourceRef="ServiceTask_PyTorchCompatibility" targetRef="ParallelGateway_MLCompatibilityConvergence"/>
+    <bpmn:sequenceFlow id="SequenceFlow_LangChainDone" sourceRef="ServiceTask_LangChainCompatibility" targetRef="ParallelGateway_MLCompatibilityConvergence"/>
+
+    <bpmn:sequenceFlow id="SequenceFlow_ToVectorDatabasePreparation" sourceRef="ParallelGateway_MLCompatibilityConvergence" targetRef="ServiceTask_VectorDatabasePreparation"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToTrainingDataStructures" sourceRef="ServiceTask_VectorDatabasePreparation" targetRef="ServiceTask_TrainingDataStructures"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToAIReadinessEnd" sourceRef="ServiceTask_TrainingDataStructures" targetRef="EndEvent_AIReadinessComplete"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: Adaptive Quality Control Process -->
+  <bpmn:process id="AdaptiveQualityControlProcess" name="Adaptive Quality Control Process" isExecutable="true">
+
+    <bpmn:startEvent id="StartEvent_QualityControlData" name="AI-Ready Entity Data">
+      <bpmn:outgoing>SequenceFlow_ToQualityAssessment</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- Multi-Dimensional Quality Assessment -->
+    <bpmn:serviceTask id="ServiceTask_QualityAssessment" name="Multi-Dimensional Quality Assessment" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToQualityAssessment</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToAdaptiveThresholding</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_AIReadyEntities" name="aiReadyEntities"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_QualityAssessment" name="qualityAssessment"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Adaptive Threshold Adjustment -->
+    <bpmn:serviceTask id="ServiceTask_AdaptiveThresholding" name="Adaptive Quality Threshold Adjustment" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToAdaptiveThresholding</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToQualityDecisionGateway</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_QualityAssessment" name="qualityAssessment"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_AdaptiveThresholds" name="adaptiveThresholds"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Quality Decision Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_QualityDecision" name="Quality Meets Adaptive Thresholds?">
+      <bpmn:incoming>SequenceFlow_ToQualityDecisionGateway</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_QualityPass</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_QualityImprovement</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_AnomalyDetection</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Quality Improvement Process -->
+    <bpmn:serviceTask id="ServiceTask_QualityImprovement" name="AI-Powered Quality Improvement" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_QualityImprovement</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToFeedbackLearning</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_LowQualityEntities" name="lowQualityEntities"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ImprovedEntities" name="improvedEntities"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Anomaly Detection and Handling -->
+    <bpmn:serviceTask id="ServiceTask_AnomalyDetection" name="Anomaly Detection and Resolution" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_AnomalyDetection</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToAnomalyResolution</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_AnomalousEntities" name="anomalousEntities"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_AnomalyAnalysis" name="anomalyAnalysis"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Anomaly Resolution Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_AnomalyResolution" name="Anomaly Resolution Strategy?">
+      <bpmn:incoming>SequenceFlow_ToAnomalyResolution</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_AutoCorrect</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_ManualReview</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_Quarantine</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Auto-Correction -->
+    <bpmn:serviceTask id="ServiceTask_AutoCorrection" name="Automated Anomaly Correction" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_AutoCorrect</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToFeedbackLearning</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Manual Review -->
+    <bpmn:userTask id="UserTask_ManualAnomalyReview" name="Manual Anomaly Review" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ManualReview</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToFeedbackLearning</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- Quarantine Process -->
+    <bpmn:serviceTask id="ServiceTask_QuarantineAnomalies" name="Quarantine Anomalous Entities" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_Quarantine</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToFeedbackLearning</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Feedback Learning -->
+    <bpmn:serviceTask id="ServiceTask_FeedbackLearning" name="Machine Learning Feedback Integration" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToFeedbackLearning</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_QualityPass</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToContinuousImprovement</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ProcessingOutcomes" name="processingOutcomes"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_LearningFeedback" name="learningFeedback"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Continuous Improvement -->
+    <bpmn:serviceTask id="ServiceTask_ContinuousImprovement" name="Apply Continuous Improvement" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToContinuousImprovement</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToQualityControlEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_LearningFeedback" name="learningFeedback"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_FinalQualityResults" name="finalQualityResults"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="EndEvent_QualityControlComplete" name="Adaptive Quality Control Complete">
+      <bpmn:incoming>SequenceFlow_ToQualityControlEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Quality Control Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToQualityAssessment" sourceRef="StartEvent_QualityControlData" targetRef="ServiceTask_QualityAssessment"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToAdaptiveThresholding" sourceRef="ServiceTask_QualityAssessment" targetRef="ServiceTask_AdaptiveThresholding"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToQualityDecisionGateway" sourceRef="ServiceTask_AdaptiveThresholding" targetRef="ExclusiveGateway_QualityDecision"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_QualityPass" sourceRef="ExclusiveGateway_QualityDecision" targetRef="ServiceTask_FeedbackLearning">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${overallQualityScore >= adaptiveThreshold}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_QualityImprovement" sourceRef="ExclusiveGateway_QualityDecision" targetRef="ServiceTask_QualityImprovement">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${overallQualityScore < adaptiveThreshold && !hasAnomalies}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_AnomalyDetection" sourceRef="ExclusiveGateway_QualityDecision" targetRef="ServiceTask_AnomalyDetection">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${hasAnomalies == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="SequenceFlow_ToFeedbackLearning" sourceRef="ServiceTask_QualityImprovement" targetRef="ServiceTask_FeedbackLearning"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToAnomalyResolution" sourceRef="ServiceTask_AnomalyDetection" targetRef="ExclusiveGateway_AnomalyResolution"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_AutoCorrect" sourceRef="ExclusiveGateway_AnomalyResolution" targetRef="ServiceTask_AutoCorrection">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${anomalySeverity == 'low'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ManualReview" sourceRef="ExclusiveGateway_AnomalyResolution" targetRef="UserTask_ManualAnomalyReview">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${anomalySeverity == 'medium'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_Quarantine" sourceRef="ExclusiveGateway_AnomalyResolution" targetRef="ServiceTask_QuarantineAnomalies">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${anomalySeverity == 'high'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="SequenceFlow_ToContinuousImprovement" sourceRef="ServiceTask_FeedbackLearning" targetRef="ServiceTask_ContinuousImprovement"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToQualityControlEnd" sourceRef="ServiceTask_ContinuousImprovement" targetRef="EndEvent_QualityControlComplete"/>
+
+  </bpmn:process>
+
+  <!-- Message Definitions -->
+  <bpmn:message id="Message_EnhancedA2ARequest" name="Enhanced A2A Request Message">
+    <bpmn:extensionElements>
+      <bpmn:documentation>Enhanced A2A protocol request message for comprehensive financial entity processing</bpmn:documentation>
+    </bpmn:extensionElements>
+  </bpmn:message>
+
+  <bpmn:message id="Message_EnhancedA2AResponse" name="Enhanced A2A Response Message">
+    <bpmn:extensionElements>
+      <bpmn:documentation>Enhanced A2A protocol response with processed, enriched, and AI-ready financial entities</bpmn:documentation>
+    </bpmn:extensionElements>
+  </bpmn:message>
+
+  <bpmn:message id="Message_PartialResultsResponse" name="Partial Results Response Message">
+    <bpmn:extensionElements>
+      <bpmn:documentation>Partial processing results returned in case of timeout or resource constraints</bpmn:documentation>
+    </bpmn:extensionElements>
+  </bpmn:message>
+
+  <!-- Error Definitions -->
+  <bpmn:error id="Error_EnhancedProcessingError" name="Enhanced Processing Error" errorCode="ENHANCED_PROCESSING_ERROR"/>
+  <bpmn:error id="Error_MonitoringError" name="Monitoring Error" errorCode="MONITORING_ERROR"/>
+  <bpmn:error id="Error_RoutingError" name="Routing Error" errorCode="ROUTING_ERROR"/>
+  <bpmn:error id="Error_SemanticEnrichmentError" name="Semantic Enrichment Error" errorCode="SEMANTIC_ENRICHMENT_ERROR"/>
+  <bpmn:error id="Error_AIReadinessError" name="AI-Readiness Error" errorCode="AI_READINESS_ERROR"/>
+  <bpmn:error id="Error_QualityControlError" name="Quality Control Error" errorCode="QUALITY_CONTROL_ERROR"/>
+
+  <!-- Enhanced Data Item Definitions -->
+  <bpmn:itemDefinition id="ItemDefinition_EnhancedA2ARequest" structureRef="EnhancedA2ARequest"/>
+  <bpmn:itemDefinition id="ItemDefinition_EnhancedA2AResponse" structureRef="EnhancedA2AResponse"/>
+  <bpmn:itemDefinition id="ItemDefinition_MonitoringSession" structureRef="MonitoringSession"/>
+  <bpmn:itemDefinition id="ItemDefinition_EnhancedValidationResult" structureRef="EnhancedValidationResult"/>
+
+  <!-- Routing Data Items -->
+  <bpmn:itemDefinition id="ItemDefinition_RoutingResult" structureRef="RoutingResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_RawEntityData" structureRef="RawEntityData"/>
+  <bpmn:itemDefinition id="ItemDefinition_ContentAnalysis" structureRef="ContentAnalysis"/>
+  <bpmn:itemDefinition id="ItemDefinition_EntityClassification" structureRef="EntityClassification"/>
+  <bpmn:itemDefinition id="ItemDefinition_ProcessingOptimization" structureRef="ProcessingOptimization"/>
+  <bpmn:itemDefinition id="ItemDefinition_IntelligentRoutingPlan" structureRef="IntelligentRoutingPlan"/>
+
+  <!-- Standardization Data Items -->
+  <bpmn:itemDefinition id="ItemDefinition_StandardizationResult" structureRef="StandardizationResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_LocationEntities" structureRef="LocationEntities"/>
+  <bpmn:itemDefinition id="ItemDefinition_AccountEntities" structureRef="AccountEntities"/>
+  <bpmn:itemDefinition id="ItemDefinition_ProductEntities" structureRef="ProductEntities"/>
+  <bpmn:itemDefinition id="ItemDefinition_InstrumentEntities" structureRef="InstrumentEntities"/>
+  <bpmn:itemDefinition id="ItemDefinition_CounterpartyEntities" structureRef="CounterpartyEntities"/>
+  <bpmn:itemDefinition id="ItemDefinition_StandardizedLocations" structureRef="StandardizedLocations"/>
+  <bpmn:itemDefinition id="ItemDefinition_StandardizedAccounts" structureRef="StandardizedAccounts"/>
+  <bpmn:itemDefinition id="ItemDefinition_StandardizedProducts" structureRef="StandardizedProducts"/>
+  <bpmn:itemDefinition id="ItemDefinition_StandardizedInstruments" structureRef="StandardizedInstruments"/>
+  <bpmn:itemDefinition id="ItemDefinition_StandardizedCounterparties" structureRef="StandardizedCounterparties"/>
+  <bpmn:itemDefinition id="ItemDefinition_AllStandardizedEntities" structureRef="AllStandardizedEntities"/>
+  <bpmn:itemDefinition id="ItemDefinition_ContextuallyProcessedEntities" structureRef="ContextuallyProcessedEntities"/>
+  <bpmn:itemDefinition id="ItemDefinition_ComplianceValidatedEntities" structureRef="ComplianceValidatedEntities"/>
+
+  <!-- Semantic Enrichment Data Items -->
+  <bpmn:itemDefinition id="ItemDefinition_EnrichmentResult" structureRef="EnrichmentResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_StandardizedEntities" structureRef="StandardizedEntities"/>
+  <bpmn:itemDefinition id="ItemDefinition_KnowledgeGraphLinks" structureRef="KnowledgeGraphLinks"/>
+  <bpmn:itemDefinition id="ItemDefinition_EntityRelationships" structureRef="EntityRelationships"/>
+  <bpmn:itemDefinition id="ItemDefinition_BusinessContext" structureRef="BusinessContext"/>
+  <bpmn:itemDefinition id="ItemDefinition_EnrichedEntityData" structureRef="EnrichedEntityData"/>
+  <bpmn:itemDefinition id="ItemDefinition_SemanticMetadata" structureRef="SemanticMetadata"/>
+  <bpmn:itemDefinition id="ItemDefinition_SemanticRepresentations" structureRef="SemanticRepresentations"/>
+
+  <!-- AI-Readiness Data Items -->
+  <bpmn:itemDefinition id="ItemDefinition_AIReadinessResult" structureRef="AIReadinessResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_EnrichedEntities" structureRef="EnrichedEntities"/>
+  <bpmn:itemDefinition id="ItemDefinition_EngineeredFeatures" structureRef="EngineeredFeatures"/>
+  <bpmn:itemDefinition id="ItemDefinition_OptimizedVectors" structureRef="OptimizedVectors"/>
+  <bpmn:itemDefinition id="ItemDefinition_MLEmbeddings" structureRef="MLEmbeddings"/>
+  <bpmn:itemDefinition id="ItemDefinition_MLCompatibleData" structureRef="MLCompatibleData"/>
+  <bpmn:itemDefinition id="ItemDefinition_VectorDatabaseSchemas" structureRef="VectorDatabaseSchemas"/>
+  <bpmn:itemDefinition id="ItemDefinition_TrainingDataStructures" structureRef="TrainingDataStructures"/>
+
+  <!-- Quality Control Data Items -->
+  <bpmn:itemDefinition id="ItemDefinition_QualityControlResult" structureRef="QualityControlResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_AIReadyEntities" structureRef="AIReadyEntities"/>
+  <bpmn:itemDefinition id="ItemDefinition_QualityAssessment" structureRef="QualityAssessment"/>
+  <bpmn:itemDefinition id="ItemDefinition_AdaptiveThresholds" structureRef="AdaptiveThresholds"/>
+  <bpmn:itemDefinition id="ItemDefinition_LowQualityEntities" structureRef="LowQualityEntities"/>
+  <bpmn:itemDefinition id="ItemDefinition_ImprovedEntities" structureRef="ImprovedEntities"/>
+  <bpmn:itemDefinition id="ItemDefinition_AnomalousEntities" structureRef="AnomalousEntities"/>
+  <bpmn:itemDefinition id="ItemDefinition_AnomalyAnalysis" structureRef="AnomalyAnalysis"/>
+  <bpmn:itemDefinition id="ItemDefinition_ProcessingOutcomes" structureRef="ProcessingOutcomes"/>
+  <bpmn:itemDefinition id="ItemDefinition_LearningFeedback" structureRef="LearningFeedback"/>
+  <bpmn:itemDefinition id="ItemDefinition_FinalQualityResults" structureRef="FinalQualityResults"/>
+
+  <!-- Error and Context Data Items -->
+  <bpmn:itemDefinition id="ItemDefinition_ProcessingError" structureRef="ProcessingError"/>
+  <bpmn:itemDefinition id="ItemDefinition_ErrorResponse" structureRef="ErrorResponse"/>
+  <bpmn:itemDefinition id="ItemDefinition_TimeoutContext" structureRef="TimeoutContext"/>
+  <bpmn:itemDefinition id="ItemDefinition_PartialResults" structureRef="PartialResults"/>
+
+  <!-- Enhanced Process Variables -->
+  <bpmn:property id="Property_EnhancedTaskId" name="enhancedTaskId"/>
+  <bpmn:property id="Property_EnhancedContextId" name="enhancedContextId"/>
+  <bpmn:property id="Property_ProcessingPhase" name="processingPhase"/>
+  <bpmn:property id="Property_RoutingStrategy" name="routingStrategy"/>
+  <bpmn:property id="Property_QualityThresholds" name="qualityThresholds"/>
+  <bpmn:property id="Property_AdaptiveThreshold" name="adaptiveThreshold"/>
+  <bpmn:property id="Property_OverallQualityScore" name="overallQualityScore"/>
+  <bpmn:property id="Property_HasAnomalies" name="hasAnomalies"/>
+  <bpmn:property id="Property_AnomalySeverity" name="anomalySeverity"/>
+  <bpmn:property id="Property_PartialResultsAvailable" name="partialResultsAvailable"/>
+  <bpmn:property id="Property_MLFrameworkTargets" name="mlFrameworkTargets"/>
+  <bpmn:property id="Property_SemanticEnrichmentLevel" name="semanticEnrichmentLevel"/>
+  <bpmn:property id="Property_MonitoringEnabled" name="monitoringEnabled"/>
+
+  <!-- Enhanced KPI Definitions -->
+  <bpmn:extensionElements>
+    <bpmn:documentation>
+      Enhanced Key Performance Indicators for Financial Entity Processing:
+
+      1. Processing Performance KPIs:
+         - End-to-end processing time per entity
+         - Phase-specific processing times (routing, standardization, enrichment, AI-preparation, quality)
+         - Throughput (entities processed per minute)
+         - Resource utilization per processing phase
+
+      2. Quality and Accuracy KPIs:
+         - Overall quality score distribution
+         - Quality improvement rate through adaptive control
+         - Anomaly detection accuracy
+         - Semantic enrichment coverage percentage
+         - AI-readiness score
+
+      3. Intelligence and Adaptation KPIs:
+         - Routing accuracy (% correctly classified entities)
+         - Adaptive threshold optimization effectiveness
+         - Machine learning feedback integration success rate
+         - Continuous improvement measurement
+
+      4. Integration and Compatibility KPIs:
+         - A2A protocol compliance rate
+         - External data source integration success rate
+         - ML framework compatibility coverage
+         - Vector database optimization effectiveness
+
+      5. Operational Excellence KPIs:
+         - Error rate by processing phase
+         - Recovery time from processing failures
+         - Monitoring system effectiveness
+         - Auto-correction success rate for anomalies
+    </bpmn:documentation>
+  </bpmn:extensionElements>
+
+</bpmn:definitions>

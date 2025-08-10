@@ -1,0 +1,197 @@
+Product (L0),Product (L1),Product (L2),Product (L3),_row_number
+Banking,Banking Others,Banking Others,Banking Others,1
+Banking,Capital Markets & Advisory,Advisory,Advisory Inp,2
+Banking,Capital Markets & Advisory,Advisory,Advisory Other,3
+Banking,Capital Markets & Advisory,Advisory,ESG Advisory,4
+Banking,Capital Markets & Advisory,Advisory,M&A Advisory,5
+Banking,Capital Markets & Advisory,Capital Markets,CM CMS,6
+Banking,Capital Markets & Advisory,Capital Markets,CM DCM,7
+Banking,Capital Markets & Advisory,Capital Markets,Capital Markets Input,8
+Banking,Capital Markets & Advisory,Capital Markets,FM Capital Markets - Inp,9
+Banking,Capital Markets & Advisory,Capital Markets & Advisory Others,Capital Markets & Advisory Others,10
+Banking,Lending & Financing Solutions,CRE,CRE Distribution,11
+Banking,Lending & Financing Solutions,CRE,CRE Origination,12
+Banking,Lending & Financing Solutions,CRE,CRE Private & Traded Credit,13
+Banking,Lending & Financing Solutions,CRE,Fund Finance-GCM,14
+Banking,Lending & Financing Solutions,CRE,Lending,15
+Banking,Lending & Financing Solutions,Data Centre,Data Centre Distribution,16
+Banking,Lending & Financing Solutions,Data Centre,Data Centre Orgination,17
+Banking,Lending & Financing Solutions,Financing Solutions,FS Banking,18
+Banking,Lending & Financing Solutions,Financing Solutions,FS Distribution,19
+Banking,Lending & Financing Solutions,Financing Solutions,FS Origination,20
+Banking,Lending & Financing Solutions,Financing Solutions,FS Private & Traded Credit,21
+Banking,Lending & Financing Solutions,Fund Finance,Fund Finance Distribution,22
+Banking,Lending & Financing Solutions,Fund Finance,Fund Finance Origination,23
+Banking,Lending & Financing Solutions,"GCIC, PM Cost and Others",Risk & Others,24
+Banking,Lending & Financing Solutions,Infrastructure and Development Finance Group,Development & Agency Finance Distribution,25
+Banking,Lending & Financing Solutions,Infrastructure and Development Finance Group,Development & Agency Finance Origination,26
+Banking,Lending & Financing Solutions,Infrastructure and Development Finance Group,IDFG - Warehouse,27
+Banking,Lending & Financing Solutions,Infrastructure and Development Finance Group,IDFG Private & Traded Credit,28
+Banking,Lending & Financing Solutions,Infrastructure and Development Finance Group,Infrastructure and Development Finance Group Input,29
+Banking,Lending & Financing Solutions,Infrastructure and Development Finance Group,Project Finance Distribution,30
+Banking,Lending & Financing Solutions,Infrastructure and Development Finance Group,Project Finance Origination,31
+Banking,Lending & Financing Solutions,Infrastructure and Development Finance Group,Venus,32
+Banking,Lending & Financing Solutions,Lending & Financing Solutions Others,AG IGG,33
+Banking,Lending & Financing Solutions,Lending & Financing Solutions Others,CLO,34
+Banking,Lending & Financing Solutions,Lending & Financing Solutions Others,Chakras,35
+Banking,Lending & Financing Solutions,Lending & Financing Solutions Others,Funding Relief,36
+Banking,Lending & Financing Solutions,Lending & Financing Solutions Others,GCIG,37
+Banking,Lending & Financing Solutions,Lending & Financing Solutions Others,L&FS Others,38
+Banking,Lending & Financing Solutions,Lending & Financing Solutions Others,Lending & Financing Solutions Others Input,39
+Banking,Lending & Financing Solutions,Lending & Financing Solutions Others,Prior Year OR,40
+Banking,Lending & Financing Solutions,Leverage & Acquisition Financing and Private Credit,Finco Desk,41
+Banking,Lending & Financing Solutions,Leverage & Acquisition Financing and Private Credit,LAF Bonds,42
+Banking,Lending & Financing Solutions,Leverage & Acquisition Financing and Private Credit,LAF Distribution,43
+Banking,Lending & Financing Solutions,Leverage & Acquisition Financing and Private Credit,LAF Origination,44
+Banking,Lending & Financing Solutions,Leverage & Acquisition Financing and Private Credit,LAF Private & Traded Credit,45
+Banking,Lending & Financing Solutions,Transportation,Aviation,46
+Banking,Lending & Financing Solutions,Transportation,Transportation - Inp,47
+Banking,Lending & Financing Solutions,Transportation,Transportation Banking,48
+Banking,Lending & Financing Solutions,Transportation,Transportation Distribution,49
+Banking,Lending & Financing Solutions,Transportation,Transportation Operations Lease,50
+Banking,Lending & Financing Solutions,Transportation,Transportation Origination,51
+Markets,Credit Trading,Bespoke Credit Solutions,BCS- Equity Derivatives,52
+Markets,Credit Trading,Bespoke Credit Solutions,BCS- Equity Financing,53
+Markets,Credit Trading,Bespoke Credit Solutions,Bespoke Credit Solutions,54
+Markets,Credit Trading,CT Others,Credit Trading Inp,55
+Markets,Credit Trading,Central Credit Unit,CCU Deployment,56
+Markets,Credit Trading,Central Credit Unit,CCU Funding,57
+Markets,Credit Trading,Central Credit Unit,CCU Others,58
+Markets,Credit Trading,Credit Flow,Credit Flow,59
+Markets,Credit Trading,Credit Flow,Credit Flow Americas,60
+Markets,Credit Trading,Credit Flow,Credit Flow China Onshore,61
+Markets,Credit Trading,Credit Flow,Credit Flow EMEA,62
+Markets,Credit Trading,Credit Flow,Credit Flow PanAsia,63
+Markets,Credit Trading,Credit Repo,Credit Repo,64
+Markets,Credit Trading,Credit Repo,Credit Repos,65
+Markets,Credit Trading,Credit Trading Charges,Credit Trading Charges,66
+Markets,Credit Trading,Credit Trading Charges,FMB PYOE Credit,67
+Markets,Credit Trading,Credit Trading Charges,Prior Year Operational Events - Credit Trading,68
+Markets,Credit Trading,Credit Trading Inp,Credit Trading Inp,69
+Markets,Credit Trading,Credit Trading Others,Credit Trading Others,70
+Markets,Credit Trading,Credit Trading Others,Risk Overlay,71
+Markets,Credit Trading,Credit Flow - DM,Credit Flow - DM,72
+Markets,Credit Trading,Loan Trading,Loan Trading,73
+Markets,Credit Trading,Loan Trading,Loan trading - East,74
+Markets,Credit Trading,Loan Trading,Loan trading - West,75
+Markets,Credit Trading,Repos JV,Repos JV (Macro),76
+Markets,Credit Trading,Securitised Products Trading,SPT Banking Book,77
+Markets,Credit Trading,Securitised Products Trading,SPT Private Facility,78
+Markets,Credit Trading,Securitised Products Trading,SPT Trading Book,79
+Markets,Credit Trading,Securitised Products Trading,SPT Warehouse,80
+Markets,Credit Trading,Securitised Products Trading,Securitised Products Trading,81
+Markets,Credit Trading,Structured Credit Trading,LCY JV (SPT - Macro),82
+Markets,Credit Trading,Structured Credit Trading,NAV-Hybrid,83
+Markets,Credit Trading,Structured Credit Trading,SCT,84
+Markets,Credit Trading,Structured Credit Trading,SCT - ABL,85
+Markets,Credit Trading,Structured Credit Trading,SCT JV (Macro),86
+Markets,Credit Trading,Structured Credit Trading,SCT JV (SPT),87
+Markets,Credit Trading,Structured Credit Trading,Structured Credit Trading,88
+Markets,Macro Trading,Commodities,Agriculture,89
+Markets,Macro Trading,Commodities,Base Metals,90
+Markets,Macro Trading,Commodities,Commodities,91
+Markets,Macro Trading,Commodities,Commodities Management,92
+Markets,Macro Trading,Commodities,Energy,93
+Markets,Macro Trading,Commodities,Physical Commodity Solutions,94
+Markets,Macro Trading,Commodities,Precious Metals,95
+Markets,Macro Trading,FX,FX,96
+Markets,Macro Trading,FXO,FXO,97
+Markets,Macro Trading,Macro Trading FX,FX,98
+Markets,Macro Trading,Macro Trading FX,FXO,99
+Markets,Macro Trading,Macro Trading Rates,Credit JV Macro,100
+Markets,Macro Trading,Macro Trading Rates,FXO MGMT,101
+Markets,Macro Trading,Macro Trading Rates,G10 Swaps,102
+Markets,Macro Trading,Macro Trading Rates,Global Rates Management,103
+Markets,Macro Trading,Macro Trading Rates,Macro AME,104
+Markets,Macro Trading,Macro Trading Rates,Macro E&A Local Markets,105
+Markets,Macro Trading,Macro Trading Rates,Macro GCNA,106
+Markets,Macro Trading,Macro Trading Rates,Macro Global FX Cash,107
+Markets,Macro Trading,Macro Trading Rates,Macro Global FXO,108
+Markets,Macro Trading,Macro Trading Rates,Macro Global Rates,109
+Markets,Macro Trading,Macro Trading Rates,Macro JV Rates,110
+Markets,Macro Trading,Macro Trading Rates,Macro Management,111
+Markets,Macro Trading,Macro Trading Rates,Macro Operational Events,112
+Markets,Macro Trading,Macro Trading Rates,Macro Trading Rates,113
+Markets,Macro Trading,Macro Trading Rates,Rates Structured,114
+Markets,Macro Trading,Macro Trading Rates,Repos JV Total,115
+Markets,Macro Trading,Macro Trading Rates,Total EM Rates,116
+Markets,Macro Trading,Macro others,Macro - Cash Collateral,117
+Markets,Macro Trading,Macro others,Macro - Exceptional items,118
+Markets,Macro Trading,Macro others,Macro - MTM vs Accrual,119
+Markets,Macro Trading,Macro others,Macro - Nostro and Others,120
+Markets,Macro Trading,Macro others,Macro others,121
+Markets,Macro Trading,Rates,EM Rates,122
+Markets,Macro Trading,Rates,G10 Swaps,123
+Markets,Macro Trading,Rates,Rates Structured,124
+Markets,Valuation & Other Adj,Central Portfolio Management,CFD Other Charges,125
+Markets,Valuation & Other Adj,Central Portfolio Management,Central Funding Desk (CFD),126
+Markets,Valuation & Other Adj,Central Portfolio Management,Central Portfolio Management,127
+Markets,Valuation & Other Adj,Central Portfolio Management,Collateral Management Unit,128
+Markets,Valuation & Other Adj,FM DVA,FM DVA,129
+Markets,Valuation & Other Adj,FM Legacy Equity,FM Legacy Equity,130
+Markets,Valuation & Other Adj,FM Other,Financial Markets- Input,131
+Markets,Valuation & Other Adj,FM XVA,FM XVA,132
+Markets,Valuation & Other Adj,XVA,Defaulted Derivatives,133
+Markets,Valuation & Other Adj,XVA,FM XVA - Inp,134
+Markets,Valuation & Other Adj,XVA others,Totem Basis,135
+Markets,Valuation & Other Adj,XVA others,XVA others,136
+Others,Others,Others,Other Products CCIB,137
+Others,Others,Others,Other Products Non CCIB,138
+Others,Others,Others,Other products Input,139
+Others,Others,Others,Others,140
+Others,Others,Others,Principal Finance,141
+Transaction services,Cash,Cash,CMP CASA,142
+Transaction services,Cash,Cash,CMP Enhanced CASA,143
+Transaction services,Cash,Cash,CMP Saadiq CASA,144
+Transaction services,Cash,Cash,Cash Management & Payments Input,145
+Transaction services,Cash,Cash,Cash Mgmt & Payments - Input_,146
+Transaction services,Cash,Cash,Clearing,147
+Transaction services,Cash,Cash,Collections,148
+Transaction services,Cash,Cash,Controlled Deposits,149
+Transaction services,Cash,Cash,Corporate Time Deposits,150
+Transaction services,Cash,Cash,Escrow & Account Bank,151
+Transaction services,Cash,Cash,Liquidity Mgt,152
+Transaction services,Cash,Cash,Other AMS TB,153
+Transaction services,Cash,Cash,Payments,154
+Transaction services,Cash,Cash,TB Cash - Sustainable Finance,155
+Transaction services,Cash,Cash,TBFX Cash,156
+Transaction services,Money Market,Money Market,FM Money Market - Inp,157
+Transaction services,Money Market,Money Market,Money Market Input,158
+Transaction services,Money Market,Money Market,Money Market Others,159
+Transaction services,Money Market,Money Market,Money Market Repos & Collateral,160
+Transaction services,Money Market,Money Market,Money Market Sales,161
+Transaction services,Securities & Prime Services,FSS Others,FSS - Exceptional Items,162
+Transaction services,Securities & Prime Services,FSS Others,FSS - FM P&L Funding,163
+Transaction services,Securities & Prime Services,FSS Others,FSS Others,164
+Transaction services,Securities & Prime Services,FSS Others,Research,165
+Transaction services,Securities & Prime Services,Prime Services,Prime Services Agency Execution,166
+Transaction services,Securities & Prime Services,Prime Services,Prime Services Cash Products,167
+Transaction services,Securities & Prime Services,Prime Services,Prime Services Clearing,168
+Transaction services,Securities & Prime Services,Prime Services,Prime Services FIPB,169
+Transaction services,Securities & Prime Services,Prime Services,Prime Services Input,170
+Transaction services,Securities & Prime Services,Prime Services,Prime Services Intermediation,171
+Transaction services,Securities & Prime Services,Securities Services,SS Corporate Agency & Trust,172
+Transaction services,Securities & Prime Services,Securities Services,SS Custody & Clearing,173
+Transaction services,Securities & Prime Services,Securities Services,SS Fiduciary & Fund Services,174
+Transaction services,Securities & Prime Services,Securities Services,SS Input,175
+Transaction services,TS Others,TB Other,Transaction Banking - Inp,176
+Transaction services,TS Others,TS Others,TS Others Input,177
+Transaction services,Trade & Working Capital,Documentary Trade,Exports,178
+Transaction services,Trade & Working Capital,Documentary Trade,Guarantees,179
+Transaction services,Trade & Working Capital,Documentary Trade,Imports,180
+Transaction services,Trade & Working Capital,Supply Chain Management,Receivables Financing,181
+Transaction services,Trade & Working Capital,Supply Chain Management,Supplier Financing,182
+Transaction services,Trade & Working Capital,Supply Chain Management,Supply Chain Management Input,183
+Transaction services,Trade & Working Capital,TBFX Trade,TBFX Trade,184
+Transaction services,Trade & Working Capital,Trade Exc Acceptance,FITL,185
+Transaction services,Trade & Working Capital,Trade Lending,Borrowing Base Trade Loan,186
+Transaction services,Trade & Working Capital,Trade Lending,Corporate Overdraft,187
+Transaction services,Trade & Working Capital,Trade Lending,Corporate Short Term Loan,188
+Transaction services,Trade & Working Capital,Trade Lending,Export Invoice Financing,189
+Transaction services,Trade & Working Capital,Trade Lending,FI- Trade linked Loan,190
+Transaction services,Trade & Working Capital,Trade Lending,Import Invoice Financing,191
+Transaction services,Trade & Working Capital,Trade Lending,Other Export Loans,192
+Transaction services,Trade & Working Capital,Trade Lending,Structured Rate Loan - SRL,193
+Transaction services,Trade & Working Capital,Trade Lending,Trade Lending Input,194
+Transaction services,Trade & Working Capital,Trade Lending,Trade Linked Loans,195
+Transaction services,Trade & Working Capital,Trade Other,Trade Other,196

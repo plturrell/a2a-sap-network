@@ -1,0 +1,145 @@
+<mvc:View
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core"
+    controllerName="a2a.portal.controller.A2ANetworkManager"
+    displayBlock="true">
+    
+    <Page
+        class="a2a-tablet-page"
+        title="A2A Network Manager"
+        showNavButton="true"
+        navButtonPress=".onNavBack">
+        
+        <headerContent>
+            <Button
+                icon="sap-icon://settings"
+                tooltip="Network Settings"
+                press=".onNetworkSettings" />
+            <Button
+                icon="sap-icon://refresh"
+                tooltip="Refresh"
+                press=".onRefreshAgents" />
+        </headerContent>
+        
+        <content>
+            <f:DynamicPage class="a2a-tablet-page" showFooter="false">
+                <f:title>
+                    <f:DynamicPageTitle>
+                        <f:heading>
+                            <Title text="A2A Network Agents" />
+                        </f:heading>
+                        
+                        <f:snappedContent>
+                            <MessageStrip
+                                text="{= ${network>/connected} ? 'Connected to ' + ${network>/network} : 'Not Connected'}"
+                                type="{= ${network>/connected} ? 'Success' : 'Warning'}"
+                                showIcon="true" />
+                        </f:snappedContent>
+                        
+                        <f:expandedContent>
+                            <HBox>
+                                <ObjectAttribute
+                                    title="Network"
+                                    text="{network>/network}" />
+                                <ObjectAttribute
+                                    title="Chain ID"
+                                    text="{network>/chainId}" />
+                                <ObjectAttribute
+                                    title="Block"
+                                    text="{network>/blockNumber}" />
+                                <ObjectAttribute
+                                    title="Address"
+                                    text="{= ${network>/address} ? ${network>/address}.substring(0,10) + '...' : 'Not Connected'}" />
+                            </HBox>
+                        </f:expandedContent>
+                        
+                        <f:actions>
+                            <Button
+                                text="Register Agent"
+                                type="Emphasized"
+                                icon="sap-icon://add"
+                                press=".onRegisterAgent"
+                                enabled="{network>/connected}" />
+                            <Button
+                                text="Webhooks"
+                                icon="sap-icon://cloud"
+                                press=".onManageWebhooks"
+                                enabled="{network>/connected}" />
+                        </f:actions>
+                    </f:DynamicPageTitle>
+                </f:title>
+                
+                <f:header>
+                    <f:DynamicPageHeader pinnable="false">
+                        <f:content>
+                            <SearchField
+                                width="300px"
+                                placeholder="Search agents by name or skills..."
+                                liveChange=".onSearchAgents" />
+                        </f:content>
+                    </f:DynamicPageHeader>
+                </f:header>
+                
+                <f:content>
+                    <Table
+                        id="agentsTable"
+                        items="{agents>/agents}"
+                        growing="true"
+                        growingThreshold="20"
+                        mode="SingleSelectMaster"
+                        selectionChange=".onAgentSelect"
+                        busy="{agents>/loading}"
+                        busyIndicatorDelay="0">
+                        
+                        <headerToolbar>
+                            <OverflowToolbar>
+                                <Title text="Agents ({agents>/totalAgents})" level="H2" />
+                                <ToolbarSpacer />
+                            </OverflowToolbar>
+                        </headerToolbar>
+                        
+                        <columns>
+                            <Column>
+                                <Text text="Name" />
+                            </Column>
+                            <Column minScreenWidth="Tablet">
+                                <Text text="ID" />
+                            </Column>
+                            <Column minScreenWidth="Desktop">
+                                <Text text="Status" />
+                            </Column>
+                            <Column minScreenWidth="Desktop">
+                                <Text text="Messages" />
+                            </Column>
+                            <Column minScreenWidth="Desktop">
+                                <Text text="Last Active" />
+                            </Column>
+                        </columns>
+                        
+                        <items>
+                            <ColumnListItem type="Navigation">
+                                <cells>
+                                    <VBox>
+                                        <Text text="{agents>name}" />
+                                        <Text text="{agents>description}" />
+                                    </VBox>
+                                    <Text text="{agents>id}" />
+                                    <ObjectStatus
+                                        text="{= ${agents>isActive} ? 'Active' : 'Inactive'}"
+                                        state="{= ${agents>isActive} ? 'Success' : 'Warning'}" />
+                                    <ObjectNumber number="{agents>messageCount}" />
+                                    <Text text="{
+                                        path: 'agents>lastActive',
+                                        formatter: '.formatDateTime'
+                                    }" />
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </f:content>
+            </f:DynamicPage>
+        </content>
+    </Page>
+</mvc:View>

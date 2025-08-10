@@ -1,0 +1,536 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="ORDRegistryProcesses"
+                  targetNamespace="http://ord.registry.processes">
+
+  <!-- Main Process: ORD Document Registration with Dublin Core -->
+  <bpmn:process id="ORDDocumentRegistrationProcess" name="ORD Document Registration with Dublin Core Process" isExecutable="true">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_ORDRegistrationRequest" name="ORD Registration Request">
+      <bpmn:outgoing>SequenceFlow_ToValidateRequest</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_ORDRegistrationRequest"/>
+    </bpmn:startEvent>
+
+    <!-- Validate Registration Request -->
+    <bpmn:serviceTask id="ServiceTask_ValidateRequest" name="Validate Registration Request" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToValidateRequest</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToValidateORD</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RegistrationRequest" name="registrationRequest"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_RequestValidation" name="requestValidation"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Validate ORD Document -->
+    <bpmn:serviceTask id="ServiceTask_ValidateORDDocument" name="Validate ORD Document" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToValidateORD</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToValidateDublinCore</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ORDDocument" name="ordDocument"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ORDValidation" name="ordValidation"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Validate Dublin Core Metadata -->
+    <bpmn:serviceTask id="ServiceTask_ValidateDublinCore" name="Validate Dublin Core Metadata" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToValidateDublinCore</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToDublinCoreGateway</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DublinCoreMetadata" name="dublinCoreMetadata"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_DublinCoreValidation" name="dublinCoreValidation"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Dublin Core Validation Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_DublinCoreValidation" name="Dublin Core Present?">
+      <bpmn:incoming>SequenceFlow_ToDublinCoreGateway</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_DublinCorePresent</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_NoDublinCore</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Check Standards Compliance -->
+    <bpmn:serviceTask id="ServiceTask_CheckStandardsCompliance" name="Check Standards Compliance" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_DublinCorePresent</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToValidationGateway</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DublinCoreValidation" name="dublinCoreValidation"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_StandardsCompliance" name="standardsCompliance"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Validation Decision Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_ValidationResult" name="All Validations Passed?">
+      <bpmn:incoming>SequenceFlow_ToValidationGateway</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_NoDublinCore</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ValidationSuccess</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_ValidationFailed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Generate Registration ID -->
+    <bpmn:serviceTask id="ServiceTask_GenerateRegistrationId" name="Generate Registration ID" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ValidationSuccess</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToStoreDocument</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ORDValidation" name="ordValidation"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_RegistrationId" name="registrationId"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Store ORD Document with Dublin Core -->
+    <bpmn:serviceTask id="ServiceTask_StoreORDDocument" name="Store ORD Document with Dublin Core" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToStoreDocument</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToIndexResources</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ORDDocument" name="ordDocument"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DublinCoreMetadata" name="dublinCoreMetadata"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RegistrationId" name="registrationId"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_StorageResult" name="storageResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Index Resources with Dublin Core -->
+    <bpmn:serviceTask id="ServiceTask_IndexResources" name="Index Resources with Dublin Core" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToIndexResources</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToIndexDublinCoreFacets</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ORDDocument" name="ordDocument"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RegistrationId" name="registrationId"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_IndexResult" name="indexResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Index Dublin Core Facets -->
+    <bpmn:serviceTask id="ServiceTask_IndexDublinCoreFacets" name="Index Dublin Core Facets" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToIndexDublinCoreFacets</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToCalculateQualityMetrics</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DublinCoreMetadata" name="dublinCoreMetadata"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RegistrationId" name="registrationId"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_FacetIndexResult" name="facetIndexResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Calculate Dublin Core Quality Metrics -->
+    <bpmn:serviceTask id="ServiceTask_CalculateQualityMetrics" name="Calculate Dublin Core Quality Metrics" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToCalculateQualityMetrics</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToNotifyRegistration</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DublinCoreMetadata" name="dublinCoreMetadata"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_StandardsCompliance" name="standardsCompliance"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_QualityMetrics" name="qualityMetrics"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Notify External Systems -->
+    <bpmn:serviceTask id="ServiceTask_NotifyRegistration" name="Notify External Systems" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToNotifyRegistration</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToSuccessEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RegistrationId" name="registrationId"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_IndexResult" name="indexResult"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_QualityMetrics" name="qualityMetrics"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_NotificationResult" name="notificationResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Success End Event -->
+    <bpmn:endEvent id="EndEvent_RegistrationSuccess" name="Registration Successful">
+      <bpmn:incoming>SequenceFlow_ToSuccessEnd</bpmn:incoming>
+      <bpmn:messageEventDefinition messageRef="Message_RegistrationSuccess"/>
+    </bpmn:endEvent>
+
+    <!-- Handle Validation Failure -->
+    <bpmn:serviceTask id="ServiceTask_HandleValidationFailure" name="Handle Validation Failure" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ValidationFailed</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToValidationFailureEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ORDValidation" name="ordValidation"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DublinCoreValidation" name="dublinCoreValidation"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ValidationFailureResponse" name="validationFailureResponse"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Validation Failure End Event -->
+    <bpmn:endEvent id="EndEvent_ValidationFailure" name="Validation Failed">
+      <bpmn:incoming>SequenceFlow_ToValidationFailureEnd</bpmn:incoming>
+      <bpmn:errorEventDefinition errorRef="Error_ValidationFailure"/>
+    </bpmn:endEvent>
+
+    <!-- Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToValidateRequest" sourceRef="StartEvent_ORDRegistrationRequest" targetRef="ServiceTask_ValidateRequest"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToValidateORD" sourceRef="ServiceTask_ValidateRequest" targetRef="ServiceTask_ValidateORDDocument"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToValidateDublinCore" sourceRef="ServiceTask_ValidateORDDocument" targetRef="ServiceTask_ValidateDublinCore"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToDublinCoreGateway" sourceRef="ServiceTask_ValidateDublinCore" targetRef="ExclusiveGateway_DublinCoreValidation"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_DublinCorePresent" sourceRef="ExclusiveGateway_DublinCoreValidation" targetRef="ServiceTask_CheckStandardsCompliance">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${dublinCoreMetadata != null}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_NoDublinCore" sourceRef="ExclusiveGateway_DublinCoreValidation" targetRef="ExclusiveGateway_ValidationResult">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${dublinCoreMetadata == null}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ToValidationGateway" sourceRef="ServiceTask_CheckStandardsCompliance" targetRef="ExclusiveGateway_ValidationResult"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ValidationSuccess" sourceRef="ExclusiveGateway_ValidationResult" targetRef="ServiceTask_GenerateRegistrationId">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${ordValidation.valid == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ValidationFailed" sourceRef="ExclusiveGateway_ValidationResult" targetRef="ServiceTask_HandleValidationFailure">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${ordValidation.valid == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ToStoreDocument" sourceRef="ServiceTask_GenerateRegistrationId" targetRef="ServiceTask_StoreORDDocument"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToIndexResources" sourceRef="ServiceTask_StoreORDDocument" targetRef="ServiceTask_IndexResources"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToIndexDublinCoreFacets" sourceRef="ServiceTask_IndexResources" targetRef="ServiceTask_IndexDublinCoreFacets"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToCalculateQualityMetrics" sourceRef="ServiceTask_IndexDublinCoreFacets" targetRef="ServiceTask_CalculateQualityMetrics"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToNotifyRegistration" sourceRef="ServiceTask_CalculateQualityMetrics" targetRef="ServiceTask_NotifyRegistration"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToSuccessEnd" sourceRef="ServiceTask_NotifyRegistration" targetRef="EndEvent_RegistrationSuccess"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToValidationFailureEnd" sourceRef="ServiceTask_HandleValidationFailure" targetRef="EndEvent_ValidationFailure"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: Resource Discovery with Dublin Core -->
+  <bpmn:process id="ResourceDiscoveryProcess" name="Resource Discovery with Dublin Core Process" isExecutable="true">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_DiscoveryRequest" name="Discovery Request">
+      <bpmn:outgoing>SequenceFlow_ToParseQuery</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_DiscoveryRequest"/>
+    </bpmn:startEvent>
+
+    <!-- Parse Search Query -->
+    <bpmn:serviceTask id="ServiceTask_ParseSearchQuery" name="Parse Search Query with Dublin Core" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToParseQuery</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToEnrichWithDublinCore</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_SearchRequest" name="searchRequest"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ParsedQuery" name="parsedQuery"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Enrich Query with Dublin Core Facets -->
+    <bpmn:serviceTask id="ServiceTask_EnrichQueryWithDublinCore" name="Enrich Query with Dublin Core Facets" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToEnrichWithDublinCore</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToSearchIndex</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ParsedQuery" name="parsedQuery"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_EnrichedQuery" name="enrichedQuery"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Search Resource Index -->
+    <bpmn:serviceTask id="ServiceTask_SearchResourceIndex" name="Search Resource Index with Dublin Core" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToSearchIndex</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToRankResults</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_EnrichedQuery" name="enrichedQuery"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_SearchResults" name="searchResults"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Rank and Filter Results -->
+    <bpmn:serviceTask id="ServiceTask_RankAndFilterResults" name="Rank and Filter Results with Dublin Core" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToRankResults</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToGenerateFacets</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_SearchResults" name="searchResults"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_RankedResults" name="rankedResults"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Generate Dublin Core Facets -->
+    <bpmn:serviceTask id="ServiceTask_GenerateDublinCoreFacets" name="Generate Dublin Core Facets" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToGenerateFacets</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToLogAccess</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RankedResults" name="rankedResults"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_DublinCoreFacets" name="dublinCoreFacets"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Log Access for Analytics -->
+    <bpmn:serviceTask id="ServiceTask_LogAccess" name="Log Access for Analytics" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToLogAccess</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToDiscoveryEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RankedResults" name="rankedResults"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DublinCoreFacets" name="dublinCoreFacets"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_DiscoveryResponse" name="discoveryResponse"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Discovery End Event -->
+    <bpmn:endEvent id="EndEvent_DiscoveryComplete" name="Discovery Complete">
+      <bpmn:incoming>SequenceFlow_ToDiscoveryEnd</bpmn:incoming>
+      <bpmn:messageEventDefinition messageRef="Message_DiscoveryResponse"/>
+    </bpmn:endEvent>
+
+    <!-- Discovery Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToParseQuery" sourceRef="StartEvent_DiscoveryRequest" targetRef="ServiceTask_ParseSearchQuery"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToEnrichWithDublinCore" sourceRef="ServiceTask_ParseSearchQuery" targetRef="ServiceTask_EnrichQueryWithDublinCore"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToSearchIndex" sourceRef="ServiceTask_EnrichQueryWithDublinCore" targetRef="ServiceTask_SearchResourceIndex"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToRankResults" sourceRef="ServiceTask_SearchResourceIndex" targetRef="ServiceTask_RankAndFilterResults"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToGenerateFacets" sourceRef="ServiceTask_RankAndFilterResults" targetRef="ServiceTask_GenerateDublinCoreFacets"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToLogAccess" sourceRef="ServiceTask_GenerateDublinCoreFacets" targetRef="ServiceTask_LogAccess"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToDiscoveryEnd" sourceRef="ServiceTask_LogAccess" targetRef="EndEvent_DiscoveryComplete"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: ORD Document Update with Dublin Core -->
+  <bpmn:process id="ORDDocumentUpdateProcess" name="ORD Document Update with Dublin Core Process" isExecutable="true">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_UpdateRequest" name="Update Request">
+      <bpmn:outgoing>SequenceFlow_ToValidateUpdate</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_UpdateRequest"/>
+    </bpmn:startEvent>
+
+    <!-- Validate Update Request -->
+    <bpmn:serviceTask id="ServiceTask_ValidateUpdateRequest" name="Validate Update Request" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToValidateUpdate</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToValidateDublinCoreUpdate</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_UpdateRequest" name="updateRequest"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_UpdateValidation" name="updateValidation"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Validate Dublin Core Update -->
+    <bpmn:serviceTask id="ServiceTask_ValidateDublinCoreUpdate" name="Validate Dublin Core Update" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToValidateDublinCoreUpdate</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToCheckExisting</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DublinCoreUpdate" name="dublinCoreUpdate"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_DublinCoreUpdateValidation" name="dublinCoreUpdateValidation"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Check Existing Registration -->
+    <bpmn:serviceTask id="ServiceTask_CheckExistingRegistration" name="Check Existing Registration" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToCheckExisting</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToUpdateGateway</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RegistrationId" name="registrationId"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ExistingRegistration" name="existingRegistration"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Update Decision Gateway -->
+    <bpmn:exclusiveGateway id="ExclusiveGateway_UpdateDecision" name="Can Update?">
+      <bpmn:incoming>SequenceFlow_ToUpdateGateway</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_CanUpdate</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_CannotUpdate</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Create Version -->
+    <bpmn:serviceTask id="ServiceTask_CreateVersion" name="Create New Version" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_CanUpdate</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToUpdateDocument</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ExistingRegistration" name="existingRegistration"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_NewVersion" name="newVersion"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Update Document -->
+    <bpmn:serviceTask id="ServiceTask_UpdateDocument" name="Update ORD Document with Dublin Core" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToUpdateDocument</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToRecalculateQuality</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_UpdateRequest" name="updateRequest"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DublinCoreUpdate" name="dublinCoreUpdate"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_UpdatedDocument" name="updatedDocument"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Recalculate Dublin Core Quality -->
+    <bpmn:serviceTask id="ServiceTask_RecalculateQuality" name="Recalculate Dublin Core Quality" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToRecalculateQuality</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToReindexResources</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DublinCoreUpdate" name="dublinCoreUpdate"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_UpdatedQualityMetrics" name="updatedQualityMetrics"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Reindex Resources -->
+    <bpmn:serviceTask id="ServiceTask_ReindexResources" name="Reindex Resources with Dublin Core" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToReindexResources</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToUpdateEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_UpdatedDocument" name="updatedDocument"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DublinCoreUpdate" name="dublinCoreUpdate"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ReindexResult" name="reindexResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Update Success End -->
+    <bpmn:endEvent id="EndEvent_UpdateSuccess" name="Update Successful">
+      <bpmn:incoming>SequenceFlow_ToUpdateEnd</bpmn:incoming>
+      <bpmn:messageEventDefinition messageRef="Message_UpdateSuccess"/>
+    </bpmn:endEvent>
+
+    <!-- Handle Update Failure -->
+    <bpmn:serviceTask id="ServiceTask_HandleUpdateFailure" name="Handle Update Failure" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_CannotUpdate</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToUpdateFailureEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_UpdateValidation" name="updateValidation"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_DublinCoreUpdateValidation" name="dublinCoreUpdateValidation"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_UpdateFailureResponse" name="updateFailureResponse"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Update Failure End -->
+    <bpmn:endEvent id="EndEvent_UpdateFailure" name="Update Failed">
+      <bpmn:incoming>SequenceFlow_ToUpdateFailureEnd</bpmn:incoming>
+      <bpmn:errorEventDefinition errorRef="Error_UpdateFailure"/>
+    </bpmn:endEvent>
+
+    <!-- Update Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToValidateUpdate" sourceRef="StartEvent_UpdateRequest" targetRef="ServiceTask_ValidateUpdateRequest"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToValidateDublinCoreUpdate" sourceRef="ServiceTask_ValidateUpdateRequest" targetRef="ServiceTask_ValidateDublinCoreUpdate"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToCheckExisting" sourceRef="ServiceTask_ValidateDublinCoreUpdate" targetRef="ServiceTask_CheckExistingRegistration"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToUpdateGateway" sourceRef="ServiceTask_CheckExistingRegistration" targetRef="ExclusiveGateway_UpdateDecision"/>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_CanUpdate" sourceRef="ExclusiveGateway_UpdateDecision" targetRef="ServiceTask_CreateVersion">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${canUpdate == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_CannotUpdate" sourceRef="ExclusiveGateway_UpdateDecision" targetRef="ServiceTask_HandleUpdateFailure">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${canUpdate == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="SequenceFlow_ToUpdateDocument" sourceRef="ServiceTask_CreateVersion" targetRef="ServiceTask_UpdateDocument"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToRecalculateQuality" sourceRef="ServiceTask_UpdateDocument" targetRef="ServiceTask_RecalculateQuality"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToReindexResources" sourceRef="ServiceTask_RecalculateQuality" targetRef="ServiceTask_ReindexResources"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToUpdateEnd" sourceRef="ServiceTask_ReindexResources" targetRef="EndEvent_UpdateSuccess"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToUpdateFailureEnd" sourceRef="ServiceTask_HandleUpdateFailure" targetRef="EndEvent_UpdateFailure"/>
+
+  </bpmn:process>
+
+  <!-- Sub-Process: Dublin Core Quality Assessment -->
+  <bpmn:process id="DublinCoreQualityAssessmentProcess" name="Dublin Core Quality Assessment Process" isExecutable="true">
+    
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_QualityAssessment" name="Quality Assessment Trigger">
+      <bpmn:outgoing>SequenceFlow_ToAnalyzeCompleteness</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">${QUALITY_ASSESSMENT_SCHEDULE}</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+
+    <!-- Analyze Metadata Completeness -->
+    <bpmn:serviceTask id="ServiceTask_AnalyzeCompleteness" name="Analyze Metadata Completeness" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToAnalyzeCompleteness</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToAssessStandards</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RegistrationCollection" name="registrationCollection"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_CompletenessAnalysis" name="completenessAnalysis"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Assess Standards Compliance -->
+    <bpmn:serviceTask id="ServiceTask_AssessStandardsCompliance" name="Assess Standards Compliance" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToAssessStandards</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToCalculateScores</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_RegistrationCollection" name="registrationCollection"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_StandardsAssessment" name="standardsAssessment"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Calculate Quality Scores -->
+    <bpmn:serviceTask id="ServiceTask_CalculateQualityScores" name="Calculate Quality Scores" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToCalculateScores</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToGenerateRecommendations</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_CompletenessAnalysis" name="completenessAnalysis"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_StandardsAssessment" name="standardsAssessment"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_QualityScores" name="qualityScores"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Generate Improvement Recommendations -->
+    <bpmn:serviceTask id="ServiceTask_GenerateRecommendations" name="Generate Improvement Recommendations" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToGenerateRecommendations</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToUpdateQualityMetrics</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_QualityScores" name="qualityScores"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_ImprovementRecommendations" name="improvementRecommendations"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Update Quality Metrics -->
+    <bpmn:serviceTask id="ServiceTask_UpdateQualityMetrics" name="Update Quality Metrics" implementation="##WebService">
+      <bpmn:incoming>SequenceFlow_ToUpdateQualityMetrics</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_ToQualityAssessmentEnd</bpmn:outgoing>
+      <bpmn:ioSpecification>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_QualityScores" name="qualityScores"/>
+        <bpmn:dataInput itemSubjectRef="ItemDefinition_ImprovementRecommendations" name="improvementRecommendations"/>
+        <bpmn:dataOutput itemSubjectRef="ItemDefinition_QualityUpdateResult" name="qualityUpdateResult"/>
+      </bpmn:ioSpecification>
+    </bpmn:serviceTask>
+
+    <!-- Quality Assessment End -->
+    <bpmn:endEvent id="EndEvent_QualityAssessmentComplete" name="Quality Assessment Complete">
+      <bpmn:incoming>SequenceFlow_ToQualityAssessmentEnd</bpmn:incoming>
+      <bpmn:messageEventDefinition messageRef="Message_QualityAssessmentComplete"/>
+    </bpmn:endEvent>
+
+    <!-- Quality Assessment Sequence Flows -->
+    <bpmn:sequenceFlow id="SequenceFlow_ToAnalyzeCompleteness" sourceRef="StartEvent_QualityAssessment" targetRef="ServiceTask_AnalyzeCompleteness"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToAssessStandards" sourceRef="ServiceTask_AnalyzeCompleteness" targetRef="ServiceTask_AssessStandardsCompliance"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToCalculateScores" sourceRef="ServiceTask_AssessStandardsCompliance" targetRef="ServiceTask_CalculateQualityScores"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToGenerateRecommendations" sourceRef="ServiceTask_CalculateQualityScores" targetRef="ServiceTask_GenerateRecommendations"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToUpdateQualityMetrics" sourceRef="ServiceTask_GenerateRecommendations" targetRef="ServiceTask_UpdateQualityMetrics"/>
+    <bpmn:sequenceFlow id="SequenceFlow_ToQualityAssessmentEnd" sourceRef="ServiceTask_UpdateQualityMetrics" targetRef="EndEvent_QualityAssessmentComplete"/>
+
+  </bpmn:process>
+
+  <!-- Message Definitions -->
+  <bpmn:message id="Message_ORDRegistrationRequest" name="ORD Registration Request"/>
+  <bpmn:message id="Message_RegistrationSuccess" name="Registration Success"/>
+  <bpmn:message id="Message_DiscoveryRequest" name="Discovery Request"/>
+  <bpmn:message id="Message_DiscoveryResponse" name="Discovery Response"/>
+  <bpmn:message id="Message_UpdateRequest" name="Update Request"/>
+  <bpmn:message id="Message_UpdateSuccess" name="Update Success"/>
+  <bpmn:message id="Message_QualityAssessmentComplete" name="Quality Assessment Complete"/>
+
+  <!-- Error Definitions -->
+  <bpmn:error id="Error_ValidationFailure" name="Validation Failure" errorCode="VALIDATION_FAILURE"/>
+  <bpmn:error id="Error_UpdateFailure" name="Update Failure" errorCode="UPDATE_FAILURE"/>
+  <bpmn:error id="Error_DublinCoreValidationFailure" name="Dublin Core Validation Failure" errorCode="DUBLINCORE_VALIDATION_FAILURE"/>
+
+  <!-- Data Item Definitions -->
+  <bpmn:itemDefinition id="ItemDefinition_RegistrationRequest" structureRef="RegistrationRequest"/>
+  <bpmn:itemDefinition id="ItemDefinition_ORDDocument" structureRef="ORDDocument"/>
+  <bpmn:itemDefinition id="ItemDefinition_DublinCoreMetadata" structureRef="DublinCoreMetadata"/>
+  <bpmn:itemDefinition id="ItemDefinition_ORDValidation" structureRef="ORDValidation"/>
+  <bpmn:itemDefinition id="ItemDefinition_DublinCoreValidation" structureRef="DublinCoreValidation"/>
+  <bpmn:itemDefinition id="ItemDefinition_StandardsCompliance" structureRef="StandardsCompliance"/>
+  <bpmn:itemDefinition id="ItemDefinition_RegistrationId" structureRef="RegistrationId"/>
+  <bpmn:itemDefinition id="ItemDefinition_StorageResult" structureRef="StorageResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_IndexResult" structureRef="IndexResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_FacetIndexResult" structureRef="FacetIndexResult"/>
+  <bpmn:itemDefinition id="ItemDefinition_QualityMetrics" structureRef="QualityMetrics"/>
+  <bpmn:itemDefinition id="ItemDefinition_SearchRequest" structureRef="SearchRequest"/>
+  <bpmn:itemDefinition id="ItemDefinition_ParsedQuery" structureRef="ParsedQuery"/>
+  <bpmn:itemDefinition id="ItemDefinition_EnrichedQuery" structureRef="EnrichedQuery"/>
+  <bpmn:itemDefinition id="ItemDefinition_SearchResults" structureRef="SearchResults"/>
+  <bpmn:itemDefinition id="ItemDefinition_RankedResults" structureRef="RankedResults"/>
+  <bpmn:itemDefinition id="ItemDefinition_DublinCoreFacets" structureRef="DublinCoreFacets"/>
+  <bpmn:itemDefinition id="ItemDefinition_UpdateRequest" structureRef="UpdateRequest"/>
+  <bpmn:itemDefinition id="ItemDefinition_DublinCoreUpdate" structureRef="DublinCoreUpdate"/>
+  <bpmn:itemDefinition id="ItemDefinition_CompletenessAnalysis" structureRef="CompletenessAnalysis"/>
+  <bpmn:itemDefinition id="ItemDefinition_StandardsAssessment" structureRef="StandardsAssessment"/>
+  <bpmn:itemDefinition id="ItemDefinition_QualityScores" structureRef="QualityScores"/>
+  <bpmn:itemDefinition id="ItemDefinition_ImprovementRecommendations" structureRef="ImprovementRecommendations"/>
+
+</bpmn:definitions>

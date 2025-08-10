@@ -1,0 +1,476 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mvc:View
+    controllerName="sap.a2a.controller.ProjectsListReport"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.f"
+    xmlns:fe="sap.fe.macros"
+    xmlns:smartFilterBar="sap.ui.comp.smartfilterbar"
+    xmlns:smartTable="sap.ui.comp.smarttable"
+    xmlns:semantic="sap.f.semantic">
+
+    <!-- SAP Fiori Elements List Report Page -->
+    <f:DynamicPage id="projectsListReportPage" 
+                   class="a2a-tablet-page"
+                   headerExpanded="true" 
+                   toggleHeaderOnTitleClick="false">
+        
+        <!-- Page Header -->
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title id="pageTitle" text="{i18n>projects.title}" level="H1"/>
+                </f:heading>
+                <f:expandedContent>
+                    <Text id="pageDescription" text="{i18n>projects.description}"/>
+                </f:expandedContent>
+                <f:snappedContent>
+                    <Text id="pageDescriptionSnapped" text="{i18n>projects.descriptionShort}"/>
+                </f:snappedContent>
+                <f:actions>
+                    <ToolbarSeparator/>
+                    <Button id="createProjectButton" 
+                            text="{i18n>projects.create}" 
+                            type="Emphasized"
+                            icon="sap-icon://add"
+                            press=".onCreateProject"/>
+                    <Button id="refreshButton" 
+                            text="{i18n>common.refresh}" 
+                            icon="sap-icon://refresh"
+                            press=".onRefresh"/>
+                    <MenuButton id="moreActionsButton" 
+                               text="{i18n>common.moreActions}" 
+                               icon="sap-icon://overflow">
+                        <menu>
+                            <Menu>
+                                <MenuItem text="{i18n>projects.import}" 
+                                         icon="sap-icon://upload" 
+                                         press=".onImportProjects"/>
+                                <MenuItem text="{i18n>projects.export}" 
+                                         icon="sap-icon://download" 
+                                         press=".onExportProjects"/>
+                                <MenuItem text="{i18n>projects.templates}" 
+                                         icon="sap-icon://template" 
+                                         press=".onManageTemplates"/>
+                            </Menu>
+                        </menu>
+                    </MenuButton>
+                </f:actions>
+                <f:navigationActions>
+                    <Button id="settingsButton" 
+                            icon="sap-icon://action-settings" 
+                            tooltip="{i18n>common.settings}"
+                            press=".onOpenSettings"/>
+                    <Button id="helpButton" 
+                            icon="sap-icon://sys-help" 
+                            tooltip="{i18n>common.help}"
+                            press=".onOpenHelp"/>
+                </f:navigationActions>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <!-- Filter Bar Header -->
+        <f:header>
+            <f:DynamicPageHeader id="listReportHeader" 
+                                pinnable="true">
+                <f:content>
+                    <smartFilterBar:SmartFilterBar id="listReportFilter"
+                                                   entitySet="Projects"
+                                                   persistencyKey="ProjectsListReportFilterBar"
+                                                   useToolbar="false"
+                                                   filterBarExpanded="false"
+                                                   showRestoreButton="true"
+                                                   showClearButton="true"
+                                                   showGoButton="true"
+                                                   search=".onFilterBarSearch"
+                                                   filterChange=".onFilterChange">
+                        
+                        <!-- Custom Filter Fields -->
+                        <smartFilterBar:controlConfiguration>
+                            <smartFilterBar:ControlConfiguration key="status" 
+                                                               label="{i18n>projects.status}" 
+                                                               groupId="main"
+                                                               index="1">
+                                <smartFilterBar:customControl>
+                                    <ComboBox id="statusFilter" 
+                                             items="{/ProjectStatuses}"
+                                             placeholder="{i18n>projects.statusPlaceholder}">
+                                        <core:Item key="{key}" text="{text}"/>
+                                    </ComboBox>
+                                </smartFilterBar:customControl>
+                            </smartFilterBar:ControlConfiguration>
+                            
+                            <smartFilterBar:ControlConfiguration key="priority" 
+                                                               label="{i18n>projects.priority}" 
+                                                               groupId="main"
+                                                               index="2">
+                                <smartFilterBar:customControl>
+                                    <ComboBox id="priorityFilter" 
+                                             items="{/ProjectPriorities}"
+                                             placeholder="{i18n>projects.priorityPlaceholder}">
+                                        <core:Item key="{key}" text="{text}"/>
+                                    </ComboBox>
+                                </smartFilterBar:customControl>
+                            </smartFilterBar:ControlConfiguration>
+                            
+                            <smartFilterBar:ControlConfiguration key="businessUnit" 
+                                                               label="{i18n>projects.businessUnit}" 
+                                                               groupId="details"
+                                                               index="3">
+                                <smartFilterBar:customControl>
+                                    <Input id="businessUnitFilter" 
+                                          placeholder="{i18n>projects.businessUnitPlaceholder}"
+                                          showValueHelp="true"
+                                          valueHelpRequest=".onBusinessUnitValueHelp"/>
+                                </smartFilterBar:customControl>
+                            </smartFilterBar:ControlConfiguration>
+                        </smartFilterBar:controlConfiguration>
+                        
+                        <!-- Filter Groups -->
+                        <smartFilterBar:filterGroupItems>
+                            <smartFilterBar:FilterGroupItem groupName="main" 
+                                                          name="status" 
+                                                          label="{i18n>projects.status}"
+                                                          mandatory="false"
+                                                          visibleInFilterBar="true"/>
+                            <smartFilterBar:FilterGroupItem groupName="main" 
+                                                          name="priority" 
+                                                          label="{i18n>projects.priority}"
+                                                          mandatory="false"
+                                                          visibleInFilterBar="true"/>
+                            <smartFilterBar:FilterGroupItem groupName="details" 
+                                                          name="businessUnit" 
+                                                          label="{i18n>projects.businessUnit}"
+                                                          mandatory="false"
+                                                          visibleInFilterBar="false"/>
+                        </smartFilterBar:filterGroupItems>
+                    </smartFilterBar:SmartFilterBar>
+                </f:content>
+            </f:DynamicPageHeader>
+        </f:header>
+
+        <!-- Main Content Area -->
+        <f:content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- KPI Cards -->
+                <Panel id="kpiPanel" 
+                       headerText="{i18n>projects.overview}" 
+                       expandable="true" 
+                       expanded="true"
+                       class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin">
+                        <NumericTile id="totalProjectsTile"
+                                    class="sapUiTinyMargin"
+                                    header="{i18n>projects.total}"
+                                    headerColor="Good"
+                                    subheader="{i18n>projects.allTime}"
+                                    value="{/kpi/totalProjects}"
+                                    valueColor="Good"
+                                    indicator="Up"
+                                    size="M"
+                                    press=".onKPIPress"/>
+                        
+                        <NumericTile id="activeProjectsTile"
+                                    class="sapUiTinyMargin"
+                                    header="{i18n>projects.active}"
+                                    headerColor="Neutral"
+                                    subheader="{i18n>projects.currentlyRunning}"
+                                    value="{/kpi/activeProjects}"
+                                    valueColor="Neutral"
+                                    indicator="None"
+                                    size="M"
+                                    press=".onKPIPress"/>
+                        
+                        <NumericTile id="completedProjectsTile"
+                                    class="sapUiTinyMargin"
+                                    header="{i18n>projects.completed}"
+                                    headerColor="Good"
+                                    subheader="{i18n>projects.thisMonth}"
+                                    value="{/kpi/completedProjects}"
+                                    valueColor="Good"
+                                    indicator="Up"
+                                    size="M"
+                                    press=".onKPIPress"/>
+                        
+                        <NumericTile id="deploymentSuccessRateTile"
+                                    class="sapUiTinyMargin"
+                                    header="{i18n>projects.successRate}"
+                                    headerColor="Good"
+                                    subheader="{i18n>projects.deployments}"
+                                    value="{path: '/kpi/deploymentSuccessRate', formatter: '.formatPercentage'}"
+                                    valueColor="Good"
+                                    indicator="Up"
+                                    size="M"
+                                    press=".onKPIPress"/>
+                    </HBox>
+                </Panel>
+
+                <!-- Smart Table for Projects List -->
+                <smartTable:SmartTable id="projectsSmartTable"
+                                      entitySet="Projects"
+                                      tableType="ResponsiveTable"
+                                      header="{i18n>projects.list}"
+                                      showRowCount="true"
+                                      enableAutoBinding="true"
+                                      persistencyKey="ProjectsListReportTable"
+                                      useExportToExcel="true"
+                                      useVariantManagement="true"
+                                      useTablePersonalisation="true"
+                                      showFullScreenButton="true"
+                                      editTogglable="false"
+                                      demandPopin="true"
+                                      class="sapUiResponsiveMargin"
+                                      rowSelectionChange=".onRowSelectionChange"
+                                      beforeRebindTable=".onBeforeRebindTable">
+
+                    <!-- Custom Toolbar -->
+                    <smartTable:customToolbar>
+                        <OverflowToolbar>
+                            <Title text="{i18n>projects.list}" level="H3"/>
+                            <ToolbarSpacer/>
+                            
+                            <!-- Bulk Actions -->
+                            <Button id="bulkEditButton" 
+                                   text="{i18n>common.edit}" 
+                                   icon="sap-icon://edit"
+                                   enabled="false"
+                                   press=".onBulkEdit"/>
+                            <Button id="bulkDeleteButton" 
+                                   text="{i18n>common.delete}" 
+                                   icon="sap-icon://delete"
+                                   enabled="false"
+                                   press=".onBulkDelete"/>
+                            
+                            <ToolbarSeparator/>
+                            
+                            <!-- View Options -->
+                            <SegmentedButton id="viewModeButton" 
+                                           selectedKey="table">
+                                <items>
+                                    <SegmentedButtonItem key="table" 
+                                                       icon="sap-icon://table-view" 
+                                                       tooltip="{i18n>common.tableView}"/>
+                                    <SegmentedButtonItem key="cards" 
+                                                       icon="sap-icon://card" 
+                                                       tooltip="{i18n>common.cardView}"/>
+                                </items>
+                                <selectionChange=".onViewModeChange"/>
+                            </SegmentedButton>
+                        </OverflowToolbar>
+                    </smartTable:customToolbar>
+
+                    <!-- Table Configuration -->
+                    <Table id="projectsTable" 
+                           mode="MultiSelect"
+                           sticky="ColumnHeaders,HeaderToolbar"
+                           fixedLayout="false"
+                           growingThreshold="50"
+                           growing="true"
+                           updateFinished=".onTableUpdateFinished"
+                           itemPress=".onProjectPress"
+                           selectionChange=".onProjectSelectionChange">
+
+                        <!-- Table Columns -->
+                        <columns>
+                            <Column id="nameColumn" 
+                                   demandPopin="false" 
+                                   minScreenWidth="Tablet"
+                                   sortProperty="name"
+                                   filterProperty="name">
+                                <header>
+                                    <Text text="{i18n>projects.name}"/>
+                                </header>
+                            </Column>
+                            
+                            <Column id="statusColumn" 
+                                   demandPopin="true" 
+                                   minScreenWidth="Desktop"
+                                   popinDisplay="Inline"
+                                   sortProperty="status"
+                                   filterProperty="status">
+                                <header>
+                                    <Text text="{i18n>projects.status}"/>
+                                </header>
+                            </Column>
+                            
+                            <Column id="priorityColumn" 
+                                   demandPopin="true" 
+                                   minScreenWidth="Desktop"
+                                   popinDisplay="Inline"
+                                   sortProperty="priority"
+                                   filterProperty="priority">
+                                <header>
+                                    <Text text="{i18n>projects.priority}"/>
+                                </header>
+                            </Column>
+                            
+                            <Column id="agentsColumn" 
+                                   demandPopin="true" 
+                                   minScreenWidth="Tablet"
+                                   popinDisplay="Block">
+                                <header>
+                                    <Text text="{i18n>projects.agents}"/>
+                                </header>
+                            </Column>
+                            
+                            <Column id="lastDeploymentColumn" 
+                                   demandPopin="true" 
+                                   minScreenWidth="Desktop"
+                                   popinDisplay="Inline"
+                                   sortProperty="lastDeployment">
+                                <header>
+                                    <Text text="{i18n>projects.lastDeployment}"/>
+                                </header>
+                            </Column>
+                            
+                            <Column id="createdByColumn" 
+                                   demandPopin="true" 
+                                   minScreenWidth="Desktop"
+                                   popinDisplay="Inline"
+                                   sortProperty="createdBy"
+                                   filterProperty="createdBy">
+                                <header>
+                                    <Text text="{i18n>projects.createdBy}"/>
+                                </header>
+                            </Column>
+                            
+                            <Column id="actionsColumn" 
+                                   demandPopin="false">
+                                <header>
+                                    <Text text="{i18n>common.actions}"/>
+                                </header>
+                            </Column>
+                        </columns>
+
+                        <!-- Table Items Template -->
+                        <items>
+                            <ColumnListItem id="projectListItem" 
+                                          press=".onProjectPress" 
+                                          type="Navigation"
+                                          highlight="{path: 'priority', formatter: '.formatPriorityHighlight'}">
+                                
+                                <!-- Project Name and Description -->
+                                <VBox class="sapUiNoMargin">
+                                    <Link text="{name}" 
+                                         press=".onProjectPress" 
+                                         emphasized="true"/>
+                                    <Text text="{description}" 
+                                         maxLines="2" 
+                                         class="sapUiTinyMarginTop sapThemeTextColorSecondary"/>
+                                </VBox>
+                                
+                                <!-- Status with ObjectStatus -->
+                                <ObjectStatus text="{status}"
+                                            state="{path: 'status', formatter: '.formatStatusState'}"
+                                            icon="{path: 'status', formatter: '.formatStatusIcon'}"
+                                            class="sapUiTinyMarginTop"/>
+                                
+                                <!-- Priority with ObjectStatus -->
+                                <ObjectStatus text="{priority}"
+                                            state="{path: 'priority', formatter: '.formatPriorityState'}"
+                                            icon="{path: 'priority', formatter: '.formatPriorityIcon'}"/>
+                                
+                                <!-- Agents Count and Types -->
+                                <HBox alignItems="Center">
+                                    <ObjectNumber number="{agents/length}" 
+                                                unit="{i18n>projects.agentsUnit}"
+                                                emphasized="false"/>
+                                    <core:Icon src="sap-icon://process" 
+                                             color="Neutral" 
+                                             class="sapUiTinyMarginBegin"/>
+                                </HBox>
+                                
+                                <!-- Last Deployment -->
+                                <VBox class="sapUiNoMargin">
+                                    <Text text="{path: 'lastDeployment', formatter: '.formatRelativeTime'}"
+                                         class="sapThemeTextColorSecondary"/>
+                                    <Text text="{path: 'deploymentStatus', formatter: '.formatDeploymentStatus'}"
+                                         class="sapUiTinyMarginTop"/>
+                                </VBox>
+                                
+                                <!-- Created By -->
+                                <Text text="{createdBy}" 
+                                     class="sapThemeTextColorSecondary"/>
+                                
+                                <!-- Action Buttons -->
+                                <HBox alignItems="Center">
+                                    <Button icon="sap-icon://play" 
+                                           tooltip="{i18n>projects.deploy}"
+                                           type="Transparent"
+                                           enabled="{path: 'status', formatter: '.isDeployable'}"
+                                           press=".onDeployProject"/>
+                                    <Button icon="sap-icon://stop" 
+                                           tooltip="{i18n>projects.stop}"
+                                           type="Transparent"
+                                           enabled="{path: 'status', formatter: '.isStoppable'}"
+                                           press=".onStopProject"/>
+                                    <MenuButton icon="sap-icon://overflow" 
+                                               tooltip="{i18n>common.moreActions}"
+                                               type="Transparent">
+                                        <menu>
+                                            <Menu>
+                                                <MenuItem text="{i18n>common.edit}" 
+                                                         icon="sap-icon://edit" 
+                                                         press=".onEditProject"/>
+                                                <MenuItem text="{i18n>projects.clone}" 
+                                                         icon="sap-icon://copy" 
+                                                         press=".onCloneProject"/>
+                                                <MenuItem text="{i18n>projects.export}" 
+                                                         icon="sap-icon://download" 
+                                                         press=".onExportProject"/>
+                                                <MenuItem text="{i18n>common.delete}" 
+                                                         icon="sap-icon://delete" 
+                                                         press=".onDeleteProject"
+                                                         startsSection="true"/>
+                                            </Menu>
+                                        </menu>
+                                    </MenuButton>
+                                </HBox>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </smartTable:SmartTable>
+                
+                <!-- Empty State (shown when no projects) -->
+                <Panel id="emptyStatePanel" 
+                       visible="{= ${/projects/length} === 0}"
+                       class="sapUiResponsiveMargin sapUiContentPadding">
+                    <VBox alignItems="Center" 
+                          class="sapUiLargeMargin">
+                        <core:Icon src="sap-icon://product" 
+                                  size="4rem" 
+                                  color="Neutral" 
+                                  class="sapUiMediumMarginBottom"/>
+                        <Title text="{i18n>projects.noProjects}" 
+                               level="H2" 
+                               textAlign="Center"/>
+                        <Text text="{i18n>projects.noProjectsDescription}" 
+                             textAlign="Center" 
+                             class="sapUiMediumMarginTop sapUiMediumMarginBottom"/>
+                        <Button text="{i18n>projects.createFirst}" 
+                               type="Emphasized" 
+                               icon="sap-icon://add" 
+                               press=".onCreateProject"
+                               class="sapUiMediumMarginTop"/>
+                    </VBox>
+                </Panel>
+            </VBox>
+        </f:content>
+
+        <!-- Floating Footer with Actions -->
+        <f:footer>
+            <OverflowToolbar id="listReportFooter">
+                <ToolbarSpacer/>
+                <Text id="selectionInfo" 
+                     text="{i18n>projects.selectedInfo}" 
+                     visible="false"/>
+                <Button id="footerRefreshButton" 
+                       text="{i18n>common.refresh}" 
+                       icon="sap-icon://refresh" 
+                       press=".onRefresh"/>
+            </OverflowToolbar>
+        </f:footer>
+    </f:DynamicPage>
+</mvc:View>

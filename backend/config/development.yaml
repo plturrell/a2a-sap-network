@@ -1,0 +1,78 @@
+# Development Environment Configuration
+# Override base settings for local development
+
+# Database settings for development
+database:
+  # Development uses PostgreSQL by default
+  # URL should be provided via environment variable DATABASE_URL
+  pool_min_size: 2
+  pool_max_size: 10
+  ssl_mode: "disable"
+
+# Security settings for development (less strict)
+security:
+  # JWT secret should be provided via environment variable JWT_SECRET
+  session_timeout_minutes: 60
+  max_login_attempts: 10
+
+# CORS settings for development (more permissive)
+cors:
+  origins:
+    - "http://localhost:3000"
+    - "http://localhost:3001" 
+    - "http://127.0.0.1:3000"
+
+# SAP settings for development
+sap:
+  # All SAP credentials should be provided via environment variables
+  # SAP_GRAPH_URL, SAP_GRAPH_CLIENT_ID, etc.
+  graph_url: "https://sandbox-api.sap.com/graph/v1"
+  btp_subdomain: "dev-subdomain"
+
+# Agent settings for development
+agents:
+  # Longer timeouts for debugging
+  timeout_seconds: 60
+  agent0_timeout: 30
+  agent1_timeout: 90
+  agent2_timeout: 240
+  agent3_timeout: 120
+  agent4_timeout: 180
+  agent5_timeout: 60
+
+# External services for development
+external_services:
+  # API keys should be provided via environment variables
+  # GROK_API_KEY, PERPLEXITY_API_KEY, etc.
+  api_timeout_seconds: 60
+
+# Monitoring for development
+monitoring:
+  enable_metrics: false
+  enable_tracing: false
+  log_level: "DEBUG"
+  log_format: "text"
+
+# UI settings for development
+ui:
+  enable_debug_mode: true
+  enable_analytics: false
+  api_timeout_ms: 60000
+
+# Development-specific settings
+development:
+  hot_reload: true
+  mock_external_services: true
+  skip_blockchain_validation: true
+  
+# Agent port assignments
+agent_ports:
+  agent0: 8001
+  agent1: 8002
+  agent2: 8003
+  agent3: 8004
+  agent4: 8009
+  agent5: 8010
+  data_manager: 8005
+  catalog_manager: 8006
+  agent_manager: 8007

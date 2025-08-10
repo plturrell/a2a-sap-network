@@ -1,0 +1,985 @@
+# A2A Smart Contracts - ABI & A2A Integration Specification
+## Complete Interface Definition for Blockchain-Enabled A2A Agents
+
+### Overview
+
+A2A Smart Contracts require **three interface layers**:
+
+1. **Smart Contract ABIs** - Direct blockchain interaction
+2. **A2A Protocol Integration** - Compatibility with existing A2A agents
+3. **REST API Wrapper** - Bridge between traditional APIs and blockchain
+
+---
+
+## 1. Smart Contract ABIs (Application Binary Interfaces)
+
+### AgentRegistryContract ABI
+
+```json
+{
+  "contractName": "AgentRegistryContract",
+  "abi": [
+    {
+      "type": "function",
+      "name": "registerAgent",
+      "inputs": [
+        {"name": "_agentId", "type": "bytes32"},
+        {"name": "_ipfsMetadataHash", "type": "string"},
+        {"name": "_capabilityHashes", "type": "bytes32[]"}
+      ],
+      "outputs": [
+        {"name": "success", "type": "bool"}
+      ],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "getAgent",
+      "inputs": [
+        {"name": "_agentId", "type": "bytes32"}
+      ],
+      "outputs": [
+        {"name": "agentAddress", "type": "address"},
+        {"name": "stake", "type": "uint256"},
+        {"name": "status", "type": "uint8"},
+        {"name": "registrationTimestamp", "type": "uint256"}
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "updateAgentStatus",
+      "inputs": [
+        {"name": "_agentId", "type": "bytes32"},
+        {"name": "_status", "type": "uint8"}
+      ],
+      "outputs": [
+        {"name": "success", "type": "bool"}
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "deregisterAgent",
+      "inputs": [
+        {"name": "_agentId", "type": "bytes32"}
+      ],
+      "outputs": [
+        {"name": "stakeReturned", "type": "uint256"}
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "event",
+      "name": "AgentRegistered",
+      "inputs": [
+        {"name": "agentId", "type": "bytes32", "indexed": true},
+        {"name": "agentAddress", "type": "address", "indexed": true},
+        {"name": "stake", "type": "uint256", "indexed": false}
+      ]
+    },
+    {
+      "type": "event",
+      "name": "AgentDeregistered",
+      "inputs": [
+        {"name": "agentId", "type": "bytes32", "indexed": true},
+        {"name": "stakeReturned", "type": "uint256", "indexed": false}
+      ]
+    }
+  ]
+}
+```
+
+### AgentTrustContract ABI
+
+```json
+{
+  "contractName": "AgentTrustContract",
+  "abi": [
+    {
+      "type": "function",
+      "name": "recordInteraction",
+      "inputs": [
+        {"name": "_provider", "type": "bytes32"},
+        {"name": "_consumer", "type": "bytes32"},
+        {"name": "_rating", "type": "uint256"},
+        {"name": "_skill", "type": "bytes32"},
+        {"name": "_signature", "type": "bytes"}
+      ],
+      "outputs": [
+        {"name": "success", "type": "bool"}
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "getTrustScore",
+      "inputs": [
+        {"name": "_agentId", "type": "bytes32"}
+      ],
+      "outputs": [
+        {"name": "totalInteractions", "type": "uint256"},
+        {"name": "successfulInteractions", "type": "uint256"},
+        {"name": "aggregatedRating", "type": "uint256"},
+        {"name": "lastUpdated", "type": "uint256"}
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getSkillRating",
+      "inputs": [
+        {"name": "_agentId", "type": "bytes32"},
+        {"name": "_skill", "type": "bytes32"}
+      ],
+      "outputs": [
+        {"name": "rating", "type": "uint256"}
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "event",
+      "name": "InteractionRecorded",
+      "inputs": [
+        {"name": "provider", "type": "bytes32", "indexed": true},
+        {"name": "consumer", "type": "bytes32", "indexed": true},
+        {"name": "rating", "type": "uint256", "indexed": false},
+        {"name": "skill", "type": "bytes32", "indexed": false}
+      ]
+    }
+  ]
+}
+```
+
+### WorkflowOrchestrationContract ABI
+
+```json
+{
+  "contractName": "WorkflowOrchestrationContract",
+  "abi": [
+    {
+      "type": "function",
+      "name": "createWorkflow",
+      "inputs": [
+        {"name": "_workflowId", "type": "bytes32"},
+        {"name": "_stages", "type": "tuple[]", "components": [
+          {"name": "agentId", "type": "bytes32"},
+          {"name": "requiredSkills", "type": "bytes32[]"},
+          {"name": "maxDuration", "type": "uint256"},
+          {"name": "payment", "type": "uint256"}
+        ]}
+      ],
+      "outputs": [
+        {"name": "success", "type": "bool"}
+      ],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "executeStage",
+      "inputs": [
+        {"name": "_workflowId", "type": "bytes32"},
+        {"name": "_stageIndex", "type": "uint256"},
+        {"name": "_outputDataHash", "type": "bytes32"}
+      ],
+      "outputs": [
+        {"name": "success", "type": "bool"}
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "getWorkflowStatus",
+      "inputs": [
+        {"name": "_workflowId", "type": "bytes32"}
+      ],
+      "outputs": [
+        {"name": "status", "type": "uint8"},
+        {"name": "currentStage", "type": "uint256"},
+        {"name": "totalStages", "type": "uint256"}
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "event",
+      "name": "WorkflowCreated",
+      "inputs": [
+        {"name": "workflowId", "type": "bytes32", "indexed": true},
+        {"name": "initiator", "type": "address", "indexed": true},
+        {"name": "totalBudget", "type": "uint256", "indexed": false}
+      ]
+    },
+    {
+      "type": "event",
+      "name": "StageCompleted",
+      "inputs": [
+        {"name": "workflowId", "type": "bytes32", "indexed": true},
+        {"name": "stageIndex", "type": "uint256", "indexed": false},
+        {"name": "agentId", "type": "bytes32", "indexed": true}
+      ]
+    },
+    {
+      "type": "event",
+      "name": "PaymentReleased",
+      "inputs": [
+        {"name": "workflowId", "type": "bytes32", "indexed": true},
+        {"name": "agentId", "type": "bytes32", "indexed": true},
+        {"name": "amount", "type": "uint256", "indexed": false}
+      ]
+    }
+  ]
+}
+```
+
+---
+
+## 2. A2A Protocol Integration
+
+### Enhanced A2A Agent Card with Blockchain Support
+
+```json
+{
+  "name": "Financial Data Standardization Agent",
+  "description": "Standardizes financial entities with blockchain trust",
+  "url": "https://standardization-agent.example.com",
+  "version": "1.0.0",
+  "protocolVersion": "0.2.9",
+  "blockchain": {
+    "enabled": true,
+    "networks": ["ethereum", "polygon"],
+    "contractAddresses": {
+      "ethereum": "0x742d35Cc6634C0532925a3b8D467e234E8A17456",
+      "polygon": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063"
+    },
+    "agentId": "0x1234567890abcdef...",
+    "walletAddress": "0xabcdef1234567890...",
+    "stake": {
+      "amount": "0.1",
+      "currency": "ETH",
+      "network": "ethereum"
+    }
+  },
+  "capabilities": {
+    "skills": [
+      {
+        "id": "location-standardization",
+        "version": "1.0.0",
+        "trustRequired": true,
+        "blockchain": {
+          "skillHash": "0xabcd1234...",
+          "minimumTrustScore": 4.0,
+          "slaRequired": true
+        }
+      }
+    ]
+  },
+  "defaultInputModes": ["text/csv", "application/json"],
+  "defaultOutputModes": ["application/json"],
+  "trustManagement": {
+    "trustScore": 4.2,
+    "totalInteractions": 156,
+    "successRate": 0.94,
+    "lastUpdated": "2024-01-01T12:00:00Z"
+  },
+  "sla": {
+    "responseTimeMax": 5000,
+    "availabilityMin": 99.9,
+    "errorRateMax": 1.0
+  }
+}
+```
+
+### A2A Skill Definition with Blockchain Trust
+
+```json
+{
+  "id": "location-standardization",
+  "version": "1.0.0",
+  "description": "Standardizes location data to industry formats",
+  "blockchain": {
+    "skillHash": "0xabcd1234567890ef...",
+    "trustMetrics": {
+      "averageRating": 4.3,
+      "totalExecutions": 1247,
+      "lastRatingUpdate": "2024-01-01T11:30:00Z"
+    },
+    "slaTerms": {
+      "maxResponseTime": 5000,
+      "minAccuracy": 0.95,
+      "penaltyPerViolation": "0.001"
+    }
+  },
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "addresses": {
+        "type": "array",
+        "items": {"type": "string"}
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "standardizedAddresses": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "street": {"type": "string"},
+            "city": {"type": "string"},
+            "country": {"type": "string"},
+            "confidence": {"type": "number"}
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### A2A Workflow Request with Blockchain Payments
+
+```json
+{
+  "workflowId": "financial_data_pipeline_001",
+  "description": "Process financial data with blockchain trust",
+  "blockchain": {
+    "enabled": true,
+    "totalBudget": "0.5",
+    "currency": "ETH",
+    "escrowAddress": "0xdef456789...",
+    "paymentSchedule": "per_stage"
+  },
+  "stages": [
+    {
+      "id": "data_standardization",
+      "requiredSkills": ["location-standardization", "account-standardization"],
+      "blockchain": {
+        "minimumTrustScore": 4.0,
+        "payment": "0.2",
+        "slaRequired": true,
+        "stakeRequired": "0.05"
+      },
+      "inputModes": ["text/csv"],
+      "outputModes": ["application/json"],
+      "timeout": 300000
+    },
+    {
+      "id": "data_vectorization", 
+      "requiredSkills": ["vector-embedding-generation"],
+      "blockchain": {
+        "minimumTrustScore": 4.2,
+        "payment": "0.3",
+        "slaRequired": true
+      },
+      "dependsOn": ["data_standardization"],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"]
+    }
+  ]
+}
+```
+
+---
+
+## 3. REST API Wrapper (Bridge Layer)
+
+### OpenAPI Specification
+
+```yaml
+openapi: 3.0.3
+info:
+  title: A2A Smart Contracts Bridge API
+  description: REST API bridge between A2A Protocol and Smart Contracts
+  version: 1.0.0
+
+servers:
+  - url: https://a2a-blockchain-bridge.example.com/api/v1
+    description: Production bridge server
+
+security:
+  - bearerAuth: []
+  - walletSignature: []
+
+paths:
+  /agents/register/blockchain:
+    post:
+      summary: Register A2A Agent with Blockchain
+      description: Register agent in both A2A Registry and blockchain
+      operationId: registerAgentBlockchain
+      tags:
+        - Blockchain Agent Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlockchainAgentRegistration'
+      responses:
+        '201':
+          description: Agent registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlockchainAgentResponse'
+
+  /agents/{agentId}/trust:
+    get:
+      summary: Get Agent Trust Score
+      description: Retrieve trust score from blockchain and A2A Registry
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Trust score information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrustScoreResponse'
+
+    post:
+      summary: Record Agent Interaction
+      description: Record interaction for trust score calculation
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InteractionRecord'
+      responses:
+        '200':
+          description: Interaction recorded successfully
+
+  /workflows/blockchain:
+    post:
+      summary: Create Blockchain Workflow
+      description: Create workflow with blockchain payments and trust
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlockchainWorkflowRequest'
+      responses:
+        '201':
+          description: Blockchain workflow created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlockchainWorkflowResponse'
+
+  /workflows/{workflowId}/execute:
+    post:
+      summary: Execute Blockchain Workflow
+      description: Execute workflow with smart contract orchestration
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowExecutionRequest'
+      responses:
+        '202':
+          description: Workflow execution started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowExecutionResponse'
+
+  /sla:
+    post:
+      summary: Create SLA Contract
+      description: Create Service Level Agreement on blockchain
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SLACreationRequest'
+      responses:
+        '201':
+          description: SLA contract created
+
+  /governance/proposals:
+    post:
+      summary: Submit Governance Proposal
+      description: Submit proposal for network governance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GovernanceProposal'
+      responses:
+        '201':
+          description: Proposal submitted for voting
+
+    get:
+      summary: List Active Proposals
+      description: Get all active governance proposals
+      responses:
+        '200':
+          description: List of active proposals
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    walletSignature:
+      type: apiKey
+      in: header
+      name: X-Wallet-Signature
+      description: Ethereum wallet signature for authentication
+
+  schemas:
+    BlockchainAgentRegistration:
+      type: object
+      required:
+        - agentCard
+        - walletAddress
+        - stakeAmount
+      properties:
+        agentCard:
+          $ref: '#/components/schemas/A2AAgentCard'
+        walletAddress:
+          type: string
+          example: "0xabcdef1234567890..."
+        stakeAmount:
+          type: string
+          example: "0.1"
+        network:
+          type: string
+          enum: [ethereum, polygon, arbitrum]
+          default: ethereum
+
+    BlockchainAgentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        registryAgentId:
+          type: string
+        blockchainAgentId:
+          type: string
+        transactionHash:
+          type: string
+        stakeAmount:
+          type: string
+        networkUsed:
+          type: string
+
+    TrustScoreResponse:
+      type: object
+      properties:
+        agentId:
+          type: string
+        overallTrustScore:
+          type: number
+          format: float
+        blockchainTrust:
+          type: object
+          properties:
+            totalInteractions:
+              type: integer
+            successfulInteractions:
+              type: integer
+            aggregatedRating:
+              type: number
+            lastUpdated:
+              type: string
+              format: date-time
+        registryTrust:
+          type: object
+          properties:
+            responseTime:
+              type: number
+            availability:
+              type: number
+            errorRate:
+              type: number
+        skillRatings:
+          type: object
+          additionalProperties:
+            type: number
+
+    InteractionRecord:
+      type: object
+      required:
+        - consumerId
+        - rating
+        - skillUsed
+      properties:
+        consumerId:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        skillUsed:
+          type: string
+        responseTime:
+          type: number
+        errorOccurred:
+          type: boolean
+        signature:
+          type: string
+          description: Cryptographic signature proving interaction
+
+    BlockchainWorkflowRequest:
+      type: object
+      required:
+        - workflowDefinition
+        - totalBudget
+      properties:
+        workflowDefinition:
+          $ref: '#/components/schemas/A2AWorkflowDefinition'
+        totalBudget:
+          type: string
+          example: "0.5"
+        currency:
+          type: string
+          enum: [ETH, MATIC, A2A]
+          default: ETH
+        network:
+          type: string
+          enum: [ethereum, polygon, arbitrum]
+        escrowSettings:
+          type: object
+          properties:
+            releaseCondition:
+              type: string
+              enum: [stage_completion, full_completion, manual]
+            timeoutDuration:
+              type: integer
+              description: Timeout in seconds
+
+    BlockchainWorkflowResponse:
+      type: object
+      properties:
+        workflowId:
+          type: string
+        blockchainWorkflowId:
+          type: string
+        escrowAddress:
+          type: string
+        totalBudget:
+          type: string
+        creationTransactionHash:
+          type: string
+        estimatedGasCost:
+          type: string
+
+    SLACreationRequest:
+      type: object
+      required:
+        - providerId
+        - consumerId
+        - terms
+      properties:
+        providerId:
+          type: string
+        consumerId:
+          type: string
+        terms:
+          type: object
+          properties:
+            responseTimeMax:
+              type: integer
+            availabilityMin:
+              type: number
+            errorRateMax:
+              type: number
+            penaltyPerViolation:
+              type: string
+        validityPeriod:
+          type: integer
+          description: Validity in seconds
+        stakeAmount:
+          type: string
+
+    GovernanceProposal:
+      type: object
+      required:
+        - title
+        - description
+        - proposalType
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        proposalType:
+          type: string
+          enum: [parameter_change, contract_upgrade, agent_review]
+        targetContract:
+          type: string
+        callData:
+          type: string
+        votingPeriod:
+          type: integer
+          default: 604800
+
+    A2AAgentCard:
+      type: object
+      # Standard A2A Agent Card with blockchain extensions
+
+    A2AWorkflowDefinition:
+      type: object
+      # Standard A2A Workflow with blockchain payment extensions
+```
+
+---
+
+## 4. Integration Architecture
+
+### Component Interaction Flow
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   A2A Agent     │    │  Bridge API     │    │  Smart Contract │
+│   (Existing)    │    │  (REST Wrapper) │    │  (Blockchain)   │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │ 1. A2A Registration   │                       │
+         │ ──────────────────────>│                       │
+         │                       │ 2. Validate & Stake  │
+         │                       │ ──────────────────────>│
+         │                       │                       │
+         │                       │ 3. Blockchain Confirm │
+         │                       │ <──────────────────────│
+         │ 4. Registration OK    │                       │
+         │ <──────────────────────│                       │
+         │                       │                       │
+         │ 5. A2A Skill Request  │                       │
+         │ ──────────────────────>│                       │
+         │                       │ 6. Check Trust Score │
+         │                       │ ──────────────────────>│
+         │                       │                       │
+         │                       │ 7. Execute & Record  │
+         │                       │ <──────────────────────│
+         │ 8. Response + Payment │                       │
+         │ <──────────────────────│                       │
+```
+
+### Web3 SDK Integration
+
+```javascript
+// A2A Smart Contract SDK
+class A2ABlockchainSDK {
+    constructor(provider, contractAddresses) {
+        this.provider = provider;
+        this.contracts = {
+            registry: new ethers.Contract(contractAddresses.registry, AgentRegistryABI, provider),
+            trust: new ethers.Contract(contractAddresses.trust, AgentTrustABI, provider),
+            workflow: new ethers.Contract(contractAddresses.workflow, WorkflowABI, provider)
+        };
+    }
+
+    // Register agent with blockchain stake
+    async registerAgent(agentCard, stakeAmount) {
+        const agentId = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(agentCard.name));
+        const ipfsHash = await this.uploadToIPFS(agentCard);
+        const capabilityHashes = agentCard.capabilities.skills.map(skill => 
+            ethers.utils.keccak256(ethers.utils.toUtf8Bytes(skill.id))
+        );
+
+        const tx = await this.contracts.registry.registerAgent(
+            agentId,
+            ipfsHash,
+            capabilityHashes,
+            { value: ethers.utils.parseEther(stakeAmount) }
+        );
+
+        return { transactionHash: tx.hash, agentId };
+    }
+
+    // Record interaction for trust scoring
+    async recordInteraction(providerId, consumerId, rating, skill, signature) {
+        const skillHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(skill));
+        
+        const tx = await this.contracts.trust.recordInteraction(
+            providerId,
+            consumerId,
+            rating,
+            skillHash,
+            signature
+        );
+
+        return { transactionHash: tx.hash };
+    }
+
+    // Create workflow with payments
+    async createWorkflow(workflowId, stages, totalBudget) {
+        const workflowIdHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(workflowId));
+        
+        const contractStages = stages.map(stage => ({
+            agentId: ethers.utils.keccak256(ethers.utils.toUtf8Bytes(stage.agentId)),
+            requiredSkills: stage.skills.map(skill => 
+                ethers.utils.keccak256(ethers.utils.toUtf8Bytes(skill))
+            ),
+            maxDuration: stage.timeout || 3600,
+            payment: ethers.utils.parseEther(stage.payment)
+        }));
+
+        const tx = await this.contracts.workflow.createWorkflow(
+            workflowIdHash,
+            contractStages,
+            { value: ethers.utils.parseEther(totalBudget) }
+        );
+
+        return { transactionHash: tx.hash, workflowId: workflowIdHash };
+    }
+}
+```
+
+---
+
+## 5. Event Monitoring & Synchronization
+
+### Blockchain Event Listeners
+
+```javascript
+// Sync blockchain events with A2A Registry
+class A2ABlockchainSync {
+    constructor(registryAPI, blockchainSDK) {
+        this.registryAPI = registryAPI;
+        this.blockchain = blockchainSDK;
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        // Agent registration events
+        this.blockchain.contracts.registry.on('AgentRegistered', 
+            async (agentId, agentAddress, stake, event) => {
+                await this.syncAgentRegistration(agentId, agentAddress, stake);
+            }
+        );
+
+        // Trust score updates
+        this.blockchain.contracts.trust.on('InteractionRecorded',
+            async (provider, consumer, rating, skill, event) => {
+                await this.syncTrustScore(provider, rating, skill);
+            }
+        );
+
+        // Workflow completions
+        this.blockchain.contracts.workflow.on('PaymentReleased',
+            async (workflowId, agentId, amount, event) => {
+                await this.syncWorkflowPayment(workflowId, agentId, amount);
+            }
+        );
+    }
+
+    async syncAgentRegistration(agentId, agentAddress, stake) {
+        // Update A2A Registry with blockchain info
+        await this.registryAPI.updateAgent(agentId, {
+            blockchain: {
+                registered: true,
+                address: agentAddress,
+                stake: ethers.utils.formatEther(stake),
+                network: 'ethereum'
+            }
+        });
+    }
+
+    async syncTrustScore(providerId, rating, skill) {
+        // Get updated trust score from blockchain
+        const trustData = await this.blockchain.contracts.trust.getTrustScore(providerId);
+        
+        // Update A2A Registry
+        await this.registryAPI.updateAgentTrust(providerId, {
+            blockchainTrust: {
+                totalInteractions: trustData.totalInteractions.toNumber(),
+                successfulInteractions: trustData.successfulInteractions.toNumber(),
+                averageRating: trustData.aggregatedRating.toNumber() / 100,
+                lastUpdated: new Date(trustData.lastUpdated.toNumber() * 1000)
+            }
+        });
+    }
+}
+```
+
+---
+
+## 6. Deployment Configuration
+
+### Contract Deployment Script
+
+```javascript
+// deploy-contracts.js
+async function deployA2AContracts() {
+    const [deployer] = await ethers.getSigners();
+    
+    console.log("Deploying A2A Smart Contracts with account:", deployer.address);
+    
+    // Deploy Registry Contract
+    const AgentRegistry = await ethers.getContractFactory("AgentRegistryContract");
+    const registry = await AgentRegistry.deploy();
+    await registry.deployed();
+    
+    // Deploy Trust Contract
+    const AgentTrust = await ethers.getContractFactory("AgentTrustContract");
+    const trust = await AgentTrust.deploy();
+    await trust.deployed();
+    
+    // Deploy Workflow Contract
+    const WorkflowOrchestration = await ethers.getContractFactory("WorkflowOrchestrationContract");
+    const workflow = await WorkflowOrchestration.deploy(registry.address, trust.address);
+    await workflow.deployed();
+    
+    console.log("Contracts deployed:");
+    console.log("Registry:", registry.address);
+    console.log("Trust:", trust.address);
+    console.log("Workflow:", workflow.address);
+    
+    // Update A2A Registry with contract addresses
+    await updateA2ARegistryConfig({
+        blockchain: {
+            enabled: true,
+            contracts: {
+                registry: registry.address,
+                trust: trust.address,
+                workflow: workflow.address
+            }
+        }
+    });
+    
+    return { registry, trust, workflow };
+}
+```
+
+---
+
+## Summary
+
+The A2A Smart Contracts need **all three layers**:
+
+1. **Smart Contract ABIs** - For direct blockchain interaction and events
+2. **A2A Protocol Integration** - Enhanced agent cards, skills, and workflows with blockchain extensions
+3. **REST API Wrapper** - Bridge layer that makes blockchain features accessible via traditional APIs
+
+This architecture allows:
+- **Backward compatibility** with existing A2A agents
+- **Gradual adoption** of blockchain features
+- **Seamless integration** between traditional APIs and smart contracts
+- **Cross-system synchronization** of trust scores and payments
+- **Future-proof extensibility** for new blockchain features

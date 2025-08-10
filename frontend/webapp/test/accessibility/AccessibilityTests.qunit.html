@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>A2A Portal - Accessibility Tests</title>
+    <script src="../../resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-libs="sap.m,sap.ui.core,sap.f,sap.tnt"
+        data-sap-ui-resourceroots='{
+            "com.sap.a2a.portal": "../../",
+            "test": "../"
+        }'
+        data-sap-ui-animation="false">
+    </script>
+    <link rel="stylesheet" type="text/css" href="../../resources/sap/ui/thirdparty/qunit.css">
+    <script src="../../resources/sap/ui/thirdparty/qunit.js"></script>
+    <script src="../../resources/sap/ui/qunit/qunit-junit.js"></script>
+    <script src="../../resources/sap/ui/qunit/qunit-coverage.js"></script>
+    <script src="../../resources/sap/ui/thirdparty/sinon.js"></script>
+    
+    <style>
+        /* Test styles */
+        .accessibility-test-container {
+            padding: 20px;
+            background: white;
+        }
+        
+        .test-low-contrast {
+            color: #ccc;
+            background: #fff;
+        }
+        
+        .test-good-contrast {
+            color: #000;
+            background: #fff;
+        }
+        
+        .test-focus-visible:focus {
+            outline: 2px solid #0070f2;
+            outline-offset: 2px;
+        }
+        
+        .test-no-focus:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body class="sapUiBody">
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    
+    <!-- Test content container -->
+    <div id="accessibility-test-content" class="accessibility-test-container" style="display: none;">
+        <!-- Color contrast tests -->
+        <div id="low-contrast-text" class="test-low-contrast">This text has low contrast</div>
+        <div id="good-contrast-text" class="test-good-contrast">This text has good contrast</div>
+        
+        <!-- Keyboard navigation tests -->
+        <button id="focusable-button" class="test-focus-visible">Focusable Button</button>
+        <button id="non-focusable-button" class="test-no-focus">No Focus Indicator</button>
+        <input id="test-input" type="text" placeholder="Test Input">
+        
+        <!-- ARIA tests -->
+        <div id="invalid-role" role="invalid-role">Invalid Role</div>
+        <button id="no-accessible-name">No Name</button>
+        <button id="with-aria-label" aria-label="Accessible Button">With ARIA Label</button>
+        
+        <!-- Heading hierarchy tests -->
+        <h1 id="heading-1">Main Heading</h1>
+        <h3 id="heading-skip">Skipped H2</h3>
+        <h2 id="heading-2">Proper H2</h2>
+        <div id="empty-heading" role="heading"></div>
+        
+        <!-- Form accessibility tests -->
+        <form id="test-form">
+            <label for="labeled-input">Properly Labeled Input</label>
+            <input id="labeled-input" type="text">
+            
+            <input id="unlabeled-input" type="text" placeholder="No label">
+            
+            <label>
+                <input id="nested-input" type="checkbox">
+                Nested in Label
+            </label>
+            
+            <input id="required-input" type="email" required aria-required="true">
+            <span id="required-indicator">*</span>
+            
+            <input id="with-error" type="email" aria-describedby="error-message" aria-invalid="true">
+            <div id="error-message" role="alert">Please enter a valid email</div>
+        </form>
+        
+        <!-- Complex component test -->
+        <div id="sap-ui5-component"></div>
+    </div>
+
+    <script>
+        sap.ui.require([
+            "test/accessibility/AccessibilityTestSuite",
+            "sap/ui/core/mvc/XMLView",
+            "sap/m/Button",
+            "sap/m/Input",
+            "sap/m/Panel"
+        ], function(AccessibilityTestSuite, XMLView, Button, Input, Panel) {
+            "use strict";
+
+            QUnit.config.autostart = false;
+
+            // Test DOM manipulation utilities
+            function getTestContainer() {
+                return document.getElementById('accessibility-test-content');
+            }
+
+            function showTestContainer() {
+                getTestContainer().style.display = 'block';
+            }
+
+            function hideTestContainer() {
+                getTestContainer().style.display = 'none';
+            }
+
+            // Accessibility Tests
+            QUnit.module("Color Contrast Tests", {
+                beforeEach: function() {
+                    showTestContainer();
+                    this.oAccessibilityEngine = new AccessibilityEngine();
+                },
+                afterEach: function() {
+                    hideTestContainer();
+                    this.oAccessibilityEngine.destroy();
+                }
+            });
+
+            QUnit.test("Should detect low contrast violations", function(assert) {
+                // Arrange
+                const oLowContrastElement = document.getElementById('low-contrast-text');
+
+                // Act
+                const aResults = this.oAccessibilityEngine.testColorContrast(getTestContainer());
+                const oLowContrastResult = aResults.find(result => result.element === oLowContrastElement);
+
+                // Assert
+                assert.ok(oLowContrastResult, "Should find low contrast element");
+                assert.ok(!oLowContrastResult.passesAA, "Low contrast element should fail AA standards");
+                assert.ok(this.oAccessibilityEngine.aViolations.some(v => v.type === 'color-contrast'), 
+                         "Should record color contrast violation");
+            });
+
+            QUnit.test("Should pass good contrast elements", function(assert) {
+                // Arrange
+                const oGoodContrastElement = document.getElementById('good-contrast-text');
+
+                // Act
+                const aResults = this.oAccessibilityEngine.testColorContrast(getTestContainer());
+                const oGoodContrastResult = aResults.find(result => result.element === oGoodContrastElement);
+
+                // Assert
+                assert.ok(oGoodContrastResult, "Should find good contrast element");
+                assert.ok(oGoodContrastResult.passesAA, "Good contrast element should pass AA standards");
+            });
+
+            QUnit.module("Keyboard Navigation Tests", {
+                beforeEach: function() {
+                    showTestContainer();
+                    this.oAccessibilityEngine = new AccessibilityEngine();
+                },
+                afterEach: function() {
+                    hideTestContainer();
+                    this.oAccessibilityEngine.destroy();
+                }
+            });
+
+            QUnit.test("Should detect focusable elements", function(assert) {
+                // Act
+                const aResults = this.oAccessibilityEngine.testKeyboardNavigation(getTestContainer());
+
+                // Assert
+                assert.ok(aResults.length > 0, "Should find focusable elements");
+                
+                const oButtonResult = aResults.find(r => r.element.id === 'focusable-button');
+                assert.ok(oButtonResult, "Should find focusable button");
+                assert.ok(oButtonResult.isKeyboardAccessible, "Button should be keyboard accessible");
+            });
+
+            QUnit.test("Should detect missing focus indicators", function(assert) {
+                // Act
+                this.oAccessibilityEngine.testKeyboardNavigation(getTestContainer());
+
+                // Assert
+                const bHasFocusViolation = this.oAccessibilityEngine.aViolations.some(
+                    v => v.type === 'focus-indicator' && v.element.id === 'non-focusable-button'
+                );
+                assert.ok(bHasFocusViolation, "Should detect missing focus indicator");
+            });
+
+            QUnit.module("ARIA Compliance Tests", {
+                beforeEach: function() {
+                    showTestContainer();
+                    this.oAccessibilityEngine = new AccessibilityEngine();
+                },
+                afterEach: function() {
+                    hideTestContainer();
+                    this.oAccessibilityEngine.destroy();
+                }
+            });
+
+            QUnit.test("Should detect invalid ARIA roles", function(assert) {
+                // Act
+                this.oAccessibilityEngine.testARIACompliance(getTestContainer());
+
+                // Assert
+                const bHasInvalidRoleViolation = this.oAccessibilityEngine.aViolations.some(
+                    v => v.type === 'aria-invalid-role' && v.element.id === 'invalid-role'
+                );
+                assert.ok(bHasInvalidRoleViolation, "Should detect invalid ARIA role");
+            });
+
+            QUnit.test("Should detect missing accessible names", function(assert) {
+                // Act
+                this.oAccessibilityEngine.testARIACompliance(getTestContainer());
+
+                // Assert
+                const bHasMissingNameViolation = this.oAccessibilityEngine.aViolations.some(
+                    v => v.type === 'aria-missing-name' && v.element.id === 'no-accessible-name'
+                );
+                assert.ok(bHasMissingNameViolation, "Should detect missing accessible name");
+            });
+
+            QUnit.test("Should pass elements with proper ARIA labels", function(assert) {
+                // Act
+                const aResults = this.oAccessibilityEngine.testARIACompliance(getTestContainer());
+
+                // Assert
+                const oProperAriaResult = aResults.find(r => r.element.id === 'with-aria-label');
+                assert.ok(oProperAriaResult, "Should find element with ARIA label");
+                assert.ok(oProperAriaResult.hasAccessibleName, "Should recognize accessible name");
+            });
+
+            QUnit.module("Heading Hierarchy Tests", {
+                beforeEach: function() {
+                    showTestContainer();
+                    this.oAccessibilityEngine = new AccessibilityEngine();
+                },
+                afterEach: function() {
+                    hideTestContainer();
+                    this.oAccessibilityEngine.destroy();
+                }
+            });
+
+            QUnit.test("Should detect heading hierarchy violations", function(assert) {
+                // Act
+                this.oAccessibilityEngine.testHeadingHierarchy(getTestContainer());
+
+                // Assert
+                const bHasHierarchyViolation = this.oAccessibilityEngine.aViolations.some(
+                    v => v.type === 'heading-hierarchy'
+                );
+                assert.ok(bHasHierarchyViolation, "Should detect heading hierarchy violation");
+            });
+
+            QUnit.test("Should detect empty headings", function(assert) {
+                // Act
+                this.oAccessibilityEngine.testHeadingHierarchy(getTestContainer());
+
+                // Assert
+                const bHasEmptyHeadingViolation = this.oAccessibilityEngine.aViolations.some(
+                    v => v.type === 'heading-empty' && v.element.id === 'empty-heading'
+                );
+                assert.ok(bHasEmptyHeadingViolation, "Should detect empty heading");
+            });
+
+            QUnit.module("Form Accessibility Tests", {
+                beforeEach: function() {
+                    showTestContainer();
+                    this.oAccessibilityEngine = new AccessibilityEngine();
+                },
+                afterEach: function() {
+                    hideTestContainer();
+                    this.oAccessibilityEngine.destroy();
+                }
+            });
+
+            QUnit.test("Should detect unlabeled form controls", function(assert) {
+                // Act
+                this.oAccessibilityEngine.testFormAccessibility(getTestContainer());
+
+                // Assert
+                const bHasMissingLabelViolation = this.oAccessibilityEngine.aViolations.some(
+                    v => v.type === 'form-missing-label' && v.element.id === 'unlabeled-input'
+                );
+                assert.ok(bHasMissingLabelViolation, "Should detect unlabeled form control");
+            });
+
+            QUnit.test("Should recognize properly labeled controls", function(assert) {
+                // Act
+                const aResults = this.oAccessibilityEngine.testFormAccessibility(getTestContainer());
+
+                // Assert
+                const oLabeledInputResult = aResults.find(r => r.element.id === 'labeled-input');
+                assert.ok(oLabeledInputResult, "Should find labeled input");
+                assert.ok(oLabeledInputResult.hasLabel, "Should recognize proper label association");
+
+                const oNestedInputResult = aResults.find(r => r.element.id === 'nested-input');
+                assert.ok(oNestedInputResult, "Should find nested input");
+                assert.ok(oNestedInputResult.hasLabel, "Should recognize nested label");
+            });
+
+            QUnit.module("SAP UI5 Component Accessibility Tests", {
+                beforeEach: function() {
+                    showTestContainer();
+                    this.oAccessibilityEngine = new AccessibilityEngine();
+                    
+                    // Create UI5 components for testing
+                    this.oPanel = new Panel({
+                        headerText: "Test Panel",
+                        content: [
+                            new Button({
+                                text: "Action Button",
+                                press: function() { /* action */ }
+                            }),
+                            new Input({
+                                placeholder: "Enter text",
+                                required: true
+                            })
+                        ]
+                    });
+                    
+                    this.oPanel.placeAt("sap-ui5-component");
+                    sap.ui.getCore().applyChanges();
+                },
+                afterEach: function() {
+                    this.oPanel.destroy();
+                    hideTestContainer();
+                    this.oAccessibilityEngine.destroy();
+                }
+            });
+
+            QUnit.test("Should test UI5 component accessibility", function(assert) {
+                // Act
+                const oComponent = document.getElementById('sap-ui5-component');
+                const aKeyboardResults = this.oAccessibilityEngine.testKeyboardNavigation(oComponent);
+                const aAriaResults = this.oAccessibilityEngine.testARIACompliance(oComponent);
+                const aContrastResults = this.oAccessibilityEngine.testColorContrast(oComponent);
+
+                // Assert
+                assert.ok(aKeyboardResults.length > 0, "Should find focusable elements in UI5 component");
+                assert.ok(aAriaResults.length > 0, "Should analyze ARIA attributes in UI5 component");
+                assert.ok(aContrastResults.length > 0, "Should test color contrast in UI5 component");
+
+                // Log violations for debugging
+                if (this.oAccessibilityEngine.aViolations.length > 0) {
+                    console.warn("UI5 Component Accessibility Violations:", this.oAccessibilityEngine.aViolations);
+                }
+            });
+
+            QUnit.module("Integration Tests", {
+                beforeEach: function() {
+                    this.oAccessibilityEngine = new AccessibilityEngine();
+                },
+                afterEach: function() {
+                    this.oAccessibilityEngine.destroy();
+                }
+            });
+
+            QUnit.test("Should run comprehensive accessibility audit", function(assert) {
+                // Arrange
+                showTestContainer();
+                const oContainer = getTestContainer();
+
+                // Act - Run all accessibility tests
+                const oResults = {
+                    keyboard: this.oAccessibilityEngine.testKeyboardNavigation(oContainer),
+                    colorContrast: this.oAccessibilityEngine.testColorContrast(oContainer),
+                    aria: this.oAccessibilityEngine.testARIACompliance(oContainer),
+                    headings: this.oAccessibilityEngine.testHeadingHierarchy(oContainer),
+                    forms: this.oAccessibilityEngine.testFormAccessibility(oContainer)
+                };
+
+                // Assert
+                assert.ok(Object.keys(oResults).every(key => Array.isArray(oResults[key])), 
+                         "All test methods should return arrays");
+                
+                const iTotalViolations = this.oAccessibilityEngine.aViolations.length;
+                assert.ok(iTotalViolations > 0, "Should detect accessibility violations in test content");
+
+                // Group violations by type for reporting
+                const oViolationsByType = this.oAccessibilityEngine.aViolations.reduce((acc, violation) => {
+                    acc[violation.type] = (acc[violation.type] || 0) + 1;
+                    return acc;
+                }, {});
+
+                console.log("Accessibility Audit Summary:", {
+                    totalViolations: iTotalViolations,
+                    violationsByType: oViolationsByType,
+                    testResults: {
+                        keyboardElementsFound: oResults.keyboard.length,
+                        contrastElementsChecked: oResults.colorContrast.length,
+                        ariaElementsAnalyzed: oResults.aria.length,
+                        headingsFound: oResults.headings.length,
+                        formElementsFound: oResults.forms.length
+                    }
+                });
+
+                hideTestContainer();
+            });
+
+            // Custom assertion for accessibility compliance
+            QUnit.assert.isAccessible = function(element, options) {
+                options = options || {};
+                const oEngine = new AccessibilityEngine();
+                
+                // Run all tests
+                oEngine.testKeyboardNavigation(element);
+                oEngine.testColorContrast(element);
+                oEngine.testARIACompliance(element);
+                oEngine.testHeadingHierarchy(element);
+                oEngine.testFormAccessibility(element);
+
+                const aViolations = oEngine.aViolations.filter(v => 
+                    !options.ignore || !options.ignore.includes(v.type)
+                );
+
+                this.pushResult({
+                    result: aViolations.length === 0,
+                    actual: aViolations.length,
+                    expected: 0,
+                    message: aViolations.length > 0 ? 
+                             `Found ${aViolations.length} accessibility violations: ${aViolations.map(v => v.message).join(', ')}` :
+                             "Element passes accessibility tests"
+                });
+
+                oEngine.destroy();
+            };
+
+            QUnit.start();
+        });
+    </script>
+</body>
+</html>

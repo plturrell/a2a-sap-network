@@ -1,0 +1,251 @@
+_schema-version: "3.3"
+ID: a2a-agent-platform-prod
+extends: a2a-agent-platform
+
+# Production environment specific parameters
+parameters:
+  app-name: a2a-agents
+  service-name: a2a-prod
+  log-level: warn
+  hana-plan: enterprise
+  postgres-plan: enterprise
+  redis-plan: enterprise
+  ans-plan: enterprise
+
+# Module overrides for production
+modules:
+  - name: a2a-backend
+    parameters:
+      instances: 4
+      memory: 4096M
+      disk-quota: 4096M
+      health-check-type: http
+      health-check-http-endpoint: /health
+      health-check-timeout: 30
+      health-check-invocation-timeout: 10
+      enable-ssh: false
+    properties:
+      NODE_ENV: production
+      DEBUG: false
+      ENABLE_PROFILING: false
+      ENABLE_SWAGGER: false
+      CORS_ALLOWED_ORIGINS: "https://*.company.com"
+      DATABASE_POOL_MIN: 10
+      DATABASE_POOL_MAX: 50
+      DATABASE_SSL: true
+      RATE_LIMIT_ENABLED: true
+      RATE_LIMIT_WINDOW_MS: 60000
+      RATE_LIMIT_MAX_REQUESTS: 1000
+      RATE_LIMIT_SKIP_SUCCESSFUL_REQUESTS: false
+      RATE_LIMIT_SKIP_FAILED_REQUESTS: false
+      CACHE_TTL: 3600
+      CACHE_CHECK_PERIOD: 600
+      ENABLE_METRICS: true
+      METRICS_PORT: 9090
+      ENABLE_TRACING: true
+      TRACE_SAMPLE_RATE: 0.1
+      LOG_FORMAT: json
+      LOG_OUTPUT: stdout
+      SECURITY_HEADERS_ENABLED: true
+      HELMET_CONFIG: production
+    env:
+      GROK_API_URL: https://api.x.ai/v1/chat/completions
+      PERPLEXITY_API_URL: https://api.perplexity.ai
+      ENABLE_MOCK_SERVICES: false
+      SENTRY_DSN: ${sentry-dsn-prod}
+      SENTRY_ENVIRONMENT: production
+      SENTRY_TRACES_SAMPLE_RATE: 0.1
+      NEW_RELIC_APP_NAME: a2a-agents-prod
+      NEW_RELIC_LICENSE_KEY: ${new-relic-key}
+
+  - name: a2a-frontend
+    parameters:
+      memory: 512M
+    build-parameters:
+      commands:
+        - npm install --production
+        - npm run build:prod
+        - npm run optimize
+    env:
+      SAP_UI5_VERSION: 1.120.0
+      ENABLE_DEBUG_MODE: false
+      ENABLE_ANALYTICS: true
+      ANALYTICS_ID: ${analytics-id-prod}
+      ENABLE_ERROR_TRACKING: true
+      ERROR_TRACKING_DSN: ${error-tracking-dsn}
+
+  - name: a2a-approuter
+    parameters:
+      instances: 3
+      memory: 512M
+      routes:
+        - route: ${app-name}.${default-domain}
+        - route: ${app-name}.company.com
+      domains:
+        - company.com
+    properties:
+      SESSION_TIMEOUT: 900
+      ENABLE_CORS: false
+      LOG_REMOTE_USER: false
+      COMPRESSION: true
+      SECURE_SESSION_COOKIE: true
+      SEND_XFRAMEOPTIONS: DENY
+      WS_ALLOWED_ORIGINS: "https://*.company.com"
+      BACKEND_TIMEOUT: 30000
+      SESSION_SECRET: ${session-secret}
+    env:
+      NODE_ENV: production
+      NODE_OPTIONS: --max-old-space-size=400
+
+  - name: a2a-db-deployer
+    parameters:
+      no-route: true
+      health-check-type: none
+      tasks:
+        - name: deploy-db
+          command: npm run deploy:prod
+          memory: 1024M
+          disk-quota: 2048M
+
+# Production-specific resources
+resources:
+  - name: a2a-hana-hdi
+    properties:
+      enable-debug: false
+      max-connections: 200
+      statement-timeout: 60000
+      lock-timeout: 10000
+      idle-in-transaction-session-timeout: 60000
+      statement-cache-size: 1000
+      enable-audit-log: true
+
+  - name: a2a-postgres-db
+    parameters:
+      service-plan: enterprise
+      config:
+        max_connections: 200
+        shared_buffers: 4GB
+        effective_cache_size: 12GB
+        maintenance_work_mem: 512MB
+        checkpoint_completion_target: 0.9
+        wal_buffers: 64MB
+        default_statistics_target: 1000
+        random_page_cost: 1.1
+        effective_io_concurrency: 200
+        work_mem: 16MB
+        min_wal_size: 2GB
+        max_wal_size: 8GB
+        max_worker_processes: 8
+        max_parallel_workers_per_gather: 4
+        max_parallel_workers: 8
+        max_parallel_maintenance_workers: 4
+        ssl: on
+        ssl_cert_file: server.crt
+        ssl_key_file: server.key
+        ssl_ca_file: root.crt
+
+  - name: a2a-redis
+    parameters:
+      service-plan: enterprise
+      config:
+        maxmemory: 8gb
+        maxmemory-policy: allkeys-lru
+        timeout: 0
+        tcp-keepalive: 300
+        tcp-backlog: 511
+        databases: 16
+        save: "900 1 300 10 60 10000"
+        stop-writes-on-bgsave-error: yes
+        rdbcompression: yes
+        rdbchecksum: yes
+        replica-read-only: yes
+        repl-diskless-sync: no
+        repl-diskless-sync-delay: 5
+        repl-disable-tcp-nodelay: no
+        replica-priority: 100
+        requirepass: ${redis-password}
+        maxclients: 10000
+        persistence: true
+        backup-enabled: true
+        backup-schedule: "0 2 * * *"
+
+  - name: a2a-xsuaa
+    parameters:
+      config:
+        xsappname: a2a-agents-prod
+        tenant-mode: shared
+        foreign-scope-references:
+          - $ACCEPT_GRANTED_SCOPES
+        oauth2-configuration:
+          token-validity: 900
+          refresh-token-validity: 7200
+          system-attributes:
+            - rolecollections
+            - groups
+          credential-types:
+            - binding-secret
+            - x509
+            - instance-secret
+          grant-types:
+            - authorization_code
+            - client_credentials
+            - refresh_token
+            - urn:ietf:params:oauth:grant-type:jwt-bearer
+            - password
+        attributes:
+          - name: CostCenter
+            description: User cost center
+            valueType: string
+          - name: Department
+            description: User department
+            valueType: string
+
+  - name: a2a-ans
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: alert-notification
+      service-plan: enterprise
+      config:
+        configuration:
+          actions:
+            - name: email-prod
+              type: EMAIL
+              properties:
+                destination: prod-alerts@company.com
+                send-resolved: true
+            - name: pagerduty-prod
+              type: WEBHOOK
+              properties:
+                url: ${pagerduty-webhook}
+                authentication:
+                  type: BASIC
+                  username: ${pagerduty-user}
+                  password: ${pagerduty-password}
+            - name: slack-prod
+              type: WEBHOOK
+              properties:
+                url: ${slack-webhook-prod}
+          conditions:
+            - name: critical-alerts
+              description: Critical production alerts
+              propertyKey: severity
+              propertyValue: CRITICAL
+              actions:
+                - email-prod
+                - pagerduty-prod
+                - slack-prod
+            - name: high-alerts
+              description: High priority alerts
+              propertyKey: severity
+              propertyValue: HIGH
+              actions:
+                - email-prod
+                - slack-prod
+
+  - name: a2a-application-logs
+    parameters:
+      service-plan: enterprise
+      config:
+        retention-period: 90
+        index-pattern: a2a-*
+        enable-correlation: true

@@ -1,0 +1,348 @@
+{
+  "identification": {
+    "id": "a2a-developer-portal",
+    "entityType": "bundle"
+  },
+  "descriptor": {
+    "_version": "1.1.0",
+    "sap.app": {
+      "id": "com.sap.a2a.developerportal.launchpad",
+      "type": "card"
+    },
+    "sap.flp": {
+      "type": "launchpad",
+      "cloudService": "A2A Agents"
+    }
+  },
+  "payload": {
+    "config": {
+      "ushellConfig": {
+        "defaultRenderer": "fiori2",
+        "applications": {
+          "Shell-home": {
+            "enableHelp": true,
+            "enableUserDefaultParameters": true,
+            "enablePersonalization": true,
+            "enableNotifications": true,
+            "enableRecentActivity": true
+          }
+        }
+      }
+    },
+    "groups": [
+      {
+        "identification": {
+          "id": "projects-group",
+          "title": "Project Management",
+          "isPreset": true,
+          "isVisible": true
+        },
+        "payload": {
+          "tiles": [
+            {
+              "id": "overview-tile",
+              "target": {
+                "semanticObject": "A2APortal",
+                "action": "overview"
+              },
+              "vizConfig": {
+                "sap.flp": {
+                  "type": "tile",
+                  "tileSize": "1x1"
+                },
+                "sap.app": {
+                  "title": "Overview Dashboard",
+                  "subTitle": "Central dashboard with KPIs",
+                  "info": "Main",
+                  "icon": "sap-icon://business-objects-experience"
+                }
+              }
+            },
+            {
+              "id": "projects-tile",
+              "target": {
+                "semanticObject": "Project",
+                "action": "manage"
+              },
+              "vizConfig": {
+                "sap.flp": {
+                  "type": "tile",
+                  "tileSize": "1x1"
+                },
+                "sap.app": {
+                  "title": "Projects",
+                  "subTitle": "Manage A2A projects",
+                  "info": "12 Active",
+                  "icon": "sap-icon://folder"
+                }
+              }
+            },
+            {
+              "id": "projects-smart-tile",
+              "target": {
+                "semanticObject": "Project",
+                "action": "manageSmart"
+              },
+              "vizConfig": {
+                "sap.flp": {
+                  "type": "tile",
+                  "tileSize": "1x1"
+                },
+                "sap.app": {
+                  "title": "Smart Projects",
+                  "subTitle": "Advanced project management",
+                  "info": "Smart Controls",
+                  "icon": "sap-icon://table-view"
+                }
+              }
+            },
+            {
+              "id": "master-detail-tile",
+              "target": {
+                "semanticObject": "Project",
+                "action": "masterDetail"
+              },
+              "vizConfig": {
+                "sap.flp": {
+                  "type": "tile",
+                  "tileSize": "1x1"
+                },
+                "sap.app": {
+                  "title": "Project Details",
+                  "subTitle": "Master-detail view",
+                  "info": "Responsive",
+                  "icon": "sap-icon://detail-view"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "identification": {
+          "id": "development-group",
+          "title": "Development Tools",
+          "isPreset": true,
+          "isVisible": true
+        },
+        "payload": {
+          "tiles": [
+            {
+              "id": "agent-builder-tile",
+              "target": {
+                "semanticObject": "Agent",
+                "action": "build"
+              },
+              "vizConfig": {
+                "sap.flp": {
+                  "type": "tile",
+                  "tileSize": "1x1"
+                },
+                "sap.app": {
+                  "title": "Agent Builder",
+                  "subTitle": "Create and configure agents",
+                  "info": "45 Agents",
+                  "icon": "sap-icon://add"
+                }
+              }
+            },
+            {
+              "id": "bpmn-designer-tile",
+              "target": {
+                "semanticObject": "Workflow",
+                "action": "design"
+              },
+              "vizConfig": {
+                "sap.flp": {
+                  "type": "tile",
+                  "tileSize": "1x1"
+                },
+                "sap.app": {
+                  "title": "BPMN Designer",
+                  "subTitle": "Design workflows",
+                  "info": "Visual",
+                  "icon": "sap-icon://process"
+                }
+              }
+            },
+            {
+              "id": "code-editor-tile",
+              "target": {
+                "semanticObject": "Code",
+                "action": "edit"
+              },
+              "vizConfig": {
+                "sap.flp": {
+                  "type": "tile",
+                  "tileSize": "1x1"
+                },
+                "sap.app": {
+                  "title": "Code Editor",
+                  "subTitle": "Edit agent code",
+                  "info": "IDE",
+                  "icon": "sap-icon://source-code"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "identification": {
+          "id": "operations-group",
+          "title": "Operations & Monitoring",
+          "isPreset": true,
+          "isVisible": true
+        },
+        "payload": {
+          "tiles": [
+            {
+              "id": "testing-tile",
+              "target": {
+                "semanticObject": "Testing",
+                "action": "manage"
+              },
+              "vizConfig": {
+                "sap.flp": {
+                  "type": "tile",
+                  "tileSize": "1x1"
+                },
+                "sap.app": {
+                  "title": "Test & Validate",
+                  "subTitle": "Comprehensive testing",
+                  "info": "Quality",
+                  "icon": "sap-icon://test"
+                }
+              }
+            },
+            {
+              "id": "deployment-tile",
+              "target": {
+                "semanticObject": "Deployment",
+                "action": "manage"
+              },
+              "vizConfig": {
+                "sap.flp": {
+                  "type": "tile",
+                  "tileSize": "1x1"
+                },
+                "sap.app": {
+                  "title": "Deployment",
+                  "subTitle": "Deploy to production",
+                  "info": "8 This Month",
+                  "icon": "sap-icon://cloud"
+                }
+              }
+            },
+            {
+              "id": "monitoring-tile",
+              "target": {
+                "semanticObject": "Monitoring",
+                "action": "display"
+              },
+              "vizConfig": {
+                "sap.flp": {
+                  "type": "tile",
+                  "tileSize": "1x1"
+                },
+                "sap.app": {
+                  "title": "Monitoring",
+                  "subTitle": "System health & metrics",
+                  "info": "Real-time",
+                  "icon": "sap-icon://monitor-payments"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "identification": {
+          "id": "user-group",
+          "title": "User & Settings",
+          "isPreset": true,
+          "isVisible": true
+        },
+        "payload": {
+          "tiles": [
+            {
+              "id": "user-profile-tile",
+              "target": {
+                "semanticObject": "User",
+                "action": "profile"
+              },
+              "vizConfig": {
+                "sap.flp": {
+                  "type": "tile",
+                  "tileSize": "1x1"
+                },
+                "sap.app": {
+                  "title": "User Profile",
+                  "subTitle": "Manage your profile",
+                  "info": "Settings",
+                  "icon": "sap-icon://person-placeholder"
+                }
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "catalogs": [
+      {
+        "identification": {
+          "id": "a2a-catalog",
+          "title": "A2A Agents"
+        },
+        "payload": {
+          "viz": [
+            {
+              "id": "overview-viz",
+              "vizId": "overview-tile"
+            },
+            {
+              "id": "projects-viz",
+              "vizId": "projects-tile"
+            },
+            {
+              "id": "projects-smart-viz",
+              "vizId": "projects-smart-tile"
+            },
+            {
+              "id": "master-detail-viz",
+              "vizId": "master-detail-tile"
+            },
+            {
+              "id": "agent-builder-viz",
+              "vizId": "agent-builder-tile"
+            },
+            {
+              "id": "bpmn-designer-viz",
+              "vizId": "bpmn-designer-tile"
+            },
+            {
+              "id": "code-editor-viz",
+              "vizId": "code-editor-tile"
+            },
+            {
+              "id": "testing-viz",
+              "vizId": "testing-tile"
+            },
+            {
+              "id": "deployment-viz",
+              "vizId": "deployment-tile"
+            },
+            {
+              "id": "monitoring-viz",
+              "vizId": "monitoring-tile"
+            },
+            {
+              "id": "user-profile-viz",
+              "vizId": "user-profile-tile"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+# A2A Agent Dockerfile
+FROM python:3.9-slim
+
+# Build arguments
+ARG AGENT_NAME
+ENV AGENT_NAME=${AGENT_NAME}
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Create non-root user
+RUN useradd -m -u 1000 a2auser && chown -R a2auser:a2auser /app
+USER a2auser
+
+# Expose port (will be overridden by docker-compose)
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
+
+# Start the appropriate agent
+CMD ["sh", "-c", "python launch_${AGENT_NAME}.py"]

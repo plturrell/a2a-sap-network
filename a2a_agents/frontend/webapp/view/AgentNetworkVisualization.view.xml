@@ -1,0 +1,389 @@
+<mvc:View
+    controllerName="com.sap.a2a.portal.controller.AgentNetworkVisualization"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.f"
+    xmlns:card="sap.f.cards"
+    xmlns:micro="sap.suite.ui.microchart"
+    xmlns:viz="sap.viz.ui5.controls"
+    xmlns:viz.feeds="sap.viz.ui5.controls.common.feeds"
+    xmlns:viz.data="sap.viz.ui5.data"
+    height="100%">
+    
+    <f:DynamicPage
+        id="agentNetworkPage"
+        headerExpanded="true"
+        showFooter="false">
+        
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>agentNetworkTitle}"/>
+                </f:heading>
+                <f:expandedContent>
+                    <Label text="{i18n>agentNetworkSubtitle}"/>
+                </f:expandedContent>
+                <f:snappedContent>
+                    <FlexBox alignItems="Center">
+                        <Avatar
+                            src="sap-icon://chain-link"
+                            displaySize="S"
+                            backgroundColor="Accent6"/>
+                        <Title
+                            text="{i18n>agentNetwork}"
+                            class="sapUiTinyMarginBegin"/>
+                    </FlexBox>
+                </f:snappedContent>
+                <f:actions>
+                    <Button
+                        text="{i18n>refresh}"
+                        icon="sap-icon://refresh"
+                        type="Transparent"
+                        press="onRefresh"/>
+                    <Button
+                        text="{i18n>filter}"
+                        icon="sap-icon://filter"
+                        type="Transparent"
+                        press="onFilter"/>
+                    <OverflowToolbarButton
+                        text="{i18n>settings}"
+                        icon="sap-icon://action-settings"
+                        type="Transparent"
+                        press="onSettings"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+        
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <f:content>
+                    <FlexBox
+                        alignItems="Start"
+                        justifyContent="SpaceBetween"
+                        wrap="Wrap">
+                        
+                        <!-- Network Statistics Cards -->
+                        <f:Card class="sapUiMediumMargin" width="20rem">
+                            <f:header>
+                                <card:NumericHeader
+                                    title="{i18n>totalAgents}"
+                                    value="{network>/totalAgents}"
+                                    scale=""
+                                    state="Good"
+                                    subtitle="{i18n>activeInNetwork}"
+                                    icon="sap-icon://group"/>
+                            </f:header>
+                        </f:Card>
+                        
+                        <f:Card class="sapUiMediumMargin" width="20rem">
+                            <f:header>
+                                <card:NumericHeader
+                                    title="{i18n>activeConnections}"
+                                    value="{network>/activeConnections}"
+                                    scale=""
+                                    state="Good"
+                                    trend="Up"
+                                    subtitle="{i18n>last24Hours}"
+                                    icon="sap-icon://connected"/>
+                            </f:header>
+                        </f:Card>
+                        
+                        <f:Card class="sapUiMediumMargin" width="20rem">
+                            <f:header>
+                                <card:NumericHeader
+                                    title="{i18n>messagesProcessed}"
+                                    value="{network>/messagesProcessed}"
+                                    scale="K"
+                                    state="Good"
+                                    subtitle="{i18n>todayTotal}"
+                                    icon="sap-icon://email"/>
+                            </f:header>
+                        </f:Card>
+                        
+                        <f:Card class="sapUiMediumMargin" width="20rem">
+                            <f:header>
+                                <card:NumericHeader
+                                    title="{i18n>avgResponseTime}"
+                                    value="{network>/avgResponseTime}"
+                                    scale="ms"
+                                    state="{= ${network>/avgResponseTime} < 500 ? 'Good' : 'Critical' }"
+                                    subtitle="{i18n>last5Minutes}"
+                                    icon="sap-icon://performance"/>
+                            </f:header>
+                        </f:Card>
+                    </FlexBox>
+                </f:content>
+            </f:DynamicPageHeader>
+        </f:header>
+        
+        <f:content>
+            <IconTabBar
+                id="agentNetworkTabBar"
+                expanded="true"
+                expandable="false"
+                selectedKey="topology"
+                select="onTabSelect"
+                class="sapUiResponsiveContentPadding">
+                
+                <!-- Network Topology Tab -->
+                <IconTabFilter
+                    key="topology"
+                    text="{i18n>networkTopology}"
+                    icon="sap-icon://org-chart"
+                    count="{network>/totalAgents}">
+                    
+                    <Panel
+                        headerText="{i18n>agentNetworkTopology}"
+                        expandable="true"
+                        expanded="true">
+                        
+                        <!-- Fiori-compliant Network Visualization -->
+                        <viz:VizFrame
+                            id="networkGraph"
+                            uiConfig="{applicationSet:'fiori'}"
+                            vizType="network_graph"
+                            height="600px"
+                            width="100%"
+                            vizProperties="{
+                                plotArea: {
+                                    dataLabel: {
+                                        visible: true
+                                    }
+                                },
+                                title: {
+                                    visible: false
+                                },
+                                interaction: {
+                                    selectability: {
+                                        mode: 'single'
+                                    }
+                                }
+                            }">
+                            
+                            <viz:dataset>
+                                <viz.data:FlattenedDataset data="{network>/graph}">
+                                    <viz.data:dimensions>
+                                        <viz.data:DimensionDefinition
+                                            name="Source"
+                                            value="{source}"/>
+                                        <viz.data:DimensionDefinition
+                                            name="Target"
+                                            value="{target}"/>
+                                    </viz.data:dimensions>
+                                    <viz.data:measures>
+                                        <viz.data:MeasureDefinition
+                                            name="Weight"
+                                            value="{weight}"/>
+                                    </viz.data:measures>
+                                </viz.data:FlattenedDataset>
+                            </viz:dataset>
+                        </viz:VizFrame>
+                    </Panel>
+                </IconTabFilter>
+                
+                <!-- Agent Status Grid -->
+                <IconTabFilter
+                    key="status"
+                    text="{i18n>agentStatus}"
+                    icon="sap-icon://status-positive"
+                    count="{network>/activeAgents}">
+                    
+                    <f:GridContainer
+                        id="agentStatusGrid"
+                        snapToRow="true"
+                        class="sapUiMediumMargin">
+                        
+                        <!-- Agent Status Cards -->
+                        <f:Card width="400px" height="300px">
+                            <f:header>
+                                <card:Header
+                                    title="{i18n>agent0Title}"
+                                    subtitle="{i18n>dataProductRegistration}"
+                                    iconSrc="sap-icon://database"
+                                    statusText="{= ${agents>/agent0/status} === 'active' ? 'Active' : 'Inactive' }"
+                                    statusState="{= ${agents>/agent0/status} === 'active' ? 'Good' : 'Error' }"/>
+                            </f:header>
+                            <f:content>
+                                <VBox class="sapUiSmallMargin">
+                                    <HBox justifyContent="SpaceBetween">
+                                        <Label text="{i18n>uptime}:"/>
+                                        <Text text="{agents>/agent0/uptime}"/>
+                                    </HBox>
+                                    <HBox justifyContent="SpaceBetween">
+                                        <Label text="{i18n>messagesProcessed}:"/>
+                                        <ObjectNumber
+                                            number="{agents>/agent0/messagesProcessed}"
+                                            state="Success"/>
+                                    </HBox>
+                                    <HBox justifyContent="SpaceBetween">
+                                        <Label text="{i18n>avgResponseTime}:"/>
+                                        <ObjectNumber
+                                            number="{agents>/agent0/avgResponseTime}"
+                                            unit="ms"
+                                            state="{= ${agents>/agent0/avgResponseTime} < 500 ? 'Success' : 'Warning' }"/>
+                                    </HBox>
+                                    <ProgressIndicator
+                                        percentValue="{agents>/agent0/health}"
+                                        displayValue="{agents>/agent0/health}%"
+                                        showValue="true"
+                                        state="{= ${agents>/agent0/health} > 80 ? 'Success' : ${agents>/agent0/health} > 60 ? 'Warning' : 'Error' }"/>
+                                </VBox>
+                            </f:content>
+                        </f:Card>
+                        
+                        <!-- Repeat for other agents -->
+                        <f:Card width="400px" height="300px">
+                            <f:header>
+                                <card:Header
+                                    title="{i18n>agent1Title}"
+                                    subtitle="{i18n>dataStandardization}"
+                                    iconSrc="sap-icon://synchronize"
+                                    statusText="{= ${agents>/agent1/status} === 'active' ? 'Active' : 'Inactive' }"
+                                    statusState="{= ${agents>/agent1/status} === 'active' ? 'Good' : 'Error' }"/>
+                            </f:header>
+                            <f:content>
+                                <VBox class="sapUiSmallMargin">
+                                    <micro:InteractiveLineChart
+                                        points="{agents>/agent1/performanceHistory}"
+                                        displayedPoints="20"
+                                        press="onAgentChartPress">
+                                        <micro:points>
+                                            <micro:InteractiveLineChartPoint
+                                                value="{value}"
+                                                label="{label}"/>
+                                        </micro:points>
+                                    </micro:InteractiveLineChart>
+                                </VBox>
+                            </f:content>
+                        </f:Card>
+                        
+                        <!-- Agent Manager Card -->
+                        <f:Card width="400px" height="300px">
+                            <f:header>
+                                <card:Header
+                                    title="{i18n>agentManagerTitle}"
+                                    subtitle="{i18n>orchestrationCoordination}"
+                                    iconSrc="sap-icon://settings"
+                                    statusText="Orchestrating"
+                                    statusState="Success"/>
+                            </f:header>
+                            <f:content>
+                                <VBox class="sapUiSmallMargin">
+                                    <micro:RadialMicroChart
+                                        percentage="{agents>/agentManager/workloadPercentage}"
+                                        press="onAgentManagerPress">
+                                    </micro:RadialMicroChart>
+                                    <Text
+                                        text="{i18n>activeWorkflows}: {agents>/agentManager/activeWorkflows}"
+                                        class="sapUiTinyMarginTop"/>
+                                </VBox>
+                            </f:content>
+                        </f:Card>
+                    </f:GridContainer>
+                </IconTabFilter>
+                
+                <!-- Communication Flow -->
+                <IconTabFilter
+                    key="flow"
+                    text="{i18n>communicationFlow}"
+                    icon="sap-icon://process">
+                    
+                    <ScrollContainer
+                        height="100%"
+                        width="100%"
+                        horizontal="true"
+                        vertical="false">
+                        
+                        <!-- Process Flow for Agent Communication -->
+                        <ProcessFlow
+                            id="agentProcessFlow"
+                            scrollable="false"
+                            nodePress="onNodePress"
+                            nodes="{flow>/nodes}"
+                            lanes="{flow>/lanes}">
+                            <nodes>
+                                <ProcessFlowNode
+                                    laneId="{laneId}"
+                                    nodeId="{nodeId}"
+                                    title="{title}"
+                                    titleAbbreviation="{titleAbbreviation}"
+                                    texts="{texts}"
+                                    highlighted="{highlighted}"
+                                    state="{state}"
+                                    stateText="{stateText}"
+                                    focused="{focused}"
+                                    selected="{selected}">
+                                    <attributes>
+                                        <ProcessFlowNodeAttribute
+                                            label="{label}"
+                                            value="{value}"/>
+                                    </attributes>
+                                </ProcessFlowNode>
+                            </nodes>
+                            <lanes>
+                                <ProcessFlowLaneHeader
+                                    laneId="{laneId}"
+                                    iconSrc="{iconSrc}"
+                                    text="{text}"
+                                    state="{state}"
+                                    position="{position}"/>
+                            </lanes>
+                        </ProcessFlow>
+                    </ScrollContainer>
+                </IconTabFilter>
+                
+                <!-- Performance Metrics -->
+                <IconTabFilter
+                    key="metrics"
+                    text="{i18n>performanceMetrics}"
+                    icon="sap-icon://line-chart">
+                    
+                    <VBox class="sapUiContentPadding">
+                        <viz:VizFrame
+                            id="performanceChart"
+                            vizType="timeseries_line"
+                            uiConfig="{applicationSet:'fiori'}"
+                            height="400px"
+                            width="100%">
+                            
+                            <viz:dataset>
+                                <viz.data:FlattenedDataset data="{metrics>/performance}">
+                                    <viz.data:dimensions>
+                                        <viz.data:DimensionDefinition
+                                            name="Date"
+                                            value="{timestamp}"
+                                            dataType="date"/>
+                                        <viz.data:DimensionDefinition
+                                            name="Agent"
+                                            value="{agent}"/>
+                                    </viz.data:dimensions>
+                                    <viz.data:measures>
+                                        <viz.data:MeasureDefinition
+                                            name="Response Time"
+                                            value="{responseTime}"/>
+                                    </viz.data:measures>
+                                </viz.data:FlattenedDataset>
+                            </viz:dataset>
+                            
+                            <viz:feeds>
+                                <viz.feeds:FeedItem
+                                    uid="valueAxis"
+                                    type="Measure"
+                                    values="Response Time"/>
+                                <viz.feeds:FeedItem
+                                    uid="timeAxis"
+                                    type="Dimension"
+                                    values="Date"/>
+                                <viz.feeds:FeedItem
+                                    uid="color"
+                                    type="Dimension"
+                                    values="Agent"/>
+                            </viz:feeds>
+                        </viz:VizFrame>
+                    </VBox>
+                </IconTabFilter>
+            </IconTabBar>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

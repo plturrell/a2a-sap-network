@@ -1,0 +1,146 @@
+<mvc:View
+    controllerName="a2a.network.fiori.controller.Agents"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core">
+    
+    <f:DynamicPage id="agentsPage" headerExpanded="true">
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>agents}"/>
+                </f:heading>
+                <f:expandedContent>
+                    <Text text="Manage autonomous agents in the A2A network"/>
+                </f:expandedContent>
+                <f:actions>
+                    <Button
+                        text="Register Agent"
+                        type="Emphasized"
+                        icon="sap-icon://add"
+                        press="onRegisterAgent"/>
+                    <Button
+                        text="Refresh"
+                        icon="sap-icon://synchronize"
+                        press="onRefresh"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+        
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <f:content>
+                    <FlexBox alignItems="Start" justifyContent="SpaceBetween">
+                        <items>
+                            <SearchField
+                                width="300px"
+                                placeholder="Search agents..."
+                                search="onSearch"/>
+                            <HBox>
+                                <Label text="Filter by Status:" class="sapUiSmallMarginEnd"/>
+                                <SegmentedButton selectedKey="all">
+                                    <items>
+                                        <SegmentedButtonItem key="all" text="All" press="onFilterChange"/>
+                                        <SegmentedButtonItem key="active" text="Active" press="onFilterChange"/>
+                                        <SegmentedButtonItem key="inactive" text="Inactive" press="onFilterChange"/>
+                                    </items>
+                                </SegmentedButton>
+                            </HBox>
+                        </items>
+                    </FlexBox>
+                </f:content>
+            </f:DynamicPageHeader>
+        </f:header>
+        
+        <f:content>
+            <Table
+                id="agentsTable"
+                items="{
+                    path: '/Agents',
+                    sorter: {
+                        path: 'reputation',
+                        descending: true
+                    }
+                }"
+                mode="SingleSelectMaster"
+                growing="true"
+                growingThreshold="20"
+                itemPress="onAgentPress">
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <content>
+                            <Title text="Registered Agents ({= ${/Agents}.length })" level="H2"/>
+                            <ToolbarSpacer/>
+                            <Button
+                                icon="sap-icon://download"
+                                tooltip="Export"
+                                press="onExport"/>
+                            <Button
+                                icon="sap-icon://action-settings"
+                                tooltip="Table Settings"
+                                press="onTableSettings"/>
+                        </content>
+                    </OverflowToolbar>
+                </headerToolbar>
+                <columns>
+                    <Column>
+                        <Text text="Name"/>
+                    </Column>
+                    <Column>
+                        <Text text="Address"/>
+                    </Column>
+                    <Column>
+                        <Text text="Reputation"/>
+                    </Column>
+                    <Column>
+                        <Text text="Status"/>
+                    </Column>
+                    <Column>
+                        <Text text="Capabilities"/>
+                    </Column>
+                    <Column>
+                        <Text text="Services"/>
+                    </Column>
+                    <Column>
+                        <Text text="Actions"/>
+                    </Column>
+                </columns>
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <ObjectIdentifier
+                                title="{name}"
+                                text="{endpoint}"/>
+                            <Text text="{
+                                path: 'address',
+                                formatter: '.formatter.formatAddress'
+                            }"/>
+                            <ObjectNumber
+                                number="{reputation}"
+                                state="{
+                                    path: 'reputation',
+                                    formatter: '.formatter.formatReputationState'
+                                }"/>
+                            <ObjectStatus
+                                text="{= ${isActive} ? 'Active' : 'Inactive' }"
+                                state="{= ${isActive} ? 'Success' : 'Error' }"/>
+                            <Text text="{= ${capabilities}.length } capabilities"/>
+                            <Text text="{= ${services}.length } services"/>
+                            <HBox>
+                                <Button
+                                    icon="sap-icon://edit"
+                                    type="Transparent"
+                                    press="onEdit"/>
+                                <Button
+                                    icon="sap-icon://synchronize"
+                                    type="Transparent"
+                                    press="onSync"/>
+                            </HBox>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>
