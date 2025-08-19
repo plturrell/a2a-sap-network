@@ -1,0 +1,79 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <Dialog title="{i18n>exportProjects}" 
+            contentWidth="500px" 
+            contentHeight="400px"
+            resizable="true"
+            draggable="true"
+            class="a2a-export-dialog">
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <!-- Selected Projects Summary -->
+                <Panel headerText="{i18n>selectedProjects}" 
+                       class="sapUiMediumMarginBottom">
+                    <content>
+                        <Text text="{= ${export>/selectedProjects}.length } projects selected for export"/>
+                        <List items="{export>/selectedProjects}"
+                              mode="None"
+                              showSeparators="Inner"
+                              class="sapUiSmallMarginTop">
+                            <StandardListItem title="{export>name}" 
+                                            description="{export>description}"
+                                            icon="sap-icon://project"/>
+                        </List>
+                    </content>
+                </Panel>
+                
+                <!-- Export Options -->
+                <VBox class="sapUiMediumMarginBottom">
+                    <Label text="{i18n>exportFormat}" required="true"/>
+                    <RadioButtonGroup selectedIndex="0" 
+                                    valueState="None"
+                                    class="sapUiMediumMarginTop">
+                        <RadioButton text="Excel (.xlsx)" 
+                                   selected="{= ${export>/exportFormat} === 'excel' }"
+                                   select="onFormatChange"/>
+                        <RadioButton text="CSV (.csv)" 
+                                   selected="{= ${export>/exportFormat} === 'csv' }"
+                                   select="onFormatChange"/>
+                        <RadioButton text="JSON (.json)" 
+                                   selected="{= ${export>/exportFormat} === 'json' }"
+                                   select="onFormatChange"/>
+                    </RadioButtonGroup>
+                </VBox>
+                
+                <!-- Export Content Options -->
+                <VBox class="sapUiMediumMarginBottom">
+                    <Label text="{i18n>includeContent}"/>
+                    <CheckBox selected="{export>/includeDetails}" 
+                              text="{i18n>includeProjectDetails}"
+                              class="sapUiSmallMarginTop"/>
+                    <CheckBox selected="{export>/includeAgents}" 
+                              text="{i18n>includeAgentList}"/>
+                    <CheckBox selected="{export>/includeFiles}" 
+                              text="{i18n>includeFileStructure}"/>
+                </VBox>
+                
+                <!-- File Name -->
+                <VBox>
+                    <Label text="{i18n>fileName}" required="true"/>
+                    <Input value="{export>/fileName}" 
+                           placeholder="{i18n>enterFileName}"
+                           valueState="{= ${export>/fileName} ? 'None' : 'Error' }"
+                           class="sapUiMediumMarginTop"/>
+                </VBox>
+            </VBox>
+        </content>
+        <beginButton>
+            <Button text="{i18n>export}" 
+                    type="Emphasized" 
+                    press="onConfirmExport"
+                    icon="sap-icon://download"
+                    enabled="{= !!${export>/fileName} }"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>cancel}" 
+                    press="onCancelExport"
+                    icon="sap-icon://cancel"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

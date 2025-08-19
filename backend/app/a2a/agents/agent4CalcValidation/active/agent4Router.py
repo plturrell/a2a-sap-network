@@ -2,6 +2,7 @@
 Agent 4 Router - Computation Quality Testing Agent
 FastAPI router for HTTP endpoints and A2A protocol integration
 """
+import uuid
 
 import asyncio
 import logging

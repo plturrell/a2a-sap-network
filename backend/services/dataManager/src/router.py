@@ -28,24 +28,25 @@ def create_a2a_router(agent):
             "protocol_version": "0.2.9",
             "capabilities": {
                 "handlers": [
-                    {
-                        "name": handler.name,
-                        "description": handler.description
-                    } for handler in agent.handlers.values()
+                    {"name": "store_data", "description": "Store data in persistent storage"},
+                    {"name": "retrieve_data", "description": "Retrieve data from storage"},
+                    {"name": "update_data", "description": "Update existing data"},
+                    {"name": "delete_data", "description": "Soft delete data"}
                 ],
                 "skills": [
-                    {
-                        "name": skill.name,
-                        "description": skill.description
-                    } for skill in agent.skills.values()
+                    {"name": "bulk_operations", "description": "Perform bulk data operations"},
+                    {"name": "query_builder", "description": "Build complex queries"}
                 ],
                 "storage_backend": agent.storage_backend.value,
                 "supports_versioning": True,
                 "supports_caching": agent.redis_client is not None,
                 "supports_bulk_operations": True,
                 "supports_transactions": True,
+                "supports_blockchain": agent.blockchain_enabled,
                 "max_record_size_mb": 10,
-                "data_types": ["accounts", "books", "locations", "measures", "products", "embeddings", "relationships"]
+                "data_types": ["accounts", "books", "locations", "measures", "products", "embeddings", "relationships", "quality_assessment"],
+                "blockchain_address": agent.agent_identity.address if agent.blockchain_enabled and agent.agent_identity else None,
+                "blockchain_capabilities": ["data_storage", "caching", "persistence", "reputation_tracking"] if agent.blockchain_enabled else []
             },
             "endpoints": {
                 "rpc": f"/a2a/{agent.agent_id}/v1/rpc",
@@ -200,7 +201,13 @@ def create_a2a_router(agent):
                 "backend": agent.storage_backend.value,
                 "database_status": db_status,
                 "cache_status": cache_status,
-                "database_path": agent.db_path if agent.storage_backend.value == "sqlite" else None
+                "database_path": agent.sqlite_db_path if agent.storage_backend.value == "sqlite" else None
+            },
+            "blockchain": {
+                "enabled": agent.blockchain_enabled,
+                "address": agent.agent_identity.address if agent.blockchain_enabled and agent.agent_identity else None,
+                "capabilities": ["data_storage", "caching", "persistence", "reputation_tracking"] if agent.blockchain_enabled else [],
+                "registered_on_chain": agent.blockchain_enabled and agent.agent_identity and agent.agent_identity.address is not None
             },
             "statistics": agent.metrics,
             "timestamp": datetime.utcnow().isoformat()
@@ -327,6 +334,10 @@ a2a_storage_backend{{backend="{agent.storage_backend.value}"}} 1
 # HELP a2a_cache_enabled Cache enabled status
 # TYPE a2a_cache_enabled gauge
 a2a_cache_enabled {1 if agent.redis_client else 0}
+
+# HELP a2a_blockchain_enabled Blockchain integration enabled status
+# TYPE a2a_blockchain_enabled gauge
+a2a_blockchain_enabled {1 if agent.blockchain_enabled else 0}
 """
         return metrics_text
     

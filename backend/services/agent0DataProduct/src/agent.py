@@ -21,13 +21,13 @@ from a2aCommon import (
     A2AMessage, MessageRole
 )
 from a2aCommon.sdk.utils import create_success_response, create_error_response, create_agent_id
-from app.a2a.core.workflowContext import workflow_context_manager
+from app.a2a.core.workflowContext import workflowContextManager
 from app.a2a.core.workflowMonitor import workflow_monitor
 from a2aCommon.security.smartContractTrust import sign_a2a_message
 from a2aCommon.security.delegationContracts import DelegationAction
 from a2aCommon.skills.accountStandardizer import AccountStandardizer
 from a2aCommon.skills.bookStandardizer import BookStandardizer
-from a2aCommon.skills.ocationStandardizer import LocationStandardizer
+from a2aCommon.skills.locationStandardizer import LocationStandardizer
 from a2aCommon.skills.measureStandardizer import MeasureStandardizer
 from a2aCommon.skills.productStandardizer import ProductStandardizer
 

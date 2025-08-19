@@ -1,0 +1,30 @@
+{
+  "timestamp": "2025-08-19T18:26:14.513373",
+  "location": "/tests/a2a_mcp/server/blockchain/",
+  "components": {
+    "unit_tests": "test_blockchain_integration.py",
+    "integration_tests": "test_blockchain_network_integration.py",
+    "monitoring": "blockchain_monitoring.py",
+    "error_handling": "blockchain_error_handling.py",
+    "documentation": "BLOCKCHAIN_INTEGRATION_GUIDE.md",
+    "test_runner": "run_all_tests.py"
+  },
+  "features": [
+    "\u2705 Comprehensive unit test coverage",
+    "\u2705 Integration tests with test networks",
+    "\u2705 Real-time monitoring and alerting",
+    "\u2705 Robust error handling and recovery",
+    "\u2705 Complete implementation guide",
+    "\u2705 Automated test execution"
+  ],
+  "capabilities": [
+    "\u2022 Mock-based unit testing",
+    "\u2022 Local blockchain network testing (Anvil/Ganache)",
+    "\u2022 Transaction monitoring and metrics",
+    "\u2022 Circuit breaker pattern for resilience",
+    "\u2022 Retry with exponential backoff",
+    "\u2022 Health checks and alerting",
+    "\u2022 Multi-agent coordination testing",
+    "\u2022 Trust and reputation verification"
+  ]
+}

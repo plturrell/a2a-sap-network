@@ -116,22 +116,12 @@ class VersionManager:
     async def _detect_from_network_module(self) -> Optional[str]:
         """Try to detect version from a2aNetwork module"""
         try:
-            import sys
-            sys.path.insert(0, '/Users/apple/projects/a2a/a2aNetwork')
-            
-            # Try to import version info
-            from setup import setup
-            
-            # Extract version from setup.py 
-            if hasattr(setup, 'version'):
-                return setup.version
-                
-            # Try to read from __init__.py
-            import api
-            if hasattr(api, '__version__'):
-                return api.__version__
-                
-        except Exception as e:
+            # The package is now installed, so we can import it directly
+            import importlib.metadata
+            version = importlib.metadata.version('a2a-network')
+            return f"a2aNetwork v{version}"
+        except importlib.metadata.PackageNotFoundError:
+            return "a2aNetwork (unknown version)"
             logger.debug(f"Could not detect version from module: {e}")
             
         return None

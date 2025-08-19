@@ -31,9 +31,17 @@ async def lifespan(app: FastAPI):
     
     # Initialize trust system
     try:
-        from a2a.security.smartContractTrust import SmartContractTrust
-        trust_system = SmartContractTrust()
-        print("✅ Trust system initialized")
+        # Try to import trust system from correct location
+        try:
+            from a2a.core.trustManager import TrustManager
+            trust_system = TrustManager()
+            print("✅ Trust system initialized (using TrustManager)")
+        except:
+            # Fallback to direct import
+            sys.path.insert(0, os.path.join(app_dir, "a2a", "core"))
+            from trustManager import TrustManager
+            trust_system = TrustManager()
+            print("✅ Trust system initialized (using direct import)")
     except Exception as e:
         print(f"⚠️ Trust system failed: {e}")
         trust_system = None
@@ -339,9 +347,9 @@ if __name__ == "__main__":
     print("   • Server: http://localhost:8080")
     
     uvicorn.run(
-        "run_registry_server:app",
+        app,
         host="0.0.0.0",
-        port=8080,
+        port=8000,  # Use port 8000 for registry server
         reload=False,
         log_level="info"
     )

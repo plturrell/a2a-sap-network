@@ -1,0 +1,176 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        title="Choose Default Agent Icon"
+        resizable="true"
+        draggable="true"
+        contentWidth="600px"
+        contentHeight="500px"
+        type="Message">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Category Filter -->
+                <Panel headerText="Icon Categories" expandable="false">
+                    <content>
+                        <IconTabBar selectedKey="all" select=".onIconCategoryChange">
+                            <items>
+                                <IconTabFilter key="all" 
+                                             icon="sap-icon://grid" 
+                                             text="All"
+                                             tooltip="Show all available icons"/>
+                                <IconTabFilter key="ai" 
+                                             icon="sap-icon://learning-assistant" 
+                                             text="AI/ML"
+                                             tooltip="Artificial Intelligence and Machine Learning"/>
+                                <IconTabFilter key="data" 
+                                             icon="sap-icon://database" 
+                                             text="Data"
+                                             tooltip="Data processing and analytics"/>
+                                <IconTabFilter key="communication" 
+                                             icon="sap-icon://message" 
+                                             text="Communication"
+                                             tooltip="Messaging and communication"/>
+                                <IconTabFilter key="integration" 
+                                             icon="sap-icon://chain-link" 
+                                             text="Integration"
+                                             tooltip="System and API integration"/>
+                                <IconTabFilter key="automation" 
+                                             icon="sap-icon://workflow-tasks" 
+                                             text="Automation"
+                                             tooltip="Process automation and workflows"/>
+                            </items>
+                        </IconTabBar>
+                    </content>
+                </Panel>
+                
+                <!-- Icon Gallery -->
+                <Panel headerText="Available Icons" expandable="false" class="sapUiSmallMarginTop">
+                    <content>
+                        <l:Grid defaultSpan="L2 M3 S4" class="sapUiSmallMargin" width="100%">
+                            
+                            <!-- AI/ML Icons -->
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://learning-assistant" data-category="ai">
+                                <core:Icon src="sap-icon://learning-assistant" size="3rem" color="Neutral"/>
+                                <Text text="AI Assistant" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://analytics-cloud" data-category="ai">
+                                <core:Icon src="sap-icon://analytics-cloud" size="3rem" color="Neutral"/>
+                                <Text text="Analytics" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://brain" data-category="ai">
+                                <core:Icon src="sap-icon://brain" size="3rem" color="Neutral"/>
+                                <Text text="Intelligence" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <!-- Data Processing Icons -->
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://database" data-category="data">
+                                <core:Icon src="sap-icon://database" size="3rem" color="Neutral"/>
+                                <Text text="Database" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://scatter-chart" data-category="data">
+                                <core:Icon src="sap-icon://scatter-chart" size="3rem" color="Neutral"/>
+                                <Text text="Analytics" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://filter" data-category="data">
+                                <core:Icon src="sap-icon://filter" size="3rem" color="Neutral"/>
+                                <Text text="Filter" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <!-- Communication Icons -->
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://message" data-category="communication">
+                                <core:Icon src="sap-icon://message" size="3rem" color="Neutral"/>
+                                <Text text="Messaging" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://discussion" data-category="communication">
+                                <core:Icon src="sap-icon://discussion" size="3rem" color="Neutral"/>
+                                <Text text="Discussion" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://email" data-category="communication">
+                                <core:Icon src="sap-icon://email" size="3rem" color="Neutral"/>
+                                <Text text="Email" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <!-- Integration Icons -->
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://chain-link" data-category="integration">
+                                <core:Icon src="sap-icon://chain-link" size="3rem" color="Neutral"/>
+                                <Text text="Integration" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://connected" data-category="integration">
+                                <core:Icon src="sap-icon://connected" size="3rem" color="Neutral"/>
+                                <Text text="Connected" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://api" data-category="integration">
+                                <core:Icon src="sap-icon://api" size="3rem" color="Neutral"/>
+                                <Text text="API" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <!-- Automation Icons -->
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://workflow-tasks" data-category="automation">
+                                <core:Icon src="sap-icon://workflow-tasks" size="3rem" color="Neutral"/>
+                                <Text text="Workflow" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://process" data-category="automation">
+                                <core:Icon src="sap-icon://process" size="3rem" color="Neutral"/>
+                                <Text text="Process" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://automator" data-category="automation">
+                                <core:Icon src="sap-icon://automator" size="3rem" color="Neutral"/>
+                                <Text text="Automation" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <!-- Generic Agent Icons -->
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://employee" data-category="all">
+                                <core:Icon src="sap-icon://employee" size="3rem" color="Neutral"/>
+                                <Text text="Agent" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://manager" data-category="all">
+                                <core:Icon src="sap-icon://manager" size="3rem" color="Neutral"/>
+                                <Text text="Manager" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://customer-and-contacts" data-category="all">
+                                <core:Icon src="sap-icon://customer-and-contacts" size="3rem" color="Neutral"/>
+                                <Text text="Assistant" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://activity-2" data-category="all">
+                                <core:Icon src="sap-icon://activity-2" size="3rem" color="Neutral"/>
+                                <Text text="Activity" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <VBox alignItems="Center" class="sapUiSmallMargin iconSelectionBox" press=".onSelectDefaultIcon" data-icon="sap-icon://org-chart" data-category="all">
+                                <core:Icon src="sap-icon://org-chart" size="3rem" color="Neutral"/>
+                                <Text text="Organization" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                        </l:Grid>
+                    </content>
+                </Panel>
+                
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button text="Cancel" 
+                    icon="sap-icon://decline"
+                    type="Default"
+                    press=".onCloseDefaultIconDialog"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

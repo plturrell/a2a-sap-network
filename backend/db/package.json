@@ -1,0 +1,11 @@
+{
+  "name": "a2a-agents-db-deployer",
+  "version": "1.0.0",
+  "description": "Database deployer for A2A Agents",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@sap/hdi-deploy": "^4.0.0"
+  }
+}

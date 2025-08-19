@@ -1,0 +1,63 @@
+_schema-version: "3.1"
+ID: a2a-agents-minimal
+description: A2A Agents - Minimal BTP Deployment
+version: 1.0.0
+
+modules:
+  - name: a2a-agents-srv
+    type: nodejs
+    path: .
+    requires:
+      - name: a2a-agents-hana
+      - name: a2a-agents-xsuaa
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+    parameters:
+      buildpack: nodejs_buildpack
+      memory: 512M
+      disk-quota: 1024M
+      instances: 1
+    build-parameters:
+      builder: npm-ci
+
+  - name: a2a-agents-db-deployer
+    type: hdb
+    path: db
+    requires:
+      - name: a2a-agents-hana
+    parameters:
+      buildpack: nodejs_buildpack
+
+resources:
+  # Minimal HANA service
+  - name: a2a-agents-hana
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hanatrial
+      service-plan: hdi-shared
+
+  # Minimal XSUAA service  
+  - name: a2a-agents-xsuaa
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      config:
+        xsappname: a2a-agents-${space}
+        tenant-mode: dedicated
+        scopes:
+          - name: $XSAPPNAME.Admin
+            description: Admin access
+        role-templates:
+          - name: Admin
+            scope-references:
+              - $XSAPPNAME.Admin
+
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm install
+        - npm run build

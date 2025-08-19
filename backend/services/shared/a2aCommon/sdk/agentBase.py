@@ -12,9 +12,9 @@ from datetime import datetime
 from uuid import uuid4
 import inspect
 
-from .a2aTypes import A2AMessage, MessagePart, MessageRole
-from .a2aTypes import AgentCard, AgentCapability, SkillDefinition, TaskStatus
+from .types import A2AMessage, MessagePart, MessageRole, AgentCard, AgentCapability, SkillDefinition, TaskStatus
 from .decorators import get_handler_metadata
+from app.a2a.core.telemetry import add_span_attributes
 
 logger = logging.getLogger(__name__)
 

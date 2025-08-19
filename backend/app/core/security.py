@@ -2,6 +2,7 @@
 A2A Platform Security Module
 Enterprise-grade security utilities and middleware
 """
+import email
 
 import hashlib
 import hmac

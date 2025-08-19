@@ -15,6 +15,7 @@ from enum import Enum
 from contextvars import ContextVar
 import asyncio
 from functools import wraps
+import time
 
 # Context variables for correlation tracking
 correlation_id: ContextVar[Optional[str]] = ContextVar('correlation_id', default=None)

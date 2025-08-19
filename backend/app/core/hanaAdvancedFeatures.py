@@ -1,4 +1,5 @@
 """
+import time
 SAP HANA Advanced Features Integration
 Implements spatial data processing, graph processing, and advanced analytics
 """

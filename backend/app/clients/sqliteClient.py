@@ -28,6 +28,9 @@ except ImportError:
     SQLCIPHER_AVAILABLE = False
 
 from app.core.databaseSecurityManager import DatabaseSecurityManager, SecurityLevel
+from app.core.connection_pool import pool_manager
+from app.core.cache_manager import cache_manager, cached
+from app.core.pagination import PaginationParams, PaginatedResponse, paginate_query
 
 logger = logging.getLogger(__name__)
 
@@ -117,13 +120,46 @@ class SQLiteConnectionPool:
         self.config = config
         self.pool = queue.Queue(maxsize=config.pool_size)
         self.lock = threading.Lock()
+        self._async_pool = None
+        self._pool_name = f"sqlite_{os.path.basename(config.db_path)}"
         self._initialize_pool()
+        # Initialize async pool in background
+        asyncio.create_task(self._initialize_async_pool())
     
     def _initialize_pool(self):
         """Initialize connection pool"""
         for _ in range(self.config.pool_size):
             conn = self._create_connection()
             self.pool.put(conn)
+    
+    async def _initialize_async_pool(self):
+        """Initialize async connection pool using global pool manager"""
+        try:
+            self._async_pool = await pool_manager.create_pool(
+                name=self._pool_name,
+                db_type="sqlite",
+                connection_factory=self._create_async_connection,
+                min_size=max(1, self.config.pool_size // 2),
+                max_size=self.config.pool_size * 2,
+                max_age_seconds=3600,
+                max_idle_seconds=300
+            )
+            logger.info(f"Initialized async connection pool '{self._pool_name}'")
+        except Exception as e:
+            logger.error(f"Failed to initialize async pool: {e}")
+    
+    async def _create_async_connection(self):
+        """Create async SQLite connection"""
+        db_path = self.config.db_path
+        conn = await aiosqlite.connect(db_path)
+        
+        # Configure connection
+        await conn.execute(f"PRAGMA journal_mode = {self.config.journal_mode}")
+        if self.config.enable_foreign_keys:
+            await conn.execute("PRAGMA foreign_keys = ON")
+        await conn.execute(f"PRAGMA cache_size = {self.config.cache_size}")
+        
+        return conn
     
     def _create_connection(self):
         """Create a new database connection with enterprise features"""
@@ -211,6 +247,14 @@ class SQLiteConnectionPool:
                         self.pool.put(conn)
                     else:
                         conn.close()
+    
+    async def get_async_connection(self):
+        """Get async connection from enhanced pool"""
+        if not self._async_pool:
+            # Fallback to creating connection directly
+            return await self._create_async_connection()
+        
+        return self._async_pool.acquire()
 
 
 class SQLiteClient:
@@ -987,6 +1031,174 @@ class SQLiteClient:
             return {"error": "Security manager not enabled"}
         
         return self.security_manager.get_security_report()
+    
+    # Async methods using connection pool
+    @cached(cache_name="sqlite_select", ttl=60)
+    async def async_select_cached(
+        self,
+        table: str,
+        columns: List[str] = None,
+        filters: Dict[str, Any] = None,
+        pagination: Optional[PaginationParams] = None
+    ) -> PaginatedResponse:
+        """Cached and paginated async select"""
+        if not pagination:
+            pagination = PaginationParams()
+            
+        # Get total count first
+        count_result = await self.async_select(
+            table=table,
+            columns=["COUNT(*) as total"],
+            filters=filters
+        )
+        total = count_result.data[0]['total'] if count_result.success else 0
+        
+        # Get paginated data
+        result = await self.async_select(
+            table=table,
+            columns=columns,
+            filters=filters,
+            limit=pagination.limit,
+            offset=pagination.offset
+        )
+        
+        if result.success:
+            return PaginatedResponse.create(
+                items=result.data,
+                total=total,
+                params=pagination
+            )
+        else:
+            return PaginatedResponse.create([], 0, pagination)
+    
+    async def async_select(
+        self,
+        table: str,
+        columns: List[str] = None,
+        filters: Dict[str, Any] = None,
+        limit: int = 100,
+        offset: int = 0,
+        order_by: str = None
+    ) -> SQLiteResponse:
+        """Async select operation using connection pool"""
+        try:
+            # Validate inputs
+            if not self._is_valid_table_name(table):
+                raise ValueError(f"Invalid table name: {table}")
+            
+            # Get connection from pool
+            async with self.connection_pool.get_async_connection() as conn:
+                # Build query
+                query_parts = ["SELECT"]
+                
+                if columns:
+                    validated_columns = [col for col in columns if self._is_valid_column_name(col)]
+                    query_parts.append(", ".join(validated_columns))
+                else:
+                    query_parts.append("*")
+                
+                query_parts.append(f"FROM {table}")
+                
+                # Add WHERE clause
+                params = []
+                if filters:
+                    conditions = []
+                    for key, value in filters.items():
+                        if self._is_valid_column_name(key):
+                            conditions.append(f"{key} = ?")
+                            params.append(value)
+                    
+                    if conditions:
+                        query_parts.append("WHERE " + " AND ".join(conditions))
+                
+                # Add ORDER BY
+                if order_by:
+                    if order_by.startswith("-"):
+                        column = order_by[1:]
+                        direction = "DESC"
+                    else:
+                        column = order_by
+                        direction = "ASC"
+                    
+                    if self._is_valid_column_name(column):
+                        query_parts.append(f"ORDER BY {column} {direction}")
+                
+                # Add LIMIT and OFFSET
+                query_parts.append(f"LIMIT {limit} OFFSET {offset}")
+                
+                query = " ".join(query_parts)
+                
+                # Execute query
+                async with conn.execute(query, params) as cursor:
+                    rows = await cursor.fetchall()
+                    columns = [description[0] for description in cursor.description]
+                    
+                    # Convert to dict format
+                    results = []
+                    for row in rows:
+                        results.append(dict(zip(columns, row)))
+                
+                return SQLiteResponse(
+                    success=True,
+                    data=results,
+                    count=len(results)
+                )
+                
+        except Exception as e:
+            logger.error(f"Async select failed: {e}")
+            return SQLiteResponse(
+                success=False,
+                error=str(e)
+            )
+    
+    async def async_insert(
+        self,
+        table: str,
+        data: Union[Dict[str, Any], List[Dict[str, Any]]]
+    ) -> SQLiteResponse:
+        """Async insert operation using connection pool"""
+        try:
+            # Validate table name
+            if not self._is_valid_table_name(table):
+                raise ValueError(f"Invalid table name: {table}")
+            
+            # Ensure data is a list
+            records = data if isinstance(data, list) else [data]
+            
+            if not records:
+                return SQLiteResponse(success=True, count=0)
+            
+            # Get connection from pool
+            async with self.connection_pool.get_async_connection() as conn:
+                # Prepare insert statement
+                first_record = records[0]
+                columns = [col for col in first_record.keys() if self._is_valid_column_name(col)]
+                
+                placeholders = ", ".join(["?" for _ in columns])
+                column_list = ", ".join(columns)
+                
+                query = f"INSERT INTO {table} ({column_list}) VALUES ({placeholders})"
+                
+                # Execute inserts
+                inserted_count = 0
+                for record in records:
+                    values = [record.get(col) for col in columns]
+                    await conn.execute(query, values)
+                    inserted_count += 1
+                
+                await conn.commit()
+                
+                return SQLiteResponse(
+                    success=True,
+                    count=inserted_count
+                )
+                
+        except Exception as e:
+            logger.error(f"Async insert failed: {e}")
+            return SQLiteResponse(
+                success=False,
+                error=str(e)
+            )
     
     def health_check(self) -> Dict[str, Any]:
         """Health check for the SQLite client"""

@@ -4,8 +4,10 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/ui/core/Fragment",
     "sap/ui/model/json/JSONModel",
-    "sap/ui/model/resource/ResourceModel"
-], function (BaseController, MessageToast, MessageBox, Fragment, JSONModel, ResourceModel) {
+    "sap/ui/model/resource/ResourceModel",
+    "../mixin/PersonalizationMixin",
+    "../mixin/OfflineMixin"
+], function (BaseController, MessageToast, MessageBox, Fragment, JSONModel, ResourceModel, PersonalizationMixin, OfflineMixin) {
     "use strict";
 
     return BaseController.extend("a2a.portal.controller.App", {
@@ -13,6 +15,13 @@ sap.ui.define([
         onInit: function () {
             // Call parent onInit to set up help integration
             BaseController.prototype.onInit.apply(this, arguments);
+            
+            // Mix in PersonalizationMixin and OfflineMixin
+            Object.assign(this, PersonalizationMixin, OfflineMixin);
+            
+            // Initialize mixins
+            this.initPersonalization();
+            this.initOfflineCapabilities();
             
             // Get the component
             var oComponent = this.getOwnerComponent();

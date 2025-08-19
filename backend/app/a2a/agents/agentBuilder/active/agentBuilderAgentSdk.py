@@ -21,19 +21,10 @@ from app.a2a.sdk import (
 )
 from app.a2a.core.workflowContext import workflowContextManager
 from app.a2a.core.workflowMonitor import workflowMonitor
-# Import trust components from a2aNetwork
-try:
-    import sys
-    sys.path.insert(0, '/Users/apple/projects/a2a/a2aNetwork')
-    from trustSystem.smartContractTrust import sign_a2a_message, initialize_agent_trust, verify_a2a_message
-except ImportError:
-    # Fallback functions
-    def sign_a2a_message(*args, **kwargs):
-        return {"signature": "mock"}
-    def initialize_agent_trust(*args, **kwargs):
-        return True
-    def verify_a2a_message(*args, **kwargs):
-        return True
+from prometheus_client import Counter, Histogram, Gauge, start_http_server
+import time
+# Import trust system
+from app.a2a.core.trustManager import sign_a2a_message, initialize_agent_trust, verify_a2a_message, trust_manager
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)

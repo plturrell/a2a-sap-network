@@ -1,0 +1,194 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        title="Select Agent Capabilities"
+        resizable="true"
+        draggable="true"
+        contentWidth="900px"
+        contentHeight="600px"
+        type="Message">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Search and Filter Section -->
+                <Panel headerText="Browse Capabilities" expandable="false">
+                    <content>
+                        <VBox class="sapUiSmallMargin">
+                            
+                            <!-- Search Bar -->
+                            <SearchField id="capabilitySearch"
+                                       placeholder="Search capabilities by name, description, or tags..."
+                                       width="100%"
+                                       search=".onCapabilitySearch"
+                                       liveChange=".onCapabilitySearch"/>
+                            
+                            <!-- Category Filter -->
+                            <IconTabBar selectedKey="{capabilities>/selectedCategory}"
+                                      select=".onCapabilityCategoryChange"
+                                      class="sapUiSmallMarginTop">
+                                <items>
+                                    <IconTabFilter key="data" 
+                                                 icon="sap-icon://database" 
+                                                 text="Data Processing"
+                                                 tooltip="Data manipulation and analysis"/>
+                                    <IconTabFilter key="communication" 
+                                                 icon="sap-icon://message" 
+                                                 text="Communication"
+                                                 tooltip="Messaging and protocols"/>
+                                    <IconTabFilter key="integration" 
+                                                 icon="sap-icon://chain-link" 
+                                                 text="Integration"
+                                                 tooltip="System and API integration"/>
+                                    <IconTabFilter key="ai" 
+                                                 icon="sap-icon://learning-assistant" 
+                                                 text="AI & ML"
+                                                 tooltip="Artificial Intelligence and Machine Learning"/>
+                                    <IconTabFilter key="workflow" 
+                                                 icon="sap-icon://workflow-tasks" 
+                                                 text="Workflow"
+                                                 tooltip="Process and task management"/>
+                                    <IconTabFilter key="monitoring" 
+                                                 icon="sap-icon://activity-2" 
+                                                 text="Monitoring"
+                                                 tooltip="System monitoring and analytics"/>
+                                </items>
+                            </IconTabBar>
+                            
+                        </VBox>
+                    </content>
+                </Panel>
+                
+                <!-- Available Capabilities List -->
+                <Panel headerText="Available Capabilities ({capabilities>/availableCapabilities/length})" 
+                       expandable="false" 
+                       class="sapUiSmallMarginTop">
+                    <content>
+                        <List id="capabilityList"
+                              items="{capabilities>/availableCapabilities}"
+                              mode="MultiSelect"
+                              selectionChange=".onCapabilitySelect"
+                              growing="true"
+                              growingThreshold="20">
+                            <CustomListItem>
+                                <HBox alignItems="Center" class="sapUiSmallMargin">
+                                    
+                                    <!-- Capability Icon -->
+                                    <core:Icon src="{capabilities>icon}" 
+                                             size="2.5rem" 
+                                             color="Neutral"
+                                             class="sapUiMediumMarginEnd"/>
+                                    
+                                    <!-- Capability Details -->
+                                    <VBox class="sapUiNoMargin" width="100%">
+                                        <HBox justifyContent="SpaceBetween" alignItems="Center">
+                                            <Title text="{capabilities>name}" level="H4"/>
+                                            <HBox alignItems="Center">
+                                                <ObjectStatus text="{capabilities>complexity}"
+                                                            state="{= ${capabilities>complexity} === 'Low' ? 'Success' : ${capabilities>complexity} === 'Medium' ? 'Warning' : 'Error' }"
+                                                            class="sapUiTinyMarginEnd"/>
+                                                <Button icon="sap-icon://information"
+                                                       type="Transparent"
+                                                       tooltip="View details"
+                                                       press=".onShowCapabilityDetails"/>
+                                            </HBox>
+                                        </HBox>
+                                        
+                                        <Text text="{capabilities>description}" 
+                                             class="sapUiTinyMarginTop sapThemeTextColorSecondary"/>
+                                        
+                                        <!-- Tags -->
+                                        <HBox class="sapUiTinyMarginTop" wrap="Wrap">
+                                            <Text text="Tags: " class="sapMTextBold sapUiTinyMarginEnd"/>
+                                            <Text text="{= ${capabilities>tags}.join(', ') }" 
+                                                 class="sapThemeTextColorSecondary"/>
+                                        </HBox>
+                                        
+                                        <!-- Dependencies -->
+                                        <HBox class="sapUiTinyMarginTop" wrap="Wrap"
+                                              visible="{= ${capabilities>dependencies}.length > 0 }">
+                                            <Text text="Dependencies: " class="sapMTextBold sapUiTinyMarginEnd"/>
+                                            <Text text="{= ${capabilities>dependencies}.join(', ') }" 
+                                                 class="sapThemeTextColorCritical"/>
+                                        </HBox>
+                                        
+                                    </VBox>
+                                </HBox>
+                            </CustomListItem>
+                        </List>
+                    </content>
+                </Panel>
+                
+                <!-- Selected Capabilities Summary -->
+                <Panel headerText="Selected Capabilities ({capabilities>/selectedCapabilities/length})" 
+                       visible="{= ${capabilities>/selectedCapabilities/length} > 0 }"
+                       expandable="true"
+                       expanded="false"
+                       class="sapUiSmallMarginTop">
+                    <content>
+                        <List items="{capabilities>/selectedCapabilities}"
+                              mode="None">
+                            <StandardListItem title="{capabilities>name}"
+                                            description="{capabilities>description}"
+                                            icon="{capabilities>icon}"
+                                            info="{capabilities>complexity}"
+                                            infoState="{= ${capabilities>complexity} === 'Low' ? 'Success' : ${capabilities>complexity} === 'Medium' ? 'Warning' : 'Error' }"/>
+                        </List>
+                    </content>
+                </Panel>
+                
+                <!-- Quick Add Options -->
+                <Panel headerText="Quick Add Options" 
+                       expandable="true" 
+                       expanded="false"
+                       class="sapUiSmallMarginTop">
+                    <content>
+                        <VBox class="sapUiSmallMargin">
+                            <Text text="Add predefined capability sets:" class="sapMTextBold"/>
+                            
+                            <HBox class="sapUiSmallMarginTop" wrap="Wrap">
+                                <Button text="Basic Data Agent"
+                                       icon="sap-icon://database"
+                                       press=".onAddBasicDataCapabilities"
+                                       class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="Communication Hub"
+                                       icon="sap-icon://message"
+                                       press=".onAddCommunicationCapabilities"
+                                       class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="AI Assistant"
+                                       icon="sap-icon://learning-assistant"
+                                       press=".onAddAICapabilities"
+                                       class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="Workflow Coordinator"
+                                       icon="sap-icon://workflow-tasks"
+                                       press=".onAddWorkflowCapabilities"
+                                       class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                            </HBox>
+                        </VBox>
+                    </content>
+                </Panel>
+                
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button text="Add Selected ({capabilities>/selectedCapabilities/length})" 
+                    icon="sap-icon://add"
+                    type="Emphasized"
+                    press=".onAddSelectedCapabilities"
+                    enabled="{= ${capabilities>/selectedCapabilities/length} > 0 }"/>
+            <Button text="Clear Selection" 
+                    icon="sap-icon://clear-all"
+                    type="Default"
+                    press=".onClearCapabilitySelection"
+                    enabled="{= ${capabilities>/selectedCapabilities/length} > 0 }"/>
+            <Button text="Cancel" 
+                    icon="sap-icon://decline"
+                    type="Default"
+                    press=".onCloseCapabilityDialog"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

@@ -2,6 +2,7 @@
 A2A Protocol Router for Catalog Manager Agent
 Implements JSON-RPC 2.0 endpoints for ORD registry operations
 """
+import asyncio
 
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse, HTMLResponse

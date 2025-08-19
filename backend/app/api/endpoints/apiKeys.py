@@ -23,6 +23,7 @@ class CreateAPIKeyRequest(BaseModel):
     key_id: str = Field(..., description="Unique identifier for the API key")
     permissions: List[str] = Field(..., description="List of permissions for the key")
     description: Optional[str] = Field(None, description="Description of the key's purpose")
+    expires_in_days: Optional[int] = Field(None, ge=1, le=365, description="Days until key expires (1-365, None for no expiration)")
 
 
 class APIKeyResponse(BaseModel):
@@ -34,6 +35,8 @@ class APIKeyResponse(BaseModel):
     created_at: Optional[str] = None
     rotated_at: Optional[str] = None
     revoked_at: Optional[str] = None
+    expires_at: Optional[str] = None
+    is_expired: Optional[bool] = None
 
 
 @router.post("/api-keys", response_model=APIKeyResponse)
@@ -66,10 +69,17 @@ async def create_api_key(
                 detail=f"Invalid permissions: {', '.join(invalid_perms)}"
             )
         
+        # Calculate expiration date if specified
+        expires_at = None
+        if request.expires_in_days:
+            from datetime import datetime, timedelta
+            expires_at = (datetime.utcnow() + timedelta(days=request.expires_in_days)).isoformat()
+        
         # Create API key
         result = signing_service.create_api_key(
             key_id=request.key_id,
-            permissions=request.permissions
+            permissions=request.permissions,
+            expires_at=expires_at
         )
         
         # Log security event
@@ -95,7 +105,9 @@ async def create_api_key(
             secret=result["secret"],  # Only returned on creation
             active=key_info["active"],
             permissions=key_info["permissions"],
-            created_at=key_info.get("created_at")
+            created_at=key_info.get("created_at"),
+            expires_at=key_info.get("expires_at"),
+            is_expired=False  # New keys are never expired
         )
         
     except HTTPException:
@@ -121,15 +133,25 @@ async def list_api_keys(
         
         signing_service = get_signing_service()
         
+        from datetime import datetime
+        
         keys = []
         for key_id, key_info in signing_service.api_keys.items():
+            # Check if key is expired
+            is_expired = False
+            expires_at = key_info.get("expires_at")
+            if expires_at:
+                is_expired = datetime.fromisoformat(expires_at.replace('Z', '+00:00')) < datetime.utcnow()
+            
             keys.append(APIKeyResponse(
                 key_id=key_id,
                 active=key_info["active"],
                 permissions=key_info["permissions"],
                 created_at=key_info.get("created_at"),
                 rotated_at=key_info.get("rotated_at"),
-                revoked_at=key_info.get("revoked_at")
+                revoked_at=key_info.get("revoked_at"),
+                expires_at=expires_at,
+                is_expired=is_expired
             ))
         
         return keys
@@ -257,13 +279,22 @@ async def get_api_key(
         
         key_info = signing_service.api_keys[key_id]
         
+        # Check if key is expired
+        from datetime import datetime
+        is_expired = False
+        expires_at = key_info.get("expires_at")
+        if expires_at:
+            is_expired = datetime.fromisoformat(expires_at.replace('Z', '+00:00')) < datetime.utcnow()
+        
         return APIKeyResponse(
             key_id=key_id,
             active=key_info["active"],
             permissions=key_info["permissions"],
             created_at=key_info.get("created_at"),
             rotated_at=key_info.get("rotated_at"),
-            revoked_at=key_info.get("revoked_at")
+            revoked_at=key_info.get("revoked_at"),
+            expires_at=expires_at,
+            is_expired=is_expired
         )
         
     except HTTPException:

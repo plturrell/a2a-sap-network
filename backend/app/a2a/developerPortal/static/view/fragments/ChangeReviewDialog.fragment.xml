@@ -1,0 +1,97 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    
+    <Dialog
+        title="Review Changes Before Cancel"
+        resizable="true"
+        draggable="true"
+        contentWidth="600px"
+        contentHeight="400px"
+        type="Message"
+        state="Warning">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <Label text="Select which changes to discard (checked items will be reverted):" class="sapUiSmallMarginBottom"/>
+                
+                <Table
+                    items="{changes>/changes}"
+                    mode="MultiSelect"
+                    class="sapUiSizeCompact">
+                    
+                    <headerToolbar>
+                        <Toolbar>
+                            <Title text="Modified Fields ({= ${changes>/changes}.length })"/>
+                            <ToolbarSpacer/>
+                            <Button 
+                                text="Select All" 
+                                icon="sap-icon://multi-select" 
+                                press="onSelectAllChanges" 
+                                type="Transparent"/>
+                            <Button 
+                                text="Deselect All" 
+                                icon="sap-icon://deselect-all" 
+                                press="onDeselectAllChanges" 
+                                type="Transparent"/>
+                        </Toolbar>
+                    </headerToolbar>
+                    
+                    <columns>
+                        <Column width="3rem">
+                            <Text text=""/>
+                        </Column>
+                        <Column width="8rem">
+                            <Text text="Field"/>
+                        </Column>
+                        <Column width="12rem">
+                            <Text text="Original Value"/>
+                        </Column>
+                        <Column width="12rem">
+                            <Text text="Current Value"/>
+                        </Column>
+                    </columns>
+                    
+                    <items>
+                        <ColumnListItem selected="{changes>selected}">
+                            <cells>
+                                <CheckBox selected="{changes>selected}"/>
+                                <Text text="{changes>fieldDisplay}" class="sapUiTinyText"/>
+                                <Text 
+                                    text="{changes>from}" 
+                                    class="sapUiTinyText"
+                                    maxLines="2"
+                                    wrapping="true"/>
+                                <Text 
+                                    text="{changes>to}" 
+                                    class="sapUiTinyText sapMTextColorPositive"
+                                    maxLines="2"
+                                    wrapping="true"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+                
+                <MessageStrip
+                    text="Changes marked with checkboxes will be reverted to their original values. Unchecked changes will be preserved."
+                    type="Information"
+                    showIcon="true"
+                    class="sapUiMediumMarginTop"/>
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button 
+                text="Discard Selected" 
+                icon="sap-icon://delete"
+                type="Reject" 
+                press="onSelectiveCancel"
+                enabled="{= ${changes>/changes}.filter(function(c) { return c.selected; }).length > 0 }"/>
+            <Button 
+                text="Keep All Changes" 
+                icon="sap-icon://cancel"
+                type="Default" 
+                press="onCancelChangeReview"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

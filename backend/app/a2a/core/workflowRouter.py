@@ -10,10 +10,14 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel, Field
 import logging
 
-from .workflowContext import workflowContextManager, WorkflowContext, DataArtifact
+from .workflowContext import workflowContextManager
 from .workflowMonitor import workflowMonitor, WorkflowMetrics, WorkflowState
-from app.a2aTrustSystem.service import TrustSystemService
-from app.a2aRegistry.service import A2ARegistryService
+# Import trust system and registry services
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../../a2aNetwork'))
+from trustSystem.service import TrustSystemService
+from registry.service import ORDRegistryService as A2ARegistryService
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +27,7 @@ router = APIRouter(prefix="/api/v1/a2a/workflows", tags=["A2A Workflow Orchestra
 # Request/Response Models
 class WorkflowCreationRequest(BaseModel):
     """Request to create a new workflow"""
+
     workflow_plan_id: str = Field(..., description="Workflow plan/template ID")
     workflow_name: str = Field(..., description="Human-readable workflow name")
     trust_contract_id: Optional[str] = Field(None, description="Associated trust contract ID")
@@ -34,6 +39,7 @@ class WorkflowCreationRequest(BaseModel):
 
 class WorkflowCreationResponse(BaseModel):
     """Response from workflow creation"""
+
     workflow_id: str = Field(..., description="Created workflow ID")
     context_id: str = Field(..., description="Context ID for message correlation")
     initial_stage: str = Field(..., description="Initial workflow stage")
@@ -43,6 +49,7 @@ class WorkflowCreationResponse(BaseModel):
 
 class WorkflowStatusResponse(BaseModel):
     """Workflow status response"""
+
     workflow_id: str = Field(..., description="Workflow ID")
     current_stage: str = Field(..., description="Current stage")
     state: WorkflowState = Field(..., description="Overall workflow state")
@@ -55,12 +62,14 @@ class WorkflowStatusResponse(BaseModel):
 
 class DataLineageRequest(BaseModel):
     """Request for data lineage"""
+
     workflow_id: str = Field(..., description="Workflow ID")
     artifact_id: str = Field(..., description="Artifact ID to trace")
 
 
 class DataLineageResponse(BaseModel):
     """Data lineage response"""
+
     artifact_id: str = Field(..., description="Artifact ID")
     lineage: List[Dict[str, Any]] = Field(..., description="Lineage chain")
     total_artifacts: int = Field(..., description="Total artifacts in lineage")
@@ -70,25 +79,30 @@ class DataLineageResponse(BaseModel):
 def get_trust_service() -> Optional[TrustSystemService]:
     """Get trust system service if available"""
     try:
-        from app.a2aTrustSystem.router import get_trust_service as trust_service_factory
-        return trust_service_factory()
-    except:
+        return TrustSystemService()
+    except Exception as e:
+        logger.warning(f"Trust service unavailable: {e}")
         return None
 
 
 def get_registry_service() -> Optional[A2ARegistryService]:
     """Get A2A registry service if available"""
     try:
-        return A2ARegistryService()
-    except:
+        # Use default base URL for registry service
+        base_url = "http://localhost:8000"  # Default registry URL
+        return A2ARegistryService(base_url=base_url)
+    except Exception as e:
+        logger.warning(f"Registry service unavailable: {e}")
         return None
 
 
-@router.post("/create", response_model=WorkflowCreationResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/create", response_model=WorkflowCreationResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_workflow(
     request: WorkflowCreationRequest,
     trust_service: Optional[TrustSystemService] = Depends(get_trust_service),
-    registry_service: Optional[A2ARegistryService] = Depends(get_registry_service)
+    registry_service: Optional[A2ARegistryService] = Depends(get_registry_service),
 ):
     """Create a new workflow with optional trust contract"""
     try:
@@ -97,7 +111,7 @@ async def create_workflow(
             # Verify trust contract exists
             # This is a simplified check - in production would validate more thoroughly
             logger.info(f"Validating trust contract {request.trust_contract_id}")
-        
+
         # Create workflow context
         workflow_context = workflowContextManager.create_workflow_context(
             workflow_plan_id=request.workflow_plan_id,
@@ -107,21 +121,18 @@ async def create_workflow(
             sla_id=request.sla_id,
             required_trust_level=request.required_trust_level,
             initial_stage="data_ingestion",
-            metadata=request.metadata or {}
+            metadata=request.metadata or {},
         )
-        
+
         # Create initial data artifact
-        initial_artifact = workflowContextManager.create_data_artifact(
+        workflowContextManager.create_data_artifact(
             workflow_id=workflow_context.workflow_id,
             artifact_type="initial_data",
             location=request.initial_data_location,
             created_by="workflow_orchestrator",
-            metadata={
-                "source": "workflow_creation",
-                "timestamp": datetime.utcnow().isoformat()
-            }
+            metadata={"source": "workflow_creation", "timestamp": datetime.utcnow().isoformat()},
         )
-        
+
         # Start workflow monitoring
         monitoring_started = False
         try:
@@ -129,29 +140,28 @@ async def create_workflow(
             if trust_service or registry_service:
                 workflowMonitor.trust_service = trust_service
                 workflowMonitor.registry = registry_service
-            
-            await workflowMonitor.start_workflowMonitoring(
-                workflow_context,
-                total_stages=3  # Default to 3 stages
+
+            await workflowMonitor.start_workflow_monitoring(
+                workflow_context, total_stages=3  # Default to 3 stages
             )
             monitoring_started = True
         except Exception as e:
             logger.warning(f"Failed to start workflow monitoring: {e}")
-        
+
         return WorkflowCreationResponse(
             workflow_id=workflow_context.workflow_id,
             context_id=workflow_context.context_id,
             initial_stage=workflow_context.current_stage,
             created_at=workflow_context.initiated_at,
-            monitoring_started=monitoring_started
+            monitoring_started=monitoring_started,
         )
-        
+
     except Exception as e:
         logger.error(f"Error creating workflow: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create workflow: {str(e)}"
-        )
+            detail=f"Failed to create workflow: {str(e)}",
+        ) from e
 
 
 @router.get("/{workflow_id}/status", response_model=WorkflowStatusResponse)
@@ -162,10 +172,9 @@ async def get_workflow_status(workflow_id: str):
         context = workflowContextManager.get_context(workflow_id)
         if not context:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Workflow {workflow_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Workflow {workflow_id} not found"
             )
-        
+
         # Get workflow metrics
         metrics = workflowMonitor.get_workflow_metrics(workflow_id)
         if not metrics:
@@ -177,9 +186,9 @@ async def get_workflow_status(workflow_id: str):
                 total_stages=3,  # Default
                 artifacts_created=len(context.artifacts),
                 current_stage=context.current_stage,
-                state=WorkflowState.RUNNING
+                state=WorkflowState.RUNNING,
             )
-        
+
         return WorkflowStatusResponse(
             workflow_id=workflow_id,
             current_stage=context.current_stage,
@@ -188,17 +197,17 @@ async def get_workflow_status(workflow_id: str):
             total_stages=metrics.total_stages,
             artifacts_created=len(context.artifacts),
             duration_seconds=metrics.duration_seconds,
-            error_message=metrics.error_message
+            error_message=metrics.error_message,
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error getting workflow status: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get workflow status: {str(e)}"
-        )
+            detail=f"Failed to get workflow status: {str(e)}",
+        ) from e
 
 
 @router.get("/{workflow_id}/context")
@@ -208,10 +217,9 @@ async def get_workflow_context(workflow_id: str):
         context = workflowContextManager.get_context(workflow_id)
         if not context:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Workflow {workflow_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Workflow {workflow_id} not found"
             )
-        
+
         # Serialize context for response
         return {
             "workflow_id": context.workflow_id,
@@ -233,22 +241,22 @@ async def get_workflow_context(workflow_id: str):
                     "checksum": art.checksum,
                     "created_by": art.created_by,
                     "created_at": art.created_at.isoformat(),
-                    "metadata": art.metadata
+                    "metadata": art.metadata,
                 }
                 for art in context.artifacts.values()
             ],
             "current_artifact_id": context.current_artifact_id,
-            "execution_metadata": context.execution_metadata
+            "execution_metadata": context.execution_metadata,
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error getting workflow context: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get workflow context: {str(e)}"
-        )
+            detail=f"Failed to get workflow context: {str(e)}",
+        ) from e
 
 
 @router.post("/lineage", response_model=DataLineageResponse)
@@ -256,16 +264,15 @@ async def get_data_lineage(request: DataLineageRequest):
     """Get data lineage for an artifact"""
     try:
         lineage_artifacts = workflowContextManager.get_data_lineage(
-            request.artifact_id,
-            request.workflow_id
+            request.artifact_id, request.workflow_id
         )
-        
+
         if not lineage_artifacts:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Artifact {request.artifact_id} not found in workflow {request.workflow_id}"
+                detail=f"Artifact {request.artifact_id} not found in workflow {request.workflow_id}",
             )
-        
+
         # Convert artifacts to response format
         lineage = [
             {
@@ -274,25 +281,23 @@ async def get_data_lineage(request: DataLineageRequest):
                 "location": art.location,
                 "created_by": art.created_by,
                 "created_at": art.created_at.isoformat(),
-                "parent_artifacts": art.parent_artifacts
+                "parent_artifacts": art.parent_artifacts,
             }
             for art in lineage_artifacts
         ]
-        
+
         return DataLineageResponse(
-            artifact_id=request.artifact_id,
-            lineage=lineage,
-            total_artifacts=len(lineage)
+            artifact_id=request.artifact_id, lineage=lineage, total_artifacts=len(lineage)
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error getting data lineage: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get data lineage: {str(e)}"
-        )
+            detail=f"Failed to get data lineage: {str(e)}",
+        ) from e
 
 
 @router.get("/active")
@@ -300,7 +305,7 @@ async def get_active_workflows():
     """Get all active workflows"""
     try:
         active_workflows = workflowMonitor.get_active_workflows()
-        
+
         return {
             "active_workflows": [
                 {
@@ -310,19 +315,19 @@ async def get_active_workflows():
                     "stages_completed": wf.stages_completed,
                     "total_stages": wf.total_stages,
                     "start_time": wf.start_time.isoformat(),
-                    "duration_seconds": (datetime.utcnow() - wf.start_time).total_seconds()
+                    "duration_seconds": (datetime.utcnow() - wf.start_time).total_seconds(),
                 }
                 for wf in active_workflows
             ],
-            "total_count": len(active_workflows)
+            "total_count": len(active_workflows),
         }
-        
+
     except Exception as e:
         logger.error(f"Error getting active workflows: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get active workflows: {str(e)}"
-        )
+            detail=f"Failed to get active workflows: {str(e)}",
+        ) from e
 
 
 @router.get("/history")
@@ -330,7 +335,7 @@ async def get_workflow_history(hours: int = 24):
     """Get workflow history for the past N hours"""
     try:
         history = workflowMonitor.get_workflow_history(hours)
-        
+
         return {
             "workflows": [
                 {
@@ -341,17 +346,17 @@ async def get_workflow_history(hours: int = 24):
                     "start_time": wf.start_time.isoformat(),
                     "end_time": wf.end_time.isoformat() if wf.end_time else None,
                     "duration_seconds": wf.duration_seconds,
-                    "error_message": wf.error_message
+                    "error_message": wf.error_message,
                 }
                 for wf in history
             ],
             "total_count": len(history),
-            "hours": hours
+            "hours": hours,
         }
-        
+
     except Exception as e:
         logger.error(f"Error getting workflow history: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get workflow history: {str(e)}"
-        )
+            detail=f"Failed to get workflow history: {str(e)}",
+        ) from e

@@ -7,6 +7,7 @@ from app.core.loggingConfig import get_logger, LogCategory
 from typing import Any, Dict, Optional, List
 from enum import Enum
 from datetime import datetime
+import logging
 
 
 logger = get_logger(__name__, LogCategory.AGENT)
@@ -59,7 +60,7 @@ class A2ABaseException(Exception):
         
         # Log the exception
         log_level = self._get_log_level()
-        logger.log(log_level, f"A2A Exception: {self.error_code} - {message}", extra={
+        logger._log(log_level, f"A2A Exception: {self.error_code} - {message}", extra={
             "error_code": self.error_code,
             "category": self.category.value,
             "severity": self.severity.value,
@@ -370,6 +371,32 @@ class A2AResourceConflictError(A2ABusinessLogicError):
             message,
             error_code="RESOURCE_CONFLICT",
             context={"conflict_type": conflict_type} if conflict_type else None,
+            **kwargs
+        )
+
+
+class A2AConcurrencyError(A2AResourceConflictError):
+    """Concurrency-related errors (e.g., circuit breaker open)"""
+    
+    def __init__(self, message: str, operation_id: str = None, **kwargs):
+        super().__init__(
+            message,
+            conflict_type="concurrency",
+            error_code="CONCURRENCY_ERROR",
+            context={"operation_id": operation_id} if operation_id else None,
+            **kwargs
+        )
+
+
+class A2AResourceExhaustionError(A2AResourceConflictError):
+    """Resource exhaustion errors (e.g., connection pool empty)"""
+    
+    def __init__(self, message: str, resource_name: str = None, **kwargs):
+        super().__init__(
+            message,
+            conflict_type="resource_exhaustion",
+            error_code="RESOURCE_EXHAUSTION",
+            context={"resource_name": resource_name} if resource_name else None,
             **kwargs
         )
 

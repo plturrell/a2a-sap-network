@@ -1,4 +1,5 @@
 """
+import time
 Secure Error Handling Framework
 Prevents information disclosure while maintaining useful logging
 """
@@ -18,13 +19,7 @@ from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-
-class ErrorSeverity(str, Enum):
-    """Error severity levels"""
-    LOW = "low"
-    MEDIUM = "medium" 
-    HIGH = "high"
-    CRITICAL = "critical"
+from .exceptions import ErrorSeverity
 
 
 class ErrorCategory(str, Enum):

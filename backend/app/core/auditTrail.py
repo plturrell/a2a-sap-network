@@ -1,4 +1,5 @@
 """
+import time
 Audit Trail and Compliance Framework
 Comprehensive audit logging and compliance reporting system
 """
@@ -29,6 +30,8 @@ class AuditEventType(str, Enum):
     USER_CREATED = "user_created"
     USER_UPDATED = "user_updated"
     USER_DELETED = "user_deleted"
+    PASSWORD_RESET_REQUESTED = "password_reset_requested"
+    PASSWORD_RESET_COMPLETED = "password_reset_completed"
     
     # Data access
     DATA_READ = "data_read"

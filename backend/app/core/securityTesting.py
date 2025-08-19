@@ -1,4 +1,5 @@
 """
+import time
 Automated Security Testing and Vulnerability Scanning Framework
 Comprehensive security testing suite for continuous security validation
 """

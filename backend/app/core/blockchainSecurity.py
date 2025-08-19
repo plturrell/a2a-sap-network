@@ -1,7 +1,9 @@
 """
+import time
 Blockchain Security Audit and Protection System
 Comprehensive security framework for A2A blockchain integration
 """
+import subprocess
 
 import os
 import re

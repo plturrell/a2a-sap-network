@@ -16,6 +16,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from pydantic import BaseModel
 from contextlib import contextmanager
 import tempfile
+import secrets
 
 logger = logging.getLogger(__name__)
 
@@ -274,7 +275,7 @@ class SecretsManager:
             if key.startswith('sk-') and len(key) < 20:  # OpenAI style
                 return False
             
-            if key.startswith('xai-') and len(key) < 32:  # X.AI style
+            if key.startswith('your-xai-api-key-here') and len(key) < 32:  # X.AI style
                 return False
             
             return True

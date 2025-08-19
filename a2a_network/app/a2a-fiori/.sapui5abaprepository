@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<repository>
-    <bsp>
-        <name>ZA2A_NETWORK_FIORI</name>
-        <description>A2A Network Fiori Application</description>
-        <abap-package>ZA2A_NETWORK</abap-package>
-        <abap-language-version>standard</abap-language-version>
-    </bsp>
-</repository>

@@ -239,6 +239,22 @@ class RequestSigningService:
             if not api_key["active"]:
                 return False, "API key is not active"
             
+            # Check if API key has expired
+            if "expires_at" in api_key:
+                expires_at = datetime.fromisoformat(api_key["expires_at"].replace('Z', '+00:00'))
+                if datetime.utcnow() > expires_at:
+                    await report_security_event(
+                        EventType.UNAUTHORIZED_API_ACCESS,
+                        ThreatLevel.MEDIUM,
+                        f"Expired API key used: {api_key_id}",
+                        details={
+                            "path": path,
+                            "method": method,
+                            "expired_at": api_key["expires_at"]
+                        }
+                    )
+                    return False, "API key has expired"
+            
             # Validate timestamp
             try:
                 timestamp = int(timestamp_str)
@@ -366,11 +382,22 @@ class RequestSigningService:
     def validate_api_key_permissions(self, 
                                     api_key_id: str,
                                     required_permission: str) -> bool:
-        """Check if API key has required permission"""
+        """Check if API key has required permission and is not expired"""
         if api_key_id not in self.api_keys:
             return False
             
         api_key = self.api_keys[api_key_id]
+        
+        # Check if key is active
+        if not api_key.get("active", True):
+            return False
+        
+        # Check if key has expired
+        if "expires_at" in api_key:
+            expires_at = datetime.fromisoformat(api_key["expires_at"].replace('Z', '+00:00'))
+            if datetime.utcnow() > expires_at:
+                return False
+        
         return required_permission in api_key.get("permissions", [])
     
     def rotate_api_key(self, api_key_id: str) -> str:
@@ -394,8 +421,9 @@ class RequestSigningService:
     
     def create_api_key(self, 
                       key_id: str,
-                      permissions: List[str]) -> Dict[str, Any]:
-        """Create a new API key"""
+                      permissions: List[str],
+                      expires_at: Optional[str] = None) -> Dict[str, Any]:
+        """Create a new API key with optional expiration"""
         if key_id in self.api_keys:
             raise ValidationError(f"API key ID already exists: {key_id}")
         
@@ -415,9 +443,13 @@ class RequestSigningService:
             "created_at": datetime.utcnow().isoformat()
         }
         
+        # Add expiration if specified
+        if expires_at:
+            api_key["expires_at"] = expires_at
+        
         self.api_keys[key_id] = api_key
         
-        logger.info(f"API key created: {key_id}")
+        logger.info(f"API key created: {key_id}" + (f" (expires: {expires_at})" if expires_at else ""))
         return {"key_id": key_id, "secret": secret}
     
     def revoke_api_key(self, api_key_id: str):

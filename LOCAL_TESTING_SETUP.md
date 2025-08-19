@@ -36,13 +36,13 @@ forge install
 
 #### A2A Agents (SAP CAP Portal)
 ```bash
-cd a2a_agents/backend/app/a2a/developer_portal/cap
+cd a2aAgents/backend/app/a2a/developer_portal/cap
 npm install
 ```
 
 #### Python Dependencies
 ```bash
-cd a2a_agents/backend
+cd a2aAgents/backend
 pip install -r requirements.txt
 ```
 
@@ -55,11 +55,11 @@ cd a2a_network
 forge test --gas-report
 
 # CAP tests  
-cd a2a_agents/backend/app/a2a/developer_portal/cap
+cd a2aAgents/backend/app/a2a/developer_portal/cap
 npm test
 
 # Python tests
-cd a2a_agents/backend
+cd a2aAgents/backend
 python -m pytest -v
 
 # Security scans
@@ -70,7 +70,7 @@ slither . --exclude-dependencies
 #### Start Local Development Servers
 ```bash
 # Start SAP CAP Portal
-cd a2a_agents/backend/app/a2a/developer_portal/cap
+cd a2aAgents/backend/app/a2a/developer_portal/cap
 cds watch
 
 # Start Blockchain Local Network
@@ -84,11 +84,11 @@ forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --broadcast
 ### 4. Local Integration Testing
 ```bash
 # Start all services
-cd a2a_agents/backend
+cd a2aAgents/backend
 python main.py  # Start main backend
 
 # In another terminal - start portal
-cd a2a_agents/backend/app/a2a/developer_portal
+cd a2aAgents/backend/app/a2a/developer_portal
 python portal_server.py
 
 # Test integration

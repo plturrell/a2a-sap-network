@@ -302,19 +302,38 @@ sap.ui.define([
         },
 
         _startAnimationTracking: function() {
+            // Clean up existing listener first
+            this._stopAnimationTracking();
+            
             const oDomRef = this.getDomRef();
             if (!oDomRef) return;
 
             // Track animation cycles for spinner
             const oSpinnerElement = oDomRef.querySelector('.sapUiSpinnerCircle');
             if (oSpinnerElement) {
-                oSpinnerElement.addEventListener('animationiteration', () => {
+                this._animationHandler = () => {
                     this._animationCycle++;
                     this.fireAnimationCycle({
                         cycle: this._animationCycle
                     });
-                });
+                };
+                
+                oSpinnerElement.addEventListener('animationiteration', this._animationHandler);
+                this._currentSpinnerElement = oSpinnerElement;
             }
+        },
+        
+        _stopAnimationTracking: function() {
+            if (this._currentSpinnerElement && this._animationHandler) {
+                this._currentSpinnerElement.removeEventListener('animationiteration', this._animationHandler);
+                this._currentSpinnerElement = null;
+                this._animationHandler = null;
+            }
+        },
+        
+        exit: function() {
+            this._stopAnimationTracking();
+            Control.prototype.exit.apply(this, arguments);
         },
 
         renderer: {

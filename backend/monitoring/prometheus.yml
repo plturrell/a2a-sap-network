@@ -3,142 +3,76 @@ global:
   evaluation_interval: 15s
 
 rule_files:
-  - "rules/*.yml"
-
-alerting:
-  alertmanagers:
-    - static_configs:
-        - targets:
-          - alertmanager:9093
+  # - "first_rules.yml"
+  # - "second_rules.yml"
 
 scrape_configs:
-  # Prometheus itself
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
 
-  # A2A Main API Server
+  # A2A Agents monitoring
   - job_name: 'a2a-main-api'
     static_configs:
-      - targets: ['host.docker.internal:8000']
-    metrics_path: /metrics
-    scrape_interval: 30s
-    scrape_timeout: 10s
-    honor_labels: true
+      - targets: ['a2a-agents:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
 
-  # A2A Gateway
-  - job_name: 'a2a-gateway'
+  # Individual A2A Agents
+  - job_name: 'a2a-agent0'
     static_configs:
-      - targets: ['host.docker.internal:8080']
-    metrics_path: /gateway/metrics
-    scrape_interval: 30s
+      - targets: ['a2a-agents:8001']
+    metrics_path: '/health'
+    scrape_interval: 15s
 
-  # Agent 0 - Data Product Registration (SDK)
-  - job_name: 'a2a-agent-0'
+  - job_name: 'a2a-agent1'
     static_configs:
-      - targets: ['host.docker.internal:8001']
-    metrics_path: /metrics
-    scrape_interval: 30s
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: agent_id
-        replacement: 'data_product_agent_0'
+      - targets: ['a2a-agents:8002']
+    metrics_path: '/health'
+    scrape_interval: 15s
 
-  # Agent 1 - Data Standardization (SDK)  
-  - job_name: 'a2a-agent-1'
+  - job_name: 'a2a-agent2'
     static_configs:
-      - targets: ['host.docker.internal:8002']
-    metrics_path: /metrics
-    scrape_interval: 30s
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: agent_id
-        replacement: 'data_standardization_agent_1'
+      - targets: ['a2a-agents:8003']
+    metrics_path: '/health'
+    scrape_interval: 15s
 
-  # Agent 2 - AI Preparation
-  - job_name: 'a2a-agent-2'
+  - job_name: 'a2a-agent3'
     static_configs:
-      - targets: ['host.docker.internal:8003']
-    metrics_path: /health
-    scrape_interval: 30s
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: agent_id
-        replacement: 'ai_preparation_agent_2'
+      - targets: ['a2a-agents:8004']
+    metrics_path: '/health'
+    scrape_interval: 15s
 
-  # Agent 3 - Vector Processing
-  - job_name: 'a2a-agent-3'
+  - job_name: 'a2a-agent4'
     static_configs:
-      - targets: ['host.docker.internal:8004']
-    metrics_path: /health
-    scrape_interval: 30s
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: agent_id
-        replacement: 'vector_processing_agent_3'
+      - targets: ['a2a-agents:8005']
+    metrics_path: '/health'
+    scrape_interval: 15s
 
-  # Data Manager Agent
-  - job_name: 'a2a-data-manager'
+  - job_name: 'a2a-agent5'
     static_configs:
-      - targets: ['host.docker.internal:8005']
-    metrics_path: /health
-    scrape_interval: 30s
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: agent_id
-        replacement: 'data_manager_agent'
+      - targets: ['a2a-agents:8006']
+    metrics_path: '/health'
+    scrape_interval: 15s
 
-  # Catalog Manager Agent
-  - job_name: 'a2a-catalog-manager'
+  - job_name: 'a2a-agent6'
     static_configs:
-      - targets: ['host.docker.internal:8006']
-    metrics_path: /health
-    scrape_interval: 30s
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: agent_id
-        replacement: 'catalog_manager_agent'
+      - targets: ['a2a-agents:8007']
+    metrics_path: '/health'
+    scrape_interval: 15s
 
-  # Agent Manager
-  - job_name: 'a2a-agent-manager'
-    static_configs:
-      - targets: ['host.docker.internal:8010']
-    metrics_path: /health
-    scrape_interval: 30s
-
-  # A2A Registry
-  - job_name: 'a2a-registry'
-    static_configs:
-      - targets: ['host.docker.internal:8100']
-    metrics_path: /api/v1/a2a/metrics
-    scrape_interval: 30s
-
-  # OpenTelemetry Collector (Prometheus metrics)
-  - job_name: 'otel-collector'
-    static_configs:
-      - targets: ['otel-collector:8889']
-    scrape_interval: 30s
-
-  # Redis
+  # System metrics
   - job_name: 'redis'
     static_configs:
-      - targets: ['host.docker.internal:6379']
-    scrape_interval: 30s
+      - targets: ['redis:6379']
 
-  # PostgreSQL (if used)
-  - job_name: 'postgresql'
+  - job_name: 'elasticsearch'
     static_configs:
-      - targets: ['host.docker.internal:5432']
-    scrape_interval: 60s
+      - targets: ['elasticsearch:9200']
+    metrics_path: '/_prometheus/metrics'
 
-  # Node Exporter (system metrics)
-  - job_name: 'node-exporter'
+  # Node exporter (if available)
+  - job_name: 'node'
     static_configs:
-      - targets: ['node-exporter:9100']
-    scrape_interval: 30s
-
-  # cAdvisor (container metrics)
-  - job_name: 'cadvisor'
-    static_configs:
-      - targets: ['cadvisor:8080']
-    scrape_interval: 30s
+      - targets: ['localhost:9100']

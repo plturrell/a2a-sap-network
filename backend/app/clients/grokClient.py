@@ -50,9 +50,9 @@ class GrokClient:
             )
         
         if not config.api_key or config.api_key in ['', 'your-api-key-here']:
-            # Allow placeholder keys in development
+            # Allow placeholder keys in development - they will fail gracefully
             if config.api_key and 'placeholder' in config.api_key.lower():
-                logger.warning("Using placeholder Grok API key - some features may not work")
+                logger.warning("Using placeholder Grok API key - API calls will fail until real key is provided")
             else:
                 raise ValueError("Grok API key is required")
         

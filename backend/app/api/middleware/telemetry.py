@@ -1,6 +1,7 @@
 """
 OpenTelemetry middleware for trace propagation
 """
+import http
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware

@@ -2,25 +2,35 @@ fastapi==0.108.0
 uvicorn[standard]==0.25.0
 httpx==0.26.0
 python-dotenv==1.0.0
-pydantic==2.5.3
+pydantic==2.7.4
+protobuf==4.21.12
 pydantic-settings==2.1.0
 aiosqlite==0.19.0
 python-multipart==0.0.6
+pyotp==2.9.0
+qrcode==7.4.2
+Pillow==11.3.0
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 email-validator==2.1.0.post1
 pytest==7.4.4
 pytest-asyncio==0.23.2
 pandas==2.2.0
-cryptography==41.0.8
+cryptography==42.0.8
 bcrypt==4.1.2
 pyjwt==2.8.0
-hdbcli==2.19.21
-langchain-hana>=0.2.1
+hdbcli==2.23.24
+langchain-hana==0.2.1
 redis[hiredis]==5.0.1
+aioredis==2.0.1
+aioetcd3==1.2.0
+aiofiles==23.1.0
 tenacity==8.2.3
 web3==6.15.1
 eth-account==0.10.0
+numpy==1.26.4
+faiss-cpu==1.8.0
+sympy==1.12
 
 # OpenTelemetry instrumentation
 opentelemetry-api==1.21.0
@@ -43,9 +53,11 @@ factory-boy==3.3.0
 freezegun==1.4.0
 
 # SAP Cloud SDK dependencies
-sap-cloud-sdk-core==1.40.0
-sap-xsuaa==3.3.0
-sap-cf-logging==4.2.0
+sap-ai-sdk-core==3.0.10
+sap-xssec==4.1.0
+scipy==1.11.4
+scikit-learn==1.4.2
+sap-cf-logging==4.2.1
 
 # Code quality and documentation
 black==23.12.1
@@ -53,7 +65,7 @@ isort==5.13.2
 flake8==6.1.0
 mypy==1.8.0
 bandit==1.7.6
-safety==2.3.5
+safety==3.1.0
 pydocstyle==6.3.0
 sphinx==7.2.6
 sphinx-rtd-theme==2.0.0

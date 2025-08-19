@@ -166,28 +166,10 @@ class CacheManager:
             return None
             
         try:
-            # In a real implementation, this would query a database table
-            # For now, we'll use a simple file-based approach as a placeholder
-            # In production, replace with actual database queries (PostgreSQL, MongoDB, etc.)
-            import aiofiles
-            import json
-            cache_file = f"/tmp/l3_cache_{cache_key.replace(':', '_')}.json"
-            
-            try:
-                async with aiofiles.open(cache_file, mode='r') as f:
-                    content = await f.read()
-                    data = json.loads(content)
-                    
-                    # Check expiry
-                    if datetime.fromisoformat(data['expires_at']) > datetime.now():
-                        return pickle.loads(bytes.fromhex(data['value']))
-                    else:
-                        # Remove expired cache file
-                        import os
-                        os.remove(cache_file)
-                        return None
-            except FileNotFoundError:
-                return None
+            # Use the new database-backed L3 cache
+            from .l3DatabaseCache import get_l3_database_cache
+            l3_cache = await get_l3_database_cache()
+            return await l3_cache.get(cache_key)
                 
         except Exception as e:
             logger.error(f"L3 cache get error: {e}")
@@ -199,22 +181,10 @@ class CacheManager:
             return
             
         try:
-            # In a real implementation, this would insert/update a database table
-            # For now, we'll use a simple file-based approach as a placeholder
-            import aiofiles
-            import json
-            cache_file = f"/tmp/l3_cache_{cache_key.replace(':', '_')}.json"
-            
-            data = {
-                'key': cache_key,
-                'value': pickle.dumps(value).hex(),
-                'created_at': datetime.now().isoformat(),
-                'expires_at': (datetime.now() + timedelta(seconds=ttl)).isoformat(),
-                'ttl': ttl
-            }
-            
-            async with aiofiles.open(cache_file, mode='w') as f:
-                await f.write(json.dumps(data))
+            # Use the new database-backed L3 cache
+            from .l3DatabaseCache import get_l3_database_cache
+            l3_cache = await get_l3_database_cache()
+            await l3_cache.set(cache_key, value, ttl)
                 
         except Exception as e:
             logger.error(f"L3 cache set error: {e}")
@@ -349,6 +319,16 @@ class CacheManager:
                 stats["l2_memory_peak"] = info.get("used_memory_peak", 0)
             except Exception as e:
                 logger.error(f"Failed to get Redis stats: {e}")
+        
+        # Get L3 database cache stats
+        if self.config.enable_l3:
+            try:
+                from .l3DatabaseCache import get_l3_database_cache
+                l3_cache = await get_l3_database_cache()
+                l3_stats = await l3_cache.get_stats()
+                stats["l3_stats"] = l3_stats
+            except Exception as e:
+                logger.error(f"Failed to get L3 cache stats: {e}")
         
         return stats
 

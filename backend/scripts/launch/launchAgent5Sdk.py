@@ -28,7 +28,7 @@ from app.a2a.agents.agent5QaValidation.active.qaValidationAgentSdk import QAVali
 from app.a2a.agents.agent5QaValidation.active.agent5Router import router, initialize_agent
 
 # Configuration
-from app.a2a.config.productionConfig import get_agent_config
+from app.a2a.config.deploymentConfig import get_agent_config
 from app.a2a.core.telemetry import setup_telemetry
 from app.a2a.core.authManager import AuthManager
 from prometheus_client import start_http_server, Counter, Histogram, Gauge

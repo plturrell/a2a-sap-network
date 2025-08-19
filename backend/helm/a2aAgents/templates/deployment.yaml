@@ -1,0 +1,142 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "a2a-agents.fullname" . }}
+  labels:
+    {{- include "a2a-agents.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "a2a-agents.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.monitoring.metricsPort }}"
+        prometheus.io/path: "/metrics"
+      labels:
+        {{- include "a2a-agents.selectorLabels" . | nindent 8 }}
+        version: {{ .Values.image.tag | default .Chart.AppVersion }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "a2a-agents.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+            - name: metrics
+              containerPort: {{ .Values.monitoring.metricsPort }}
+              protocol: TCP
+            {{- range $i, $port := list 8001 8002 8003 8004 8005 }}
+            - name: agent{{ $i }}
+              containerPort: {{ $port }}
+              protocol: TCP
+            {{- end }}
+          env:
+            - name: A2A_ENVIRONMENT
+              value: {{ .Values.environment }}
+            - name: A2A_LOG_LEVEL
+              value: {{ .Values.config.logLevel }}
+            - name: A2A_ENABLE_MONITORING
+              value: "{{ .Values.monitoring.enabled }}"
+            - name: A2A_ENABLE_ERROR_HANDLING
+              value: "{{ .Values.errorHandling.enabled }}"
+            - name: A2A_ENABLE_SECURITY
+              value: "{{ .Values.security.enabled }}"
+            - name: A2A_SECURITY_STRICT_MODE
+              value: "{{ .Values.security.strictMode }}"
+            - name: PROMETHEUS_MULTIPROC_DIR
+              value: "/tmp/prometheus_multiproc"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          envFrom:
+            - configMapRef:
+                name: {{ include "a2a-agents.fullname" . }}-config
+            {{- if .Values.secrets.external.enabled }}
+            - secretRef:
+                name: {{ include "a2a-agents.fullname" . }}-secrets
+            {{- end }}
+          {{- if .Values.healthcheck.enabled }}
+          livenessProbe:
+            {{- toYaml .Values.healthcheck.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.healthcheck.readinessProbe | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data-volume
+              mountPath: {{ .Values.persistence.dataPath }}
+            - name: logs-volume
+              mountPath: {{ .Values.persistence.logPath }}
+            - name: tmp-volume
+              mountPath: /tmp
+            - name: config-volume
+              mountPath: /app/config
+              readOnly: true
+            {{- if .Values.security.enabled }}
+            - name: security-config
+              mountPath: /app/security
+              readOnly: true
+            {{- end }}
+      volumes:
+        {{- if .Values.persistence.enabled }}
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: {{ include "a2a-agents.fullname" . }}-data
+        - name: logs-volume
+          persistentVolumeClaim:
+            claimName: {{ include "a2a-agents.fullname" . }}-logs
+        {{- else }}
+        - name: data-volume
+          emptyDir: {}
+        - name: logs-volume
+          emptyDir: {}
+        {{- end }}
+        - name: tmp-volume
+          emptyDir: {}
+        - name: config-volume
+          configMap:
+            name: {{ include "a2a-agents.fullname" . }}-config
+        {{- if .Values.security.enabled }}
+        - name: security-config
+          configMap:
+            name: {{ include "a2a-agents.fullname" . }}-security
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

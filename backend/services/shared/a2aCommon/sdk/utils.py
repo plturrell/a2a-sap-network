@@ -11,7 +11,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 import re
 
-from .a2aTypes import A2AMessage
+from .types import A2AMessage
 
 
 def create_agent_id(name: str, organization: str = "a2a") -> str:

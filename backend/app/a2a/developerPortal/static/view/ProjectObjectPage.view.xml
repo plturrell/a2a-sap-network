@@ -13,7 +13,11 @@
         showTitleInHeaderContent="true"
         showEditHeaderButton="true"
         editHeaderButtonPress="onEdit"
-        upperCaseAnchorBar="false">
+        upperCaseAnchorBar="false"
+        showAnchorBar="{view>/anchorBarVisible}"
+        enableLazyLoading="true"
+        useTwoColumnsForLargeScreen="true"
+        navigate="onAnchorBarPress">
         
         <uxap:headerTitle>
             <uxap:ObjectPageDynamicHeaderTitle>
@@ -35,8 +39,111 @@
                 </uxap:snappedContent>
                 
                 <uxap:actions>
-                    <Button text="Deploy" type="Emphasized" press="onDeploy" enabled="{= ${project>/status} === 'ACTIVE' }"/>
-                    <Button text="Archive" press="onArchive" enabled="{= ${project>/status} !== 'ARCHIVED' }"/>
+                    <Button text="{= ${view>/editMode} ? 'Save Changes' : 'Edit' }" 
+                            icon="{= ${view>/editMode} ? 'sap-icon://save' : 'sap-icon://edit' }"
+                            type="{= ${view>/editMode} ? 'Emphasized' : 'Default' }"
+                            press="onEdit" 
+                            enabled="{= !${view>/busy} }"/>
+                    <Button text="Cancel" 
+                            icon="sap-icon://decline"
+                            type="Reject"
+                            press="onCancelEdit" 
+                            visible="{view>/editMode}"
+                            class="a2a-cancel-button"/>
+                    <Button text="Deploy" type="Emphasized" press="onDeploy" enabled="{= ${project>/status} === 'ACTIVE' && !${view>/editMode} }"/>
+                    <Button text="Archive" press="onArchive" enabled="{= ${project>/status} !== 'ARCHIVED' && !${view>/editMode} }"/>
+                    <Button icon="sap-icon://menu" 
+                           tooltip="Toggle Anchor Bar" 
+                           press="onToggleAnchorBar" 
+                           type="Transparent"/>
+                    <Button icon="sap-icon://navigation-up-arrow" 
+                           tooltip="Scroll to Top (Ctrl+Home)" 
+                           press="onScrollToTop" 
+                           type="Transparent"/>
+                    <Button icon="sap-icon://navigation-down-arrow" 
+                           tooltip="Scroll to Bottom (Ctrl+End)" 
+                           press="onScrollToBottom" 
+                           type="Transparent"/>
+                    <Button icon="sap-icon://highlight" 
+                           tooltip="Toggle Section Highlighting" 
+                           press="onToggleSectionHighlighting" 
+                           type="{= ${view>/sectionHighlighting/enabled} ? 'Emphasized' : 'Transparent' }"/>
+                    <Button icon="sap-icon://collapse-all" 
+                           tooltip="Collapse All Sections (Ctrl+Shift+C)" 
+                           press="onCollapseAllSections" 
+                           type="Transparent"/>
+                    <Button icon="sap-icon://expand-all" 
+                           tooltip="Expand All Sections (Ctrl+Shift+E)" 
+                           press="onExpandAllSections" 
+                           type="Transparent"/>
+                    <Button icon="sap-icon://refresh" 
+                           tooltip="Toggle Lazy Loading" 
+                           press="onToggleLazyLoading" 
+                           type="{= ${view>/lazyLoading/enabled} ? 'Emphasized' : 'Transparent' }"/>
+                    <Select id="roleSelector"
+                           selectedKey="{view>/fieldEditability/userRole}"
+                           change="onChangeUserRole"
+                           tooltip="Test Role Change"
+                           visible="{= ${view>/editMode} }">
+                        <core:Item key="ADMIN" text="Admin"/>
+                        <core:Item key="PROJECT_MANAGER" text="PM"/>
+                        <core:Item key="DEVELOPER" text="Dev"/>
+                        <core:Item key="VIEWER" text="View"/>
+                    </Select>
+                    <Button icon="sap-icon://permission" 
+                           tooltip="Test Field Editability" 
+                           press="onTestFieldEditability" 
+                           type="Transparent"/>
+                    <Button icon="sap-icon://history" 
+                           tooltip="View Change History" 
+                           press="onViewChangeHistory" 
+                           type="Transparent"/>
+                    <Button icon="sap-icon://override" 
+                           tooltip="Force Save (Test)" 
+                           press="onForceSave" 
+                           type="Reject"
+                           visible="{view>/editMode}"/>
+                    <Button icon="sap-icon://save" 
+                           tooltip="Auto-Save Draft" 
+                           press="onAutoSaveDraft" 
+                           type="Default"
+                           visible="{view>/editMode}"/>
+                    <Button icon="sap-icon://open-folder" 
+                           tooltip="Restore Draft" 
+                           press="onRestoreFromDraft" 
+                           type="Default"/>
+                    <Button icon="sap-icon://validate" 
+                           tooltip="Validate All Fields" 
+                           press="onValidateAllFields" 
+                           type="Default"
+                           visible="{view>/editMode}"/>
+                    <Button icon="sap-icon://detail-view" 
+                           tooltip="Toggle Validation Panel" 
+                           press="onToggleValidationPanel" 
+                           type="{= ${view>/showValidationPanel} ? 'Emphasized' : 'Default' }"
+                           visible="{view>/editMode}"/>
+                    <Button icon="sap-icon://lightbulb" 
+                           tooltip="AI Suggestions ({= ${view>/suggestions/currentSuggestions}.length })" 
+                           press="onToggleSuggestions" 
+                           type="{= ${view>/suggestions/enabled} ? 'Emphasized' : 'Default' }"
+                           visible="{view>/editMode}"/>
+                    <Button icon="sap-icon://learning-assistant" 
+                           tooltip="Configure Suggestions" 
+                           press="onConfigureSuggestions" 
+                           type="Transparent"
+                           visible="{view>/editMode}"/>
+                    <Button icon="sap-icon://business-objects-experience" 
+                           tooltip="AI Insights Panel ({= ${view>/insights/currentInsights}.length } insights)" 
+                           press="onShowInsightsPanel" 
+                           type="{= ${view>/insights/enabled} ? 'Emphasized' : 'Default' }"/>
+                    <Button icon="sap-icon://settings" 
+                           tooltip="Configure Insights" 
+                           press="onConfigureInsights" 
+                           type="Transparent"/>
+                    <Button icon="sap-icon://learning-assistant" 
+                           tooltip="Learning Analytics ({= ${view>/suggestions/feedback/accepted}.length + ${view>/suggestions/feedback/rejected}.length } interactions)" 
+                           press="onViewLearningAnalytics" 
+                           type="{= (${view>/suggestions/feedback/accepted}.length + ${view>/suggestions/feedback/rejected}.length) > 0 ? 'Emphasized' : 'Default' }"/>
                     <Button icon="sap-icon://action" press="onActions" ariaHasPopup="Menu"/>
                 </uxap:actions>
             </uxap:ObjectPageDynamicHeaderTitle>
@@ -84,11 +191,38 @@
                     unit="{project>/currency}"
                     state="{= ${project>/budgetStatus} === 'OVER' ? 'Error' : 'Success' }"/>
             </VerticalLayout>
+            
+            <!-- Save Progress Indicator -->
+            <VerticalLayout visible="{= ${view>/saveProgress} !== null && ${view>/saveProgress} !== undefined }">
+                <Label text="Save Progress"/>
+                <ProgressIndicator
+                    percentValue="{view>/saveProgress/progress}"
+                    displayValue="{view>/saveProgress/message}"
+                    showValue="true"
+                    state="Information"
+                    class="sapUiSmallMarginTop"/>
+            </VerticalLayout>
+            
+            <!-- Live Validation Indicator -->
+            <VerticalLayout visible="{= ${view>/editMode} && ${view>/liveValidation} !== undefined }">
+                <Label text="Form Validation"/>
+                <HBox alignItems="Center" class="sapUiSmallMarginTop">
+                    <core:Icon src="{= ${view>/liveValidation/isValid} ? 'sap-icon://accept' : 'sap-icon://error' }"
+                              color="{= ${view>/liveValidation/isValid} ? '#28a745' : '#dc3545' }"
+                              class="sapUiTinyMarginEnd"/>
+                    <Text text="{= ${view>/liveValidation/validFieldsPercent} + '% valid' }" 
+                          class="{= ${view>/liveValidation/isValid} ? 'sapMTextColorPositive' : 'sapMTextColorNegative' }"/>
+                </HBox>
+                <HBox alignItems="Center" class="sapUiTinyMarginTop" visible="{= ${view>/liveValidation/errorCount} > 0 || ${view>/liveValidation/warningCount} > 0 }">
+                    <Text text="{= ${view>/liveValidation/errorCount} + ' errors, ' + ${view>/liveValidation/warningCount} + ' warnings' }" 
+                          class="sapUiTinyText sapMTextColorError"/>
+                </HBox>
+            </VerticalLayout>
         </uxap:headerContent>
         
         <uxap:sections>
             <!-- General Information Section -->
-            <uxap:ObjectPageSection titleUppercase="false" title="General Information">
+            <uxap:ObjectPageSection id="generalSection" titleUppercase="false" title="General Information">
                 <uxap:subSections>
                     <uxap:ObjectPageSubSection>
                         <uxap:blocks>
@@ -110,26 +244,126 @@
                                 columnsM="1"
                                 singleContainerFullSize="false">
                                 <form:content>
+                                    <Label text="Project Name"/>
+                                    <HBox alignItems="Center">
+                                        <Input id="projectNameInput" 
+                                               value="{project>/name}" 
+                                               editable="{= ${view>/editMode} && ${view>/fieldEditability/editableFields/name} }"
+                                               visible="{view>/editMode}"
+                                               class="{= ${view>/editMode} && ${view>/fieldEditability/editableFields/name} ? 'a2a-form-control-editable' : 'a2a-field-readonly' }"
+                                               width="90%"
+                                               liveChange="onRealTimeValidation"
+                                               placeholder="Enter project name (min 3 characters)"/>
+                                        <core:Icon src="{= ${view>/fieldEditability/editableFields/name} ? 'sap-icon://accept' : 'sap-icon://decline' }"
+                                                  color="{= ${view>/fieldEditability/editableFields/name} ? '#28a745' : '#dc3545' }"
+                                                  visible="{view>/editMode}"
+                                                  class="a2a-field-permission-indicator"/>
+                                    </HBox>
+                                    <Text text="{project>/name}" visible="{= !${view>/editMode} }"/>
+                                    
                                     <Label text="Description"/>
-                                    <Text text="{project>/description}" renderWhitespace="true"/>
+                                    <HBox alignItems="Center">
+                                        <TextArea id="projectDescInput" 
+                                                 value="{project>/description}" 
+                                                 editable="{= ${view>/editMode} && ${view>/fieldEditability/editableFields/description} }"
+                                                 visible="{view>/editMode}"
+                                                 rows="3"
+                                                 class="{= ${view>/editMode} && ${view>/fieldEditability/editableFields/description} ? 'a2a-form-control-editable' : 'a2a-field-readonly' }"
+                                                 width="90%"
+                                                 liveChange="onRealTimeValidation"
+                                                 placeholder="Provide detailed project description (min 10 characters)"/>
+                                        <core:Icon src="{= ${view>/fieldEditability/editableFields/description} ? 'sap-icon://accept' : 'sap-icon://decline' }"
+                                                  color="{= ${view>/fieldEditability/editableFields/description} ? '#28a745' : '#dc3545' }"
+                                                  visible="{view>/editMode}"
+                                                  class="a2a-field-permission-indicator"/>
+                                    </HBox>
+                                    <Text text="{project>/description}" renderWhitespace="true" visible="{= !${view>/editMode} }"/>
+                                    
                                     <Label text="Department"/>
                                     <Text text="{project>/department/name}"/>
                                     <Label text="Project Manager"/>
                                     <Link text="{project>/projectManager/displayName}" press="onManagerPress"/>
+                                    
                                     <Label text="Start Date"/>
+                                    <HBox alignItems="Center">
+                                        <DatePicker id="startDatePicker" 
+                                                  value="{project>/startDate}" 
+                                                  editable="{= ${view>/editMode} && ${view>/fieldEditability/editableFields/startDate} }"
+                                                  visible="{view>/editMode}"
+                                                  class="{= ${view>/editMode} && ${view>/fieldEditability/editableFields/startDate} ? 'a2a-form-control-editable' : 'a2a-field-readonly' }"
+                                                  width="90%"
+                                                  change="onRealTimeValidation"
+                                                  placeholder="Select project start date"/>
+                                        <core:Icon src="{= ${view>/fieldEditability/editableFields/startDate} ? 'sap-icon://accept' : 'sap-icon://decline' }"
+                                                  color="{= ${view>/fieldEditability/editableFields/startDate} ? '#28a745' : '#dc3545' }"
+                                                  visible="{view>/editMode}"
+                                                  class="a2a-field-permission-indicator"/>
+                                    </HBox>
                                     <Text text="{
                                         path: 'project>/startDate',
                                         type: 'sap.ui.model.type.Date',
                                         formatOptions: {style: 'medium'}
-                                    }"/>
+                                    }" visible="{= !${view>/editMode} }"/>
+                                    
                                     <Label text="End Date"/>
+                                    <HBox alignItems="Center">
+                                        <DatePicker id="endDatePicker" 
+                                                  value="{project>/endDate}" 
+                                                  editable="{= ${view>/editMode} && ${view>/fieldEditability/editableFields/endDate} }"
+                                                  visible="{view>/editMode}"
+                                                  class="{= ${view>/editMode} && ${view>/fieldEditability/editableFields/endDate} ? 'a2a-form-control-editable' : 'a2a-field-readonly' }"
+                                                  width="90%"
+                                                  change="onRealTimeValidation"
+                                                  placeholder="Select project end date"/>
+                                        <core:Icon src="{= ${view>/fieldEditability/editableFields/endDate} ? 'sap-icon://accept' : 'sap-icon://decline' }"
+                                                  color="{= ${view>/fieldEditability/editableFields/endDate} ? '#28a745' : '#dc3545' }"
+                                                  visible="{view>/editMode}"
+                                                  class="a2a-field-permission-indicator"/>
+                                    </HBox>
                                     <Text text="{
                                         path: 'project>/endDate',
                                         type: 'sap.ui.model.type.Date',
                                         formatOptions: {style: 'medium'}
-                                    }"/>
+                                    }" visible="{= !${view>/editMode} }"/>
+                                    
+                                    <Label text="Budget"/>
+                                    <HBox alignItems="Center">
+                                        <Input id="budgetInput" 
+                                               value="{project>/budget}" 
+                                               editable="{= ${view>/editMode} && ${view>/fieldEditability/editableFields/budget} }"
+                                               visible="{view>/editMode}"
+                                               type="Number"
+                                               class="{= ${view>/editMode} && ${view>/fieldEditability/editableFields/budget} ? 'a2a-form-control-editable' : 'a2a-field-readonly' }"
+                                               width="90%"
+                                               liveChange="onRealTimeValidation"
+                                               placeholder="Enter budget amount (positive number)"/>
+                                        <core:Icon src="{= ${view>/fieldEditability/editableFields/budget} ? 'sap-icon://accept' : 'sap-icon://decline' }"
+                                                  color="{= ${view>/fieldEditability/editableFields/budget} ? '#28a745' : '#dc3545' }"
+                                                  visible="{view>/editMode}"
+                                                  class="a2a-field-permission-indicator"/>
+                                    </HBox>
+                                    <ObjectNumber number="{
+                                        parts: ['project>/budget', 'project>/currency'],
+                                        type: 'sap.ui.model.type.Currency',
+                                        formatOptions: {showMeasure: false}
+                                    }" unit="{project>/currency}" visible="{= !${view>/editMode} }"/>
+                                    
                                     <Label text="Cost Center"/>
-                                    <Text text="{project>/costCenter}"/>
+                                    <HBox alignItems="Center">
+                                        <Input id="costCenterInput" 
+                                               value="{project>/costCenter}" 
+                                               editable="{= ${view>/editMode} && ${view>/fieldEditability/editableFields/costCenter} }"
+                                               visible="{view>/editMode}"
+                                               class="{= ${view>/editMode} && ${view>/fieldEditability/editableFields/costCenter} ? 'a2a-form-control-editable' : 'a2a-field-readonly' }"
+                                               width="90%"
+                                               liveChange="onRealTimeValidation"
+                                               placeholder="Format: CC-XXX-### (e.g., CC-IT-001)"/>
+                                        <core:Icon src="{= ${view>/fieldEditability/editableFields/costCenter} ? 'sap-icon://accept' : 'sap-icon://decline' }"
+                                                  color="{= ${view>/fieldEditability/editableFields/costCenter} ? '#28a745' : '#dc3545' }"
+                                                  visible="{view>/editMode}"
+                                                  class="a2a-field-permission-indicator"/>
+                                    </HBox>
+                                    <Text text="{project>/costCenter}" visible="{= !${view>/editMode} }"/>
                                 </form:content>
                             </form:SimpleForm>
                         </uxap:blocks>
@@ -138,7 +372,7 @@
             </uxap:ObjectPageSection>
             
             <!-- Agents Section -->
-            <uxap:ObjectPageSection titleUppercase="false" title="Agents ({= ${project>/agents}.length })">
+            <uxap:ObjectPageSection id="agentsSection" titleUppercase="false" title="Agents ({= ${project>/agents}.length })">
                 <uxap:subSections>
                     <uxap:ObjectPageSubSection>
                         <uxap:actions>
@@ -193,7 +427,7 @@
             </uxap:ObjectPageSection>
             
             <!-- Workflows Section -->
-            <uxap:ObjectPageSection titleUppercase="false" title="Workflows">
+            <uxap:ObjectPageSection id="workflowsSection" titleUppercase="false" title="Workflows">
                 <uxap:subSections>
                     <uxap:ObjectPageSubSection>
                         <uxap:actions>
@@ -230,7 +464,7 @@
             </uxap:ObjectPageSection>
             
             <!-- Team Members Section -->
-            <uxap:ObjectPageSection titleUppercase="false" title="Team Members">
+            <uxap:ObjectPageSection id="teamSection" titleUppercase="false" title="Team Members">
                 <uxap:subSections>
                     <uxap:ObjectPageSubSection>
                         <uxap:actions>
@@ -256,7 +490,7 @@
             </uxap:ObjectPageSection>
             
             <!-- Metrics Section -->
-            <uxap:ObjectPageSection titleUppercase="false" title="Metrics &amp; Analytics">
+            <uxap:ObjectPageSection id="metricsSection" titleUppercase="false" title="Metrics &amp; Analytics">
                 <uxap:subSections>
                     <uxap:ObjectPageSubSection title="Performance Metrics">
                         <uxap:blocks>
@@ -301,7 +535,7 @@
             </uxap:ObjectPageSection>
             
             <!-- Activity Timeline Section -->
-            <uxap:ObjectPageSection titleUppercase="false" title="Recent Activity">
+            <uxap:ObjectPageSection id="activitySection" titleUppercase="false" title="Recent Activity">
                 <uxap:subSections>
                     <uxap:ObjectPageSubSection>
                         <uxap:blocks>

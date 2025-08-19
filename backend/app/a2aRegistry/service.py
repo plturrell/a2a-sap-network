@@ -829,3 +829,27 @@ class A2ARegistryService:
                         
         except Exception as e:
             logger.error(f"Error deregistering agent {agent_id} from ORD Registry: {e}")
+
+async def main():
+    """Main service runner"""
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    logger.info("Starting A2A Registry Service")
+    
+    try:
+        # Create service instance
+        service = A2ARegistryService()
+        logger.info("A2A Registry Service initialized successfully")
+        
+        # Keep the service running
+        while True:
+            await asyncio.sleep(60)
+            logger.info("A2A Registry Service is running...")
+            
+    except Exception as e:
+        logger.error(f"Failed to start A2A Registry Service: {e}")
+        raise
+
+if __name__ == "__main__":
+    asyncio.run(main())
+

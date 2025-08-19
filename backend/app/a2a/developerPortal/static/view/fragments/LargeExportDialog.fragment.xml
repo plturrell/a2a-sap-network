@@ -1,0 +1,156 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        title="Large Export Progress"
+        resizable="true"
+        draggable="true"
+        contentWidth="600px"
+        contentHeight="400px"
+        type="Message"
+        escapeHandler=".onCancelLargeExport">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Export Summary -->
+                <Panel headerText="Export Details" expandable="false">
+                    <content>
+                        <l:Grid defaultSpan="L6 M12 S12" class="sapUiSmallMargin">
+                            
+                            <!-- Format -->
+                            <VBox>
+                                <Label text="Export Format:" class="sapMTextBold"/>
+                                <ObjectStatus text="{= ${largeExport>/format}.toUpperCase() }"
+                                            icon="{= ${largeExport>/format} === 'excel' ? 'sap-icon://excel-attachment' : ${largeExport>/format} === 'pdf' ? 'sap-icon://pdf-attachment' : 'sap-icon://attachment-text-file' }"
+                                            state="Information"/>
+                            </VBox>
+                            
+                            <!-- Total Records -->
+                            <VBox>
+                                <Label text="Total Records:" class="sapMTextBold"/>
+                                <ObjectNumber number="{largeExport>/totalRecords}" 
+                                            emphasized="true"/>
+                            </VBox>
+                            
+                            <!-- Chunk Size -->
+                            <VBox>
+                                <Label text="Processing Chunks:" class="sapMTextBold"/>
+                                <Text text="{largeExport>/currentChunk} / {largeExport>/totalChunks}"/>
+                            </VBox>
+                            
+                            <!-- Time Estimate -->
+                            <VBox>
+                                <Label text="Estimated Time Remaining:" class="sapMTextBold"/>
+                                <Text text="{= ${largeExport>/estimatedTime} > 0 ? ${largeExport>/estimatedTime} + ' seconds' : 'Calculating...' }"
+                                     class="sapThemeTextColorInformation"/>
+                            </VBox>
+                            
+                        </l:Grid>
+                    </content>
+                </Panel>
+                
+                <!-- Progress Indicators -->
+                <Panel headerText="Processing Progress" expandable="false" class="sapUiSmallMarginTop">
+                    <content>
+                        <VBox class="sapUiMediumMargin">
+                            
+                            <!-- Overall Progress -->
+                            <VBox class="sapUiSmallMarginBottom">
+                                <Label text="Overall Progress:" class="sapMTextBold"/>
+                                <ProgressIndicator
+                                    percentValue="{= ${largeExport>/processedRecords} / ${largeExport>/totalRecords} * 100 }"
+                                    displayValue="{largeExport>/processedRecords} / {largeExport>/totalRecords} records"
+                                    showValue="true"
+                                    state="Success"
+                                    width="100%"/>
+                            </VBox>
+                            
+                            <!-- Chunk Progress -->
+                            <VBox>
+                                <Label text="Current Chunk:" class="sapMTextBold"/>
+                                <ProgressIndicator
+                                    percentValue="{= ${largeExport>/currentChunk} / ${largeExport>/totalChunks} * 100 }"
+                                    displayValue="Chunk {largeExport>/currentChunk} of {largeExport>/totalChunks}"
+                                    showValue="true"
+                                    state="Information"
+                                    width="100%"/>
+                            </VBox>
+                            
+                        </VBox>
+                    </content>
+                </Panel>
+                
+                <!-- Performance Information -->
+                <Panel headerText="Performance Metrics" expandable="true" expanded="false" class="sapUiSmallMarginTop">
+                    <content>
+                        <VBox class="sapUiSmallMargin">
+                            <MessageStrip text="Using Web Worker for parallel processing"
+                                        type="Information"
+                                        showIcon="true"
+                                        visible="{= window.Worker !== undefined }"/>
+                            
+                            <MessageStrip text="Using sequential processing (Web Workers not available)"
+                                        type="Warning"
+                                        showIcon="true"
+                                        visible="{= window.Worker === undefined }"/>
+                            
+                            <List class="sapUiSmallMarginTop">
+                                <StandardListItem title="Chunk Size" 
+                                                info="500 records per chunk"
+                                                icon="sap-icon://database"/>
+                                <StandardListItem title="Processing Mode" 
+                                                info="{= window.Worker ? 'Parallel (Web Worker)' : 'Sequential' }"
+                                                icon="sap-icon://parallel-sequences"/>
+                                <StandardListItem title="Memory Usage" 
+                                                info="Optimized for large datasets"
+                                                icon="sap-icon://performance"/>
+                            </List>
+                        </VBox>
+                    </content>
+                </Panel>
+                
+                <!-- Status Messages -->
+                <Panel headerText="Status" expandable="false" class="sapUiSmallMarginTop">
+                    <content>
+                        <VBox class="sapUiSmallMargin">
+                            <MessageStrip text="Processing large export. Please wait..."
+                                        type="Information"
+                                        showIcon="true"
+                                        visible="{largeExport>/inProgress}"/>
+                            
+                            <MessageStrip text="Export completed successfully!"
+                                        type="Success"
+                                        showIcon="true"
+                                        visible="{= !${largeExport>/inProgress} && ${largeExport>/processedRecords} === ${largeExport>/totalRecords} }"/>
+                            
+                            <Text text="Tips:" class="sapMTextBold sapUiSmallMarginTop"/>
+                            <Text text="• Large exports are processed in chunks to prevent browser freezing"
+                                 class="sapUiTinyText sapThemeTextColorSecondary"/>
+                            <Text text="• The export will download automatically when complete"
+                                 class="sapUiTinyText sapThemeTextColorSecondary"/>
+                            <Text text="• You can cancel at any time without losing existing data"
+                                 class="sapUiTinyText sapThemeTextColorSecondary"/>
+                        </VBox>
+                    </content>
+                </Panel>
+                
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button text="Cancel Export" 
+                    icon="sap-icon://stop"
+                    type="Negative"
+                    press=".onCancelLargeExport"
+                    enabled="{largeExport>/inProgress}"/>
+            <Button text="Close" 
+                    icon="sap-icon://decline"
+                    type="Default"
+                    press=".onCancelLargeExport"
+                    enabled="{= !${largeExport>/inProgress} }"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

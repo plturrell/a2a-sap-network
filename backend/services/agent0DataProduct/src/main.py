@@ -15,9 +15,9 @@ from .router import create_router
 
 async def main():
     # Get configuration from environment variables
-    port = int(os.getenv("AGENT_PORT", "8001"))
-    host = os.getenv("AGENT_HOST", "0.0.0.0")
-    base_url = os.getenv("AGENT_BASE_URL", f"http://localhost:{port}")
+    port = int(os.getenv("A2A_AGENT_PORT", "8001"))
+    host = os.getenv("A2A_AGENT_HOST", "0.0.0.0")
+    base_url = os.getenv("A2A_AGENT_BASE_URL", f"http://localhost:{port}")
     ord_registry_url = os.getenv("ORD_REGISTRY_URL", "http://ord-registry:8000/api/v1/ord")
     
     # Create agent instance

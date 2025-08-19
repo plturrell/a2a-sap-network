@@ -18,11 +18,11 @@ current_dir = Path(__file__).parent
 app_dir = current_dir.parent.parent
 sys.path.insert(0, str(app_dir))
 
-from a2a.config.production_config import (
-    ProductionConfigManager,
+from config.deploymentConfig import (
+    DeploymentConfigManager as ProductionConfigManager,
     Environment,
-    get_production_config,
-    validate_production_setup
+    get_deployment_config as get_production_config,
+    validate_deployment_setup as validate_production_setup
 )
 
 # Configure logging

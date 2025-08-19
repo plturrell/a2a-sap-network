@@ -1,0 +1,206 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        title="Data Integrity Check"
+        resizable="true"
+        draggable="true"
+        contentWidth="700px"
+        contentHeight="500px"
+        type="Message">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Progress Section -->
+                <Panel headerText="Integrity Check Progress" 
+                       visible="{integrity>/inProgress}"
+                       expandable="false">
+                    <content>
+                        <VBox alignItems="Center" class="sapUiMediumMargin">
+                            <ProgressIndicator
+                                percentValue="{= ${integrity>/checkedRecords} / ${integrity>/totalRecords} * 100 }"
+                                displayValue="{integrity>/checkedRecords} / {integrity>/totalRecords} records"
+                                showValue="true"
+                                state="Information"
+                                width="100%"/>
+                            <Text text="Verifying data integrity..." 
+                                 class="sapUiSmallMarginTop sapUiTinyText"/>
+                        </VBox>
+                    </content>
+                </Panel>
+                
+                <!-- Summary Section -->
+                <Panel headerText="Integrity Check Summary" 
+                       visible="{= !${integrity>/inProgress} }"
+                       expandable="false">
+                    <content>
+                        <l:Grid defaultSpan="L6 M12 S12" class="sapUiSmallMargin">
+                            
+                            <!-- Total Records -->
+                            <VBox>
+                                <Label text="Total Records:" class="sapMTextBold"/>
+                                <ObjectNumber number="{integrity>/totalRecords}" 
+                                            emphasized="true"/>
+                            </VBox>
+                            
+                            <!-- Checksum -->
+                            <VBox>
+                                <Label text="Data Checksum:" class="sapMTextBold"/>
+                                <Text text="{integrity>/checksum}" 
+                                     class="sapUiTinyText sapMTextColorInformation"/>
+                            </VBox>
+                            
+                            <!-- Errors Count -->
+                            <VBox>
+                                <Label text="Errors Found:" class="sapMTextBold"/>
+                                <ObjectStatus text="{integrity>/errors/length}"
+                                            state="{= ${integrity>/errors/length} > 0 ? 'Error' : 'Success' }"
+                                            icon="{= ${integrity>/errors/length} > 0 ? 'sap-icon://error' : 'sap-icon://accept' }"/>
+                            </VBox>
+                            
+                            <!-- Warnings Count -->
+                            <VBox>
+                                <Label text="Warnings Found:" class="sapMTextBold"/>
+                                <ObjectStatus text="{integrity>/warnings/length}"
+                                            state="{= ${integrity>/warnings/length} > 0 ? 'Warning' : 'Success' }"
+                                            icon="{= ${integrity>/warnings/length} > 0 ? 'sap-icon://alert' : 'sap-icon://accept' }"/>
+                            </VBox>
+                            
+                        </l:Grid>
+                    </content>
+                </Panel>
+                
+                <!-- Errors List -->
+                <Panel headerText="Data Errors ({integrity>/errors/length})" 
+                       visible="{= ${integrity>/errors/length} > 0 && !${integrity>/inProgress} }"
+                       expandable="true"
+                       expanded="false"
+                       class="sapUiSmallMarginTop">
+                    <content>
+                        <Table items="{integrity>/errors}"
+                               sticky="ColumnHeaders"
+                               growing="true"
+                               growingThreshold="20">
+                            <columns>
+                                <Column width="80px">
+                                    <Text text="Row"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Column"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Error Type"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Value"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem type="Inactive">
+                                    <Text text="{integrity>row}" class="sapMTextColorError"/>
+                                    <Text text="{integrity>column}"/>
+                                    <Text text="{integrity>type}" class="sapMTextColorError"/>
+                                    <Text text="{integrity>value}"/>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </content>
+                </Panel>
+                
+                <!-- Warnings List -->
+                <Panel headerText="Data Warnings ({integrity>/warnings/length})" 
+                       visible="{= ${integrity>/warnings/length} > 0 && !${integrity>/inProgress} }"
+                       expandable="true"
+                       expanded="false"
+                       class="sapUiSmallMarginTop">
+                    <content>
+                        <Table items="{integrity>/warnings}"
+                               sticky="ColumnHeaders"
+                               growing="true"
+                               growingThreshold="20">
+                            <columns>
+                                <Column width="80px">
+                                    <Text text="Row"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Column"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Warning Type"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Value"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem type="Inactive">
+                                    <Text text="{integrity>row}" class="sapMTextColorWarning"/>
+                                    <Text text="{integrity>column}"/>
+                                    <Text text="{integrity>type}" class="sapMTextColorWarning"/>
+                                    <Text text="{integrity>value}"/>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </content>
+                </Panel>
+                
+                <!-- Export Options -->
+                <Panel headerText="Export Options" 
+                       visible="{= !${integrity>/inProgress} }"
+                       expandable="false"
+                       class="sapUiSmallMarginTop">
+                    <content>
+                        <VBox class="sapUiSmallMargin">
+                            <MessageStrip text="Data integrity check complete. You can now proceed with export or save the integrity report."
+                                        type="{= ${integrity>/errors/length} > 0 ? 'Error' : ${integrity>/warnings/length} > 0 ? 'Warning' : 'Success' }"
+                                        showIcon="true"/>
+                            
+                            <HBox alignItems="Center" class="sapUiSmallMarginTop">
+                                <CheckBox text="Include integrity report in export" 
+                                         selected="{integrity>/includeReport}"
+                                         enabled="{integrity>/exportReady}"/>
+                            </HBox>
+                            
+                            <HBox alignItems="Center" class="sapUiSmallMarginTop">
+                                <CheckBox text="Export only validated records" 
+                                         selected="{integrity>/exportValidOnly}"
+                                         enabled="{= ${integrity>/errors/length} > 0 }"/>
+                            </HBox>
+                        </VBox>
+                    </content>
+                </Panel>
+                
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button text="Export Excel" 
+                    icon="sap-icon://excel-attachment"
+                    type="Emphasized"
+                    press=".onExportWithIntegrity('excel')"
+                    enabled="{= !${integrity>/inProgress} && ${integrity>/exportReady} }"/>
+            <Button text="Export PDF" 
+                    icon="sap-icon://pdf-attachment"
+                    type="Default"
+                    press=".onExportWithIntegrity('pdf')"
+                    enabled="{= !${integrity>/inProgress} && ${integrity>/exportReady} }"/>
+            <Button text="Export CSV" 
+                    icon="sap-icon://attachment-text-file"
+                    type="Default"
+                    press=".onExportWithIntegrity('csv')"
+                    enabled="{= !${integrity>/inProgress} && ${integrity>/exportReady} }"/>
+            <Button text="Save Report" 
+                    icon="sap-icon://save"
+                    type="Default"
+                    press=".onSaveIntegrityReport"
+                    enabled="{= !${integrity>/inProgress} }"/>
+            <Button text="Close" 
+                    icon="sap-icon://decline"
+                    type="Default"
+                    press=".onCloseIntegrityDialog"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

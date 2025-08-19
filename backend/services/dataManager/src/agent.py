@@ -21,13 +21,20 @@ from hdbcli import dbapi
 import sqlite3
 
 import sys
-sys.path.append('../shared')
+sys.path.append('/Users/apple/projects/a2a/a2aAgents/backend/services/shared')
 
 from a2aCommon import (
     A2AAgentBase, a2a_handler, a2a_skill, a2a_task,
     A2AMessage, MessageRole
 )
 from a2aCommon.sdk.utils import create_success_response, create_error_response
+
+# Import blockchain components
+sys.path.append('/Users/apple/projects/a2a/a2aNetwork/pythonSdk')
+from blockchain.web3Client import A2ABlockchainClient, AgentIdentity
+from blockchain.agentIntegration import BlockchainAgentIntegration, AgentCapability
+from blockchain.eventListener import MessageEventListener
+from config.contractConfig import ContractConfigManager
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +109,7 @@ class DataManagerAgent(A2AAgentBase):
             "password": os.getenv("HANA_PASSWORD", ""),
             "databaseName": os.getenv("HANA_DATABASE", "A2A_DATA")
         }
-        self.sqlite_db_path = os.getenv("SQLITE_DB_PATH", "a2a_data.db")
+        self.sqlite_db_path = os.getenv("SQLITE_DB_PATH", "./a2a_data.db")
         self.postgres_url = os.getenv("POSTGRES_URL", "")
         self.redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
         self.cache_ttl = int(os.getenv("CACHE_TTL", "3600"))  # 1 hour default
@@ -111,7 +118,13 @@ class DataManagerAgent(A2AAgentBase):
         self.hana_connection = None
         self.postgres_pool = None
         
-        logger.info(f"Initialized {self.name} with {self.storage_backend.value} backend")
+        # Initialize blockchain integration
+        self.blockchain_client = None
+        self.blockchain_integration = None
+        self.agent_identity = None
+        self.blockchain_enabled = os.getenv("BLOCKCHAIN_ENABLED", "false").lower() == "true"
+        
+        logger.info(f"Initialized {self.name} with {self.storage_backend.value} backend, blockchain: {self.blockchain_enabled}")
     
     async def initialize(self) -> None:
         """Initialize data storage connections"""
@@ -145,12 +158,18 @@ class DataManagerAgent(A2AAgentBase):
         self.is_registered = False
         self.tasks = {}
         
+        # Initialize blockchain integration if enabled
+        if self.blockchain_enabled:
+            await self._initialize_blockchain()
+        
         logger.info("Data Manager initialized successfully")
     
     async def _initialize_sqlite(self) -> None:
         """Initialize SQLite database"""
         # Create database directory if needed
-        os.makedirs(os.path.dirname(self.sqlite_db_path), exist_ok=True)
+        dir_path = os.path.dirname(self.sqlite_db_path)
+        if dir_path and dir_path != ".":
+            os.makedirs(dir_path, exist_ok=True)
         
         # Connect to database
         self.db_connection = await aiosqlite.connect(self.sqlite_db_path)
@@ -310,6 +329,185 @@ class DataManagerAgent(A2AAgentBase):
         except Exception as e:
             logger.warning(f"Could not initialize SQLite fallback: {e}")
     
+    async def _initialize_blockchain(self) -> None:
+        """Initialize blockchain integration for Data Manager"""
+        try:
+            logger.info("Initializing blockchain integration for Data Manager...")
+            
+            # Initialize blockchain client
+            self.blockchain_client = A2ABlockchainClient(
+                rpc_url=os.getenv("A2A_RPC_URL", "http://localhost:8545"),
+                private_key=os.getenv("A2A_PRIVATE_KEY"),
+                network="localhost"
+            )
+            
+            # Initialize agent identity
+            self.agent_identity = AgentIdentity(
+                name="Data Manager Agent",
+                agent_type="data_storage",
+                endpoint=self.base_url,
+                capabilities=["data_storage", "caching", "versioning", "bulk_operations"]
+            )
+            
+            # Initialize blockchain integration
+            self.blockchain_integration = BlockchainAgentIntegration(
+                blockchain_client=self.blockchain_client,
+                agent_identity=self.agent_identity,
+                capabilities=[
+                    AgentCapability.DATA_STORAGE,
+                    AgentCapability.CACHING,
+                    AgentCapability.PERSISTENCE
+                ]
+            )
+            
+            # Register on blockchain
+            await self._register_on_blockchain()
+            
+            # Set up message listeners
+            await self._setup_blockchain_listeners()
+            
+            logger.info("Blockchain integration initialized successfully")
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize blockchain integration: {e}")
+            self.blockchain_enabled = False
+    
+    async def _register_on_blockchain(self) -> None:
+        """Register Data Manager on blockchain agent registry"""
+        try:
+            # Register with blockchain
+            registration_result = await self.blockchain_integration.register_agent()
+            
+            if registration_result.get("success"):
+                self.agent_identity.address = registration_result.get("agent_address")
+                logger.info(f"Registered Data Manager on blockchain: {self.agent_identity.address}")
+            else:
+                logger.error(f"Failed to register on blockchain: {registration_result}")
+                
+        except Exception as e:
+            logger.error(f"Blockchain registration failed: {e}")
+    
+    async def _setup_blockchain_listeners(self) -> None:
+        """Set up blockchain event listeners for incoming messages"""
+        try:
+            # Create message event listener
+            self.message_listener = MessageEventListener(
+                blockchain_client=self.blockchain_client,
+                agent_address=self.agent_identity.address
+            )
+            
+            # Register message handler
+            self.message_listener.on_message_received(self._handle_blockchain_message)
+            
+            # Start listening for events
+            await self.message_listener.start_listening()
+            
+            logger.info("Blockchain message listeners initialized")
+            
+        except Exception as e:
+            logger.error(f"Failed to setup blockchain listeners: {e}")
+    
+    async def _handle_blockchain_message(self, message_data: Dict[str, Any]) -> None:
+        """Handle incoming blockchain messages"""
+        try:
+            logger.info(f"Received blockchain message: {message_data}")
+            
+            # Extract message content
+            content = json.loads(message_data.get("content", "{}"))
+            message_type = message_data.get("message_type", "unknown")
+            sender_address = message_data.get("from_address")
+            
+            # Route to appropriate handler based on message type
+            if message_type == "data_store_request":
+                await self._handle_blockchain_store_request(content, sender_address)
+            elif message_type == "data_retrieve_request":
+                await self._handle_blockchain_retrieve_request(content, sender_address)
+            else:
+                logger.warning(f"Unknown blockchain message type: {message_type}")
+                
+        except Exception as e:
+            logger.error(f"Error handling blockchain message: {e}")
+    
+    async def _handle_blockchain_store_request(self, content: Dict[str, Any], sender_address: str) -> None:
+        """Handle blockchain data storage requests"""
+        try:
+            # Verify sender reputation
+            sender_info = await self.blockchain_client.get_agent_info(sender_address)
+            if sender_info.get("reputation", 0) < 50:  # Minimum reputation threshold
+                logger.warning(f"Rejecting request from low reputation agent: {sender_address}")
+                return
+            
+            # Create A2A message for processing
+            message = self.create_message(content)
+            context_id = content.get("context_id", "blockchain_" + str(int(datetime.utcnow().timestamp())))
+            
+            # Process the storage request
+            result = await self.handle_store_data(message, context_id)
+            
+            # Send response back via blockchain
+            if result.get("success"):
+                response_content = {
+                    "status": "success",
+                    "record_id": result["data"]["record_id"],
+                    "timestamp": result["data"]["timestamp"]
+                }
+            else:
+                response_content = {
+                    "status": "error",
+                    "error": result.get("error", "Unknown error")
+                }
+            
+            await self.blockchain_client.send_message(
+                to_address=sender_address,
+                content=json.dumps(response_content),
+                message_type="data_store_response"
+            )
+            
+            logger.info(f"Processed blockchain storage request from {sender_address}")
+            
+        except Exception as e:
+            logger.error(f"Error handling blockchain store request: {e}")
+    
+    async def _handle_blockchain_retrieve_request(self, content: Dict[str, Any], sender_address: str) -> None:
+        """Handle blockchain data retrieval requests"""
+        try:
+            # Verify sender reputation
+            sender_info = await self.blockchain_client.get_agent_info(sender_address)
+            if sender_info.get("reputation", 0) < 30:  # Lower threshold for retrieval
+                logger.warning(f"Rejecting retrieval request from low reputation agent: {sender_address}")
+                return
+            
+            # Create A2A message for processing
+            message = self.create_message(content)
+            context_id = content.get("context_id", "blockchain_retrieve")
+            
+            # Process the retrieval request
+            result = await self.handle_retrieve_data(message, context_id)
+            
+            # Send response back via blockchain
+            if result.get("success"):
+                response_content = {
+                    "status": "success",
+                    "records": result["data"]["records"],
+                    "count": result["data"]["count"]
+                }
+            else:
+                response_content = {
+                    "status": "error",
+                    "error": result.get("error", "Unknown error")
+                }
+            
+            await self.blockchain_client.send_message(
+                to_address=sender_address,
+                content=json.dumps(response_content),
+                message_type="data_retrieve_response"
+            )
+            
+            logger.info(f"Processed blockchain retrieval request from {sender_address}")
+            
+        except Exception as e:
+            logger.error(f"Error handling blockchain retrieve request: {e}")
+    
     async def _initialize_postgres(self) -> None:
         """Initialize PostgreSQL as primary storage (when HANA fails)"""
         try:
@@ -355,11 +553,13 @@ class DataManagerAgent(A2AAgentBase):
                     "supports_versioning": True,
                     "supports_caching": self.redis_client is not None,
                     "supports_bulk_operations": True,
+                    "supports_blockchain": self.blockchain_enabled,
                     "max_record_size_mb": 10,
                     "data_types": ["accounts", "books", "locations", "measures", "products", "embeddings"]
                 },
-                "handlers": [h.name for h in self.handlers.values()],
-                "skills": [s.name for s in self.skills.values()]
+                "handlers": list(self.handlers.keys()),
+                "skills": list(self.skills.keys()),
+                "blockchain_capabilities": ["data_storage", "caching", "persistence", "reputation_tracking"] if self.blockchain_enabled else []
             }
             
             # Send registration to Agent Manager
@@ -391,12 +591,24 @@ class DataManagerAgent(A2AAgentBase):
     async def handle_store_data(self, message: A2AMessage, context_id: str) -> Dict[str, Any]:
         """Store data with versioning and metadata"""
         try:
-            data_content = message.content if hasattr(message, 'content') else message
+            # Extract data content from A2AMessage
+            if hasattr(message, 'parts') and message.parts:
+                data_content = message.parts[0].data
+                logger.info(f"Data from message.parts[0].data: {data_content}")
+            elif hasattr(message, 'content'):
+                data_content = message.content
+                logger.info(f"Data from message.content: {data_content}")
+            else:
+                data_content = message
+                logger.info(f"Data from message directly: {data_content}")
+            
+            logger.info(f"Extracted data_content type: {type(data_content)}, content: {data_content}")
             
             # Validate required fields
             required_fields = ["data_type", "data"]
             for field in required_fields:
                 if field not in data_content:
+                    logger.error(f"Missing field '{field}' in data_content: {data_content}")
                     return create_error_response(400, f"Missing required field: {field}")
             
             # Create data record
@@ -434,7 +646,13 @@ class DataManagerAgent(A2AAgentBase):
     async def handle_retrieve_data(self, message: A2AMessage, context_id: str) -> Dict[str, Any]:
         """Retrieve data with caching"""
         try:
-            query = message.content if hasattr(message, 'content') else message
+            # Extract query from A2AMessage
+            if hasattr(message, 'parts') and message.parts:
+                query = message.parts[0].data
+            elif hasattr(message, 'content'):
+                query = message.content
+            else:
+                query = message
             
             # Check cache first
             if self.redis_client and "record_id" in query:
@@ -467,7 +685,13 @@ class DataManagerAgent(A2AAgentBase):
     async def handle_update_data(self, message: A2AMessage, context_id: str) -> Dict[str, Any]:
         """Update data with versioning"""
         try:
-            update_request = message.content if hasattr(message, 'content') else message
+            # Extract update request from A2AMessage
+            if hasattr(message, 'parts') and message.parts:
+                update_request = message.parts[0].data
+            elif hasattr(message, 'content'):
+                update_request = message.content
+            else:
+                update_request = message
             
             # Validate required fields
             if "record_id" not in update_request or "data" not in update_request:
@@ -506,7 +730,13 @@ class DataManagerAgent(A2AAgentBase):
     async def handle_delete_data(self, message: A2AMessage, context_id: str) -> Dict[str, Any]:
         """Soft delete data (mark as deleted)"""
         try:
-            delete_request = message.content if hasattr(message, 'content') else message
+            # Extract delete request from A2AMessage
+            if hasattr(message, 'parts') and message.parts:
+                delete_request = message.parts[0].data
+            elif hasattr(message, 'content'):
+                delete_request = message.content
+            else:
+                delete_request = message
             
             if "record_id" not in delete_request:
                 return create_error_response(400, "Missing record_id")
@@ -898,10 +1128,10 @@ class DataManagerAgent(A2AAgentBase):
     
     def create_message(self, content: Any) -> A2AMessage:
         """Create A2A message"""
+        from a2aCommon.sdk.types import MessagePart
         return A2AMessage(
-            sender_id=self.agent_id,
-            content=content,
-            role=MessageRole.AGENT
+            role=MessageRole.AGENT,
+            parts=[MessagePart(kind="text", data=content)]
         )
     
     async def create_task(self, task_type: str, metadata: Dict[str, Any]) -> str:

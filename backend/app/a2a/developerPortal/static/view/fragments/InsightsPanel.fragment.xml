@@ -1,0 +1,257 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.f">
+    
+    <Dialog
+        title="AI Project Insights"
+        resizable="true"
+        draggable="true"
+        contentWidth="800px"
+        contentHeight="600px"
+        type="Message">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Insights Header -->
+                <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                    <core:Icon src="sap-icon://business-objects-experience" color="#007bff" size="1.5rem" class="sapUiTinyMarginEnd"/>
+                    <Title text="Project Intelligence Dashboard" level="H2"/>
+                    <ToolbarSpacer/>
+                    <Text text="Last updated: {= ${view>/insights/lastAnalysis} ? ${view>/insights/lastAnalysis}.toLocaleTimeString() : 'Never' }" 
+                          class="sapUiTinyText sapMTextColorSecondary"/>
+                    <Button icon="sap-icon://refresh" 
+                           tooltip="Refresh Insights" 
+                           press="onRefreshInsights" 
+                           type="Transparent"
+                           class="sapUiSmallMarginBegin"/>
+                </HBox>
+                
+                <!-- Insights Summary Cards -->
+                <HBox class="sapUiMediumMarginBottom" visible="{= ${view>/insights/currentInsights}.length > 0 }">
+                    <f:Card class="sapUiTinyMarginEnd" width="150px">
+                        <f:header>
+                            <f:cards.NumericHeader
+                                title="Total Insights"
+                                number="{= ${view>/insights/currentInsights}.length }"
+                                state="Neutral"/>
+                        </f:header>
+                    </f:Card>
+                    <f:Card class="sapUiTinyMarginEnd" width="150px">
+                        <f:header>
+                            <f:cards.NumericHeader
+                                title="Critical Issues"
+                                number="{= ${view>/insights/currentInsights}.filter(function(insight) { return insight.severity === 'critical'; }).length }"
+                                state="Error"/>
+                        </f:header>
+                    </f:Card>
+                    <f:Card class="sapUiTinyMarginEnd" width="150px">
+                        <f:header>
+                            <f:cards.NumericHeader
+                                title="Warnings"
+                                number="{= ${view>/insights/currentInsights}.filter(function(insight) { return insight.severity === 'warning'; }).length }"
+                                state="Warning"/>
+                        </f:header>
+                    </f:Card>
+                    <f:Card width="150px">
+                        <f:header>
+                            <f:cards.NumericHeader
+                                title="Avg Confidence"
+                                number="{= Math.round(${view>/insights/currentInsights}.reduce(function(sum, insight) { return sum + insight.confidence; }, 0) / ${view>/insights/currentInsights}.length * 100) }"
+                                unitOfMeasurement="%"
+                                state="Success"/>
+                        </f:header>
+                    </f:Card>
+                </HBox>
+                
+                <!-- Category Tabs -->
+                <IconTabBar selectedKey="all" class="sapUiMediumMarginBottom">
+                    <items>
+                        <IconTabFilter key="all" text="All Insights" count="{= ${view>/insights/currentInsights}.length }">
+                            <content>
+                                <List items="{view>/insights/currentInsights}" mode="None">
+                                    <CustomListItem class="a2a-insight-item">
+                                        <VBox class="sapUiSmallMargin">
+                                            <!-- Insight Header -->
+                                            <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                                                <core:Icon src="{view>icon}" 
+                                                          color="{= ${view>severity} === 'critical' ? '#dc3545' : 
+                                                                   ${view>severity} === 'warning' ? '#ffc107' : 
+                                                                   '#17a2b8' }" 
+                                                          class="sapUiTinyMarginEnd"/>
+                                                <Title text="{view>title}" level="H4" class="sapUiTinyMarginEnd"/>
+                                                <ObjectStatus text="{view>severity}" 
+                                                            state="{= ${view>severity} === 'critical' ? 'Error' : 
+                                                                     ${view>severity} === 'warning' ? 'Warning' : 
+                                                                     'Information' }"/>
+                                                <ToolbarSpacer/>
+                                                <Text text="{= Math.round(${view>confidence} * 100) + '% confidence' }" 
+                                                      class="sapUiTinyText sapMTextColorSecondary"/>
+                                            </HBox>
+                                            
+                                            <!-- Insight Description -->
+                                            <Text text="{view>description}" 
+                                                  class="sapUiSmallMarginBottom"
+                                                  wrapping="true"/>
+                                            
+                                            <!-- Impact and Trend -->
+                                            <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                                                <Label text="Impact:" class="sapUiTinyMarginEnd"/>
+                                                <ObjectStatus text="{view>impact}" 
+                                                            state="{= ${view>impact} === 'high' ? 'Error' : 
+                                                                     ${view>impact} === 'medium' ? 'Warning' : 
+                                                                     'Success' }"
+                                                            class="sapUiTinyMarginEnd"/>
+                                                <Label text="Trend:" class="sapUiTinyMarginEnd"/>
+                                                <core:Icon src="{= ${view>trend} === 'positive' ? 'sap-icon://trend-up' : 
+                                                               ${view>trend} === 'negative' ? 'sap-icon://trend-down' : 
+                                                               'sap-icon://horizontal-stacked-chart' }"
+                                                          color="{= ${view>trend} === 'positive' ? '#28a745' : 
+                                                                   ${view>trend} === 'negative' ? '#dc3545' : 
+                                                                   '#6c757d' }"/>
+                                            </HBox>
+                                            
+                                            <!-- Recommendations -->
+                                            <VBox visible="{= ${view>recommendations} && ${view>recommendations}.length > 0 }">
+                                                <Label text="Recommended Actions:" class="sapUiSmallMarginBottom sapMTextBold"/>
+                                                <List items="{view>recommendations}" mode="None">
+                                                    <StandardListItem title="{view>}" 
+                                                                    icon="sap-icon://accept"
+                                                                    type="Inactive"
+                                                                    class="a2a-recommendation-item"/>
+                                                </List>
+                                            </VBox>
+                                            
+                                            <!-- Metrics -->
+                                            <VBox visible="{= ${view>metrics} && Object.keys(${view>metrics}).length > 0 }"
+                                                  class="sapUiSmallMarginTop">
+                                                <Label text="Key Metrics:" class="sapUiSmallMarginBottom sapMTextBold"/>
+                                                <HBox wrap="Wrap">
+                                                    <!-- Dynamic metrics display would need custom control or preprocessing -->
+                                                    <Text text="View detailed metrics in expanded mode" 
+                                                          class="sapUiTinyText sapMTextColorSecondary"/>
+                                                </HBox>
+                                            </VBox>
+                                        </VBox>
+                                    </CustomListItem>
+                                </List>
+                            </content>
+                        </IconTabFilter>
+                        
+                        <IconTabFilter key="risk" iconColor="Negative" text="Risk Analysis" 
+                                     count="{= ${view>/insights/currentInsights}.filter(function(insight) { return insight.category === 'risk'; }).length }">
+                            <content>
+                                <List items="{
+                                    path: 'view>/insights/currentInsights',
+                                    filters: [{
+                                        path: 'category',
+                                        operator: 'EQ',
+                                        value1: 'risk'
+                                    }]
+                                }" mode="None">
+                                    <!-- Same insight item template as above -->
+                                    <CustomListItem class="a2a-insight-item">
+                                        <VBox class="sapUiSmallMargin">
+                                            <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                                                <core:Icon src="{view>icon}" color="#dc3545" class="sapUiTinyMarginEnd"/>
+                                                <Title text="{view>title}" level="H4"/>
+                                                <ToolbarSpacer/>
+                                                <ObjectStatus text="{view>severity}" state="Error"/>
+                                            </HBox>
+                                            <Text text="{view>description}" wrapping="true"/>
+                                        </VBox>
+                                    </CustomListItem>
+                                </List>
+                            </content>
+                        </IconTabFilter>
+                        
+                        <IconTabFilter key="optimization" iconColor="Good" text="Optimization" 
+                                     count="{= ${view>/insights/currentInsights}.filter(function(insight) { return insight.category === 'optimization'; }).length }">
+                            <content>
+                                <List items="{
+                                    path: 'view>/insights/currentInsights',
+                                    filters: [{
+                                        path: 'category',
+                                        operator: 'EQ',
+                                        value1: 'optimization'
+                                    }]
+                                }" mode="None">
+                                    <CustomListItem class="a2a-insight-item">
+                                        <VBox class="sapUiSmallMargin">
+                                            <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                                                <core:Icon src="{view>icon}" color="#28a745" class="sapUiTinyMarginEnd"/>
+                                                <Title text="{view>title}" level="H4"/>
+                                                <ToolbarSpacer/>
+                                                <ObjectStatus text="{view>impact}" state="Success"/>
+                                            </HBox>
+                                            <Text text="{view>description}" wrapping="true"/>
+                                        </VBox>
+                                    </CustomListItem>
+                                </List>
+                            </content>
+                        </IconTabFilter>
+                        
+                        <IconTabFilter key="prediction" iconColor="Critical" text="Predictions" 
+                                     count="{= ${view>/insights/currentInsights}.filter(function(insight) { return insight.category === 'prediction'; }).length }">
+                            <content>
+                                <List items="{
+                                    path: 'view>/insights/currentInsights',
+                                    filters: [{
+                                        path: 'category',
+                                        operator: 'EQ',
+                                        value1: 'prediction'
+                                    }]
+                                }" mode="None">
+                                    <CustomListItem class="a2a-insight-item">
+                                        <VBox class="sapUiSmallMargin">
+                                            <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                                                <core:Icon src="{view>icon}" color="#ffc107" class="sapUiTinyMarginEnd"/>
+                                                <Title text="{view>title}" level="H4"/>
+                                                <ToolbarSpacer/>
+                                                <Text text="{= Math.round(${view>confidence} * 100) + '% accuracy' }" 
+                                                      class="sapUiTinyText"/>
+                                            </HBox>
+                                            <Text text="{view>description}" wrapping="true"/>
+                                        </VBox>
+                                    </CustomListItem>
+                                </List>
+                            </content>
+                        </IconTabFilter>
+                    </items>
+                </IconTabBar>
+                
+                <!-- Empty State -->
+                <VBox alignItems="Center" 
+                      visible="{= ${view>/insights/currentInsights}.length === 0 }"
+                      class="sapUiLargeMarginTop">
+                    <core:Icon src="sap-icon://business-objects-experience" size="3rem" color="#c0c0c0"/>
+                    <Title text="No Insights Available" level="H3" class="sapUiSmallMarginTop"/>
+                    <Text text="AI analysis will provide insights as project data becomes available" 
+                          class="sapMTextColorSecondary"/>
+                    <Button text="Analyze Project" 
+                           icon="sap-icon://refresh"
+                           type="Emphasized"
+                           press="onRefreshInsights"
+                           class="sapUiMediumMarginTop"/>
+                </VBox>
+                
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button text="Export Insights" 
+                    icon="sap-icon://download"
+                    type="Default"
+                    press="onExportInsights"/>
+            <Button text="Configure" 
+                    icon="sap-icon://settings"
+                    type="Default"
+                    press="onConfigureInsights"/>
+            <Button text="Close" 
+                    icon="sap-icon://decline"
+                    type="Default"
+                    press="onCloseInsightsPanel"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

@@ -101,6 +101,12 @@
                 selectionMode="Multi"
                 visibleRowCount="15"
                 alternateRowColors="true"
+                enableColumnReordering="false"
+                enableBusyIndicator="true"
+                threshold="50"
+                columnHeaderVisible="true"
+                showNoData="true"
+                rowHeight="auto"
                 rowSelectionChange="onRowSelectionChange">
                 
                 <table:toolbar>

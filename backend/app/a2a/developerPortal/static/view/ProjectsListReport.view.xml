@@ -8,7 +8,8 @@
     xmlns:fe="sap.fe.macros"
     xmlns:smartFilterBar="sap.ui.comp.smartfilterbar"
     xmlns:smartTable="sap.ui.comp.smarttable"
-    xmlns:semantic="sap.f.semantic">
+    xmlns:semantic="sap.f.semantic"
+    xmlns:customData="sap.ui.core.CustomData">
 
     <!-- SAP Fiori Elements List Report Page -->
     <f:DynamicPage id="projectsListReportPage" 
@@ -258,6 +259,154 @@
                                 </items>
                                 <selectionChange=".onViewModeChange"/>
                             </SegmentedButton>
+                            
+                            <ToolbarSeparator/>
+                            
+                            <!-- Sort Options -->
+                            <MenuButton id="sortOptionsButton" 
+                                       text="Sort" 
+                                       icon="sap-icon://sort"
+                                       tooltip="Sorting Options">
+                                <menu>
+                                    <Menu>
+                                        <MenuItem text="Project Name (A-Z)" 
+                                                 icon="sap-icon://alphabetical-order" 
+                                                 press=".onQuickSort"
+                                                 customData:key="alphabetical"/>
+                                        <MenuItem text="Newest First" 
+                                                 icon="sap-icon://history" 
+                                                 press=".onQuickSort"
+                                                 customData:key="newest"/>
+                                        <MenuItem text="High Priority First" 
+                                                 icon="sap-icon://priority" 
+                                                 press=".onQuickSort"
+                                                 customData:key="priority_high"/>
+                                        <MenuItem text="Recent Activity" 
+                                                 icon="sap-icon://refresh" 
+                                                 press=".onQuickSort"
+                                                 customData:key="recent_activity"/>
+                                        <MenuItem text="Reset Sorting" 
+                                                 icon="sap-icon://undo" 
+                                                 press=".onResetSorting"
+                                                 startsSection="true"/>
+                                    </Menu>
+                                </menu>
+                            </MenuButton>
+                            
+                            <!-- Group Options -->
+                            <MenuButton id="groupOptionsButton" 
+                                       text="Group" 
+                                       icon="sap-icon://group-2"
+                                       tooltip="Grouping Options">
+                                <menu>
+                                    <Menu>
+                                        <MenuItem text="Group by Status" 
+                                                 icon="sap-icon://status-positive" 
+                                                 press=".onQuickGroup"
+                                                 customData:key="by_status"/>
+                                        <MenuItem text="Group by Priority" 
+                                                 icon="sap-icon://priority" 
+                                                 press=".onQuickGroup"
+                                                 customData:key="by_priority"/>
+                                        <MenuItem text="Group by Business Unit" 
+                                                 icon="sap-icon://org-chart" 
+                                                 press=".onQuickGroup"
+                                                 customData:key="by_unit"/>
+                                        <MenuItem text="Group by Date Range" 
+                                                 icon="sap-icon://calendar" 
+                                                 press=".onQuickGroup"
+                                                 customData:key="by_month"/>
+                                        <MenuItem text="Collapse All Groups" 
+                                                 icon="sap-icon://collapse-all" 
+                                                 press=".onCollapseAllGroups"
+                                                 startsSection="true"/>
+                                        <MenuItem text="Expand All Groups" 
+                                                 icon="sap-icon://expand-all" 
+                                                 press=".onExpandAllGroups"/>
+                                        <MenuItem text="Remove Grouping" 
+                                                 icon="sap-icon://decline" 
+                                                 press=".onRemoveGrouping"/>
+                                    </Menu>
+                                </menu>
+                            </MenuButton>
+                            
+                            <ToolbarSeparator/>
+                            
+                            <!-- Aggregation Button -->
+                            <Button id="aggregationButton" 
+                                   text="Aggregations" 
+                                   icon="sap-icon://sum"
+                                   tooltip="Toggle aggregations"
+                                   press=".onToggleAggregations"/>
+                            
+                            <!-- Chart Toggle Button -->
+                            <Button id="chartToggleButton" 
+                                   text="Charts" 
+                                   icon="sap-icon://business-objects-experience"
+                                   tooltip="Toggle chart visualization"
+                                   type="{= ${view>/chartView/enabled} ? 'Emphasized' : 'Default' }"
+                                   press=".onToggleChartView"/>
+                            
+                            <ToolbarSeparator/>
+                            
+                            <!-- Data Integrity Button -->
+                            <Button id="dataIntegrityButton" 
+                                   text="Verify Data" 
+                                   icon="sap-icon://validate"
+                                   tooltip="Check data integrity before export"
+                                   press=".onVerifyDataIntegrity"/>
+                            
+                            <!-- Print Preview Button -->
+                            <Button id="printPreviewButton" 
+                                   text="Print Preview" 
+                                   icon="sap-icon://print"
+                                   tooltip="Open print preview"
+                                   press=".onPrintPreview"/>
+                            
+                            <!-- Export Menu Button -->
+                            <MenuButton id="exportMenuButton" 
+                                       text="Export" 
+                                       icon="sap-icon://download"
+                                       tooltip="Export options">
+                                <menu>
+                                    <Menu>
+                                        <MenuItem text="Export to Excel" 
+                                                 icon="sap-icon://excel-attachment" 
+                                                 press=".onExportExcel"/>
+                                        <MenuItem text="Export to PDF" 
+                                                 icon="sap-icon://pdf-attachment" 
+                                                 press=".onExportPDF"/>
+                                        <MenuItem text="Export to CSV" 
+                                                 icon="sap-icon://attachment-text-file" 
+                                                 press=".onExportCSV"/>
+                                        <MenuItem text="Export Selected" 
+                                                 icon="sap-icon://multiselect-all" 
+                                                 press=".onExportSelected"
+                                                 startsSection="true"/>
+                                        <MenuItem text="Export Filtered" 
+                                                 icon="sap-icon://filter" 
+                                                 press=".onExportFiltered"/>
+                                        <MenuItem text="Export All" 
+                                                 icon="sap-icon://database" 
+                                                 press=".onExportAll"/>
+                                        <MenuItem text="Large Export (1000+ records)" 
+                                                 icon="sap-icon://upload-to-cloud" 
+                                                 startsSection="true">
+                                            <items>
+                                                <MenuItem text="Export All to Excel" 
+                                                         icon="sap-icon://excel-attachment" 
+                                                         press=".onLargeExport('excel')"/>
+                                                <MenuItem text="Export All to CSV" 
+                                                         icon="sap-icon://attachment-text-file" 
+                                                         press=".onLargeExport('csv')"/>
+                                                <MenuItem text="Export All to PDF" 
+                                                         icon="sap-icon://pdf-attachment" 
+                                                         press=".onLargeExport('pdf')"/>
+                                            </items>
+                                        </MenuItem>
+                                    </Menu>
+                                </menu>
+                            </MenuButton>
                         </OverflowToolbar>
                     </smartTable:customToolbar>
 
@@ -278,9 +427,15 @@
                                    demandPopin="false" 
                                    minScreenWidth="Tablet"
                                    sortProperty="name"
-                                   filterProperty="name">
+                                   filterProperty="name"
+                                   press="onColumnSort">
                                 <header>
-                                    <Text text="{i18n>projects.name}"/>
+                                    <HBox alignItems="Center" class="a2a-sortable-header">
+                                        <Text text="{i18n>projects.name}" class="sapUiTinyMarginEnd"/>
+                                        <core:Icon src="sap-icon://sort" 
+                                                  color="{= ${sorting>/currentSort/column} === 'name' ? 'Emphasized' : 'Neutral' }" 
+                                                  class="a2a-sort-icon"/>
+                                    </HBox>
                                 </header>
                             </Column>
                             
@@ -289,9 +444,15 @@
                                    minScreenWidth="Desktop"
                                    popinDisplay="Inline"
                                    sortProperty="status"
-                                   filterProperty="status">
+                                   filterProperty="status"
+                                   press="onColumnSort">
                                 <header>
-                                    <Text text="{i18n>projects.status}"/>
+                                    <HBox alignItems="Center" class="a2a-sortable-header">
+                                        <Text text="{i18n>projects.status}" class="sapUiTinyMarginEnd"/>
+                                        <core:Icon src="sap-icon://sort" 
+                                                  color="{= ${sorting>/currentSort/column} === 'status' ? 'Emphasized' : 'Neutral' }" 
+                                                  class="a2a-sort-icon"/>
+                                    </HBox>
                                 </header>
                             </Column>
                             
@@ -300,9 +461,15 @@
                                    minScreenWidth="Desktop"
                                    popinDisplay="Inline"
                                    sortProperty="priority"
-                                   filterProperty="priority">
+                                   filterProperty="priority"
+                                   press="onColumnSort">
                                 <header>
-                                    <Text text="{i18n>projects.priority}"/>
+                                    <HBox alignItems="Center" class="a2a-sortable-header">
+                                        <Text text="{i18n>projects.priority}" class="sapUiTinyMarginEnd"/>
+                                        <core:Icon src="sap-icon://sort" 
+                                                  color="{= ${sorting>/currentSort/column} === 'priority' ? 'Emphasized' : 'Neutral' }" 
+                                                  class="a2a-sort-icon"/>
+                                    </HBox>
                                 </header>
                             </Column>
                             
@@ -319,9 +486,15 @@
                                    demandPopin="true" 
                                    minScreenWidth="Desktop"
                                    popinDisplay="Inline"
-                                   sortProperty="lastDeployment">
+                                   sortProperty="lastDeployment"
+                                   press="onColumnSort">
                                 <header>
-                                    <Text text="{i18n>projects.lastDeployment}"/>
+                                    <HBox alignItems="Center" class="a2a-sortable-header">
+                                        <Text text="{i18n>projects.lastDeployment}" class="sapUiTinyMarginEnd"/>
+                                        <core:Icon src="sap-icon://sort" 
+                                                  color="{= ${sorting>/currentSort/column} === 'lastDeployment' ? 'Emphasized' : 'Neutral' }" 
+                                                  class="a2a-sort-icon"/>
+                                    </HBox>
                                 </header>
                             </Column>
                             
@@ -330,9 +503,15 @@
                                    minScreenWidth="Desktop"
                                    popinDisplay="Inline"
                                    sortProperty="createdBy"
-                                   filterProperty="createdBy">
+                                   filterProperty="createdBy"
+                                   press="onColumnSort">
                                 <header>
-                                    <Text text="{i18n>projects.createdBy}"/>
+                                    <HBox alignItems="Center" class="a2a-sortable-header">
+                                        <Text text="{i18n>projects.createdBy}" class="sapUiTinyMarginEnd"/>
+                                        <core:Icon src="sap-icon://sort" 
+                                                  color="{= ${sorting>/currentSort/column} === 'createdBy' ? 'Emphasized' : 'Neutral' }" 
+                                                  class="a2a-sort-icon"/>
+                                    </HBox>
                                 </header>
                             </Column>
                             
@@ -432,6 +611,96 @@
                         </items>
                     </Table>
                 </smartTable:SmartTable>
+                
+                <!-- Chart Visualization Container -->
+                <Panel id="chartVisualizationPanel" 
+                       headerText="Project Analytics"
+                       visible="{view>/chartView/enabled}"
+                       class="sapUiResponsiveMargin sapUiContentPadding">
+                    <IconTabBar selectedKey="{view>/chartView/selectedChart}">
+                        <items>
+                            <!-- Status Distribution Chart -->
+                            <IconTabFilter key="statusChart" 
+                                         icon="sap-icon://pie-chart" 
+                                         text="Status Distribution">
+                                <VBox alignItems="Center" class="sapUiMediumMargin">
+                                    <Title text="Projects by Status" level="H3" class="sapUiMediumMarginBottom"/>
+                                    <HBox id="statusChartContainer" 
+                                         width="100%" 
+                                         height="400px"
+                                         justifyContent="Center">
+                                        <!-- Chart will be rendered here -->
+                                    </HBox>
+                                </VBox>
+                            </IconTabFilter>
+                            
+                            <!-- Priority Distribution Chart -->
+                            <IconTabFilter key="priorityChart" 
+                                         icon="sap-icon://horizontal-bar-chart" 
+                                         text="Priority Analysis">
+                                <VBox alignItems="Center" class="sapUiMediumMargin">
+                                    <Title text="Projects by Priority" level="H3" class="sapUiMediumMarginBottom"/>
+                                    <HBox id="priorityChartContainer" 
+                                         width="100%" 
+                                         height="400px"
+                                         justifyContent="Center">
+                                        <!-- Chart will be rendered here -->
+                                    </HBox>
+                                </VBox>
+                            </IconTabFilter>
+                            
+                            <!-- Timeline Chart -->
+                            <IconTabFilter key="timelineChart" 
+                                         icon="sap-icon://line-chart" 
+                                         text="Project Timeline">
+                                <VBox alignItems="Center" class="sapUiMediumMargin">
+                                    <Title text="Project Creation Timeline" level="H3" class="sapUiMediumMarginBottom"/>
+                                    <HBox id="timelineChartContainer" 
+                                         width="100%" 
+                                         height="400px"
+                                         justifyContent="Center">
+                                        <!-- Chart will be rendered here -->
+                                    </HBox>
+                                </VBox>
+                            </IconTabFilter>
+                            
+                            <!-- Department Distribution Chart -->
+                            <IconTabFilter key="departmentChart" 
+                                         icon="sap-icon://org-chart" 
+                                         text="Department View">
+                                <VBox alignItems="Center" class="sapUiMediumMargin">
+                                    <Title text="Projects by Department" level="H3" class="sapUiMediumMarginBottom"/>
+                                    <HBox id="departmentChartContainer" 
+                                         width="100%" 
+                                         height="400px"
+                                         justifyContent="Center">
+                                        <!-- Chart will be rendered here -->
+                                    </HBox>
+                                </VBox>
+                            </IconTabFilter>
+                        </items>
+                    </IconTabBar>
+                    
+                    <!-- Chart Controls -->
+                    <OverflowToolbar class="sapUiMediumMarginTop">
+                        <ToolbarSpacer/>
+                        <Select selectedKey="{view>/chartView/chartType}"
+                               change=".onChartTypeChange"
+                               tooltip="Select chart type">
+                            <core:Item key="pie" text="Pie Chart"/>
+                            <core:Item key="donut" text="Donut Chart"/>
+                            <core:Item key="bar" text="Bar Chart"/>
+                            <core:Item key="column" text="Column Chart"/>
+                            <core:Item key="line" text="Line Chart"/>
+                        </Select>
+                        <Button text="Refresh Charts" 
+                               icon="sap-icon://refresh"
+                               press=".onRefreshCharts"/>
+                        <Button text="Export Chart" 
+                               icon="sap-icon://download"
+                               press=".onExportChart"/>
+                    </OverflowToolbar>
+                </Panel>
                 
                 <!-- Empty State (shown when no projects) -->
                 <Panel id="emptyStatePanel" 

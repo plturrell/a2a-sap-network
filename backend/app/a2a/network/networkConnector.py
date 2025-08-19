@@ -2,12 +2,12 @@
 Network Connector - Main interface for a2aAgents to connect to a2aNetwork
 """
 
-import asyncio
 import sys
 import os
 from typing import Dict, List, Any, Optional
 import logging
 from datetime import datetime
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -22,20 +22,20 @@ class NetworkConnector:
     """
     
     def __init__(self, 
-                 a2a_network_path: str = "/Users/apple/projects/a2a/a2aNetwork",
-                 registry_url: str = "http://localhost:9000",
-                 trust_service_url: str = "http://localhost:9001"):
+                 a2a_network_path: Optional[str] = None,
+                 registry_url: Optional[str] = None,
+                 trust_service_url: Optional[str] = None):
         """
         Initialize network connector
         
         Args:
-            a2a_network_path: Path to a2aNetwork directory
+            a2a_network_path: Path to a2aNetwork directory (defaults to config)
             registry_url: URL of registry service
             trust_service_url: URL of trust service
         """
-        self.a2a_network_path = a2a_network_path
-        self.registry_url = registry_url
-        self.trust_service_url = trust_service_url
+        self.a2a_network_path = a2a_network_path or settings.A2A_NETWORK_PATH
+        self.registry_url = registry_url or settings.REGISTRY_URL
+        self.trust_service_url = trust_service_url or settings.TRUST_SERVICE_URL
         
         # Network client (will be initialized on first use)
         self._network_client = None
@@ -44,10 +44,10 @@ class NetworkConnector:
         # Initialization status
         self._initialized = False
         
-        logger.info(f"NetworkConnector created")
-        logger.info(f"  a2aNetwork path: {a2a_network_path}")
-        logger.info(f"  Registry URL: {registry_url}")
-        logger.info(f"  Trust Service URL: {trust_service_url}")
+        logger.info("NetworkConnector created")
+        logger.info("  a2aNetwork path: %s", a2a_network_path)
+        logger.info("  Registry URL: %s", registry_url)
+        logger.info("  Trust Service URL: %s", trust_service_url)
     
     async def initialize(self) -> bool:
         """Initialize network connectivity"""
@@ -66,8 +66,8 @@ class NetworkConnector:
             
             return self._network_available
             
-        except Exception as e:
-            logger.error(f"NetworkConnector initialization failed: {e}")
+        except (ImportError, RuntimeError) as e:
+            logger.error("NetworkConnector initialization failed: %s", e)
             self._network_available = False
             self._initialized = True
             return False
@@ -99,10 +99,10 @@ class NetworkConnector:
                 logger.warning("⚠️  a2aNetwork services unavailable, using local fallback")
                 
         except ImportError as e:
-            logger.warning(f"a2aNetwork not available: {e}")
+            logger.warning("a2aNetwork not available: %s", e)
             self._network_available = False
-        except Exception as e:
-            logger.error(f"Network client initialization failed: {e}")
+        except RuntimeError as e:
+            logger.error("Network client initialization failed: %s", e)
             self._network_available = False
     
     async def register_agent(self, agent_instance) -> Dict[str, Any]:
@@ -121,7 +121,7 @@ class NetworkConnector:
         try:
             if self._network_available and self._network_client:
                 # Use network registration
-                logger.info(f"Registering agent {agent_instance.agent_id} with a2aNetwork")
+                logger.info("Registering agent %s with a2aNetwork", agent_instance.agent_id)
                 
                 # Create agent card using network SDK
                 agent_card = self._network_client.sdk.create_agent_card_from_base(agent_instance)
@@ -130,17 +130,17 @@ class NetworkConnector:
                 result = await self._network_client.register_agent(agent_card)
                 
                 if result.get("success", False):
-                    logger.info(f"✅ Agent {agent_instance.agent_id} registered with a2aNetwork")
+                    logger.info("✅ Agent %s registered with a2aNetwork", agent_instance.agent_id)
                     return result
                 else:
-                    raise Exception(f"Network registration failed: {result.get('error', 'Unknown error')}")
+                    raise RuntimeError(f"Network registration failed: {result.get('error', 'Unknown error')}")
             else:
                 # Fallback to local registration
-                logger.info(f"Registering agent {agent_instance.agent_id} locally (network unavailable)")
+                logger.info("Registering agent %s locally (network unavailable)", agent_instance.agent_id)
                 return await self._register_agent_locally(agent_instance)
                 
-        except Exception as e:
-            logger.error(f"Agent registration failed: {e}")
+        except RuntimeError as e:
+            logger.error("Agent registration failed: %s", e)
             # Fallback to local registration
             return await self._register_agent_locally(agent_instance)
     
@@ -168,17 +168,17 @@ class NetworkConnector:
             
             # Load existing registry
             if os.path.exists(local_registry_path):
-                with open(local_registry_path, 'r') as f:
+                with open(local_registry_path, 'r', encoding="utf-8") as f:
                     local_registry = json.load(f)
             
             # Add agent
             local_registry[agent_instance.agent_id] = agent_record
             
             # Save registry
-            with open(local_registry_path, 'w') as f:
+            with open(local_registry_path, 'w', encoding="utf-8") as f:
                 json.dump(local_registry, f, indent=2)
             
-            logger.info(f"✅ Agent {agent_instance.agent_id} registered locally")
+            logger.info("✅ Agent %s registered locally", agent_instance.agent_id)
             
             return {
                 "success": True,
@@ -187,8 +187,8 @@ class NetworkConnector:
                 "registry_path": local_registry_path
             }
             
-        except Exception as e:
-            logger.error(f"Local agent registration failed: {e}")
+        except (IOError, TypeError) as e:
+            logger.error("Local agent registration failed: %s", e)
             return {
                 "success": False,
                 "error": str(e)
@@ -208,8 +208,8 @@ class NetworkConnector:
                 # Search local registry
                 return await self._find_agents_locally(capabilities, domain)
                 
-        except Exception as e:
-            logger.error(f"Agent search failed: {e}")
+        except RuntimeError as e:
+            logger.error("Agent search failed: %s", e)
             return []
     
     async def _find_agents_locally(self, capabilities: List[str] = None, 
@@ -222,11 +222,11 @@ class NetworkConnector:
                 return []
             
             import json
-            with open(local_registry_path, 'r') as f:
+            with open(local_registry_path, 'r', encoding="utf-8") as f:
                 local_registry = json.load(f)
             
             agents = []
-            for agent_id, agent_data in local_registry.items():
+            for agent_data in local_registry.values():
                 # Filter by capabilities if specified
                 if capabilities:
                     agent_capabilities = set(agent_data.get("capabilities", []))
@@ -244,8 +244,8 @@ class NetworkConnector:
             
             return agents
             
-        except Exception as e:
-            logger.error(f"Local agent search failed: {e}")
+        except (IOError, TypeError) as e:
+            logger.error("Local agent search failed: %s", e)
             return []
     
     async def send_message(self, from_agent: str, to_agent: str, 
@@ -262,8 +262,8 @@ class NetworkConnector:
                 # Local messaging fallback
                 return await self._send_message_locally(from_agent, to_agent, message)
                 
-        except Exception as e:
-            logger.error(f"Message sending failed: {e}")
+        except RuntimeError as e:
+            logger.error("Message sending failed: %s", e)
             return {
                 "success": False,
                 "error": str(e)
@@ -273,8 +273,8 @@ class NetworkConnector:
                                    message: Dict[str, Any]) -> Dict[str, Any]:
         """Send message locally when network unavailable"""
         # For local mode, we'll just log the message
-        logger.info(f"LOCAL MESSAGE: {from_agent} -> {to_agent}")
-        logger.info(f"Message content: {message}")
+        logger.info("LOCAL MESSAGE: %s -> %s", from_agent, to_agent)
+        logger.info("Message content: %s", message)
         
         return {
             "success": True,
@@ -300,8 +300,8 @@ class NetworkConnector:
                     dublin_core_metadata, ord_descriptor
                 )
                 
-        except Exception as e:
-            logger.error(f"Data product registration failed: {e}")
+        except RuntimeError as e:
+            logger.error("Data product registration failed: %s", e)
             return {
                 "success": False,
                 "error": str(e)
@@ -319,7 +319,7 @@ class NetworkConnector:
             
             # Load existing data products
             if os.path.exists(local_dp_path):
-                with open(local_dp_path, 'r') as f:
+                with open(local_dp_path, 'r', encoding="utf-8") as f:
                     data_products = json.load(f)
             
             # Create data product record
@@ -337,10 +337,10 @@ class NetworkConnector:
             data_products[dp_id] = data_product_record
             
             # Save data products
-            with open(local_dp_path, 'w') as f:
+            with open(local_dp_path, 'w', encoding="utf-8") as f:
                 json.dump(data_products, f, indent=2)
             
-            logger.info(f"✅ Data product {dp_id} registered locally")
+            logger.info("✅ Data product %s registered locally", dp_id)
             
             return {
                 "success": True,
@@ -348,8 +348,8 @@ class NetworkConnector:
                 "registration_type": "local"
             }
             
-        except Exception as e:
-            logger.error(f"Local data product registration failed: {e}")
+        except (IOError, TypeError) as e:
+            logger.error("Local data product registration failed: %s", e)
             return {
                 "success": False,
                 "error": str(e)
@@ -372,8 +372,8 @@ class NetworkConnector:
             try:
                 network_status = await self._network_client.get_network_status()
                 status.update(network_status)
-            except Exception as e:
-                logger.error(f"Failed to get network status: {e}")
+            except RuntimeError as e:
+                logger.error("Failed to get network status: %s", e)
                 status["network_error"] = str(e)
         
         return status
@@ -386,13 +386,13 @@ class NetworkConnector:
             
             logger.info("NetworkConnector shutdown complete")
             
-        except Exception as e:
-            logger.error(f"NetworkConnector shutdown error: {e}")
+        except RuntimeError as e:
+            logger.error("NetworkConnector shutdown error: %s", e)
 
 
-def get_network_connector(a2a_network_path: str = "/Users/apple/projects/a2a/a2aNetwork",
-                         registry_url: str = "http://localhost:9000",
-                         trust_service_url: str = "http://localhost:9001") -> NetworkConnector:
+def get_network_connector(a2a_network_path: Optional[str] = None,
+                         registry_url: Optional[str] = None,
+                         trust_service_url: Optional[str] = None) -> NetworkConnector:
     """Get global network connector instance"""
     global _network_connector
     

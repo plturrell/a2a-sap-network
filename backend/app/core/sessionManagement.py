@@ -11,6 +11,7 @@ import hashlib
 from typing import Dict, Any, Optional, Tuple, List, Set
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
+import secrets
 try:
     import jwt
     JWT_AVAILABLE = True
@@ -557,6 +558,69 @@ class SessionManager:
                     refresh_info.is_revoked = True
     
     # Serialization helpers
+    async def create_password_reset_token(self, user_id: str, email: str) -> str:
+        """Create secure password reset token valid for 1 hour"""
+        try:
+            # Generate secure random token
+            reset_token = secrets.token_urlsafe(32)
+            
+            # Create token data
+            token_data = {
+                "user_id": user_id,
+                "email": email,
+                "created_at": datetime.utcnow().isoformat(),
+                "expires_at": (datetime.utcnow() + timedelta(hours=1)).isoformat(),
+                "token_type": "password_reset"
+            }
+            
+            # Store token (in production, use Redis with TTL)
+            if not hasattr(self, '_password_reset_tokens'):
+                self._password_reset_tokens = {}
+            
+            self._password_reset_tokens[reset_token] = token_data
+            
+            logger.info(f"Password reset token created for user {user_id}")
+            return reset_token
+            
+        except Exception as e:
+            logger.error(f"Failed to create password reset token: {e}")
+            raise SecurityError("Failed to create password reset token")
+    
+    async def validate_password_reset_token(self, reset_token: str) -> Dict[str, Any]:
+        """Validate password reset token and return user data"""
+        try:
+            if not hasattr(self, '_password_reset_tokens'):
+                self._password_reset_tokens = {}
+            
+            token_data = self._password_reset_tokens.get(reset_token)
+            
+            if not token_data:
+                raise ValidationError("Invalid reset token")
+            
+            # Check expiration
+            expires_at = datetime.fromisoformat(token_data["expires_at"])
+            if datetime.utcnow() > expires_at:
+                # Clean up expired token
+                del self._password_reset_tokens[reset_token]
+                raise ValidationError("Reset token has expired")
+            
+            return token_data
+            
+        except ValidationError:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to validate password reset token: {e}")
+            raise ValidationError("Invalid reset token")
+    
+    async def invalidate_password_reset_token(self, reset_token: str):
+        """Invalidate used password reset token"""
+        try:
+            if hasattr(self, '_password_reset_tokens') and reset_token in self._password_reset_tokens:
+                del self._password_reset_tokens[reset_token]
+                logger.info("Password reset token invalidated")
+        except Exception as e:
+            logger.error(f"Failed to invalidate password reset token: {e}")
+
     def _serialize_session(self, session: SessionInfo) -> Dict[str, Any]:
         return {
             "session_id": session.session_id,

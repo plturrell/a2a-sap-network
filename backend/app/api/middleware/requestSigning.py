@@ -2,6 +2,7 @@
 Request Signing Middleware
 Automatically verifies signed API requests
 """
+import http
 
 import logging
 from typing import Optional, List

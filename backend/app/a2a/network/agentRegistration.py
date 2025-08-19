@@ -8,6 +8,7 @@ import logging
 from datetime import datetime
 
 from .networkConnector import get_network_connector
+from ..storage import get_distributed_storage
 
 logger = logging.getLogger(__name__)
 
@@ -22,13 +23,18 @@ class AgentRegistrationService:
         self.registered_agents = {}
         self.registration_tasks = {}
         self.network_connector = None
+        self.distributed_storage = None
     
     async def initialize(self):
         """Initialize the registration service"""
         try:
             self.network_connector = get_network_connector()
             await self.network_connector.initialize()
-            logger.info("AgentRegistrationService initialized")
+            
+            # Initialize distributed storage
+            self.distributed_storage = await get_distributed_storage()
+            
+            logger.info("AgentRegistrationService initialized with distributed storage")
         except Exception as e:
             logger.error(f"Failed to initialize AgentRegistrationService: {e}")
     
@@ -53,13 +59,28 @@ class AgentRegistrationService:
             result = await self.network_connector.register_agent(agent_instance)
             
             if result.get("success", False):
-                # Store registration info
+                # Store registration info locally
                 self.registered_agents[agent_instance.agent_id] = {
                     "agent": agent_instance,
                     "registration_result": result,
                     "registered_at": datetime.utcnow().isoformat(),
                     "status": "active"
                 }
+                
+                # Store in distributed storage
+                agent_data = {
+                    "agent_id": agent_instance.agent_id,
+                    "name": getattr(agent_instance, 'name', agent_instance.agent_id),
+                    "description": getattr(agent_instance, 'description', ''),
+                    "capabilities": getattr(agent_instance, 'capabilities', []),
+                    "endpoint": getattr(agent_instance, 'endpoint', ''),
+                    "status": "active",
+                    "registered_at": datetime.utcnow().isoformat(),
+                    "registration_result": result,
+                    "public_key": getattr(agent_instance, 'public_key_pem', None)
+                }
+                
+                await self.distributed_storage.register_agent(agent_instance.agent_id, agent_data)
                 
                 logger.info(f"✅ Agent {agent_instance.agent_id} auto-registered successfully")
                 
@@ -107,6 +128,14 @@ class AgentRegistrationService:
             if result.get("success", False):
                 agent_info["registration_result"] = result
                 agent_info["last_updated"] = datetime.utcnow().isoformat()
+                
+                # Update in distributed storage
+                agent_data = await self.distributed_storage.get_agent(agent_id)
+                if agent_data:
+                    agent_data["capabilities"] = new_capabilities
+                    agent_data["last_updated"] = datetime.utcnow().isoformat()
+                    await self.distributed_storage.register_agent(agent_id, agent_data)
+                
                 logger.info(f"✅ Agent {agent_id} capabilities updated")
                 return True
             else:
@@ -137,6 +166,9 @@ class AgentRegistrationService:
                 # Mark as inactive
                 self.registered_agents[agent_id]["status"] = "inactive"
                 self.registered_agents[agent_id]["deregistered_at"] = datetime.utcnow().isoformat()
+                
+                # Remove from distributed storage
+                await self.distributed_storage.deregister_agent(agent_id)
                 
                 logger.info(f"✅ Agent {agent_id} deregistered")
                 return True

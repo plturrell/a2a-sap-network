@@ -315,3 +315,79 @@ async def get_metrics():
         "ord_registry_rfc5013_compliance": health["standards_compliance"]["rfc5013_compliance_rate"],
         "ord_registry_up": 1
     }
+
+
+@router.get("/blockchain/status")
+async def get_blockchain_status(
+    registry: ORDRegistryService = Depends(ensure_ord_registry_initialized)
+):
+    """Get blockchain integration status"""
+    try:
+        status = await registry.get_blockchain_status()
+        return status
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/register/{registration_id}/verify")
+async def verify_document_integrity(
+    registration_id: str,
+    version: str = None,
+    registry: ORDRegistryService = Depends(ensure_ord_registry_initialized)
+):
+    """Verify document integrity using blockchain records"""
+    try:
+        verification = await registry.verify_document_integrity(registration_id, version)
+        
+        if verification.get("status") == "not_found":
+            raise HTTPException(status_code=404, detail="Registration not found")
+        elif verification.get("status") == "unavailable":
+            raise HTTPException(status_code=503, detail="Blockchain verification not available")
+        
+        return verification
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/register/{registration_id}/blockchain-history")
+async def get_document_blockchain_history(
+    registration_id: str,
+    registry: ORDRegistryService = Depends(ensure_ord_registry_initialized)
+):
+    """Get complete blockchain history for a document"""
+    try:
+        history = await registry.get_document_blockchain_history(registration_id)
+        return history
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/register/{registration_id}/blockchain-audit")
+async def create_blockchain_audit_entry(
+    registration_id: str,
+    audit_data: dict,
+    registry: ORDRegistryService = Depends(ensure_ord_registry_initialized)
+):
+    """Create a blockchain audit trail entry"""
+    try:
+        if not registry.blockchain_integration:
+            raise HTTPException(status_code=503, detail="Blockchain integration not available")
+        
+        audit_entry = await registry.blockchain_integration.create_audit_trail(
+            registration_id=registration_id,
+            operation=audit_data.get("operation", "manual_audit"),
+            user=audit_data.get("user", "api_user"),
+            details=audit_data.get("details", {})
+        )
+        
+        return {
+            "message": "Audit entry created successfully",
+            "audit_entry": audit_entry
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

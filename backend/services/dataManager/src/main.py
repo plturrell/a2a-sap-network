@@ -4,23 +4,27 @@ Data Manager - A2A Microservice
 Central data persistence service for the A2A network
 """
 
-import asyncio
+import sys
 import os
+# Add path for imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import asyncio
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .agent import DataManagerAgent
-from .router import create_a2a_router
+from agent import DataManagerAgent
+from router import create_a2a_router
 
 async def main():
     # Get configuration from environment variables
-    port = int(os.getenv("AGENT_PORT", "8008"))
-    host = os.getenv("AGENT_HOST", "0.0.0.0")
-    base_url = os.getenv("AGENT_BASE_URL", f"http://localhost:{port}")
+    port = int(os.getenv("A2A_AGENT_PORT", "8008"))
+    host = os.getenv("A2A_AGENT_HOST", "0.0.0.0")
+    base_url = os.getenv("A2A_AGENT_BASE_URL", f"http://localhost:{port}")
     
     # A2A network configuration
-    agent_manager_url = os.getenv("AGENT_MANAGER_URL", "http://agent-manager:8007")
+    agent_manager_url = os.getenv("A2A_AGENT_MANAGER_URL", "http://agent-manager:8007")
     
     # Storage configuration
     storage_backend = os.getenv("STORAGE_BACKEND", "sqlite")
@@ -34,7 +38,12 @@ async def main():
     
     # Initialize agent and register with A2A network
     await agent.initialize()
-    await agent.register_with_network()
+    # Skip registration if Agent Manager is not available
+    try:
+        await agent.register_with_network()
+    except Exception as e:
+        print(f"Warning: Could not register with Agent Manager: {e}")
+        print("Continuing without registration...")
     
     # Create FastAPI app
     app = FastAPI(
@@ -48,10 +57,10 @@ async def main():
     # Add CORS middleware for A2A communication with secure configuration
     # SECURITY: Never use "*" for origins when credentials are allowed
     allowed_origins = os.getenv("CORS_ORIGINS", "").split(",") if os.getenv("CORS_ORIGINS") else [
-        "http://localhost:3000",     # Development frontend
-        "http://localhost:8080",     # Gateway
+        os.getenv("A2A_FRONTEND_URL", "http://localhost:3000"),
+        os.getenv("A2A_GATEWAY_URL", "http://localhost:8080"),  # Gateway
         "http://gateway:8080",       # Internal gateway service
-        "http://agent-manager:8007", # Agent Manager internal
+        "http://agent-manager:8010", # Agent Manager internal
     ]
     
     app.add_middleware(

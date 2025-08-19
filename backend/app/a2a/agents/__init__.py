@@ -25,7 +25,7 @@ All agents should use the SDK versions from the active/ folders.
 # from .agent2_ai_preparation.active.ai_preparation_agent_sdk import AIPreparationAgentSDK
 # from .agent3_vector_processing.active.vector_processing_agent_sdk import VectorProcessingAgentSDK
 from .agent4CalcValidation.active.calcValidationAgentSdk import CalcValidationAgentSDK
-from .agent5QaValidation.active.qaValidationAgentSdk import QAValidationAgentSDK
+# from .agent5QaValidation.active.qaValidationAgentSdk import QAValidationAgentSDK  # Still has import issues
 # from .agent_manager.active.agent_manager_agent import AgentManagerAgent
 # from .data_manager.active.data_manager_agent_sdk import DataManagerAgentSDK
 # from .catalog_manager.active.catalog_manager_agent_sdk import CatalogManagerAgentSDK

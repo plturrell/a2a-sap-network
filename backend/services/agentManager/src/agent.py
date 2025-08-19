@@ -2,6 +2,7 @@
 Agent Manager - A2A Network Orchestrator
 Manages agent discovery, health monitoring, workflow orchestration, and trust verification
 """
+import os
 
 import asyncio
 import json
@@ -216,6 +217,9 @@ class AgentManager(A2AAgentBase):
                 recovery_timeout=60,
                 expected_exception=Exception
             )
+            
+            # Initialize agent with default reputation
+            await self._initialize_agent_reputation(agent.agent_id)
             
             self.metrics["total_agents_registered"] += 1
             
@@ -651,6 +655,153 @@ class AgentManager(A2AAgentBase):
             "certificate": base64.b64encode(json.dumps(certificate).encode()).decode(),
             "expires_at": certificate["expires_at"]
         }
+    
+    async def _initialize_agent_reputation(self, agent_id: str) -> None:
+        """Initialize agent with default reputation in A2A Network"""
+        try:
+            # Call A2A Network service to create agent record with reputation
+            a2a_network_url = "http://localhost:4004/api/v1/network"
+            
+            agent_data = {
+                "address": f"0x{hashlib.sha256(agent_id.encode()).hexdigest()[:40]}",
+                "name": agent_id,
+                "endpoint": self.registered_agents[agent_id].base_url,
+                "reputation": 100,  # Default reputation
+                "isActive": True
+            }
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{a2a_network_url}/Agents",
+                    json=agent_data,
+                    timeout=10.0
+                )
+                
+                if response.status_code == 201:
+                    logger.info(f"Agent {agent_id} registered in A2A Network with default reputation")
+                    
+                    # Initialize agent performance record
+                    performance_data = {
+                        "agent_ID": response.json()["ID"],
+                        "totalTasks": 0,
+                        "successfulTasks": 0,
+                        "failedTasks": 0,
+                        "reputationScore": 100,
+                        "trustScore": 1.0
+                    }
+                    
+                    await client.post(
+                        f"{a2a_network_url}/AgentPerformance",
+                        json=performance_data,
+                        timeout=10.0
+                    )
+                    
+                else:
+                    logger.warning(f"Failed to register agent {agent_id} in A2A Network: {response.status_code}")
+                    
+        except Exception as e:
+            logger.error(f"Error initializing agent reputation for {agent_id}: {e}")
+    
+    async def update_agent_reputation(self, agent_id: str, reputation_change: int, reason: str) -> None:
+        """Update agent reputation after task completion"""
+        try:
+            a2a_network_url = "http://localhost:4004/api/v1/network"
+            
+            # Apply reputation change through reputation service
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{a2a_network_url}/ReputationTransactions",
+                    json={
+                        "agent": {"ID": agent_id},
+                        "transactionType": reason,
+                        "amount": reputation_change,
+                        "reason": reason,
+                        "context": json.dumps({
+                            "updated_by": "agent_manager",
+                            "timestamp": datetime.utcnow().isoformat()
+                        }),
+                        "isAutomated": True
+                    },
+                    timeout=10.0
+                )
+                
+                if response.status_code == 201:
+                    logger.info(f"Reputation updated for agent {agent_id}: {reputation_change} points ({reason})")
+                else:
+                    logger.warning(f"Failed to update reputation for agent {agent_id}: {response.status_code}")
+                    
+        except Exception as e:
+            logger.error(f"Error updating agent reputation for {agent_id}: {e}")
+    
+    async def handle_task_completion(self, agent_id: str, task_result: Dict[str, Any]) -> None:
+        """Handle task completion and update reputation accordingly"""
+        try:
+            # Calculate reputation change based on task result
+            reputation_change = 0
+            reason = "TASK_COMPLETION"
+            
+            if task_result.get("status") == "success":
+                complexity = task_result.get("complexity", "MEDIUM")
+                reputation_change = {
+                    "SIMPLE": 5,
+                    "MEDIUM": 10,
+                    "COMPLEX": 20,
+                    "CRITICAL": 30
+                }.get(complexity, 10)
+                
+                # Performance bonuses
+                if task_result.get("completion_time", 0) < task_result.get("expected_time", float('inf')) * 0.5:
+                    reputation_change += 5  # Fast completion bonus
+                    
+                if task_result.get("accuracy", 0) > 0.95:
+                    reputation_change += 10  # High accuracy bonus
+                    
+            elif task_result.get("status") == "failed":
+                failure_type = task_result.get("failure_type", "ERROR")
+                reputation_change = {
+                    "TIMEOUT": -5,
+                    "ERROR": -10,
+                    "ABANDONED": -15
+                }.get(failure_type, -10)
+                reason = f"TASK_FAILURE_{failure_type}"
+            
+            # Update reputation
+            if reputation_change != 0:
+                await self.update_agent_reputation(agent_id, reputation_change, reason)
+                
+        except Exception as e:
+            logger.error(f"Error handling task completion for agent {agent_id}: {e}")
+    
+    async def endorse_agent(self, endorser_id: str, endorsed_id: str, amount: int, reason: str) -> Dict[str, Any]:
+        """Handle peer-to-peer agent endorsement"""
+        try:
+            a2a_network_url = "http://localhost:4004/api/v1/network"
+            
+            # Call the endorsement action on the A2A Network
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{a2a_network_url}/Agents({endorsed_id})/endorsePeer",
+                    json={
+                        "toAgentId": endorsed_id,
+                        "amount": amount,
+                        "reason": reason,
+                        "description": f"Endorsed by {endorser_id}"
+                    },
+                    timeout=10.0
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    logger.info(f"Agent {endorser_id} endorsed {endorsed_id} with {amount} points")
+                    return create_success_response(result)
+                else:
+                    error_msg = f"Failed to endorse agent: {response.status_code}"
+                    logger.warning(error_msg)
+                    return create_error_response(response.status_code, error_msg)
+                    
+        except Exception as e:
+            logger.error(f"Error endorsing agent {endorsed_id}: {e}")
+            return create_error_response(500, str(e))
 
 
 class CircuitBreaker:

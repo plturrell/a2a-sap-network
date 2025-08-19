@@ -3,32 +3,19 @@ Platform-specific connectors for catalog synchronization
 All connectors maintain A2A protocol compliance
 """
 
-import asyncio
 import json
-from typing import Dict, List, Any, Optional
-from datetime import datetime
+from typing import Dict, List, Any
 import logging
 import httpx
-from abc import ABC, abstractmethod
+import base64
 
 from .catalogIntegrationSkill import DownstreamConnector, CatalogChangeEvent
 from .ordTransformerSkill import ORDTransformerSkill, CSNTransformerSkill
-from app.a2a.core.types import A2AMessage, MessagePart, MessageRole
+from app.a2a.core.a2aTypes import A2AMessage, MessagePart, MessageRole
 from app.a2a.core.authManager import get_auth_manager
-from app.a2a.core.circuitBreaker import get_breaker_manager, CircuitBreakerOpenError
+from app.a2a.core.circuitBreaker import get_circuit_breaker_manager, CircuitBreakerOpenError
 # Import trust components from a2aNetwork
-try:
-    import sys
-    sys.path.insert(0, '/Users/apple/projects/a2a/a2aNetwork')
-    from trustSystem.smartContractTrust import sign_a2a_message, initialize_agent_trust, verify_a2a_message
-except ImportError:
-    # Fallback functions
-    def sign_a2a_message(*args, **kwargs):
-        return {"signature": "mock"}
-    def initialize_agent_trust(*args, **kwargs):
-        return True
-    def verify_a2a_message(*args, **kwargs):
-        return True
+from a2aNetwork.trustSystem.smartContractTrust import sign_a2a_message
 logger = logging.getLogger(__name__)
 
 
@@ -43,6 +30,7 @@ class SAPDataspherConnector(DownstreamConnector):
             system_namespace=config.get("namespace", "com.company"),
             system_type="datasphere"
         )
+        self._auth_registered = False
     
     async def push_catalog_change(self, event: CatalogChangeEvent) -> Dict[str, Any]:
         """Push catalog change to SAP Datasphere"""
@@ -72,11 +60,8 @@ class SAPDataspherConnector(DownstreamConnector):
             signed_message = sign_a2a_message(message.model_dump())
             
             # Get circuit breaker for this connector
-            breaker = get_breaker_manager().get_breaker(
-                f"datasphere_{self.endpoint}",
-                failure_threshold=3,
-                timeout=120.0
-            )
+            breaker_manager = await get_circuit_breaker_manager()
+            breaker = await breaker_manager.get_circuit_breaker(f"datasphere_{self.endpoint}")
             
             async def call_api():
                 async with httpx.AsyncClient() as client:
@@ -96,18 +81,21 @@ class SAPDataspherConnector(DownstreamConnector):
                             "platform": "datasphere",
                             "response": response.json()
                         }
-                    elif response.status_code == 401:
-                        # Force token refresh on auth error
-                        self._auth_registered = False
-                        raise Exception("Authentication failed - token may be expired")
                     else:
-                        raise Exception(f"Datasphere sync failed: {response.status_code} - {response.text}")
+                        response.raise_for_status()
             
             # Call through circuit breaker
             return await breaker.call(call_api)
                     
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 401:
+                self._auth_registered = False
+                logger.error("Authentication failed for Datasphere, token may be expired.")
+            else:
+                logger.error("Error pushing to Datasphere: %s - %s", e.response.status_code, e.response.text)
+            raise
         except Exception as e:
-            logger.error(f"Error pushing to Datasphere: {e}")
+            logger.error("An unexpected error occurred while pushing to Datasphere: %s", e)
             raise
     
     async def validate_connection(self) -> bool:
@@ -121,8 +109,8 @@ class SAPDataspherConnector(DownstreamConnector):
                     timeout=10.0
                 )
                 return response.status_code == 200
-        except Exception as e:
-            logger.error(f"Datasphere connection validation failed: {e}")
+        except httpx.RequestError as e:
+            logger.error("Datasphere connection validation failed: %s", e)
             return False
     
     def get_supported_entity_types(self) -> List[str]:
@@ -134,7 +122,7 @@ class SAPDataspherConnector(DownstreamConnector):
         auth_manager = get_auth_manager()
         # Register OAuth2 client if not already done
         platform_id = f"datasphere_{self.endpoint}"
-        if not hasattr(self, '_auth_registered'):
+        if not self._auth_registered:
             auth_manager.register_oauth2(
                 platform_id,
                 self.auth_config["client_id"],
@@ -162,17 +150,6 @@ class UnityaCatalogConnector(DownstreamConnector):
             # Map event to Unity Catalog format
             unity_payload = self._map_to_unity_format(event)
             
-            # Create A2A message
-            message = A2AMessage(
-                role=MessageRole.AGENT,
-                contextId=event.event_id,
-                parts=[
-                    MessagePart(
-                        kind="unity_catalog_update",
-                        data=unity_payload
-                    )
-                ]
-            )
             
             # Send to Unity Catalog
             async with httpx.AsyncClient() as client:
@@ -209,10 +186,13 @@ class UnityaCatalogConnector(DownstreamConnector):
                         "response": response.json() if response.content else {}
                     }
                 else:
-                    raise Exception(f"Unity Catalog sync failed: {response.status_code} - {response.text}")
+                    response.raise_for_status()
                     
+        except httpx.HTTPStatusError as e:
+            logger.error("Unity Catalog sync failed: %s - %s", e.response.status_code, e.response.text)
+            raise
         except Exception as e:
-            logger.error(f"Error pushing to Unity Catalog: {e}")
+            logger.error("An unexpected error occurred while pushing to Unity Catalog: %s", e)
             raise
     
     async def validate_connection(self) -> bool:
@@ -225,7 +205,8 @@ class UnityaCatalogConnector(DownstreamConnector):
                     timeout=10.0
                 )
                 return response.status_code == 200
-        except:
+        except httpx.RequestError as e:
+            logger.error("Unity Catalog connection validation failed: %s", e)
             return False
     
     def get_supported_entity_types(self) -> List[str]:
@@ -335,10 +316,13 @@ class SAPHANACloudConnector(DownstreamConnector):
                         "response": response.json()
                     }
                 else:
-                    raise Exception(f"HANA HDI deployment failed: {response.status_code} - {response.text}")
+                    response.raise_for_status()
                     
+        except httpx.HTTPStatusError as e:
+            logger.error("HANA HDI deployment failed: %s - %s", e.response.status_code, e.response.text)
+            raise
         except Exception as e:
-            logger.error(f"Error pushing to HANA Cloud: {e}")
+            logger.error("An unexpected error occurred while pushing to HANA Cloud: %s", e)
             raise
     
     async def validate_connection(self) -> bool:
@@ -352,7 +336,8 @@ class SAPHANACloudConnector(DownstreamConnector):
                     timeout=10.0
                 )
                 return response.status_code == 200
-        except:
+        except httpx.RequestError as e:
+            logger.error("HANA Cloud connection validation failed: %s", e)
             return False
     
     def get_supported_entity_types(self) -> List[str]:
@@ -461,20 +446,6 @@ class ClouderaAtlasConnector(DownstreamConnector):
             # Map to Atlas entity format
             atlas_entities = self._map_to_atlas_format(event)
             
-            # Create A2A message
-            message = A2AMessage(
-                role=MessageRole.AGENT,
-                contextId=event.event_id,
-                parts=[
-                    MessagePart(
-                        kind="atlas_entity_update",
-                        data={
-                            "entities": atlas_entities,
-                            "operation": event.operation
-                        }
-                    )
-                ]
-            )
             
             # Send to Atlas
             async with httpx.AsyncClient() as client:
@@ -503,10 +474,13 @@ class ClouderaAtlasConnector(DownstreamConnector):
                         "response": response.json() if response.content else {}
                     }
                 else:
-                    raise Exception(f"Atlas sync failed: {response.status_code} - {response.text}")
+                    response.raise_for_status()
                     
+        except httpx.HTTPStatusError as e:
+            logger.error("Atlas sync failed: %s - %s", e.response.status_code, e.response.text)
+            raise
         except Exception as e:
-            logger.error(f"Error pushing to Cloudera Atlas: {e}")
+            logger.error("An unexpected error occurred while pushing to Cloudera Atlas: %s", e)
             raise
     
     async def validate_connection(self) -> bool:
@@ -520,7 +494,8 @@ class ClouderaAtlasConnector(DownstreamConnector):
                     timeout=10.0
                 )
                 return response.status_code == 200
-        except:
+        except httpx.RequestError as e:
+            logger.error("Atlas connection validation failed: %s", e)
             return False
     
     def get_supported_entity_types(self) -> List[str]:

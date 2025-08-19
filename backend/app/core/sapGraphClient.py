@@ -1,4 +1,5 @@
 """
+import time
 SAP Graph API Client for unified data access across SAP systems
 Provides centralized access to business data from multiple SAP sources
 """

@@ -2,6 +2,7 @@
 SAP CAP Logging Service
 Implements proper SAP CAP logging standards with structured logging, correlation IDs, and audit trails
 """
+import http
 
 import logging
 import json

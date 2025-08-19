@@ -22,6 +22,18 @@
         showProductSwitcher="true"
         productSwitcherPress="onProductSwitcherPress"
         class="a2a-tablet-shell">
+        <f:additionalContent>
+            <ComboBox
+                id="workspaceSelector"
+                placeholder="{i18n>selectWorkspace}"
+                selectedKey="{workspace>/current}"
+                items="{workspace>/available}"
+                selectionChange="onWorkspaceSelectionChange"
+                width="200px"
+                class="a2a-workspace-selector">
+                <core:Item key="{workspace>id}" text="{workspace>name}"/>
+            </ComboBox>
+        </f:additionalContent>
         <f:menu>
             <Menu>
                 <MenuItem text="{i18n>userSettings}" icon="sap-icon://person-placeholder" press="onUserSettingsPress"/>

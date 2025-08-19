@@ -30,17 +30,41 @@
                     <Button 
                         icon="sap-icon://refresh" 
                         tooltip="Refresh"
-                        press="onRefresh"/>
+                        press="onRefresh"
+                        enabled="{= !${loading>/refreshLoading} }"/>
+                    
+                    <!-- Loading indicator for operations -->
+                    <BusyIndicator 
+                        visible="{loading>/masterLoading}"
+                        size="Small"
+                        class="sapUiTinyMarginBegin"/>
+                        
+                    <!-- Error indicator -->
+                    <Button 
+                        icon="sap-icon://error" 
+                        type="Transparent"
+                        visible="{errors>/hasErrors}"
+                        text="{errors>/errorCount}"
+                        tooltip="View Error Details"
+                        press="onShowErrorDetails"
+                        class="sapUiTinyMarginBegin"/>
                 </headerContent>
                 
                 <content>
                     <VBox>
                         <!-- Search and Filter -->
-                        <SearchField 
-                            width="100%" 
-                            search="onSearch"
-                            placeholder="Search projects..."
-                            class="sapUiMediumMargin"/>
+                        <HBox class="sapUiMediumMargin" alignItems="Center">
+                            <SearchField 
+                                id="searchField"
+                                width="100%" 
+                                search="onSearch"
+                                placeholder="Search projects..."
+                                enabled="{= !${loading>/searchLoading} }"/>
+                            <BusyIndicator 
+                                visible="{loading>/searchLoading}"
+                                size="Small"
+                                class="sapUiTinyMarginBegin"/>
+                        </HBox>
                         
                         <!-- Master List -->
                         <List 
@@ -110,20 +134,57 @@
                     <Button 
                         icon="sap-icon://edit" 
                         tooltip="Edit Project"
-                        press="onEditProject"/>
+                        press="onEditProject"
+                        enabled="{= !${loading>/operationLoading} }"/>
                     <Button 
                         icon="sap-icon://play" 
                         tooltip="Deploy Project"
                         press="onDeployProject"
-                        type="Emphasized"/>
+                        type="Emphasized"
+                        enabled="{= !${loading>/deployLoading} }"/>
                     <Button 
                         icon="sap-icon://action" 
                         tooltip="More Actions"
-                        press="onMoreActions"/>
+                        press="onMoreActions"
+                        enabled="{= !${loading>/operationLoading} }"/>
+                        
+                    <!-- Operation loading indicator -->
+                    <BusyIndicator 
+                        visible="{loading>/operationLoading}"
+                        size="Small"
+                        text="{loading>/currentOperation}"
+                        class="sapUiTinyMarginBegin"/>
                 </headerContent>
                 
                 <content>
-                    <ScrollContainer height="100%" width="100%">
+                    <!-- Loading Indicator -->
+                    <VBox alignItems="Center" 
+                          justifyContent="Center" 
+                          height="100%"
+                          visible="{detailModel>/loading}">
+                        <BusyIndicator size="Large" 
+                                       text="Loading project details..."
+                                       class="sapUiMediumMarginTop"/>
+                    </VBox>
+                    
+                    <!-- Operation Progress Indicator -->
+                    <VBox alignItems="Center" 
+                          justifyContent="Center" 
+                          height="100%"
+                          visible="{= ${loading>/operationLoading} && ${loading>/operationProgress} > 0 }"
+                          class="sapUiMediumMargin">
+                        <Title text="{loading>/currentOperation}" level="H3" class="sapUiMediumMarginBottom"/>
+                        <ProgressIndicator 
+                            percentValue="{loading>/operationProgress}"
+                            displayValue="{= ${loading>/operationProgress} + '%' }"
+                            width="60%"
+                            class="sapUiMediumMarginBottom"/>
+                        <Text text="Please wait while the operation completes..." class="sapUiTinyText"/>
+                    </VBox>
+                    
+                    <!-- Detail Content -->
+                    <ScrollContainer height="100%" width="100%" 
+                                     visible="{= !${detailModel>/loading} }">
                         <VBox class="sapUiMediumMargin">
                             
                             <!-- Project Overview Card -->

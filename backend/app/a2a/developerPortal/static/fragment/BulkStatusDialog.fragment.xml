@@ -1,0 +1,60 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <Dialog title="{i18n>changeProjectStatus}" 
+            contentWidth="450px" 
+            contentHeight="300px"
+            resizable="true"
+            draggable="true"
+            class="a2a-bulk-status-dialog">
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <!-- Selected Projects Summary -->
+                <Text text="{= ${bulkStatus>/selectedProjects}.length } projects selected for status change"
+                      class="sapUiMediumMarginBottom"/>
+                      
+                <!-- Status Selection -->
+                <VBox class="sapUiMediumMarginBottom">
+                    <Label text="{i18n>newStatus}" required="true"/>
+                    <Select selectedKey="{bulkStatus>/newStatus}"
+                           items="{bulkStatus>/statusOptions}"
+                           class="sapUiMediumMarginTop">
+                        <core:Item key="{bulkStatus>key}" text="{bulkStatus>text}"/>
+                    </Select>
+                </VBox>
+                
+                <!-- Status Description -->
+                <VBox class="sapUiMediumMarginBottom">
+                    <Text text="{i18n>statusChangeDescription}" 
+                          class="sapUiSmallText"/>
+                    <Text text="{i18n>statusChangeWarning}" 
+                          class="sapUiSmallText sapUiEmphasisText"/>
+                </VBox>
+                
+                <!-- Selected Projects Preview -->
+                <Panel headerText="{i18n>affectedProjects}" 
+                       expandable="true" 
+                       expanded="false">
+                    <content>
+                        <List items="{bulkStatus>/selectedProjects}"
+                              mode="None"
+                              showSeparators="Inner">
+                            <StandardListItem title="{bulkStatus>name}" 
+                                            description="Current Status: {bulkStatus>status}"
+                                            icon="sap-icon://project"/>
+                        </List>
+                    </content>
+                </Panel>
+            </VBox>
+        </content>
+        <beginButton>
+            <Button text="{i18n>changeStatus}" 
+                    type="Emphasized" 
+                    press="onConfirmBulkStatusChange"
+                    icon="sap-icon://status-positive"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>cancel}" 
+                    press="onCancelBulkStatusChange"
+                    icon="sap-icon://cancel"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

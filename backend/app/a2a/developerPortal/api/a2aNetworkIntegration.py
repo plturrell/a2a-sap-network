@@ -19,7 +19,6 @@ import httpx
 
 # Import A2A Network SDK
 import sys
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent.parent.parent / "a2a_network" / "sdk" / "python"))
 from a2a.client import A2AClient
 from a2a.utils.errors import A2AError
 

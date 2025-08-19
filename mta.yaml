@@ -1,19 +1,42 @@
+# Multi-Target Application (MTA) Deployment Descriptor
+# SAP Business Technology Platform (BTP) deployment configuration
+# Schema version 3.3 supports advanced deployment features and parallel processing
 _schema-version: "3.3"
+
+# Unique identifier for the MTA application across all BTP landscapes
+# Used for service binding, routing, and application lifecycle management
 ID: a2a-agent-platform
+
+# Semantic versioning for deployment tracking and rollback capabilities
+# Increment for each deployment to maintain version history
 version: 1.0.0
+
+# Human-readable description for BTP cockpit and deployment logs
 description: A2A Agent Platform - Enterprise Financial Data Processing
 
-# Build parameters
+# Global deployment parameters affecting all modules
+# These parameters are inherited by all modules unless overridden
 parameters:
+  # HTML5 repository deployment mode for optimized static content delivery
+  # Enables CDN caching and improved performance for frontend assets
   deploy_mode: html5-repo
+  
+  # Parallel deployment reduces total deployment time by processing modules concurrently
+  # Critical for enterprise environments with multiple modules and services
   enable-parallel-deployments: true
 
-# Build modules
+# Global build configuration executed before module-specific builds
+# Ensures consistent dependency management and build artifacts
 build-parameters:
   before-all:
     - builder: custom
       commands:
+        # Install only production dependencies to reduce deployment size
+        # Excludes devDependencies for security and performance optimization
         - npm install --production
+        
+        # Execute build process for all modules (frontend compilation, asset optimization)
+        # Generates production-ready artifacts for deployment
         - npm run build
 
 # Modules definition

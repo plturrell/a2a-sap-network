@@ -1,0 +1,189 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        title="Configure AI Insights"
+        resizable="true"
+        draggable="true"
+        contentWidth="600px"
+        contentHeight="500px"
+        type="Message">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- General Settings -->
+                <form:SimpleForm
+                    maxContainerCols="1"
+                    editable="true"
+                    layout="ResponsiveGridLayout"
+                    labelSpanXL="4"
+                    labelSpanL="4"
+                    labelSpanM="4"
+                    labelSpanS="12"
+                    adjustLabelSpan="false"
+                    emptySpanXL="0"
+                    emptySpanL="0"
+                    emptySpanM="0"
+                    emptySpanS="0"
+                    columnsXL="1"
+                    columnsL="1"
+                    columnsM="1"
+                    class="sapUiMediumMarginBottom">
+                    
+                    <form:content>
+                        <core:Title text="General Settings"/>
+                        
+                        <Label text="Enable AI Insights"/>
+                        <Switch state="{view>/insights/enabled}"
+                               tooltip="Enable or disable AI-powered project insights"/>
+                        
+                        <Label text="Auto Refresh"/>
+                        <Switch state="{view>/insights/autoRefresh}"
+                               tooltip="Automatically refresh insights every 30 seconds"/>
+                        
+                        <Label text="Refresh Interval (seconds)"/>
+                        <StepInput value="{= ${view>/insights/refreshInterval} / 1000 }"
+                                  min="10"
+                                  max="300"
+                                  step="10"
+                                  width="150px"
+                                  tooltip="How often to refresh insights automatically"/>
+                        
+                        <core:Title text="Analysis Configuration"/>
+                        
+                        <Label text="Real-time Analysis"/>
+                        <Switch state="{view>/insights/analysisConfig/enableRealTimeAnalysis}"
+                               tooltip="Enable real-time analysis as project data changes"/>
+                        
+                        <Label text="Include Historical Data"/>
+                        <Switch state="{view>/insights/analysisConfig/includeHistoricalData}"
+                               tooltip="Include historical project data in analysis"/>
+                        
+                        <Label text="Comparative Analysis"/>
+                        <Switch state="{view>/insights/analysisConfig/enableComparativeAnalysis}"
+                               tooltip="Compare with similar projects for better insights"/>
+                        
+                        <Label text="Predictive Analysis"/>
+                        <Switch state="{view>/insights/analysisConfig/enablePredictiveAnalysis}"
+                               tooltip="Generate predictions based on current trends"/>
+                        
+                        <Label text="Confidence Threshold"/>
+                        <Slider value="{= ${view>/insights/analysisConfig/confidenceThreshold} * 100 }"
+                               min="50"
+                               max="99"
+                               step="5"
+                               width="200px"
+                               tooltip="Minimum confidence level for displaying insights"/>
+                        <Text text="{= Math.round(${view>/insights/analysisConfig/confidenceThreshold} * 100) + '%' }"
+                              class="sapUiTinyText"/>
+                    </form:content>
+                </form:SimpleForm>
+                
+                <!-- Insight Categories -->
+                <Panel headerText="Insight Categories" expandable="true" expanded="true">
+                    <content>
+                        <form:SimpleForm
+                            maxContainerCols="2"
+                            editable="true"
+                            layout="ResponsiveGridLayout"
+                            labelSpanXL="6"
+                            labelSpanL="6"
+                            labelSpanM="12"
+                            labelSpanS="12"
+                            adjustLabelSpan="false"
+                            emptySpanXL="0"
+                            emptySpanL="0"
+                            emptySpanM="0"
+                            emptySpanS="0"
+                            columnsXL="2"
+                            columnsL="2"
+                            columnsM="1"
+                            class="sapUiSmallMargin">
+                            
+                            <form:content>
+                                <Label text="Risk Analysis"/>
+                                <Switch state="{view>/insights/insightCategories/risk/enabled}"/>
+                                
+                                <Label text="Optimization Opportunities"/>
+                                <Switch state="{view>/insights/insightCategories/optimization/enabled}"/>
+                                
+                                <Label text="Compliance Checks"/>
+                                <Switch state="{view>/insights/insightCategories/compliance/enabled}"/>
+                                
+                                <Label text="Predictive Insights"/>
+                                <Switch state="{view>/insights/insightCategories/prediction/enabled}"/>
+                                
+                                <Label text="Recommendations"/>
+                                <Switch state="{view>/insights/insightCategories/recommendation/enabled}"/>
+                            </form:content>
+                        </form:SimpleForm>
+                    </content>
+                </Panel>
+                
+                <!-- Display Settings -->
+                <Panel headerText="Display Settings" expandable="true" expanded="false">
+                    <content>
+                        <form:SimpleForm
+                            maxContainerCols="1"
+                            editable="true"
+                            layout="ResponsiveGridLayout"
+                            labelSpanXL="4"
+                            labelSpanL="4"
+                            labelSpanM="4"
+                            labelSpanS="12"
+                            adjustLabelSpan="false"
+                            emptySpanXL="0"
+                            emptySpanL="0"
+                            emptySpanM="0"
+                            emptySpanS="0"
+                            columnsXL="1"
+                            columnsL="1"
+                            columnsM="1"
+                            class="sapUiSmallMargin">
+                            
+                            <form:content>
+                                <Label text="Max Insights Per Category"/>
+                                <StepInput value="{view>/insights/displayConfig/maxInsightsPerCategory}"
+                                          min="1"
+                                          max="10"
+                                          step="1"
+                                          width="120px"/>
+                                
+                                <Label text="Show Confidence Scores"/>
+                                <Switch state="{view>/insights/displayConfig/showConfidenceScores}"/>
+                                
+                                <Label text="Enable Detailed View"/>
+                                <Switch state="{view>/insights/displayConfig/enableDetailedView}"/>
+                                
+                                <Label text="Show Actionable Recommendations"/>
+                                <Switch state="{view>/insights/displayConfig/showActionableRecommendations}"/>
+                                
+                                <Label text="Group by Priority"/>
+                                <Switch state="{view>/insights/displayConfig/groupByPriority}"/>
+                            </form:content>
+                        </form:SimpleForm>
+                    </content>
+                </Panel>
+                
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button text="Reset to Defaults" 
+                    icon="sap-icon://refresh"
+                    type="Default"
+                    press="onResetInsightsConfig"/>
+            <Button text="Save Configuration" 
+                    icon="sap-icon://save"
+                    type="Emphasized"
+                    press="onSaveInsightsConfig"/>
+            <Button text="Cancel" 
+                    icon="sap-icon://cancel"
+                    type="Default"
+                    press="onCancelInsightsConfig"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

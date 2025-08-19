@@ -3,6 +3,8 @@
 A2A Async/Await Pattern Migration Script
 Systematically standardizes async patterns across the entire codebase
 """
+import asyncio
+import time
 
 import ast
 import os

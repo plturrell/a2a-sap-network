@@ -22,8 +22,20 @@
                     </Breadcrumbs>
                 </f:breadcrumbs>
                 <f:actions>
-                    <Button text="{i18n>edit}" 
+                    <Button text="{i18n>save}" 
                            type="Emphasized" 
+                           icon="sap-icon://save" 
+                           press="onSaveProject"
+                           tooltip="{i18n>saveProjectTooltip}"/>
+                    <Button text="{i18n>build}" 
+                           icon="sap-icon://developer-settings" 
+                           press="onBuildProject"
+                           tooltip="{i18n>buildProjectTooltip}"/>
+                    <Button text="{i18n>run}" 
+                           icon="sap-icon://media-play" 
+                           press="onRunProject"
+                           tooltip="{i18n>runProjectTooltip}"/>
+                    <Button text="{i18n>edit}" 
                            icon="sap-icon://edit" 
                            press="onEditProject"/>
                     <Button text="{i18n>deploy}" 
@@ -163,6 +175,97 @@
                         </Table>
                     </IconTabFilter>
                     
+                    <!-- Files Tab -->
+                    <IconTabFilter text="{i18n>files}" 
+                                  icon="sap-icon://folder"
+                                  key="files">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="{i18n>projectFiles}" 
+                                   class="sapUiNoContentPadding">
+                                <headerToolbar>
+                                    <Toolbar>
+                                        <Title text="{i18n>fileExplorer}"/>
+                                        <ToolbarSpacer/>
+                                        <Button text="{i18n>createFile}" 
+                                               icon="sap-icon://document" 
+                                               press="onCreateFile"
+                                               tooltip="{i18n>createFileTooltip}"/>
+                                        <Button text="{i18n>createFolder}" 
+                                               icon="sap-icon://folder-blank" 
+                                               press="onCreateFolder"
+                                               tooltip="{i18n>createFolderTooltip}"/>
+                                        <Button icon="sap-icon://upload" 
+                                               tooltip="{i18n>uploadFilesTooltip}"
+                                               press="onUploadFiles"/>
+                                        <Button icon="sap-icon://refresh" 
+                                               tooltip="{i18n>refreshFilesTreeTooltip}"
+                                               press="onRefreshFileTree"/>
+                                    </Toolbar>
+                                </headerToolbar>
+                                <content>
+                                    <!-- File Tree Structure -->
+                                    <Tree id="fileExplorerTree"
+                                          items="{path: '/files', 
+                                                  templateShareable: false}"
+                                          mode="MultiSelect"
+                                          includeItemInSelection="true"
+                                          toggleOpenState="onToggleFolder"
+                                          itemPress="onFilePress"
+                                          selectionChange="onFileSelectionChange"
+                                          class="a2a-file-explorer">
+                                        <StandardTreeItem title="{name}"
+                                                        icon="{path: 'type', formatter: '.getFileIcon'}"
+                                                        type="{path: 'type', formatter: '.getFileItemType'}"
+                                                        press="onTreeItemPress"
+                                                        class="a2a-file-tree-item"
+                                                        customData="{
+                                                            path: '',
+                                                            templateShareable: false
+                                                        }">
+                                            <!-- Context Menu Trigger -->
+                                            <customData>
+                                                <core:CustomData key="filePath" value="{path}"/>
+                                                <core:CustomData key="fileType" value="{type}"/>
+                                                <core:CustomData key="fileName" value="{name}"/>
+                                            </customData>
+                                        </StandardTreeItem>
+                                    </Tree>
+                                </content>
+                            </Panel>
+                            
+                            <!-- File Actions Panel -->
+                            <Panel headerText="{i18n>selectedFileActions}" 
+                                   visible="{= ${files>/selectedFiles} && ${files>/selectedFiles}.length > 0 }"
+                                   class="sapUiMediumMarginTop">
+                                <Toolbar>
+                                    <Text text="{= ${files>/selectedFiles} ? ${files>/selectedFiles}.length : 0 } {i18n>filesSelected}"/>
+                                    <ToolbarSpacer/>
+                                    <Button text="{i18n>open}" 
+                                           icon="sap-icon://open-folder" 
+                                           press="onOpenSelectedFile"
+                                           enabled="{= ${files>/selectedFiles} && ${files>/selectedFiles}.length === 1 }"/>
+                                    <Button text="{i18n>rename}" 
+                                           icon="sap-icon://edit" 
+                                           press="onRenameFile"
+                                           enabled="{= ${files>/selectedFiles} && ${files>/selectedFiles}.length === 1 }"/>
+                                    <Button text="{i18n>copy}" 
+                                           icon="sap-icon://copy" 
+                                           press="onCopyFiles"
+                                           enabled="{= ${files>/selectedFiles} && ${files>/selectedFiles}.length > 0 }"/>
+                                    <Button text="{i18n>move}" 
+                                           icon="sap-icon://move" 
+                                           press="onMoveFiles"
+                                           enabled="{= ${files>/selectedFiles} && ${files>/selectedFiles}.length > 0 }"/>
+                                    <Button text="{i18n>delete}" 
+                                           icon="sap-icon://delete" 
+                                           type="Transparent"
+                                           press="onDeleteFiles"
+                                           enabled="{= ${files>/selectedFiles} && ${files>/selectedFiles}.length > 0 }"/>
+                                </Toolbar>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
                     <!-- Settings Tab -->
                     <IconTabFilter text="{i18n>settings}" 
                                   icon="sap-icon://action-settings"
@@ -193,6 +296,63 @@
                                 </f:SimpleForm>
                             </Panel>
                         </l:VerticalLayout>
+                    </IconTabFilter>
+                    
+                    <!-- Terminal Tab -->
+                    <IconTabFilter text="{i18n>terminal}" 
+                                  icon="sap-icon://command-line-interfaces"
+                                  key="terminal">
+                        <VBox class="sapUiNoContentPadding" height="100%">
+                            <Toolbar>
+                                <Title text="{i18n>projectTerminal}"/>
+                                <ToolbarSpacer/>
+                                <Button text="{i18n>newTerminal}" 
+                                       icon="sap-icon://add" 
+                                       press="onNewTerminal"
+                                       tooltip="{i18n>createNewTerminalSession}"/>
+                                <MenuButton text="{i18n>terminal}" icon="sap-icon://menu2">
+                                    <menu>
+                                        <Menu>
+                                            <MenuItem text="{i18n>clearTerminal}" 
+                                                     icon="sap-icon://clear-all"
+                                                     press="onClearTerminal"/>
+                                            <MenuItem text="{i18n>exportOutput}" 
+                                                     icon="sap-icon://download"
+                                                     press="onExportTerminalOutput"/>
+                                            <MenuItem text="{i18n>terminalSettings}" 
+                                                     icon="sap-icon://settings"
+                                                     press="onTerminalSettings"/>
+                                        </Menu>
+                                    </menu>
+                                </MenuButton>
+                            </Toolbar>
+                            
+                            <!-- Terminal Container -->
+                            <ScrollContainer id="terminalContainer"
+                                           height="600px"
+                                           width="100%"
+                                           vertical="true"
+                                           horizontal="false"
+                                           class="a2a-terminal-container">
+                                <VBox id="terminalContent" class="a2a-terminal-content">
+                                    <!-- Terminal sessions will be added here dynamically -->
+                                </VBox>
+                            </ScrollContainer>
+                            
+                            <!-- Command Input -->
+                            <Toolbar class="a2a-terminal-input-toolbar">
+                                <Label text="$" class="a2a-terminal-prompt"/>
+                                <Input id="terminalCommandInput"
+                                      value="{terminal>/currentCommand}"
+                                      placeholder="{i18n>enterCommand}"
+                                      submit="onTerminalCommandSubmit"
+                                      width="100%"
+                                      class="a2a-terminal-input"/>
+                                <Button icon="sap-icon://play" 
+                                       press="onTerminalCommandSubmit"
+                                       tooltip="{i18n>executeCommand}"/>
+                            </Toolbar>
+                        </VBox>
                     </IconTabFilter>
                 </items>
             </IconTabBar>

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from .endpoints import auth, data, health, users, rateLimits, authentication, securityMonitoring, securityTesting, apiKeys, sessions, compliance
+from .endpoints import auth, data, health, users, rateLimits, authentication, securityMonitoring, securityTesting, apiKeys, sessions, compliance, gdpr
 
 api_router = APIRouter()
 
@@ -16,3 +16,4 @@ api_router.include_router(securityTesting.router, prefix="/admin", tags=["Securi
 api_router.include_router(apiKeys.router, prefix="/admin", tags=["API Keys"])
 api_router.include_router(sessions.router, prefix="/sessions", tags=["Sessions"])
 api_router.include_router(compliance.router, prefix="/admin", tags=["Compliance"])
+api_router.include_router(gdpr.router, prefix="/gdpr", tags=["GDPR"])

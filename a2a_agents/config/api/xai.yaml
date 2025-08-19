@@ -1,9 +1,0 @@
-xai:
-  api_key: ${XAI_API_KEY}
-  base_url: https://api.x.ai/v1
-  model: grok-4-latest
-  temperature: 0
-  max_tokens: 4096
-  timeout: 30
-  retry_attempts: 3
-  retry_delay: 1

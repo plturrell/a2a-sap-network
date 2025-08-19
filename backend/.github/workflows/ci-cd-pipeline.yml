@@ -1,0 +1,454 @@
+name: A2A Agents CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt', 'requirements-dev.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+        
+    - name: Run code formatting checks
+      run: |
+        black --check --diff .
+        isort --check-only --diff .
+        
+    - name: Run linting
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        
+    - name: Run type checking
+      run: |
+        mypy app/ --ignore-missing-imports --no-strict-optional
+        
+    - name: Run security scan
+      run: |
+        bandit -r app/ -f json -o bandit-report.json || true
+        
+    - name: Run unit tests
+      run: |
+        python -m pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
+        
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        
+    - name: Run integration tests
+      run: |
+        python -m pytest tests/test_*_integration.py -v
+        
+    - name: Run performance monitoring validation
+      run: |
+        python tests/validate_performance_monitoring.py
+        
+    - name: Run error handling validation  
+      run: |
+        python tests/validate_error_handling.py
+        
+    - name: Run security hardening validation
+      run: |
+        python tests/validate_security_hardening.py
+
+  build:
+    name: Build and Package
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build wheel setuptools
+        
+    - name: Build package
+      run: |
+        python -m build
+        
+    - name: Generate version info
+      run: |
+        echo "VERSION=$(python setup.py --version)" >> $GITHUB_ENV
+        echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
+        echo "GIT_COMMIT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+        
+    - name: Create build info
+      run: |
+        cat > build_info.json << EOF
+        {
+          "version": "${{ env.VERSION }}",
+          "build_date": "${{ env.BUILD_DATE }}",
+          "git_commit": "${{ env.GIT_COMMIT }}",
+          "python_version": "${{ env.PYTHON_VERSION }}",
+          "branch": "${{ github.ref_name }}",
+          "workflow_run": "${{ github.run_number }}"
+        }
+        EOF
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: a2a-agents-${{ env.VERSION }}
+        path: |
+          dist/
+          build_info.json
+          
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+        
+    - name: Run Snyk security scan
+      uses: snyk/actions/python@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high
+        
+  docker-build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [test, build]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: a2a/agents
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix={{branch}}-
+          
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build, docker-build, security-scan]
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+        
+    - name: Setup Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: '3.12.0'
+        
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+        kubectl cluster-info
+        
+    - name: Deploy to staging
+      run: |
+        export KUBECONFIG=kubeconfig
+        
+        # Update Helm values for staging
+        helm upgrade --install a2a-agents-staging ./helm/a2a-agents \
+          --namespace a2a-staging \
+          --create-namespace \
+          --set image.tag=${{ github.sha }} \
+          --set environment=staging \
+          --set replicaCount=2 \
+          --set resources.requests.cpu=100m \
+          --set resources.requests.memory=256Mi \
+          --set resources.limits.cpu=500m \
+          --set resources.limits.memory=1Gi \
+          --set monitoring.enabled=true \
+          --set security.enabled=true \
+          --wait --timeout=300s
+          
+    - name: Run staging tests
+      run: |
+        export KUBECONFIG=kubeconfig
+        
+        # Wait for deployment to be ready
+        kubectl wait --for=condition=available --timeout=300s deployment/a2a-agents-staging -n a2a-staging
+        
+        # Run smoke tests against staging
+        python scripts/smoke_tests.py --environment=staging
+        
+    - name: Notify deployment status
+      uses: 8398a7/action-slack@v3
+      if: always()
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        text: 'A2A Agents staging deployment ${{ job.status }}'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, docker-build, security-scan, deploy-staging]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+        
+    - name: Setup Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: '3.12.0'
+        
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+        kubectl cluster-info
+        
+    - name: Deploy to production
+      run: |
+        export KUBECONFIG=kubeconfig
+        
+        # Deploy with production settings
+        helm upgrade --install a2a-agents ./helm/a2a-agents \
+          --namespace a2a-production \
+          --create-namespace \
+          --set image.tag=${{ github.sha }} \
+          --set environment=production \
+          --set replicaCount=5 \
+          --set resources.requests.cpu=200m \
+          --set resources.requests.memory=512Mi \
+          --set resources.limits.cpu=1000m \
+          --set resources.limits.memory=2Gi \
+          --set monitoring.enabled=true \
+          --set security.enabled=true \
+          --set security.strictMode=true \
+          --set autoscaling.enabled=true \
+          --set autoscaling.minReplicas=3 \
+          --set autoscaling.maxReplicas=20 \
+          --wait --timeout=600s
+          
+    - name: Run production health checks
+      run: |
+        export KUBECONFIG=kubeconfig
+        
+        # Wait for deployment to be ready
+        kubectl wait --for=condition=available --timeout=600s deployment/a2a-agents -n a2a-production
+        
+        # Run comprehensive health checks
+        python scripts/health_checks.py --environment=production
+        
+        # Run performance tests
+        python scripts/performance_tests.py --environment=production
+        
+    - name: Update monitoring dashboards
+      run: |
+        # Update Grafana dashboards
+        curl -X POST "${{ secrets.GRAFANA_API_URL }}/api/dashboards/db" \
+          -H "Authorization: Bearer ${{ secrets.GRAFANA_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d @monitoring/grafana-dashboard.json
+          
+    - name: Create deployment record
+      run: |
+        # Record deployment in monitoring system
+        curl -X POST "${{ secrets.MONITORING_API_URL }}/deployments" \
+          -H "Authorization: Bearer ${{ secrets.MONITORING_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "service": "a2a-agents",
+            "version": "${{ github.sha }}",
+            "environment": "production",
+            "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
+            "deployer": "${{ github.actor }}",
+            "commit": "${{ github.sha }}",
+            "branch": "${{ github.ref_name }}"
+          }'
+          
+    - name: Notify successful deployment
+      uses: 8398a7/action-slack@v3
+      if: success()
+      with:
+        status: success
+        channel: '#deployments'
+        text: '🎉 A2A Agents successfully deployed to production! Version: ${{ github.sha }}'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        
+    - name: Notify failed deployment
+      uses: 8398a7/action-slack@v3
+      if: failure()
+      with:
+        status: failure
+        channel: '#deployments'
+        text: '🚨 A2A Agents production deployment FAILED! Please investigate.'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: github.event_name == 'release'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: a2a-agents-${{ github.event.release.tag_name }}
+        
+    - name: Create release notes
+      run: |
+        cat > release_notes.md << EOF
+        # A2A Agents Release ${{ github.event.release.tag_name }}
+        
+        ## Features
+        - Enhanced performance monitoring with real-time metrics
+        - Comprehensive error handling and recovery mechanisms  
+        - Advanced security hardening with threat detection
+        - Automated deployment and CI/CD pipeline
+        
+        ## Docker Images
+        - \`a2a/agents:${{ github.event.release.tag_name }}\`
+        - \`a2a/agents:latest\`
+        
+        ## Deployment
+        See the [deployment guide](docs/deployment.md) for installation instructions.
+        
+        ## Validation
+        All enhancements have been validated with comprehensive test suites.
+        EOF
+        
+    - name: Update release with assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./dist/a2a_agents-${{ github.event.release.tag_name }}.tar.gz
+        asset_name: a2a_agents-${{ github.event.release.tag_name }}.tar.gz
+        asset_content_type: application/gzip
+
+  cleanup:
+    name: Cleanup Resources  
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: always()
+    
+    steps:
+    - name: Clean up old Docker images
+      run: |
+        # Keep only last 10 builds
+        docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.CreatedAt}}" | \
+          grep "a2a/agents" | sort -k3 -r | tail -n +11 | \
+          awk '{print $1":"$2}' | xargs -r docker rmi || true
+          
+    - name: Clean up old releases in staging
+      run: |
+        # Clean up old staging deployments (keep last 3)
+        export KUBECONFIG=kubeconfig
+        kubectl get deployments -n a2a-staging --sort-by=.metadata.creationTimestamp | \
+          tail -n +4 | awk '{print $1}' | \
+          xargs -r kubectl delete deployment -n a2a-staging || true

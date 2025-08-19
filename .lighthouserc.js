@@ -5,7 +5,7 @@ module.exports = {
         'http://localhost:8000',
         'http://localhost:8000/index.html'
       ],
-      startServerCommand: 'cd a2a_agents/backend/app/a2a/developer_portal/static && python3 -m http.server 8000',
+      startServerCommand: 'cd a2aAgents/backend/app/a2a/developer_portal/static && python3 -m http.server 8000',
       startServerReadyPattern: 'Serving HTTP',
       startServerReadyTimeout: 30000
     },

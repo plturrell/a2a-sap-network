@@ -274,18 +274,31 @@ ANSWER:"""
                 return "I apologize, but my AI capabilities are currently unavailable. Please try again later."
             
             # Use Grok-4 client to get response
-            response = await self.grok_client.complete(
-                prompt=prompt,
-                model="grok-4",
+            response = await self.grok_client.async_chat_completion(
+                messages=[{"role": "user", "content": prompt}],
                 max_tokens=1000,
                 temperature=0.7
             )
             
-            return response.strip()
+            # Extract content from response
+            if hasattr(response, 'choices') and response.choices:
+                return response.choices[0].message.content.strip()
+            elif isinstance(response, dict) and 'choices' in response:
+                return response['choices'][0]['message']['content'].strip()
+            else:
+                return str(response).strip()
             
         except Exception as e:
             logger.error(f"❌ Grok-4 query failed: {e}")
-            return f"I encountered an issue accessing my AI capabilities: {str(e)}. I can still help with basic information about this agent."
+            error_str = str(e)
+            
+            # Provide helpful message for common API issues
+            if "invalid argument" in error_str.lower() and "api key" in error_str.lower():
+                return "I'm currently unable to access my AI capabilities due to API configuration issues. Please check the Grok API key configuration. I can still help with basic information about this agent."
+            elif "404" in error_str:
+                return "I'm currently unable to access my AI capabilities due to API endpoint issues. Please verify the Grok API URL configuration. I can still help with basic information about this agent."
+            else:
+                return f"I encountered an issue accessing my AI capabilities: {error_str}. I can still help with basic information about this agent."
     
     def _log_conversation(self, question: str, answer: str, asking_agent_id: str = None):
         """Log conversation for learning and improvement"""

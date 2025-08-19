@@ -1,0 +1,254 @@
+# Reasoning Agent Configuration
+# Advanced Multi-Agent Reasoning System Configuration
+
+agent:
+  id: "reasoning-agent-{instance}"
+  name: "Advanced Reasoning Agent"
+  version: "1.0.0"
+  description: "Multi-agent reasoning system with hierarchical orchestration and swarm intelligence"
+  base_url: "http://localhost:8008"
+
+# Network Configuration
+network:
+  agent_network_url: "http://localhost:8000"
+  timeout: 300  # seconds
+  max_retries: 3
+  retry_delay: 1000  # milliseconds
+
+# Reasoning Configuration
+reasoning:
+  max_sub_agents: 10
+  max_reasoning_depth: 5
+  default_confidence_threshold: 0.7
+  reasoning_timeout: 300  # seconds
+  
+  # Architecture-specific settings
+  architectures:
+    hierarchical:
+      enabled: true
+      max_hierarchy_levels: 4
+      parallel_execution: true
+      
+    peer_to_peer:
+      enabled: true
+      swarm_size: 5
+      max_iterations: 20
+      convergence_threshold: 0.8
+      
+    blackboard:
+      enabled: true
+      max_cycles: 10
+      knowledge_sources:
+        - pattern_recognition
+        - logical_reasoning
+        - evidence_evaluation
+      
+    hub_and_spoke:
+      enabled: true
+      hub_timeout: 60
+      spoke_concurrency: 5
+      
+    graph_based:
+      enabled: true
+      max_nodes: 100
+      max_edges: 500
+
+# Sub-Agent Pool Configuration
+sub_agents:
+  question_analyzer:
+    count: 2
+    capabilities:
+      - decomposition
+      - complexity_analysis
+      - intent_detection
+    priority: 1.0
+    max_concurrent_tasks: 5
+    
+  evidence_retriever:
+    count: 3
+    capabilities:
+      - search
+      - extraction
+      - relevance_scoring
+    priority: 0.9
+    max_concurrent_tasks: 10
+    
+  reasoning_engine:
+    count: 3
+    capabilities:
+      - inference
+      - deduction
+      - hypothesis_testing
+    priority: 1.2
+    max_concurrent_tasks: 5
+    
+  answer_synthesizer:
+    count: 2
+    capabilities:
+      - aggregation
+      - formatting
+      - confidence_scoring
+    priority: 0.8
+    max_concurrent_tasks: 3
+    
+  validator:
+    count: 1
+    capabilities:
+      - consistency_check
+      - logic_validation
+      - confidence_assessment
+    priority: 1.0
+    max_concurrent_tasks: 5
+
+# Debate Configuration
+debate:
+  enabled: true
+  max_rounds: 3
+  min_participants: 2
+  consensus_methods:
+    - voting
+    - weighted_average
+    - debate
+    - emergence
+  convergence_criteria:
+    confidence_threshold: 0.8
+    variance_threshold: 0.1
+
+# Circuit Breaker Configuration
+circuit_breakers:
+  agent_network:
+    failure_threshold: 5
+    success_threshold: 3
+    timeout: 60.0
+    reset_timeout: 30.0
+    
+  sub_agents:
+    failure_threshold: 3
+    success_threshold: 2
+    timeout: 30.0
+    reset_timeout: 15.0
+
+# Performance Configuration
+performance:
+  monitoring:
+    enabled: true
+    metrics_port: 8008
+    collection_interval: 10  # seconds
+    
+  optimization:
+    cache_ttl: 3600  # seconds
+    max_cache_size: 1000
+    parallel_requests: true
+    batch_size: 10
+    
+  resource_limits:
+    max_memory: "2G"
+    max_cpu: "2"
+    max_concurrent_sessions: 50
+
+# Security Configuration
+security:
+  authentication:
+    enabled: true
+    type: "bearer"
+    token_validation: true
+    
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 60
+    burst_size: 10
+    
+  encryption:
+    enabled: true
+    algorithm: "AES-256-GCM"
+    
+  trust_system:
+    enabled: true
+    verification_required: true
+    trusted_agents_only: false
+
+# Telemetry Configuration
+telemetry:
+  enabled: true
+  export_interval: 30  # seconds
+  exporters:
+    - type: "prometheus"
+      endpoint: "http://localhost:9090"
+    - type: "jaeger"
+      endpoint: "http://localhost:14268"
+      
+  traces:
+    enabled: true
+    sample_rate: 0.1
+    
+  metrics:
+    enabled: true
+    custom_metrics:
+      - reasoning_sessions_total
+      - reasoning_time_seconds
+      - sub_agent_utilization
+      - consensus_success_rate
+      - debate_rounds_total
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "json"
+  outputs:
+    - type: "console"
+      level: "INFO"
+    - type: "file"
+      path: "/var/log/a2a/reasoning_agent.log"
+      level: "DEBUG"
+      rotation: "daily"
+      retention_days: 7
+
+# Feature Flags
+features:
+  multi_agent_debate: true
+  recursive_reasoning: true
+  emergent_consensus: true
+  graph_based_reasoning: true
+  semantic_similarity: true
+  chain_of_thought: true
+  blackboard_architecture: true
+  swarm_intelligence: true
+
+# API Configuration
+api:
+  cors:
+    enabled: true
+    allowed_origins:
+      - "http://localhost:3000"
+      - "https://a2a-network.com"
+    allowed_methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "DELETE"
+    allowed_headers:
+      - "Content-Type"
+      - "Authorization"
+      
+  documentation:
+    enabled: true
+    endpoint: "/docs"
+    
+  health_check:
+    enabled: true
+    endpoint: "/health"
+    include_details: true
+
+# Development Settings
+development:
+  debug: true
+  mock_sub_agents: false  # No mocking allowed
+  verbose_logging: true
+  disable_cache: false
+  
+# Production Settings
+production:
+  debug: false
+  mock_sub_agents: false  # No mocking allowed
+  verbose_logging: false
+  disable_cache: false

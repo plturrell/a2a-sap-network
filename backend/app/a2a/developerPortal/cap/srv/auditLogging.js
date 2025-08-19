@@ -550,19 +550,27 @@ class AuditLoggingService {
         try {
             const db = await cds.connect.to('db');
             
-            // Clean up old audit logs based on retention policies
+            // Clean up old audit logs based on retention policies - batch delete for better performance
+            const deletePromises = [];
+            
             for (const [category, config] of this.auditCategories) {
                 const retentionDays = this.parseRetentionPeriod(config.retention);
                 const cutoffDate = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
                 
-                await db.run(
-                    DELETE.from('AuditLogs')
-                        .where({ 
-                            entityType: category,
-                            timestamp: { '<': cutoffDate }
-                        })
+                // Batch all delete operations instead of sequential execution
+                deletePromises.push(
+                    db.run(
+                        DELETE.from('AuditLogs')
+                            .where({ 
+                                entityType: category,
+                                timestamp: { '<': cutoffDate }
+                            })
+                    )
                 );
             }
+            
+            // Execute all deletes in parallel for better performance
+            await Promise.all(deletePromises);
             
         } catch (error) {
             console.error('Failed to validate audit log retention:', error);

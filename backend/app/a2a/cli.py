@@ -9,12 +9,11 @@ import argparse
 import asyncio
 import logging
 import sys
-from pathlib import Path
+import os
 from typing import Optional
 
-from .config.productionConfig import ProductionConfigManager as ProductionConfig, Environment
+from .config.deploymentConfig import ProductionConfigManager as ProductionConfig, Environment
 from .core.telemetry import init_telemetry as setup_telemetry
-from .agents.agentManager.active.agentManagerAgent import AgentManagerAgent
 
 
 def setup_logging(verbose: bool = False):
@@ -86,7 +85,9 @@ Examples:
 
 async def start_agent(agent_name: str, port: Optional[int] = None, config_path: Optional[str] = None):
     """Start a specific agent."""
-    logging.info(f"Starting {agent_name} agent...")
+    logging.info("Starting %s agent...", agent_name)
+    if config_path:
+        logging.info("Configuration file path is not yet implemented: %s", config_path)
     
     # Agent port mapping
     default_ports = {
@@ -103,6 +104,7 @@ async def start_agent(agent_name: str, port: Optional[int] = None, config_path: 
     
     port = port or default_ports.get(agent_name, 8000)
     
+    logging.info("DEBUG: Attempting to dynamically import agent SDK for '%s'", agent_name)
     # Dynamic import and start based on agent name
     if agent_name == "agent0":
         from .agents.agent0DataProduct.active.dataProductAgentSdk import DataProductRegistrationAgentSDK
@@ -112,29 +114,39 @@ async def start_agent(agent_name: str, port: Optional[int] = None, config_path: 
         )
     elif agent_name == "agent1":
         from .agents.agent1Standardization.active.dataStandardizationAgentSdk import DataStandardizationAgentSDK
-        agent = DataStandardizationAgentSDK()
+        agent = DataStandardizationAgentSDK(base_url=f"http://localhost:{port}")
     elif agent_name == "agent2":
-        from .agents.agent2AiPreparation.active.aiPreparationAgentSdk import AiPreparationAgentSDK
-        agent = AiPreparationAgentSDK()
+        from .agents.agent2AiPreparation.active.aiPreparationAgentSdk import AIPreparationAgentSDK
+        agent = AIPreparationAgentSDK(base_url=f"http://localhost:{port}")
     elif agent_name == "agent3":
         from .agents.agent3VectorProcessing.active.vectorProcessingAgentSdk import VectorProcessingAgentSDK
-        agent = VectorProcessingAgentSDK()
+        agent = VectorProcessingAgentSDK(base_url=f"http://localhost:{port}")
+    elif agent_name == "agent4":
+        from .agents.agent4CalcValidation.active.calcValidationAgentSdk import CalcValidationAgentSDK
+        agent = CalcValidationAgentSDK(base_url=f"http://localhost:{port}")
     else:
-        logging.error(f"Unknown agent: {agent_name}")
+        logging.error("Unknown agent: %s", agent_name)
         return False
     
+    logging.info("DEBUG: Agent SDK imported successfully.")
+
     # Initialize the agent if it has initialize method
     if hasattr(agent, 'initialize'):
+        logging.info("DEBUG: Initializing agent...")
         await agent.initialize()
+        logging.info("DEBUG: Agent initialized successfully.")
     
     # Create FastAPI app
+    logging.info("DEBUG: Creating FastAPI app...")
     app = agent.create_fastapi_app()
+    logging.info("DEBUG: FastAPI app created successfully.")
     
-    logging.info(f"🚀 Starting {agent.name} v{agent.version}")
-    logging.info(f"📡 Listening on http://localhost:{port}")
-    logging.info(f"🎯 Agent ID: {agent.agent_id}")
+    logging.info("🚀 Starting %s v%s", agent.name, agent.version)
+    logging.info("📡 Listening on http://localhost:%s", port)
+    logging.info("🎯 Agent ID: %s", agent.agent_id)
     
     # Start server with uvicorn
+    logging.info("DEBUG: Starting uvicorn server...")
     import uvicorn
     config = uvicorn.Config(app, host="0.0.0.0", port=port, log_level="info")
     server = uvicorn.Server(config)
@@ -145,13 +157,13 @@ async def start_agent(agent_name: str, port: Optional[int] = None, config_path: 
         if hasattr(agent, 'shutdown'):
             await agent.shutdown()
     
-    logging.info(f"Agent {agent_name} stopped")
+    logging.info("Agent %s stopped", agent_name)
     return True
 
 
 async def deploy_network(environment: str, config_file: Optional[str] = None):
     """Deploy the entire A2A network."""
-    logging.info(f"Deploying A2A network to {environment}")
+    logging.info("Deploying A2A network to %s", environment)
     
     env = Environment(environment)
     config = ProductionConfig(env)
@@ -168,7 +180,7 @@ async def deploy_network(environment: str, config_file: Optional[str] = None):
     for agent_name in agents:
         success = await start_agent(agent_name)
         if not success:
-            logging.error(f"Failed to deploy {agent_name}")
+            logging.error("Failed to deploy %s", agent_name)
             return False
     
     logging.info("A2A network deployed successfully")
@@ -181,9 +193,9 @@ async def check_status(agent_name: Optional[str] = None, check_all: bool = False
         agents = ["agent0", "agent1", "agent2", "agent3", "data-manager", "catalog-manager"]
         for agent in agents:
             # Implementation would check agent health endpoints
-            logging.info(f"{agent}: Status check not implemented yet")
+            logging.info("%s: Status check not implemented yet", agent)
     elif agent_name:
-        logging.info(f"{agent_name}: Status check not implemented yet")
+        logging.info("%s: Status check not implemented yet", agent_name)
     else:
         logging.error("Must specify --agent or --all")
 
@@ -197,7 +209,7 @@ async def run_tests(agent_type: Optional[str] = None, integration: bool = False)
         # Would run pytest with integration markers
     
     if agent_type:
-        logging.info(f"Running tests for {agent_type} agents...")
+        logging.info("Running tests for %s agents...", agent_type)
         # Would run specific test suites
     
     logging.info("Tests completed")
@@ -216,7 +228,9 @@ async def main():
     
     try:
         if args.command == "start":
-            await start_agent(args.agent, args.port, args.config)
+            success = await start_agent(args.agent, args.port, args.config)
+            if not success:
+                return 1
         elif args.command == "deploy":
             await deploy_network(args.environment, args.config_file)
         elif args.command == "status":
@@ -224,11 +238,11 @@ async def main():
         elif args.command == "test":
             await run_tests(args.agent_type, args.integration)
         else:
-            logging.error(f"Unknown command: {args.command}")
+            logging.error("Unknown command: %s", args.command)
             return 1
             
     except Exception as e:
-        logging.error(f"Command failed: {e}")
+        logging.error("Command failed: %s", e)
         if args.verbose:
             logging.exception("Full traceback:")
         return 1

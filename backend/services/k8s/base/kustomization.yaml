@@ -5,17 +5,17 @@ namespace: a2a-network
 
 resources:
   - namespace.yaml
-  - agent0-deployment.yaml
-  - agent1-deployment.yaml
-  - agent2-deployment.yaml
-  - agent3-deployment.yaml
-  - agent-manager-deployment.yaml
-  - data-manager-deployment.yaml
-  - catalog-manager-deployment.yaml
+  - agent0_deployment.yaml
+  - agent1_deployment.yaml
+  - agent2_deployment.yaml
+  - agent3_deployment.yaml
+  - agent_manager_deployment.yaml
+  - data_manager_deployment.yaml
+  - catalog_manager_deployment.yaml
   - configmap.yaml
   - secrets.yaml
-  - network-policy.yaml
-  - service-monitor.yaml
+  - network_policy.yaml
+  - service_monitor.yaml
 
 commonLabels:
   protocol: a2a

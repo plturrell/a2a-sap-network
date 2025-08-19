@@ -15,13 +15,13 @@ from .router import create_a2a_router
 
 async def main():
     # Get configuration from environment variables
-    port = int(os.getenv("AGENT_PORT", "8009"))
-    host = os.getenv("AGENT_HOST", "0.0.0.0")
-    base_url = os.getenv("AGENT_BASE_URL", f"http://localhost:{port}")
+    port = int(os.getenv("A2A_AGENT_PORT", "8012"))
+    host = os.getenv("A2A_AGENT_HOST", "0.0.0.0")
+    base_url = os.getenv("A2A_AGENT_BASE_URL", f"http://localhost:{port}")
     
     # A2A network configuration
-    agent_manager_url = os.getenv("AGENT_MANAGER_URL", "http://agent-manager:8007")
-    data_manager_url = os.getenv("DATA_MANAGER_URL", "http://data-manager:8008")
+    agent_manager_url = os.getenv("A2A_AGENT_MANAGER_URL", "http://agent-manager:8010")
+    data_manager_url = os.getenv("A2A_DATA_MANAGER_URL", "http://data-manager:8011")
     
     # Create agent instance
     agent = CatalogManagerAgent(

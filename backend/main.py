@@ -1,3 +1,10 @@
+import os
+
+# Add project root to the Python path to resolve import issues
+# project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+# if project_root not in sys.path:
+#     sys.path.insert(0, project_root)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
@@ -18,6 +25,9 @@ from app.a2a.agents.agent0DataProduct.active.agent0Router import router as agent
 from app.a2a.agents.agent1Standardization.active.agent1Router import router as agent1_router
 from app.a2a.agents.agent2AiPreparation.active.agent2Router import router as agent2_router
 from app.a2a.agents.agent3VectorProcessing.active.agent3Router import router as agent3_router
+from app.a2a.agents.agent4CalcValidation.active.agent4Router import router as agent4_router
+from app.a2a.agents.agent5QaValidation.active.agent5Router import router as agent5_router
+from app.a2a.agents.calculationAgent.active.calculationRouter import router as calculation_router
 from app.a2a.agents.agentManager.active.agentManagerRouter import router as agent_manager_router
 from app.a2a.agents.catalogManager.active.catalogManagerRouter import router as catalog_manager_router
 from app.a2aRegistry.router import router as a2a_registry_router
@@ -366,8 +376,9 @@ from app.api.middleware.requestSigning import RequestSigningMiddleware, APIKeyPe
 app.add_middleware(APIKeyPermissionMiddleware)  # Check permissions for signed requests
 app.add_middleware(RequestSigningMiddleware, enforce_signing=False)  # Optional signing
 
-# Add global exception handler for secure error handling
-app.add_exception_handler(Exception, global_exception_handler)
+# Add global exception handler for secure error handling (disabled in development for debugging)
+if not (os.getenv("ENVIRONMENT", "development") == "development"):
+    app.add_exception_handler(Exception, global_exception_handler)
 
 # Include routers
 app.include_router(api_router, prefix=settings.API_V1_STR)
@@ -377,6 +388,9 @@ app.include_router(agent0_router)  # Agent 0 at /a2a/agent0/v1
 app.include_router(agent1_router)  # Agent 1 at /a2a/agent1/v1
 app.include_router(agent2_router)  # Agent 2 at /a2a/agent2/v1
 app.include_router(agent3_router)  # Agent 3 at /a2a/agent3/v1
+app.include_router(agent4_router)  # Agent 4 at /a2a/agent4/v1
+app.include_router(agent5_router)  # Agent 5 at /a2a/agent5/v1
+app.include_router(calculation_router)  # Calculation Agent at /a2a/calculation/v1
 app.include_router(agent_manager_router)  # Agent Manager at /a2a/agent_manager/v1
 app.include_router(catalog_manager_router)  # Catalog Manager at /a2a/catalog_manager/v1
 app.include_router(a2a_registry_router)  # A2A Registry at /api/v1/a2a

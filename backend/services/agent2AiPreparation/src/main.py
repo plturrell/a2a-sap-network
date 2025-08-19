@@ -15,13 +15,13 @@ from .router import create_a2a_router
 
 async def main():
     # Get configuration from environment variables
-    port = int(os.getenv("AGENT_PORT", "8003"))
-    host = os.getenv("AGENT_HOST", "0.0.0.0")
-    base_url = os.getenv("AGENT_BASE_URL", f"http://localhost:{port}")
+    port = int(os.getenv("A2A_AGENT_PORT", "8003"))
+    host = os.getenv("A2A_AGENT_HOST", "0.0.0.0")
+    base_url = os.getenv("A2A_AGENT_BASE_URL", f"http://localhost:{port}")
     
     # A2A network configuration
-    agent_manager_url = os.getenv("AGENT_MANAGER_URL", "http://agent-manager:8007")
-    downstream_agent_url = os.getenv("DOWNSTREAM_AGENT_URL", "http://agent3-vector-processing:8004")
+    agent_manager_url = os.getenv("A2A_AGENT_MANAGER_URL", os.getenv("A2A_AGENT_MANAGER_URL", "http://agent-manager:8007"))
+    downstream_agent_url = os.getenv("A2A_DOWNSTREAM_AGENT_URL", os.getenv("A2A_DOWNSTREAM_URL_3", "http://agent3:8004"))
     
     # Create agent instance
     agent = AIPreparationAgent(

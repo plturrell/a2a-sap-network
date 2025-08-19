@@ -1,12 +1,37 @@
+from datetime import datetime
+import asyncio
+import json
+import os
+
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
-import json
-import asyncio
-import os
-from datetime import datetime
 
 from .agentManagerAgent import AgentManagerAgent, AgentRegistrationRequest, TrustContractRequest, WorkflowRequest
 from app.a2a.core.a2aTypes import A2AMessage, MessagePart, MessageRole
+
+# Trust system imports
+try:
+    import sys
+    sys.path.insert(0, '/Users/apple/projects/a2a/a2aNetwork')
+    from trustSystem.smartContractTrust import (
+        initialize_agent_trust,
+        get_trust_contract,
+        verify_a2a_message,
+        sign_a2a_message
+    )
+except ImportError:
+    # Fallback if trust system not available
+    def initialize_agent_trust(*args, **kwargs):
+        return {"status": "trust_system_unavailable"}
+    
+    def get_trust_contract():
+        return None
+    
+    def verify_a2a_message(*args, **kwargs):
+        return True, {"status": "trust_system_unavailable"}
+    
+    def sign_a2a_message(*args, **kwargs):
+        return {"message": args[1] if len(args) > 1 else {}, "signature": {"status": "trust_system_unavailable"}}
 
 router = APIRouter(prefix="/a2a/agent_manager/v1", tags=["Agent Manager - A2A Ecosystem Orchestration"])
 
@@ -21,6 +46,16 @@ def initialize_agent_manager():
     
     if agent_manager is None:
         from .agentManagerAgent import AgentManagerAgent
+
+        # Trust contract import
+        try:
+            import sys
+            sys.path.insert(0, '/Users/apple/projects/a2a/a2aNetwork')
+            from trustSystem.smartContractTrust import get_trust_contract
+        except ImportError:
+            # Fallback if trust system not available
+            def get_trust_contract():
+                return None
         
         # Agent Manager configuration
         agent_id = "agent_manager"

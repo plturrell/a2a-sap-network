@@ -152,7 +152,7 @@ def update_configuration(bdc_address):
     """Update configuration files with the deployed BDC address"""
     
     # Update the real contract addresses
-    config_file = Path("real_contract_addresses.json")
+    config_file = Path("deployed_contract_addresses.json")
     try:
         with open(config_file, 'r') as f:
             config = json.load(f)

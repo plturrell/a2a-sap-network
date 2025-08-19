@@ -92,7 +92,7 @@ A comprehensive SAP BTP enterprise application for agent-to-agent development an
 
 ```
 a2a/
-├── a2a_agents/backend/app/a2a/developer_portal/
+├── a2aAgents/backend/app/a2a/developer_portal/
 │   ├── cap/                          # SAP CAP backend
 │   │   ├── db/                       # CDS data models
 │   │   ├── srv/                      # Service implementations
@@ -138,7 +138,7 @@ a2a/
 
 2. **Install CAP dependencies**
    ```bash
-   cd a2a_agents/backend/app/a2a/developer_portal/cap
+   cd a2aAgents/backend/app/a2a/developer_portal/cap
    npm install
    ```
 

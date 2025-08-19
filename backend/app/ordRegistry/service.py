@@ -18,6 +18,7 @@ from ..clients.grokClient import get_grok_client
 from ..clients.perplexityClient import get_perplexity_client
 from .advancedAiEnhancer import create_advanced_ai_enhancer
 from .enhancedSearchService import get_enhanced_search_service
+from .blockchainIntegration import get_ord_blockchain_integration
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,8 @@ class ORDRegistryService:
         self.ai_enhancer = None
         # Enhanced search service
         self.enhanced_search = None
+        # Blockchain integration
+        self.blockchain_integration = None
         # Initialize flags
         self.initialized = False
         
@@ -82,9 +85,17 @@ class ORDRegistryService:
             except Exception as e:
                 logger.warning(f"Enhanced search initialization failed: {e}")
                 self.enhanced_search = None
+            
+            # Initialize blockchain integration
+            try:
+                self.blockchain_integration = await get_ord_blockchain_integration()
+                logger.info("✅ Blockchain integration initialized for immutable ORD audit trails")
+            except Exception as e:
+                logger.warning(f"Blockchain integration initialization failed: {e}")
+                self.blockchain_integration = None
                 
             self.initialized = True
-            logger.info("🚀 ORD Registry Service fully initialized with dual-database and AI features")
+            logger.info("🚀 ORD Registry Service fully initialized with dual-database, AI, and blockchain features")
             
         except Exception as e:
             logger.error(f"Failed to initialize ORD registry service: {e}")
@@ -160,6 +171,32 @@ class ORDRegistryService:
             
             # Index resources for advanced search using storage layer
             await self.storage.index_registration(registration)
+            
+            # Record on blockchain for immutable audit trail
+            if self.blockchain_integration:
+                try:
+                    blockchain_hash = await self.blockchain_integration.record_document_update(
+                        registration, 
+                        operation="create"
+                    )
+                    if blockchain_hash:
+                        logger.info(f"🔗 Document hash recorded on blockchain: {registration_id}")
+                        
+                        # Create audit trail
+                        await self.blockchain_integration.create_audit_trail(
+                            registration_id=registration_id,
+                            operation="register",
+                            user=registered_by,
+                            details={
+                                "document_hash": blockchain_hash.document_hash,
+                                "version": registration.metadata.version,
+                                "validation_score": validation_result.compliance_score
+                            }
+                        )
+                    else:
+                        logger.warning(f"⚠️ Blockchain recording failed for: {registration_id}")
+                except Exception as e:
+                    logger.warning(f"Blockchain integration error (non-fatal): {e}")
             
             # Return the actual ORDRegistration object
             logger.info(f"✅ ORD document registered successfully: {registration_id}")
@@ -622,6 +659,34 @@ class ORDRegistryService:
                 updated_registration.ord_document
             )
             
+            # Record update on blockchain for immutable audit trail
+            if self.blockchain_integration:
+                try:
+                    blockchain_hash = await self.blockchain_integration.record_document_update(
+                        updated_registration, 
+                        operation="update"
+                    )
+                    if blockchain_hash:
+                        logger.info(f"🔗 Document update recorded on blockchain: {registration_id} (v{updated_metadata.version})")
+                        
+                        # Create audit trail for update
+                        await self.blockchain_integration.create_audit_trail(
+                            registration_id=registration_id,
+                            operation="update",
+                            user=existing_registration.metadata.registered_by,
+                            details={
+                                "document_hash": blockchain_hash.document_hash,
+                                "old_version": existing_registration.metadata.version,
+                                "new_version": updated_metadata.version,
+                                "ai_enhanced": enhance_with_ai,
+                                "validation_score": validation.compliance_score
+                            }
+                        )
+                    else:
+                        logger.warning(f"⚠️ Blockchain update recording failed for: {registration_id}")
+                except Exception as e:
+                    logger.warning(f"Blockchain integration error during update (non-fatal): {e}")
+            
             logger.info(f"✅ Registration updated successfully: {registration_id} (v{updated_metadata.version})")
             return updated_registration
             
@@ -808,6 +873,79 @@ class ORDRegistryService:
         except Exception as e:
             logger.error(f" Error restoring registration {registration_id}: {e}")
             return False
+    
+    async def verify_document_integrity(
+        self,
+        registration_id: str,
+        version: str = None
+    ) -> Dict[str, Any]:
+        """Verify document integrity using blockchain records"""
+        await self._ensure_initialized()
+        
+        try:
+            if not self.blockchain_integration:
+                return {"error": "Blockchain integration not available", "status": "unavailable"}
+            
+            # Get registration
+            registration = await self.storage.get_registration(registration_id)
+            if not registration:
+                return {"error": "Registration not found", "status": "not_found"}
+            
+            # Verify integrity
+            is_valid, verification_details = await self.blockchain_integration.verify_document_integrity(
+                registration_id=registration_id,
+                ord_document=registration.ord_document,
+                version=version or registration.metadata.version
+            )
+            
+            return {
+                "registration_id": registration_id,
+                "integrity_verified": is_valid,
+                "verification_details": verification_details,
+                "status": "verified" if is_valid else "integrity_failed"
+            }
+            
+        except Exception as e:
+            logger.error(f"Document integrity verification failed: {e}")
+            return {"error": str(e), "status": "error"}
+    
+    async def get_document_blockchain_history(
+        self,
+        registration_id: str
+    ) -> Dict[str, Any]:
+        """Get complete blockchain history for a document"""
+        await self._ensure_initialized()
+        
+        try:
+            if not self.blockchain_integration:
+                return {"error": "Blockchain integration not available", "history": []}
+            
+            history = await self.blockchain_integration.get_document_history(registration_id)
+            
+            return {
+                "registration_id": registration_id,
+                "blockchain_history": history,
+                "total_versions": len(history),
+                "blockchain_enabled": True
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get blockchain history: {e}")
+            return {"error": str(e), "history": []}
+    
+    async def get_blockchain_status(self) -> Dict[str, Any]:
+        """Get blockchain integration status"""
+        await self._ensure_initialized()
+        
+        try:
+            if not self.blockchain_integration:
+                return {"enabled": False, "status": "not_available"}
+            
+            return await self.blockchain_integration.get_blockchain_status()
+            
+        except Exception as e:
+            logger.error(f"Failed to get blockchain status: {e}")
+            return {"error": str(e), "enabled": False}
     
     async def get_health_status(self) -> Dict[str, Any]:
         """Get health status of the registry with dual-database storage"""

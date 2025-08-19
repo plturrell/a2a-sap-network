@@ -6,7 +6,7 @@ Simplifies development of new agents in the A2A network
 from .agentBase import A2AAgentBase
 # from .client import A2AClient  # Disabled due to missing dependencies
 from .decorators import a2a_handler, a2a_task, a2a_skill
-from .a2aTypes import (
+from .types import (
     A2AMessage, MessagePart, MessageRole, TaskStatus,
     AgentCard, AgentCapability, SkillDefinition
 )

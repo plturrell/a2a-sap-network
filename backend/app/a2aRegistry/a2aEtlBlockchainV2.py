@@ -5,18 +5,18 @@ Full A2A v0.2.9 compliance with real blockchain integration for ETL agents
 Matches actual Finsight CIB Agent 0 and Agent 1 ETL functionality
 """
 
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
-import sys
-import os
-import json
-from datetime import datetime
-from typing import Dict, Any, List, Optional
-from pydantic import BaseModel
-import uuid
-from web3 import Web3
 import logging
+import os
+import sys
+import uuid
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import uvicorn
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from web3 import Web3
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -29,6 +29,7 @@ sys.path.insert(0, app_dir)
 # Import trust system
 try:
     from a2a.security.smartContractTrust import SmartContractTrust
+    from a2a.sdk.types import AgentCard, SkillDefinition as A2ASkill
     TRUST_AVAILABLE = True
 except ImportError:
     TRUST_AVAILABLE = False
@@ -36,11 +37,13 @@ except ImportError:
 
 # A2A Protocol Models (v0.2.9 compliant)
 class A2AProvider(BaseModel):
+    """A2A Provider information."""
     organization: str
     url: Optional[str] = None
     contact: Optional[str] = None
 
 class A2ACapabilities(BaseModel):
+    """A2A Agent capabilities."""
     streaming: bool = True
     pushNotifications: bool = True
     stateTransitionHistory: bool = True
@@ -48,21 +51,8 @@ class A2ACapabilities(BaseModel):
     metadataExtraction: bool = False
     dublinCoreCompliance: bool = False
 
-class A2ASkill(BaseModel):
-    id: str
-    name: str
-    description: str
-    tags: List[str] = []
-    inputModes: List[str] = ["application/json"]
-    outputModes: List[str] = ["application/json"]
-    examples: List[str] = []
-
-class A2AAgentCard(BaseModel):
-    name: str
-    description: str
-    url: str
-    version: str
-    protocolVersion: str = "0.2.9"
+class A2ABlockchainAgentCard(AgentCard):
+    """A2A Agent Card with blockchain-specific extensions."""
     provider: A2AProvider
     capabilities: A2ACapabilities
     skills: List[A2ASkill]
@@ -72,9 +62,9 @@ class A2AAgentCard(BaseModel):
     healthEndpoint: Optional[str] = None
     metricsEndpoint: Optional[str] = None
     securitySchemes: Optional[Dict[str, str]] = None
-    metadata: Optional[Dict[str, Any]] = None
 
 class A2AMessagePart(BaseModel):
+    """A single part of an A2A message."""
     type: str  # "text", "function-call", "function-response"
     text: Optional[str] = None
     name: Optional[str] = None  # function name
@@ -82,6 +72,7 @@ class A2AMessagePart(BaseModel):
     id: Optional[str] = None
 
 class A2AMessage(BaseModel):
+    """A2A Message structure."""
     messageId: str
     role: str  # "user", "agent", "system"
     parts: List[A2AMessagePart]
@@ -92,6 +83,7 @@ class A2AMessage(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
 
 class A2ATask(BaseModel):
+    """A2A Task structure."""
     taskId: str
     contextId: Optional[str] = None
     description: str
@@ -104,6 +96,7 @@ class A2ATask(BaseModel):
 
 # Blockchain connector
 class BlockchainConnector:
+    """Handles connection to the local Anvil blockchain node."""
     def __init__(self):
         self.w3 = None
         self.connected = False
@@ -120,7 +113,7 @@ class BlockchainConnector:
                 print(f"   Block number: {self.w3.eth.block_number}")
                 print(f"   Account: {self.account}")
             return self.connected
-        except Exception as e:
+        except IOError as e:
             print(f"⚠️ Blockchain connection failed: {e}")
             self.connected = False
             return False
@@ -138,13 +131,12 @@ class BlockchainConnector:
                 "account": self.account,
                 "balance": self.w3.eth.get_balance(self.account) if self.account else 0
             }
-        except Exception as e:
+        except RuntimeError as e:
             return {"status": "error", "error": str(e)}
 
 # Global instances
 blockchain = BlockchainConnector()
-trust_system = None
-a2a_agents = {}
+a2a_agents: Dict[str, A2ABlockchainAgentCard] = {}
 blockchain_tasks = {}
 blockchain_messages = {}
 
@@ -166,21 +158,19 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_event():
     """Initialize blockchain A2A ETL network"""
-    global trust_system
-    
     print("🚀 Starting A2A ETL Blockchain Agent Network v2.0...")
     
     # Connect to blockchain
     blockchain_connected = blockchain.connect()
     
     # Initialize trust system if available
+    app.state.trust_system = None
     if TRUST_AVAILABLE:
         try:
-            trust_system = SmartContractTrust()
+            app.state.trust_system = SmartContractTrust()
             print("✅ Trust system initialized")
-        except Exception as e:
+        except RuntimeError as e:
             print(f"⚠️ Trust system failed: {e}")
-            trust_system = None
     
     # Initialize A2A ETL agents
     await initialize_a2a_etl_agents()
@@ -188,7 +178,7 @@ async def startup_event():
     print("🎯 A2A ETL Blockchain Agent Network v2.0 is LIVE!")
     print("   • Protocol: A2A v0.2.9 (100% compliant)")
     print(f"   • Blockchain: {'Connected' if blockchain_connected else 'Simulated'}")
-    print(f"   • Trust: {'Enabled' if trust_system else 'Disabled'}")
+    print(f"   • Trust: {'Enabled' if app.state.trust_system else 'Disabled'}")
     print("   • Agents: Data Product Registration + Financial Standardization")
 
 async def initialize_a2a_etl_agents():
@@ -196,11 +186,15 @@ async def initialize_a2a_etl_agents():
     
     # Get blockchain status for metadata
     blockchain_status = blockchain.get_status()
+    trust_enabled = app.state.trust_system is not None
     
     # Agent 0: Data Product Registration Agent (blockchain version)
-    agent0_data_product = A2AAgentCard(
+    agent0_data_product = A2ABlockchainAgentCard(
         name="Blockchain Data Product Registration Agent v2.0",
-        description="A2A v0.2.9 compliant data product registration agent executing on blockchain with Dublin Core metadata extraction from raw CRD financial data",
+        description=(
+            "A2A v0.2.9 compliant data product registration agent executing on blockchain "
+            "with Dublin Core metadata extraction from raw CRD financial data"
+        ),
         url="http://localhost:8084/agents/0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
         version="2.0.0",
         protocolVersion="0.2.9",
@@ -221,7 +215,10 @@ async def initialize_a2a_etl_agents():
             A2ASkill(
                 id="dublin-core-extraction",
                 name="Dublin Core Metadata Extraction",
-                description="Extract and generate Dublin Core metadata from raw CRD financial data according to ISO 15836, RFC 5013, and ANSI/NISO Z39.85 standards",
+                description=(
+                    "Extract and generate Dublin Core metadata from raw CRD financial data "
+                    "according to ISO 15836, RFC 5013, and ANSI/NISO Z39.85 standards"
+                ),
                 tags=["dublin-core", "metadata", "iso15836", "rfc5013", "standards", "blockchain", "etl"],
                 inputModes=["text/csv", "application/json", "application/xml", "text/plain"],
                 outputModes=["application/json"],
@@ -234,7 +231,10 @@ async def initialize_a2a_etl_agents():
             A2ASkill(
                 id="cds-csn-generation",
                 name="CDS CSN Generation",
-                description="Generate Core Data Services (CDS) Core Schema Notation (CSN) from raw CRD financial data with blockchain integrity verification",
+                description=(
+                    "Generate Core Data Services (CDS) Core Schema Notation (CSN) from raw "
+                    "CRD financial data with blockchain integrity verification"
+                ),
                 tags=["cds", "csn", "schema", "financial", "data", "blockchain", "etl"],
                 inputModes=["text/csv", "application/json"],
                 outputModes=["application/cds", "application/json"],
@@ -278,12 +278,16 @@ async def initialize_a2a_etl_agents():
             "agent": {
                 "address": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
                 "execution": "blockchain",
-                "trust_enabled": trust_system is not None,
+                "trust_enabled": trust_enabled,
                 "agent_type": "data_product_registration",
                 "etl_stage": "ingestion"
             },
             "etl": {
-                "data_sources": ["CRD_Extraction_v1_account.csv", "CRD_Extraction_v1_book.csv", "CRD_Extraction_v1_location.csv", "CRD_Extraction_v1_measure.csv", "CRD_Extraction_v1_product.csv"],
+                "data_sources": [
+                "CRD_Extraction_v1_account.csv", "CRD_Extraction_v1_book.csv",
+                "CRD_Extraction_v1_location.csv", "CRD_Extraction_v1_measure.csv",
+                "CRD_Extraction_v1_product.csv"
+            ],
                 "processing_type": "raw_to_structured",
                 "output_format": "ORD+JSON with Dublin Core",
                 "standards_compliance": ["ISO 15836", "RFC 5013", "ANSI/NISO Z39.85"]
@@ -297,9 +301,12 @@ async def initialize_a2a_etl_agents():
     )
     
     # Agent 1: Financial Standardization Agent (blockchain version)
-    agent1_standardization = A2AAgentCard(
+    agent1_standardization = A2ABlockchainAgentCard(
         name="Blockchain Financial Standardization Agent v2.0",
-        description="A2A v0.2.9 compliant financial data standardization agent executing on blockchain with L4 hierarchical processing for CRD entities",
+        description=(
+            "A2A v0.2.9 compliant financial data standardization agent executing on "
+            "blockchain with L4 hierarchical processing for CRD entities"
+        ),
         url="http://localhost:8084/agents/0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
         version="2.0.0",
         protocolVersion="0.2.9",
@@ -377,7 +384,7 @@ async def initialize_a2a_etl_agents():
             "agent": {
                 "address": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
                 "execution": "blockchain",
-                "trust_enabled": trust_system is not None,
+                "trust_enabled": trust_enabled,
                 "agent_type": "financial_standardization",
                 "etl_stage": "transformation"
             },
@@ -397,12 +404,18 @@ async def initialize_a2a_etl_agents():
     )
     
     # Register agents with trust system if available
-    if trust_system:
+    if app.state.trust_system:
         try:
-            trust_system.register_agent("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", "blockchain_data_product_agent")
-            trust_system.register_agent("0x70997970C51812dc3A010C7d01b50e0d17dc79C8", "blockchain_standardization_agent")
+            app.state.trust_system.register_agent(
+                "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+                "blockchain_data_product_agent"
+            )
+            app.state.trust_system.register_agent(
+                "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+                "blockchain_standardization_agent"
+            )
             print("✅ ETL agents registered in trust system")
-        except Exception as e:
+        except RuntimeError as e:
             print(f"⚠️ Trust registration failed: {e}")
     
     # Store agents
@@ -450,7 +463,7 @@ async def root():
             "registered_addresses": list(a2a_agents.keys())
         },
         "features": {
-            "trust_system": trust_system is not None,
+            "trust_system": trust_enabled,
             "blockchain_execution": blockchain.connected,
             "a2a_compliance": True,
             "etl_processing": True
@@ -503,11 +516,12 @@ async def agent_health(agent_id: str):
     
     # Get trust score if available
     trust_score = None
-    if trust_system:
+    trust_enabled = app.state.trust_system is not None
+    if trust_enabled:
         try:
-            trust_score = trust_system.get_trust_score(agent_id)
-        except Exception as e:
-            logger.warning(f"Failed to get trust score for agent {agent_id}: {e}")
+            trust_score = app.state.trust_system.get_trust_score(agent_id)
+        except (RuntimeError, ConnectionError) as e:
+            logger.warning("Failed to get trust score for agent %s: %s", agent_id, e)
             trust_score = None
     
     return {
@@ -533,7 +547,7 @@ async def agent_health(agent_id: str):
             "operational": True
         },
         "trust": {
-            "enabled": trust_system is not None,
+            "enabled": trust_enabled,
             "score": trust_score,
             "level": "verified" if (trust_score and trust_score >= 0.9) else "unknown"
         },
@@ -591,32 +605,35 @@ async def send_message(agent_id: str, message: A2AMessage):
             },
             "agent_id": agent_id,
             "results": results,
-            "trust_verified": trust_system is not None,
+            "trust_verified": app.state.trust_system is not None,
             "processing_time_ms": 287.6,
             "etl_stage": a2a_agents[agent_id].metadata.get("agent", {}).get("etl_stage"),
             "timestamp": datetime.utcnow().isoformat()
         }
         
-    except Exception as e:
+    except (ValueError, RuntimeError) as e:
         blockchain_messages[message.messageId]["status"] = "failed"
         blockchain_messages[message.messageId]["error"] = str(e)
         
-        raise HTTPException(status_code=500, detail=f"A2A ETL message processing failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"A2A ETL message processing failed: {str(e)}"
+        ) from e
 
 @app.get("/agents")
 async def list_agents():
     """List all A2A blockchain ETL agents"""
     blockchain_status = blockchain.get_status()
     agents_list = []
+    trust_enabled = app.state.trust_system is not None
     
     for agent_id, agent_card in a2a_agents.items():
         # Get trust score if available
         trust_score = None
-        if trust_system:
+        if trust_enabled:
             try:
-                trust_score = trust_system.get_trust_score(agent_id)
-            except Exception as e:
-                logger.warning(f"Failed to get trust score for agent {agent_id}: {e}")
+                trust_score = app.state.trust_system.get_trust_score(agent_id)
+            except (RuntimeError, ConnectionError) as e:
+                logger.warning("Failed to get trust score for agent %s: %s", agent_id, e)
                 trust_score = None
         
         agents_list.append({
@@ -632,14 +649,18 @@ async def list_agents():
             "blockchain": {
                 "connected": blockchain.connected,
                 "address": agent_id,
-                "contract": agent_card.metadata.get("blockchain", {}).get("registry_contract") if "data_product" in agent_card.name.lower() else agent_card.metadata.get("blockchain", {}).get("standardization_contract")
+                "contract": (
+                    agent_card.metadata.get("blockchain", {}).get("registry_contract")
+                    if "data_product" in agent_card.name.lower()
+                    else agent_card.metadata.get("blockchain", {}).get("standardization_contract")
+                )
             },
             "etl": {
                 "stage": agent_card.metadata.get("agent", {}).get("etl_stage"),
                 "agent_type": agent_card.metadata.get("agent", {}).get("agent_type")
             },
             "trust": {
-                "enabled": trust_system is not None,
+                "enabled": trust_enabled,
                 "score": trust_score
             },
             "status": "active"
@@ -660,7 +681,7 @@ async def list_agents():
             "stages_available": ["ingestion", "transformation"]
         },
         "features": {
-            "trust_system": trust_system is not None,
+            "trust_system": trust_enabled,
             "blockchain_execution": blockchain.connected
         },
         "timestamp": datetime.utcnow().isoformat()
@@ -739,7 +760,6 @@ async def execute_dublin_core_extraction_v2(args: Dict[str, Any], blockchain_sta
         try:
             import pandas as pd
             import hashlib
-            import os
             
             # Construct full file path
             full_path = os.path.join(source_path, data_file)
@@ -770,7 +790,7 @@ async def execute_dublin_core_extraction_v2(args: Dict[str, Any], blockchain_sta
             entity_levels = []
             
             # Analyze hierarchical structure (L0, L1, L2, L3, etc.)
-            for col in entity_columns:
+            for idx, col in enumerate(entity_columns):
                 if '(L' in col:
                     level = col.split('(L')[1].split(')')[0]
                     entity_levels.append(f"L{level}")
@@ -779,6 +799,7 @@ async def execute_dublin_core_extraction_v2(args: Dict[str, Any], blockchain_sta
             if not entity_levels and entity_columns:
                 entity_levels = ["flat_structure"]
             
+{{ ... }}
             # Get unique entity types from the data
             unique_entities = set()
             if len(df) > 0:
@@ -790,7 +811,7 @@ async def execute_dublin_core_extraction_v2(args: Dict[str, Any], blockchain_sta
             # Extract sample data structure
             sample_records = []
             if len(df) > 0:
-                for idx, row in df.head(3).iterrows():
+                for _, row in df.head(3).iterrows():
                     record = {}
                     for col in entity_columns:
                         if col != '_row_number':
@@ -857,13 +878,12 @@ async def execute_dublin_core_extraction_v2(args: Dict[str, Any], blockchain_sta
                 "timestamp": datetime.utcnow().isoformat()
             }
             
-        except Exception as e:
+        except (IOError, pd.errors.ParserError) as e:
             return {
                 "skill": "dublin-core-extraction",
                 "version": "2.0.0",
                 "status": "error",
-                "error": f"Failed to process real CRD file: {str(e)}",
-                "file_path": os.path.join(source_path, data_file),
+                "error": f"Failed to process CRD file: {str(e)}",
                 "timestamp": datetime.utcnow().isoformat()
             }
     
@@ -1050,7 +1070,6 @@ async def execute_l4_standardization_v2(args: Dict[str, Any], blockchain_status:
     if process_real_data and source_data_reference:
         try:
             import pandas as pd
-            import os
             
             standardization_results = {}
             total_processed = 0
@@ -1072,7 +1091,7 @@ async def execute_l4_standardization_v2(args: Dict[str, Any], blockchain_status:
                     flat_cols = [col for col in df.columns if not col.startswith('_') and '(L' not in col]
                     
                     # Create L4 standardized structure
-                    for idx, row in df.iterrows():
+                    for _, row in df.iterrows():
                         standardized_entity = {
                             "entity_id": f"{entity_type}_{idx+1}",
                             "entity_type": entity_type.rstrip('s'),
@@ -1170,7 +1189,7 @@ async def execute_l4_standardization_v2(args: Dict[str, Any], blockchain_status:
                 "timestamp": datetime.utcnow().isoformat()
             }
             
-        except Exception as e:
+        except IOError as e:
             return {
                 "skill": "l4-financial-standardization",
                 "version": "2.0.0",
@@ -1229,7 +1248,6 @@ async def execute_l4_standardization_v2(args: Dict[str, Any], blockchain_status:
 async def execute_semantic_matching_v2(args: Dict[str, Any], blockchain_status: Dict):
     """Execute semantic matching v2.0 with blockchain integration"""
     
-    matching_type = args.get("matching_type", "financial_entities")
     
     blockchain_tx = None
     if blockchain.connected:
@@ -1282,7 +1300,7 @@ async def execute_semantic_matching_v2(args: Dict[str, Any], blockchain_status: 
         "timestamp": datetime.utcnow().isoformat()
     }
 
-async def execute_quality_assessment_v2(args: Dict[str, Any], blockchain_status: Dict):
+async def execute_quality_assessment_v2(blockchain_status: Dict):
     """Execute data quality assessment v2.0 with blockchain integration"""
     
     assessment_type = args.get("assessment_type", "comprehensive")

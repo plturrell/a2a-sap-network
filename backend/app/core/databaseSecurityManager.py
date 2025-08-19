@@ -1,4 +1,5 @@
 """
+import time
 Enterprise Database Security Management
 Unified security management for HANA and SQLite databases
 """
@@ -44,6 +45,7 @@ class DatabaseUser:
     max_connections: int = 10
     session_timeout_minutes: int = 60
     password_hash: Optional[str] = None
+    salt: Optional[str] = None  # Unique salt per user for secure password hashing
     created_at: datetime = None
     last_login: Optional[datetime] = None
     active: bool = True
@@ -186,8 +188,11 @@ class DatabaseSecurityManager:
             self.security_auditor.warning(f"DB_AUTH_LOCKED: Account {username} is locked")
             return None
         
-        # Verify password (in production, use proper hashing)
-        password_hash = hashlib.pbkdf2_hmac('sha256', password.encode(), b'salt', 100000).hex()
+        # Verify password with unique salt per user
+        if not hasattr(user, 'salt') or not user.salt:
+            # Generate salt for existing users without one
+            user.salt = secrets.token_hex(16)
+        password_hash = hashlib.pbkdf2_hmac('sha256', password.encode(), user.salt.encode(), 100000).hex()
         
         if user.password_hash and user.password_hash != password_hash:
             user.failed_login_attempts += 1

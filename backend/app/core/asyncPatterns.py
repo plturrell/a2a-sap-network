@@ -1,4 +1,5 @@
 """
+import time
 A2A Platform Async/Await Standardization Framework
 Provides consistent patterns, utilities, and decorators for async operations
 """
@@ -13,6 +14,11 @@ from typing import (
     TypeVar, Union, Generic, Protocol, runtime_checkable,
     AsyncContextManager, AsyncIterator
 )
+
+try:
+    from typing import ParamSpec
+except ImportError:
+    from typing_extensions import ParamSpec
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from enum import Enum
@@ -25,7 +31,7 @@ from app.core.exceptions import (
 )
 
 T = TypeVar('T')
-P = TypeVar('P')
+P = ParamSpec('P')
 R = TypeVar('R')
 
 logger = get_logger(__name__, LogCategory.SYSTEM)
@@ -75,9 +81,9 @@ class AsyncOperationResult(Generic[T]):
 
 
 @runtime_checkable
-class AsyncCallable(Protocol[P, R]):
+class AsyncCallable(Protocol[R]):
     """Protocol for async callable types"""
-    async def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
+    async def __call__(self, *args: Any, **kwargs: Any) -> R:
         ...
 
 

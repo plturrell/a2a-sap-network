@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: a2a-network
-  labels:
-    name: a2a-network
-    protocol: a2a
-    version: "0.2.9"

@@ -1,0 +1,100 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <Dialog title="{i18n>manageViews}" 
+            contentWidth="600px" 
+            contentHeight="500px"
+            resizable="true"
+            draggable="true"
+            class="a2a-manage-views-dialog">
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <Text text="{i18n>manageViewsDescription}" 
+                      class="sapUiMediumMarginBottom"/>
+                      
+                <!-- Views Table -->
+                <Table items="{manageViews>/views}"
+                       mode="None"
+                       growing="false"
+                       class="a2a-views-table">
+                    <headerToolbar>
+                        <Toolbar>
+                            <Title text="{i18n>savedViews} ({= ${manageViews>/views}.length })"/>
+                        </Toolbar>
+                    </headerToolbar>
+                    
+                    <columns>
+                        <Column>
+                            <Text text="{i18n>name}"/>
+                        </Column>
+                        <Column>
+                            <Text text="{i18n>description}"/>
+                        </Column>
+                        <Column>
+                            <Text text="{i18n>created}"/>
+                        </Column>
+                        <Column>
+                            <Text text="{i18n>default}"/>
+                        </Column>
+                        <Column>
+                            <Text text="{i18n>actions}"/>
+                        </Column>
+                    </columns>
+                    
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <VBox>
+                                    <Text text="{manageViews>name}" 
+                                          class="sapMListItemText"/>
+                                    <Text text="ID: {manageViews>id}" 
+                                          class="sapMListItemTextSecondary"/>
+                                </VBox>
+                                <Text text="{manageViews>description}" 
+                                      maxLines="2"/>
+                                <Text text="{path: 'manageViews>created', formatter: '.formatDateTime'}"/>
+                                <core:Icon src="{= ${manageViews>isDefault} ? 'sap-icon://favorite' : '' }"
+                                          color="{= ${manageViews>isDefault} ? 'Critical' : 'Default' }"/>
+                                <HBox>
+                                    <Button icon="sap-icon://edit" 
+                                           type="Transparent" 
+                                           tooltip="{i18n>editView}"
+                                           press="onEditSavedView"/>
+                                    <Button icon="sap-icon://copy" 
+                                           type="Transparent" 
+                                           tooltip="{i18n>duplicateView}"
+                                           press="onDuplicateSavedView"/>
+                                    <Button icon="sap-icon://delete" 
+                                           type="Transparent" 
+                                           tooltip="{i18n>deleteView}"
+                                           press="onDeleteSavedView"
+                                           visible="{= !${manageViews>isDefault} }"/>
+                                </HBox>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+                
+                <!-- Empty State -->
+                <VBox alignItems="Center" 
+                      justifyContent="Center" 
+                      height="10rem"
+                      visible="{= !${manageViews>/views} || ${manageViews>/views}.length === 0 }">
+                    <core:Icon src="sap-icon://bookmark" 
+                             size="3rem" 
+                             color="Neutral"
+                             class="sapUiMediumMarginBottom"/>
+                    <Text text="{i18n>noSavedViews}" 
+                         class="sapUiMediumMarginBottom"/>
+                    <Button text="{i18n>createFirstView}" 
+                           type="Emphasized" 
+                           icon="sap-icon://add" 
+                           press="onCreateFirstView"/>
+                </VBox>
+            </VBox>
+        </content>
+        <endButton>
+            <Button text="{i18n>close}" 
+                    press="onCloseManageViews"
+                    icon="sap-icon://decline"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" 
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI" 
+                  id="CalculationAgentBPMN" 
+                  targetNamespace="http://a2a.network/calculationAgent">
+  
+  <!-- CALCULATION AGENT INTERNAL SKILLS PROCESS -->
+  <bpmn:process id="CalculationAgentProcess" name="Calculation Agent Internal Process">
+    
+    <!-- Start Events -->
+    <bpmn:startEvent id="StartBlockchain" name="Blockchain Message Received">
+      <bpmn:messageEventDefinition messageRef="BlockchainMessage"/>
+    </bpmn:startEvent>
+    
+    <bpmn:startEvent id="StartA2A" name="A2A Handler Called">
+      <bpmn:messageEventDefinition messageRef="A2AMessage"/>
+    </bpmn:startEvent>
+    
+    <!-- Gateway for Message Type -->
+    <bpmn:exclusiveGateway id="MessageTypeGateway" name="Message Type?"/>
+    
+    <!-- Main Calculation Handler -->
+    <bpmn:serviceTask id="HandleCalculation" name="handle_calculation_request">
+      <bpmn:documentation>@a2a_handler("calculate")</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <!-- Skills Gateway -->
+    <bpmn:exclusiveGateway id="SkillsGateway" name="Select Skill"/>
+    
+    <!-- Individual Skills -->
+    <bpmn:serviceTask id="EvaluateCalculation" name="evaluate_calculation">
+      <bpmn:documentation>@a2a_skill - Basic expression evaluation using SymPy</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <bpmn:serviceTask id="SolveEquation" name="solve_equation">
+      <bpmn:documentation>@a2a_skill - Solve algebraic equations</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <bpmn:serviceTask id="PerformCalculus" name="perform_calculus">
+      <bpmn:documentation>@a2a_skill - Derivatives and integrals</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <bpmn:serviceTask id="MatrixOperations" name="matrix_operations">
+      <bpmn:documentation>@a2a_skill - Matrix calculations</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <bpmn:serviceTask id="StatisticalAnalysis" name="statistical_analysis">
+      <bpmn:documentation>@a2a_skill - Mean, variance, correlation</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <bpmn:serviceTask id="FinancialCalculations" name="financial_calculations">
+      <bpmn:documentation>@a2a_skill - Compound interest, loans, bonds</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <bpmn:serviceTask id="IntelligentDispatch" name="intelligent_dispatch">
+      <bpmn:documentation>@a2a_skill - Natural language calculation with explanation</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <bpmn:serviceTask id="ExplainMethodology" name="explain_methodology">
+      <bpmn:documentation>@a2a_skill - Retrieve calculation methodology</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <!-- Batch Processing Task -->
+    <bpmn:serviceTask id="BatchCalculations" name="process_batch_calculations">
+      <bpmn:documentation>@a2a_task - Process multiple calculations</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <!-- Enhanced Calculation Skills -->
+    <bpmn:subProcess id="EnhancedSkillsSubprocess" name="Enhanced Calculation Skills">
+      <bpmn:startEvent id="StartEnhanced"/>
+      <bpmn:serviceTask id="CalculateWithExplanation" name="calculate_with_explanation"/>
+      <bpmn:exclusiveGateway id="CalcTypeGateway" name="Calculation Type?"/>
+      <bpmn:serviceTask id="DerivativeSteps" name="_calculate_derivative_with_steps"/>
+      <bpmn:serviceTask id="IntegralSteps" name="_calculate_integral_with_steps"/>
+      <bpmn:serviceTask id="EquationSteps" name="_solve_equation_with_steps"/>
+      <bpmn:serviceTask id="FinancialSteps" name="_calculate_financial_with_steps"/>
+      <bpmn:serviceTask id="StatisticalSteps" name="_calculate_statistical_with_steps"/>
+      <bpmn:serviceTask id="MatrixSteps" name="_calculate_matrix_with_steps"/>
+      <bpmn:serviceTask id="ExpressionSteps" name="_evaluate_expression_with_steps"/>
+      <bpmn:endEvent id="EndEnhanced"/>
+    </bpmn:subProcess>
+    
+    <!-- Storage Call -->
+    <bpmn:callActivity id="StoreResults" name="Store Results via Data Manager" calledElement="DataManagerStorage"/>
+    
+    <!-- Response Creation -->
+    <bpmn:serviceTask id="CreateResponse" name="Create A2A Response"/>
+    
+    <!-- End Events -->
+    <bpmn:endEvent id="EndSuccess" name="Success Response"/>
+    <bpmn:endEvent id="EndError" name="Error Response"/>
+    
+    <!-- Sequence Flows -->
+    <bpmn:sequenceFlow sourceRef="StartBlockchain" targetRef="MessageTypeGateway"/>
+    <bpmn:sequenceFlow sourceRef="StartA2A" targetRef="HandleCalculation"/>
+    <bpmn:sequenceFlow sourceRef="MessageTypeGateway" targetRef="HandleCalculation">
+      <bpmn:conditionExpression>type == "calculation_request"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow sourceRef="HandleCalculation" targetRef="SkillsGateway"/>
+    <bpmn:sequenceFlow sourceRef="SkillsGateway" targetRef="IntelligentDispatch">
+      <bpmn:conditionExpression>metadata.test_mode == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  
+  <!-- AGENT DELEGATION PROCESS -->
+  <bpmn:collaboration id="AgentDelegation">
+    
+    <!-- Participants -->
+    <bpmn:participant id="CalculationAgent" name="Calculation Agent" processRef="CalculationAgentProcess"/>
+    <bpmn:participant id="CalcValidationAgent" name="CalcValidation Agent"/>
+    <bpmn:participant id="DataManager" name="Data Manager Agent"/>
+    <bpmn:participant id="AgentManager" name="Agent Manager"/>
+    <bpmn:participant id="CatalogManager" name="Catalog Manager"/>
+    <bpmn:participant id="Blockchain" name="Blockchain Network"/>
+    
+    <!-- Message Flows -->
+    
+    <!-- Incoming: CalcValidation -> Calculation Agent -->
+    <bpmn:messageFlow id="TestRequest" name="test_calculation_request" 
+                       sourceRef="CalcValidationAgent" 
+                       targetRef="StartBlockchain">
+      <bpmn:documentation>Via blockchain: dispatch_test_question()</bpmn:documentation>
+    </bpmn:messageFlow>
+    
+    <!-- Outgoing: Calculation Agent -> Data Manager -->
+    <bpmn:messageFlow id="StoreData" name="data_operation_request" 
+                       sourceRef="StoreResults" 
+                       targetRef="DataManager">
+      <bpmn:documentation>_call_data_manager() via blockchain</bpmn:documentation>
+    </bpmn:messageFlow>
+    
+    <!-- Response: Data Manager -> Calculation Agent -->
+    <bpmn:messageFlow id="DataResponse" name="data_operation_response" 
+                       sourceRef="DataManager" 
+                       targetRef="CalculationAgent">
+      <bpmn:documentation>_handle_data_manager_response()</bpmn:documentation>
+    </bpmn:messageFlow>
+    
+    <!-- Response: Calculation Agent -> CalcValidation -->
+    <bpmn:messageFlow id="TestResponse" name="test_calculation_response" 
+                       sourceRef="CreateResponse" 
+                       targetRef="CalcValidationAgent">
+      <bpmn:documentation>Via blockchain with signature</bpmn:documentation>
+    </bpmn:messageFlow>
+    
+    <!-- All blockchain messages -->
+    <bpmn:messageFlow sourceRef="Blockchain" targetRef="CalculationAgent" name="Blockchain Events"/>
+    <bpmn:messageFlow sourceRef="CalculationAgent" targetRef="Blockchain" name="Send Messages"/>
+  </bpmn:collaboration>
+  
+  <!-- DATA STORAGE SUBPROCESS -->
+  <bpmn:process id="DataManagerStorage" name="Data Manager Storage Process">
+    <bpmn:startEvent id="StartStorage" name="Storage Request"/>
+    
+    <bpmn:exclusiveGateway id="StorageTypeGateway" name="Storage Type?"/>
+    
+    <bpmn:serviceTask id="StoreTestResult" name="Store Test Result">
+      <bpmn:documentation>data_create with metadata.data_type = "calculation_test_result"</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <bpmn:serviceTask id="StoreBatchResults" name="Store Batch Results">
+      <bpmn:documentation>data_create with metadata.data_type = "calculation_batch_results"</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <bpmn:endEvent id="EndStorage" name="Storage Complete"/>
+    
+    <bpmn:sequenceFlow sourceRef="StartStorage" targetRef="StorageTypeGateway"/>
+    <bpmn:sequenceFlow sourceRef="StorageTypeGateway" targetRef="StoreTestResult">
+      <bpmn:conditionExpression>metadata.test_mode == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow sourceRef="StorageTypeGateway" targetRef="StoreBatchResults">
+      <bpmn:conditionExpression>batch_id != null</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  
+  <!-- BLOCKCHAIN MESSAGE HANDLERS -->
+  <bpmn:process id="BlockchainHandlers" name="Blockchain Message Handlers">
+    <bpmn:startEvent id="BlockchainEvent" name="Blockchain Event"/>
+    
+    <bpmn:exclusiveGateway id="HandlerGateway" name="Select Handler"/>
+    
+    <bpmn:serviceTask id="HandleCalcRequest" name="_handle_blockchain_calculation_request">
+      <bpmn:documentation>Registered: "calculation_request"</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <bpmn:serviceTask id="HandleTestRequest" name="_handle_test_calculation_request">
+      <bpmn:documentation>Registered: "test_calculation_request"</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <bpmn:serviceTask id="HandleDataResponse" name="_handle_data_manager_response">
+      <bpmn:documentation>Registered: "data_operation_response"</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <bpmn:serviceTask id="HandleAgentResponse" name="_handle_agent_manager_response">
+      <bpmn:documentation>Registered: "agent_operation_response"</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <bpmn:serviceTask id="HandleCatalogResponse" name="_handle_catalog_manager_response">
+      <bpmn:documentation>Registered: "catalog_operation_response"</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <bpmn:serviceTask id="HandleDefault" name="_handle_blockchain_message">
+      <bpmn:documentation>Registered: "default"</bpmn:documentation>
+    </bpmn:serviceTask>
+    
+    <bpmn:endEvent id="EndHandler"/>
+  </bpmn:process>
+  
+</bpmn:definitions>

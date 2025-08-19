@@ -16,12 +16,23 @@ help:
 	@echo "  dev-setup     Setup development environment"
 	@echo ""
 	@echo "Agent Management:"
-	@echo "  start-agent0  Start Data Product Agent (port 8001)"
-	@echo "  start-agent1  Start Standardization Agent (port 8002)"
-	@echo "  start-agent2  Start AI Preparation Agent (port 8003)"
-	@echo "  start-agent3  Start Vector Processing Agent (port 8004)"
-	@echo "  start-managers Start support agents (data, catalog, agent managers)"
-	@echo "  start-all     Start all agents"
+	@echo "  start-registry       Start Registry Server (port 8000)"
+	@echo "  start-agent0         Start Data Product Agent (port 8001)"
+	@echo "  start-agent1         Start Standardization Agent (port 8002)"
+	@echo "  start-agent2         Start AI Preparation Agent (port 8003)"
+	@echo "  start-agent3         Start Vector Processing Agent (port 8004)"
+	@echo "  start-agent4         Start Calc Validation Agent (port 8005)"
+	@echo "  start-agent5         Start QA Validation Agent (port 8006)"
+	@echo "  start-agent6         Start Quality Control Agent (port 8007)"
+	@echo "  start-reasoning      Start Reasoning Agent (port 8008)"
+	@echo "  start-sql            Start SQL Agent (port 8009)"
+	@echo "  start-agent-manager  Start Agent Manager (port 8010)"
+	@echo "  start-data-manager   Start Data Manager (port 8011)"
+	@echo "  start-catalog-manager Start Catalog Manager (port 8012)"
+	@echo "  start-calculation    Start Calculation Agent (port 8013)"
+	@echo "  start-agent-builder  Start Agent Builder (port 8014)"
+	@echo "  start-embedding      Start Embedding Fine-Tuner (port 8015)"
+	@echo "  start-all           Start all 16 agents (100% coverage)"
 	@echo ""
 	@echo "Deployment:"
 	@echo "  deploy-dev    Deploy to development environment"
@@ -66,7 +77,10 @@ dev-setup: install-dev
 	pre-commit install
 	@echo "Development environment setup complete!"
 
-# Agent Management
+# Agent Management - All 16 Agents for 100% Coverage
+start-registry:
+	python scripts/launch/unified_launcher.py --agent=registry-server --port=8000
+
 start-agent0:
 	python scripts/launch/unified_launcher.py --agent=agent0 --port=8001
 
@@ -80,32 +94,59 @@ start-agent3:
 	python scripts/launch/unified_launcher.py --agent=agent3 --port=8004
 
 start-agent4:
-	python scripts/launch/unified_launcher.py --agent=agent4 --port=8009
+	python scripts/launch/unified_launcher.py --agent=agent4 --port=8005
 
 start-agent5:
-	python scripts/launch/unified_launcher.py --agent=agent5 --port=8010
+	python scripts/launch/unified_launcher.py --agent=agent5 --port=8006
 
-start-data-manager:
-	python scripts/launch/unified_launcher.py --agent=data-manager --port=8005
+start-agent6:
+	python scripts/launch/unified_launcher.py --agent=agent6 --port=8007
 
-start-catalog-manager:
-	python scripts/launch/unified_launcher.py --agent=catalog-manager --port=8006
+start-reasoning:
+	python scripts/launch/unified_launcher.py --agent=reasoning-agent --port=8008
+
+start-sql:
+	python scripts/launch/unified_launcher.py --agent=sql-agent --port=8009
 
 start-agent-manager:
-	python scripts/launch/unified_launcher.py --agent=agent-manager --port=8007
+	python scripts/launch/unified_launcher.py --agent=agent-manager --port=8010
+
+start-data-manager:
+	python scripts/launch/unified_launcher.py --agent=data-manager --port=8011
+
+start-catalog-manager:
+	python scripts/launch/unified_launcher.py --agent=catalog-manager --port=8012
+
+start-calculation:
+	python scripts/launch/unified_launcher.py --agent=calculation-agent --port=8013
+
+start-agent-builder:
+	python scripts/launch/unified_launcher.py --agent=agent-builder --port=8014
+
+start-embedding:
+	python scripts/launch/unified_launcher.py --agent=embedding-finetuner --port=8015
 
 start-managers: start-data-manager start-catalog-manager start-agent-manager
 
 start-all:
-	@echo "Starting all A2A agents..."
+	@echo "Starting ALL 16 A2A agents for 100% coverage..."
+	python scripts/launch/unified_launcher.py --agent=registry-server --port=8000 &
 	python scripts/launch/unified_launcher.py --agent=agent0 --port=8001 &
 	python scripts/launch/unified_launcher.py --agent=agent1 --port=8002 &
 	python scripts/launch/unified_launcher.py --agent=agent2 --port=8003 &
 	python scripts/launch/unified_launcher.py --agent=agent3 --port=8004 &
-	python scripts/launch/unified_launcher.py --agent=data-manager --port=8005 &
-	python scripts/launch/unified_launcher.py --agent=catalog-manager --port=8006 &
-	python scripts/launch/unified_launcher.py --agent=agent-manager --port=8007 &
-	@echo "All agents started in background. Use 'make stop-all' to stop them."
+	python scripts/launch/unified_launcher.py --agent=agent4 --port=8005 &
+	python scripts/launch/unified_launcher.py --agent=agent5 --port=8006 &
+	python scripts/launch/unified_launcher.py --agent=agent6 --port=8007 &
+	python scripts/launch/unified_launcher.py --agent=reasoning-agent --port=8008 &
+	python scripts/launch/unified_launcher.py --agent=sql-agent --port=8009 &
+	python scripts/launch/unified_launcher.py --agent=agent-manager --port=8010 &
+	python scripts/launch/unified_launcher.py --agent=data-manager --port=8011 &
+	python scripts/launch/unified_launcher.py --agent=catalog-manager --port=8012 &
+	python scripts/launch/unified_launcher.py --agent=calculation-agent --port=8013 &
+	python scripts/launch/unified_launcher.py --agent=agent-builder --port=8014 &
+	python scripts/launch/unified_launcher.py --agent=embedding-finetuner --port=8015 &
+	@echo "All 16 agents started in background (100% coverage). Use 'make stop-all' to stop them."
 
 stop-all:
 	@echo "Stopping all A2A agents..."

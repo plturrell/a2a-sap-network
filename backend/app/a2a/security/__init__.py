@@ -6,7 +6,15 @@ Delegated to a2aNetwork trust system
 # Import from a2aNetwork trust system
 try:
     import sys
-    sys.path.insert(0, "/Users/apple/projects/a2a/a2aNetwork")
+    import os
+    from app.core.config import settings
+    
+    # Use configured path instead of hardcoded
+    a2a_network_path = settings.A2A_NETWORK_PATH
+    if os.path.exists(a2a_network_path):
+        sys.path.insert(0, a2a_network_path)
+    else:
+        raise ImportError(f"A2A Network path not found: {a2a_network_path}")
     
     # Import individual modules and re-export functions
     from trustSystem import smartContractTrust
