@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  # A2A Network Application
+  a2a-network:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "4004:4004"  # CAP server
+      - "9229:9229"  # Node.js debugger
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - a2a-data:/app/data
+      - a2a-logs:/app/logs
+    environment:
+      - NODE_ENV=development
+      - USE_DEVELOPMENT_AUTH=true
+      - BLOCKCHAIN_RPC_URL=http://ganache:8545
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+      - ganache
+    command: npm run watch
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Local Blockchain (Ganache)
+  ganache:
+    image: trufflesuite/ganache-cli:latest
+    ports:
+      - "8545:8545"
+    command: >
+      --deterministic
+      --accounts 20
+      --host 0.0.0.0
+      --port 8545
+      --gasLimit 12000000
+      --quiet
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8545"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Development Database (SQLite with web interface)
+  sqlite-web:
+    image: coleifer/sqlite-web
+    ports:
+      - "8080:8080"
+    volumes:
+      - a2a-data:/data
+    command: sqlite_web -H 0.0.0.0 -x /data/a2a_development.db
+    depends_on:
+      - a2a-network
+    restart: unless-stopped
+
+  # Blockchain Explorer (optional)
+  blockchain-explorer:
+    image: consensys/quorum-explorer:latest
+    ports:
+      - "8081:8080"
+    environment:
+      - NODE_ENDPOINT=http://ganache:8545
+    depends_on:
+      - ganache
+    restart: unless-stopped
+
+volumes:
+  a2a-data:
+    driver: local
+  a2a-logs:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  default:
+    name: a2a-dev-network

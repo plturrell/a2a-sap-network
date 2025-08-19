@@ -52,6 +52,7 @@ class CacheMiddleware {
    * Cache middleware for Express routes
    */
   middleware() {
+    const self = this; // Preserve context for SAP enterprise standard approach
     return async (req, res, next) => {
       const startTime = performance.now();
       
@@ -60,12 +61,12 @@ class CacheMiddleware {
         return next();
       }
 
-      const cacheKey = this.generateCacheKey(req);
-      const entityType = this.extractEntityType(req.path);
-      const config = this.cacheConfig[entityType] || { ttl: 300, strategy: 'cache-aside' };
+      const cacheKey = self.generateCacheKey(req);
+      const entityType = self.extractEntityType(req.path);
+      const config = self.cacheConfig[entityType] || { ttl: 300, strategy: 'cache-aside' };
 
       try {
-        const cachedData = await this.get(cacheKey);
+        const cachedData = await self.get(cacheKey);
         
         if (cachedData) {
           const duration = performance.now() - startTime;
@@ -83,12 +84,14 @@ class CacheMiddleware {
         // Cache miss - continue to handler
         res.set('X-Cache-Status', 'MISS');
         
-        // Override res.json to cache the response
-        const originalJson = res.json;
-        res.json = function(data) {
+        // Use event-based response handling instead of overriding res.json to avoid OpenTelemetry conflicts
+        let responseData = null;
+        
+        // Capture response data using event listeners instead of method override
+        res.on('finish', () => {
           // Cache successful responses only
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            const cachePromise = this.set(cacheKey, data, config.ttl);
+          if (res.statusCode >= 200 && res.statusCode < 300 && responseData) {
+            const cachePromise = self.set(cacheKey, responseData, config.ttl);
             
             // Don't wait for cache write in write-behind strategy
             if (config.strategy === 'write-behind') {
@@ -102,9 +105,14 @@ class CacheMiddleware {
               );
             }
           }
-          
+        });
+        
+        // Store original json method to capture data without overriding
+        const originalJson = res.json;
+        res.json = function(data) {
+          responseData = data; // Capture data for caching
           return originalJson.call(this, data);
-        }.bind(this);
+        }.bind(res);
 
       } catch (error) {
         cds.log('service').warn('Cache middleware error:', error.message);

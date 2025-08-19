@@ -1,0 +1,17 @@
+{
+  "agentType": "vectorProcessingAgent",
+  "name": "Vector Processing Agent",
+  "address": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+  "endpoint": "http://localhost:8003",
+  "capabilities": [
+    "vector_generation",
+    "embedding_creation",
+    "similarity_search",
+    "vector_optimization",
+    "semantic_analysis"
+  ],
+  "description": "Agent 3 - Generates and processes vector embeddings for semantic analysis",
+  "registrationTx": "0x33c5032eca16ec96f663026083baf12635d0b0b469047bc0d1ff2c2e927d0d96",
+  "registrationBlock": 6,
+  "registeredAt": "2025-08-19T06:02:17.571Z"
+}

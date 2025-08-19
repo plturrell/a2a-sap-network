@@ -12,17 +12,17 @@ sap.ui.define([
          * @param {Date|string} vDate - Date object or date string
          * @returns {string} Formatted date/time string
          */
-        formatDateTime: function(vDate) {
+        formatDateTime(vDate) {
             if (!vDate) {
                 return "";
             }
-            
+
             try {
-                var oDateFormat = DateFormat.getDateTimeInstance({
+                const oDateFormat = DateFormat.getDateTimeInstance({
                     style: "medium"
                 });
-                
-                var oDate = vDate instanceof Date ? vDate : new Date(vDate);
+
+                const oDate = vDate instanceof Date ? vDate : new Date(vDate);
                 return oDateFormat.format(oDate);
             } catch (e) {
                 Log.error("Date formatting failed", e);
@@ -37,31 +37,31 @@ sap.ui.define([
          * @param {Date|string} vEnd - End date
          * @returns {string} Duration string
          */
-        calculateDuration: function(vStart, vEnd) {
+        calculateDuration(vStart, vEnd) {
             if (!vStart) {
                 return "";
             }
-            
+
             try {
-                var iStart = new Date(vStart).getTime();
-                var iEnd = vEnd ? new Date(vEnd).getTime() : Date.now();
-                var iDuration = iEnd - iStart;
-                
+                const iStart = new Date(vStart).getTime();
+                const iEnd = vEnd ? new Date(vEnd).getTime() : Date.now();
+                const iDuration = iEnd - iStart;
+
                 // Convert to human readable format
-                var iSeconds = Math.floor(iDuration / 1000);
-                var iMinutes = Math.floor(iSeconds / 60);
-                var iHours = Math.floor(iMinutes / 60);
-                var iDays = Math.floor(iHours / 24);
-                
+                const iSeconds = Math.floor(iDuration / 1000);
+                const iMinutes = Math.floor(iSeconds / 60);
+                const iHours = Math.floor(iMinutes / 60);
+                const iDays = Math.floor(iHours / 24);
+
                 if (iDays > 0) {
-                    return iDays + "d " + (iHours % 24) + "h";
+                    return `${iDays }d ${ iHours % 24 }h`;
                 } else if (iHours > 0) {
-                    return iHours + "h " + (iMinutes % 60) + "m";
+                    return `${iHours }h ${ iMinutes % 60 }m`;
                 } else if (iMinutes > 0) {
-                    return iMinutes + "m " + (iSeconds % 60) + "s";
-                } else {
-                    return iSeconds + "s";
+                    return `${iMinutes }m ${ iSeconds % 60 }s`;
                 }
+                return `${iSeconds }s`;
+
             } catch (e) {
                 Log.error("Duration calculation failed", e);
                 return "";
@@ -74,17 +74,17 @@ sap.ui.define([
          * @param {string} sAddress - Full Ethereum address
          * @returns {string} Shortened address
          */
-        formatAddress: function(sAddress) {
+        formatAddress(sAddress) {
             if (!sAddress || typeof sAddress !== "string") {
                 return "";
             }
-            
+
             // Validate Ethereum address format
             if (!/^0x[a-fA-F0-9]{40}$/.test(sAddress)) {
                 return sAddress; // Return as-is if not valid format
             }
-            
-            return sAddress.substring(0, 6) + "..." + sAddress.substring(38);
+
+            return `${sAddress.substring(0, 6) }...${ sAddress.substring(38)}`;
         },
 
         /**
@@ -93,20 +93,20 @@ sap.ui.define([
          * @param {number} iScore - Reputation score
          * @returns {sap.ui.core.ValueState} Value state for UI5 controls
          */
-        formatReputationState: function(iScore) {
+        formatReputationState(iScore) {
             if (typeof iScore !== "number") {
                 return ValueState.None;
             }
-            
+
             if (iScore >= 150) {
                 return ValueState.Success;
             } else if (iScore >= 100) {
                 return ValueState.Warning;
             } else if (iScore >= 50) {
                 return ValueState.Error;
-            } else {
-                return ValueState.Error;
             }
+            return ValueState.Error;
+
         },
 
         /**
@@ -115,20 +115,20 @@ sap.ui.define([
          * @param {number} iScore - Reputation score
          * @returns {string} Formatted reputation text
          */
-        formatReputationText: function(iScore) {
+        formatReputationText(iScore) {
             if (typeof iScore !== "number") {
                 return "Unknown";
             }
-            
+
             if (iScore >= 150) {
-                return iScore + " (Excellent)";
+                return `${iScore } (Excellent)`;
             } else if (iScore >= 100) {
-                return iScore + " (Good)";
+                return `${iScore } (Good)`;
             } else if (iScore >= 50) {
-                return iScore + " (Fair)";
-            } else {
-                return iScore + " (Poor)";
+                return `${iScore } (Fair)`;
             }
+            return `${iScore } (Poor)`;
+
         },
 
         /**
@@ -137,8 +137,8 @@ sap.ui.define([
          * @param {string} sStatus - Service status
          * @returns {string} Human readable status
          */
-        formatServiceStatus: function(sStatus) {
-            var mStatusMap = {
+        formatServiceStatus(sStatus) {
+            const mStatusMap = {
                 "pending": "Pending",
                 "active": "Active",
                 "completed": "Completed",
@@ -146,7 +146,7 @@ sap.ui.define([
                 "disputed": "Disputed",
                 "failed": "Failed"
             };
-            
+
             return mStatusMap[sStatus] || sStatus || "";
         },
 
@@ -156,19 +156,19 @@ sap.ui.define([
          * @param {string} sStatus - Service status
          * @returns {sap.ui.core.ValueState} Value state
          */
-        formatServiceStatusState: function(sStatus) {
+        formatServiceStatusState(sStatus) {
             switch (sStatus) {
-                case "active":
-                case "completed":
-                    return ValueState.Success;
-                case "pending":
-                    return ValueState.Warning;
-                case "cancelled":
-                case "failed":
-                case "disputed":
-                    return ValueState.Error;
-                default:
-                    return ValueState.None;
+            case "active":
+            case "completed":
+                return ValueState.Success;
+            case "pending":
+                return ValueState.Warning;
+            case "cancelled":
+            case "failed":
+            case "disputed":
+                return ValueState.Error;
+            default:
+                return ValueState.None;
             }
         },
 
@@ -178,15 +178,15 @@ sap.ui.define([
          * @param {string|number} vWei - Gas price in Wei
          * @returns {string} Gas price in Gwei
          */
-        formatGasPrice: function(vWei) {
+        formatGasPrice(vWei) {
             if (!vWei) {
                 return "0 Gwei";
             }
-            
+
             try {
                 // Convert Wei to Gwei (1 Gwei = 10^9 Wei)
-                var fGwei = parseFloat(vWei) / 1000000000;
-                return fGwei.toFixed(2) + " Gwei";
+                const fGwei = parseFloat(vWei) / 1000000000;
+                return `${fGwei.toFixed(2) } Gwei`;
             } catch (e) {
                 Log.error("Gas price formatting failed", e);
                 return "0 Gwei";
@@ -199,12 +199,12 @@ sap.ui.define([
          * @param {number} fValue - Decimal value (0-1)
          * @returns {string} Percentage string
          */
-        formatPercentage: function(fValue) {
+        formatPercentage(fValue) {
             if (typeof fValue !== "number" || isNaN(fValue)) {
                 return "0%";
             }
-            
-            return (fValue * 100).toFixed(1) + "%";
+
+            return `${(fValue * 100).toFixed(1) }%`;
         },
 
         /**
@@ -213,8 +213,8 @@ sap.ui.define([
          * @param {number} iCategory - Category enum value
          * @returns {string} Category name
          */
-        formatCapabilityCategory: function(iCategory) {
-            var mCategories = {
+        formatCapabilityCategory(iCategory) {
+            const mCategories = {
                 0: "Computation",
                 1: "Storage",
                 2: "Analysis",
@@ -223,7 +223,7 @@ sap.ui.define([
                 5: "Security",
                 6: "Integration"
             };
-            
+
             return mCategories[iCategory] || "Other";
         },
 
@@ -233,15 +233,15 @@ sap.ui.define([
          * @param {string} sStatus - Workflow status
          * @returns {string} Icon name
          */
-        getWorkflowStatusIcon: function(sStatus) {
-            var mIcons = {
+        getWorkflowStatusIcon(sStatus) {
+            const mIcons = {
                 "running": "sap-icon://process",
                 "completed": "sap-icon://sys-enter-2",
                 "failed": "sap-icon://error",
                 "cancelled": "sap-icon://sys-cancel",
                 "paused": "sap-icon://pause"
             };
-            
+
             return mIcons[sStatus] || "sap-icon://question-mark";
         },
 
@@ -251,18 +251,18 @@ sap.ui.define([
          * @param {string} sStatus - Workflow status
          * @returns {sap.ui.core.ValueState} Value state
          */
-        formatWorkflowStatusState: function(sStatus) {
+        formatWorkflowStatusState(sStatus) {
             switch (sStatus) {
-                case "completed":
-                    return ValueState.Success;
-                case "running":
-                case "paused":
-                    return ValueState.Warning;
-                case "failed":
-                case "cancelled":
-                    return ValueState.Error;
-                default:
-                    return ValueState.None;
+            case "completed":
+                return ValueState.Success;
+            case "running":
+            case "paused":
+                return ValueState.Warning;
+            case "failed":
+            case "cancelled":
+                return ValueState.Error;
+            default:
+                return ValueState.None;
             }
         },
 
@@ -272,22 +272,22 @@ sap.ui.define([
          * @param {number} iNumber - Large number
          * @returns {string} Formatted number (e.g., 1.2K, 3.4M)
          */
-        formatLargeNumber: function(iNumber) {
+        formatLargeNumber(iNumber) {
             if (typeof iNumber !== "number" || isNaN(iNumber)) {
                 return "0";
             }
-            
-            var absNumber = Math.abs(iNumber);
-            var sign = iNumber < 0 ? "-" : "";
-            
+
+            const absNumber = Math.abs(iNumber);
+            const sign = iNumber < 0 ? "-" : "";
+
             if (absNumber >= 1000000000) {
-                return sign + (absNumber / 1000000000).toFixed(1) + "B";
+                return `${sign + (absNumber / 1000000000).toFixed(1) }B`;
             } else if (absNumber >= 1000000) {
-                return sign + (absNumber / 1000000).toFixed(1) + "M";
+                return `${sign + (absNumber / 1000000).toFixed(1) }M`;
             } else if (absNumber >= 1000) {
-                return sign + (absNumber / 1000).toFixed(1) + "K";
+                return `${sign + (absNumber / 1000).toFixed(1) }K`;
             }
-            
+
             return sign + absNumber.toString();
         },
 
@@ -298,15 +298,15 @@ sap.ui.define([
          * @param {string} sCurrency - Currency code (default: USD)
          * @returns {string} Formatted currency string
          */
-        formatCurrency: function(fValue, sCurrency) {
+        formatCurrency(fValue, sCurrency) {
             if (typeof fValue !== "number" || isNaN(fValue)) {
                 return "";
             }
-            
-            var oCurrencyFormat = sap.ui.core.format.NumberFormat.getCurrencyInstance({
+
+            const oCurrencyFormat = sap.ui.core.format.NumberFormat.getCurrencyInstance({
                 currencyCode: false
             });
-            
+
             return oCurrencyFormat.format(fValue, sCurrency || "USD");
         },
 
@@ -316,8 +316,8 @@ sap.ui.define([
          * @param {any} vValue - Value to check
          * @returns {boolean} True if empty
          */
-        isEmpty: function(vValue) {
-            return !vValue || 
+        isEmpty(vValue) {
+            return !vValue ||
                    (Array.isArray(vValue) && vValue.length === 0) ||
                    (typeof vValue === "object" && Object.keys(vValue).length === 0);
         },
@@ -328,7 +328,7 @@ sap.ui.define([
          * @param {any} vValue - Value to check
          * @returns {boolean} True if not empty
          */
-        isNotEmpty: function(vValue) {
+        isNotEmpty(vValue) {
             return !this.isEmpty(vValue);
         }
     };

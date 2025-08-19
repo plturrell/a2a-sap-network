@@ -9,7 +9,7 @@
  */
 
 const cds = require('@sap/cds');
-const { normalizeLocale, formatCurrency, formatDate, formatNumber, isRTL } = require('./i18n-config');
+const { normalizeLocale, formatCurrency, formatDate, formatNumber, isRTL } = require('./sapI18nConfig');
 
 /**
  * CDS middleware for i18n integration
@@ -19,7 +19,7 @@ class I18nMiddleware {
     constructor() {
         this.cache = new Map();
         this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
-    }
+    \n        this.intervals = new Map(); // Track intervals for cleanup}
 
     /**
      * Initialize i18n middleware for CDS services
@@ -380,8 +380,8 @@ class I18nMiddleware {
 const i18nMiddleware = new I18nMiddleware();
 
 // Auto-clean cache every hour
-setInterval(() => {
+this.intervals.set('interval_383', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => {
     i18nMiddleware.cleanCache();
-}, 60 * 60 * 1000);
+}, 60 * 60 * 1000));
 
 module.exports = i18nMiddleware;

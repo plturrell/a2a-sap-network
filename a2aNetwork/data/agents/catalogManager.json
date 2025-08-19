@@ -1,0 +1,17 @@
+{
+  "agentType": "catalogManager",
+  "name": "Catalog Manager Agent",
+  "address": "0xFABB0ac9d68B0B445fB7357272Ff202C5651694a",
+  "endpoint": "http://localhost:8012",
+  "capabilities": [
+    "catalog_management",
+    "metadata_indexing",
+    "service_discovery",
+    "catalog_search",
+    "resource_registration"
+  ],
+  "description": "Agent 12 - Manages service catalogs and resource discovery",
+  "registrationTx": "0xf23d64ba681cbd29092091a9ad47796457264fa48c826cb599c025821f34992f",
+  "registrationBlock": 15,
+  "registeredAt": "2025-08-19T06:02:18.255Z"
+}

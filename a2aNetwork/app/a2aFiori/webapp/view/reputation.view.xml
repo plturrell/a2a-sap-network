@@ -1,0 +1,298 @@
+<mvc:View
+    controllerName="a2a.controller.reputation"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns:m="sap.m"
+    xmlns:f="sap.f"
+    xmlns:layout="sap.ui.layout"
+    xmlns:viz="sap.viz.ui5.controls"
+    xmlns:vizData="sap.viz.ui5.data"
+    xmlns:vizFeeds="sap.viz.ui5.controls.common.feeds"
+    height="100%">
+    
+    <m:Page
+        title="Reputation Management"
+        showNavButton="true"
+        navButtonPress="onNavBack">
+        
+        <m:headerContent>
+            <m:Button
+                icon="sap-icon://download"
+                tooltip="Export History"
+                press="onExportHistory" />
+            <m:Button
+                icon="sap-icon://refresh"
+                tooltip="Refresh"
+                press="_loadReputationData" />
+        </m:headerContent>
+        
+        <m:content>
+            <m:ScrollContainer height="100%" vertical="true">
+                
+                <!-- Reputation Overview Card -->
+                <f:Card class="sapUiMediumMargin">
+                    <f:header>
+                        <m:HBox alignItems="Center" justifyContent="SpaceBetween">
+                            <m:VBox>
+                                <m:Title text="Reputation Overview" />
+                                <m:Text text="Your current standing in the A2A network" />
+                            </m:VBox>
+                            <m:ObjectStatus
+                                text="{reputation>/badges/current/icon} {reputation>/badges/current/name}"
+                                state="{
+                                    path: 'reputation>/currentAgent/reputation',
+                                    formatter: '.formatReputationState'
+                                }"
+                                class="sapUiLargeMarginEnd" />
+                        </m:HBox>
+                    </f:header>
+                    <f:content>
+                        <layout:Grid
+                            defaultSpan="L6 M12 S12"
+                            class="sapUiSmallMargin">
+                            
+                            <!-- Reputation Score -->
+                            <m:VBox class="sapUiSmallMargin">
+                                <m:Title text="Reputation Score" level="H3" />
+                                <m:HBox alignItems="Center">
+                                    <m:ObjectNumber
+                                        number="{reputation>/currentAgent/reputation}"
+                                        unit="/200"
+                                        state="{reputation>/currentAgent/reputationState}"
+                                        emphasized="true" />
+                                    <m:ProgressIndicator
+                                        percentValue="{reputation>/currentAgent/progressPercentage}"
+                                        displayValue="{reputation>/currentAgent/formattedReputation}"
+                                        state="{reputation>/currentAgent/reputationState}"
+                                        width="200px"
+                                        class="sapUiSmallMarginBegin" />
+                                </m:HBox>
+                                
+                                <!-- Trend Indicator -->
+                                <m:HBox alignItems="Center" class="sapUiTinyMarginTop">
+                                    <m:Icon
+                                        src="{
+                                            path: 'reputation>/analytics/trend',
+                                            formatter: '.formatTrendIcon'
+                                        }"
+                                        color="{
+                                            path: 'reputation>/analytics/trend',
+                                            formatter: '.formatTrendColor'
+                                        }" />
+                                    <m:Text
+                                        text="{
+                                            path: 'reputation>/analytics/weeklyChange',
+                                            formatter: '.formatReputationChange'
+                                        } this week" />
+                                </m:HBox>
+                            </m:VBox>
+                            
+                            <!-- Performance Metrics -->
+                            <m:VBox class="sapUiSmallMargin">
+                                <m:Title text="Performance Metrics" level="H3" />
+                                <layout:VerticalLayout>
+                                    <m:HBox justifyContent="SpaceBetween">
+                                        <m:Label text="Success Rate:" />
+                                        <m:Text text="{reputation>/currentAgent/successRate}%" emphasized="true" />
+                                    </m:HBox>
+                                    <m:HBox justifyContent="SpaceBetween">
+                                        <m:Label text="Trust Score:" />
+                                        <m:RatingIndicator
+                                            value="{reputation>/currentAgent/trustScore}"
+                                            maxValue="5"
+                                            editable="false" />
+                                    </m:HBox>
+                                    <m:HBox justifyContent="SpaceBetween">
+                                        <m:Label text="Endorsement Score:" />
+                                        <m:Text text="{reputation>/currentAgent/endorsementScore}" emphasized="true" />
+                                    </m:HBox>
+                                    <m:HBox justifyContent="SpaceBetween">
+                                        <m:Label text="Total Tasks:" />
+                                        <m:Text text="{reputation>/currentAgent/performance/totalTasks}" />
+                                    </m:HBox>
+                                </layout:VerticalLayout>
+                            </m:VBox>
+                        </layout:Grid>
+                    </f:content>
+                </f:Card>
+                
+                <!-- Badge Progress -->
+                <f:Card class="sapUiMediumMargin">
+                    <f:header>
+                        <m:Title text="Badge Progress" />
+                    </f:header>
+                    <f:content>
+                        <m:HBox class="sapUiSmallMargin">
+                            <m:HBox
+                                items="{reputation>/badges/all}"
+                                wrap="Wrap">
+                                <m:VBox
+                                    alignItems="Center"
+                                    class="sapUiSmallMargin">
+                                    <m:Text
+                                        text="{reputation>icon}"
+                                        class="sapUiLargeMarginBottom" />
+                                    <m:Text
+                                        text="{reputation>name}"
+                                        class="{
+                                            path: 'reputation>unlocked',
+                                            formatter: '.formatBadgeClass'
+                                        }" />
+                                    <m:Text
+                                        text="{reputation>min}-{reputation>max}"
+                                        class="sapUiTinyText" />
+                                </m:VBox>
+                            </m:HBox>
+                        </m:HBox>
+                    </f:content>
+                </f:Card>
+                
+                <!-- Peer Endorsement -->
+                <f:Card class="sapUiMediumMargin">
+                    <f:header>
+                        <m:HBox alignItems="Center" justifyContent="SpaceBetween">
+                            <m:Title text="Endorse a Peer" />
+                            <m:Text text="Daily Remaining: {reputation>/limits/dailyRemaining}" />
+                        </m:HBox>
+                    </f:header>
+                    <f:content>
+                        <layout:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout"
+                            class="sapUiSmallMargin">
+                            
+                            <m:Label text="Agent ID:" required="true" />
+                            <m:Input
+                                value="{reputation>/endorsementForm/toAgentId}"
+                                placeholder="Enter agent ID to endorse"
+                                showValueHelp="true"
+                                valueHelpRequest="onSelectAgent" />
+                            
+                            <m:Label text="Endorsement Amount:" required="true" />
+                            <m:Slider
+                                value="{reputation>/endorsementForm/amount}"
+                                min="1"
+                                max="{reputation>/limits/maxEndorsementAmount}"
+                                step="1"
+                                enableTickmarks="true"
+                                showAdvancedTooltip="true"
+                                inputsAsTooltips="true" />
+                            
+                            <m:Label text="Reason:" required="true" />
+                            <m:Select
+                                selectedKey="{reputation>/endorsementForm/reason}">
+                                <m:items>
+                                    <core:Item key="EXCELLENT_COLLABORATION" text="Excellent Collaboration" />
+                                    <core:Item key="TIMELY_ASSISTANCE" text="Timely Assistance" />
+                                    <core:Item key="HIGH_QUALITY_WORK" text="High Quality Work" />
+                                    <core:Item key="KNOWLEDGE_SHARING" text="Knowledge Sharing" />
+                                    <core:Item key="PROBLEM_SOLVING" text="Problem Solving" />
+                                    <core:Item key="INNOVATION" text="Innovation" />
+                                </m:items>
+                            </m:Select>
+                            
+                            <m:Label text="Description:" />
+                            <m:TextArea
+                                value="{reputation>/endorsementForm/description}"
+                                placeholder="Optional: Provide additional context"
+                                rows="3" />
+                            
+                            <m:Label />
+                            <m:Button
+                                text="Endorse"
+                                type="Emphasized"
+                                press="onEndorsePeer"
+                                enabled="{
+                                    parts: [
+                                        {path: 'reputation>/endorsementForm/toAgentId'},
+                                        {path: 'reputation>/endorsementForm/reason'},
+                                        {path: 'reputation>/limits/dailyRemaining'}
+                                    ],
+                                    formatter: '.canEndorse'
+                                }" />
+                        </layout:SimpleForm>
+                    </f:content>
+                </f:Card>
+                
+                <!-- Recent Activity -->
+                <f:Card class="sapUiMediumMargin">
+                    <f:header>
+                        <m:Title text="Recent Reputation Activity" />
+                    </f:header>
+                    <f:content>
+                        <m:Table
+                            items="{reputation>/reputationHistory}"
+                            growing="true"
+                            growingThreshold="20">
+                            <m:columns>
+                                <m:Column>
+                                    <m:Text text="Date" />
+                                </m:Column>
+                                <m:Column>
+                                    <m:Text text="Type" />
+                                </m:Column>
+                                <m:Column>
+                                    <m:Text text="Change" />
+                                </m:Column>
+                                <m:Column>
+                                    <m:Text text="Reason" />
+                                </m:Column>
+                            </m:columns>
+                            <m:items>
+                                <m:ColumnListItem>
+                                    <m:cells>
+                                        <m:Text text="{
+                                            path: 'reputation>createdAt',
+                                            formatter: '.formatDateTime'
+                                        }" />
+                                        <m:Text text="{reputation>transactionType}" />
+                                        <m:ObjectNumber
+                                            number="{reputation>amount}"
+                                            state="{
+                                                path: 'reputation>amount',
+                                                formatter: '.formatChangeState'
+                                            }" />
+                                        <m:Text text="{reputation>reason}" />
+                                    </m:cells>
+                                </m:ColumnListItem>
+                            </m:items>
+                        </m:Table>
+                    </f:content>
+                </f:Card>
+                
+                <!-- Endorsements Received -->
+                <f:Card class="sapUiMediumMargin">
+                    <f:header>
+                        <m:Title text="Endorsements Received" />
+                    </f:header>
+                    <f:content>
+                        <m:List
+                            items="{reputation>/endorsements/received}"
+                            noDataText="No endorsements received yet">
+                            <m:StandardListItem
+                                title="{reputation>fromAgent/name}"
+                                description="{reputation>reason}: {reputation>context/description}"
+                                info="{reputation>amount} points"
+                                infoState="{
+                                    path: 'reputation>amount',
+                                    formatter: '.formatEndorsementState'
+                                }"
+                                type="Navigation"
+                                press="onNavigateToDetails"
+                                data:agentId="{reputation>fromAgent_ID}">
+                                <m:attributes>
+                                    <m:ObjectAttribute
+                                        text="{
+                                            path: 'reputation>createdAt',
+                                            formatter: '.formatDateTime'
+                                        }" />
+                                </m:attributes>
+                            </m:StandardListItem>
+                        </m:List>
+                    </f:content>
+                </f:Card>
+                
+            </m:ScrollContainer>
+        </m:content>
+    </m:Page>
+</mvc:View>

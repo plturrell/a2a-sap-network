@@ -1,0 +1,17 @@
+{
+  "agentType": "dataManager",
+  "name": "Data Manager Agent",
+  "address": "0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f",
+  "endpoint": "http://localhost:8008",
+  "capabilities": [
+    "data_storage",
+    "caching",
+    "persistence",
+    "versioning",
+    "bulk_operations"
+  ],
+  "description": "Agent 8 - Centralized data storage and retrieval agent",
+  "registrationTx": "0xbe271c842ede985702ee4ff382dd6feeb54250707ac5d21d2825548636c858f2",
+  "registrationBlock": 11,
+  "registeredAt": "2025-08-19T06:02:17.957Z"
+}

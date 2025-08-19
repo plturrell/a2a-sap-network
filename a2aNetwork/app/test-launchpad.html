@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A2A Network - Test Launchpad</title>
+
+    <!-- Development Mode Launchpad Configuration -->
+    <script>
+        // Development mode configuration
+        window["sap-ushell-config"] = {
+            defaultRenderer: "fiori2",
+            renderers: {
+                fiori2: {
+                    componentData: {
+                        config: {
+                            enableSearch: true,
+                            enablePersonalization: true,
+                            enableTagFiltering: false,
+                            enableCatalogTagFilter: false,
+                            enableAbout: true,
+                            enableUserDefaultParameters: true,
+                            disableSortedLockedGroups: false,
+                            enableTileActionsIcon: true,
+                            enableSetTheme: true,
+                            enableAccessibility: true,
+                            enableHelp: true,
+                            enableUserImage: false,
+                            enableBackGroundShapes: true,
+                            animationMode: "minimal",
+                            sessionTimeoutReminderInMinutes: 60,
+                            sessionTimeoutIntervalInMinutes: 120,
+                            sessionTimeoutTileStopRefreshIntervalInMinutes: 90,
+                            rootIntent: "Shell-home",
+                            preloadLibrariesForRootIntent: false,
+                            enableNotificationsUI: true,
+                            logo: "/resources/sap/ui/core/mimes/logo/sap_55x27.png",
+                            title: "A2A Network",
+                            moveAppFinderActionToShellHeader: true
+                        }
+                    }
+                }
+            },
+            applications: {
+                "Shell-home": {
+                    productSwitch: true
+                }
+            },
+            services: {
+                LaunchPage: {
+                    adapter: {
+                        config: {
+                            groups: [
+                                {
+                                    id: "test_home_group",
+                                    title: "Development Dashboard",
+                                    isPreset: true,
+                                    isVisible: true,
+                                    isGroupLocked: false,
+                                    tiles: [
+                                        {
+                                            id: "test_overview_tile",
+                                            tileType: "sap.ushell.ui.tile.StaticTile",
+                                            properties: {
+                                                title: "Network Overview",
+                                                subtitle: "Development Mode",
+                                                icon: "sap-icon://home",
+                                                targetURL: "#A2ANetwork-manage&/home",
+                                                info: "Test Environment"
+                                            }
+                                        },
+                                        {
+                                            id: "test_agents_tile",
+                                            tileType: "sap.ushell.ui.tile.StaticTile",
+                                            properties: {
+                                                title: "Agent Manager",
+                                                subtitle: "Test Agents",
+                                                icon: "sap-icon://group",
+                                                targetURL: "#A2ANetwork-manage&/agents",
+                                                info: "Manage Test Agents"
+                                            }
+                                        },
+                                        {
+                                            id: "test_blockchain_tile",
+                                            tileType: "sap.ushell.ui.tile.StaticTile",
+                                            properties: {
+                                                title: "Local Blockchain",
+                                                subtitle: "Ganache Network",
+                                                icon: "sap-icon://chain-link",
+                                                targetURL: "#A2ANetwork-manage&/blockchain",
+                                                info: "Local Test Chain"
+                                            }
+                                        },
+                                        {
+                                            id: "test_marketplace_tile",
+                                            tileType: "sap.ushell.ui.tile.StaticTile",
+                                            properties: {
+                                                title: "Service Marketplace",
+                                                subtitle: "Mock Services",
+                                                icon: "sap-icon://retail-store",
+                                                targetURL: "#A2ANetwork-manage&/marketplace",
+                                                info: "Test Services"
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    id: "test_dev_tools_group",
+                                    title: "Developer Tools",
+                                    isPreset: true,
+                                    isVisible: true,
+                                    isGroupLocked: false,
+                                    tiles: [
+                                        {
+                                            id: "test_logs_tile",
+                                            tileType: "sap.ushell.ui.tile.StaticTile",
+                                            properties: {
+                                                title: "Debug Logs",
+                                                subtitle: "Development Logs",
+                                                icon: "sap-icon://activity-items",
+                                                targetURL: "#A2ANetwork-manage&/logs",
+                                                info: "View Debug Output"
+                                            }
+                                        },
+                                        {
+                                            id: "test_api_tile",
+                                            tileType: "sap.ushell.ui.tile.StaticTile",
+                                            properties: {
+                                                title: "API Explorer",
+                                                subtitle: "Test Endpoints",
+                                                icon: "sap-icon://cloud",
+                                                targetURL: "/api/v1/network/$metadata",
+                                                info: "OData Metadata"
+                                            }
+                                        },
+                                        {
+                                            id: "test_health_tile",
+                                            tileType: "sap.ushell.ui.tile.StaticTile",
+                                            properties: {
+                                                title: "Health Check",
+                                                subtitle: "System Status",
+                                                icon: "sap-icon://stethoscope",
+                                                targetURL: "/health/detailed",
+                                                info: "Check Health"
+                                            }
+                                        },
+                                        {
+                                            id: "test_settings_tile",
+                                            tileType: "sap.ushell.ui.tile.StaticTile",
+                                            properties: {
+                                                title: "Dev Settings",
+                                                subtitle: "Configuration",
+                                                icon: "sap-icon://action-settings",
+                                                targetURL: "#A2ANetwork-manage&/settings",
+                                                info: "Configure Dev Mode"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ],
+                            catalogs: []
+                        }
+                    }
+                },
+                NavTargetResolution: {
+                    adapter: {
+                        config: {
+                            applications: {
+                                "A2ANetwork-manage": {
+                                    sap: {
+                                        app: {
+                                            id: "a2a.network.fiori",
+                                            applicationVersion: {
+                                                version: "1.0.0-dev"
+                                            },
+                                            title: "A2A Network (Dev)",
+                                            subTitle: "Development Environment",
+                                            shortTitle: "A2A Dev",
+                                            info: "Development mode - authentication bypassed"
+                                        },
+                                        ui: {
+                                            technology: "UI5",
+                                            icons: {
+                                                icon: "sap-icon://developer-settings"
+                                            },
+                                            deviceTypes: {
+                                                desktop: true,
+                                                tablet: true,
+                                                phone: true
+                                            }
+                                        },
+                                        ui5: {
+                                            componentName: "a2a.network.fiori"
+                                        },
+                                        flp: {
+                                            type: "application"
+                                        }
+                                    },
+                                    url: "./a2aFiori/webapp/",
+                                    applicationType: "URL",
+                                    navigationMode: "embedded"
+                                }
+                            }
+                        }
+                    }
+                },
+                ClientSideTargetResolution: {
+                    adapter: {
+                        config: {
+                            applications: {
+                                "A2ANetwork-manage": {
+                                    sap: {
+                                        app: {
+                                            id: "a2a.network.fiori",
+                                            applicationVersion: {
+                                                version: "1.0.0-dev"
+                                            }
+                                        },
+                                        flp: {
+                                            type: "application"
+                                        }
+                                    },
+                                    url: "./a2aFiori/webapp/",
+                                    applicationType: "URL"
+                                }
+                            }
+                        }
+                    }
+                },
+                UserInfo: {
+                    adapter: {
+                        config: {
+                            themes: [
+                                { id: "sap_horizon", name: "SAP Horizon" },
+                                { id: "sap_horizon_dark", name: "SAP Horizon Dark" },
+                                { id: "sap_fiori_3", name: "SAP Quartz Light" },
+                                { id: "sap_fiori_3_dark", name: "SAP Quartz Dark" }
+                            ]
+                        }
+                    }
+                }
+            }
+        };
+
+        // Development mode flag
+        window.A2A_DEV_MODE = true;
+    </script>
+
+    <!-- UI5 Bootstrap -->
+    <script
+        id="sap-ui-bootstrap"
+        src="https://ui5.sap.com/1.120.0/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-compatVersion="edge"
+        data-sap-ui-frameOptions="allow"
+        data-sap-ui-async="true"
+        data-sap-ui-preload=""
+        data-sap-ui-logLevel="INFO"
+        data-sap-ui-resourceroots='{
+            "a2a.network.fiori": "./a2aFiori/webapp"
+        }'>
+    </script>
+
+    <!-- Fiori Launchpad Bootstrap -->
+    <script id="sap-ushell-bootstrap" src="https://ui5.sap.com/1.120.0/test-resources/sap/ushell/bootstrap/sandbox.js"></script>
+
+    <style>
+        /* Development mode indicator */
+        body::before {
+            content: "DEVELOPMENT MODE";
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff5722;
+            color: white;
+            padding: 2px 10px;
+            font-size: 12px;
+            z-index: 10000;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+
+<body class="sapUiBody" id="content">
+    <!-- Shell will be rendered here -->
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "agentType": "qualityControlManager",
+  "name": "Quality Control Manager Agent",
+  "address": "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+  "endpoint": "http://localhost:8006",
+  "capabilities": [
+    "quality_assessment",
+    "routing_decision",
+    "improvement_recommendations",
+    "workflow_control",
+    "trust_verification"
+  ],
+  "description": "Agent 6 - Manages quality control and routing decisions",
+  "registrationTx": "0xaa62dc77047dd6a36a923d6d7e32b2522686dbe8d52a8196e9205bf9f6ce6eca",
+  "registrationBlock": 9,
+  "registeredAt": "2025-08-19T06:02:17.799Z"
+}

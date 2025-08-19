@@ -1,0 +1,16 @@
+<mvc:View
+    controllerName="a2a.network.launchpad.controller.Analytics"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m">
+    <Page
+        title="{i18n>analyticsButtonTooltip}"
+        showNavButton="true"
+        navButtonPress=".onNavBack">
+        <content>
+            <VBox class="sapUiSmallMargin">
+                <Title text="Analytics Dashboard"/>
+                <Text text="Detailed analytics and performance metrics will be displayed here."/>
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>

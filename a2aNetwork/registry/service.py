@@ -16,8 +16,8 @@ from .models import (
 from .storage import get_ord_storage
 from ..clients.grokClient import get_grok_client
 from ..clients.perplexityClient import get_perplexity_client
-from .advancedAiEnhancer import create_advanced_ai_enhancer
-from .enhancedSearchService import get_enhanced_search_service
+from .aiEnhancer import create_ai_enhancer
+from .searchService import get_search_service
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ class ORDRegistryService:
                 logger.warning(f"Perplexity client initialization failed: {e}")
                 
             # Initialize AI enhancer with available clients
-            self.ai_enhancer = create_advanced_ai_enhancer(
+            self.ai_enhancer = create_ai_enhancer(
                 grok_client=self.grok_client,
                 perplexity_client=self.perplexity_client
             )
@@ -76,7 +76,7 @@ class ORDRegistryService:
             
             # Initialize enhanced search service
             try:
-                self.enhanced_search = await get_enhanced_search_service()
+                self.enhanced_search = await get_search_service()
                 await self.enhanced_search.initialize(self.storage)
                 logger.info("✅ Enhanced search service initialized")
             except Exception as e:

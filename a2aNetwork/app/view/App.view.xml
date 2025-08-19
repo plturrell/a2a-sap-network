@@ -1,0 +1,6 @@
+<mvc:View controllerName="a2a.network.launchpad.controller.App"
+    xmlns:mvc="sap.ui.core.mvc"
+    displayBlock="true"
+    xmlns="sap.m">
+    <App id="app"/>
+</mvc:View>

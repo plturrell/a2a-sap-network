@@ -1,0 +1,113 @@
+{
+  "xsappname": "a2a-network-launchpad",
+  "tenant-mode": "dedicated",
+  "description": "A2A Network - Autonomous Agent Management Platform",
+  "scopes": [
+    {
+      "name": "uaa.user",
+      "description": "UAA"
+    },
+    {
+      "name": "$XSAPPNAME.Admin",
+      "description": "Administrator - Full access to all A2A Network features"
+    },
+    {
+      "name": "$XSAPPNAME.AgentManager",
+      "description": "Agent Manager - Manage agents and their configurations"
+    },
+    {
+      "name": "$XSAPPNAME.ServiceManager", 
+      "description": "Service Manager - Manage services and marketplace"
+    },
+    {
+      "name": "$XSAPPNAME.Viewer",
+      "description": "Viewer - Read-only access to dashboards and reports"
+    },
+    {
+      "name": "$XSAPPNAME.OperationsManager",
+      "description": "Operations Manager - Monitor system health and operations"
+    },
+    {
+      "name": "$XSAPPNAME.BlockchainManager",
+      "description": "Blockchain Manager - Manage blockchain integration and contracts"
+    }
+  ],
+  "attributes": [
+    {
+      "name": "Department",
+      "description": "User department",
+      "valueType": "string"
+    },
+    {
+      "name": "Region",
+      "description": "User region",
+      "valueType": "string"
+    }
+  ],
+  "role-templates": [
+    {
+      "name": "Administrator",
+      "description": "System Administrator",
+      "scope-references": [
+        "uaa.user",
+        "$XSAPPNAME.Admin",
+        "$XSAPPNAME.AgentManager",
+        "$XSAPPNAME.ServiceManager",
+        "$XSAPPNAME.OperationsManager",
+        "$XSAPPNAME.BlockchainManager"
+      ]
+    },
+    {
+      "name": "AgentManager",
+      "description": "Agent Management Role",
+      "scope-references": [
+        "uaa.user",
+        "$XSAPPNAME.AgentManager",
+        "$XSAPPNAME.Viewer"
+      ]
+    },
+    {
+      "name": "ServiceManager",
+      "description": "Service Management Role", 
+      "scope-references": [
+        "uaa.user",
+        "$XSAPPNAME.ServiceManager",
+        "$XSAPPNAME.Viewer"
+      ]
+    },
+    {
+      "name": "OperationsManager",
+      "description": "Operations Management Role",
+      "scope-references": [
+        "uaa.user",
+        "$XSAPPNAME.OperationsManager",
+        "$XSAPPNAME.Viewer"
+      ]
+    },
+    {
+      "name": "BlockchainManager",
+      "description": "Blockchain Management Role",
+      "scope-references": [
+        "uaa.user", 
+        "$XSAPPNAME.BlockchainManager",
+        "$XSAPPNAME.Viewer"
+      ]
+    },
+    {
+      "name": "Viewer",
+      "description": "Read-only User",
+      "scope-references": [
+        "uaa.user",
+        "$XSAPPNAME.Viewer"
+      ]
+    }
+  ],
+  "oauth2-configuration": {
+    "token-validity": 7200,
+    "refresh-token-validity": 86400,
+    "redirect-uris": [
+      "https://a2a-network-launchpad-prod.cfapps.sap.hana.ondemand.com/**",
+      "https://a2a-network.cfapps.sap.hana.ondemand.com/**"
+    ]
+  }
+}

@@ -9,29 +9,30 @@ sap.ui.define([
     "sap/base/Log",
     "../mixin/PersonalizationMixin",
     "../mixin/OfflineMixin"
-], function(BaseController, MessageToast, ResponsivePopover, Button, List, StandardListItem, NotificationListItem, Log, PersonalizationMixin, OfflineMixin) {
+], function(BaseController, MessageToast, ResponsivePopover, Button, List, StandardListItem,
+    NotificationListItem, Log, PersonalizationMixin, OfflineMixin) {
     "use strict";
 
     return BaseController.extend("a2a.network.fiori.controller.App", {
         _oNotificationPopover: null,
         _oUserPopover: null,
-        onInit: function() {
+        onInit() {
             // Mix in PersonalizationMixin and OfflineMixin
             Object.assign(this, PersonalizationMixin, OfflineMixin);
-            
+
             // Initialize mixins
             this.initPersonalization();
             this.initOfflineCapabilities();
-            
+
             // Apply content density mode to root view
             this.getView().addStyleClass(this.getOwnerComponent().getContentDensityClass());
-            
+
             // Initialize side navigation
-            var oSideNavigation = this.byId("sideNavigation");
+            const oSideNavigation = this.byId("sideNavigation");
             if (oSideNavigation) {
                 oSideNavigation.setSelectedKey("home");
             }
-            
+
             // Register for cleanup
             this._registerForCleanup(function() {
                 if (this._oNotificationPopover) {
@@ -42,40 +43,40 @@ sap.ui.define([
                     this._oUserPopover.destroy();
                     this._oUserPopover = null;
                 }
-                
+
                 // Cleanup mixins
                 this.cleanupPersonalization();
                 this.cleanupOfflineCapabilities();
             }.bind(this));
-            
+
             Log.info("App controller initialized with personalization and offline capabilities");
         },
 
-        onSideNavButtonPress: function() {
-            var oToolPage = this.byId("toolPage");
+        onSideNavButtonPress() {
+            const oToolPage = this.byId("toolPage");
             if (!oToolPage) {
                 Log.error("ToolPage control not found");
                 return;
             }
-            
-            var bSideExpanded = oToolPage.getSideExpanded();
+
+            const bSideExpanded = oToolPage.getSideExpanded();
             oToolPage.setSideExpanded(!bSideExpanded);
-            
+
             Log.debug("Side navigation toggled", bSideExpanded ? "collapsed" : "expanded");
         },
 
-        onItemSelect: function(oEvent) {
-            var oItem = oEvent.getParameter("item");
+        onItemSelect(oEvent) {
+            const oItem = oEvent.getParameter("item");
             if (!oItem) {
                 Log.error("No item found in navigation event");
                 return;
             }
-            
-            var sKey = oItem.getKey();
+
+            const sKey = oItem.getKey();
             Log.debug("Navigation item selected", sKey);
-            
+
             // Define route mapping
-            var mRoutes = {
+            const mRoutes = {
                 "home": "home",
                 "agents": "agents",
                 "services": "services",
@@ -88,7 +89,7 @@ sap.ui.define([
                 "transactions": "transactions",
                 "settings": "settings"
             };
-            
+
             if (mRoutes[sKey]) {
                 this.getRouter().navTo(mRoutes[sKey]);
             } else {
@@ -97,9 +98,9 @@ sap.ui.define([
             }
         },
 
-        onNotificationPress: function(oEvent) {
-            var oButton = oEvent.getSource();
-            
+        onNotificationPress(oEvent) {
+            const oButton = oEvent.getSource();
+
             // Create notification popover if not exists
             if (!this._notificationPopover) {
                 this._notificationPopover = new ResponsivePopover({
@@ -115,7 +116,7 @@ sap.ui.define([
                                     description: "Agent 'DataProcessor-01' has been registered to the network",
                                     datetime: "5 minutes ago",
                                     priority: "High",
-                                    close: function() {
+                                    close() {
                                         MessageToast.show("Notification closed");
                                     }
                                 }),
@@ -145,16 +146,16 @@ sap.ui.define([
                         })
                     ]
                 });
-                
+
                 this.getView().addDependent(this._notificationPopover);
             }
-            
+
             this._notificationPopover.openBy(oButton);
         },
 
-        onAvatarPress: function(oEvent) {
-            var oButton = oEvent.getSource();
-            
+        onAvatarPress(oEvent) {
+            const oButton = oEvent.getSource();
+
             // Create user menu popover if not exists
             if (!this._userPopover) {
                 this._userPopover = new ResponsivePopover({
@@ -203,10 +204,10 @@ sap.ui.define([
                         })
                     ]
                 });
-                
+
                 this.getView().addDependent(this._userPopover);
             }
-            
+
             this._userPopover.openBy(oButton);
         }
     });

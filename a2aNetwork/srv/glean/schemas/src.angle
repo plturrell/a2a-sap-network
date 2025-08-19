@@ -1,0 +1,448 @@
+# Glean Schema for A2A Network Source Code Analysis
+# Defines predicates for code structure, dependencies, and cross-references
+
+schema src.1 {
+
+# Basic file information
+predicate File :
+  {
+    file : string,
+    language : enum { javascript | typescript | python | solidity | java | cds },
+    size : nat,
+    symbols : nat,
+    lines : nat,
+    checksum : string,
+  }
+
+# Symbol definitions (functions, classes, variables, etc.)
+predicate Symbol :
+  {
+    file : string,
+    symbol : string,
+    name : string,
+    kind : enum { 
+      function | class | variable | interface | type | contract | 
+      event | modifier | import | export | method | field 
+    },
+    line : nat,
+    column : nat,
+    visibility : enum { public | private | protected | internal },
+    range : Range,
+  }
+
+predicate Range :
+  {
+    start_line : nat,
+    start_column : nat,
+    end_line : nat,
+    end_column : nat,
+  }
+
+# Cross-references between symbols
+predicate XRef :
+  {
+    file : string,
+    symbol : string,
+    target_file : string,
+    target_symbol : string,
+    kind : enum { definition | reference | call | inheritance | implementation },
+    line : nat,
+    column : nat,
+  }
+
+# Dependencies between files/modules
+predicate Dependency :
+  {
+    source_file : string,
+    target_file : string,
+    import_name : string,
+    dependency_type : enum { import | require | include | inherit },
+    line : nat,
+  }
+
+# Function/method information
+predicate Function :
+  {
+    file : string,
+    name : string,
+    signature : string,
+    return_type : maybe string,
+    parameters : [Parameter],
+    line : nat,
+    complexity : nat,
+    async : bool,
+    exported : bool,
+  }
+
+predicate Parameter :
+  {
+    name : string,
+    type : maybe string,
+    optional : bool,
+    default_value : maybe string,
+  }
+
+# Class/Contract information  
+predicate Class :
+  {
+    file : string,
+    name : string,
+    extends : maybe string,
+    implements : [string],
+    line : nat,
+    abstract : bool,
+    exported : bool,
+    methods : [string],
+    fields : [string],
+  }
+
+# Solidity-specific predicates
+predicate Contract :
+  {
+    file : string,
+    name : string,
+    extends : maybe string,
+    line : nat,
+    functions : [string],
+    events : [string],
+    modifiers : [string],
+    state_variables : [string],
+  }
+
+predicate Event :
+  {
+    file : string,
+    contract : string,
+    name : string,
+    parameters : [Parameter],
+    line : nat,
+    indexed_params : [string],
+  }
+
+predicate Modifier :
+  {
+    file : string,
+    contract : string,
+    name : string,
+    parameters : [Parameter],
+    line : nat,
+  }
+
+# JavaScript/TypeScript specific
+predicate Import :
+  {
+    file : string,
+    module : string,
+    imported_names : [string],
+    default_import : maybe string,
+    namespace_import : maybe string,
+    line : nat,
+  }
+
+predicate Export :
+  {
+    file : string,
+    name : string,
+    export_type : enum { named | default | namespace },
+    line : nat,
+  }
+
+# Python specific
+predicate PythonImport :
+  {
+    file : string,
+    module : string,
+    imported_names : [string],
+    alias : maybe string,
+    from_import : bool,
+    line : nat,
+  }
+
+# SAP CAP/CDS specific predicates
+predicate CDSFile :
+  {
+    file : string,
+    namespace : maybe string,
+    entities : nat,
+    services : nat,
+    types : nat,
+    aspects : nat,
+    annotations : nat,
+  }
+
+predicate CDSEntity :
+  {
+    file : string,
+    name : string,
+    namespace : maybe string,
+    line : nat,
+    fields : [CDSField],
+    keys : [string],
+    associations : [CDSAssociation],
+    aspects : [string],
+    annotations : [CDSAnnotation],
+  }
+
+predicate CDSField :
+  {
+    name : string,
+    type : string,
+    nullable : bool,
+    key : bool,
+    virtual : bool,
+    calculated : bool,
+  }
+
+predicate CDSAssociation :
+  {
+    name : string,
+    target : string,
+    cardinality : enum { one | many },
+    on_condition : maybe string,
+  }
+
+predicate CDSService :
+  {
+    file : string,
+    name : string,
+    namespace : maybe string,
+    line : nat,
+    exposed_entities : [string],
+    actions : [string],
+    functions : [string],
+    annotations : [CDSAnnotation],
+  }
+
+predicate CDSAction :
+  {
+    file : string,
+    service : string,
+    name : string,
+    parameters : [Parameter],
+    returns : maybe string,
+    line : nat,
+    annotations : [CDSAnnotation],
+  }
+
+predicate CDSType :
+  {
+    file : string,
+    name : string,
+    definition : string,
+    line : nat,
+    base_type : maybe string,
+  }
+
+predicate CDSAspect :
+  {
+    file : string,
+    name : string,
+    line : nat,
+    fields : [CDSField],
+    extends : maybe string,
+  }
+
+predicate CDSAnnotation :
+  {
+    file : string,
+    name : string,
+    value : string,
+    line : nat,
+    target : maybe string,
+  }
+
+predicate CDSView :
+  {
+    file : string,
+    name : string,
+    line : nat,
+    select_from : string,
+    columns : [string],
+    where_clause : maybe string,
+  }
+
+# CAP Service Implementation (Node.js)
+predicate CAPServiceHandler :
+  {
+    file : string,
+    service : string,
+    entity : maybe string,
+    operation : string,
+    handler_type : enum { before | on | after },
+    line : nat,
+    async : bool,
+  }
+
+predicate CAPEventHandler :
+  {
+    file : string,
+    event : string,
+    handler_function : string,
+    line : nat,
+    priority : maybe nat,
+  }
+
+predicate CAPMiddleware :
+  {
+    file : string,
+    name : string,
+    line : nat,
+    applies_to : [string],
+    order : maybe nat,
+  }
+
+# Analysis results predicates
+predicate SecurityIssue :
+  {
+    file : string,
+    line : nat,
+    column : nat,
+    issue_type : enum { 
+      sql_injection | xss | hardcoded_secret | weak_crypto | 
+      command_injection | path_traversal | unsafe_eval 
+    },
+    severity : enum { low | medium | high | critical },
+    description : string,
+    cwe_id : maybe nat,
+  }
+
+predicate PerformanceIssue :
+  {
+    file : string,
+    line : nat,
+    issue_type : enum { 
+      n_plus_one_query | inefficient_loop | blocking_operation | 
+      memory_leak | large_object | sync_in_async 
+    },
+    severity : enum { low | medium | high },
+    description : string,
+    suggestion : string,
+  }
+
+predicate CodeSmell :
+  {
+    file : string,
+    line : nat,
+    smell_type : enum { 
+      long_method | large_class | duplicate_code | dead_code |
+      complex_condition | long_parameter_list 
+    },
+    severity : enum { minor | major | critical },
+    metric_value : nat,
+    threshold : nat,
+  }
+
+predicate TestCoverage :
+  {
+    file : string,
+    function : string,
+    line_coverage : nat,
+    branch_coverage : nat,
+    covered : bool,
+    test_files : [string],
+  }
+
+# Call graph information
+predicate FunctionCall :
+  {
+    caller_file : string,
+    caller_function : string,
+    callee_file : string,
+    callee_function : string,
+    line : nat,
+    call_type : enum { direct | indirect | dynamic },
+  }
+
+# Type information (for TypeScript/typed languages)
+predicate TypeDefinition :
+  {
+    file : string,
+    name : string,
+    kind : enum { primitive | object | array | union | intersection | generic },
+    definition : string,
+    line : nat,
+    exported : bool,
+  }
+
+predicate TypeUsage :
+  {
+    file : string,
+    symbol : string,
+    type_name : string,
+    line : nat,
+    usage_kind : enum { annotation | assertion | cast },
+  }
+
+# Documentation predicates
+predicate Documentation :
+  {
+    file : string,
+    symbol : string,
+    doc_type : enum { jsdoc | docstring | comment },
+    content : string,
+    line : nat,
+    tags : [string],
+  }
+
+# Configuration predicates
+predicate ConfigFile :
+  {
+    file : string,
+    config_type : enum { 
+      package_json | tsconfig | eslint | jest | webpack | 
+      dockerfile | compose | kubernetes 
+    },
+    dependencies : [string],
+    scripts : [string],
+  }
+
+# Git/Version control predicates
+predicate FileHistory :
+  {
+    file : string,
+    last_modified : string,
+    commits : nat,
+    contributors : [string],
+    churn_rate : nat,
+  }
+
+# Derived predicates for complex queries
+
+# All symbols in a file
+predicate FileSymbols(file : string) : [Symbol] = 
+  Symbol { file, symbol, name, kind, line, column, visibility, range }
+
+# All dependencies for a file  
+predicate FileDependencies(file : string) : [Dependency] =
+  Dependency { source_file = file, target_file, import_name, dependency_type, line }
+
+# All functions in a file
+predicate FileFunctions(file : string) : [Function] =
+  Function { file, name, signature, return_type, parameters, line, complexity, async, exported }
+
+# Security issues by severity
+predicate CriticalSecurityIssues() : [SecurityIssue] =
+  SecurityIssue { file, line, column, issue_type, severity = critical, description, cwe_id }
+
+# High complexity functions
+predicate ComplexFunctions(threshold : nat) : [Function] =
+  Function { file, name, signature, return_type, parameters, line, complexity, async, exported }
+  where complexity > threshold
+
+# Unused exports
+predicate UnusedExports(file : string) : [Export] =
+  Export { file, name, export_type, line }
+  where !(XRef { target_file = file, target_symbol = name })
+
+# Circular dependencies
+predicate CircularDependencies() : [(string, string)] =
+  (file1, file2) where 
+    Dependency { source_file = file1, target_file = file2 } &&
+    Dependency { source_file = file2, target_file = file1 }
+
+# Test coverage gaps
+predicate UncoveredFunctions() : [Function] =
+  Function { file, name, signature, return_type, parameters, line, complexity, async, exported }
+  where !(TestCoverage { file, function = name, covered = true })
+
+}

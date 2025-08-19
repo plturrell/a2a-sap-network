@@ -456,7 +456,7 @@ def initialize_agent_trust(agent_id: str, agent_type: str) -> AgentIdentity:
     return trust_contract.register_agent(agent_id, agent_type)
 
 
-def sign_a2a_message(agent_id: str, message: Dict[str, Any]) -> Dict[str, Any]:
+def sign_a2a_message(message: Dict[str, Any], agent_id: str) -> Dict[str, Any]:
     """Sign an A2A message for trusted communication"""
     trust_contract = get_trust_contract()
     return trust_contract.sign_message(agent_id, message)

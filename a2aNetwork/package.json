@@ -19,8 +19,19 @@
     "format": "prettier --write \"**/*.{js,ts,json,md}\"",
     "deploy": "cds deploy",
     "deploy:cf": "cf push",
+    "db:deploy": "cds deploy --to sqlite",
     "db:migrate": "cds deploy --to hana",
     "db:seed": "node scripts/seed-data.js",
+    "setup:dev": "node scripts/setup-dev-environment.js",
+    "dev": "node scripts/quick-start.js",
+    "dev:clean": "rm -rf node_modules data logs temp gen coverage .env && npm run setup:dev",
+    "start:clean": "node scripts/start-clean.js",
+    "blockchain:local": "sh scripts/start-local-blockchain.sh",
+    "contracts:deploy": "node scripts/deployTestContracts.js",
+    "db:reset": "rm -f data/*.db && npm run db:deploy && npm run db:seed",
+    "test:quick": "jest --maxWorkers=4",
+    "lint:quick": "eslint srv/ app/ --fix --quiet",
+    "validate": "npm run lint:quick && npm run test:quick",
     "i18n:populate": "node scripts/populate-translations.js",
     "i18n:export": "node scripts/export-translations.js",
     "i18n:validate": "node scripts/validate-translations.js",
@@ -33,7 +44,8 @@
     "monitoring:setup": "node scripts/setup-monitoring.js",
     "backup:create": "node scripts/create-backup.js",
     "backup:restore": "node scripts/restore-backup.js",
-    "health:check": "curl -f http://localhost:4004/health || exit 1",
+    "health:check": "curl -f ${HEALTH_CHECK_URL:-http://localhost:4004}/health || exit 1",
+    "security:validate": "node scripts/validateSecurity.js",
     "logs": "cf logs a2a-network",
     "clean": "rimraf dist/ coverage/ .nyc_output/",
     "precommit": "npm run lint && npm run test",
@@ -45,7 +57,18 @@
     "security:scan": "node scripts/security-scan.js",
     "compliance:check": "node scripts/compliance-check.js",
     "metrics:export": "node scripts/export-metrics.js",
-    "audit:generate": "node scripts/generate-audit-report.js"
+    "audit:generate": "node scripts/generate-audit-report.js",
+    "diagnostic": "node scripts/diagnosticTool.js",
+    "diagnostic:enhanced": "node scripts/enhancedDiagnosticTool.js",
+    "glean:deploy": "sudo scripts/deployGlean.sh",
+    "glean:index": "node scripts/indexCodebase.js",
+    "glean:status": "curl -s http://localhost:8080/health | jq",
+    "glean:test": "node test/integration/gleanIntegrationTest.js",
+    "glean:test:verbose": "node test/integration/gleanIntegrationTest.js --verbose",
+    "glean:validate": "node test/integration/phase1ValidationTest.js",
+    "glean:test-ast": "node test/ast-parsing-test.js",
+    "glean:test-codebase": "node test/codebase-parsing-test.js",
+    "glean:test-cap": "node test/cap-integration-test.js"
   },
   "keywords": [
     "autonomous-agents",
@@ -74,11 +97,11 @@
     "npm": ">=9.0.0"
   },
   "dependencies": {
-    "@opentelemetry/auto-instrumentations-node": "^0.24.0",
-    "@opentelemetry/sdk-node": "^0.52.1",
-    "@opentelemetry/resources": "^1.25.1",
-    "@opentelemetry/semantic-conventions": "^1.25.1",
-    "@opentelemetry/sdk-metrics": "^1.25.1",
+    "@babel/parser": "^7.23.6",
+    "@babel/traverse": "^7.23.6",
+    "@babel/types": "^7.23.6",
+    "@opentelemetry/api": "^1.9.0",
+    "@sap-cloud-sdk/resilience": "^4.1.1",
     "@sap/audit-logging": "^5.8.0",
     "@sap/cds": "^7.4.0",
     "@sap/cds-hana": "^2.0.0",
@@ -86,13 +109,13 @@
     "@sap/logging": "^7.0.0",
     "@sap/xsenv": "^4.2.0",
     "@sap/xssec": "^3.2.17",
+    "@typescript-eslint/parser": "^6.21.0",
     "async": "^3.2.4",
-    "axios": "^1.6.0",
     "bcrypt": "^5.1.1",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "ethers": "^6.8.1",
+    "dotenv": "^16.6.1",
+    "ethers": "^6.15.0",
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",
     "express-session": "^1.18.2",
@@ -109,9 +132,10 @@
     "multer": "^1.4.5-lts.1",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
-    "prom-client": "^15.0.0",
+    "prom-client": "^15.1.3",
     "puppeteer": "^24.16.0",
     "redis": "^4.6.10",
+    "semver": "^7.5.4",
     "socket.io": "^4.7.4",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
@@ -132,13 +156,15 @@
     "@sapui5/ts-types": "^1.120.0",
     "@types/node": "^20.10.0",
     "axios": "^1.11.0",
-    "chai": "^4.3.10",
+    "chai": "^4.5.0",
     "chai-as-promised": "^7.1.1",
     "chai-subset": "^1.6.0",
     "eslint": "^8.56.0",
+    "glob": "^11.0.3",
     "jest": "^29.7.0",
     "prettier": "^3.1.1",
     "rimraf": "^5.0.5",
+    "sinon": "^21.0.0",
     "sqlite3": "^5.1.6",
     "supertest": "^6.3.3",
     "typescript": "^5.3.0"
@@ -146,36 +172,48 @@
   "cds": {
     "requires": {
       "db": {
-        "[development]": {
-          "kind": "hana-cloud",
-          "credentials": {
-            "host": "d93a8739-44a8-4845-bef3-8ec724dea2ce.hana.prod-us10.hanacloud.ondemand.com",
-            "port": 443,
-            "user": "DBADMIN",
-            "password": "Initial@1",
-            "encrypt": true,
-            "sslValidateCertificate": false
-          }
-        },
-        "[production]": {
-          "kind": "hana-cloud"
-        }
-      },
-      "sqlite": {
+        "kind": "hana-cloud",
+        "model": [
+          "db",
+          "srv"
+        ],
         "[development]": {
           "kind": "sqlite",
           "credentials": {
-            "database": "./data/a2a_fallback.db"
+            "database": "db.sqlite"
           }
         }
       },
       "auth": {
-        "[production]": {
-          "kind": "xsuaa"
+        "kind": "xsuaa",
+        "[development]": {
+          "kind": "mocked",
+          "users": {
+            "alice": {
+              "tenant": "a2a",
+              "roles": [
+                "authenticated-user",
+                "Admin"
+              ]
+            },
+            "bob": {
+              "tenant": "a2a",
+              "roles": [
+                "authenticated-user"
+              ]
+            }
+          }
         }
       },
       "approuter": {
         "kind": "cloudfoundry"
+      },
+      "sapBlockchainService": {
+        "kind": "rest",
+        "credentials": {
+          "url": "${BLOCKCHAIN_RPC_URL}",
+          "timeout": 30000
+        }
       }
     },
     "features": {

@@ -25,7 +25,13 @@ module.exports = async (srv) => {
                     return;
                 }
                 
-                cds.log('service').info('Initializing sample data...');
+                // Only initialize sample data in development environment
+                if (process.env.NODE_ENV === 'production') {
+                    cds.log('service').info('Skipping sample data initialization in production');
+                    return;
+                }
+                
+                cds.log('service').info('Initializing sample data for development...');
                 
                 // Create sample agents
                 const agents = await INSERT.into(Agents).entries([

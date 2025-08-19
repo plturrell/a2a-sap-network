@@ -24,7 +24,7 @@ class LoggingService {
         this.correlationStore = new Map();
         
         this._initializeLogger();
-    }
+    \n        this.intervals = new Map(); // Track intervals for cleanup}
 
     /**
      * Initialize Winston logger with multiple transports
@@ -451,15 +451,13 @@ class LoggingService {
                 ip: req.ip || req.connection.remoteAddress
             });
 
-            // Override res.end to log completion
-            const originalEnd = res.end;
-            res.end = function(...args) {
+            // Use response event listeners instead of overriding res.end to avoid OpenTelemetry conflicts
+            res.on('finish', () => {
                 const duration = Date.now() - startTime;
-                originalEnd.apply(this, args);
                 
                 // Log request completion
                 loggingService.httpRequest(req, res, duration);
-            };
+            });
 
             next();
         };
@@ -470,8 +468,8 @@ class LoggingService {
 const loggingService = new LoggingService();
 
 // Clean up correlations every hour
-setInterval(() => {
+this.intervals.set('interval_471', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => {
     loggingService.cleanupCorrelations();
-}, 3600000);
+}, 3600000));
 
 module.exports = loggingService;

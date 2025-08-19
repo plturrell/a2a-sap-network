@@ -1,0 +1,88 @@
+<mvc:View
+    controllerName="a2a.network.fiori.controller.Logs"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core">
+    
+    <f:DynamicPage id="logsPage" class="a2a-tablet-page">
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>logs.title}" level="H2"/>
+                </f:heading>
+                <f:actions>
+                    <Button 
+                        text="{i18n>logs.refresh}" 
+                        type="Emphasized" 
+                        press="onRefreshLogs"
+                        icon="sap-icon://refresh"/>
+                    <Button 
+                        text="{i18n>logs.download}" 
+                        press="onDownloadLogs"
+                        icon="sap-icon://download"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <f:content>
+            <VBox class="sapUiMediumMargin">
+                <!-- Log Level Filter -->
+                <Panel headerText="{i18n>logs.filters}" expandable="true" expanded="true">
+                    <HBox class="sapUiSmallMargin">
+                        <Label text="{i18n>logs.level}:" class="sapUiSmallMarginEnd"/>
+                        <ComboBox id="logLevelFilter" selectedKey="all" selectionChange="onLogLevelChange">
+                            <core:Item key="all" text="All Levels"/>
+                            <core:Item key="error" text="Error"/>
+                            <core:Item key="warn" text="Warning"/>
+                            <core:Item key="info" text="Info"/>
+                            <core:Item key="debug" text="Debug"/>
+                        </ComboBox>
+                    </HBox>
+                </Panel>
+
+                <!-- Logs Table -->
+                <Table id="logsTable" items="{/logs}" growing="true" growingThreshold="100">
+                    <headerToolbar>
+                        <Toolbar>
+                            <Title text="{i18n>logs.systemLogs}"/>
+                            <ToolbarSpacer/>
+                            <SearchField width="300px" search="onSearchLogs" placeholder="{i18n>logs.search}"/>
+                        </Toolbar>
+                    </headerToolbar>
+                    
+                    <columns>
+                        <Column>
+                            <Text text="{i18n>logs.timestamp}"/>
+                        </Column>
+                        <Column>
+                            <Text text="{i18n>logs.level}"/>
+                        </Column>
+                        <Column>
+                            <Text text="{i18n>logs.logger}"/>
+                        </Column>
+                        <Column>
+                            <Text text="{i18n>logs.message}"/>
+                        </Column>
+                    </columns>
+
+                    <items>
+                        <ColumnListItem press="onLogItemPress">
+                            <cells>
+                                <Text text="{timestamp}"/>
+                                <ObjectStatus 
+                                    text="{level}" 
+                                    state="{
+                                        path: 'level',
+                                        formatter: '.formatLogLevel'
+                                    }"/>
+                                <Text text="{logger}"/>
+                                <Text text="{message}" maxLines="2"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+            </VBox>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

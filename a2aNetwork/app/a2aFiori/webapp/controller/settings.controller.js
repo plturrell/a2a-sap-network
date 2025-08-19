@@ -8,14 +8,15 @@ sap.ui.define([
     "sap/base/Log",
     "sap/viz/ui5/controls/VizFrame",
     "sap/viz/ui5/data/FlattenedDataset"
-], function(BaseController, MessageToast, MessageBox, JSONModel, Filter, FilterOperator, Log, VizFrame, FlattenedDataset) {
+], function(BaseController, MessageToast, MessageBox, JSONModel, Filter, FilterOperator,
+    Log, VizFrame, FlattenedDataset) {
     "use strict";
 
     return BaseController.extend("a2a.network.fiori.controller.Settings", {
-        
-        onInit: function() {
+
+        onInit() {
             // Initialize comprehensive settings model with professional data structure
-            var oSettingsModel = new JSONModel({
+            const oSettingsModel = new JSONModel({
                 network: {
                     name: "A2A Network",
                     description: "Enterprise Agent-to-Agent Communication Network",
@@ -39,11 +40,11 @@ sap.ui.define([
                     compressionEnabled: true
                 },
                 security: {
-                    requireAuth: process.env.NODE_ENV === 'production',
+                    requireAuth: process.env.NODE_ENV === "production",
                     sessionTimeoutMinutes: 120,
                     maxLoginAttempts: 5,
                     encryptMessages: true,
-                    rateLimitEnabled: process.env.NODE_ENV === 'production',
+                    rateLimitEnabled: process.env.NODE_ENV === "production",
                     maxRequestsPerHour: 1000,
                     blockDurationMinutes: 15,
                     sslEnabled: true,
@@ -51,7 +52,7 @@ sap.ui.define([
                     auditLoggingEnabled: true
                 },
                 blockchain: {
-                    rpcUrl: "http://localhost:8545",
+                    rpcUrl: process.env.BLOCKCHAIN_RPC_URL || "http://localhost:8545",
                     networkId: 31337,
                     gasLimit: 500000,
                     gasPriceGwei: 20,
@@ -83,11 +84,11 @@ sap.ui.define([
                     { timestamp: "2024-01-01T04:00:00Z", cpu: 22, memory: 42, disk: 28, network: 10 }
                 ]
             });
-            
+
             this.getView().setModel(oSettingsModel, "settings");
-            
+
             // Initialize UI state model for professional loading states
-            var oUIModel = new JSONModel({
+            const oUIModel = new JSONModel({
                 isLoadingSkeleton: false,
                 isLoadingSpinner: false,
                 isLoadingProgress: false,
@@ -106,25 +107,25 @@ sap.ui.define([
                 configBackups: []
             });
             this.getView().setModel(oUIModel, "ui");
-            
+
             // Initialize performance metrics model
             this._initializePerformanceMetrics();
-            
+
             // Load current settings from backend
             this._loadCurrentSettings();
-            
+
             // Setup auto-save mechanism
             this._setupAutoSave();
-            
+
             // Setup real-time monitoring
             this._setupRealTimeMonitoring();
-            
+
             Log.info("Settings controller initialized with professional features");
         },
 
-        _initializePerformanceMetrics: function() {
+        _initializePerformanceMetrics() {
             // Initialize performance metrics for charts
-            var oPerformanceModel = new JSONModel({
+            const oPerformanceModel = new JSONModel({
                 currentMetrics: {
                     cpu: 0,
                     memory: 0,
@@ -143,36 +144,38 @@ sap.ui.define([
                 alerts: []
             });
             this.getView().setModel(oPerformanceModel, "performance");
-            
+
             // Initialize charts after model is set
             setTimeout(() => {
                 this._initializeCharts();
             }, 100);
         },
 
-        _initializeCharts: function() {
+        _initializeCharts() {
             try {
                 // Initialize performance trend chart
                 this._initializePerformanceChart();
-                
+
                 // Initialize system health chart
                 this._initializeHealthChart();
-                
+
             } catch (error) {
                 Log.error("Failed to initialize charts", error);
             }
         },
 
-        _initializePerformanceChart: function() {
-            var oVizFrame = this.byId("performanceChart");
-            if (!oVizFrame) return;
+        _initializePerformanceChart() {
+            const oVizFrame = this.byId("performanceChart");
+            if (!oVizFrame) {
+                return;
+            }
 
-            oVizFrame.setVizType('line');
+            oVizFrame.setVizType("line");
             oVizFrame.setUiConfig({
                 "applicationSet": "fiori"
             });
 
-            var oDataset = new FlattenedDataset({
+            const oDataset = new FlattenedDataset({
                 dimensions: [{
                     name: "Time",
                     value: "{timestamp}"
@@ -195,13 +198,13 @@ sap.ui.define([
             oVizFrame.setDataset(oDataset);
             oVizFrame.setModel(this.getView().getModel("settings"));
 
-            var feedValueAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
+            const feedValueAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
                 "uid": "valueAxis",
                 "type": "Measure",
                 "values": ["CPU Usage", "Memory Usage", "Network Latency"]
             });
 
-            var feedCategoryAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
+            const feedCategoryAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
                 "uid": "categoryAxis",
                 "type": "Dimension",
                 "values": ["Time"]
@@ -213,78 +216,80 @@ sap.ui.define([
             Log.info("Performance chart initialized successfully");
         },
 
-        _initializeHealthChart: function() {
+        _initializeHealthChart() {
             // Health chart initialization would go here
             Log.info("Health chart initialized successfully");
         },
 
-        _loadCurrentSettings: async function() {
+        async _loadCurrentSettings() {
             this._showLoadingState("progress", {
                 title: this.getResourceBundle().getText("loadingSettings"),
                 message: this.getResourceBundle().getText("fetchingConfiguration"),
                 value: 20
             });
-            
+
             try {
                 this._updateProgress(40, this.getResourceBundle().getText("loadingNetworkConfig"));
-                
+
                 const networkResponse = await fetch("/api/v1/settings/network", {
                     method: "GET",
                     headers: { "Content-Type": "application/json" }
                 });
-                
+
                 this._updateProgress(60, this.getResourceBundle().getText("loadingSecurityConfig"));
-                
+
                 const securityResponse = await fetch("/api/v1/settings/security", {
                     method: "GET",
                     headers: { "Content-Type": "application/json" }
                 });
-                
+
                 this._updateProgress(80, this.getResourceBundle().getText("loadingPerformanceMetrics"));
-                
+
                 // Load performance metrics
                 const metricsResponse = await fetch("/api/v1/metrics/current");
-                
+
                 this._updateProgress(100, this.getResourceBundle().getText("settingsLoaded"));
-                
+
                 if (networkResponse.ok && securityResponse.ok) {
                     const networkSettings = await networkResponse.json();
                     const securitySettings = await securityResponse.json();
-                    
+
                     // Merge with current settings
-                    var oModel = this.getView().getModel("settings");
-                    var oCurrentData = oModel.getData();
-                    
+                    const oModel = this.getView().getModel("settings");
+                    const oCurrentData = oModel.getData();
+
                     oModel.setData({
                         ...oCurrentData,
                         network: { ...oCurrentData.network, ...networkSettings },
                         security: { ...oCurrentData.security, ...securitySettings }
                     });
-                    
+
                     Log.info("Settings loaded successfully from backend");
                 }
-                
+
                 if (metricsResponse.ok) {
                     const metrics = await metricsResponse.json();
                     this._updatePerformanceMetrics(metrics);
                 }
-                
+
                 // Update UI state
-                var oUIModel = this.getView().getModel("ui");
+                const oUIModel = this.getView().getModel("ui");
                 oUIModel.setProperty("/lastSaved", new Date());
-                
+
                 this._hideLoadingState();
-                
+
             } catch (error) {
                 Log.error("Error loading settings", error);
                 this._showErrorState(this.getResourceBundle().getText("settingsLoadError"));
             }
         },
 
-        _updatePerformanceMetrics: function(metrics) {
-            var oPerformanceModel = this.getView().getModel("performance");
-            if (!oPerformanceModel) return;
-            
+        _updatePerformanceMetrics(metrics) {
+            const oPerformanceModel = this.getView().getModel("performance");
+            if (!oPerformanceModel) {
+                return;
+            }
+
             oPerformanceModel.setProperty("/currentMetrics", {
                 cpu: metrics.cpuUsage || 0,
                 memory: metrics.memoryUsagePercent || 0,
@@ -293,11 +298,11 @@ sap.ui.define([
                 requestsPerSecond: metrics.requestsPerSecond || 0,
                 errorsPerMinute: metrics.errorsPerMinute || 0
             });
-            
+
             // Update historical data
             const currentTime = new Date().toISOString();
-            var aHistorical = oPerformanceModel.getProperty("/historicalData") || [];
-            
+            let aHistorical = oPerformanceModel.getProperty("/historicalData") || [];
+
             aHistorical.push({
                 timestamp: currentTime,
                 cpu: metrics.cpu_usage || 0,
@@ -305,27 +310,27 @@ sap.ui.define([
                 disk: metrics.disk_usage_percent || 0,
                 network: metrics.network_latency_ms || 0
             });
-            
+
             // Keep only last 20 data points
             if (aHistorical.length > 20) {
                 aHistorical = aHistorical.slice(-20);
             }
-            
+
             oPerformanceModel.setProperty("/historicalData", aHistorical);
         },
 
-        _setupAutoSave: function() {
+        _setupAutoSave() {
             this._autoSaveInterval = setInterval(() => {
-                var oUIModel = this.getView().getModel("ui");
-                if (oUIModel.getProperty("/unsavedChanges") && 
+                const oUIModel = this.getView().getModel("ui");
+                if (oUIModel.getProperty("/unsavedChanges") &&
                     oUIModel.getProperty("/autoSaveEnabled")) {
                     this._performAutoSave();
                 }
             }, 30000); // Auto-save every 30 seconds
         },
 
-        _setupRealTimeMonitoring: function() {
-            this._monitoringInterval = setInterval(async () => {
+        _setupRealTimeMonitoring() {
+            this._monitoringInterval = setInterval(async() => {
                 try {
                     const response = await fetch("/api/v1/metrics/current");
                     if (response.ok) {
@@ -338,10 +343,10 @@ sap.ui.define([
             }, 10000); // Update every 10 seconds
         },
 
-        _performAutoSave: async function() {
+        async _performAutoSave() {
             try {
                 const oSettings = this.getView().getModel("settings").getData();
-                
+
                 const response = await fetch("/api/v1/settings/autosave", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -350,24 +355,24 @@ sap.ui.define([
                         timestamp: new Date().toISOString()
                     })
                 });
-                
+
                 if (response.ok) {
-                    var oUIModel = this.getView().getModel("ui");
+                    const oUIModel = this.getView().getModel("ui");
                     oUIModel.setProperty("/lastSaved", new Date());
                     oUIModel.setProperty("/unsavedChanges", false);
-                    
+
                     MessageToast.show(this.getResourceBundle().getText("autoSaveComplete"));
                 }
-                
+
             } catch (error) {
                 Log.error("Auto-save failed", error);
             }
         },
 
         // Professional loading state management
-        _showLoadingState: function(sType, oOptions = {}) {
-            var oUIModel = this.getView().getModel("ui");
-            
+        _showLoadingState(sType, oOptions = {}) {
+            const oUIModel = this.getView().getModel("ui");
+
             oUIModel.setData({
                 ...oUIModel.getData(),
                 isLoadingSkeleton: sType === "skeleton",
@@ -382,15 +387,15 @@ sap.ui.define([
             });
         },
 
-        _updateProgress: function(iValue, sMessage) {
-            var oUIModel = this.getView().getModel("ui");
+        _updateProgress(iValue, sMessage) {
+            const oUIModel = this.getView().getModel("ui");
             oUIModel.setProperty("/progressValue", iValue);
             oUIModel.setProperty("/progressText", `${iValue}%`);
             oUIModel.setProperty("/loadingMessage", sMessage);
         },
 
-        _hideLoadingState: function() {
-            var oUIModel = this.getView().getModel("ui");
+        _hideLoadingState() {
+            const oUIModel = this.getView().getModel("ui");
             oUIModel.setData({
                 ...oUIModel.getData(),
                 isLoadingSkeleton: false,
@@ -401,8 +406,8 @@ sap.ui.define([
             });
         },
 
-        _showErrorState: function(sMessage) {
-            var oUIModel = this.getView().getModel("ui");
+        _showErrorState(sMessage) {
+            const oUIModel = this.getView().getModel("ui");
             oUIModel.setData({
                 ...oUIModel.getData(),
                 isLoadingSkeleton: false,
@@ -415,123 +420,123 @@ sap.ui.define([
         },
 
         // Enhanced event handlers
-        onTabSelect: function(oEvent) {
+        onTabSelect(oEvent) {
             const sKey = oEvent.getParameter("key");
-            var oUIModel = this.getView().getModel("ui");
+            const oUIModel = this.getView().getModel("ui");
             oUIModel.setProperty("/selectedTab", sKey);
-            
+
             Log.debug("Settings tab selected", sKey);
-            
+
             // Load tab-specific data
             switch (sKey) {
-                case "monitoring":
-                    this._refreshMonitoringData();
-                    break;
-                case "blockchain":
-                    this._refreshBlockchainStatus();
-                    break;
-                case "performance":
-                    this._refreshPerformanceMetrics();
-                    break;
+            case "monitoring":
+                this._refreshMonitoringData();
+                break;
+            case "blockchain":
+                this._refreshBlockchainStatus();
+                break;
+            case "performance":
+                this._refreshPerformanceMetrics();
+                break;
             }
         },
 
-        onSettingChange: function(oEvent) {
-            var oUIModel = this.getView().getModel("ui");
+        onSettingChange(oEvent) {
+            const oUIModel = this.getView().getModel("ui");
             oUIModel.setProperty("/unsavedChanges", true);
-            
+
             // Validate the changed setting
             const oSource = oEvent.getSource();
             const sBindingPath = oSource.getBinding("value").getPath();
             const oValue = oEvent.getParameter("value") || oEvent.getParameter("state");
-            
+
             this._validateSetting(sBindingPath, oValue);
-            
+
             Log.debug("Setting changed", { path: sBindingPath, value: oValue });
         },
 
-        _validateSetting: function(sPath, oValue) {
-            var oUIModel = this.getView().getModel("ui");
-            var oValidationErrors = oUIModel.getProperty("/validationErrors") || {};
-            
+        _validateSetting(sPath, oValue) {
+            const oUIModel = this.getView().getModel("ui");
+            const oValidationErrors = oUIModel.getProperty("/validationErrors") || {};
+
             // Remove existing error for this path
             delete oValidationErrors[sPath];
-            
+
             // Validate based on setting type
             if (sPath.includes("email") && oValue) {
                 if (!oValue.includes("@") || !oValue.includes(".")) {
                     oValidationErrors[sPath] = this.getResourceBundle().getText("invalidEmailFormat");
                 }
             }
-            
+
             if (sPath.includes("rpcUrl") && oValue) {
                 if (!oValue.startsWith("http")) {
                     oValidationErrors[sPath] = this.getResourceBundle().getText("invalidUrlFormat");
                 }
             }
-            
+
             if (sPath.includes("gasLimit") && oValue < 21000) {
                 oValidationErrors[sPath] = this.getResourceBundle().getText("gasLimitTooLow");
             }
-            
+
             oUIModel.setProperty("/validationErrors", oValidationErrors);
         },
 
-        onSaveSettings: async function() {
+        async onSaveSettings() {
             // Validate all settings before saving
             if (!this._validateAllSettings()) {
                 MessageBox.error(this.getResourceBundle().getText("validationErrorsExist"));
                 return;
             }
-            
+
             const oSettings = this.getView().getModel("settings").getData();
-            
+
             this._showLoadingState("progress", {
                 title: this.getResourceBundle().getText("savingSettings"),
                 message: this.getResourceBundle().getText("updatingConfiguration"),
                 value: 0
             });
-            
+
             try {
                 // Save in phases with progress updates
                 this._updateProgress(25, this.getResourceBundle().getText("savingNetworkSettings"));
-                
+
                 const networkResponse = await fetch("/api/v1/settings/network", {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(oSettings.network)
                 });
-                
+
                 this._updateProgress(50, this.getResourceBundle().getText("savingSecuritySettings"));
-                
+
                 const securityResponse = await fetch("/api/v1/settings/security", {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(oSettings.security)
                 });
-                
+
                 this._updateProgress(75, this.getResourceBundle().getText("applyingConfiguration"));
-                
+
                 // Apply settings that require immediate reconfiguration
                 await this._applyNetworkSettings(oSettings);
-                
+
                 this._updateProgress(100, this.getResourceBundle().getText("settingsSaved"));
-                
+
                 if (networkResponse.ok && securityResponse.ok) {
                     MessageToast.show(this.getResourceBundle().getText("settingsSavedSuccessfully"));
-                    
-                    var oUIModel = this.getView().getModel("ui");
+
+                    const oUIModel = this.getView().getModel("ui");
                     oUIModel.setProperty("/unsavedChanges", false);
                     oUIModel.setProperty("/lastSaved", new Date());
-                    
+
                     // Create backup
                     this._createConfigBackup(oSettings);
-                    
+
                 } else {
                     const error = await networkResponse.json();
                     MessageBox.error(error.message || this.getResourceBundle().getText("settingsSaveError"));
                 }
-                
+
             } catch (error) {
                 Log.error("Error saving settings", error);
                 MessageBox.error(this.getResourceBundle().getText("settingsSaveError"));
@@ -540,33 +545,33 @@ sap.ui.define([
             }
         },
 
-        _validateAllSettings: function() {
-            var oUIModel = this.getView().getModel("ui");
-            var oValidationErrors = oUIModel.getProperty("/validationErrors");
+        _validateAllSettings() {
+            const oUIModel = this.getView().getModel("ui");
+            const oValidationErrors = oUIModel.getProperty("/validationErrors");
             return Object.keys(oValidationErrors).length === 0;
         },
 
-        _createConfigBackup: function(oSettings) {
-            var oUIModel = this.getView().getModel("ui");
-            var aBackups = oUIModel.getProperty("/configBackups") || [];
-            
+        _createConfigBackup(oSettings) {
+            const oUIModel = this.getView().getModel("ui");
+            let aBackups = oUIModel.getProperty("/configBackups") || [];
+
             aBackups.unshift({
                 timestamp: new Date(),
                 settings: JSON.parse(JSON.stringify(oSettings)),
                 version: aBackups.length + 1
             });
-            
+
             // Keep only last 10 backups
             if (aBackups.length > 10) {
                 aBackups = aBackups.slice(0, 10);
             }
-            
+
             oUIModel.setProperty("/configBackups", aBackups);
         },
 
-        onCancel: function() {
-            var oUIModel = this.getView().getModel("ui");
-            
+        onCancel() {
+            const oUIModel = this.getView().getModel("ui");
+
             if (oUIModel.getProperty("/unsavedChanges")) {
                 MessageBox.confirm(
                     this.getResourceBundle().getText("unsavedChangesMessage"),
@@ -586,7 +591,7 @@ sap.ui.define([
             }
         },
 
-        onResetToDefaults: function() {
+        onResetToDefaults() {
             MessageBox.confirm(
                 this.getResourceBundle().getText("resetToDefaultsMessage"),
                 {
@@ -600,7 +605,7 @@ sap.ui.define([
             );
         },
 
-        _resetToDefaults: function() {
+        _resetToDefaults() {
             const oDefaultSettings = {
                 network: {
                     name: "A2A Network",
@@ -637,7 +642,7 @@ sap.ui.define([
                     auditLoggingEnabled: true
                 },
                 blockchain: {
-                    rpcUrl: "http://localhost:8545",
+                    rpcUrl: process.env.BLOCKCHAIN_RPC_URL || "http://localhost:8545",
                     networkId: 31337,
                     gasLimit: 500000,
                     gasPriceGwei: 20,
@@ -661,48 +666,50 @@ sap.ui.define([
                     healthCheckEndpoint: true
                 }
             };
-            
+
             this.getView().getModel("settings").setData(oDefaultSettings);
-            var oUIModel = this.getView().getModel("ui");
+            const oUIModel = this.getView().getModel("ui");
             oUIModel.setProperty("/unsavedChanges", true);
-            
+
             MessageToast.show(this.getResourceBundle().getText("settingsResetToDefaults"));
         },
 
-        onExportConfig: function() {
+        onExportConfig() {
             const oSettings = this.getView().getModel("settings").getData();
             const oExportData = {
                 version: "1.0",
                 timestamp: new Date().toISOString(),
                 settings: oSettings
             };
-            
+
             const sConfig = JSON.stringify(oExportData, null, 2);
             this._downloadFile(sConfig, "a2a-network-config.json", "application/json");
-            
+
             MessageToast.show(this.getResourceBundle().getText("configExported"));
         },
 
-        onImportConfig: function() {
+        onImportConfig() {
             // Create file input element
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = ".json";
+
             input.onchange = (event) => {
                 const file = event.target.files[0];
-                if (!file) return;
-                
+                if (!file) {
+                    return;
+                }
+
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
                         const importedData = JSON.parse(e.target.result);
-                        
+
                         if (importedData.settings) {
                             this.getView().getModel("settings").setData(importedData.settings);
-                            var oUIModel = this.getView().getModel("ui");
+                            const oUIModel = this.getView().getModel("ui");
                             oUIModel.setProperty("/unsavedChanges", true);
-                            
+
                             MessageToast.show(this.getResourceBundle().getText("configImported"));
                         } else {
                             MessageBox.error(this.getResourceBundle().getText("invalidConfigFile"));
@@ -714,13 +721,13 @@ sap.ui.define([
                 };
                 reader.readAsText(file);
             };
-            
+
             input.click();
         },
 
-        _downloadFile: function(sContent, sFileName, sMimeType) {
+        _downloadFile(sContent, sFileName, sMimeType) {
             const element = document.createElement("a");
-            element.setAttribute("href", `data:${sMimeType};charset=utf-8,` + encodeURIComponent(sContent));
+            element.setAttribute("href", `data:${sMimeType};charset=utf-8,${ encodeURIComponent(sContent)}`);
             element.setAttribute("download", sFileName);
             element.style.display = "none";
             document.body.appendChild(element);
@@ -728,13 +735,13 @@ sap.ui.define([
             document.body.removeChild(element);
         },
 
-        onTestConnection: async function() {
+        async onTestConnection() {
             const oSettings = this.getView().getModel("settings").getData();
-            
+
             this._showLoadingState("spinner", {
                 message: this.getResourceBundle().getText("testingConnection")
             });
-            
+
             try {
                 const response = await fetch("/api/v1/test-connection", {
                     method: "POST",
@@ -744,9 +751,9 @@ sap.ui.define([
                         networkId: oSettings.blockchain.networkId
                     })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (response.ok && result.success) {
                     MessageBox.success(
                         this.getResourceBundle().getText("connectionTestSuccessful"),
@@ -758,7 +765,7 @@ sap.ui.define([
                         { title: this.getResourceBundle().getText("connectionTest") }
                     );
                 }
-                
+
             } catch (error) {
                 Log.error("Connection test failed", error);
                 MessageBox.error(this.getResourceBundle().getText("connectionTestError"));
@@ -767,7 +774,7 @@ sap.ui.define([
             }
         },
 
-        _applyNetworkSettings: async function(oSettings) {
+        async _applyNetworkSettings(oSettings) {
             try {
                 const response = await fetch("/api/v1/reconfigure", {
                     method: "POST",
@@ -778,13 +785,13 @@ sap.ui.define([
                         security: oSettings.security
                     })
                 });
-                
+
                 if (response.ok) {
                     Log.info("Network reconfiguration applied successfully");
                 } else {
                     Log.warning("Network reconfiguration failed");
                 }
-                
+
             } catch (error) {
                 Log.error("Failed to apply network settings", error);
                 MessageBox.warning(this.getResourceBundle().getText("settingsSavedButNotApplied"));
@@ -792,7 +799,7 @@ sap.ui.define([
         },
 
         // Real-time monitoring refresh handlers
-        _refreshMonitoringData: async function() {
+        async _refreshMonitoringData() {
             try {
                 const response = await fetch("/api/v1/monitoring/status");
                 if (response.ok) {
@@ -804,7 +811,7 @@ sap.ui.define([
             }
         },
 
-        _refreshBlockchainStatus: async function() {
+        async _refreshBlockchainStatus() {
             try {
                 const response = await fetch("/api/v1/blockchain/status");
                 if (response.ok) {
@@ -817,13 +824,13 @@ sap.ui.define([
             }
         },
 
-        _refreshPerformanceMetrics: async function() {
+        async _refreshPerformanceMetrics() {
             try {
                 const response = await fetch("/api/v1/metrics/performance");
                 if (response.ok) {
                     const metrics = await response.json();
                     this._updatePerformanceMetrics(metrics);
-                    
+
                     // Update chart data
                     this._updateChartData(metrics);
                 }
@@ -832,10 +839,10 @@ sap.ui.define([
             }
         },
 
-        _updateChartData: function(metrics) {
-            var oSettingsModel = this.getView().getModel("settings");
-            var aHistory = oSettingsModel.getProperty("/performanceHistory") || [];
-            
+        _updateChartData(metrics) {
+            const oSettingsModel = this.getView().getModel("settings");
+            let aHistory = oSettingsModel.getProperty("/performanceHistory") || [];
+
             // Add new data point
             aHistory.push({
                 timestamp: new Date().toISOString(),
@@ -844,25 +851,25 @@ sap.ui.define([
                 disk: metrics.disk_usage_percent || 0,
                 network: metrics.network_latency_ms || 0
             });
-            
+
             // Keep only last 24 points (24 hours if updated hourly)
             if (aHistory.length > 24) {
                 aHistory = aHistory.slice(-24);
             }
-            
+
             oSettingsModel.setProperty("/performanceHistory", aHistory);
         },
 
-        onRetryLoad: function() {
+        onRetryLoad() {
             this._loadCurrentSettings();
         },
 
-        onExit: function() {
+        onExit() {
             // Clean up intervals
             if (this._autoSaveInterval) {
                 clearInterval(this._autoSaveInterval);
             }
-            
+
             if (this._monitoringInterval) {
                 clearInterval(this._monitoringInterval);
             }

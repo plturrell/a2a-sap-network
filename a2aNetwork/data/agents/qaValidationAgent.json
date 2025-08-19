@@ -1,0 +1,17 @@
+{
+  "agentType": "qaValidationAgent",
+  "name": "QA Validation Agent",
+  "address": "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc",
+  "endpoint": "http://localhost:8005",
+  "capabilities": [
+    "qa_validation",
+    "quality_assurance",
+    "test_execution",
+    "validation_reporting",
+    "compliance_checking"
+  ],
+  "description": "Agent 5 - Performs quality assurance and validation checks",
+  "registrationTx": "0x2bc85d25fff18261dfc3812df738641f9cc3dbafb3476d416c71acaf73884b79",
+  "registrationBlock": 8,
+  "registeredAt": "2025-08-19T06:02:17.728Z"
+}

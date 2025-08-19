@@ -14,6 +14,8 @@ modules:
       - name: a2a-network-application-logging
       - name: a2a-network-alert-notification
       - name: a2a-network-autoscaler
+      - name: a2a-network-redis
+      - name: a2a-network-service-manager
     provides:
       - name: srv-api
         properties:
@@ -195,6 +197,25 @@ resources:
             threshold: 85
             operator: ">"
             adjustment: "+1"
+  
+  - name: a2a-network-redis
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: redis-cache
+      service-plan: standard
+      config:
+        maxMemoryPolicy: "allkeys-lru"
+        maxClients: 1000
+        timeout: 300
+        
+  - name: a2a-network-service-manager
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: service-manager
+      service-plan: container
+      config:
+        acquireTimeoutInSeconds: 60
+        maxAcquireRetries: 3
           - metric_type: responsetime
             threshold: 1000
             operator: ">"

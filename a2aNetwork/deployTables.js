@@ -11,7 +11,7 @@ const connOptions = {
     uid: 'DBADMIN',
     pwd: 'Initial@1',
     encrypt: true,
-    sslValidateCertificate: false,
+    sslValidateCertificate: process.env.HANA_SSL_VALIDATE_CERTIFICATE !== 'false',
     currentSchema: 'A2A_DEV'
 };
 

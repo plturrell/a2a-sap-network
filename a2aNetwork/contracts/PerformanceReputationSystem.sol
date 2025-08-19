@@ -107,6 +107,15 @@ contract PerformanceReputationSystem is
     mapping(address => uint256) public historicalScoresIndex; // Circular buffer index
     mapping(address => mapping(uint256 => uint256)) public historicalScoresBuffer; // Circular buffer
     
+    // SECURITY FIX: Event-based indexing support
+    mapping(bytes32 => ReviewLocation) public reviewLocations; // Maps review hash to location
+    
+    struct ReviewLocation {
+        address agent;
+        uint256 index;
+        bool exists;
+    }
+    
     // Dynamic thresholds and market context
     DynamicThresholds public dynamicThresholds;
     MarketContext public marketContext;
@@ -148,6 +157,22 @@ contract PerformanceReputationSystem is
     event InsurancePurchased(address indexed agent, uint256 bondAmount, uint256 coverage);
     event ReviewValidated(bytes32 indexed reviewHash, address indexed validator);
     event MarketContextUpdated(uint256 networkLoad, uint256 gasPrice, uint256 activeAgents);
+    
+    // SECURITY FIX: Enhanced events for off-chain indexing
+    event ReviewSubmittedDetailed(
+        bytes32 indexed reviewHash,
+        address indexed agent,
+        address indexed reviewer,
+        uint256 rating,
+        uint256 taskId,
+        uint256 timestamp,
+        uint256 reviewIndex
+    );
+    event ReviewValidationRequested(
+        bytes32 indexed reviewHash,
+        address indexed validator,
+        bool isValid
+    );
     
     function initialize(address _agentRegistry) public initializer {
         __AccessControl_init();
@@ -213,7 +238,10 @@ contract PerformanceReputationSystem is
         
         metrics.totalTasks++;
         metrics.totalTaskDifficulty += weightedValue;
-        metrics.avgTaskDifficulty = metrics.totalTaskDifficulty / metrics.totalTasks;
+        // SECURITY FIX: Check for division by zero
+        if (metrics.totalTasks > 0) {
+            metrics.avgTaskDifficulty = metrics.totalTaskDifficulty / metrics.totalTasks;
+        }
         
         if (success) {
             metrics.successfulTasks++;
@@ -224,10 +252,16 @@ contract PerformanceReputationSystem is
         // Update response time with market context adjustment
         uint256 adjustedResponseTime = _adjustForMarketConditions(responseTime);
         metrics.totalResponseTime += adjustedResponseTime;
-        metrics.avgResponseTime = metrics.totalResponseTime / metrics.totalTasks;
+        // SECURITY FIX: Check for division by zero
+        if (metrics.totalTasks > 0) {
+            metrics.avgResponseTime = metrics.totalResponseTime / metrics.totalTasks;
+        }
         
         metrics.totalGasUsed += gasUsed;
-        metrics.avgGasPerTask = metrics.totalGasUsed / metrics.totalTasks;
+        // SECURITY FIX: Check for division by zero
+        if (metrics.totalTasks > 0) {
+            metrics.avgGasPerTask = metrics.totalGasUsed / metrics.totalTasks;
+        }
         
         metrics.lastActiveTimestamp = block.timestamp;
         
@@ -283,6 +317,9 @@ contract PerformanceReputationSystem is
         uint256 reviewerReputation = agentRegistry.getReputation(msg.sender);
         require(reviewerReputation >= 50, "Reviewer reputation too low");
         
+        // Store review
+        uint256 reviewIndex = peerReviews[agent].length;
+        
         peerReviews[agent].push(PeerReview({
             reviewer: msg.sender,
             rating: rating,
@@ -295,6 +332,13 @@ contract PerformanceReputationSystem is
             reviewHash: reviewHash
         }));
         
+        // SECURITY FIX: Store review location for efficient lookup
+        reviewLocations[reviewHash] = ReviewLocation({
+            agent: agent,
+            index: reviewIndex,
+            exists: true
+        });
+        
         usedReviewHashes[reviewHash] = true;
         lastReviewTime[msg.sender][agent] = block.timestamp;
         
@@ -303,35 +347,35 @@ contract PerformanceReputationSystem is
         
         emit PeerReviewSubmitted(agent, msg.sender, rating, reviewHash);
         
+        // SECURITY FIX: Emit detailed event for off-chain indexing
+        emit ReviewSubmittedDetailed(
+            reviewHash,
+            agent,
+            msg.sender,
+            rating,
+            taskId,
+            block.timestamp,
+            reviewIndex
+        );
+        
         // Recalculate reputation with new review
         _calculateReputation(agent);
     }
     
     /**
      * @notice Validate a peer review (cross-validation)
+     * @dev SECURITY FIX: Uses mapping lookup instead of loops for gas efficiency
      */
     function validateReview(bytes32 reviewHash, bool isValid) external {
         require(agentRegistry.isRegistered(msg.sender), "Not registered");
         require(agentStakes[msg.sender] >= minStakeAmount, "Insufficient stake");
         
-        // Find the review
-        address agentAddress;
-        uint256 reviewIndex;
-        bool found = false;
+        // SECURITY FIX: Use mapping for O(1) lookup instead of loop
+        ReviewLocation memory location = reviewLocations[reviewHash];
+        require(location.exists, "Review not found");
         
-        // This is expensive but necessary for validation
-        // In production, consider using events for off-chain indexing
-        for (uint256 i = 0; i < peerReviews[agentAddress].length; i++) {
-            if (peerReviews[agentAddress][i].reviewHash == reviewHash) {
-                reviewIndex = i;
-                found = true;
-                break;
-            }
-        }
-        
-        require(found, "Review not found");
-        
-        PeerReview storage review = peerReviews[agentAddress][reviewIndex];
+        // Get the review directly using stored location
+        PeerReview storage review = peerReviews[location.agent][location.index];
         require(review.reviewer != msg.sender, "Cannot validate own review");
         
         // Check if validator already validated this review
@@ -352,6 +396,8 @@ contract PerformanceReputationSystem is
             review.validated = true;
         }
         
+        // SECURITY FIX: Emit event for off-chain indexing
+        emit ReviewValidationRequested(reviewHash, msg.sender, isValid);
         emit ReviewValidated(reviewHash, msg.sender);
     }
     
@@ -405,6 +451,7 @@ contract PerformanceReputationSystem is
             totalRating += peerReviews[agent][i].rating;
         }
         
+        // SECURITY FIX: Safe division
         averagePeerRating = reviewCount > 0 ? (totalRating * 100) / reviewCount : 0;
     }
     
@@ -492,6 +539,10 @@ contract PerformanceReputationSystem is
     
     function _calculateSuccessRate(PerformanceMetrics storage metrics) 
         private view returns (uint256) {
+        // SECURITY FIX: Check for division by zero
+        if (metrics.totalTasks == 0) {
+            return 0;
+        }
         return (metrics.successfulTasks * 100) / metrics.totalTasks;
     }
     
@@ -533,6 +584,7 @@ contract PerformanceReputationSystem is
             weightTotal += weight;
         }
         
+        // SECURITY FIX: Already has zero check
         return weightTotal > 0 ? weightedSum / weightTotal : 50;
     }
     
@@ -580,7 +632,7 @@ contract PerformanceReputationSystem is
             }
             
             // Adjust gas thresholds based on gas price
-            uint256 gasPriceRatio = (marketContext.gasPrice * 100) / 20 gwei; // 20 gwei baseline
+            uint256 gasPriceRatio = 20 gwei > 0 ? (marketContext.gasPrice * 100) / 20 gwei : 100; // SECURITY FIX: Safe division
             if (gasPriceRatio > 150) { // High gas price
                 thresholds.excellentGasUsage = (thresholds.excellentGasUsage * 90) / 100;
                 thresholds.goodGasUsage = (thresholds.goodGasUsage * 95) / 100;
@@ -636,11 +688,19 @@ contract PerformanceReputationSystem is
             // Remove oldest unvalidated review
             for (uint256 i = 0; i < reviews.length; i++) {
                 if (!reviews[i].validated && block.timestamp - reviews[i].timestamp > 30 days) {
-                    // Remove hash from used hashes
-                    usedReviewHashes[reviews[i].reviewHash] = false;
+                    bytes32 oldReviewHash = reviews[i].reviewHash;
                     
-                    // Swap with last element and pop
-                    reviews[i] = reviews[reviews.length - 1];
+                    // SECURITY FIX: Clean up review location mapping
+                    delete reviewLocations[oldReviewHash];
+                    delete usedReviewHashes[oldReviewHash];
+                    
+                    // If removing from middle, update location of swapped review
+                    if (i < reviews.length - 1) {
+                        bytes32 movedReviewHash = reviews[reviews.length - 1].reviewHash;
+                        reviewLocations[movedReviewHash].index = i;
+                        reviews[i] = reviews[reviews.length - 1];
+                    }
+                    
                     reviews.pop();
                     break;
                 }
@@ -722,6 +782,44 @@ contract PerformanceReputationSystem is
         }
         
         return scores;
+    }
+    
+    /**
+     * @notice Get review details by hash (O(1) lookup)
+     * @dev SECURITY FIX: Efficient review retrieval without loops
+     */
+    function getReviewByHash(bytes32 reviewHash) external view returns (
+        address agent,
+        address reviewer,
+        uint256 rating,
+        string memory comment,
+        uint256 taskId,
+        uint256 timestamp,
+        bool validated,
+        uint256 validatorCount
+    ) {
+        ReviewLocation memory location = reviewLocations[reviewHash];
+        require(location.exists, "Review not found");
+        
+        PeerReview storage review = peerReviews[location.agent][location.index];
+        
+        return (
+            location.agent,
+            review.reviewer,
+            review.rating,
+            review.comment,
+            review.taskId,
+            review.timestamp,
+            review.validated,
+            review.validatorCount
+        );
+    }
+    
+    /**
+     * @notice Check if a review exists
+     */
+    function reviewExists(bytes32 reviewHash) external view returns (bool) {
+        return reviewLocations[reviewHash].exists;
     }
     
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}

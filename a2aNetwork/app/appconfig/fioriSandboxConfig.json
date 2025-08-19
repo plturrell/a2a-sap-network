@@ -51,9 +51,8 @@
                     "subtitle": "Network Overview & Status",
                     "icon": "sap-icon://home",
                     "targetURL": "#A2ANetwork-manage&/home",
-                    "serviceUrl": "/api/v1/NetworkStats",
-                    "numberValue": "100%",
-                    "numberUnit": "Health"
+                    "serviceUrl": "/api/v1/NetworkStats?id=overview_dashboard",
+                    "serviceRefreshInterval": 30
                   }
                 },
                 {
@@ -64,9 +63,8 @@
                     "subtitle": "Distributed Ledger Monitoring",
                     "icon": "sap-icon://chain-link",
                     "targetURL": "#A2ANetwork-manage&/blockchain",
-                    "serviceUrl": "/odata/v4/blockchain/BlockchainStats",
-                    "numberValue": "1.2K",
-                    "numberUnit": "Blocks"
+                    "serviceUrl": "/api/v1/blockchain/stats?id=blockchain_dashboard",
+                    "serviceRefreshInterval": 30
                   }
                 },
                 {
@@ -77,9 +75,44 @@
                     "subtitle": "AI Agent Network Topology",
                     "icon": "sap-icon://network",
                     "targetURL": "#A2ANetwork-manage&/agents",
-                    "serviceUrl": "/api/v1/Agents",
-                    "numberValue": "24",
-                    "numberUnit": "Active"
+                    "serviceUrl": "/api/v1/Agents?id=agent_visualization",
+                    "serviceRefreshInterval": 30
+                  }
+                },
+                {
+                  "id": "service_marketplace",
+                  "tileType": "sap.ushell.ui.tile.DynamicTile",
+                  "properties": {
+                    "title": "Service Marketplace",
+                    "subtitle": "AI Services & Capabilities",
+                    "icon": "sap-icon://retail-store",
+                    "targetURL": "#A2ANetwork-manage&/marketplace",
+                    "serviceUrl": "/api/v1/Services?id=service_marketplace",
+                    "serviceRefreshInterval": 30
+                  }
+                },
+                {
+                  "id": "network_health",
+                  "tileType": "sap.ushell.ui.tile.DynamicTile",
+                  "properties": {
+                    "title": "Network Health",
+                    "subtitle": "System Status & Performance",
+                    "icon": "sap-icon://heart",
+                    "targetURL": "#A2ANetwork-manage&/analytics",
+                    "serviceUrl": "/api/v1/network/health",
+                    "serviceRefreshInterval": 15
+                  }
+                },
+                {
+                  "id": "notification_center",
+                  "tileType": "sap.ushell.ui.tile.DynamicTile",
+                  "properties": {
+                    "title": "Notifications",
+                    "subtitle": "Alerts & Messages",
+                    "icon": "sap-icon://bell",
+                    "targetURL": "#A2ANetwork-manage&/alerts",
+                    "serviceUrl": "/api/v1/notifications/count",
+                    "serviceRefreshInterval": 10
                   }
                 }
               ]

@@ -1,0 +1,616 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<mvc:View
+    controllerName="a2a.network.fiori.controller.agentMarketplace"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:cards="sap.f.cards"
+    xmlns:viz="sap.viz"
+    xmlns:micro="sap.suite.ui.microchart"
+    xmlns:uxap="sap.uxap"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:layout="sap.ui.layout"
+    xmlns:p13n="sap.m.p13n"
+    xmlns:vm="sap.ui.fl.variants"
+    displayBlock="true"
+    height="100%">
+
+    <Page id="marketplacePage" 
+          title="{i18n>agentMarketplaceTitle}" 
+          showNavButton="true" 
+          navButtonPress="onNavBack"
+          class="sapUiResponsiveContentPadding">
+        
+        <content>
+            <f:DynamicPage id="marketplaceDynamicPage">
+                
+                <!-- Header -->
+                <f:header>
+                    <f:DynamicPageHeader pinnable="true">
+                        <f:content>
+                            <VBox class="sapUiMediumMarginBottom">
+                                
+                                <!-- Marketplace Stats -->
+                                <HBox wrap="Wrap" class="sapUiMediumMarginBottom">
+                                    <f:Card class="sapUiMediumMarginEnd" width="250px">
+                                        <f:header>
+                                            <cards:Header title="{i18n>totalAgents}" iconSrc="sap-icon://collaborate"/>
+                                        </f:header>
+                                        <f:content>
+                                            <VBox class="sapUiContentPadding" alignItems="Center">
+                                                <Text text="{marketplace>/stats/totalAgents}" class="sapUiLargeText sapThemeHighlight-asColor"/>
+                                                <Text text="{i18n>registeredAgents}" class="sapUiTinyText"/>
+                                            </VBox>
+                                        </f:content>
+                                    </f:Card>
+                                    
+                                    <f:Card class="sapUiMediumMarginEnd" width="250px">
+                                        <f:header>
+                                            <cards:Header title="{i18n>activeServices}" iconSrc="sap-icon://activities"/>
+                                        </f:header>
+                                        <f:content>
+                                            <VBox class="sapUiContentPadding" alignItems="Center">
+                                                <Text text="{marketplace>/stats/activeServices}" class="sapUiLargeText sapThemePositive-asColor"/>
+                                                <Text text="{i18n>availableNow}" class="sapUiTinyText"/>
+                                            </VBox>
+                                        </f:content>
+                                    </f:Card>
+                                    
+                                    <f:Card class="sapUiMediumMarginEnd" width="250px">
+                                        <f:header>
+                                            <cards:Header title="{i18n>totalTransactions}" iconSrc="sap-icon://sales-order"/>
+                                        </f:header>
+                                        <f:content>
+                                            <VBox class="sapUiContentPadding" alignItems="Center">
+                                                <Text text="{marketplace>/stats/totalTransactions}" class="sapUiLargeText sapThemeHighlight-asColor"/>
+                                                <Text text="{i18n>completed}" class="sapUiTinyText"/>
+                                            </VBox>
+                                        </f:content>
+                                    </f:Card>
+                                    
+                                    <f:Card width="250px">
+                                        <f:header>
+                                            <cards:Header title="{i18n>averageRating}" iconSrc="sap-icon://customer-and-supplier"/>
+                                        </f:header>
+                                        <f:content>
+                                            <VBox class="sapUiContentPadding" alignItems="Center">
+                                                <Text text="{marketplace>/stats/averageRating}" class="sapUiLargeText sapThemePositive-asColor"/>
+                                                <RatingIndicator value="{marketplace>/stats/averageRating}" maxValue="5" displayOnly="true"/>
+                                            </VBox>
+                                        </f:content>
+                                    </f:Card>
+                                </HBox>
+
+                                <!-- Search and Filters -->
+                                <Panel headerText="{i18n>searchAndFilters}" expandable="true" expanded="true">
+                                    <content>
+                                        <form:SimpleForm editable="true" layout="ResponsiveGridLayout" class="sapUiContentPadding">
+                                            <form:content>
+                                                <Label text="{i18n>searchAgents}"/>
+                                                <SearchField id="agentSearch" 
+                                                           width="100%" 
+                                                           placeholder="{i18n>searchPlaceholder}"
+                                                           search="onSearchAgents"/>
+                                                
+                                                <Label text="{i18n>category}"/>
+                                                <ComboBox id="categoryFilter" 
+                                                          selectedKey="{marketplace>/filters/category}"
+                                                          items="{marketplace>/categories}"
+                                                          selectionChange="onCategoryFilter">
+                                                    <core:Item key="{key}" text="{text}"/>
+                                                </ComboBox>
+                                                
+                                                <Label text="{i18n>capability}"/>
+                                                <MultiComboBox id="capabilityFilter"
+                                                              selectedKeys="{marketplace>/filters/capabilities}"
+                                                              items="{marketplace>/capabilities}"
+                                                              selectionFinish="onCapabilityFilter">
+                                                    <core:Item key="{key}" text="{text}"/>
+                                                </MultiComboBox>
+                                                
+                                                <Label text="{i18n>priceRange}"/>
+                                                <RangeSlider id="priceRange"
+                                                           min="0"
+                                                           max="1000"
+                                                           value="{marketplace>/filters/priceMin}"
+                                                           value2="{marketplace>/filters/priceMax}"
+                                                           liveChange="onPriceRangeChange"
+                                                           width="100%"/>
+                                                
+                                                <Label text="{i18n>rating}"/>
+                                                <RatingIndicator id="ratingFilter"
+                                                               value="{marketplace>/filters/minRating}"
+                                                               change="onRatingFilter"
+                                                               tooltip="{i18n>minimumRating}"/>
+                                                
+                                                <Label text="{i18n>availability}"/>
+                                                <Switch id="availabilityFilter"
+                                                       state="{marketplace>/filters/availableOnly}"
+                                                       change="onAvailabilityFilter"
+                                                       customTextOn="{i18n>availableOnly}"
+                                                       customTextOff="{i18n>all}"/>
+                                            </form:content>
+                                        </form:SimpleForm>
+                                    </content>
+                                </Panel>
+                            </VBox>
+                        </f:content>
+                    </f:DynamicPageHeader>
+                </f:header>
+
+                <!-- Main Content -->
+                <f:content>
+                    <IconTabBar id="marketplaceTabBar" expanded="true" stretchContentHeight="true">
+                        
+                        <!-- Agent Browser Tab -->
+                        <items>
+                            <IconTabFilter key="browse" text="{i18n>browseAgents}" icon="sap-icon://grid">
+                                <content>
+                                    <VBox class="sapUiMediumMargin">
+                                        
+                                        <!-- View Toggle and Sort -->
+                                        <Toolbar>
+                                            <Title text="{i18n>availableAgents}" level="H2"/>
+                                            <ToolbarSpacer/>
+                                            <SegmentedButton id="viewToggle" selectedKey="grid">
+                                                <items>
+                                                    <SegmentedButtonItem key="grid" icon="sap-icon://grid" press="onViewToggle"/>
+                                                    <SegmentedButtonItem key="list" icon="sap-icon://list" press="onViewToggle"/>
+                                                </items>
+                                            </SegmentedButton>
+                                            <ComboBox id="sortBy" 
+                                                      selectedKey="{marketplace>/sortBy}"
+                                                      items="{marketplace>/sortOptions}"
+                                                      selectionChange="onSortChange"
+                                                      class="sapUiTinyMarginBegin">
+                                                <core:Item key="{key}" text="{text}"/>
+                                            </ComboBox>
+                                        </Toolbar>
+
+                                        <!-- Agent Grid View -->
+                                        <ScrollContainer id="agentGridContainer" 
+                                                        height="100%" 
+                                                        width="100%" 
+                                                        horizontal="false" 
+                                                        vertical="true"
+                                                        visible="{= ${marketplace>/viewMode} === 'grid'}">
+                                            <layout:Grid defaultSpan="XL3 L4 M6 S12" class="sapUiResponsiveMargin">
+                                                <f:Card class="agentCard sapUiMediumMargin" 
+                                                        items="{marketplace>/agents}"
+                                                        press="onAgentPress">
+                                                    <f:header>
+                                                        <cards:Header title="{name}" 
+                                                                     subtitle="{owner}"
+                                                                     iconSrc="sap-icon://collaborate"
+                                                                     statusText="{status}"
+                                                                     statusColor="{path: 'status', formatter: '.formatStatusColor'}"/>
+                                                    </f:header>
+                                                    <f:content>
+                                                        <VBox class="sapUiContentPadding">
+                                                            
+                                                            <!-- Agent Info -->
+                                                            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                                                <Text text="{i18n>category}" class="sapUiTinyText"/>
+                                                                <Text text="{category}" class="sapThemeHighlight-asColor"/>
+                                                            </HBox>
+                                                            
+                                                            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                                                <Text text="{i18n>rating}" class="sapUiTinyText"/>
+                                                                <RatingIndicator value="{rating}" maxValue="5" displayOnly="true" iconSize="0.75rem"/>
+                                                            </HBox>
+                                                            
+                                                            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                                                <Text text="{i18n>price}" class="sapUiTinyText"/>
+                                                                <Text text="{price} A2A" class="sapThemeHighlight-asColor"/>
+                                                            </HBox>
+                                                            
+                                                            <!-- Capabilities -->
+                                                            <Text text="{i18n>capabilities}" class="sapUiTinyText sapUiTinyMarginTop"/>
+                                                            <HBox wrap="Wrap" class="sapUiTinyMarginTop">
+                                                                <Token text="{capability}" 
+                                                                       class="sapUiTinyMarginEnd sapUiTinyMarginBottom"
+                                                                       items="{capabilities}"/>
+                                                            </HBox>
+                                                            
+                                                            <!-- Description -->
+                                                            <Text text="{description}" 
+                                                                  maxLines="3" 
+                                                                  class="sapUiTinyText sapUiTinyMarginTop"/>
+                                                            
+                                                            <!-- Action Buttons -->
+                                                            <HBox justifyContent="SpaceBetween" class="sapUiMediumMarginTop">
+                                                                <Button text="{i18n>viewDetails}" 
+                                                                        type="Transparent" 
+                                                                        press="onViewAgentDetails"/>
+                                                                <Button text="{i18n>requestService}" 
+                                                                        type="Emphasized" 
+                                                                        press="onRequestService"
+                                                                        enabled="{= ${status} === 'Available'}"/>
+                                                            </HBox>
+                                                        </VBox>
+                                                    </f:content>
+                                                </f:Card>
+                                            </layout:Grid>
+                                        </ScrollContainer>
+
+                                        <!-- Agent List View with Variant Management -->
+                                        <Table id="agentListTable" 
+                                               items="{marketplace>/agents}" 
+                                               growing="true" 
+                                               growingThreshold="20"
+                                               mode="SingleSelect"
+                                               selectionChange="onAgentSelect"
+                                               visible="{= ${marketplace>/viewMode} === 'list'}">
+                                            <headerToolbar>
+                                                <Toolbar>
+                                                    <vm:VariantManagement id="agentListVariant"
+                                                                      showExecuteOnSelection="true"
+                                                                      showShare="true"
+                                                                      showSetAsDefault="true"
+                                                                      standardItemText="{i18n>defaultView}"
+                                                                      select="onVariantSelect"
+                                                                      save="onVariantSave"
+                                                                      manage="onVariantManage"/>
+                                                    <ToolbarSpacer/>
+                                                    <Button icon="sap-icon://action-settings" 
+                                                           tooltip="{i18n>tableSettings}"
+                                                           press="onAgentTableSettings"/>
+                                                </Toolbar>
+                                            </headerToolbar>
+                                            <columns>
+                                                <Column width="4rem">
+                                                    <Text text="{i18n>status}"/>
+                                                </Column>
+                                                <Column width="12rem">
+                                                    <Text text="{i18n>agentName}"/>
+                                                </Column>
+                                                <Column width="8rem">
+                                                    <Text text="{i18n>category}"/>
+                                                </Column>
+                                                <Column width="8rem">
+                                                    <Text text="{i18n>owner}"/>
+                                                </Column>
+                                                <Column width="6rem" hAlign="Center">
+                                                    <Text text="{i18n>rating}"/>
+                                                </Column>
+                                                <Column width="6rem" hAlign="End">
+                                                    <Text text="{i18n>price}"/>
+                                                </Column>
+                                                <Column width="10rem">
+                                                    <Text text="{i18n>capabilities}"/>
+                                                </Column>
+                                                <Column width="8rem" hAlign="Center">
+                                                    <Text text="{i18n>actions}"/>
+                                                </Column>
+                                            </columns>
+                                            <items>
+                                                <ColumnListItem press="onAgentPress">
+                                                    <cells>
+                                                        <ObjectStatus text="{status}" 
+                                                                      state="{path: 'status', formatter: '.formatStatusState'}"/>
+                                                        <VBox>
+                                                            <Link text="{name}" press="onAgentPress" class="sapThemeHighlight-asColor"/>
+                                                            <Text text="{description}" 
+                                                                  maxLines="1" 
+                                                                  class="sapUiTinyText"/>
+                                                        </VBox>
+                                                        <Text text="{category}"/>
+                                                        <Text text="{owner}"/>
+                                                        <RatingIndicator value="{rating}" maxValue="5" displayOnly="true" iconSize="0.75rem"/>
+                                                        <Text text="{price} A2A"/>
+                                                        <HBox wrap="Wrap">
+                                                            <Token text="{capability}" 
+                                                                   class="sapUiTinyMarginEnd"
+                                                                   items="{capabilities}"/>
+                                                        </HBox>
+                                                        <HBox>
+                                                            <Button icon="sap-icon://detail-view" 
+                                                                    type="Transparent" 
+                                                                    tooltip="{i18n>viewDetails}"
+                                                                    press="onViewAgentDetails"
+                                                                    class="sapUiTinyMarginEnd"/>
+                                                            <Button icon="sap-icon://request" 
+                                                                    type="Emphasized" 
+                                                                    tooltip="{i18n>requestService}"
+                                                                    press="onRequestService"
+                                                                    enabled="{= ${status} === 'Available'}"/>
+                                                        </HBox>
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+                                        </Table>
+                                    </VBox>
+                                </content>
+                            </IconTabFilter>
+
+                            <!-- My Requests Tab -->
+                            <IconTabFilter key="requests" text="{i18n>myRequests}" icon="sap-icon://sales-order">
+                                <content>
+                                    <VBox class="sapUiMediumMargin">
+                                        
+                                        <Title text="{i18n>serviceRequests}" level="H2" class="sapUiMediumMarginBottom"/>
+                                        
+                                        <!-- Request Status Cards -->
+                                        <HBox wrap="Wrap" class="sapUiMediumMarginBottom">
+                                            <f:Card class="sapUiMediumMarginEnd" width="200px">
+                                                <f:content>
+                                                    <VBox class="sapUiContentPadding" alignItems="Center">
+                                                        <micro:RadialMicroChart percentage="{marketplace>/requestStats/pending}" size="M" class="sapUiTinyMarginBottom"/>
+                                                        <Text text="{i18n>pendingRequests}" class="sapUiTinyText"/>
+                                                        <Text text="{marketplace>/requestStats/pendingCount}" class="sapThemeWarning-asColor"/>
+                                                    </VBox>
+                                                </f:content>
+                                            </f:Card>
+                                            
+                                            <f:Card class="sapUiMediumMarginEnd" width="200px">
+                                                <f:content>
+                                                    <VBox class="sapUiContentPadding" alignItems="Center">
+                                                        <micro:RadialMicroChart percentage="{marketplace>/requestStats/active}" size="M" class="sapUiTinyMarginBottom"/>
+                                                        <Text text="{i18n>activeRequests}" class="sapUiTinyText"/>
+                                                        <Text text="{marketplace>/requestStats/activeCount}" class="sapThemePositive-asColor"/>
+                                                    </VBox>
+                                                </f:content>
+                                            </f:Card>
+                                            
+                                            <f:Card width="200px">
+                                                <f:content>
+                                                    <VBox class="sapUiContentPadding" alignItems="Center">
+                                                        <micro:RadialMicroChart percentage="{marketplace>/requestStats/completed}" size="M" class="sapUiTinyMarginBottom"/>
+                                                        <Text text="{i18n>completedRequests}" class="sapUiTinyText"/>
+                                                        <Text text="{marketplace>/requestStats/completedCount}" class="sapThemeHighlight-asColor"/>
+                                                    </VBox>
+                                                </f:content>
+                                            </f:Card>
+                                        </HBox>
+
+                                        <!-- Requests Table -->
+                                        <Table id="requestsTable" 
+                                               items="{marketplace>/userRequests}" 
+                                               growing="true" 
+                                               growingThreshold="20">
+                                            <headerToolbar>
+                                                <Toolbar>
+                                                    <Title text="{i18n>yourServiceRequests}"/>
+                                                    <ToolbarSpacer/>
+                                                    <ComboBox id="requestStatusFilter" 
+                                                              placeholder="{i18n>filterByStatus}"
+                                                              items="{marketplace>/requestStatuses}"
+                                                              selectionChange="onRequestStatusFilter">
+                                                        <core:Item key="{key}" text="{text}"/>
+                                                    </ComboBox>
+                                                </Toolbar>
+                                            </headerToolbar>
+                                            <columns>
+                                                <Column><Text text="{i18n>requestId}"/></Column>
+                                                <Column><Text text="{i18n>agentName}"/></Column>
+                                                <Column><Text text="{i18n>service}"/></Column>
+                                                <Column><Text text="{i18n>status}"/></Column>
+                                                <Column><Text text="{i18n>requestDate}"/></Column>
+                                                <Column><Text text="{i18n>completionDate}"/></Column>
+                                                <Column><Text text="{i18n>cost}"/></Column>
+                                                <Column><Text text="{i18n>actions}"/></Column>
+                                            </columns>
+                                            <items>
+                                                <ColumnListItem>
+                                                    <cells>
+                                                        <Text text="#{requestId}"/>
+                                                        <Link text="{agentName}" press="onViewAgentFromRequest"/>
+                                                        <Text text="{serviceName}"/>
+                                                        <ObjectStatus text="{status}" 
+                                                                      state="{path: 'status', formatter: '.formatRequestStatusState'}"/>
+                                                        <Text text="{path: 'requestDate', type: 'sap.ui.model.odata.type.DateTimeOffset'}"/>
+                                                        <Text text="{path: 'completionDate', type: 'sap.ui.model.odata.type.DateTimeOffset'}"/>
+                                                        <Text text="{cost} A2A"/>
+                                                        <HBox>
+                                                            <Button icon="sap-icon://detail-view" 
+                                                                    type="Transparent" 
+                                                                    tooltip="{i18n>viewDetails}"
+                                                                    press="onViewRequestDetails"
+                                                                    class="sapUiTinyMarginEnd"/>
+                                                            <Button text="{i18n>cancel}" 
+                                                                    type="Reject" 
+                                                                    press="onCancelRequest"
+                                                                    visible="{= ${status} === 'Pending' || ${status} === 'Active'}"
+                                                                    class="sapUiTinyMarginEnd"/>
+                                                            <Button text="{i18n>rate}" 
+                                                                    type="Accept" 
+                                                                    press="onRateService"
+                                                                    visible="{= ${status} === 'Completed' && !${rated}}"/>
+                                                        </HBox>
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+                                        </Table>
+                                    </VBox>
+                                </content>
+                            </IconTabFilter>
+
+                            <!-- My Agents Tab -->
+                            <IconTabFilter key="myAgents" text="{i18n>myAgents}" icon="sap-icon://employee">
+                                <content>
+                                    <VBox class="sapUiMediumMargin">
+                                        
+                                        <!-- Register New Agent Button -->
+                                        <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiMediumMarginBottom">
+                                            <Title text="{i18n>yourAgents}" level="H2"/>
+                                            <Button text="{i18n>registerNewAgent}" 
+                                                    type="Emphasized" 
+                                                    icon="sap-icon://add"
+                                                    press="onRegisterAgent"/>
+                                        </HBox>
+
+                                        <!-- Agent Management Table -->
+                                        <Table id="myAgentsTable" 
+                                               items="{marketplace>/userAgents}" 
+                                               growing="true" 
+                                               growingThreshold="20">
+                                            <columns>
+                                                <Column><Text text="{i18n>agentName}"/></Column>
+                                                <Column><Text text="{i18n>category}"/></Column>
+                                                <Column><Text text="{i18n>status}"/></Column>
+                                                <Column><Text text="{i18n>rating}"/></Column>
+                                                <Column><Text text="{i18n>totalEarnings}"/></Column>
+                                                <Column><Text text="{i18n>activeServices}"/></Column>
+                                                <Column><Text text="{i18n>lastActivity}"/></Column>
+                                                <Column><Text text="{i18n>actions}"/></Column>
+                                            </columns>
+                                            <items>
+                                                <ColumnListItem>
+                                                    <cells>
+                                                        <VBox>
+                                                            <Link text="{name}" press="onManageAgent" class="sapThemeHighlight-asColor"/>
+                                                            <Text text="{description}" maxLines="1" class="sapUiTinyText"/>
+                                                        </VBox>
+                                                        <Text text="{category}"/>
+                                                        <ObjectStatus text="{status}" 
+                                                                      state="{path: 'status', formatter: '.formatStatusState'}"/>
+                                                        <RatingIndicator value="{rating}" maxValue="5" displayOnly="true" iconSize="0.75rem"/>
+                                                        <Text text="{totalEarnings} A2A" class="sapThemePositive-asColor"/>
+                                                        <Text text="{activeServices}"/>
+                                                        <Text text="{path: 'lastActivity', type: 'sap.ui.model.odata.type.DateTimeOffset'}"/>
+                                                        <HBox>
+                                                            <Button icon="sap-icon://edit" 
+                                                                    type="Transparent" 
+                                                                    tooltip="{i18n>editAgent}"
+                                                                    press="onEditAgent"
+                                                                    class="sapUiTinyMarginEnd"/>
+                                                            <Button icon="{= ${status} === 'Available' ? 'sap-icon://pause' : 'sap-icon://play'}" 
+                                                                    type="Transparent" 
+                                                                    tooltip="{= ${status} === 'Available' ? ${i18n>pauseAgent} : ${i18n>activateAgent}}"
+                                                                    press="onToggleAgentStatus"
+                                                                    class="sapUiTinyMarginEnd"/>
+                                                            <Button icon="sap-icon://delete" 
+                                                                    type="Transparent" 
+                                                                    tooltip="{i18n>deleteAgent}"
+                                                                    press="onDeleteAgent"/>
+                                                        </HBox>
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+                                        </Table>
+                                    </VBox>
+                                </content>
+                            </IconTabFilter>
+
+                        </items>
+                    </IconTabBar>
+                </f:content>
+            </f:DynamicPage>
+        </content>
+    </Page>
+
+    <!-- Service Request Dialog -->
+    <Dialog id="serviceRequestDialog" 
+            title="{i18n>requestService}" 
+            contentWidth="500px"
+            resizable="true"
+            draggable="true">
+        <content>
+            <form:SimpleForm editable="true" layout="ResponsiveGridLayout" class="sapUiContentPadding">
+                <form:content>
+                    <Label text="{i18n>selectedAgent}" required="true"/>
+                    <Text text="{marketplace>/selectedAgent/name}" class="sapThemeHighlight-asColor"/>
+                    
+                    <Label text="{i18n>serviceType}" required="true"/>
+                    <ComboBox id="serviceType" 
+                              selectedKey="{marketplace>/serviceRequest/serviceType}"
+                              items="{marketplace>/selectedAgent/services}">
+                        <core:Item key="{id}" text="{name}"/>
+                    </ComboBox>
+                    
+                    <Label text="{i18n>parameters}"/>
+                    <TextArea id="serviceParameters" 
+                              value="{marketplace>/serviceRequest/parameters}"
+                              rows="4"
+                              placeholder="{i18n>enterServiceParameters}"/>
+                    
+                    <Label text="{i18n>deadline}"/>
+                    <DateTimePicker id="serviceDeadline" 
+                                   value="{marketplace>/serviceRequest/deadline}"
+                                   placeholder="{i18n>selectDeadline}"/>
+                    
+                    <Label text="{i18n>estimatedCost}"/>
+                    <Text text="{marketplace>/serviceRequest/estimatedCost} A2A" class="sapThemePositive-asColor"/>
+                    
+                    <Label text="{i18n>escrowAmount}"/>
+                    <Input id="escrowAmount" 
+                           value="{marketplace>/serviceRequest/escrowAmount}"
+                           type="Number"
+                           placeholder="{i18n>enterEscrowAmount}"/>
+                </form:content>
+            </form:SimpleForm>
+        </content>
+        <beginButton>
+            <Button text="{i18n>submitRequest}" 
+                    type="Emphasized" 
+                    press="onSubmitServiceRequest"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>cancel}" press="onCancelServiceRequest"/>
+        </endButton>
+    </Dialog>
+
+    <!-- Agent Registration Dialog -->
+    <Dialog id="agentRegistrationDialog" 
+            title="{i18n>registerAgent}" 
+            contentWidth="600px"
+            resizable="true"
+            draggable="true">
+        <content>
+            <form:SimpleForm editable="true" layout="ResponsiveGridLayout" class="sapUiContentPadding">
+                <form:content>
+                    <Label text="{i18n>agentName}" required="true"/>
+                    <Input id="agentName" value="{marketplace>/newAgent/name}" required="true"/>
+                    
+                    <Label text="{i18n>description}" required="true"/>
+                    <TextArea id="agentDescription" 
+                              value="{marketplace>/newAgent/description}"
+                              rows="3"
+                              required="true"/>
+                    
+                    <Label text="{i18n>category}" required="true"/>
+                    <ComboBox id="agentCategory" 
+                              selectedKey="{marketplace>/newAgent/category}"
+                              items="{marketplace>/categories}">
+                        <core:Item key="{key}" text="{text}"/>
+                    </ComboBox>
+                    
+                    <Label text="{i18n>endpoint}" required="true"/>
+                    <Input id="agentEndpoint" 
+                           value="{marketplace>/newAgent/endpoint}"
+                           placeholder="https://your-agent-endpoint.com"
+                           required="true"/>
+                    
+                    <Label text="{i18n>capabilities}" required="true"/>
+                    <MultiComboBox id="agentCapabilities"
+                                  selectedKeys="{marketplace>/newAgent/capabilities}"
+                                  items="{marketplace>/capabilities}">
+                        <core:Item key="{key}" text="{text}"/>
+                    </MultiComboBox>
+                    
+                    <Label text="{i18n>pricing}"/>
+                    <Input id="agentPricing" 
+                           value="{marketplace>/newAgent/pricing}"
+                           type="Number"
+                           placeholder="{i18n>pricePerService}"/>
+                    
+                    <Label text="{i18n>minimumStake}"/>
+                    <Input id="minimumStake" 
+                           value="{marketplace>/newAgent/minimumStake}"
+                           type="Number"
+                           placeholder="{i18n>requiredStakeAmount}"/>
+                </form:content>
+            </form:SimpleForm>
+        </content>
+        <beginButton>
+            <Button text="{i18n>register}" 
+                    type="Emphasized" 
+                    press="onConfirmAgentRegistration"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>cancel}" press="onCancelAgentRegistration"/>
+        </endButton>
+    </Dialog>
+
+</mvc:View>

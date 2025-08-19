@@ -1,0 +1,32 @@
+{
+  "VCAP_SERVICES": {
+    "hana": [
+      {
+        "name": "a2a-network-db",
+        "label": "hana", 
+        "tags": ["hana", "database", "relational"],
+        "credentials": {
+          "host": "${HANA_HOST}",
+          "port": "${HANA_PORT}",
+          "user": "${HANA_USER}",
+          "password": "${HANA_PASSWORD}",
+          "schema": "${HANA_DATABASE}",
+          "encrypt": "${HANA_ENCRYPT}",
+          "sslValidateCertificate": "${HANA_SSL_VALIDATE_CERTIFICATE}",
+          "pooling": true,
+          "pool": {
+            "min": 0,
+            "max": 10,
+            "testOnBorrow": false,
+            "acquireTimeoutMillis": 30000,
+            "idleTimeoutMillis": 120000
+          }
+        }
+      }
+    ]
+  },
+  "CDS_REQUIRES_DB_KIND": "hana-cloud",
+  "CDS_MULTITENANCY": "false",
+  "CDS_TENANT": "${CDS_TENANT}",
+  "CDS_REQUIRES_DB_SCHEMA": "${HANA_DATABASE}"
+}

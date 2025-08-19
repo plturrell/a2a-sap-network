@@ -10,14 +10,14 @@
  */
 
 const { v4: uuidv4 } = require('uuid');
-const loggingService = require('./logging-service');
+const loggingService = require('./sapLoggingService');
 
 class ErrorReportingService {
     constructor() {
         this.errorStore = new Map();
         this.errorStats = {
             total: 0,
-            byCategory: {},
+            byCategory: {\n        this.intervals = new Map(); // Track intervals for cleanup},
             byComponent: {},
             byUser: {},
             bySeverity: {
@@ -39,7 +39,7 @@ class ErrorReportingService {
         this.logger = loggingService.child('error-reporting');
         
         // Clean up old errors every hour
-        setInterval(() => this._cleanupOldErrors(), 3600000);
+        this.intervals.set('interval_42', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => this._cleanupOldErrors(), 3600000));
     }
 
     /**

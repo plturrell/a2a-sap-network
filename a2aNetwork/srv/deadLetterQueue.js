@@ -12,6 +12,24 @@ const Redis = require('ioredis');
 const { v4: uuidv4 } = require('uuid');
 const EventEmitter = require('events');
 
+// Track intervals for cleanup
+const activeIntervals = new Map();
+
+function stopAllIntervals() {
+    for (const [name, intervalId] of activeIntervals) {
+        clearInterval(intervalId);
+    }
+    activeIntervals.clear();
+}
+
+function shutdown() {
+    stopAllIntervals();
+}
+
+// Export cleanup function
+module.exports.shutdown = shutdown;
+
+
 /**
  * Dead Letter Queue Service
  * Handles failed messages with intelligent retry and recovery mechanisms
@@ -347,16 +365,15 @@ class DeadLetterQueueService extends cds.Service {
      * Background processor for retrying messages
      */
     _startRetryProcessor() {
-        setInterval(async () => {
+        activeIntervals.set('interval_368', setInterval(async () => {
             try {
                 // Get messages ready for retry
                 const currentTime = Date.now();
                 const readyMessages = await this.redis.zrangebyscore(
-                    'retry_queue', 
-                    '-inf', 
+                    'retry_queue', '-inf', 
                     currentTime, 
                     'LIMIT', 0, this.config.batchProcessSize
-                );
+                ));
                 
                 if (readyMessages.length === 0) return;
                 
@@ -383,7 +400,7 @@ class DeadLetterQueueService extends cds.Service {
      * Background processor for analytics and health monitoring
      */
     _startAnalyticsProcessor() {
-        setInterval(async () => {
+        activeIntervals.set('interval_404', setInterval(async () => {
             try {
                 // Generate failure rate alerts
                 const stats = await this._getDLQStats({ data: {} });
@@ -392,7 +409,7 @@ class DeadLetterQueueService extends cds.Service {
                     this.eventEmitter.emit('highFailureRateAlert', {
                         failureRate: stats.failureRate,
                         threshold: this.config.alertThresholds.highFailureRate,
-                        timestamp: new Date()
+                        timestamp: new Date())
                     });
                 }
                 
@@ -502,33 +519,39 @@ class DeadLetterQueueService extends cds.Service {
     }
 
     async _markMessageAsPoison(failedMessage) {
-        const { PoisonMessages } = this.entities;
-        
-        await INSERT.into(PoisonMessages).entries({
-            poisonId: uuidv4(),
-            originalDlqId: failedMessage.dlqId,
-            messageId: failedMessage.messageId,
-            originalMessage: failedMessage.originalMessage,
-            poisonReason: `Exceeded retry limit with poison score: ${failedMessage.poisonScore}`,
-            markedAt: new Date(),
-            agentId: failedMessage.agentId,
-            messageType: failedMessage.messageType,
-            totalRetries: failedMessage.retryCount
-        });
-        
-        // Update original message status
-        const { FailedMessages } = this.entities;
-        await UPDATE(FailedMessages)
-            .set({ status: 'poison' })
-            .where({ dlqId: failedMessage.dlqId });
-        
-        // Remove from retry queue
-        await this.redis.zrem('retry_queue', failedMessage.dlqId);
-        
-        this.log.error(`Message marked as poison: ${failedMessage.messageId}`, {
-            retryCount: failedMessage.retryCount,
-            poisonScore: failedMessage.poisonScore
-        });
+        try {
+            const { PoisonMessages } = this.entities;
+            
+            await INSERT.into(PoisonMessages).entries({
+                poisonId: uuidv4(),
+                originalDlqId: failedMessage.dlqId,
+                messageId: failedMessage.messageId,
+                originalMessage: failedMessage.originalMessage,
+                poisonReason: `Exceeded retry limit with poison score: ${failedMessage.poisonScore}`,
+                markedAt: new Date(),
+                agentId: failedMessage.agentId,
+                messageType: failedMessage.messageType,
+                totalRetries: failedMessage.retryCount
+            });
+            
+            // Update original message status
+            const { FailedMessages } = this.entities;
+            await UPDATE(FailedMessages)
+                .set({ status: 'poison' })
+                .where({ dlqId: failedMessage.dlqId });
+            
+            // Remove from retry queue
+            await this.redis.zrem('retry_queue', failedMessage.dlqId);
+            
+            this.log.error(`Message marked as poison: ${failedMessage.messageId}`, {
+                retryCount: failedMessage.retryCount,
+                poisonScore: failedMessage.poisonScore
+            });
+        } catch (error) {
+            this.log.error('Failed to mark message as poison:', error);
+            // Still throw the error to maintain the failure chain
+            throw new Error(`Failed to mark message as poison: ${error.message}`);
+        }
     }
 
     async _getMaxRetries(messageType, agentId) {
@@ -629,7 +652,7 @@ class DeadLetterQueueService extends cds.Service {
                 .where({ addedAt: { '>=': yesterday } });
             
             // Calculate failure rate (simplified)
-            const totalRecentMessages = 1000; // This would come from your message metrics
+            const totalRecentMessages = 0; // Real message metrics should be used here
             const failureRate = totalRecentMessages > 0 ? 
                 recentFailures.count / totalRecentMessages : 0;
             

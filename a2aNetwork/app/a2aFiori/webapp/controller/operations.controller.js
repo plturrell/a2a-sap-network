@@ -8,10 +8,20 @@ sap.ui.define([
     "use strict";
 
     return BaseController.extend("a2a.network.fiori.controller.Operations", {
-        
-        onInit: function() {
+
+        getCurrentUserEmail() {
+            try {
+                return sap.ushell.Container.getUser().getEmail() ||
+                       this.getOwnerComponent().getModel("app").getProperty("/currentUser/email") ||
+                       "user@a2a.network";
+            } catch (error) {
+                return "user@a2a.network";
+            }
+        },
+
+        onInit() {
             // Initialize operations model
-            var oOperationsModel = new JSONModel({
+            const oOperationsModel = new JSONModel({
                 systemHealth: {
                     status: "healthy",
                     uptime: "0h 0m",
@@ -54,19 +64,19 @@ sap.ui.define([
                 ]
             });
             this.getView().setModel(oOperationsModel, "operations");
-            
+
             // Load operations data
             this._loadOperationsData();
-            
+
             // Set up auto-refresh
             this._setupAutoRefresh();
-            
+
             Log.info("Operations controller initialized");
         },
 
-        _loadOperationsData: async function() {
+        async _loadOperationsData() {
             this.showBusyIndicator();
-            
+
             try {
                 // Load system health
                 const healthResponse = await fetch("/health");
@@ -74,21 +84,21 @@ sap.ui.define([
                     const healthData = await healthResponse.json();
                     this._updateSystemHealth(healthData);
                 }
-                
+
                 // Load performance metrics
                 const metricsResponse = await fetch("/metrics");
                 if (metricsResponse.ok) {
                     const metricsText = await metricsResponse.text();
                     this._updatePerformanceMetrics(metricsText);
                 }
-                
+
                 // Load operations service data
                 const opsResponse = await fetch("/api/v1/operations/status");
                 if (opsResponse.ok) {
                     const opsData = await opsResponse.json();
                     this._updateOperationsData(opsData);
                 }
-                
+
             } catch (error) {
                 Log.error("Failed to load operations data", error);
                 MessageToast.show(this.getResourceBundle().getText("operationsLoadError"));
@@ -97,7 +107,7 @@ sap.ui.define([
             }
         },
 
-        _updateSystemHealth: function(healthData) {
+        _updateSystemHealth(healthData) {
             const oModel = this.getView().getModel("operations");
             oModel.setProperty("/systemHealth", {
                 status: healthData.status || "unknown",
@@ -109,10 +119,10 @@ sap.ui.define([
             });
         },
 
-        _updatePerformanceMetrics: function(metricsText) {
+        _updatePerformanceMetrics(metricsText) {
             // Parse Prometheus format metrics
             const metrics = this._parsePrometheusMetrics(metricsText);
-            
+
             const oModel = this.getView().getModel("operations");
             oModel.setProperty("/performanceMetrics", {
                 cpuUsage: metrics.cpu_usage || 0,
@@ -124,49 +134,51 @@ sap.ui.define([
             });
         },
 
-        _parsePrometheusMetrics: function(metricsText) {
+        _parsePrometheusMetrics(metricsText) {
             const metrics = {};
-            const lines = metricsText.split('\n');
-            
+            const lines = metricsText.split("\n");
+
             lines.forEach(line => {
-                if (line.startsWith('#') || !line.includes(' ')) return;
-                
-                const [nameWithLabels, value] = line.split(' ');
-                const metricName = nameWithLabels.split('{')[0];
+                if (line.startsWith("#") || !line.includes(" ")) {
+                    return;
+                }
+
+                const [nameWithLabels, value] = line.split(" ");
+                const metricName = nameWithLabels.split("{")[0];
                 metrics[metricName] = parseFloat(value) || 0;
             });
-            
+
             return metrics;
         },
 
-        _updateOperationsData: function(opsData) {
+        _updateOperationsData(opsData) {
             const oModel = this.getView().getModel("operations");
-            
+
             if (opsData.alerts) {
                 oModel.setProperty("/alerts", opsData.alerts);
             }
-            
+
             if (opsData.recentOperations) {
                 oModel.setProperty("/recentOperations", opsData.recentOperations);
             }
-            
+
             if (opsData.services) {
                 oModel.setProperty("/services", opsData.services);
             }
         },
 
-        _setupAutoRefresh: function() {
+        _setupAutoRefresh() {
             // Refresh every 30 seconds
             this._refreshInterval = setInterval(() => {
                 this._loadOperationsData();
             }, 30000);
         },
 
-        onRefreshHealth: function() {
+        onRefreshHealth() {
             this._loadOperationsData();
         },
 
-        onSystemRestart: function() {
+        onSystemRestart() {
             MessageBox.confirm(
                 this.getResourceBundle().getText("confirmSystemRestart"),
                 {
@@ -180,25 +192,25 @@ sap.ui.define([
             );
         },
 
-        _restartSystem: async function() {
+        async _restartSystem() {
             try {
                 const response = await fetch("/api/v1/operations/restart", {
                     method: "POST"
                 });
-                
+
                 if (response.ok) {
                     MessageToast.show(this.getResourceBundle().getText("systemRestartInitiated"));
                 } else {
                     MessageBox.error(this.getResourceBundle().getText("systemRestartFailed"));
                 }
-                
+
             } catch (error) {
                 Log.error("Failed to restart system", error);
                 MessageBox.error(this.getResourceBundle().getText("systemRestartError"));
             }
         },
 
-        onClearLogs: function() {
+        onClearLogs() {
             MessageBox.confirm(
                 this.getResourceBundle().getText("confirmClearLogs"),
                 {
@@ -212,115 +224,115 @@ sap.ui.define([
             );
         },
 
-        _clearLogs: async function() {
+        async _clearLogs() {
             try {
                 const response = await fetch("/api/v1/operations/logs", {
                     method: "DELETE"
                 });
-                
+
                 if (response.ok) {
                     MessageToast.show(this.getResourceBundle().getText("logsCleared"));
                 } else {
                     MessageBox.error(this.getResourceBundle().getText("logsClearFailed"));
                 }
-                
+
             } catch (error) {
                 Log.error("Failed to clear logs", error);
                 MessageBox.error(this.getResourceBundle().getText("logsClearError"));
             }
         },
 
-        onDownloadLogs: async function() {
+        async onDownloadLogs() {
             try {
                 const response = await fetch("/api/v1/operations/logs/download");
-                
+
                 if (response.ok) {
                     const blob = await response.blob();
                     const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
+                    const a = document.createElement("a");
                     a.href = url;
-                    a.download = `a2a-logs-${new Date().toISOString().split('T')[0]}.zip`;
+                    a.download = `a2a-logs-${new Date().toISOString().split("T")[0]}.zip`;
                     document.body.appendChild(a);
                     a.click();
                     window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
-                    
+
                     MessageToast.show(this.getResourceBundle().getText("logsDownloaded"));
                 } else {
                     MessageBox.error(this.getResourceBundle().getText("logsDownloadFailed"));
                 }
-                
+
             } catch (error) {
                 Log.error("Failed to download logs", error);
                 MessageBox.error(this.getResourceBundle().getText("logsDownloadError"));
             }
         },
 
-        onServiceAction: function(oEvent) {
+        onServiceAction(oEvent) {
             const oSource = oEvent.getSource();
             const sAction = oSource.data("action");
-            const oContext = oSource.getBindingContext("operations");
+            const _oContext = oSource.getBindingContext("operations");
             const oService = oContext.getObject();
-            
+
             switch (sAction) {
-                case "restart":
-                    this._restartService(oService.name);
-                    break;
-                case "stop":
-                    this._stopService(oService.name);
-                    break;
-                case "logs":
-                    this._viewServiceLogs(oService.name);
-                    break;
-                case "configure":
-                    this._configureService(oService.name);
-                    break;
-                case "scale":
-                    this._scaleService(oService.name);
-                    break;
-                default:
-                    MessageToast.show(this.getResourceBundle().getText("actionNotSupported", [sAction]));
+            case "restart":
+                this._restartService(oService.name);
+                break;
+            case "stop":
+                this._stopService(oService.name);
+                break;
+            case "logs":
+                this._viewServiceLogs(oService.name);
+                break;
+            case "configure":
+                this._configureService(oService.name);
+                break;
+            case "scale":
+                this._scaleService(oService.name);
+                break;
+            default:
+                MessageToast.show(this.getResourceBundle().getText("actionNotSupported", [sAction]));
             }
         },
 
-        _restartService: async function(sServiceName) {
+        async _restartService(sServiceName) {
             try {
                 const response = await fetch(`/api/v1/operations/services/${sServiceName}/restart`, {
                     method: "POST"
                 });
-                
+
                 if (response.ok) {
                     MessageToast.show(this.getResourceBundle().getText("serviceRestarted", [sServiceName]));
                     this._loadOperationsData();
                 } else {
                     MessageBox.error(this.getResourceBundle().getText("serviceRestartFailed"));
                 }
-                
+
             } catch (error) {
                 Log.error("Failed to restart service", error);
                 MessageBox.error(this.getResourceBundle().getText("serviceRestartError"));
             }
         },
 
-        _stopService: async function(sServiceName) {
+        async _stopService(sServiceName) {
             MessageBox.confirm(
                 this.getResourceBundle().getText("confirmStopService", [sServiceName]),
                 {
                     title: this.getResourceBundle().getText("stopService"),
-                    onClose: async (sAction) => {
+                    onClose: async(sAction) => {
                         if (sAction === MessageBox.Action.OK) {
                             try {
                                 const response = await fetch(`/api/v1/operations/services/${sServiceName}/stop`, {
                                     method: "POST"
                                 });
-                                
+
                                 if (response.ok) {
                                     MessageToast.show(this.getResourceBundle().getText("serviceStopped", [sServiceName]));
                                     this._loadOperationsData();
                                 } else {
                                     MessageBox.error(this.getResourceBundle().getText("serviceStopFailed"));
                                 }
-                                
+
                             } catch (error) {
                                 Log.error("Failed to stop service", error);
                                 MessageBox.error(this.getResourceBundle().getText("serviceStopError"));
@@ -331,7 +343,7 @@ sap.ui.define([
             );
         },
 
-        _viewServiceLogs: function(sServiceName) {
+        _viewServiceLogs(sServiceName) {
             // This could open a dialog with service logs or navigate to a logs view
             MessageBox.information(
                 this.getResourceBundle().getText("serviceLogsNotImplemented"),
@@ -341,72 +353,72 @@ sap.ui.define([
             );
         },
 
-        onAlertAction: function(oEvent) {
+        onAlertAction(oEvent) {
             const oSource = oEvent.getSource();
             const sAction = oSource.data("action");
-            const oContext = oSource.getBindingContext("operations");
+            const _oContext = oSource.getBindingContext("operations");
             const oAlert = oContext.getObject();
-            
+
             switch (sAction) {
-                case "acknowledge":
-                    this._acknowledgeAlert(oAlert.id);
-                    break;
-                case "dismiss":
-                    this._dismissAlert(oAlert.id);
-                    break;
-                case "resolve":
-                    this._resolveAlert(oAlert.id);
-                    break;
-                case "escalate":
-                    this._escalateAlert(oAlert.id);
-                    break;
-                default:
-                    MessageToast.show(this.getResourceBundle().getText("alertActionNotSupported", [sAction]));
+            case "acknowledge":
+                this._acknowledgeAlert(oAlert.id);
+                break;
+            case "dismiss":
+                this._dismissAlert(oAlert.id);
+                break;
+            case "resolve":
+                this._resolveAlert(oAlert.id);
+                break;
+            case "escalate":
+                this._escalateAlert(oAlert.id);
+                break;
+            default:
+                MessageToast.show(this.getResourceBundle().getText("alertActionNotSupported", [sAction]));
             }
         },
 
-        _acknowledgeAlert: async function(sAlertId) {
+        async _acknowledgeAlert(sAlertId) {
             try {
                 const response = await fetch(`/api/v1/operations/alerts/${sAlertId}/acknowledge`, {
                     method: "POST"
                 });
-                
+
                 if (response.ok) {
                     MessageToast.show(this.getResourceBundle().getText("alertAcknowledged"));
                     this._loadOperationsData();
                 } else {
                     MessageBox.error(this.getResourceBundle().getText("alertAcknowledgeFailed"));
                 }
-                
+
             } catch (error) {
                 Log.error("Failed to acknowledge alert", error);
                 MessageBox.error(this.getResourceBundle().getText("alertAcknowledgeError"));
             }
         },
 
-        _dismissAlert: async function(sAlertId) {
+        async _dismissAlert(sAlertId) {
             try {
                 const response = await fetch(`/api/v1/operations/alerts/${sAlertId}`, {
                     method: "DELETE"
                 });
-                
+
                 if (response.ok) {
                     MessageToast.show(this.getResourceBundle().getText("alertDismissed"));
                     this._loadOperationsData();
                 } else {
                     MessageBox.error(this.getResourceBundle().getText("alertDismissFailed"));
                 }
-                
+
             } catch (error) {
                 Log.error("Failed to dismiss alert", error);
                 MessageBox.error(this.getResourceBundle().getText("alertDismissError"));
             }
         },
 
-        onOperationDetails: function(oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("operations");
+        onOperationDetails(oEvent) {
+            const _oContext = oEvent.getSource().getBindingContext("operations");
             const oOperation = oContext.getObject();
-            
+
             // Show operation details in a dialog or navigate to details view
             const sDetails = `
 Operation: ${oOperation.type}
@@ -416,17 +428,17 @@ Duration: ${oOperation.duration}
 User: ${oOperation.user}
 Details: ${oOperation.details}
             `;
-            
+
             MessageBox.information(sDetails, {
                 title: this.getResourceBundle().getText("operationDetails")
             });
         },
 
-        onExport: function() {
+        onExport() {
             // Export operations data
             const oModel = this.getView().getModel("operations");
             const oData = oModel.getData();
-            
+
             const exportData = {
                 timestamp: new Date().toISOString(),
                 systemHealth: oData.systemHealth,
@@ -435,26 +447,26 @@ Details: ${oOperation.details}
                 alerts: oData.alerts,
                 recentOperations: oData.recentOperations
             };
-            
+
             // Create download
             const element = document.createElement("a");
-            element.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2)));
-            element.setAttribute("download", `a2a-operations-${new Date().toISOString().split('T')[0]}.json`);
+            element.setAttribute("href", `data:text/json;charset=utf-8,${ encodeURIComponent(JSON.stringify(exportData, null, 2))}`);
+            element.setAttribute("download", `a2a-operations-${new Date().toISOString().split("T")[0]}.json`);
             element.style.display = "none";
             document.body.appendChild(element);
             element.click();
             document.body.removeChild(element);
-            
+
             MessageToast.show(this.getResourceBundle().getText("operationsDataExported"));
         },
 
-        _configureService: function(sServiceName) {
+        _configureService(sServiceName) {
             // Open service configuration dialog
             MessageToast.show(this.getResourceBundle().getText("openingServiceConfiguration", [sServiceName]));
             // In production, open configuration dialog
         },
 
-        _scaleService: function(sServiceName) {
+        _scaleService(sServiceName) {
             // Open service scaling dialog
             if (!this._oScaleDialog) {
                 MessageBox.confirm(
@@ -473,7 +485,7 @@ Details: ${oOperation.details}
             }
         },
 
-        _resolveAlert: async function(sAlertId) {
+        async _resolveAlert(sAlertId) {
             try {
                 const response = await fetch(`/api/v1/operations/alerts/${sAlertId}/resolve`, {
                     method: "POST",
@@ -481,11 +493,11 @@ Details: ${oOperation.details}
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        resolvedBy: "current.user@sap.com",
+                        resolvedBy: this.getCurrentUserEmail(),
                         resolution: "Issue resolved"
                     })
                 });
-                
+
                 if (response.ok) {
                     MessageToast.show(this.getResourceBundle().getText("alertResolved"));
                     this._loadOperationsData();
@@ -497,7 +509,7 @@ Details: ${oOperation.details}
             }
         },
 
-        _escalateAlert: async function(sAlertId) {
+        async _escalateAlert(sAlertId) {
             MessageBox.confirm(
                 this.getResourceBundle().getText("escalateAlertConfirm"),
                 {
@@ -511,11 +523,11 @@ Details: ${oOperation.details}
                                         "Content-Type": "application/json"
                                     },
                                     body: JSON.stringify({
-                                        escalatedBy: "current.user@sap.com",
+                                        escalatedBy: this.getCurrentUserEmail(),
                                         escalationLevel: 2
                                     })
                                 });
-                                
+
                                 if (response.ok) {
                                     MessageToast.show(this.getResourceBundle().getText("alertEscalated"));
                                     this._loadOperationsData();
@@ -531,7 +543,7 @@ Details: ${oOperation.details}
             );
         },
 
-        onExit: function() {
+        onExit() {
             // Clean up auto-refresh interval
             if (this._refreshInterval) {
                 clearInterval(this._refreshInterval);

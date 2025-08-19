@@ -6,49 +6,49 @@ sap.ui.define([
     "use strict";
 
     return Controller.extend("a2a.network.fiori.controller.Workflows", {
-        formatter: formatter,
+        formatter,
 
-        onInit: function() {
+        onInit() {
             this.getRouter().getRoute("workflows").attachPatternMatched(this._onRouteMatched, this);
         },
 
-        _onRouteMatched: function() {
+        _onRouteMatched() {
             this.getView().getModel().refresh();
         },
 
-        onCreateWorkflow: function() {
+        onCreateWorkflow() {
             MessageToast.show("Create Workflow - Coming Soon");
         },
 
-        onWorkflowSelect: function(oEvent) {
-            var oItem = oEvent.getParameter("listItem");
-            var oContext = oItem.getBindingContext();
-            
+        onWorkflowSelect(oEvent) {
+            const oItem = oEvent.getParameter("listItem");
+            const _oContext = oItem.getBindingContext();
+
             // Update header
-            var oHeader = this.byId("workflowHeader");
+            const oHeader = this.byId("workflowHeader");
             oHeader.setBindingContext(oContext);
-            
+
             // Update executions table
-            var oTable = this.byId("executionsTable");
+            const oTable = this.byId("executionsTable");
             oTable.bindItems({
-                path: oContext.getPath() + "/executions",
+                path: `${oContext.getPath() }/executions`,
                 template: oTable.getItems()[0].clone()
             });
         },
 
-        onExecuteWorkflow: function() {
+        onExecuteWorkflow() {
             MessageToast.show("Execute Workflow");
         },
 
-        onEditWorkflow: function() {
+        onEditWorkflow() {
             MessageToast.show("Edit Workflow");
         },
 
-        onDeleteWorkflow: function() {
+        onDeleteWorkflow() {
             MessageToast.show("Delete Workflow");
         },
 
-        getRouter: function() {
+        getRouter() {
             return this.getOwnerComponent().getRouter();
         }
     });

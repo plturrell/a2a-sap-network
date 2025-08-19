@@ -1,0 +1,17 @@
+{
+  "agentType": "dataStandardizationAgent",
+  "name": "Data Standardization Agent",
+  "address": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+  "endpoint": "http://localhost:8001",
+  "capabilities": [
+    "data_standardization",
+    "schema_validation",
+    "format_conversion",
+    "data_normalization",
+    "quality_improvement"
+  ],
+  "description": "Agent 1 - Standardizes data formats and validates schemas",
+  "registrationTx": "0x961e18123da69e5a9811eb721fe1a935c8af7a2d2f4243c99681514741099c02",
+  "registrationBlock": 4,
+  "registeredAt": "2025-08-19T06:02:17.423Z"
+}

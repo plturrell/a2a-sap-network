@@ -10,8 +10,9 @@ using {
     sap.common.CodeList
 } from '@sap/cds/common';
 
-using { a2a.network.tracking } from './change-tracking';
-using { a2a.network.aspects } from './sap-aspects';
+// using { a2a.network.tracking } from './change_tracking'; // Disabled for now
+using { a2a.network.aspects } from './sap_aspects';
+// using { a2a.network } from './blockchainSchema'; // Temporarily disabled
 
 // Custom Types for Type Safety
 type BlockchainAddress : String(42);
@@ -69,6 +70,34 @@ entity Agents : cuid, managed {
     
     @Common.Label: 'Performance Metrics'
     performance  : Composition of one AgentPerformance on performance.agent = $self;
+    
+    @Common.Label: 'Reputation Transactions'
+    reputationTransactions : Composition of many ReputationTransactions on reputationTransactions.agent = $self;
+    
+    @Common.Label: 'Endorsements Received'
+    endorsementsReceived   : Composition of many PeerEndorsements on endorsementsReceived.toAgent = $self;
+    
+    @Common.Label: 'Endorsements Given'
+    endorsementsGiven      : Composition of many PeerEndorsements on endorsementsGiven.fromAgent = $self;
+    
+    @Common.Label: 'Reputation Milestones'
+    milestones            : Composition of many ReputationMilestones on milestones.agent = $self;
+    
+    @Common.Label: 'Recovery Programs'
+    recoveryPrograms      : Composition of many ReputationRecovery on recoveryPrograms.agent = $self;
+    
+    // Computed reputation fields
+    @Common.Label: 'Current Badge'
+    @Core.Computed
+    virtual currentBadge          : String(20);
+    
+    @Common.Label: 'Endorsement Power'
+    @Core.Computed
+    virtual endorsementPower      : Integer;
+    
+    @Common.Label: 'Reputation Trend'
+    @Core.Computed
+    virtual reputationTrend       : String(10);
 }
 
 
@@ -521,7 +550,7 @@ entity NetworkStats : temporal, cuid {
     averageReputation: Decimal(5,2);
     
     @Common.Label: 'Network Load %'
-    @assert.range: [0.0, 100.0]
+    @assert.range: [0, 100]
     @Analytics.Measure: true
     networkLoad      : Decimal(5,2);
     
@@ -536,6 +565,60 @@ entity NetworkConfig : cuid, managed {
     value       : String(1000);
     description : String(500);
     isActive    : Boolean default true;
+}
+
+// Request Management
+entity Requests : cuid, managed {
+    @Common.Label: 'Request Title'
+    title : String(200) @mandatory;
+    
+    @Common.Label: 'Description'
+    description : String(2000);
+    
+    @Common.Label: 'Request Type'
+    requestType : String(50) default 'SERVICE_REQUEST';
+    
+    @Common.Label: 'Priority'
+    priority : String(10) default 'MEDIUM';
+    
+    @Common.Label: 'Status'
+    status : String(20) default 'PENDING';
+    
+    @Common.Label: 'Requester'
+    requester : Association to Agents;
+    
+    @Common.Label: 'Assigned Agent'
+    assignedAgent : Association to Agents;
+    
+    @Common.Label: 'Due Date'
+    dueDate : DateTime;
+    
+    @Common.Label: 'Responses'
+    responses : Composition of many Responses on responses.request = $self;
+}
+
+// Response Management
+entity Responses : cuid, managed {
+    @Common.Label: 'Response Content'
+    content : String(5000) @mandatory;
+    
+    @Common.Label: 'Response Type'
+    responseType : String(50) default 'TEXT';
+    
+    @Common.Label: 'Status'
+    status : String(20) default 'DRAFT';
+    
+    @Common.Label: 'Request'
+    request : Association to Requests @mandatory;
+    
+    @Common.Label: 'Responder'
+    responder : Association to Agents;
+    
+    @Common.Label: 'Response Priority'
+    priority : String(10) default 'NORMAL';
+    
+    @Common.Label: 'Is Final Response'
+    isFinalResponse : Boolean default false;
 }
 
 // Views for Analytics
@@ -649,6 +732,241 @@ entity ExtensionFields : managed {
     visible : Boolean default true;
 }
 
+// ================================
+// REPUTATION SYSTEM ENTITIES
+// ================================
+
+// Reputation transaction tracking
+entity ReputationTransactions : cuid, managed {
+    @Common.Label: 'Agent'
+    @assert.integrity
+    agent              : Association to Agents;
+    
+    @Common.Label: 'Transaction Type'
+    transactionType    : String(50) not null enum {
+        TASK_COMPLETION = 'TASK_COMPLETION';
+        SERVICE_RATING = 'SERVICE_RATING';
+        PEER_ENDORSEMENT = 'PEER_ENDORSEMENT';
+        QUALITY_BONUS = 'QUALITY_BONUS';
+        PENALTY = 'PENALTY';
+        MILESTONE_BONUS = 'MILESTONE_BONUS';
+        RECOVERY_REWARD = 'RECOVERY_REWARD';
+        WORKFLOW_PARTICIPATION = 'WORKFLOW_PARTICIPATION';
+        COLLABORATION_BONUS = 'COLLABORATION_BONUS';
+    };
+    
+    @Common.Label: 'Amount'
+    @assert.range: [-50, 50]
+    amount            : Integer not null;
+    
+    @Common.Label: 'Reason'
+    reason            : String(200);
+    
+    @Common.Label: 'Context'
+    @Core.MediaType: 'application/json'
+    context           : LargeString;
+    
+    @Common.Label: 'Is Automated'
+    isAutomated       : Boolean default false;
+    
+    @Common.Label: 'Created By Agent'
+    createdByAgent    : Association to Agents;
+    
+    @Common.Label: 'Related Service Order'
+    serviceOrder      : Association to ServiceOrders;
+    
+    @Common.Label: 'Related Workflow'
+    workflow          : Association to Workflows;
+}
+
+// Peer-to-peer endorsements
+entity PeerEndorsements : cuid, managed {
+    @Common.Label: 'From Agent'
+    @assert.integrity
+    fromAgent         : Association to Agents not null;
+    
+    @Common.Label: 'To Agent'
+    @assert.integrity
+    toAgent           : Association to Agents not null;
+    
+    @Common.Label: 'Endorsement Amount'
+    @assert.range: [1, 10]
+    amount            : Integer not null;
+    
+    @Common.Label: 'Endorsement Reason'
+    reason            : String(50) not null enum {
+        EXCELLENT_COLLABORATION = 'EXCELLENT_COLLABORATION';
+        TIMELY_ASSISTANCE = 'TIMELY_ASSISTANCE';
+        HIGH_QUALITY_WORK = 'HIGH_QUALITY_WORK';
+        KNOWLEDGE_SHARING = 'KNOWLEDGE_SHARING';
+        PROBLEM_SOLVING = 'PROBLEM_SOLVING';
+        INNOVATION = 'INNOVATION';
+        MENTORING = 'MENTORING';
+        RELIABILITY = 'RELIABILITY';
+    };
+    
+    @Common.Label: 'Context'
+    @Core.MediaType: 'application/json'
+    context           : LargeString;
+    
+    @Common.Label: 'Related Workflow'
+    workflow          : Association to Workflows;
+    
+    @Common.Label: 'Related Service Order'
+    serviceOrder      : Association to ServiceOrders;
+    
+    @Common.Label: 'Expires At'
+    expiresAt         : DateTime;
+    
+    @Common.Label: 'Is Reciprocal'
+    @readonly
+    isReciprocal      : Boolean default false;
+    
+    @Common.Label: 'Verification Hash'
+    verificationHash  : String(64);
+    
+    @Common.Label: 'Blockchain Transaction'
+    blockchainTx      : String(66);
+}
+
+// Reputation milestones and badges
+entity ReputationMilestones : cuid {
+    @Common.Label: 'Agent'
+    @assert.integrity
+    agent             : Association to Agents;
+    
+    @Common.Label: 'Milestone'
+    @assert.range: [50, 100, 150, 200]
+    milestone         : Integer not null;
+    
+    @Common.Label: 'Badge Name'
+    badgeName         : String(20) not null enum {
+        NEWCOMER = 'NEWCOMER';
+        ESTABLISHED = 'ESTABLISHED';
+        TRUSTED = 'TRUSTED';
+        EXPERT = 'EXPERT';
+        LEGENDARY = 'LEGENDARY';
+    };
+    
+    @Common.Label: 'Achieved At'
+    achievedAt        : DateTime not null;
+    
+    @Common.Label: 'Badge Metadata'
+    @Core.MediaType: 'application/json'
+    badgeMetadata     : String(500);
+}
+
+// Reputation recovery programs
+entity ReputationRecovery : cuid, managed {
+    @Common.Label: 'Agent'
+    @assert.integrity
+    agent             : Association to Agents;
+    
+    @Common.Label: 'Recovery Type'
+    recoveryType      : String(30) not null enum {
+        PROBATION_TASKS = 'PROBATION_TASKS';
+        PEER_VOUCHING = 'PEER_VOUCHING';
+        TRAINING_COMPLETION = 'TRAINING_COMPLETION';
+        COMMUNITY_SERVICE = 'COMMUNITY_SERVICE';
+    };
+    
+    @Common.Label: 'Status'
+    status            : String(20) enum {
+        PENDING = 'PENDING';
+        IN_PROGRESS = 'IN_PROGRESS';
+        COMPLETED = 'COMPLETED';
+        FAILED = 'FAILED';
+    } default 'PENDING';
+    
+    @Common.Label: 'Requirements'
+    @Core.MediaType: 'application/json'
+    requirements      : LargeString;
+    
+    @Common.Label: 'Progress'
+    @Core.MediaType: 'application/json'
+    progress          : LargeString;
+    
+    @Common.Label: 'Reputation Reward'
+    reputationReward  : Integer default 20;
+    
+    @Common.Label: 'Started At'
+    startedAt         : DateTime;
+    
+    @Common.Label: 'Completed At'
+    completedAt       : DateTime;
+}
+
+// Daily reputation limits tracking
+entity DailyReputationLimits : cuid {
+    @Common.Label: 'Agent'
+    @assert.integrity
+    agent             : Association to Agents;
+    
+    @Common.Label: 'Date'
+    date              : Date not null;
+    
+    @Common.Label: 'Endorsements Given'
+    endorsementsGiven : Integer default 0;
+    
+    @Common.Label: 'Points Given'
+    pointsGiven       : Integer default 0;
+    
+    @Common.Label: 'Max Daily Limit'
+    maxDailyLimit     : Integer default 50;
+}
+
+// Reputation analytics aggregation
+@Analytics: { DCL: 'REPUTATION_ANALYTICS' }
+entity ReputationAnalytics : cuid {
+    @Common.Label: 'Agent'
+    @assert.integrity
+    agent                  : Association to Agents;
+    
+    @Common.Label: 'Period Start'
+    periodStart           : Date not null;
+    
+    @Common.Label: 'Period End'
+    periodEnd             : Date not null;
+    
+    @Common.Label: 'Starting Reputation'
+    startingReputation    : Integer;
+    
+    @Common.Label: 'Ending Reputation'
+    endingReputation      : Integer;
+    
+    @Common.Label: 'Total Earned'
+    @Analytics.Measure: true
+    totalEarned           : Integer default 0;
+    
+    @Common.Label: 'Total Lost'
+    @Analytics.Measure: true
+    totalLost             : Integer default 0;
+    
+    @Common.Label: 'Endorsements Received'
+    @Analytics.Measure: true
+    endorsementsReceived  : Integer default 0;
+    
+    @Common.Label: 'Endorsements Given'
+    @Analytics.Measure: true
+    endorsementsGiven     : Integer default 0;
+    
+    @Common.Label: 'Unique Endorsers'
+    @Analytics.Measure: true
+    uniqueEndorsers       : Integer default 0;
+    
+    @Common.Label: 'Average Transaction'
+    @Analytics.Measure: true
+    averageTransaction    : Decimal(5,2);
+    
+    @Common.Label: 'Task Success Rate'
+    @Analytics.Measure: true
+    taskSuccessRate       : Decimal(5,2);
+    
+    @Common.Label: 'Service Rating Average'
+    @Analytics.Measure: true
+    serviceRatingAverage  : Decimal(3,2);
+}
+
 // Business Validations (implemented in service layer)
 // 1. Agent reputation must be recalculated after each completed service order
 // 2. Service orders cannot exceed provider's maxCallsPerDay limit
@@ -656,9 +974,15 @@ entity ExtensionFields : managed {
 // 4. Workflow executions must validate agent permissions before each step
 // 5. Cross-chain transfers require bridge availability confirmation
 // 6. Private channels require mutual consent from all participants
+// 7. Reputation changes must be logged in ReputationTransactions
+// 8. Peer endorsements must respect daily and weekly limits
+// 9. Reputation recovery programs must track progress automatically
 
 // Computed Fields (calculated in service layer)
 // 1. Agent.performance.successRate = successfulTasks / totalTasks * 100
 // 2. Service.utilizationRate = totalCalls / (maxCallsPerDay * daysSinceCreated)
 // 3. WorkflowExecution.duration = completedAt - startedAt
 // 4. NetworkStats.efficiency = (successfulMessages / totalMessages) * 100
+// 5. Agent.currentBadge = getReputationBadge(reputation)
+// 6. Agent.endorsementPower = getMaxEndorsementAmount(reputation)
+// 7. Agent.reputationTrend = calculateTrend(last30DaysTransactions)

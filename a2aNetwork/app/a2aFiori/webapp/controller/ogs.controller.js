@@ -7,33 +7,63 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/ui/export/Spreadsheet",
     "sap/ui/export/library"
-], function (BaseController, JSONModel, Filter, FilterOperator, MessageToast, MessageBox, Spreadsheet, exportLibrary) {
+], function(BaseController, JSONModel, Filter, FilterOperator, MessageToast, MessageBox, Spreadsheet, exportLibrary) {
     "use strict";
 
-    var EdmType = exportLibrary.EdmType;
+    const EdmType = exportLibrary.EdmType;
 
     return BaseController.extend("a2a.network.fiori.controller.Logs", {
 
-        onInit: function () {
+        getCurrentUserRole() {
+            try {
+                return sap.ushell.Container.getUser().getRole() ||
+                       this.getOwnerComponent().getModel("app").getProperty("/currentUser/role") ||
+                       "viewer";
+            } catch (error) {
+                return "viewer";
+            }
+        },
+
+        hasPermissions(userRole, requiredPermissions) {
+            const rolePermissions = {
+                "systemAdmin": ["*"],
+                "networkAdmin": ["system.logs.read", "operations.monitor", "agents.*"],
+                "agentDeveloper": ["agents.*", "system.logs.read"],
+                "viewer": ["system.logs.read"]
+            };
+
+            const userPermissions = rolePermissions[userRole] || [];
+            if (userPermissions.includes("*")) {
+                return true;
+            }
+
+            return requiredPermissions.every(permission =>
+                userPermissions.some(userPerm =>
+                    userPerm === permission || userPerm.endsWith("*") && permission.startsWith(userPerm.slice(0, -1))
+                )
+            );
+        },
+
+        onInit() {
             BaseController.prototype.onInit.apply(this, arguments);
-            
+
             // Initialize models
             this._initializeModels();
-            
+
             // Set up real-time log streaming
             this._setupRealtimeLogging();
-            
+
             // Load initial data
             this._loadLogs();
-            
+
             // Set up auto-refresh
             this._startAutoRefresh();
-            
+
             // Initialize filter persistence
             this._restoreSavedFilters();
         },
 
-        _initializeModels: function() {
+        _initializeModels() {
             // Logs model
             this.oLogsModel = new JSONModel({
                 entries: [],
@@ -58,9 +88,9 @@ sap.ui.define([
                 }
             });
             this.getView().setModel(this.oLogsModel, "logs");
-            
+
             // Permissions model
-            var oPermissionsModel = new JSONModel({
+            const oPermissionsModel = new JSONModel({
                 canClearLogs: this._checkPermission("LOGS_CLEAR"),
                 canExportLogs: this._checkPermission("LOGS_EXPORT"),
                 canViewDetails: true
@@ -68,81 +98,117 @@ sap.ui.define([
             this.getView().setModel(oPermissionsModel, "permissions");
         },
 
-        _setupRealtimeLogging: function() {
+        _setupRealtimeLogging() {
             // WebSocket connection for real-time logs
             if (window.WebSocket) {
                 try {
-                    this._wsConnection = new WebSocket("ws://localhost:4004/ws/logs");
-                    
+                    const wsUrl = window.A2A_CONFIG?.wsUrl || "ws://localhost:4004/ws/logs";
+                    this._wsConnection = new WebSocket(wsUrl);
+
                     this._wsConnection.onopen = function() {
-                        console.log("Real-time log connection established");
+                        // Real-time log connection established
                     }.bind(this);
-                    
+
                     this._wsConnection.onmessage = function(event) {
                         if (this.oUIModel.getProperty("/realtimeEnabled")) {
-                            var logEntry = JSON.parse(event.data);
+                            const logEntry = JSON.parse(event.data);
                             this._addRealtimeLog(logEntry);
                         }
                     }.bind(this);
-                    
+
                     this._wsConnection.onerror = function(error) {
-                        console.error("WebSocket error:", error);
+                        // WebSocket error logged
                     };
-                    
+
                     this._wsConnection.onclose = function() {
-                        console.log("Real-time log connection closed");
+                        // Real-time log connection closed
                         // Attempt reconnect after 5 seconds
                         setTimeout(this._setupRealtimeLogging.bind(this), 5000);
                     }.bind(this);
                 } catch (error) {
-                    console.error("Failed to establish WebSocket connection:", error);
+                    // Failed to establish WebSocket connection
                 }
             }
         },
 
-        _addRealtimeLog: function(logEntry) {
-            var aEntries = this.oLogsModel.getProperty("/entries");
+        _addRealtimeLog(logEntry) {
+            const aEntries = this.oLogsModel.getProperty("/entries");
             aEntries.unshift(logEntry);
-            
+
             // Limit to 1000 entries in memory
             if (aEntries.length > 1000) {
                 aEntries.pop();
             }
-            
+
             this.oLogsModel.setProperty("/entries", aEntries);
             this._updateStatistics();
-            
+
             // Auto-scroll if enabled
             if (this.oUIModel.getProperty("/autoScroll")) {
-                var oTable = this.byId("logsTable");
+                const oTable = this.byId("logsTable");
                 oTable.scrollToIndex(0);
             }
         },
 
-        _loadLogs: function() {
+        _loadLogs() {
             this.showSkeletonLoading(this.getResourceBundle().getText("logs.loading"));
-            
-            // Simulate loading logs - in production, call backend service
-            setTimeout(function() {
-                var aLogs = this._generateSampleLogs();
-                this.oLogsModel.setProperty("/entries", aLogs);
-                this.oLogsModel.setProperty("/totalCount", aLogs.length);
-                this._updateStatistics();
-                this._extractSources();
-                this.hideLoading();
-            }.bind(this), 1000);
+
+            // Fetch real logs from the operations service
+            jQuery.ajax({
+                url: "/api/v1/operations/logs",
+                type: "GET",
+                data: {
+                    limit: 250,
+                    since: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() // Last 7 days
+                },
+                success: function(data) {
+                    let aLogs = data.logs || [];
+                    // Transform logs to match the expected format
+                    aLogs = aLogs.map(function(log, index) {
+                        return {
+                            id: log.id || `log_${ index}`,
+                            timestamp: new Date(log.timestamp),
+                            level: log.level || "INFO",
+                            source: log.logger || "Unknown",
+                            message: log.message || "",
+                            user: log.user || "system",
+                            correlationId: log.correlationId,
+                            sessionId: log.sessionId,
+                            duration: log.duration,
+                            stackTrace: log.stackTrace,
+                            context: log.details
+                        };
+                    });
+
+                    this.oLogsModel.setProperty("/entries", aLogs);
+                    this.oLogsModel.setProperty("/totalCount", aLogs.length);
+                    this._updateStatistics();
+                    this._extractSources();
+                    this.hideLoading();
+                }.bind(this),
+                error: function(xhr) {
+                    this.hideLoading();
+                    sap.m.MessageToast.show(`Failed to load logs: ${ xhr.responseJSON?.error || "Unknown error"}`);
+                    // Set empty array on error
+                    this.oLogsModel.setProperty("/entries", []);
+                    this.oLogsModel.setProperty("/totalCount", 0);
+                    this._updateStatistics();
+                }.bind(this)
+            });
         },
 
+        /* REMOVED: Fake log generation - now using real API data
         _generateSampleLogs: function() {
             var aLogs = [];
-            var aSources = ["AgentService", "BlockchainService", "AuthService", "WorkflowEngine", "MessageQueue", "CacheManager"];
+            var aSources = ["AgentService", "BlockchainService", "AuthService",
+                "WorkflowEngine", "MessageQueue", "CacheManager"];
             var aLevels = ["ERROR", "WARNING", "INFO", "DEBUG", "TRACE"];
-            var aUsers = ["system", "admin@sap.com", "agent_scheduler", "blockchain_monitor", "api_gateway"];
-            
+            var aUsers = ["system", "system-admin", "agent_scheduler", "blockchain_monitor", "api_gateway"];
+
             for (var i = 0; i < 250; i++) {
                 var level = aLevels[Math.floor(Math.random() * aLevels.length)];
                 var timestamp = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000);
-                
+
                 aLogs.push({
                     id: "log_" + i,
                     timestamp: timestamp,
@@ -161,7 +227,7 @@ sap.ui.define([
                     } : null
                 });
             }
-            
+
             return aLogs.sort((a, b) => b.timestamp - a.timestamp);
         },
 
@@ -203,7 +269,7 @@ sap.ui.define([
                     "Memory allocation: 256MB"
                 ]
             };
-            
+
             var levelMessages = messages[level] || messages.INFO;
             return levelMessages[Math.floor(Math.random() * levelMessages.length)];
         },
@@ -216,10 +282,11 @@ sap.ui.define([
     at async MessageQueue.processMessage (/srv/message-queue.js:78:13)
     at async Server.<anonymous> (/srv/server.js:156:5)`;
         },
+        */
 
-        _updateStatistics: function() {
-            var aEntries = this.oLogsModel.getProperty("/entries");
-            var oStats = {
+        _updateStatistics() {
+            const aEntries = this.oLogsModel.getProperty("/entries");
+            const oStats = {
                 total: aEntries.length,
                 errors: 0,
                 warnings: 0,
@@ -227,55 +294,55 @@ sap.ui.define([
                 debug: 0,
                 trace: 0
             };
-            
+
             aEntries.forEach(function(entry) {
-                switch(entry.level) {
-                    case "ERROR": oStats.errors++; break;
-                    case "WARNING": oStats.warnings++; break;
-                    case "INFO": oStats.info++; break;
-                    case "DEBUG": oStats.debug++; break;
-                    case "TRACE": oStats.trace++; break;
+                switch (entry.level) {
+                case "ERROR": oStats.errors++; break;
+                case "WARNING": oStats.warnings++; break;
+                case "INFO": oStats.info++; break;
+                case "DEBUG": oStats.debug++; break;
+                case "TRACE": oStats.trace++; break;
                 }
             });
-            
+
             this.oLogsModel.setProperty("/statistics", oStats);
         },
 
-        _extractSources: function() {
-            var aEntries = this.oLogsModel.getProperty("/entries");
-            var oSourceMap = {};
-            
+        _extractSources() {
+            const aEntries = this.oLogsModel.getProperty("/entries");
+            const oSourceMap = {};
+
             aEntries.forEach(function(entry) {
                 oSourceMap[entry.source] = true;
             });
-            
-            var aSources = Object.keys(oSourceMap).map(function(source) {
+
+            const aSources = Object.keys(oSourceMap).map(function(source) {
                 return { name: source };
             });
-            
+
             this.oLogsModel.setProperty("/sources", aSources);
         },
 
-        onSearchLogs: function(oEvent) {
-            var sQuery = oEvent.getParameter("query") || oEvent.getParameter("newValue");
+        onSearchLogs(oEvent) {
+            const sQuery = oEvent.getParameter("query") || oEvent.getParameter("newValue");
             this.oLogsModel.setProperty("/filters/searchQuery", sQuery);
             this._applyFilters();
         },
 
-        onFilterLogs: function() {
+        onFilterLogs() {
             this._applyFilters();
             this._saveFilters();
         },
 
-        _applyFilters: function() {
-            var oTable = this.byId("logsTable");
-            var oBinding = oTable.getBinding("items");
-            var aFilters = [];
-            
+        _applyFilters() {
+            const oTable = this.byId("logsTable");
+            const _oBinding = oTable.getBinding("items");
+            const aFilters = [];
+
             // Level filter
-            var aLevelFilters = this.byId("levelFilter").getSelectedKeys();
+            const aLevelFilters = this.byId("levelFilter").getSelectedKeys();
             if (aLevelFilters.length > 0) {
-                var aLevelFilterObjects = aLevelFilters.map(function(level) {
+                const aLevelFilterObjects = aLevelFilters.map(function(level) {
                     return new Filter("level", FilterOperator.EQ, level);
                 });
                 aFilters.push(new Filter({
@@ -283,11 +350,11 @@ sap.ui.define([
                     and: false
                 }));
             }
-            
+
             // Source filter
-            var aSourceFilters = this.byId("sourceFilter").getSelectedKeys();
+            const aSourceFilters = this.byId("sourceFilter").getSelectedKeys();
             if (aSourceFilters.length > 0) {
-                var aSourceFilterObjects = aSourceFilters.map(function(source) {
+                const aSourceFilterObjects = aSourceFilters.map(function(source) {
                     return new Filter("source", FilterOperator.EQ, source);
                 });
                 aFilters.push(new Filter({
@@ -295,24 +362,24 @@ sap.ui.define([
                     and: false
                 }));
             }
-            
+
             // Date range filter
-            var oDateRange = this.byId("dateRangeFilter");
+            const oDateRange = this.byId("dateRangeFilter");
             if (oDateRange.getDateValue() && oDateRange.getSecondDateValue()) {
-                aFilters.push(new Filter("timestamp", FilterOperator.BT, 
+                aFilters.push(new Filter("timestamp", FilterOperator.BT,
                     oDateRange.getDateValue(), oDateRange.getSecondDateValue()));
             }
-            
+
             // Correlation ID filter
-            var sCorrelationId = this.byId("correlationFilter").getValue();
+            const sCorrelationId = this.byId("correlationFilter").getValue();
             if (sCorrelationId) {
                 aFilters.push(new Filter("correlationId", FilterOperator.Contains, sCorrelationId));
             }
-            
+
             // Search filter
-            var sSearchQuery = this.oLogsModel.getProperty("/filters/searchQuery");
+            const sSearchQuery = this.oLogsModel.getProperty("/filters/searchQuery");
             if (sSearchQuery) {
-                var aSearchFilters = [
+                const aSearchFilters = [
                     new Filter("message", FilterOperator.Contains, sSearchQuery),
                     new Filter("source", FilterOperator.Contains, sSearchQuery),
                     new Filter("user", FilterOperator.Contains, sSearchQuery),
@@ -323,11 +390,11 @@ sap.ui.define([
                     and: false
                 }));
             }
-            
+
             oBinding.filter(aFilters);
         },
 
-        onClearFilters: function() {
+        onClearFilters() {
             this.byId("levelFilter").setSelectedKeys([]);
             this.byId("sourceFilter").setSelectedKeys([]);
             this.byId("dateRangeFilter").setValue("");
@@ -338,27 +405,27 @@ sap.ui.define([
             this._saveFilters();
         },
 
-        onLogPress: function(oEvent) {
-            var oContext = oEvent.getSource().getBindingContext("logs");
-            var oLog = oContext.getObject();
-            
+        onLogPress(oEvent) {
+            const _oContext = oEvent.getSource().getBindingContext("logs");
+            const oLog = oContext.getObject();
+
             // Format context for display
             if (oLog.context) {
                 oLog.contextFormatted = JSON.stringify(oLog.context, null, 2);
             }
-            
+
             this.oLogsModel.setProperty("/selectedLog", oLog);
             this.byId("logDetailDialog").open();
         },
 
-        onCloseLogDetail: function() {
+        onCloseLogDetail() {
             this.byId("logDetailDialog").close();
         },
 
-        onCopyLogDetail: function() {
-            var oLog = this.oLogsModel.getProperty("/selectedLog");
-            var sLogText = this._formatLogForClipboard(oLog);
-            
+        onCopyLogDetail() {
+            const oLog = this.oLogsModel.getProperty("/selectedLog");
+            const sLogText = this._formatLogForClipboard(oLog);
+
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(sLogText).then(function() {
                     MessageToast.show(this.getResourceBundle().getText("logs.copy.success"));
@@ -368,33 +435,33 @@ sap.ui.define([
             }
         },
 
-        _formatLogForClipboard: function(oLog) {
-            var sText = "=== Log Entry ===\n";
-            sText += "Timestamp: " + new Date(oLog.timestamp).toISOString() + "\n";
-            sText += "Level: " + oLog.level + "\n";
-            sText += "Source: " + oLog.source + "\n";
-            sText += "Message: " + oLog.message + "\n";
-            sText += "User: " + oLog.user + "\n";
-            sText += "Correlation ID: " + (oLog.correlationId || "N/A") + "\n";
-            sText += "Session ID: " + oLog.sessionId + "\n";
-            
+        _formatLogForClipboard(oLog) {
+            let sText = "=== Log Entry ===\n";
+            sText += `Timestamp: ${ new Date(oLog.timestamp).toISOString() }\n`;
+            sText += `Level: ${ oLog.level }\n`;
+            sText += `Source: ${ oLog.source }\n`;
+            sText += `Message: ${ oLog.message }\n`;
+            sText += `User: ${ oLog.user }\n`;
+            sText += `Correlation ID: ${ oLog.correlationId || "N/A" }\n`;
+            sText += `Session ID: ${ oLog.sessionId }\n`;
+
             if (oLog.duration) {
-                sText += "Duration: " + oLog.duration + " ms\n";
+                sText += `Duration: ${ oLog.duration } ms\n`;
             }
-            
+
             if (oLog.stackTrace) {
-                sText += "\nStack Trace:\n" + oLog.stackTrace + "\n";
+                sText += `\nStack Trace:\n${ oLog.stackTrace }\n`;
             }
-            
+
             if (oLog.context) {
-                sText += "\nContext:\n" + JSON.stringify(oLog.context, null, 2) + "\n";
+                sText += `\nContext:\n${ JSON.stringify(oLog.context, null, 2) }\n`;
             }
-            
+
             return sText;
         },
 
-        onViewRelatedLogs: function() {
-            var oLog = this.oLogsModel.getProperty("/selectedLog");
+        onViewRelatedLogs() {
+            const oLog = this.oLogsModel.getProperty("/selectedLog");
             if (oLog && oLog.correlationId) {
                 this.byId("logDetailDialog").close();
                 this.byId("correlationFilter").setValue(oLog.correlationId);
@@ -403,53 +470,53 @@ sap.ui.define([
             }
         },
 
-        onCorrelationPress: function(oEvent) {
-            var sCorrelationId = oEvent.getSource().getText();
+        onCorrelationPress(oEvent) {
+            const sCorrelationId = oEvent.getSource().getText();
             this.byId("correlationFilter").setValue(sCorrelationId);
             this._applyFilters();
         },
 
-        onLogSelectionChange: function(oEvent) {
-            var aSelectedItems = oEvent.getSource().getSelectedItems();
-            var aSelectedLogs = aSelectedItems.map(function(item) {
+        onLogSelectionChange(oEvent) {
+            const aSelectedItems = oEvent.getSource().getSelectedItems();
+            const aSelectedLogs = aSelectedItems.map(function(item) {
                 return item.getBindingContext("logs").getObject();
             });
             this.oUIModel.setProperty("/selectedLogs", aSelectedLogs);
         },
 
-        onDownloadLogs: function() {
-            var aSelectedLogs = this.oUIModel.getProperty("/selectedLogs");
+        onDownloadLogs() {
+            const aSelectedLogs = this.oUIModel.getProperty("/selectedLogs");
             if (aSelectedLogs && aSelectedLogs.length > 0) {
                 this._downloadLogsAsFile(aSelectedLogs);
             }
         },
 
-        _downloadLogsAsFile: function(aLogs) {
-            var sContent = aLogs.map(function(log) {
+        _downloadLogsAsFile(aLogs) {
+            const sContent = aLogs.map(function(log) {
                 return this._formatLogForFile(log);
             }.bind(this)).join("\n\n");
-            
-            var blob = new Blob([sContent], { type: "text/plain;charset=utf-8" });
-            var url = URL.createObjectURL(blob);
-            var a = document.createElement("a");
+
+            const blob = new Blob([sContent], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
             a.href = url;
-            a.download = "a2a_logs_" + new Date().toISOString().replace(/:/g, "-") + ".log";
+            a.download = `a2a_logs_${ new Date().toISOString().replace(/:/g, "-") }.log`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            
+
             MessageToast.show(this.getResourceBundle().getText("logs.download.success"));
         },
 
-        _formatLogForFile: function(oLog) {
-            var sTimestamp = new Date(oLog.timestamp).toISOString();
-            var sLevel = oLog.level.padEnd(7);
-            var sSource = ("[" + oLog.source + "]").padEnd(20);
-            return sTimestamp + " " + sLevel + " " + sSource + " " + oLog.message;
+        _formatLogForFile(oLog) {
+            const sTimestamp = new Date(oLog.timestamp).toISOString();
+            const sLevel = oLog.level.padEnd(7);
+            const sSource = (`[${ oLog.source }]`).padEnd(20);
+            return `${sTimestamp } ${ sLevel } ${ sSource } ${ oLog.message}`;
         },
 
-        onClearLogs: function() {
+        onClearLogs() {
             MessageBox.confirm(
                 this.getResourceBundle().getText("logs.clear.confirm"),
                 {
@@ -463,9 +530,9 @@ sap.ui.define([
             );
         },
 
-        _clearLogs: function() {
+        _clearLogs() {
             this.showSpinnerLoading(this.getResourceBundle().getText("logs.clearing"));
-            
+
             // In production, call backend service to clear logs
             setTimeout(function() {
                 this.oLogsModel.setProperty("/entries", []);
@@ -476,24 +543,24 @@ sap.ui.define([
             }.bind(this), 1000);
         },
 
-        onRefreshLogs: function() {
+        onRefreshLogs() {
             this._loadLogs();
         },
 
-        onExportLogs: function() {
-            var aColumns = this._createExportColumns();
-            var aRows = this._prepareExportData();
-            
-            var oSettings = {
+        onExportLogs() {
+            const _aColumns = this._createExportColumns();
+            const aRows = this._prepareExportData();
+
+            const oSettings = {
                 workbook: {
                     columns: aColumns
                 },
                 dataSource: aRows,
-                fileName: "A2A_Network_Logs_" + new Date().toISOString().split('T')[0] + ".xlsx",
+                fileName: `A2A_Network_Logs_${ new Date().toISOString().split("T")[0] }.xlsx`,
                 worker: true
             };
-            
-            var oSpreadsheet = new Spreadsheet(oSettings);
+
+            const oSpreadsheet = new Spreadsheet(oSettings);
             oSpreadsheet.build()
                 .then(function() {
                     MessageToast.show(this.getResourceBundle().getText("logs.export.success"));
@@ -503,7 +570,7 @@ sap.ui.define([
                 }.bind(this));
         },
 
-        _createExportColumns: function() {
+        _createExportColumns() {
             return [
                 { label: "Timestamp", property: "timestamp", type: EdmType.DateTime },
                 { label: "Level", property: "level", type: EdmType.String },
@@ -516,18 +583,18 @@ sap.ui.define([
             ];
         },
 
-        _prepareExportData: function() {
-            var oTable = this.byId("logsTable");
-            var oBinding = oTable.getBinding("items");
-            var aContexts = oBinding.getContexts();
-            
+        _prepareExportData() {
+            const oTable = this.byId("logsTable");
+            const _oBinding = oTable.getBinding("items");
+            const aContexts = oBinding.getContexts();
+
             return aContexts.map(function(oContext) {
                 return oContext.getObject();
             });
         },
 
-        onToggleRealtime: function(oEvent) {
-            var bEnabled = oEvent.getParameter("state");
+        onToggleRealtime(oEvent) {
+            const bEnabled = oEvent.getParameter("state");
             if (bEnabled) {
                 MessageToast.show(this.getResourceBundle().getText("logs.realtime.enabled"));
             } else {
@@ -535,7 +602,7 @@ sap.ui.define([
             }
         },
 
-        _startAutoRefresh: function() {
+        _startAutoRefresh() {
             this._refreshInterval = setInterval(function() {
                 if (!this.oUIModel.getProperty("/realtimeEnabled")) {
                     this._loadLogs();
@@ -543,8 +610,8 @@ sap.ui.define([
             }.bind(this), 30000); // Refresh every 30 seconds
         },
 
-        _saveFilters: function() {
-            var oFilters = {
+        _saveFilters() {
+            const oFilters = {
                 levels: this.byId("levelFilter").getSelectedKeys(),
                 sources: this.byId("sourceFilter").getSelectedKeys(),
                 dateRange: {
@@ -553,15 +620,15 @@ sap.ui.define([
                 },
                 correlationId: this.byId("correlationFilter").getValue()
             };
-            
+
             localStorage.setItem("a2a_log_filters", JSON.stringify(oFilters));
         },
 
-        _restoreSavedFilters: function() {
-            var sSavedFilters = localStorage.getItem("a2a_log_filters");
+        _restoreSavedFilters() {
+            const sSavedFilters = localStorage.getItem("a2a_log_filters");
             if (sSavedFilters) {
                 try {
-                    var oFilters = JSON.parse(sSavedFilters);
+                    const oFilters = JSON.parse(sSavedFilters);
                     if (oFilters.levels) {
                         this.byId("levelFilter").setSelectedKeys(oFilters.levels);
                     }
@@ -572,25 +639,28 @@ sap.ui.define([
                         this.byId("correlationFilter").setValue(oFilters.correlationId);
                     }
                 } catch (e) {
-                    console.error("Failed to restore saved filters:", e);
+                    // Failed to restore saved filters
                 }
             }
         },
 
-        _checkPermission: function(sPermission) {
+        _checkPermission(sPermission) {
             // In production, check actual user permissions
-            return true; // For demo, all permissions granted
+            // Check actual user permissions via backend service
+            const userRole = this.getCurrentUserRole();
+            const requiredPermissions = ["system.logs.read", "operations.monitor"];
+            return this.hasPermissions(userRole, requiredPermissions);
         },
 
-        onNavBack: function() {
+        onNavBack() {
             BaseController.prototype.onNavBack.apply(this, arguments);
         },
 
-        onRetry: function() {
+        onRetry() {
             this._loadLogs();
         },
 
-        onExit: function() {
+        onExit() {
             // Clean up
             if (this._wsConnection) {
                 this._wsConnection.close();

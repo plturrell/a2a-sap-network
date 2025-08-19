@@ -6,40 +6,40 @@ sap.ui.define([
     "use strict";
 
     return Controller.extend("a2a.network.fiori.controller.Capabilities", {
-        formatter: formatter,
+        formatter,
 
-        onInit: function() {
+        onInit() {
             this.getRouter().getRoute("capabilities").attachPatternMatched(this._onRouteMatched, this);
         },
 
-        _onRouteMatched: function() {
+        _onRouteMatched() {
             this.getView().getModel().refresh();
         },
 
-        onRegisterCapability: function() {
+        onRegisterCapability() {
             MessageToast.show("Register Capability - Coming Soon");
         },
 
-        onTabSelect: function(oEvent) {
-            var sKey = oEvent.getParameter("key");
+        onTabSelect(oEvent) {
+            const sKey = oEvent.getParameter("key");
             // Filter capabilities by category
-            MessageToast.show("Filter by: " + sKey);
+            MessageToast.show(`Filter by: ${ sKey}`);
         },
 
-        onSearch: function(oEvent) {
-            var sQuery = oEvent.getParameter("query");
-            MessageToast.show("Searching for: " + sQuery);
+        onSearch(oEvent) {
+            const sQuery = oEvent.getParameter("query");
+            MessageToast.show(`Searching for: ${ sQuery}`);
         },
 
-        onGroup: function() {
+        onGroup() {
             MessageToast.show("Grouping capabilities");
         },
 
-        onFilter: function() {
+        onFilter() {
             MessageToast.show("Advanced filters");
         },
 
-        getRouter: function() {
+        getRouter() {
             return this.getOwnerComponent().getRouter();
         }
     });

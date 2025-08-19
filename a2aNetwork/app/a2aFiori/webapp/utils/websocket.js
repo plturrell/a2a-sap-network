@@ -21,7 +21,7 @@ sap.ui.define([
          * @param {string} [config.url] - WebSocket server URL
          * @returns {Promise} Promise that resolves when connected
          */
-        connect: function(config) {
+        connect(config) {
             return new Promise((resolve, reject) => {
                 if (this._socket && this._socket.connected) {
                     Log.info("WebSocket already connected");
@@ -29,20 +29,20 @@ sap.ui.define([
                 }
 
                 // Determine WebSocket URL
-                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
                 const host = window.location.host;
                 const wsUrl = config.url || `${protocol}//${host}`;
 
                 // Import socket.io client library dynamically
-                if (typeof io === 'undefined') {
+                if (typeof io === "undefined") {
                     // Load socket.io client from CDN if not available
-                    const script = document.createElement('script');
-                    script.src = 'https://cdn.socket.io/4.7.4/socket.io.min.js';
+                    const script = document.createElement("script");
+                    script.src = "https://cdn.socket.io/4.7.4/socket.io.min.js";
                     script.onload = () => {
                         this._createConnection(wsUrl, config, resolve, reject);
                     };
                     script.onerror = () => {
-                        reject(new Error('Failed to load socket.io client library'));
+                        reject(new Error("Failed to load socket.io client library"));
                     };
                     document.head.appendChild(script);
                 } else {
@@ -55,13 +55,13 @@ sap.ui.define([
          * Create WebSocket connection
          * @private
          */
-        _createConnection: function(wsUrl, config, resolve, reject) {
+        _createConnection(wsUrl, config, resolve, reject) {
             try {
                 this._socket = io(wsUrl, {
                     auth: {
                         token: config.token
                     },
-                    transports: ['websocket', 'polling'],
+                    transports: ["websocket", "polling"],
                     reconnection: true,
                     reconnectionAttempts: this._maxReconnectAttempts,
                     reconnectionDelay: this._reconnectDelay
@@ -79,41 +79,41 @@ sap.ui.define([
          * Setup WebSocket event handlers
          * @private
          */
-        _setupEventHandlers: function(resolve, reject) {
+        _setupEventHandlers(resolve, reject) {
             const socket = this._socket;
 
-            socket.on('connect', () => {
+            socket.on("connect", () => {
                 Log.info("WebSocket connected", { socketId: socket.id });
                 this._reconnectAttempts = 0;
                 resolve(socket);
             });
 
-            socket.on('connected', (data) => {
+            socket.on("connected", (data) => {
                 Log.info("WebSocket connection confirmed", data);
             });
 
-            socket.on('disconnect', (reason) => {
+            socket.on("disconnect", (reason) => {
                 Log.warning("WebSocket disconnected", { reason });
             });
 
-            socket.on('connect_error', (error) => {
+            socket.on("connect_error", (error) => {
                 Log.error("WebSocket connection error", error);
                 this._reconnectAttempts++;
-                
+
                 if (this._reconnectAttempts >= this._maxReconnectAttempts) {
                     reject(new Error(`WebSocket connection failed after ${this._maxReconnectAttempts} attempts: ${error.message}`));
                 }
             });
 
-            socket.on('error', (error) => {
+            socket.on("error", (error) => {
                 Log.error("WebSocket error", error);
             });
 
-            socket.on('subscribed', (data) => {
+            socket.on("subscribed", (data) => {
                 Log.info("Subscribed to topics", data);
             });
 
-            socket.on('unsubscribed', (data) => {
+            socket.on("unsubscribed", (data) => {
                 Log.info("Unsubscribed from topics", data);
             });
         },
@@ -123,7 +123,7 @@ sap.ui.define([
          * @param {Array} topics - Array of topic names
          * @returns {Promise} Promise that resolves when subscribed
          */
-        subscribe: function(topics) {
+        subscribe(topics) {
             return new Promise((resolve, reject) => {
                 if (!this._socket || !this._socket.connected) {
                     return reject(new Error("WebSocket not connected"));
@@ -133,19 +133,19 @@ sap.ui.define([
                     return reject(new Error("Topics must be an array"));
                 }
 
-                this._socket.emit('subscribe', topics);
-                
+                this._socket.emit("subscribe", topics);
+
                 // Wait for subscription confirmation
                 const timeout = setTimeout(() => {
                     reject(new Error("Subscription timeout"));
                 }, 5000);
 
-                this._socket.once('subscribed', (data) => {
+                this._socket.once("subscribed", (data) => {
                     clearTimeout(timeout);
                     resolve(data);
                 });
 
-                this._socket.once('error', (error) => {
+                this._socket.once("error", (error) => {
                     clearTimeout(timeout);
                     reject(error);
                 });
@@ -157,7 +157,7 @@ sap.ui.define([
          * @param {Array} topics - Array of topic names
          * @returns {Promise} Promise that resolves when unsubscribed
          */
-        unsubscribe: function(topics) {
+        unsubscribe(topics) {
             return new Promise((resolve, reject) => {
                 if (!this._socket || !this._socket.connected) {
                     return reject(new Error("WebSocket not connected"));
@@ -167,13 +167,13 @@ sap.ui.define([
                     return reject(new Error("Topics must be an array"));
                 }
 
-                this._socket.emit('unsubscribe', topics);
-                
+                this._socket.emit("unsubscribe", topics);
+
                 const timeout = setTimeout(() => {
                     reject(new Error("Unsubscription timeout"));
                 }, 5000);
 
-                this._socket.once('unsubscribed', (data) => {
+                this._socket.once("unsubscribed", (data) => {
                     clearTimeout(timeout);
                     resolve(data);
                 });
@@ -185,7 +185,7 @@ sap.ui.define([
          * @param {string} event - Event name
          * @param {Function} handler - Event handler function
          */
-        on: function(event, handler) {
+        on(event, handler) {
             if (!this._socket) {
                 Log.warning("WebSocket not initialized, handler will be queued");
                 this._eventHandlers.set(event, handler);
@@ -201,7 +201,7 @@ sap.ui.define([
          * @param {string} event - Event name
          * @param {Function} [handler] - Specific handler to remove
          */
-        off: function(event, handler) {
+        off(event, handler) {
             if (this._socket) {
                 this._socket.off(event, handler);
             }
@@ -211,7 +211,7 @@ sap.ui.define([
         /**
          * Disconnect WebSocket
          */
-        disconnect: function() {
+        disconnect() {
             if (this._socket) {
                 this._socket.disconnect();
                 this._socket = null;
@@ -223,7 +223,7 @@ sap.ui.define([
          * Check if WebSocket is connected
          * @returns {boolean} Connection status
          */
-        isConnected: function() {
+        isConnected() {
             return this._socket && this._socket.connected;
         },
 
@@ -231,7 +231,7 @@ sap.ui.define([
          * Get connection info
          * @returns {Object} Connection information
          */
-        getConnectionInfo: function() {
+        getConnectionInfo() {
             if (!this._socket) {
                 return { connected: false };
             }

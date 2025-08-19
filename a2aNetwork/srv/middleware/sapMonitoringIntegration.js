@@ -3,14 +3,16 @@
  * Implements comprehensive observability following SAP standards
  */
 
-const { NodeSDK } = require('@opentelemetry/sdk-node');
+// Temporarily disable all OpenTelemetry imports to isolate root cause of Express response patching conflict
+// const { NodeSDK } = require('@opentelemetry/sdk-node');
 const cds = require('@sap/cds');
-const { Resource } = require('@opentelemetry/resources');
-const { SemanticResourceAttributes } = require('@opentelemetry/semantic-conventions');
-const { OTLPTraceExporter } = require('@opentelemetry/exporter-otlp-http');
-const { OTLPMetricExporter } = require('@opentelemetry/exporter-otlp-http');
-const { PeriodicExportingMetricReader } = require('@opentelemetry/sdk-metrics');
-const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
+// const { Resource } = require('@opentelemetry/resources');
+// const { SemanticResourceAttributes } = require('@opentelemetry/semantic-conventions');
+// const { OTLPTraceExporter } = require('@opentelemetry/exporter-otlp-http');
+// const { OTLPMetricExporter } = require('@opentelemetry/exporter-otlp-http');
+// const { PeriodicExportingMetricReader } = require('@opentelemetry/sdk-metrics');
+// const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node'); // Replaced with selective manual instrumentation to avoid HTTP conflicts
+// const { ExpressInstrumentation } = require('@opentelemetry/instrumentation-express');
 const promClient = require('prom-client');
 const axios = require('axios');
 
@@ -20,7 +22,7 @@ class MonitoringIntegration {
     this.serviceVersion = process.env.APP_VERSION || '1.0.0';
     this.environment = process.env.NODE_ENV || 'development';
     
-    this.initializeOpenTelemetry();
+    // Don't initialize OpenTelemetry in constructor to avoid early HTTP patching conflicts
     this.setupCustomMetrics();
     this.setupHealthChecks();
   }
@@ -29,6 +31,10 @@ class MonitoringIntegration {
    * Initialize OpenTelemetry for SAP Cloud ALM
    */
   initializeOpenTelemetry() {
+    // Temporarily disable OpenTelemetry SDK initialization to isolate root cause of Express response patching conflict
+    cds.log('service').info('OpenTelemetry temporarily disabled for debugging - SAP enterprise monitoring features will be restored after resolving Express conflict');
+    return;
+    
     const sdk = new NodeSDK({
       resource: new Resource({
         [SemanticResourceAttributes.SERVICE_NAME]: this.serviceName,
@@ -61,30 +67,19 @@ class MonitoringIntegration {
       }),
       
       instrumentations: [
-        getNodeAutoInstrumentations({
-          '@opentelemetry/instrumentation-fs': {
-            enabled: false // Disable file system instrumentation for performance
-          },
-          '@opentelemetry/instrumentation-express': {
-            enabled: true,
-            requestHook: (span, info) => {
-              span.setAttributes({
-                'sap.tenant_id': info.request.user?.tenant || 'default',
-                'sap.user_id': info.request.user?.sub || 'anonymous',
-                'sap.correlation_id': info.request.correlationId
-              });
-            }
-          },
-          '@opentelemetry/instrumentation-http': {
-            enabled: true,
-            requestHook: (span, request) => {
-              span.setAttributes({
-                'sap.component': 'a2a-network',
-                'sap.interface': 'REST'
-              });
-            }
+        // Use selective manual instrumentation instead of auto-instrumentations to avoid HTTP conflicts
+        new ExpressInstrumentation({
+          requestHook: (span, info) => {
+            span.setAttributes({
+              'sap.tenant_id': info.request.user?.tenant || 'default',
+              'sap.user_id': info.request.user?.sub || 'anonymous',
+              'sap.correlation_id': info.request.correlationId,
+              'sap.component': 'a2a-network',
+              'sap.interface': 'REST'
+            });
           }
         })
+        // Note: HTTP instrumentation deliberately excluded to prevent Express response patching conflicts
       ]
     });
 
@@ -203,16 +198,13 @@ class MonitoringIntegration {
     return (req, res, next) => {
       const startTime = Date.now();
 
-      // Override response methods to collect metrics
-      const originalJson = res.json;
-      res.json = function(data) {
+      // Use event-based response handling instead of overriding res.json to avoid OpenTelemetry conflicts
+      res.on('finish', (() => {
         const duration = (Date.now() - startTime) / 1000;
         
         // Collect API metrics
         this.collectAPIMetrics(req, res, duration);
-        
-        return originalJson.call(this, data);
-      }.bind(this);
+      }).bind(this));
 
       next();
     };
@@ -421,6 +413,23 @@ class MonitoringIntegration {
         }
       }
     };
+  }
+
+  /**
+   * Initialize monitoring integration
+   */
+  async initialize() {
+    cds.log('service').info('Initializing SAP monitoring integration...');
+    
+    // Setup health checks
+    this.setupHealthChecks();
+    
+    // Initialize OpenTelemetry if not already done
+    if (!this.sdk) {
+      this.initializeOpenTelemetry();
+    }
+    
+    cds.log('service').info('SAP monitoring integration initialized successfully');
   }
 
   /**

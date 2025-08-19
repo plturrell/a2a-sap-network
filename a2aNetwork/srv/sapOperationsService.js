@@ -95,68 +95,109 @@ module.exports = class OperationsService extends BaseService {
         this.on('getLogs', async (req) => {
             const { startTime, endTime, level, logger, correlationId, limit = 100 } = req.data;
             
-            // In production, this would query the Application Logging Service
-            // For now, return mock data
-            const logs = [];
-            
-            // Add some sample logs
-            const levels = level ? [level] : ['DEBUG', 'INFO', 'WARN', 'ERROR'];
-            const loggers = logger ? [logger] : ['a2a-network', 'blockchain', 'agents'];
-            
-            for (let i = 0; i < Math.min(limit, 10); i++) {
-                const timestamp = new Date(startTime.getTime() + Math.random() * (endTime.getTime() - startTime.getTime()));
-                logs.push({
-                    ID: cds.utils.uuid(),
-                    timestamp: timestamp.toISOString(),
-                    level: levels[Math.floor(Math.random() * levels.length)],
-                    logger: loggers[Math.floor(Math.random() * loggers.length)],
-                    message: `Sample log message ${i + 1}`,
-                    correlationId: correlationId || cds.utils.uuid(),
-                    tenant: req.user?.tenant || 'default',
-                    user: req.user?.id || 'anonymous',
-                    details: JSON.stringify({ sample: true, index: i })
+            // Query real Application Logging Service
+            try {
+                const loggingUrl = process.env.LOGGING_BACKEND_URL || 'http://localhost:9200'; // Elasticsearch
+                const query = {
+                    query: {
+                        bool: {
+                            must: [
+                                {
+                                    range: {
+                                        '@timestamp': {
+                                            gte: startTime,
+                                            lte: endTime
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    size: limit,
+                    sort: [{ '@timestamp': { order: 'desc' } }]
+                };
+                
+                if (level) {
+                    query.query.bool.must.push({ term: { level: level } });
+                }
+                if (logger) {
+                    query.query.bool.must.push({ term: { logger: logger } });
+                }
+                if (correlationId) {
+                    query.query.bool.must.push({ term: { correlationId: correlationId } });
+                }
+                
+                const response = await fetch(`${loggingUrl}/logs-*/_search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(query)
                 });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    return result.hits.hits.map(hit => ({
+                        ID: hit._id,
+                        timestamp: hit._source['@timestamp'],
+                        level: hit._source.level,
+                        logger: hit._source.logger,
+                        message: hit._source.message,
+                        correlationId: hit._source.correlationId,
+                        tenant: hit._source.tenant,
+                        user: hit._source.user,
+                        details: JSON.stringify(hit._source.details || {})
+                    }));
+                }
+            } catch (error) {
+                cds.log('operations').error('Failed to fetch logs from backend:', error);
             }
             
-            return logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            // Return empty array - no fallback to mock data
+            return [];
         });
 
         // Get traces implementation
         this.on('getTraces', async (req) => {
             const { startTime, endTime, serviceName, operationName, minDuration, limit = 100 } = req.data;
             
-            // In production, this would query the tracing backend
-            // For now, return mock traces
-            const traces = [];
-            
-            const services = serviceName ? [serviceName] : ['a2a-network-srv', 'blockchain-service', 'agent-service'];
-            const operations = operationName ? [operationName] : ['HTTP GET', 'HTTP POST', 'DB Query', 'Blockchain Call'];
-            
-            for (let i = 0; i < Math.min(limit, 20); i++) {
-                const start = new Date(startTime.getTime() + Math.random() * (endTime.getTime() - startTime.getTime()));
-                const duration = Math.floor(Math.random() * 2000); // 0-2000ms
-                
-                if (minDuration && duration < minDuration) continue;
-                
-                traces.push({
-                    traceId: cds.utils.uuid(),
-                    spanId: cds.utils.uuid().substring(0, 16),
-                    parentSpanId: i > 0 ? traces[0].spanId : null,
-                    operationName: operations[Math.floor(Math.random() * operations.length)],
-                    serviceName: services[Math.floor(Math.random() * services.length)],
-                    startTime: start.toISOString(),
-                    endTime: new Date(start.getTime() + duration).toISOString(),
-                    duration: duration,
-                    status: duration > 1000 ? 'timeout' : Math.random() > 0.9 ? 'error' : 'ok',
-                    tags: {
-                        'http.method': 'GET',
-                        'http.status_code': duration > 1000 ? '504' : '200',
-                        'span.kind': 'server'
-                    }
+            // Query real distributed tracing backend (Jaeger, Zipkin, etc.)
+            try {
+                const tracingUrl = process.env.TRACING_BACKEND_URL || 'http://localhost:16686'; // Jaeger
+                const params = new URLSearchParams({
+                    start: startTime,
+                    end: endTime,
+                    limit: limit.toString()
                 });
+                
+                if (serviceName) params.append('service', serviceName);
+                if (operationName) params.append('operation', operationName);
+                if (minDuration) params.append('minDuration', `${minDuration}ms`);
+                
+                const response = await fetch(`${tracingUrl}/api/traces?${params}`);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    return result.data?.map(trace => ({
+                        traceId: trace.traceID,
+                        spanId: trace.spans?.[0]?.spanID,
+                        parentSpanId: trace.spans?.[0]?.parentSpanID,
+                        operationName: trace.spans?.[0]?.operationName,
+                        serviceName: trace.spans?.[0]?.process?.serviceName,
+                        startTime: new Date(trace.spans?.[0]?.startTime / 1000).toISOString(),
+                        endTime: new Date((trace.spans?.[0]?.startTime + trace.spans?.[0]?.duration) / 1000).toISOString(),
+                        duration: Math.floor(trace.spans?.[0]?.duration / 1000),
+                        status: trace.spans?.[0]?.tags?.find(t => t.key === 'error')?.value ? 'error' : 'ok',
+                        tags: trace.spans?.[0]?.tags?.reduce((acc, tag) => {
+                            acc[tag.key] = tag.value;
+                            return acc;
+                        }, {}) || {}
+                    })) || [];
+                }
+            } catch (error) {
+                cds.log('operations').error('Failed to fetch traces from backend:', error);
             }
             
-            return traces;
+            // Return empty array - no fallback to mock traces
+            return [];
         });
 
         // Get alerts

@@ -17,6 +17,7 @@ const { BaseApplicationService } = require('./lib/sapBaseService')
 const WorkflowExecutor = require('./lib/sapWorkflowExecutor')
 const AgentManager = require('./lib/sapAgentManager')
 const draftHandler = require('./lib/sapDraftHandler')
+const ReputationService = require('./reputationService')
 const CONSTANTS = require('./config/constants')
 
 // Internal state symbols following SAP patterns
@@ -67,6 +68,10 @@ class A2AService extends BaseApplicationService {
     // Initialize extracted modules
     this[$workflowExecutor] = new WorkflowExecutor()
     this[$agentManager] = new AgentManager()
+    this[$reputationService] = new ReputationService()
+    
+    // Initialize reputation service handlers
+    this._initializeReputationHandlers()
     
     this[$initialized] = true
   }
@@ -77,31 +82,41 @@ class A2AService extends BaseApplicationService {
   }
 
   async _validateAgentUpdate(req) {
-    const { data, params } = req;
-    const agentId = params[0];
+    try {
+      const { data, params } = req;
+      const agentId = params[0];
 
-    // Check if agent exists
-    const existing = await SELECT.one.from(this.entities.Agents).where({ ID: agentId });
-    if (!existing) {
-      req.error(404, 'AGENT_NOT_FOUND', `Agent ${agentId} not found`);
+      // Check if agent exists
+      const existing = await SELECT.one.from(this.entities.Agents).where({ ID: agentId });
+      if (!existing) {
+        req.error(404, 'AGENT_NOT_FOUND', `Agent ${agentId} not found`);
+      }
+
+      // Validate update data
+      this.validation.validateAgentUpdate(data, req);
+    } catch (error) {
+      this.log.error('Agent validation failed:', error);
+      req.error(500, 'VALIDATION_ERROR', 'Agent validation failed');
     }
-
-    // Validate update data
-    this.validation.validateAgentUpdate(data, req);
   }
 
   async _validateService(req) {
-    const { data } = req;
+    try {
+      const { data } = req;
 
-    // Use shared validation
-    this.validation.validateService(data, req);
+      // Use shared validation
+      this.validation.validateService(data, req);
 
-    // Additional business logic validation
-    if (data.provider_ID) {
-      const provider = await SELECT.one.from(this.entities.Agents).where({ ID: data.provider_ID });
-      if (!provider) {
-        req.error(400, 'PROVIDER_NOT_FOUND', `Provider agent ${data.provider_ID} not found`);
+      // Additional business logic validation
+      if (data.provider_ID) {
+        const provider = await SELECT.one.from(this.entities.Agents).where({ ID: data.provider_ID });
+        if (!provider) {
+          req.error(400, 'PROVIDER_NOT_FOUND', `Provider agent ${data.provider_ID} not found`);
+        }
       }
+    } catch (error) {
+      this.log.error('Service validation failed:', error);
+      req.error(500, 'VALIDATION_ERROR', 'Service validation failed');
     }
   }
 
@@ -462,7 +477,7 @@ class A2AService extends BaseApplicationService {
       // Fallback to local calculation
       const agent = await SELECT.one.from(this.entities.Agents).where({ address: agentAddress })
       return JSON.stringify({
-        reputationScore: agent?.reputation || 100,
+        reputationScore: agent?.reputation || 0,
         trustScore: 1.0,
         source: 'database'
       })
@@ -520,6 +535,174 @@ class A2AService extends BaseApplicationService {
         error: error.message
       })
     }
+  }
+
+  /**
+   * Initialize reputation system handlers
+   */
+  _initializeReputationHandlers() {
+    const $reputationService = this[$reputationService];
+    
+    // Agent endorsement action
+    this.on('endorsePeer', 'Agents', async (req) => {
+      const { toAgentId, amount, reason, description } = req.data;
+      const fromAgentId = req.params[0]; // Agent ID from the URL
+      
+      try {
+        const result = await $reputationService.handlePeerEndorsement({
+          data: {
+            fromAgentId,
+            toAgentId,
+            amount,
+            reason,
+            context: { description, timestamp: new Date().toISOString() }
+          }
+        });
+        return JSON.stringify(result);
+      } catch (error) {
+        req.error(400, error.message);
+      }
+    });
+    
+    // Reputation functions
+    this.on('getReputationHistory', async (req) => {
+      const { agentId, startDate, endDate } = req.data;
+      
+      const transactions = await SELECT.from('ReputationTransactions')
+        .where({ 
+          agent_ID: agentId,
+          createdAt: { between: startDate, endDate }
+        })
+        .orderBy({ createdAt: 'desc' });
+        
+      return transactions.map(tx => JSON.stringify(tx));
+    });
+    
+    this.on('getReputationAnalytics', async (req) => {
+      const { agentId, period } = req.data;
+      
+      const analytics = await SELECT.one.from('ReputationAnalytics')
+        .where({ agent_ID: agentId })
+        .orderBy({ periodEnd: 'desc' });
+        
+      return JSON.stringify(analytics || {});
+    });
+    
+    this.on('calculateReputationScore', async (req) => {
+      const { agentId } = req.data;
+      return await $reputationService.calculateAgentReputation({ data: { agentId } });
+    });
+    
+    this.on('getReputationBadge', async (req) => {
+      const { reputation } = req.data;
+      return JSON.stringify($reputationService.getReputationBadge(reputation));
+    });
+    
+    this.on('canEndorsePeer', async (req) => {
+      const { fromAgentId, toAgentId, amount } = req.data;
+      
+      try {
+        await $reputationService.validateEndorsement(fromAgentId, toAgentId, amount);
+        return true;
+      } catch (error) {
+        return false;
+      }
+    });
+    
+    // Listen to service order completion for automatic reputation updates
+    this.after('UPDATE', 'ServiceOrders', async (data, req) => {
+      if (data.status === 'COMPLETED' && data.rating) {
+        await $reputationService.handleServiceOrderCompletion({
+          data: {
+            orderId: data.ID,
+            serviceId: data.service_ID,
+            providerId: data.provider_ID,
+            rating: data.rating,
+            feedback: data.feedback
+          }
+        });
+      }
+    });
+    
+    // Listen to workflow completion for collaboration rewards
+    this.after('UPDATE', 'WorkflowExecutions', async (data, req) => {
+      if (data.status === 'COMPLETED') {
+        // Award collaboration bonuses to all participants
+        const participants = await SELECT.from('WorkflowSteps')
+          .where({ execution_ID: data.ID })
+          .columns('assignedAgent_ID');
+          
+        // Batch reputation updates instead of individual calls
+        const reputationUpdates = participants
+          .filter(p => p.assignedAgent_ID)
+          .map(participant => ({
+            agentId: participant.assignedAgent_ID,
+            amount: 3,
+            reason: 'WORKFLOW_PARTICIPATION',
+            context: {
+              workflowId: data.workflow_ID,
+              workflowTitle: data.title,
+              participantId: participant.ID
+            }
+          }));
+        
+        // Apply all reputation changes in batch
+        if (reputationUpdates.length > 0) {
+          await $reputationService.applyBatchReputationChanges(reputationUpdates);
+        });
+          }
+        }
+      }
+    });
+    
+    // Listen to peer endorsement verification
+    this.on('verify', 'PeerEndorsements', async (req) => {
+      const endorsementId = req.params[0];
+      
+      try {
+        const endorsement = await SELECT.one.from('PeerEndorsements').where({ ID: endorsementId });
+        if (!endorsement) {
+          req.error(404, 'Endorsement not found');
+        }
+        
+        // Mark as verified (can be enhanced with blockchain verification)
+        await UPDATE('PeerEndorsements')
+          .set({ verificationHash: 'verified_' + Date.now() })
+          .where({ ID: endorsementId });
+          
+        return true;
+      } catch (error) {
+        req.error(400, error.message);
+      }
+    });
+    
+    // Reputation recovery program handlers
+    this.on('startProgram', 'ReputationRecovery', async (req) => {
+      const programId = req.params[0];
+      
+      await UPDATE('ReputationRecovery')
+        .set({ 
+          status: 'IN_PROGRESS',
+          startedAt: new Date()
+        })
+        .where({ ID: programId });
+        
+      return true;
+    });
+    
+    this.on('updateProgress', 'ReputationRecovery', async (req) => {
+      const { progress } = req.data;
+      const programId = req.params[0];
+      
+      await UPDATE('ReputationRecovery')
+        .set({ 
+          progress: JSON.stringify(progress),
+          modifiedAt: new Date()
+        })
+        .where({ ID: programId });
+        
+      return true;
+    });
   }
 
   // Private helper methods following SAP patterns
@@ -720,13 +903,47 @@ class A2AService extends BaseApplicationService {
   async _filterAgentsByCapabilities(agents, capabilities) {
     const filtered = []
 
+    // Use optimized batch query instead of individual queries per agent
+    const agentIds = agents.map(a => a.ID);
+    
+    // Get all agent capabilities in one query
+    const allAgentCaps = await SELECT.from('AgentCapabilities')
+      .where({ agent_ID: { in: agentIds } })
+      .columns('agent_ID', 'capability_ID');
+    
+    // Get all capability names in one query  
+    const capabilityIds = [...new Set(allAgentCaps.map(ac => ac.capability_ID))];
+    const allCapabilities = await SELECT.from(this.entities.Capabilities)
+      .where({ ID: { in: capabilityIds } })
+      .columns('ID', 'name');
+    
+    // Create lookup maps for efficient filtering
+    const agentCapMap = new Map();
+    allAgentCaps.forEach(ac => {
+      if (!agentCapMap.has(ac.agent_ID)) {
+        agentCapMap.set(ac.agent_ID, []);
+      }
+      agentCapMap.get(ac.agent_ID).push(ac.capability_ID);
+    });
+    
+    const capNameMap = new Map();
+    allCapabilities.forEach(cap => {
+      capNameMap.set(cap.ID, cap.name);
+    });
+    
+    // Filter agents efficiently using the maps
     for (const agent of agents) {
-      const agentCaps = await SELECT.from('AgentCapabilities')
-        .where({ agent_ID: agent.ID })
-        .columns('capability_ID')
+      const agentCapIds = agentCapMap.get(agent.ID) || [];
+      const agentCapNames = agentCapIds.map(id => capNameMap.get(id)).filter(Boolean);
+      
+      const hasAllCaps = capabilities.every(cap =>
+        agentCapNames.includes(cap)
+      );
 
-      const capNames = await SELECT.from(this.entities.Capabilities)
-        .where({ ID: { in: agentCaps.map(c => c.capability_ID) } })
+      if (hasAllCaps) {
+        filtered.push(agent);
+      }
+    } })
         .columns('name')
 
       const hasAllCaps = capabilities.every(cap =>

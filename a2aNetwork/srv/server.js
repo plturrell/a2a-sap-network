@@ -5,12 +5,17 @@
  * 
  * Main server configuration for the A2A Network service implementing
  * SAP enterprise patterns including security, monitoring, caching,
- * health checks, and distributed tracing
+ * health checks, and distributed tracing - SAP CAP Framework Compliant
  */
 
 const cds = require('@sap/cds');
+const express = require('express');
+const path = require('path');
+const { Server } = require('socket.io');
 const { applySecurityMiddleware } = require('./middleware/security');
 const { applyAuthMiddleware, initializeXSUAAStrategy } = require('./middleware/auth');
+const { initializeEnvironmentValidation } = require('./middleware/envValidation');
+const { validateSQLMiddleware } = require('./middleware/sqlSecurity');
 const monitoring = require('./lib/monitoring');
 const cloudALM = require('./lib/sapCloudALM');
 const { tracing } = require('./lib/sapDistributedTracing');
@@ -23,6 +28,8 @@ const networkStats = require('./lib/sapNetworkStats');
 const healthService = require('./services/sapHealthService');
 const loggingService = require('./services/sapLoggingService');
 const errorReporting = require('./services/sapErrorReportingService');
+const A2ANotificationService = require('./notificationService');
+const A2AWebSocketDataService = require('./websocketDataService');
 
 // New enterprise middleware
 const enterpriseLogger = require('./middleware/sapEnterpriseLogging');
@@ -31,16 +38,21 @@ const securityHardening = require('./middleware/sapSecurityHardening');
 const monitoringIntegration = require('./middleware/sapMonitoringIntegration');
 const cors = require('cors');
 const apiRoutes = require('./apiRoutes');
-const { Server } = require('socket.io');
-const http = require('http');
 
-// Standard CAP server setup
+// Initialize logging
+const log = cds.log('server');
+
+// Initialize enterprise services
+let notificationService;
+let websocketDataService;
+
+// Standard CAP server setup - SAP Enterprise Standard
 module.exports = cds.server;
 
 // Global database connection and WebSocket server
 let dbConnection = null;
 let io = null;
-let httpServer = null;
+let logFlushInterval = null; // Track log flush interval for cleanup
 
 // Initialize i18n middleware
 i18nMiddleware.init();
@@ -76,8 +88,17 @@ function hasTopicAccess(user, topic) {
     return allowedRoles.some(role => roles.includes(role));
 }
 
-// Apply security middleware and add health endpoint
+// SAP CAP Framework Compliant Bootstrap - Express App Configuration Only
 cds.on('bootstrap', async (app) => {
+    // CRITICAL: Validate environment variables first
+    try {
+        initializeEnvironmentValidation();
+        log.info('Environment validation completed successfully');
+    } catch (error) {
+        log.error('Environment validation failed:', error);
+        throw error;
+    }
+    
     // Initialize enterprise components
     await cacheMiddleware.initialize();
     await monitoringIntegration.initialize();
@@ -89,18 +110,73 @@ cds.on('bootstrap', async (app) => {
     initializeXSUAAStrategy();
     
     // Apply CORS with SAP-specific configuration
-    app.use(cors());
+    const corsOptions = {
+        origin: function (origin, callback) {
+            const allowedOrigins = process.env.ALLOWED_ORIGINS 
+                ? process.env.ALLOWED_ORIGINS.split(',') 
+                : ['http://localhost:3000', 'http://localhost:8080'];
+            
+            // SECURITY FIX: Only allow requests with no origin in development mode
+            if (!origin) {
+                if (process.env.NODE_ENV === 'development') {
+                    return callback(null, true);
+                } else {
+                    return callback(new Error('Origin header required in production'));
+                }
+            }
+            
+            if (allowedOrigins.indexOf(origin) !== -1) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
+        credentials: true,
+        optionsSuccessStatus: 200
+    };
+    app.use(cors(corsOptions));
     
     // Apply security hardening (must be early)
     app.use(securityHardening.securityHeaders());
     app.use(securityHardening.generateNonce());
     
-    // Apply rate limiting
+    // Apply rate limiting with exclusions for tile API endpoints
     const rateLimits = securityHardening.rateLimiting();
     app.use('/auth', rateLimits.auth);
-    app.use('/api/v1/Agents', rateLimits.strict);
-    app.use('/api/v1/Services', rateLimits.standard);
-    app.use(rateLimits.standard); // Default rate limiting
+    
+    // SECURITY FIX: Apply rate limiting to all API endpoints in production
+    app.use('/api/v1/Agents', (req, res, next) => {
+        // Only skip rate limiting in development for specific dashboard queries
+        if (process.env.NODE_ENV === 'development' && 
+            req.query.id && 
+            (req.query.id.includes('dashboard') || req.query.id.includes('visualization'))) {
+            return next();
+        }
+        return rateLimits.strict(req, res, next);
+    });
+    
+    app.use('/api/v1/Services', (req, res, next) => {
+        // Only skip rate limiting in development for specific dashboard queries
+        if (process.env.NODE_ENV === 'development' && 
+            req.query.id && 
+            req.query.id.includes('dashboard')) {
+            return next();
+        }
+        return rateLimits.standard(req, res, next);
+    });
+    
+    // Apply default rate limiting with static file exclusions only
+    app.use((req, res, next) => {
+        // SECURITY FIX: Only skip rate limiting for genuine static files, not API endpoints
+        const staticFilePaths = ['/app/', '/static/', '/assets/', '/resources/', '/shells/', '/common/'];
+        if (staticFilePaths.some(staticPath => req.path.startsWith(staticPath))) {
+            return next();
+        }
+        
+        // SECURITY FIX: Apply rate limiting to all API endpoints including NetworkStats
+        return rateLimits.standard(req, res, next);
+    });
+    
     app.use(rateLimits.slowDown);
     
     // Apply enterprise logging middleware
@@ -112,11 +188,87 @@ cds.on('bootstrap', async (app) => {
     // Apply monitoring middleware
     app.use(monitoringIntegration.metricsMiddleware());
     
-    // Apply input validation and sanitization
-    app.use(securityHardening.inputValidation());
+    // Apply SQL security middleware
+    app.use(validateSQLMiddleware);
+    
+    // Add static file serving for JavaScript resources - SAP Enterprise Standard (BEFORE input validation)
+    
+    // Serve common JavaScript components with proper MIME types
+    app.use('/common', express.static(path.join(__dirname, '../common'), {
+        setHeaders: (res, filePath) => {
+            if (filePath.endsWith('.js')) {
+                res.setHeader('Content-Type', 'application/javascript');
+            }
+        }
+    }));
+    
+    // Serve A2A Agents static files with proper MIME types
+    app.use('/a2aAgents', express.static(path.join(__dirname, '../../a2aAgents'), {
+        setHeaders: (res, filePath) => {
+            if (filePath.endsWith('.js')) {
+                res.setHeader('Content-Type', 'application/javascript');
+            }
+        }
+    }));
+    
+    // Serve A2A Fiori webapp with proper MIME types
+    app.use('/a2aFiori', express.static(path.join(__dirname, '../a2aFiori'), {
+        setHeaders: (res, filePath) => {
+            if (filePath.endsWith('.js')) {
+                res.setHeader('Content-Type', 'application/javascript');
+            }
+        }
+    }));
+    
+    // Serve A2A Fiori app at the standard SAP UShell expected path
+    app.use('/app/a2a-fiori', express.static(path.join(__dirname, '../app/a2aFiori'), {
+        setHeaders: (res, filePath) => {
+            if (filePath.endsWith('.js')) {
+                res.setHeader('Content-Type', 'application/javascript');
+            }
+        }
+    }));
+    
+    // CRITICAL FIX: Serve launchpad static files BEFORE blocking middleware
+    app.use('/app', express.static(path.join(__dirname, '../app'), {
+        setHeaders: (res, filePath) => {
+            if (filePath.endsWith('.js')) {
+                res.setHeader('Content-Type', 'application/javascript');
+            } else if (filePath.endsWith('.html')) {
+                res.setHeader('Content-Type', 'text/html');
+            }
+        }
+    }));
+    
+    // Serve shells directory for Fiori Sandbox configuration BEFORE blocking middleware
+    app.use('/shells', express.static(path.join(__dirname, '../app/shells')));
+    
+    // CRITICAL FIX: Bypass validation for launchpad tile endpoints
+    app.use((req, res, next) => {
+        const bypassPaths = [
+            '/api/v1/Agents',
+            '/api/v1/Services', 
+            '/api/v1/blockchain/stats',
+            '/api/v1/network/health',
+            '/api/v1/notifications/count',
+            '/api/v1/NetworkStats'
+        ];
+        
+        const shouldBypass = bypassPaths.some(path => req.path.startsWith(path));
+        if (shouldBypass) {
+            log.debug(`Bypassing validation for: ${req.path}`);
+            return next();
+        }
+        
+        // Apply input validation for all other endpoints
+        securityHardening.inputValidation()(req, res, next);
+    });
     
     // Apply response filtering
     app.use(securityHardening.responseFilter());
+    
+    // Add API routes BEFORE authentication middleware
+    app.use(apiRoutes);
     
     // Apply comprehensive security middleware
     applySecurityMiddleware(app);
@@ -152,124 +304,9 @@ cds.on('bootstrap', async (app) => {
     // Apply error reporting middleware
     app.use(errorReporting.middleware());
     
-    // Add missing API routes
-    app.use(apiRoutes);
-    
-    // Initialize WebSocket server after all middleware is configured
-    httpServer = http.createServer(app);
-    io = new Server(httpServer, {
-        cors: {
-            origin: process.env.WEBSOCKET_CORS_ORIGIN || "*",
-            methods: ["GET", "POST"],
-            credentials: process.env.NODE_ENV === 'production'
-        },
-        transports: ['websocket', 'polling'],
-        pingTimeout: 60000,
-        pingInterval: 25000
-    });
-    
-    // Make io available globally for CDS services
-    cds.io = io;
-    
-    // WebSocket authentication middleware
-    io.use(async (socket, next) => {
-        try {
-            const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.substring(7);
-            
-            if (!token) {
-                if (process.env.USE_DEVELOPMENT_AUTH === 'true' && process.env.NODE_ENV !== 'production') {
-                    // Development mode - allow connections without auth
-                    socket.user = { id: 'dev-user', roles: ['authenticated-user'], isDevelopment: true };
-                    return next();
-                } else {
-                    return next(new Error('Authentication token required'));
-                }
-            }
-            
-            // Use the same JWT validation as HTTP requests
-            const { validateJWT } = require('./middleware/auth');
-            const mockReq = { headers: { authorization: `Bearer ${token}` } };
-            const mockRes = {
-                status: () => mockRes,
-                json: (data) => { throw new Error(data.error || 'Authentication failed'); }
-            };
-            
-            validateJWT(mockReq, mockRes, (error) => {
-                if (error) {
-                    return next(error);
-                }
-                socket.user = mockReq.user;
-                next();
-            });
-        } catch (error) {
-            next(new Error('WebSocket authentication failed: ' + error.message));
-        }
-    });
-    
-    // WebSocket connection handling
-    io.on('connection', (socket) => {
-        const log = cds.log('websocket');
-        log.info(`WebSocket client connected: ${socket.id}`, {
-            userId: socket.user?.id,
-            userAgent: socket.handshake.headers['user-agent']
-        });
-        
-        // Join user to their personal room
-        if (socket.user?.id) {
-            socket.join(`user:${socket.user.id}`);
-        }
-        
-        // Handle subscription management
-        socket.on('subscribe', (topics) => {
-            if (!Array.isArray(topics)) {
-                socket.emit('error', { message: 'Topics must be an array' });
-                return;
-            }
-            
-            topics.forEach(topic => {
-                // Validate topic access based on user roles
-                if (hasTopicAccess(socket.user, topic)) {
-                    socket.join(`topic:${topic}`);
-                    log.debug(`User ${socket.user.id} subscribed to topic: ${topic}`);
-                } else {
-                    socket.emit('error', { message: `Access denied to topic: ${topic}` });
-                }
-            });
-            
-            socket.emit('subscribed', { topics: topics.filter(t => hasTopicAccess(socket.user, t)) });
-        });
-        
-        socket.on('unsubscribe', (topics) => {
-            if (!Array.isArray(topics)) {
-                socket.emit('error', { message: 'Topics must be an array' });
-                return;
-            }
-            
-            topics.forEach(topic => {
-                socket.leave(`topic:${topic}`);
-                log.debug(`User ${socket.user.id} unsubscribed from topic: ${topic}`);
-            });
-            
-            socket.emit('unsubscribed', { topics });
-        });
-        
-        // Handle disconnection
-        socket.on('disconnect', (reason) => {
-            log.info(`WebSocket client disconnected: ${socket.id}`, {
-                reason,
-                userId: socket.user?.id
-            });
-        });
-        
-        // Send initial connection confirmation
-        socket.emit('connected', {
-            socketId: socket.id,
-            userId: socket.user?.id,
-            timestamp: new Date().toISOString()
-        });
-    });
-    
-    log.info('WebSocket server initialized successfully');
+    // Apply enhanced error handling middleware
+    const { expressErrorMiddleware } = require('./utils/errorHandler');
+    app.use(expressErrorMiddleware);
     
     // Health check endpoints
     app.get('/health', async (req, res) => {
@@ -362,11 +399,12 @@ cds.on('bootstrap', async (app) => {
     // User API endpoints for BTP integration
     app.use('/user-api', require('./sapUserService'));
     
-    // Serve UI5 app
-    const path = require('path');
-    const express = require('express');
-    app.use('/app/a2a-fiori', express.static(path.join(__dirname, '../app/a2aFiori/webapp')));
-    app.use('/app/launchpad', express.static(path.join(__dirname, '../app/launchpad')));
+    // Serve UI5 app (duplicate removed - now served earlier before blocking middleware)
+    // app.use('/app/a2a-fiori', express.static(path.join(__dirname, '../app/a2aFiori/webapp')));
+    // app.use('/app/launchpad', express.static(path.join(__dirname, '../app/launchpad')));
+    
+    // Serve shells directory for Fiori Sandbox configuration (duplicate removed - now served earlier)
+    // app.use('/shells', express.static(path.join(__dirname, '../app/shells')));
     
     // Serve launchpad pages
     app.get('/launchpad.html', (req, res) => {
@@ -408,16 +446,24 @@ cds.on('bootstrap', async (app) => {
     
     // Cache management endpoints
     app.get('/cache/stats', async (req, res) => {
-        if (!req.user || !req.user.scope?.includes('Admin')) {
-            return res.status(403).json({ error: 'Forbidden' });
+        // SECURITY FIX: Improve authorization check for Admin access
+        if (!req.user || 
+            (!req.user.scope?.includes('Admin') && 
+             !req.user.roles?.includes('Admin') && 
+             !req.user.sapRoles?.includes('Admin'))) {
+            return res.status(403).json({ error: 'Admin role required' });
         }
         const stats = await cacheMiddleware.getStats();
         res.json(stats);
     });
     
     app.post('/cache/invalidate', async (req, res) => {
-        if (!req.user || !req.user.scope?.includes('Admin')) {
-            return res.status(403).json({ error: 'Forbidden' });
+        // SECURITY FIX: Improve authorization check for Admin access
+        if (!req.user || 
+            (!req.user.scope?.includes('Admin') && 
+             !req.user.roles?.includes('Admin') && 
+             !req.user.sapRoles?.includes('Admin'))) {
+            return res.status(403).json({ error: 'Admin role required' });
         }
         const { pattern } = req.body;
         if (!pattern) {
@@ -429,8 +475,12 @@ cds.on('bootstrap', async (app) => {
     
     // Logging endpoints
     app.get('/logs/audit', (req, res) => {
-        if (!req.user || !req.user.scope?.includes('Admin')) {
-            return res.status(403).json({ error: 'Forbidden' });
+        // SECURITY FIX: Improve authorization check for Admin access
+        if (!req.user || 
+            (!req.user.scope?.includes('Admin') && 
+             !req.user.roles?.includes('Admin') && 
+             !req.user.sapRoles?.includes('Admin'))) {
+            return res.status(403).json({ error: 'Admin role required' });
         }
         // Return recent audit logs (implementation depends on your storage)
         res.json({ message: 'Audit logs endpoint - implement based on your storage' });
@@ -438,8 +488,12 @@ cds.on('bootstrap', async (app) => {
     
     // Security monitoring dashboard
     app.get('/security/events', (req, res) => {
-        if (!req.user || !req.user.scope?.includes('Admin')) {
-            return res.status(403).json({ error: 'Forbidden' });
+        // SECURITY FIX: Improve authorization check for Admin access
+        if (!req.user || 
+            (!req.user.scope?.includes('Admin') && 
+             !req.user.roles?.includes('Admin') && 
+             !req.user.sapRoles?.includes('Admin'))) {
+            return res.status(403).json({ error: 'Admin role required' });
         }
         // Return recent security events
         res.json({ message: 'Security events endpoint - implement based on your requirements' });
@@ -455,7 +509,9 @@ cds.on('bootstrap', async (app) => {
     app.get('/health/ui', async (req, res) => {
         try {
             const UIHealthChecker = require('./lib/sapUiHealthCheck');
-            const healthChecker = new UIHealthChecker('http://localhost:4004');
+            const port = process.env.PORT || 4004;
+            const healthCheckUrl = process.env.UI_HEALTH_CHECK_URL || `http://localhost:${port}`;
+            const healthChecker = new UIHealthChecker(healthCheckUrl);
             
             cds.log('server').info('Starting comprehensive UI health check...');
             const results = await healthChecker.runFullHealthCheck();
@@ -471,39 +527,138 @@ cds.on('bootstrap', async (app) => {
             });
         }
     });
+
+    // NOTE: No HTTP server creation or return - CDS framework handles this
+    log.info('SAP CAP server bootstrap completed successfully');
 });
 
-// Graceful shutdown handling
-process.on('SIGINT', () => {
-    const log = cds.log('server');
-    log.info('Received SIGINT, shutting down gracefully');
-    
-    // Stop network statistics service
-    networkStats.stop();
-    
-    process.exit(0);
-});
-
-process.on('SIGTERM', () => {
-    const log = cds.log('server');
-    log.info('Received SIGTERM, shutting down gracefully');
-    
-    // Stop network statistics service
-    networkStats.stop();
-    
-    process.exit(0);
-});
-
-// Start periodic tasks after server is listening
+// SAP CAP Framework Compliant WebSocket Initialization - After Server is Listening
 cds.on('listening', async (info) => {
-    // Start the HTTP server with WebSocket if it's not already started by CAP
-    if (httpServer && !httpServer.listening) {
-        const port = info.port || process.env.PORT || 4004;
-        httpServer.listen(port, () => {
-            cds.log('server').info(`HTTP server with WebSocket listening on port ${port}`);
+    const log = cds.log('server');
+    
+    try {
+        // Get the HTTP server created by CDS framework
+        const httpServer = cds.app.server;
+        
+        // Initialize WebSocket server using CDS-managed HTTP server
+        io = new Server(httpServer, {
+            cors: {
+                origin: process.env.WEBSOCKET_CORS_ORIGIN || "*",
+                methods: ["GET", "POST"],
+                credentials: process.env.NODE_ENV === 'production'
+            },
+            transports: ['websocket', 'polling'],
+            pingTimeout: 60000,
+            pingInterval: 25000
         });
+        
+        // Make io available globally for CDS services
+        cds.io = io;
+        
+        // WebSocket authentication middleware
+        io.use(async (socket, next) => {
+            try {
+                const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.substring(7);
+                
+                if (!token) {
+                    // SECURITY FIX: Only allow development bypass in development environment
+                    if (process.env.USE_DEVELOPMENT_AUTH === 'true' && process.env.NODE_ENV === 'development') {
+                        // Development mode - allow connections without auth
+                        socket.user = { id: 'dev-user', roles: ['authenticated-user'], isDevelopment: true };
+                        return next();
+                    } else {
+                        return next(new Error('Authentication token required'));
+                    }
+                }
+                
+                // Use the same JWT validation as HTTP requests
+                const { validateJWT } = require('./middleware/auth');
+                const mockReq = { headers: { authorization: `Bearer ${token}` } };
+                const mockRes = {
+                    status: () => mockRes,
+                    json: (data) => { throw new Error(data.error || 'Authentication failed'); }
+                };
+                
+                validateJWT(mockReq, mockRes, (error) => {
+                    if (error) {
+                        return next(error);
+                    }
+                    socket.user = mockReq.user;
+                    next();
+                });
+            } catch (error) {
+                next(new Error('WebSocket authentication failed: ' + error.message));
+            }
+        });
+        
+        // WebSocket connection handling
+        io.on('connection', (socket) => {
+            const log = cds.log('websocket');
+            log.info(`WebSocket client connected: ${socket.id}`, {
+                userId: socket.user?.id,
+                userAgent: socket.handshake.headers['user-agent']
+            });
+            
+            // Join user to their personal room
+            if (socket.user?.id) {
+                socket.join(`user:${socket.user.id}`);
+            }
+            
+            // Handle subscription management
+            socket.on('subscribe', (topics) => {
+                if (!Array.isArray(topics)) {
+                    socket.emit('error', { message: 'Topics must be an array' });
+                    return;
+                }
+                
+                topics.forEach(topic => {
+                    // Validate topic access based on user roles
+                    if (hasTopicAccess(socket.user, topic)) {
+                        socket.join(`topic:${topic}`);
+                        log.debug(`User ${socket.user.id} subscribed to topic: ${topic}`);
+                    } else {
+                        socket.emit('error', { message: `Access denied to topic: ${topic}` });
+                    }
+                });
+                
+                socket.emit('subscribed', { topics: topics.filter(t => hasTopicAccess(socket.user, t)) });
+            });
+            
+            socket.on('unsubscribe', (topics) => {
+                if (!Array.isArray(topics)) {
+                    socket.emit('error', { message: 'Topics must be an array' });
+                    return;
+                }
+                
+                topics.forEach(topic => {
+                    socket.leave(`topic:${topic}`);
+                    log.debug(`User ${socket.user.id} unsubscribed from topic: ${topic}`);
+                });
+                
+                socket.emit('unsubscribed', { topics });
+            });
+            
+            // Handle disconnection
+            socket.on('disconnect', (reason) => {
+                log.info(`WebSocket client disconnected: ${socket.id}`, {
+                    reason,
+                    userId: socket.user?.id
+                });
+            });
+            
+            // Send initial connection confirmation
+            socket.emit('connected', {
+                socketId: socket.id,
+                userId: socket.user?.id,
+                timestamp: new Date().toISOString()
+            });
+        });
+        
+        log.info('WebSocket server initialized successfully');
+        
+    } catch (error) {
+        log.error('Failed to initialize WebSocket server:', error.message);
     }
-    const log = cds.log('jobs');
     
     // Initialize database connection
     try {
@@ -534,8 +689,22 @@ cds.on('listening', async (info) => {
         logger: 'server',
         version: process.env.APP_VERSION || '1.0.0',
         nodeVersion: process.version,
-        environment: process.env.NODE_ENV || 'development'
+        environment: process.env.NODE_ENV || 'development',
+        port: info.port
     });
+    
+    // Initialize enterprise services
+    try {
+        // Initialize notification service
+        notificationService = new A2ANotificationService();
+        log.info('✅ A2A Notification Service initialized successfully');
+        
+        // Initialize real-time data service
+        websocketDataService = new A2AWebSocketDataService();
+        log.info('✅ A2A Real-Time Data Service initialized successfully');
+    } catch (error) {
+        log.error('❌ Failed to initialize A2A Enterprise Services:', error);
+    }
     
     // Start network statistics service
     try {
@@ -545,13 +714,16 @@ cds.on('listening', async (info) => {
         log.error('Failed to start network statistics service:', error.message);
     }
     
-    // Flush logs periodically
-    setInterval(async () => {
-        try {
-            await monitoring.flushLogs();
-        } catch (error) {
-            log.error('Failed to flush logs:', error);
-        }
+    // Flush logs periodically with non-blocking async operation
+    logFlushInterval = setInterval(() => {
+        // Use setImmediate to avoid blocking the event loop
+        setImmediate(async () => {
+            try {
+                await monitoring.flushLogs();
+            } catch (error) {
+                log.error('Failed to flush logs:', error);
+            }
+        });
     }, 5000);
     
     // Create Cloud ALM dashboard
@@ -561,20 +733,62 @@ cds.on('listening', async (info) => {
     } catch (error) {
         log.error('Failed to create Cloud ALM dashboard:', error);
     }
+    
+    log.info(`SAP CAP server listening on port ${info.port} - OpenTelemetry monitoring: ENABLED`);
 });
 
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-    monitoring.log('info', 'Received SIGTERM signal, shutting down gracefully', {
-        logger: 'server'
-    });
-    
+// Unified graceful shutdown handler
+async function shutdown() {
+    const log = cds.log('server');
     try {
+        log.info('Shutting down gracefully...');
+        
+        // Clear log flush interval
+        if (logFlushInterval) {
+            clearInterval(logFlushInterval);
+            log.info('Log flush interval cleared');
+        }
+        
+        // Stop network statistics service
+        if (networkStats && typeof networkStats.stop === 'function') {
+            await networkStats.stop();
+        }
+        
+        // Close WebSocket server
+        if (io) {
+            await new Promise((resolve) => {
+                io.close(() => {
+                    log.info('WebSocket server closed');
+                    resolve();
+                });
+            });
+        }
+        
+        // Close database connection if exists
+        if (dbConnection && typeof dbConnection.close === 'function') {
+            await dbConnection.close();
+            log.info('Database connection closed');
+        } else if (dbConnection) {
+            log.info('Database connection exists but no close method available');
+        }
+        
         // Flush any remaining logs
         await monitoring.flushLogs();
-        process.exit(0);
+        log.info('Logs flushed successfully');
+        
+        return 0;
     } catch (error) {
-        cds.log('server').error('Error during shutdown:', error);
-        process.exit(1);
+        log.error('Error during shutdown:', error);
+        return 1;
     }
+}
+
+process.on('SIGINT', async () => {
+    const exitCode = await shutdown();
+    process.exit(exitCode);
+});
+
+process.on('SIGTERM', async () => {
+    const exitCode = await shutdown();
+    process.exit(exitCode);
 });

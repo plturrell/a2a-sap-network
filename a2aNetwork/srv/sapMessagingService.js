@@ -100,20 +100,25 @@ module.exports = class MessagingService extends cds.Service {
     }
     
     async _publishAgentEvent(req) {
-        const { eventType, payload } = req.data;
-        const event = JSON.parse(payload);
-        
-        await this.emit(eventType, {
-            ...event,
-            timestamp: new Date()
-        });
-        
-        // Publish to external messaging if available
-        if (this.messaging) {
-            await this.messaging.emit(`a2a.agent.${eventType}`, event);
+        try {
+            const { eventType, payload } = req.data;
+            const event = JSON.parse(payload);
+            
+            await this.emit(eventType, {
+                ...event,
+                timestamp: new Date()
+            });
+            
+            // Publish to external messaging if available
+            if (this.messaging) {
+                await this.messaging.emit(`a2a.agent.${eventType}`, event);
+            }
+            
+            return `Event ${eventType} published successfully`;
+        } catch (error) {
+            this.log.error('Failed to publish agent event:', error);
+            throw new Error(`Failed to publish agent event: ${error.message}`);
         }
-        
-        return `Event ${eventType} published successfully`;
     }
     
     async _publishServiceEvent(req) {
@@ -219,35 +224,112 @@ module.exports = class MessagingService extends cds.Service {
     }
     
     async _getQueueStatus(req) {
-        // Simulate queue status - in production, this would connect to actual message queue
-        const stats = {
-            pendingMessages: Math.floor(Math.random() * 100),
-            processedToday: Math.floor(Math.random() * 1000),
-            failedToday: Math.floor(Math.random() * 10),
-            queueHealth: 'healthy'
-        };
-        
-        if (stats.failedToday > 50) {
-            stats.queueHealth = 'degraded';
-        } else if (stats.pendingMessages > 500) {
-            stats.queueHealth = 'warning';
+        try {
+            // Get real queue metrics from Redis or message queue service
+            const redisClient = this.redisClient || require('../middleware/sapCacheMiddleware').getRedisClient();
+            if (!redisClient) {
+                throw new Error("Redis client not available for queue metrics");
+            }
+            
+            // Get real metrics from Redis
+            const [pending, processed, failed] = await Promise.all([
+                redisClient.llen('message_queue:pending'),
+                redisClient.get('queue_stats:processed_today') || '0',
+                redisClient.get('queue_stats:failed_today') || '0'
+            ]);
+            
+            const stats = {
+                pendingMessages: parseInt(pending) || 0,
+                processedToday: parseInt(processed) || 0,
+                failedToday: parseInt(failed) || 0,
+                queueHealth: 'healthy'
+            };
+            
+            // Calculate real health status
+            if (stats.failedToday > 50) {
+                stats.queueHealth = 'degraded';
+            } else if (stats.pendingMessages > 500) {
+                stats.queueHealth = 'warning';
+            }
+            
+            return stats;
+        } catch (error) {
+            this.logger.error('Failed to retrieve real queue status:', error);
+            throw new Error(`Queue status unavailable: ${error.message}`);
         }
-        
-        return stats;
     }
     
     async _retryFailedMessages(req) {
         const { since } = req.data;
         
-        // Simulate retry logic - in production, this would retry actual failed messages
-        const totalFailed = Math.floor(Math.random() * 50);
-        const successRate = 0.8;
-        
-        return {
-            retriedCount: totalFailed,
-            successCount: Math.floor(totalFailed * successRate),
-            failedCount: Math.floor(totalFailed * (1 - successRate))
-        };
+        try {
+            // Get real failed messages from dead letter queue
+            const redisClient = this.redisClient || require('../middleware/sapCacheMiddleware').getRedisClient();
+            if (!redisClient) {
+                throw new Error("Redis client not available for retry operations");
+            }
+            
+            // Get failed messages from dead letter queue
+            const failedMessages = await redisClient.lrange('message_queue:failed', 0, -1);
+            let retriedCount = 0;
+            let successCount = 0;
+            let failedCount = 0;
+            
+            for (const messageStr of failedMessages) {
+                try {
+                    const message = JSON.parse(messageStr);
+                    
+                    // Check if message should be retried based on timestamp
+                    if (since && new Date(message.failedAt) < new Date(since)) {
+                        continue;
+                    }
+                    
+                    // Attempt to reprocess the message
+                    retriedCount++;
+                    const success = await this._reprocessMessage(message);
+                    
+                    if (success) {
+                        successCount++;
+                        // Remove from failed queue
+                        await redisClient.lrem('message_queue:failed', 1, messageStr);
+                    } else {
+                        failedCount++;
+                    }
+                } catch (error) {
+                    this.logger.error('Failed to retry message:', error);
+                    failedCount++;
+                }
+            }
+            
+            return {
+                retriedCount,
+                successCount,
+                failedCount
+            };
+        } catch (error) {
+            this.logger.error('Failed to retry failed messages:', error);
+            throw new Error(`Message retry failed: ${error.message}`);
+        }
+    }
+    
+    async _reprocessMessage(message) {
+        try {
+            // Implement actual message reprocessing logic
+            // This would depend on your message processing pipeline
+            
+            // Example: Send message back to processing queue
+            const redisClient = this.redisClient || require('../middleware/sapCacheMiddleware').getRedisClient();
+            await redisClient.rpush('message_queue:pending', JSON.stringify(message));
+            
+            // Update retry count
+            message.retryCount = (message.retryCount || 0) + 1;
+            message.retriedAt = new Date().toISOString();
+            
+            return true; // Return true if successfully queued for reprocessing
+        } catch (error) {
+            this.logger.error('Failed to reprocess message:', error);
+            return false;
+        }
     }
     
     // Helper method to broadcast events via WebSocket

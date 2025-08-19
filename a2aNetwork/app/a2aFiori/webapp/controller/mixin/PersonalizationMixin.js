@@ -4,7 +4,7 @@ sap.ui.define([
     "sap/ui/fl/apply/api/ControlVariantApplyAPI",
     "sap/ui/fl/write/api/ControlPersonalizationWriteAPI",
     "sap/m/MessageToast"
-], function (Controller, VariantManagement, ControlVariantApplyAPI, ControlPersonalizationWriteAPI, MessageToast) {
+], function(Controller, VariantManagement, ControlVariantApplyAPI, ControlPersonalizationWriteAPI, MessageToast) {
     "use strict";
 
     /**
@@ -16,7 +16,7 @@ sap.ui.define([
          * Initialize personalization for the view
          * @public
          */
-        initPersonalization: function () {
+        initPersonalization() {
             this._oPersonalizationPromise = this._loadPersonalizationData();
             this._registerPersonalizationHandlers();
             this._initializeVariantManagement();
@@ -27,7 +27,7 @@ sap.ui.define([
          * @private
          * @returns {Promise} Promise resolving with personalization data
          */
-        _loadPersonalizationData: function () {
+        _loadPersonalizationData() {
             const sUserId = this.getOwnerComponent().getModel("user").getProperty("/id");
             const sViewId = this.getView().getId();
 
@@ -56,7 +56,7 @@ sap.ui.define([
          * @private
          * @returns {object} Default personalization object
          */
-        _getDefaultPersonalization: function () {
+        _getDefaultPersonalization() {
             return {
                 theme: "sap_horizon",
                 density: "cozy",
@@ -84,7 +84,7 @@ sap.ui.define([
          * @private
          * @param {object} oPersonalizationData Personalization data
          */
-        _applyPersonalization: function (oPersonalizationData) {
+        _applyPersonalization(oPersonalizationData) {
             // Apply theme
             if (oPersonalizationData.theme) {
                 sap.ui.getCore().applyTheme(oPersonalizationData.theme);
@@ -114,9 +114,9 @@ sap.ui.define([
          * @private
          * @param {object} oTableSettings Table personalization settings
          */
-        _applyTablePersonalization: function (oTableSettings) {
+        _applyTablePersonalization(oTableSettings) {
             const aTables = this._findControlsByType("sap.m.Table");
-            
+
             aTables.forEach(oTable => {
                 const sTableId = oTable.getId();
                 const oSettings = oTableSettings[sTableId];
@@ -131,7 +131,7 @@ sap.ui.define([
 
                     // Apply sort settings
                     if (oSettings.sortOrder && oTable.getBinding("items")) {
-                        const aSorters = oSettings.sortOrder.map(oSort => 
+                        const aSorters = oSettings.sortOrder.map(oSort =>
                             new sap.ui.model.Sorter(oSort.path, oSort.descending)
                         );
                         oTable.getBinding("items").sort(aSorters);
@@ -145,11 +145,11 @@ sap.ui.define([
          * @private
          * @param {object} oDashboardLayout Dashboard layout settings
          */
-        _applyDashboardPersonalization: function (oDashboardLayout) {
+        _applyDashboardPersonalization(oDashboardLayout) {
             const oDashboard = this.byId("dashboard");
             if (oDashboard && oDashboard.setLayout) {
                 oDashboard.setLayout(oDashboardLayout.layout);
-                
+
                 // Reorder tiles based on saved preferences
                 if (oDashboardLayout.tiles && Array.isArray(oDashboardLayout.tiles)) {
                     this._reorderDashboardTiles(oDashboardLayout.tiles);
@@ -161,9 +161,9 @@ sap.ui.define([
          * Initialize variant management for the view
          * @private
          */
-        _initializeVariantManagement: function () {
+        _initializeVariantManagement() {
             const oView = this.getView();
-            
+
             // Create variant management control
             this._oVariantManagement = new VariantManagement({
                 standardItemText: "Standard",
@@ -190,11 +190,11 @@ sap.ui.define([
          * Load available variants for the current view
          * @private
          */
-        _loadVariants: function () {
+        _loadVariants() {
             ControlVariantApplyAPI.loadVariants({
                 control: this.getView(),
                 standardVariant: {}
-            }).then(function (aVariants) {
+            }).then(function(aVariants) {
                 // Add variants to variant management control
                 aVariants.forEach(oVariant => {
                     this._oVariantManagement.addVariantItem(new sap.ui.fl.variants.VariantItem({
@@ -211,7 +211,7 @@ sap.ui.define([
          * Register personalization event handlers
          * @private
          */
-        _registerPersonalizationHandlers: function () {
+        _registerPersonalizationHandlers() {
             // Enable drag and drop for dashboard tiles
             this._enableDashboardDragDrop();
 
@@ -226,11 +226,11 @@ sap.ui.define([
          * Enable drag and drop functionality for dashboard tiles
          * @private
          */
-        _enableDashboardDragDrop: function () {
+        _enableDashboardDragDrop() {
             const oDashboard = this.byId("dashboard");
             if (oDashboard) {
                 oDashboard.addEventDelegate({
-                    onAfterRendering: function () {
+                    onAfterRendering: function() {
                         this._initializeDragDrop(oDashboard);
                     }.bind(this)
                 });
@@ -242,8 +242,8 @@ sap.ui.define([
          * @private
          * @param {sap.ui.core.Control} oContainer Container control
          */
-        _initializeDragDrop: function (oContainer) {
-            const aDraggables = oContainer.findAggregatedObjects(true, function (oControl) {
+        _initializeDragDrop(oContainer) {
+            const aDraggables = oContainer.findAggregatedObjects(true, function(oControl) {
                 return oControl.isA("sap.m.GenericTile");
             });
 
@@ -265,9 +265,11 @@ sap.ui.define([
          * Add personalization toolbar to the view
          * @private
          */
-        _addPersonalizationToolbar: function () {
+        _addPersonalizationToolbar() {
             const oPage = this.byId("page");
-            if (!oPage) return;
+            if (!oPage) {
+                return;
+            }
 
             const oToolbar = new sap.m.Toolbar({
                 visible: false,
@@ -301,7 +303,7 @@ sap.ui.define([
             });
 
             oPage.setSubHeader(oToolbar);
-            
+
             // Show toolbar in personalization mode
             this._oPersonalizationToolbar = oToolbar;
         },
@@ -310,14 +312,14 @@ sap.ui.define([
          * Register keyboard shortcuts for personalization
          * @private
          */
-        _registerPersonalizationShortcuts: function () {
-            document.addEventListener("keydown", function (oEvent) {
+        _registerPersonalizationShortcuts() {
+            document.addEventListener("keydown", function(oEvent) {
                 // Ctrl/Cmd + Shift + P: Open personalization
                 if ((oEvent.ctrlKey || oEvent.metaKey) && oEvent.shiftKey && oEvent.key === "P") {
                     oEvent.preventDefault();
                     this.onOpenPersonalizationDialog();
                 }
-                
+
                 // Ctrl/Cmd + Shift + R: Reset personalization
                 if ((oEvent.ctrlKey || oEvent.metaKey) && oEvent.shiftKey && oEvent.key === "R") {
                     oEvent.preventDefault();
@@ -330,7 +332,7 @@ sap.ui.define([
          * Open personalization dialog
          * @public
          */
-        onOpenPersonalizationDialog: function () {
+        onOpenPersonalizationDialog() {
             if (!this._oPersonalizationDialog) {
                 this._oPersonalizationDialog = sap.ui.xmlfragment(
                     "com.sap.a2a.fragment.PersonalizationDialog",
@@ -350,7 +352,7 @@ sap.ui.define([
          * Save personalization settings
          * @public
          */
-        onSavePersonalization: function () {
+        onSavePersonalization() {
             const oPersonalizationData = this.getOwnerComponent().getModel("personalization").getData();
             const sUserId = this.getOwnerComponent().getModel("user").getProperty("/id");
             const sViewId = this.getView().getId();
@@ -371,7 +373,7 @@ sap.ui.define([
          * @private
          * @param {object} oPersonalizationData Personalization data
          */
-        _savePersonalizationToBackend: function (oPersonalizationData) {
+        _savePersonalizationToBackend(oPersonalizationData) {
             const oModel = this.getOwnerComponent().getModel();
             oModel.create("/UserPersonalizations", {
                 userId: this.getOwnerComponent().getModel("user").getProperty("/id"),
@@ -384,9 +386,9 @@ sap.ui.define([
          * Reset personalization to defaults
          * @public
          */
-        onResetPersonalization: function () {
+        onResetPersonalization() {
             sap.m.MessageBox.confirm("Are you sure you want to reset all personalizations?", {
-                onClose: function (oAction) {
+                onClose: function(oAction) {
                     if (oAction === sap.m.MessageBox.Action.OK) {
                         const oDefaultPersonalization = this._getDefaultPersonalization();
                         this._applyPersonalization(oDefaultPersonalization);
@@ -401,7 +403,7 @@ sap.ui.define([
          * @public
          * @param {sap.ui.base.Event} oEvent Selection change event
          */
-        onDensityChange: function (oEvent) {
+        onDensityChange(oEvent) {
             const sSelectedKey = oEvent.getParameter("item").getKey();
             const oView = this.getView();
 
@@ -421,10 +423,10 @@ sap.ui.define([
          * @public
          * @param {sap.ui.base.Event} oEvent Save event
          */
-        onSaveVariant: function (oEvent) {
+        onSaveVariant(oEvent) {
             const sVariantName = oEvent.getParameter("name");
-            const bDefault = oEvent.getParameter("def");
-            const bPublic = oEvent.getParameter("public");
+            const _bDefault = oEvent.getParameter("def");
+            const _bPublic = oEvent.getParameter("public");
             const bExecuteOnSelect = oEvent.getParameter("execute");
 
             // Get current personalization state
@@ -447,7 +449,7 @@ sap.ui.define([
                         content: oPersonalizationData
                     }
                 }]
-            }).then(function () {
+            }).then(function() {
                 MessageToast.show(`Variant "${sVariantName}" saved successfully`);
                 this._loadVariants();
             }.bind(this));
@@ -455,10 +457,10 @@ sap.ui.define([
 
         /**
          * Handle variant selection
-         * @public  
+         * @public
          * @param {sap.ui.base.Event} oEvent Selection event
          */
-        onSelectVariant: function (oEvent) {
+        onSelectVariant(oEvent) {
             const sVariantKey = oEvent.getParameter("key");
 
             if (sVariantKey === "*standard*") {
@@ -468,7 +470,7 @@ sap.ui.define([
                 ControlVariantApplyAPI.activateVariant({
                     element: this.getView(),
                     variantReference: sVariantKey
-                }).then(function () {
+                }).then(function() {
                     MessageToast.show("Variant applied successfully");
                 });
             }
@@ -479,9 +481,9 @@ sap.ui.define([
          * @public
          * @param {sap.ui.base.Event} oEvent Drag event
          */
-        onDragStart: function (oEvent) {
+        onDragStart(oEvent) {
             const oDraggedControl = oEvent.getParameter("draggedControl");
-            const oDragSession = oEvent.getParameter("dragSession");
+            const _oDragSession = oEvent.getParameter("dragSession");
 
             oDragSession.setComplexData("draggedControl", {
                 id: oDraggedControl.getId(),
@@ -494,8 +496,8 @@ sap.ui.define([
          * @public
          * @param {sap.ui.base.Event} oEvent Drop event
          */
-        onDrop: function (oEvent) {
-            const oDragSession = oEvent.getParameter("dragSession");
+        onDrop(oEvent) {
+            const _oDragSession = oEvent.getParameter("dragSession");
             const oDraggedControl = oEvent.getParameter("draggedControl");
             const oDroppedControl = oEvent.getParameter("droppedControl");
             const sDropPosition = oEvent.getParameter("dropPosition");
@@ -525,9 +527,11 @@ sap.ui.define([
          * Save tile order to personalization
          * @private
          */
-        _saveTileOrder: function () {
+        _saveTileOrder() {
             const oDashboard = this.byId("dashboard");
-            if (!oDashboard) return;
+            if (!oDashboard) {
+                return;
+            }
 
             const aTiles = oDashboard.getAggregation("tiles") || [];
             const aTileOrder = aTiles.map(oTile => oTile.getId());
@@ -547,14 +551,14 @@ sap.ui.define([
          * @param {string} sType Control type
          * @returns {array} Array of controls
          */
-        _findControlsByType: function (sType) {
+        _findControlsByType(sType) {
             const aControls = [];
-            
+
             function findControls(oControl) {
                 if (oControl.isA(sType)) {
                     aControls.push(oControl);
                 }
-                
+
                 const aAggregations = oControl.getMetadata().getAllAggregations();
                 for (const sAggregation in aAggregations) {
                     const aChildren = oControl.getAggregation(sAggregation);
@@ -574,7 +578,7 @@ sap.ui.define([
          * Clean up personalization on exit
          * @public
          */
-        cleanupPersonalization: function () {
+        cleanupPersonalization() {
             if (this._oPersonalizationDialog) {
                 this._oPersonalizationDialog.destroy();
                 this._oPersonalizationDialog = null;

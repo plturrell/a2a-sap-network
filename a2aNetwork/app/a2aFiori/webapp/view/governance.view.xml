@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<mvc:View
+    controllerName="a2a.network.fiori.controller.governance"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:cards="sap.f.cards"
+    xmlns:viz="sap.viz"
+    xmlns:micro="sap.suite.ui.microchart"
+    xmlns:uxap="sap.uxap"
+    xmlns:form="sap.ui.layout.form"
+    displayBlock="true"
+    height="100%">
+
+    <Page id="governancePage" 
+          title="{i18n>governanceTitle}" 
+          showNavButton="true" 
+          navButtonPress="onNavBack"
+          class="sapUiResponsiveContentPadding">
+        
+        <content>
+            <!-- Header with Key Metrics -->
+            <f:DynamicPage id="governanceDynamicPage">
+                
+                <!-- Header -->
+                <f:header>
+                    <f:DynamicPageHeader pinnable="true">
+                        <f:content>
+                            <HBox class="sapUiMediumMarginBottom" wrap="Wrap">
+                                
+                                <!-- Governance Token Stats -->
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <f:Card class="sapUiMediumMargin" width="320px">
+                                        <f:header>
+                                            <cards:Header title="{i18n>tokenMetrics}" iconSrc="sap-icon://coins"/>
+                                        </f:header>
+                                        <f:content>
+                                            <VBox class="sapUiContentPadding">
+                                                <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                                    <Text text="{i18n>totalSupply}" class="sapUiTinyMarginEnd"/>
+                                                    <Text text="{governance>/tokenStats/totalSupply}" class="sapThemeHighlight-asColor"/>
+                                                </HBox>
+                                                <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                                    <Text text="{i18n>circulatingSupply}" class="sapUiTinyMarginEnd"/>
+                                                    <Text text="{governance>/tokenStats/circulatingSupply}" class="sapThemeHighlight-asColor"/>
+                                                </HBox>
+                                                <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                                    <Text text="{i18n>stakedTokens}" class="sapUiTinyMarginEnd"/>
+                                                    <Text text="{governance>/tokenStats/stakedTokens}" class="sapThemeHighlight-asColor"/>
+                                                </HBox>
+                                                <HBox justifyContent="SpaceBetween">
+                                                    <Text text="{i18n>stakingAPR}" class="sapUiTinyMarginEnd"/>
+                                                    <Text text="{governance>/tokenStats/stakingAPR}%" class="sapThemePositive-asColor"/>
+                                                </HBox>
+                                            </VBox>
+                                        </f:content>
+                                    </f:Card>
+                                </VBox>
+
+                                <!-- Voting Power -->
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <f:Card class="sapUiMediumMargin" width="320px">
+                                        <f:header>
+                                            <cards:Header title="{i18n>votingPower}" iconSrc="sap-icon://thumb-up"/>
+                                        </f:header>
+                                        <f:content>
+                                            <VBox class="sapUiContentPadding">
+                                                <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                                    <Text text="{i18n>yourTokens}" class="sapUiTinyMarginEnd"/>
+                                                    <Text text="{governance>/userStats/tokens}" class="sapThemeHighlight-asColor"/>
+                                                </HBox>
+                                                <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                                    <Text text="{i18n>yourVotingPower}" class="sapUiTinyMarginEnd"/>
+                                                    <Text text="{governance>/userStats/votingPower}" class="sapThemeHighlight-asColor"/>
+                                                </HBox>
+                                                <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                                    <Text text="{i18n>delegatedTo}" class="sapUiTinyMarginEnd"/>
+                                                    <Text text="{governance>/userStats/delegatedTo}" class="sapThemeHighlight-asColor"/>
+                                                </HBox>
+                                                <Button text="{i18n>manageStaking}" 
+                                                        type="Emphasized" 
+                                                        width="100%" 
+                                                        press="onManageStaking"
+                                                        class="sapUiTinyMarginTop"/>
+                                            </VBox>
+                                        </f:content>
+                                    </f:Card>
+                                </VBox>
+
+                                <!-- Governance Stats -->
+                                <VBox>
+                                    <f:Card class="sapUiMediumMargin" width="320px">
+                                        <f:header>
+                                            <cards:Header title="{i18n>governanceStats}" iconSrc="sap-icon://chart-axis"/>
+                                        </f:header>
+                                        <f:content>
+                                            <VBox class="sapUiContentPadding">
+                                                <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                                    <Text text="{i18n>activeProposals}" class="sapUiTinyMarginEnd"/>
+                                                    <Text text="{governance>/stats/activeProposals}" class="sapThemeHighlight-asColor"/>
+                                                </HBox>
+                                                <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                                    <Text text="{i18n>totalProposals}" class="sapUiTinyMarginEnd"/>
+                                                    <Text text="{governance>/stats/totalProposals}" class="sapThemeHighlight-asColor"/>
+                                                </HBox>
+                                                <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                                    <Text text="{i18n>participationRate}" class="sapUiTinyMarginEnd"/>
+                                                    <Text text="{governance>/stats/participationRate}%" class="sapThemePositive-asColor"/>
+                                                </HBox>
+                                                <HBox justifyContent="SpaceBetween">
+                                                    <Text text="{i18n>averageQuorum}" class="sapUiTinyMarginEnd"/>
+                                                    <Text text="{governance>/stats/averageQuorum}%" class="sapThemeHighlight-asColor"/>
+                                                </HBox>
+                                            </VBox>
+                                        </f:content>
+                                    </f:Card>
+                                </VBox>
+                            </HBox>
+                        </f:content>
+                    </f:DynamicPageHeader>
+                </f:header>
+
+                <!-- Main Content -->
+                <f:content>
+                    <IconTabBar id="governanceTabBar" expanded="true" stretchContentHeight="true">
+                        
+                        <!-- Active Proposals Tab -->
+                        <items>
+                            <IconTabFilter key="proposals" text="{i18n>proposals}" icon="sap-icon://document">
+                                <content>
+                                    <VBox class="sapUiMediumMargin">
+                                        
+                                        <!-- Create Proposal Button -->
+                                        <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiMediumMarginBottom">
+                                            <Title text="{i18n>activeProposals}" level="H2"/>
+                                            <Button text="{i18n>createProposal}" 
+                                                    type="Emphasized" 
+                                                    icon="sap-icon://add"
+                                                    press="onCreateProposal"/>
+                                        </HBox>
+
+                                        <!-- Proposals Table -->
+                                        <Table id="proposalsTable" 
+                                               items="{governance>/proposals}" 
+                                               growing="true" 
+                                               growingThreshold="20"
+                                               mode="SingleSelect"
+                                               selectionChange="onProposalSelect">
+                                            <headerToolbar>
+                                                <Toolbar>
+                                                    <Title text="{i18n>proposals}"/>
+                                                    <ToolbarSpacer/>
+                                                    <SearchField id="proposalSearch" width="200px" search="onSearchProposals"/>
+                                                    <ComboBox id="categoryFilter" 
+                                                              placeholder="{i18n>filterByCategory}"
+                                                              items="{governance>/categories}"
+                                                              selectedKey="{governance>/selectedCategory}"
+                                                              selectionChange="onCategoryFilter">
+                                                        <core:Item key="{key}" text="{text}"/>
+                                                    </ComboBox>
+                                                </Toolbar>
+                                            </headerToolbar>
+                                            <columns>
+                                                <Column width="4rem">
+                                                    <Text text="{i18n>id}"/>
+                                                </Column>
+                                                <Column width="12rem">
+                                                    <Text text="{i18n>title}"/>
+                                                </Column>
+                                                <Column width="8rem">
+                                                    <Text text="{i18n>category}"/>
+                                                </Column>
+                                                <Column width="6rem" hAlign="Center">
+                                                    <Text text="{i18n>status}"/>
+                                                </Column>
+                                                <Column width="8rem" hAlign="End">
+                                                    <Text text="{i18n>forVotes}"/>
+                                                </Column>
+                                                <Column width="8rem" hAlign="End">
+                                                    <Text text="{i18n>againstVotes}"/>
+                                                </Column>
+                                                <Column width="6rem" hAlign="Center">
+                                                    <Text text="{i18n>quorum}"/>
+                                                </Column>
+                                                <Column width="8rem">
+                                                    <Text text="{i18n>endDate}"/>
+                                                </Column>
+                                                <Column width="8rem" hAlign="Center">
+                                                    <Text text="{i18n>actions}"/>
+                                                </Column>
+                                            </columns>
+                                            <items>
+                                                <ColumnListItem press="onProposalPress">
+                                                    <cells>
+                                                        <Text text="#{id}"/>
+                                                        <Link text="{title}" press="onProposalPress"/>
+                                                        <ObjectStatus text="{category}" 
+                                                                      state="{path: 'category', formatter: '.formatCategoryState'}"/>
+                                                        <ObjectStatus text="{status}" 
+                                                                      state="{path: 'status', formatter: '.formatStatusState'}"/>
+                                                        <Text text="{forVotes}"/>
+                                                        <Text text="{againstVotes}"/>
+                                                        <micro:RadialMicroChart size="S" percentage="{quorumPercentage}"/>
+                                                        <Text text="{path: 'endDate', type: 'sap.ui.model.odata.type.DateTimeOffset'}"/>
+                                                        <HBox>
+                                                            <Button icon="sap-icon://thumb-up" 
+                                                                    type="Accept" 
+                                                                    tooltip="{i18n>voteFor}"
+                                                                    press="onVoteFor"
+                                                                    visible="{path: 'status', formatter: '.isVotingActive'}"
+                                                                    class="sapUiTinyMarginEnd"/>
+                                                            <Button icon="sap-icon://thumb-down" 
+                                                                    type="Reject" 
+                                                                    tooltip="{i18n>voteAgainst}"
+                                                                    press="onVoteAgainst"
+                                                                    visible="{path: 'status', formatter: '.isVotingActive'}"/>
+                                                        </HBox>
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+                                        </Table>
+                                    </VBox>
+                                </content>
+                            </IconTabFilter>
+
+                            <!-- Staking Tab -->
+                            <IconTabFilter key="staking" text="{i18n>staking}" icon="sap-icon://coins">
+                                <content>
+                                    <VBox class="sapUiMediumMargin">
+                                        
+                                        <Title text="{i18n>stakingManagement}" level="H2" class="sapUiMediumMarginBottom"/>
+                                        
+                                        <HBox wrap="Wrap">
+                                            <!-- Staking Form -->
+                                            <VBox class="sapUiLargeMarginEnd">
+                                                <f:Card width="400px">
+                                                    <f:header>
+                                                        <cards:Header title="{i18n>stakeTokens}" iconSrc="sap-icon://add"/>
+                                                    </f:header>
+                                                    <f:content>
+                                                        <form:SimpleForm class="sapUiContentPadding"
+                                                                         editable="true"
+                                                                         layout="ResponsiveGridLayout">
+                                                            <form:content>
+                                                                <Label text="{i18n>availableBalance}"/>
+                                                                <Text text="{governance>/userStats/availableBalance} A2A"/>
+                                                                
+                                                                <Label text="{i18n>amountToStake}"/>
+                                                                <Input id="stakeAmount" 
+                                                                       value="{governance>/stakeForm/amount}"
+                                                                       type="Number"
+                                                                       placeholder="{i18n>enterAmount}"
+                                                                       liveChange="onStakeAmountChange"/>
+                                                                
+                                                                <Label text="{i18n>stakingPeriod}"/>
+                                                                <ComboBox id="stakingPeriod"
+                                                                          selectedKey="{governance>/stakeForm/period}"
+                                                                          items="{governance>/stakingPeriods}">
+                                                                    <core:Item key="{key}" text="{text}"/>
+                                                                </ComboBox>
+                                                                
+                                                                <Label text="{i18n>estimatedRewards}"/>
+                                                                <Text text="{governance>/stakeForm/estimatedRewards} A2A" 
+                                                                      class="sapThemePositive-asColor"/>
+                                                                
+                                                                <Button text="{i18n>stakeTokens}" 
+                                                                        type="Emphasized" 
+                                                                        width="100%"
+                                                                        press="onStakeTokens"
+                                                                        enabled="{governance>/stakeForm/valid}"/>
+                                                            </form:content>
+                                                        </form:SimpleForm>
+                                                    </f:content>
+                                                </f:Card>
+                                            </VBox>
+                                            
+                                            <!-- Current Stakes -->
+                                            <VBox>
+                                                <f:Card width="500px">
+                                                    <f:header>
+                                                        <cards:Header title="{i18n>yourStakes}" iconSrc="sap-icon://wallet"/>
+                                                    </f:header>
+                                                    <f:content>
+                                                        <Table items="{governance>/userStakes}" class="sapUiContentPadding">
+                                                            <columns>
+                                                                <Column><Text text="{i18n>amount}"/></Column>
+                                                                <Column><Text text="{i18n>period}"/></Column>
+                                                                <Column><Text text="{i18n>rewards}"/></Column>
+                                                                <Column><Text text="{i18n>unlockDate}"/></Column>
+                                                                <Column><Text text="{i18n>actions}"/></Column>
+                                                            </columns>
+                                                            <items>
+                                                                <ColumnListItem>
+                                                                    <cells>
+                                                                        <Text text="{amount} A2A"/>
+                                                                        <Text text="{period}"/>
+                                                                        <Text text="{rewards} A2A" class="sapThemePositive-asColor"/>
+                                                                        <Text text="{path: 'unlockDate', type: 'sap.ui.model.odata.type.DateTimeOffset'}"/>
+                                                                        <Button text="{i18n>unstake}" 
+                                                                                type="Transparent"
+                                                                                press="onUnstake"
+                                                                                enabled="{unlockable}"/>
+                                                                    </cells>
+                                                                </ColumnListItem>
+                                                            </items>
+                                                        </Table>
+                                                    </f:content>
+                                                </f:Card>
+                                            </VBox>
+                                        </HBox>
+                                    </VBox>
+                                </content>
+                            </IconTabFilter>
+
+                            <!-- Delegation Tab -->
+                            <IconTabFilter key="delegation" text="{i18n>delegation}" icon="sap-icon://share-2">
+                                <content>
+                                    <VBox class="sapUiMediumMargin">
+                                        
+                                        <Title text="{i18n>voteDelegation}" level="H2" class="sapUiMediumMarginBottom"/>
+                                        
+                                        <HBox wrap="Wrap">
+                                            <!-- Delegate Form -->
+                                            <VBox class="sapUiLargeMarginEnd">
+                                                <f:Card width="400px">
+                                                    <f:header>
+                                                        <cards:Header title="{i18n>delegateVoting}" iconSrc="sap-icon://share"/>
+                                                    </f:header>
+                                                    <f:content>
+                                                        <form:SimpleForm class="sapUiContentPadding"
+                                                                         editable="true"
+                                                                         layout="ResponsiveGridLayout">
+                                                            <form:content>
+                                                                <Label text="{i18n>currentDelegate}"/>
+                                                                <Text text="{governance>/userStats/currentDelegate}"/>
+                                                                
+                                                                <Label text="{i18n>newDelegate}"/>
+                                                                <Input id="delegateAddress" 
+                                                                       value="{governance>/delegateForm/address}"
+                                                                       placeholder="{i18n>enterDelegateAddress}"
+                                                                       liveChange="onDelegateAddressChange"/>
+                                                                
+                                                                <Button text="{i18n>delegateVotes}" 
+                                                                        type="Emphasized" 
+                                                                        width="100%"
+                                                                        press="onDelegateVotes"
+                                                                        enabled="{governance>/delegateForm/valid}"/>
+                                                                
+                                                                <Button text="{i18n>removeDelegation}" 
+                                                                        type="Transparent" 
+                                                                        width="100%"
+                                                                        press="onRemoveDelegation"
+                                                                        visible="{governance>/userStats/hasDelegated}"/>
+                                                            </form:content>
+                                                        </form:SimpleForm>
+                                                    </f:content>
+                                                </f:Card>
+                                            </VBox>
+                                            
+                                            <!-- Top Delegates -->
+                                            <VBox>
+                                                <f:Card width="500px">
+                                                    <f:header>
+                                                        <cards:Header title="{i18n>topDelegates}" iconSrc="sap-icon://employee"/>
+                                                    </f:header>
+                                                    <f:content>
+                                                        <Table items="{governance>/topDelegates}" class="sapUiContentPadding">
+                                                            <columns>
+                                                                <Column><Text text="{i18n>delegate}"/></Column>
+                                                                <Column><Text text="{i18n>votingPower}"/></Column>
+                                                                <Column><Text text="{i18n>proposals}"/></Column>
+                                                                <Column><Text text="{i18n>participation}"/></Column>
+                                                                <Column><Text text="{i18n>actions}"/></Column>
+                                                            </columns>
+                                                            <items>
+                                                                <ColumnListItem>
+                                                                    <cells>
+                                                                        <VBox>
+                                                                            <Text text="{name}" class="sapThemeHighlight-asColor"/>
+                                                                            <Text text="{address}" class="sapUiTinyText"/>
+                                                                        </VBox>
+                                                                        <Text text="{votingPower}"/>
+                                                                        <Text text="{proposalsCreated}"/>
+                                                                        <Text text="{participationRate}%"/>
+                                                                        <Button text="{i18n>delegate}" 
+                                                                                type="Emphasized"
+                                                                                press="onDelegateToUser"/>
+                                                                    </cells>
+                                                                </ColumnListItem>
+                                                            </items>
+                                                        </Table>
+                                                    </f:content>
+                                                </f:Card>
+                                            </VBox>
+                                        </HBox>
+                                    </VBox>
+                                </content>
+                            </IconTabFilter>
+
+                            <!-- History Tab -->
+                            <IconTabFilter key="history" text="{i18n>history}" icon="sap-icon://history">
+                                <content>
+                                    <VBox class="sapUiMediumMargin">
+                                        
+                                        <Title text="{i18n>governanceHistory}" level="H2" class="sapUiMediumMarginBottom"/>
+                                        
+                                        <!-- Voting History -->
+                                        <Table id="historyTable" 
+                                               items="{governance>/userHistory}" 
+                                               growing="true" 
+                                               growingThreshold="20">
+                                            <headerToolbar>
+                                                <Toolbar>
+                                                    <Title text="{i18n>yourVotingHistory}"/>
+                                                    <ToolbarSpacer/>
+                                                    <DateRangeSelection id="historyDateRange"/>
+                                                    <Button text="{i18n>filter}" type="Transparent" press="onFilterHistory"/>
+                                                </Toolbar>
+                                            </headerToolbar>
+                                            <columns>
+                                                <Column><Text text="{i18n>proposal}"/></Column>
+                                                <Column><Text text="{i18n>vote}"/></Column>
+                                                <Column><Text text="{i18n>votingPower}"/></Column>
+                                                <Column><Text text="{i18n>date}"/></Column>
+                                                <Column><Text text="{i18n>result}"/></Column>
+                                            </columns>
+                                            <items>
+                                                <ColumnListItem>
+                                                    <cells>
+                                                        <Link text="{proposalTitle}" press="onHistoryProposalPress"/>
+                                                        <ObjectStatus text="{vote}" 
+                                                                      state="{path: 'vote', formatter: '.formatVoteState'}"/>
+                                                        <Text text="{votingPower}"/>
+                                                        <Text text="{path: 'voteDate', type: 'sap.ui.model.odata.type.DateTimeOffset'}"/>
+                                                        <ObjectStatus text="{result}" 
+                                                                      state="{path: 'result', formatter: '.formatResultState'}"/>
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+                                        </Table>
+                                    </VBox>
+                                </content>
+                            </IconTabFilter>
+
+                        </items>
+                    </IconTabBar>
+                </f:content>
+            </f:DynamicPage>
+        </content>
+    </Page>
+
+    <!-- Create Proposal Dialog -->
+    <Dialog id="createProposalDialog" 
+            title="{i18n>createProposal}" 
+            contentWidth="600px"
+            resizable="true"
+            draggable="true">
+        <content>
+            <form:SimpleForm editable="true" layout="ResponsiveGridLayout" class="sapUiContentPadding">
+                <form:content>
+                    <Label text="{i18n>proposalTitle}" required="true"/>
+                    <Input id="proposalTitle" value="{governance>/newProposal/title}" required="true"/>
+                    
+                    <Label text="{i18n>category}" required="true"/>
+                    <ComboBox id="proposalCategory" 
+                              selectedKey="{governance>/newProposal/category}"
+                              items="{governance>/categories}">
+                        <core:Item key="{key}" text="{text}"/>
+                    </ComboBox>
+                    
+                    <Label text="{i18n>description}" required="true"/>
+                    <TextArea id="proposalDescription" 
+                              value="{governance>/newProposal/description}"
+                              rows="5"
+                              growing="true"
+                              required="true"/>
+                    
+                    <Label text="{i18n>executionDelay}"/>
+                    <ComboBox id="executionDelay" 
+                              selectedKey="{governance>/newProposal/delay}"
+                              items="{governance>/executionDelays}">
+                        <core:Item key="{key}" text="{text}"/>
+                    </ComboBox>
+                    
+                    <Label text="{i18n>ipfsHash}"/>
+                    <Input id="ipfsHash" value="{governance>/newProposal/ipfsHash}" placeholder="{i18n>optionalIPFSHash}"/>
+                </form:content>
+            </form:SimpleForm>
+        </content>
+        <beginButton>
+            <Button text="{i18n>create}" 
+                    type="Emphasized" 
+                    press="onCreateProposalConfirm"
+                    enabled="{governance>/newProposal/valid}"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>cancel}" press="onCreateProposalCancel"/>
+        </endButton>
+    </Dialog>
+
+</mvc:View>

@@ -144,9 +144,8 @@ class EnterpriseLogger {
         content_length: req.headers['content-length'] || 0
       });
 
-      // Override res.end to log response
-      const originalEnd = res.end;
-      res.end = function(chunk, encoding) {
+      // Use response event listeners instead of overriding res.end to avoid OpenTelemetry conflicts
+      res.on('finish', () => {
         const duration = Date.now() - startTime;
         const contentLength = parseInt(res.get('Content-Length') || 0);
 
@@ -173,9 +172,7 @@ class EnterpriseLogger {
             url: req.originalUrl
           });
         }
-
-        return originalEnd.call(this, chunk, encoding);
-      }.bind(this);
+      });
 
       next();
     };

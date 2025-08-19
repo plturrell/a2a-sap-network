@@ -23,29 +23,33 @@ contract AgentServiceMarketplace is
     enum ServiceStatus { Listed, InProgress, Completed, Disputed, Cancelled }
     enum ServiceType { OneTime, Subscription, OnDemand }
     
+    // GAS OPTIMIZATION: Pack struct to minimize storage slots
     struct Service {
-        address provider;
-        string name;
-        string description;
-        string[] capabilities;
-        uint256 basePrice;
-        ServiceType serviceType;
-        uint256 minReputation;
-        uint256 maxConcurrent;
-        uint256 currentActive;
-        bool active;
+        address provider;           // slot 1: 20 bytes
+        uint128 basePrice;         // slot 1: 16 bytes (total 36 bytes, 28 bytes padding)
+        
+        uint64 minReputation;      // slot 2: 8 bytes
+        uint32 maxConcurrent;      // slot 2: 4 bytes  
+        uint32 currentActive;      // slot 2: 4 bytes
+        ServiceType serviceType;   // slot 2: 1 byte (assuming enum fits in 1 byte)
+        bool active;              // slot 2: 1 byte (total 18 bytes, 14 bytes padding)
+        
+        string name;              // slot 3+: dynamic
+        string description;       // dynamic
+        string[] capabilities;    // dynamic
     }
     
+    // GAS OPTIMIZATION: Pack ServiceRequest struct
     struct ServiceRequest {
-        uint256 serviceId;
-        address requester;
-        address provider;
-        uint256 agreedPrice;
-        uint256 deadline;
-        ServiceStatus status;
-        bytes parameters;
-        bytes result;
-        uint256 escrowAmount;
+        uint256 serviceId;         // slot 1: 32 bytes
+        address requester;         // slot 2: 20 bytes
+        address provider;          // slot 3: 20 bytes
+        uint128 agreedPrice;       // slot 4: 16 bytes
+        uint128 escrowAmount;      // slot 4: 16 bytes (total 32 bytes)
+        uint64 deadline;          // slot 5: 8 bytes
+        ServiceStatus status;      // slot 5: 1 byte (total 9 bytes, 23 bytes padding)
+        bytes parameters;         // slot 6+: dynamic
+        bytes result;            // dynamic
     }
     
     struct Bid {
@@ -219,13 +223,17 @@ contract AgentServiceMarketplace is
         uint256 platformFee = (request.escrowAmount * platformFeePercent) / 10000;
         uint256 providerPayment = request.escrowAmount - platformFee;
         
+        // SECURITY FIX: Update state BEFORE external calls to prevent reentrancy
+        uint256 escrowToRelease = request.escrowAmount;
         request.escrowAmount = 0;
         services[request.serviceId].currentActive--;
         
         agentEarnings[request.provider] += providerPayment;
         agentSpending[request.requester] += request.agreedPrice;
         
-        payable(request.provider).transfer(providerPayment);
+        // SECURITY FIX: Use call instead of transfer for better error handling
+        (bool success, ) = payable(request.provider).call{value: providerPayment}("");
+        require(success, "Payment transfer failed");
         
         emit PaymentReleased(requestId, providerPayment);
     }
@@ -260,17 +268,21 @@ contract AgentServiceMarketplace is
         uint256 providerAmount = (request.escrowAmount * providerPercent) / 100;
         uint256 requesterRefund = request.escrowAmount - providerAmount;
         
+        // SECURITY FIX: Update state BEFORE external calls
+        uint256 totalEscrow = request.escrowAmount;
         request.escrowAmount = 0;
         request.status = ServiceStatus.Completed;
         services[request.serviceId].currentActive--;
         
         if (providerAmount > 0) {
             agentEarnings[request.provider] += providerAmount;
-            payable(request.provider).transfer(providerAmount);
+            (bool successProvider, ) = payable(request.provider).call{value: providerAmount}("");
+            require(successProvider, "Provider payment failed");
         }
         
         if (requesterRefund > 0) {
-            payable(request.requester).transfer(requesterRefund);
+            (bool successRequester, ) = payable(request.requester).call{value: requesterRefund}("");
+            require(successRequester, "Requester refund failed");
         }
     }
     
@@ -299,5 +311,81 @@ contract AgentServiceMarketplace is
         completionRate = servicesRequested > 0 ? (completed * 100) / servicesRequested : 0;
     }
     
-    function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
+    // SECURITY ENHANCEMENT: Advanced upgrade authorization with timelock and validation
+    uint256 public constant UPGRADE_DELAY = 48 hours;
+    uint256 public upgradeProposalTime;
+    address public proposedImplementation;
+    bytes32 public proposedImplementationCodeHash;
+    
+    event UpgradeProposed(address indexed newImplementation, uint256 proposalTime);
+    event UpgradeExecuted(address indexed newImplementation);
+    event UpgradeCancelled(address indexed proposedImplementation);
+    
+    /**
+     * @notice Propose a contract upgrade with timelock
+     */
+    function proposeUpgrade(address newImplementation) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(newImplementation != address(0), "Invalid implementation address");
+        require(newImplementation.code.length > 0, "Implementation must have code");
+        
+        // Get code hash for verification
+        bytes32 codeHash;
+        assembly {
+            codeHash := extcodehash(newImplementation)
+        }
+        
+        proposedImplementation = newImplementation;
+        proposedImplementationCodeHash = codeHash;
+        upgradeProposalTime = block.timestamp;
+        
+        emit UpgradeProposed(newImplementation, block.timestamp);
+    }
+    
+    /**
+     * @notice Execute a proposed upgrade after timelock
+     */
+    function executeUpgrade() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(proposedImplementation != address(0), "No upgrade proposed");
+        require(block.timestamp >= upgradeProposalTime + UPGRADE_DELAY, "Timelock not expired");
+        
+        // Verify implementation hasn't changed
+        bytes32 currentCodeHash;
+        assembly {
+            currentCodeHash := extcodehash(proposedImplementation)
+        }
+        require(currentCodeHash == proposedImplementationCodeHash, "Implementation code changed");
+        
+        address implementation = proposedImplementation;
+        
+        // Clear proposal
+        proposedImplementation = address(0);
+        proposedImplementationCodeHash = bytes32(0);
+        upgradeProposalTime = 0;
+        
+        // Execute upgrade
+        _upgradeTo(implementation);
+        
+        emit UpgradeExecuted(implementation);
+    }
+    
+    /**
+     * @notice Cancel a proposed upgrade
+     */
+    function cancelUpgrade() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(proposedImplementation != address(0), "No upgrade proposed");
+        
+        address cancelled = proposedImplementation;
+        
+        proposedImplementation = address(0);
+        proposedImplementationCodeHash = bytes32(0);
+        upgradeProposalTime = 0;
+        
+        emit UpgradeCancelled(cancelled);
+    }
+    
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {
+        // This function is called by UUPSUpgradeable, but we override the flow
+        // to use our timelock mechanism instead
+        revert("Use proposeUpgrade and executeUpgrade instead");
+    }
 }

@@ -63,3 +63,20 @@ temp/
 default-*.json
 mta_archives/
 .mta/
+
+# Security - NEVER commit these
+default_env.json
+cdsrcPrivate.json
+**/credentials.json
+**/secrets.json
+**/*password*
+**/*secret*
+**/*private*
+**/*token*
+**/wallet.*
+**/keystore.*
+
+# Production configuration
+production.env
+prod.env
+staging.env

@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
+(async () => {
 console.log('🔒 A2A Network Security Audit\n');
 
 /**
@@ -33,7 +34,7 @@ class SecurityAuditor {
         
         // Check XSUAA configuration
         try {
-            const authMiddleware = fs.readFileSync('srv/middleware/auth.js', 'utf8');
+            const authMiddleware = await fs.readFile('srv/middleware/auth.js', 'utf8');
             
             if (authMiddleware.includes('ENABLE_XSUAA_VALIDATION')) {
                 this.log('PASS', 'AUTH', 'Environment-based XSUAA validation implemented');
@@ -59,7 +60,7 @@ class SecurityAuditor {
 
         // Check xs-security.json
         try {
-            const xsSecurity = JSON.parse(fs.readFileSync('xs-security.json', 'utf8'));
+            const xsSecurity = JSON.parse(await fs.readFile('xs-security.json', 'utf8'));
             
             if (xsSecurity.scopes && xsSecurity.scopes.length > 0) {
                 this.log('PASS', 'AUTH', `${xsSecurity.scopes.length} security scopes defined`);
@@ -88,7 +89,7 @@ class SecurityAuditor {
         console.log('\n🛡️  Security Headers Audit');
         
         try {
-            const securityMiddleware = fs.readFileSync('srv/middleware/security.js', 'utf8');
+            const securityMiddleware = await fs.readFile('srv/middleware/security.js', 'utf8');
             
             const securityHeaders = [
                 'X-Content-Type-Options',
@@ -121,7 +122,7 @@ class SecurityAuditor {
         console.log('\n⏱️  Rate Limiting Audit');
         
         try {
-            const securityMiddleware = fs.readFileSync('srv/middleware/security.js', 'utf8');
+            const securityMiddleware = await fs.readFile('srv/middleware/security.js', 'utf8');
             
             if (securityMiddleware.includes('express-rate-limit')) {
                 this.log('PASS', 'RATE_LIMIT', 'Express rate limiting configured');
@@ -205,3 +206,4 @@ auditor.runFullAudit().then(results => {
     console.error('❌ Security audit failed:', error);
     process.exit(1);
 });
+})().catch(console.error);

@@ -10,12 +10,12 @@ sap.ui.define([
     "use strict";
 
     return BaseController.extend("a2a.network.fiori.controller.ContractDetail", {
-        
-        onInit: function() {
+
+        onInit() {
             this.getRouter().getRoute("contractDetail").attachPatternMatched(this._onObjectMatched, this);
-            
+
             // Initialize contract model with comprehensive data structure
-            var oContractModel = new JSONModel({
+            const oContractModel = new JSONModel({
                 address: "",
                 name: "",
                 type: "",
@@ -42,9 +42,9 @@ sap.ui.define([
                 complianceScore: 0
             });
             this.getView().setModel(oContractModel, "contract");
-            
+
             // Initialize UI state model for loading states
-            var oUIModel = new JSONModel({
+            const oUIModel = new JSONModel({
                 isLoadingSkeleton: false,
                 isLoadingSpinner: false,
                 isLoadingProgress: false,
@@ -59,52 +59,52 @@ sap.ui.define([
                 errorMessage: ""
             });
             this.getView().setModel(oUIModel, "ui");
-            
+
             Log.info("ContractDetail controller initialized");
         },
 
-        _onObjectMatched: function(oEvent) {
-            var sAddress = oEvent.getParameter("arguments").address;
+        _onObjectMatched(oEvent) {
+            const _sAddress = oEvent.getParameter("arguments").address;
             this._loadContractDetails(sAddress);
         },
 
-        _loadContractDetails: async function(sAddress) {
+        async _loadContractDetails(sAddress) {
             this._showLoadingState("skeleton");
-            
+
             try {
                 // Get blockchain service
                 const blockchainService = await this.getOwnerComponent().getBlockchainService();
-                
+
                 // Show progress for multi-step loading
                 this._showLoadingState("progress", {
                     title: this.getResourceBundle().getText("loadingContractData"),
                     message: this.getResourceBundle().getText("fetchingBasicInfo"),
                     value: 20
                 });
-                
+
                 // Load contract details
                 const contractData = await blockchainService.getContractDetails(sAddress);
-                
+
                 this._updateProgress(40, this.getResourceBundle().getText("loadingFunctions"));
-                
+
                 // Parse functions and events
                 const functions = this._parseFunctions(contractData.abi);
                 const events = contractData.events || [];
-                
+
                 this._updateProgress(60, this.getResourceBundle().getText("loadingMetrics"));
-                
+
                 // Load usage statistics
                 const metrics = await this._loadContractMetrics(sAddress, blockchainService);
-                
+
                 this._updateProgress(80, this.getResourceBundle().getText("loadingSecurityInfo"));
-                
+
                 // Load security information
                 const securityInfo = await this._loadSecurityInfo(sAddress, blockchainService);
-                
+
                 this._updateProgress(100, this.getResourceBundle().getText("loadingComplete"));
-                
+
                 // Update model with comprehensive data
-                var oModel = this.getView().getModel("contract");
+                const oModel = this.getView().getModel("contract");
                 oModel.setData({
                     address: sAddress,
                     name: contractData.name || "Unknown Contract",
@@ -119,8 +119,8 @@ sap.ui.define([
                     sourceCode: contractData.sourceCode || "// Source code not available",
                     language: contractData.language || "Solidity",
                     fileName: contractData.fileName || "Contract.sol",
-                    functions: functions,
-                    events: events,
+                    functions,
+                    events,
                     stateVariables: contractData.stateVariables || [],
                     // Enhanced metrics
                     utilizationPercent: metrics.utilizationPercent || 0,
@@ -131,21 +131,23 @@ sap.ui.define([
                     lastAuditDate: securityInfo.lastAuditDate,
                     complianceScore: securityInfo.complianceScore || 0
                 });
-                
+
                 // Load recent events
                 this._loadContractEvents(sAddress);
-                
+
                 this._hideLoadingState();
-                
+
             } catch (error) {
                 Log.error("Failed to load contract details", error);
                 this._showErrorState(this.getResourceBundle().getText("contractLoadError"));
             }
         },
 
-        _parseFunctions: function(abi) {
-            if (!abi || !Array.isArray(abi)) return [];
-            
+        _parseFunctions(abi) {
+            if (!abi || !Array.isArray(abi)) {
+                return [];
+            }
+
             return abi
                 .filter(item => item.type === "function")
                 .map(func => ({
@@ -161,7 +163,7 @@ sap.ui.define([
                 }));
         },
 
-        _generateFunctionDescription: function(func) {
+        _generateFunctionDescription(func) {
             const mutabilityDescriptions = {
                 "view": "Read-only function that doesn't modify state",
                 "pure": "Pure function that doesn't read or modify state",
@@ -171,7 +173,7 @@ sap.ui.define([
             return mutabilityDescriptions[func.stateMutability] || "Contract function";
         },
 
-        _loadContractMetrics: async function(sAddress, blockchainService) {
+        async _loadContractMetrics(sAddress, blockchainService) {
             try {
                 const metrics = await blockchainService.getContractMetrics(sAddress);
                 return {
@@ -191,7 +193,7 @@ sap.ui.define([
             }
         },
 
-        _loadSecurityInfo: async function(sAddress, blockchainService) {
+        async _loadSecurityInfo(sAddress, blockchainService) {
             try {
                 const securityInfo = await blockchainService.getContractSecurity(sAddress);
                 return {
@@ -209,26 +211,26 @@ sap.ui.define([
             }
         },
 
-        _loadContractEvents: async function(sAddress) {
+        async _loadContractEvents(sAddress) {
             try {
                 const blockchainService = await this.getOwnerComponent().getBlockchainService();
                 const events = await blockchainService.getContractEvents(sAddress, {
                     fromBlock: "latest-100",
                     toBlock: "latest"
                 });
-                
-                var oModel = this.getView().getModel("contract");
+
+                const oModel = this.getView().getModel("contract");
                 oModel.setProperty("/events", events);
-                
+
             } catch (error) {
                 Log.error("Failed to load contract events", error);
             }
         },
 
         // Loading state management
-        _showLoadingState: function(sType, oOptions = {}) {
-            var oUIModel = this.getView().getModel("ui");
-            
+        _showLoadingState(sType, oOptions = {}) {
+            const oUIModel = this.getView().getModel("ui");
+
             // Reset all loading states
             oUIModel.setData({
                 isLoadingSkeleton: sType === "skeleton",
@@ -245,15 +247,15 @@ sap.ui.define([
             });
         },
 
-        _updateProgress: function(iValue, sMessage) {
-            var oUIModel = this.getView().getModel("ui");
+        _updateProgress(iValue, sMessage) {
+            const oUIModel = this.getView().getModel("ui");
             oUIModel.setProperty("/progressValue", iValue);
             oUIModel.setProperty("/progressText", `${iValue}%`);
             oUIModel.setProperty("/loadingMessage", sMessage);
         },
 
-        _hideLoadingState: function() {
-            var oUIModel = this.getView().getModel("ui");
+        _hideLoadingState() {
+            const oUIModel = this.getView().getModel("ui");
             oUIModel.setData({
                 isLoadingSkeleton: false,
                 isLoadingSpinner: false,
@@ -265,8 +267,8 @@ sap.ui.define([
             });
         },
 
-        _showErrorState: function(sMessage) {
-            var oUIModel = this.getView().getModel("ui");
+        _showErrorState(sMessage) {
+            const oUIModel = this.getView().getModel("ui");
             oUIModel.setData({
                 isLoadingSkeleton: false,
                 isLoadingSpinner: false,
@@ -279,7 +281,7 @@ sap.ui.define([
         },
 
         // Enhanced copy-to-clipboard functionality
-        _copyToClipboard: function(sText, sSuccessMessage) {
+        _copyToClipboard(sText, sSuccessMessage) {
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(sText).then(() => {
                     MessageToast.show(sSuccessMessage);
@@ -291,7 +293,7 @@ sap.ui.define([
             }
         },
 
-        _fallbackCopy: function(sText, sSuccessMessage) {
+        _fallbackCopy(sText, sSuccessMessage) {
             const textArea = document.createElement("textarea");
             textArea.value = sText;
             textArea.style.position = "fixed";
@@ -300,73 +302,73 @@ sap.ui.define([
             document.body.appendChild(textArea);
             textArea.select();
             textArea.setSelectionRange(0, 99999);
-            
+
             try {
-                document.execCommand('copy');
+                document.execCommand("copy");
                 MessageToast.show(sSuccessMessage);
             } catch (error) {
                 MessageToast.show(this.getResourceBundle().getText("copyFailed"));
             }
-            
+
             document.body.removeChild(textArea);
         },
 
         // Event handlers with enhanced functionality
-        onVerifyContract: async function() {
+        async onVerifyContract() {
             this._showLoadingState("blockchain");
-            var oUIModel = this.getView().getModel("ui");
+            const oUIModel = this.getView().getModel("ui");
             oUIModel.setProperty("/blockchainStep", this.getResourceBundle().getText("verifyingContract"));
-            
+
             try {
                 const blockchainService = await this.getOwnerComponent().getBlockchainService();
-                const sAddress = this.getView().getModel("contract").getProperty("/address");
-                
+                const _sAddress = this.getView().getModel("contract").getProperty("/address");
+
                 const result = await blockchainService.verifyContract(sAddress);
-                
+
                 if (result.verified) {
                     this.getView().getModel("contract").setProperty("/verified", true);
                     MessageToast.show(this.getResourceBundle().getText("contractVerified"));
                 } else {
                     MessageBox.error(this.getResourceBundle().getText("contractVerificationFailed"));
                 }
-                
+
             } catch (error) {
                 Log.error("Contract verification failed", error);
                 this._showErrorState(this.getResourceBundle().getText("contractVerificationError"));
                 return;
             }
-            
+
             this._hideLoadingState();
         },
 
-        onViewOnExplorer: function() {
-            const sAddress = this.getView().getModel("contract").getProperty("/address");
-            const sExplorerUrl = this.getOwnerComponent().getBlockExplorerUrl() + "/address/" + sAddress;
+        onViewOnExplorer() {
+            const _sAddress = this.getView().getModel("contract").getProperty("/address");
+            const sExplorerUrl = `${this.getOwnerComponent().getBlockExplorerUrl() }/address/${ sAddress}`;
             window.open(sExplorerUrl, "_blank");
         },
 
-        onRefreshContract: function() {
-            const sAddress = this.getView().getModel("contract").getProperty("/address");
+        onRefreshContract() {
+            const _sAddress = this.getView().getModel("contract").getProperty("/address");
             this._loadContractDetails(sAddress);
         },
 
-        onDownloadABI: function() {
+        onDownloadABI() {
             const oContract = this.getView().getModel("contract").getData();
             const sABI = JSON.stringify(oContract.abi || [], null, 2);
             this._downloadFile(sABI, `${oContract.name || "contract"}_abi.json`, "application/json");
             MessageToast.show(this.getResourceBundle().getText("abiDownloaded"));
         },
 
-        onDownloadSource: function() {
+        onDownloadSource() {
             const oContract = this.getView().getModel("contract").getData();
             const sSourceCode = oContract.sourceCode || "// Source code not available";
             this._downloadFile(sSourceCode, oContract.fileName || "Contract.sol", "text/plain");
             MessageToast.show(this.getResourceBundle().getText("sourceCodeDownloaded"));
         },
 
-        _downloadFile: function(sContent, sFileName, sMimeType) {
+        _downloadFile(sContent, sFileName, sMimeType) {
             const element = document.createElement("a");
-            element.setAttribute("href", `data:${sMimeType};charset=utf-8,` + encodeURIComponent(sContent));
+            element.setAttribute("href", `data:${sMimeType};charset=utf-8,${ encodeURIComponent(sContent)}`);
             element.setAttribute("download", sFileName);
             element.style.display = "none";
             document.body.appendChild(element);
@@ -375,79 +377,79 @@ sap.ui.define([
         },
 
         // Copy functionality for all elements
-        onCopyAddress: function() {
-            const sAddress = this.getView().getModel("contract").getProperty("/address");
+        onCopyAddress() {
+            const _sAddress = this.getView().getModel("contract").getProperty("/address");
             this._copyToClipboard(sAddress, this.getResourceBundle().getText("addressCopied"));
         },
 
-        onCopyDeployer: function() {
+        onCopyDeployer() {
             const sDeployer = this.getView().getModel("contract").getProperty("/deployer");
             this._copyToClipboard(sDeployer, this.getResourceBundle().getText("deployerCopied"));
         },
 
-        onCopyFunctionSignature: function(oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("contract");
+        onCopyFunctionSignature(oEvent) {
+            const _oContext = oEvent.getSource().getBindingContext("contract");
             const sSignature = oContext.getProperty("signature");
             this._copyToClipboard(sSignature, this.getResourceBundle().getText("signatureCopied"));
         },
 
-        onCopyTransactionHash: function(oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("contract");
-            const sHash = oContext.getProperty("transactionHash");
+        onCopyTransactionHash(oEvent) {
+            const _oContext = oEvent.getSource().getBindingContext("contract");
+            const _sHash = oContext.getProperty("transactionHash");
             this._copyToClipboard(sHash, this.getResourceBundle().getText("hashCopied"));
         },
 
-        onCopySourceCode: function() {
+        onCopySourceCode() {
             const sSourceCode = this.getView().getModel("contract").getProperty("/sourceCode");
             this._copyToClipboard(sSourceCode, this.getResourceBundle().getText("sourceCodeCopied"));
         },
 
         // Navigation handlers
-        onDeployerPress: function() {
+        onDeployerPress() {
             const sDeployer = this.getView().getModel("contract").getProperty("/deployer");
             this.getRouter().navTo("agentDetail", { agentId: sDeployer });
         },
 
-        onTransactionPress: function(oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("contract");
-            const sHash = oContext.getProperty("transactionHash");
-            const sExplorerUrl = this.getOwnerComponent().getBlockExplorerUrl() + "/tx/" + sHash;
+        onTransactionPress(oEvent) {
+            const _oContext = oEvent.getSource().getBindingContext("contract");
+            const _sHash = oContext.getProperty("transactionHash");
+            const sExplorerUrl = `${this.getOwnerComponent().getBlockExplorerUrl() }/tx/${ sHash}`;
             window.open(sExplorerUrl, "_blank");
         },
 
         // Enhanced tab and interaction handlers
-        onTabSelect: function(oEvent) {
+        onTabSelect(oEvent) {
             const sKey = oEvent.getParameter("key");
             Log.debug("Contract tab selected", sKey);
-            
+
             // Load tab-specific data if needed
             switch (sKey) {
-                case "events":
-                    this._ensureEventsLoaded();
-                    break;
-                case "state":
-                    this._ensureStateVariablesLoaded();
-                    break;
+            case "events":
+                this._ensureEventsLoaded();
+                break;
+            case "state":
+                this._ensureStateVariablesLoaded();
+                break;
             }
         },
 
-        _ensureEventsLoaded: function() {
+        _ensureEventsLoaded() {
             const aEvents = this.getView().getModel("contract").getProperty("/events");
             if (!aEvents || aEvents.length === 0) {
-                const sAddress = this.getView().getModel("contract").getProperty("/address");
+                const _sAddress = this.getView().getModel("contract").getProperty("/address");
                 this._loadContractEvents(sAddress);
             }
         },
 
-        _ensureStateVariablesLoaded: function() {
+        _ensureStateVariablesLoaded() {
             // Implementation for loading state variables if needed
             Log.debug("Ensuring state variables are loaded");
         },
 
-        onSearchFunctions: function(oEvent) {
+        onSearchFunctions(oEvent) {
             const sQuery = oEvent.getParameter("newValue");
             const oTable = this.byId("functionsTable");
-            const oBinding = oTable.getBinding("items");
+            const _oBinding = oTable.getBinding("items");
             const aFilters = [];
 
             if (sQuery && sQuery.length > 0) {
@@ -461,10 +463,10 @@ sap.ui.define([
         },
 
         // Function interaction handlers
-        onFunctionPress: function(oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("contract");
+        onFunctionPress(oEvent) {
+            const _oContext = oEvent.getSource().getBindingContext("contract");
             const oFunction = oContext.getObject();
-            
+
             const sDetails = `
 Function: ${oFunction.name}
 Signature: ${oFunction.signature}
@@ -472,31 +474,31 @@ Type: ${oFunction.stateMutability}
 Gas Estimate: ${oFunction.gasEstimate}
 Description: ${oFunction.description}
             `;
-            
+
             MessageBox.information(sDetails, {
                 title: this.getResourceBundle().getText("functionDetails")
             });
         },
 
-        onReadFunction: async function(oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("contract");
+        async onReadFunction(oEvent) {
+            const _oContext = oEvent.getSource().getBindingContext("contract");
             const oFunction = oContext.getObject();
-            
+
             this._showLoadingState("spinner", {
                 message: this.getResourceBundle().getText("callingFunction", [oFunction.name])
             });
-            
+
             try {
                 const blockchainService = await this.getOwnerComponent().getBlockchainService();
-                const sAddress = this.getView().getModel("contract").getProperty("/address");
-                
+                const _sAddress = this.getView().getModel("contract").getProperty("/address");
+
                 const result = await blockchainService.callContractFunction(sAddress, oFunction.name, []);
-                
+
                 MessageBox.information(
                     `Result: ${JSON.stringify(result, null, 2)}`,
                     { title: oFunction.name }
                 );
-                
+
             } catch (error) {
                 Log.error("Failed to read contract function", error);
                 MessageBox.error(this.getResourceBundle().getText("functionCallError"));
@@ -505,10 +507,10 @@ Description: ${oFunction.description}
             }
         },
 
-        onWriteFunction: function(oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("contract");
+        onWriteFunction(oEvent) {
+            const _oContext = oEvent.getSource().getBindingContext("contract");
             const oFunction = oContext.getObject();
-            
+
             MessageBox.information(
                 this.getResourceBundle().getText("writeFunctionComingSoon"),
                 { title: oFunction.name }
@@ -516,23 +518,23 @@ Description: ${oFunction.description}
         },
 
         // Security and utility handlers
-        onRunSecurityScan: async function() {
+        async onRunSecurityScan() {
             this._showLoadingState("progress", {
                 title: this.getResourceBundle().getText("runningSecurityScan"),
                 message: this.getResourceBundle().getText("analyzingContract"),
                 value: 0
             });
-            
+
             try {
-                const sAddress = this.getView().getModel("contract").getProperty("/address");
+                const _sAddress = this.getView().getModel("contract").getProperty("/address");
                 // Simulate security scan with progress updates
                 for (let i = 0; i <= 100; i += 20) {
                     this._updateProgress(i, this.getResourceBundle().getText("scanningVulnerabilities"));
                     await new Promise(resolve => setTimeout(resolve, 500));
                 }
-                
+
                 MessageToast.show(this.getResourceBundle().getText("securityScanComplete"));
-                
+
             } catch (error) {
                 Log.error("Security scan failed", error);
                 MessageBox.error(this.getResourceBundle().getText("securityScanError"));
@@ -541,28 +543,28 @@ Description: ${oFunction.description}
             }
         },
 
-        onUtilizationPress: function() {
+        onUtilizationPress() {
             const iUtilization = this.getView().getModel("contract").getProperty("/utilizationPercent");
             MessageToast.show(`Contract Utilization: ${iUtilization}%`);
         },
 
         // Enhanced event handlers
-        onRefreshEvents: function() {
-            const sAddress = this.getView().getModel("contract").getProperty("/address");
+        onRefreshEvents() {
+            const _sAddress = this.getView().getModel("contract").getProperty("/address");
             this._loadContractEvents(sAddress);
         },
 
-        onExportEvents: function() {
+        onExportEvents() {
             const aEvents = this.getView().getModel("contract").getProperty("/events");
             if (!aEvents || aEvents.length === 0) {
                 MessageToast.show(this.getResourceBundle().getText("noEventsToExport"));
                 return;
             }
-            
+
             // Convert to CSV
             const aHeaders = ["Timestamp", "Event Name", "Transaction Hash", "Block Number", "Arguments"];
             const aCsvData = [aHeaders.join(",")];
-            
+
             aEvents.forEach(event => {
                 const aRow = [
                     new Date(event.timestamp).toISOString(),
@@ -573,15 +575,15 @@ Description: ${oFunction.description}
                 ];
                 aCsvData.push(aRow.map(field => `"${field}"`).join(","));
             });
-            
+
             this._downloadFile(aCsvData.join("\n"), `contract-events-${Date.now()}.csv`, "text/csv");
             MessageToast.show(this.getResourceBundle().getText("eventsExported"));
         },
 
-        onEventPress: function(oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("contract");
+        onEventPress(oEvent) {
+            const _oContext = oEvent.getSource().getBindingContext("contract");
             const oEventData = oContext.getObject();
-            
+
             const sDetails = `
 Event: ${oEventData.name}
 Transaction: ${oEventData.transactionHash}
@@ -589,34 +591,34 @@ Block: ${oEventData.blockNumber}
 Timestamp: ${new Date(oEventData.timestamp).toLocaleString()}
 Arguments: ${oEventData.args}
             `;
-            
+
             MessageBox.information(sDetails, {
                 title: this.getResourceBundle().getText("eventDetails")
             });
         },
 
-        onViewEventOnExplorer: function(oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("contract");
-            const sHash = oContext.getProperty("transactionHash");
-            const sExplorerUrl = this.getOwnerComponent().getBlockExplorerUrl() + "/tx/" + sHash;
+        onViewEventOnExplorer(oEvent) {
+            const _oContext = oEvent.getSource().getBindingContext("contract");
+            const _sHash = oContext.getProperty("transactionHash");
+            const sExplorerUrl = `${this.getOwnerComponent().getBlockExplorerUrl() }/tx/${ sHash}`;
             window.open(sExplorerUrl, "_blank");
         },
 
-        onViewEventDetails: function(oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("contract");
+        onViewEventDetails(oEvent) {
+            const _oContext = oEvent.getSource().getBindingContext("contract");
             this.onEventPress(oEvent); // Reuse the event press handler
         },
 
         // State variable handlers
-        onRefreshState: function() {
+        onRefreshState() {
             MessageToast.show(this.getResourceBundle().getText("refreshingStateVariables"));
             // Implementation would refresh state variables from blockchain
         },
 
-        onStateVariablePress: function(oEvent) {
+        onStateVariablePress(oEvent) {
             const oItem = oEvent.getSource();
             const oVariable = oItem.getBindingContext("contract").getObject();
-            
+
             MessageBox.information(
                 `${oVariable.name}: ${oVariable.value}\nType: ${oVariable.type}\nVisibility: ${oVariable.visibility}`,
                 { title: this.getResourceBundle().getText("stateVariable") }
@@ -624,8 +626,8 @@ Arguments: ${oEventData.args}
         },
 
         // Error recovery
-        onRetryLoad: function() {
-            const sAddress = this.getView().getModel("contract").getProperty("/address");
+        onRetryLoad() {
+            const _sAddress = this.getView().getModel("contract").getProperty("/address");
             this._loadContractDetails(sAddress);
         }
     });

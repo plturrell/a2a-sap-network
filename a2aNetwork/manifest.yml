@@ -1,0 +1,65 @@
+---
+# SAP BTP Cloud Foundry Deployment Manifest
+# A2A Network - Production SAP Fiori Launchpad
+
+applications:
+- name: a2a-network-launchpad
+  memory: 1024M
+  disk_quota: 512M
+  instances: 2
+  buildpacks:
+    - nodejs_buildpack
+  path: .
+  command: node app/production-launchpad-server.js
+  
+  env:
+    NODE_ENV: production
+    BTP_ENVIRONMENT: true
+    ENABLE_XSUAA_VALIDATION: true
+    LOG_LEVEL: info
+    LOG_FORMAT: json
+    
+  services:
+    # XSUAA Authentication Service
+    - a2a-network-xsuaa
+    # HANA Database Service
+    - a2a-network-hdi-container
+    # Application Logging Service
+    - a2a-network-application-logs
+    # Connectivity Service (if needed for on-premise connectivity)
+    - a2a-network-connectivity
+    # Destination Service (if needed for external system integration)
+    - a2a-network-destination
+    
+  routes:
+    - route: a2a-network-launchpad-prod.cfapps.sap.hana.ondemand.com
+    - route: a2a-network.cfapps.sap.hana.ondemand.com
+  
+  # Health check configuration
+  health-check-type: http
+  health-check-http-endpoint: /health
+  health-check-timeout: 30
+  
+  # Application-specific environment variables
+  # These will be overridden by bound services in BTP
+  env:
+    # Database configuration (overridden by HANA service binding)
+    DATABASE_TYPE: hana
+    
+    # Security configuration
+    CORS_ORIGINS: "https://a2a-network-launchpad-prod.cfapps.sap.hana.ondemand.com,https://a2a-network.cfapps.sap.hana.ondemand.com"
+    
+    # Feature flags
+    ENABLE_BLOCKCHAIN: true
+    ENABLE_WEBSOCKET: true
+    ENABLE_CACHE: true
+    ENABLE_METRICS: true
+    
+    # Performance tuning for production
+    MAX_POOL_SIZE: 20
+    CACHE_TTL: 300
+    REQUEST_TIMEOUT: 30000
+    
+    # Rate limiting for production
+    RATE_LIMIT_WINDOW_MS: 900000
+    RATE_LIMIT_MAX_REQUESTS: 1000

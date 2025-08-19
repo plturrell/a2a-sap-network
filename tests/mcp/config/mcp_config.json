@@ -1,0 +1,179 @@
+{
+  "mcpServers": {
+    "a2a-test-suite": {
+      "command": "python",
+      "args": [
+        "-m",
+        "tests.mcp.server.test_mcp_server"
+      ],
+      "cwd": "/Users/apple/projects/a2a",
+      "env": {
+        "PYTHONPATH": "/Users/apple/projects/a2a",
+        "A2A_TEST_ROOT": "/Users/apple/projects/a2a/tests",
+        "LOG_LEVEL": "INFO"
+      },
+      "description": "A2A Test Suite MCP Server - Comprehensive test management and execution",
+      "version": "1.0.0",
+      "capabilities": {
+        "resources": [
+          "test://unit",
+          "test://integration", 
+          "test://e2e",
+          "test://performance",
+          "test://security",
+          "test://contracts",
+          "test://reports"
+        ],
+        "tools": [
+          "run_tests",
+          "analyze_test_results",
+          "get_test_coverage",
+          "discover_tests",
+          "validate_test_setup",
+          "manage_test_data"
+        ],
+        "agents": [
+          "test_orchestrator",
+          "unit_agent",
+          "integration_agent",
+          "e2e_agent",
+          "contract_agent",
+          "performance_agent",
+          "security_agent"
+        ]
+      },
+      "metadata": {
+        "author": "A2A Development Team",
+        "license": "MIT",
+        "repository": "https://github.com/plturrell/a2a-sap-network",
+        "documentation": "https://docs.a2a-network.com/testing",
+        "tags": ["testing", "automation", "a2a", "sap", "enterprise"]
+      }
+    }
+  },
+  "client": {
+    "name": "A2A Test Management Client",
+    "version": "1.0.0",
+    "defaultServer": "a2a-test-suite",
+    "requestTimeout": 30000,
+    "maxRetries": 3,
+    "logLevel": "INFO"
+  },
+  "workflows": {
+    "quick_validation": {
+      "description": "Quick validation workflow for CI/CD",
+      "test_types": ["unit"],
+      "modules": ["common"],
+      "parallel": true,
+      "timeout": 300,
+      "coverage": false,
+      "priority": "high"
+    },
+    "comprehensive_testing": {
+      "description": "Full test suite execution",
+      "test_types": ["unit", "integration", "e2e"],
+      "modules": ["all"],
+      "parallel": true,
+      "timeout": 1800,
+      "coverage": true,
+      "priority": "medium"
+    },
+    "security_audit": {
+      "description": "Security-focused test execution",
+      "test_types": ["security", "contracts"],
+      "modules": ["all"],
+      "parallel": false,
+      "timeout": 900,
+      "coverage": false,
+      "priority": "high"
+    },
+    "performance_baseline": {
+      "description": "Performance and load testing",
+      "test_types": ["performance"],
+      "modules": ["all"],
+      "parallel": false,
+      "timeout": 1200,
+      "coverage": false,
+      "priority": "low"
+    },
+    "pre_deployment": {
+      "description": "Pre-deployment validation",
+      "test_types": ["unit", "integration", "security"],
+      "modules": ["all"],
+      "parallel": true,
+      "timeout": 1200,
+      "coverage": true,
+      "priority": "critical"
+    }
+  },
+  "agent_config": {
+    "unit_agent": {
+      "max_concurrent": 3,
+      "timeout": 300,
+      "retry_count": 2,
+      "capabilities": ["unit", "python", "javascript"]
+    },
+    "integration_agent": {
+      "max_concurrent": 2,
+      "timeout": 600,
+      "retry_count": 1,
+      "capabilities": ["integration", "python", "javascript", "database"]
+    },
+    "e2e_agent": {
+      "max_concurrent": 1,
+      "timeout": 900,
+      "retry_count": 2,
+      "capabilities": ["e2e", "ui", "cypress", "selenium"]
+    },
+    "contract_agent": {
+      "max_concurrent": 2,
+      "timeout": 600,
+      "retry_count": 1,
+      "capabilities": ["contracts", "solidity", "forge", "blockchain"]
+    },
+    "performance_agent": {
+      "max_concurrent": 1,
+      "timeout": 1200,
+      "retry_count": 0,
+      "capabilities": ["performance", "load", "stress", "benchmark"]
+    },
+    "security_agent": {
+      "max_concurrent": 2,
+      "timeout": 600,
+      "retry_count": 1,
+      "capabilities": ["security", "authentication", "authorization", "blockchain"]
+    }
+  },
+  "reporting": {
+    "formats": ["json", "html", "junit", "text"],
+    "output_directory": "test-results",
+    "coverage_threshold": 80,
+    "failure_threshold": 0,
+    "retention_days": 30,
+    "notifications": {
+      "enabled": false,
+      "webhook_url": "",
+      "on_failure": true,
+      "on_success": false
+    }
+  },
+  "optimization": {
+    "parallel_execution": true,
+    "test_selection": {
+      "enabled": true,
+      "changed_files_only": false,
+      "impact_analysis": true
+    },
+    "caching": {
+      "enabled": true,
+      "cache_dependencies": true,
+      "cache_results": true,
+      "ttl_hours": 24
+    },
+    "resource_limits": {
+      "max_memory_mb": 2048,
+      "max_cpu_percent": 80,
+      "max_parallel_workflows": 3
+    }
+  }
+}

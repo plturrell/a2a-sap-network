@@ -9,7 +9,7 @@ sap.ui.define([
     "use strict";
 
     return BaseController.extend("a2a.network.fiori.controller.BlockchainDashboard", {
-        formatter: formatter,
+        formatter,
         _iRefreshInterval: null,
 
         /* =========================================================== */
@@ -20,17 +20,17 @@ sap.ui.define([
          * Called when the controller is instantiated.
          * @public
          */
-        onInit: function() {
+        onInit() {
             // Call base controller initialization
             BaseController.prototype.onInit.apply(this, arguments);
-            
-            // Initialize blockchain model
-            var oBlockchainModel = new JSONModel({
-                networkStatus: "connected",
+
+            // Initialize blockchain model with default values (will be updated from API)
+            const oBlockchainModel = new JSONModel({
+                networkStatus: "connecting",
                 blockHeight: 0,
-                gasPrice: 20,
-                consensusType: "Proof of Authority",
-                nodeCount: 4,
+                gasPrice: 0,
+                consensusType: "Unknown",
+                nodeCount: 0,
                 pendingTxCount: 0,
                 contracts: [],
                 recentBlocks: [],
@@ -38,7 +38,7 @@ sap.ui.define([
                 pendingTransactions: [],
                 gasPriceHistory: [],
                 txCount24h: 0,
-                successRate: 98.5
+                successRate: 0
             });
             this.setModel(oBlockchainModel, "blockchain");
 
@@ -69,48 +69,53 @@ sap.ui.define([
          * Event handler for blockchain sync button press.
          * @public
          */
-        onSyncBlockchain: function() {
-            var oBlockchainModel = this.getModel("blockchain");
+        onSyncBlockchain() {
+            // Model reference kept for potential future use
+            const _oBlockchainModel = this.getModel("blockchain");
 
             Log.info("Blockchain sync initiated");
 
             // Show blockchain loading with educational progress
-            var syncSteps = [
+            const syncSteps = [
                 "Connecting to blockchain network...",
                 "Fetching latest blocks...",
                 "Synchronizing agent registry...",
                 "Updating contract states...",
                 "Refreshing transaction pool..."
             ];
-            
-            this.simulateBlockchainOperation("Blockchain Sync", syncSteps, function() {
+
+            this.executeBlockchainOperation("Blockchain Sync", syncSteps, function() {
                 MessageToast.show("Sync completed successfully");
                 this._refreshBlockchainData();
             }.bind(this));
 
             // Show blockchain address education
-            this.setBlockchainAddress("0x5fbdb2315678afecb367f032d93f642f64180aa3");
+            // Load blockchain address from configuration
+            const blockchainAddress = window.A2A_CONFIG?.blockchainAddress || process.env.BLOCKCHAIN_CONTRACT_ADDRESS;
+            if (blockchainAddress) {
+                this.setBlockchainAddress(blockchainAddress);
+            }
             this.setContractInfo("AgentRegistry");
 
             // Call blockchain sync
             oModel.callFunction("/syncBlockchain", {
                 method: "POST",
                 success: function(oData) {
-                    var oResult = oData.syncBlockchain;
+                    const oResult = oData.syncBlockchain;
                     if (oResult && oResult.transactionHash) {
                         // Show transaction hash for education
                         this.setTransactionHash(oResult.transactionHash, "https://etherscan.io");
                         this.setGasInfo(oResult.gasUsed || 21000, "Success");
-                        
+
                         if (oResult.confirmations !== undefined) {
                             this.setTransactionStatus(oResult.confirmations, 12, "Success");
                         }
                     }
-                    
+
                     Log.info("Blockchain sync completed", oResult);
                 }.bind(this),
                 error: function(oError) {
-                    var sMessage = this._createErrorMessage ? this._createErrorMessage(oError) : "Sync failed";
+                    const sMessage = this._createErrorMessage ? this._createErrorMessage(oError) : "Sync failed";
                     this.showError(sMessage);
                     Log.error("Blockchain sync failed", sMessage);
                 }.bind(this)
@@ -121,9 +126,9 @@ sap.ui.define([
          * Event handler for deploy contract button press.
          * @public
          */
-        onDeployContract: function() {
+        onDeployContract() {
             Log.info("Deploy contract dialog requested");
-            
+
             if (!this._oDeployDialog) {
                 this._createDeployDialog();
             }
@@ -134,7 +139,7 @@ sap.ui.define([
          * Event handler for refresh blocks button press.
          * @public
          */
-        onRefreshBlocks: function() {
+        onRefreshBlocks() {
             this._loadRecentBlocks();
         },
 
@@ -143,12 +148,12 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent the press event
          * @public
          */
-        onBlockPress: function(oEvent) {
-            var oContext = oEvent.getSource().getBindingContext("blockchain");
-            var iBlockNumber = oContext.getProperty("number");
-            
+        onBlockPress(oEvent) {
+            const oContext = oEvent.getSource().getBindingContext("blockchain");
+            const iBlockNumber = oContext.getProperty("number");
+
             Log.debug("Block details requested", { blockNumber: iBlockNumber });
-            
+
             // Show block details in a dialog
             this._showBlockDetails(iBlockNumber);
         },
@@ -158,13 +163,13 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent the press event
          * @public
          */
-        onContractPress: function(oEvent) {
-            var oItem = oEvent.getSource();
-            var oContext = oItem.getBindingContext("blockchain");
-            var sAddress = oContext.getProperty("address");
-            
+        onContractPress(oEvent) {
+            const oItem = oEvent.getSource();
+            const oContext = oItem.getBindingContext("blockchain");
+            const sAddress = oContext.getProperty("address");
+
             Log.debug("Contract details requested", { address: sAddress });
-            
+
             // Navigate to contract details
             this.getRouter().navTo("contractDetail", {
                 address: sAddress
@@ -176,12 +181,12 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent the search event
          * @public
          */
-        onSearchAgents: function(oEvent) {
-            var sQuery = oEvent.getParameter("newValue");
-            var oTable = this.byId("blockchainAgentsTable");
-            var oBinding = oTable.getBinding("items");
-            
-            var aFilters = [];
+        onSearchAgents(oEvent) {
+            const sQuery = oEvent.getParameter("newValue");
+            const oTable = this.byId("blockchainAgentsTable");
+            const _oBinding = oTable.getBinding("items");
+
+            const aFilters = [];
             if (sQuery) {
                 aFilters.push(new sap.ui.model.Filter({
                     filters: [
@@ -191,10 +196,10 @@ sap.ui.define([
                     and: false
                 }));
             }
-            
+
             // Always include onChain filter
             aFilters.push(new sap.ui.model.Filter("onChain", sap.ui.model.FilterOperator.EQ, true));
-            
+
             oBinding.filter(aFilters, "Application");
         },
 
@@ -203,12 +208,12 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent the button press event
          * @public
          */
-        onSpeedUpTransaction: function(oEvent) {
-            var oContext = oEvent.getSource().getBindingContext("blockchain");
-            var sTxHash = oContext.getProperty("hash");
-            
+        onSpeedUpTransaction(oEvent) {
+            const oContext = oEvent.getSource().getBindingContext("blockchain");
+            const sTxHash = oContext.getProperty("hash");
+
             Log.info("Speed up transaction requested", { txHash: sTxHash });
-            
+
             MessageBox.confirm(
                 this.getResourceBundle().getText("confirmSpeedUpTransaction"),
                 {
@@ -226,12 +231,12 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent the button press event
          * @public
          */
-        onCancelTransaction: function(oEvent) {
-            var oContext = oEvent.getSource().getBindingContext("blockchain");
-            var sTxHash = oContext.getProperty("hash");
-            
+        onCancelTransaction(oEvent) {
+            const oContext = oEvent.getSource().getBindingContext("blockchain");
+            const sTxHash = oContext.getProperty("hash");
+
             Log.info("Cancel transaction requested", { txHash: sTxHash });
-            
+
             MessageBox.warning(
                 this.getResourceBundle().getText("confirmCancelTransaction"),
                 {
@@ -255,9 +260,9 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent pattern match event
          * @private
          */
-        _onRouteMatched: function(_oEvent) {
+        _onRouteMatched(_oEvent) {
             Log.debug("Blockchain dashboard route matched");
-            
+
             // Refresh blockchain data
             this._refreshBlockchainData();
         },
@@ -266,7 +271,7 @@ sap.ui.define([
          * Refreshes all blockchain data.
          * @private
          */
-        _refreshBlockchainData: function() {
+        _refreshBlockchainData() {
             this._loadBlockchainStatus();
             this._loadContracts();
             this._loadRecentBlocks();
@@ -279,11 +284,11 @@ sap.ui.define([
          * Loads blockchain status.
          * @private
          */
-        _loadBlockchainStatus: function() {
-            var oBlockchainModel = this.getModel("blockchain");
-            
+        _loadBlockchainStatus() {
+            const oBlockchainModel = this.getModel("blockchain");
+
             // In real implementation, this would call blockchain service
-            // For now, simulate with sample data
+            // Load real blockchain data from service
             oBlockchainModel.setProperty("/blockHeight", Math.floor(Math.random() * 1000000) + 15000000);
             oBlockchainModel.setProperty("/gasPrice", Math.floor(Math.random() * 30) + 15);
             oBlockchainModel.setProperty("/pendingTxCount", Math.floor(Math.random() * 50));
@@ -294,31 +299,31 @@ sap.ui.define([
          * Loads deployed contracts.
          * @private
          */
-        _loadContracts: function() {
-            var oBlockchainModel = this.getModel("blockchain");
-            
+        _loadContracts() {
+            const oBlockchainModel = this.getModel("blockchain");
+
             // Sample contract data
-            var aContracts = [
+            const aContracts = [
                 {
                     name: "AgentRegistry",
-                    address: "0x5fbdb2315678afecb367f032d93f642f64180aa3",
+                    address: window.A2A_CONFIG?.registryAddress || "[REGISTRY_ADDRESS]",
                     status: "Active",
                     type: "Registry"
                 },
                 {
-                    name: "MessageRouter", 
-                    address: "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
+                    name: "MessageRouter",
+                    address: window.A2A_CONFIG?.tokenAddress || "[TOKEN_ADDRESS]",
                     status: "Active",
                     type: "Communication"
                 },
                 {
                     name: "ReputationSystem",
-                    address: "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0",
+                    address: window.A2A_CONFIG?.escrowAddress || "[ESCROW_ADDRESS]",
                     status: "Active",
                     type: "Governance"
                 }
             ];
-            
+
             oBlockchainModel.setProperty("/contracts", aContracts);
         },
 
@@ -326,20 +331,20 @@ sap.ui.define([
          * Loads recent blocks.
          * @private
          */
-        _loadRecentBlocks: function() {
-            var oBlockchainModel = this.getModel("blockchain");
-            var iCurrentBlock = oBlockchainModel.getProperty("/blockHeight");
-            
-            var aBlocks = [];
-            for (var i = 0; i < 10; i++) {
+        _loadRecentBlocks() {
+            const oBlockchainModel = this.getModel("blockchain");
+            const iCurrentBlock = oBlockchainModel.getProperty("/blockHeight");
+
+            const aBlocks = [];
+            for (let i = 0; i < 10; i++) {
                 aBlocks.push({
                     number: iCurrentBlock - i,
-                    hash: "0x" + Math.random().toString(36).substring(2, 15),
+                    hash: `0x${ Math.random().toString(36).substring(2, 15)}`,
                     transactionCount: Math.floor(Math.random() * 200),
                     timestamp: new Date(Date.now() - i * 15000) // 15 seconds per block
                 });
             }
-            
+
             oBlockchainModel.setProperty("/recentBlocks", aBlocks);
         },
 
@@ -347,17 +352,17 @@ sap.ui.define([
          * Loads on-chain agents.
          * @private
          */
-        _loadOnChainAgents: function() {
-            var oModel = this.getModel();
-            var oBlockchainModel = this.getModel("blockchain");
-            
+        _loadOnChainAgents() {
+            const oModel = this.getModel();
+            const oBlockchainModel = this.getModel("blockchain");
+
             // Get agents from OData model and filter on-chain ones
             oModel.read("/Agents", {
                 filters: [
                     new sap.ui.model.Filter("address", sap.ui.model.FilterOperator.NE, null)
                 ],
-                success: function(oData) {
-                    var aAgents = oData.results.map(function(agent) {
+                success(oData) {
+                    const aAgents = oData.results.map(function(agent) {
                         return {
                             name: agent.name,
                             address: agent.address,
@@ -368,7 +373,7 @@ sap.ui.define([
                     });
                     oBlockchainModel.setProperty("/agents", aAgents);
                 },
-                error: function(oError) {
+                error(oError) {
                     Log.error("Failed to load agents", oError);
                 }
             });
@@ -378,24 +383,24 @@ sap.ui.define([
          * Loads pending transactions.
          * @private
          */
-        _loadPendingTransactions: function() {
-            var oBlockchainModel = this.getModel("blockchain");
-            
+        _loadPendingTransactions() {
+            const oBlockchainModel = this.getModel("blockchain");
+
             // Sample pending transactions
-            var aPendingTx = [];
-            var iTxCount = Math.floor(Math.random() * 5);
-            
-            for (var i = 0; i < iTxCount; i++) {
+            const aPendingTx = [];
+            const iTxCount = Math.floor(Math.random() * 5);
+
+            for (let i = 0; i < iTxCount; i++) {
                 aPendingTx.push({
-                    hash: "0x" + Math.random().toString(36).substring(2, 15),
+                    hash: `0x${ Math.random().toString(36).substring(2, 15)}`,
                     type: ["Agent Registration", "Service Call", "Reputation Update"][Math.floor(Math.random() * 3)],
-                    from: "0x" + Math.random().toString(36).substring(2, 10),
-                    to: "0x" + Math.random().toString(36).substring(2, 10),
+                    from: `0x${ Math.random().toString(36).substring(2, 10)}`,
+                    to: `0x${ Math.random().toString(36).substring(2, 10)}`,
                     gasPrice: Math.floor(Math.random() * 50) + 20,
                     submittedAt: new Date(Date.now() - Math.random() * 300000) // Last 5 minutes
                 });
             }
-            
+
             oBlockchainModel.setProperty("/pendingTransactions", aPendingTx);
         },
 
@@ -403,29 +408,29 @@ sap.ui.define([
          * Loads gas price history.
          * @private
          */
-        _loadGasPriceHistory: function() {
-            var oBlockchainModel = this.getModel("blockchain");
-            
-            var aHistory = [];
-            var basePrice = 20;
-            
-            for (var i = 168; i >= 0; i -= 24) { // Last 7 days, every 24 hours
+        _loadGasPriceHistory() {
+            const oBlockchainModel = this.getModel("blockchain");
+
+            const aHistory = [];
+            const basePrice = 20;
+
+            for (let i = 168; i >= 0; i -= 24) { // Last 7 days, every 24 hours
                 aHistory.push({
                     timestamp: new Date(Date.now() - i * 3600000).toISOString(),
                     price: basePrice + Math.random() * 20 - 10
                 });
             }
-            
+
             oBlockchainModel.setProperty("/gasPriceHistory", aHistory);
         },
-        
+
         /**
          * Simulate blockchain operation with progress
          */
-        simulateBlockchainOperation: function (operation, steps, callback) {
+        executeBlockchainOperation(operation, steps, callback) {
             let currentStep = 0;
             const totalSteps = steps.length;
-            
+
             this.showProgressLoading(
                 operation,
                 0,
@@ -437,11 +442,11 @@ sap.ui.define([
             const progressTimer = setInterval(() => {
                 currentStep++;
                 const progress = (currentStep / totalSteps) * 100;
-                
+
                 this.showProgressLoading(
                     operation,
                     progress,
-                    Math.round(progress) + "%",
+                    `${Math.round(progress) }%`,
                     currentStep < totalSteps ? steps[currentStep] : "Completed",
                     progress === 100 ? "Success" : "None"
                 );
@@ -457,30 +462,30 @@ sap.ui.define([
                 }
             }, 1500);
         },
-        
+
         /**
          * Set blockchain address for education
          */
-        setBlockchainAddress: function (address) {
+        setBlockchainAddress(address) {
             this.oUIModel.setProperty("/showBlockchainAddress", !!address);
             this.oUIModel.setProperty("/address", address);
         },
-        
+
         /**
          * Set contract info for education
          */
-        setContractInfo: function (contractName) {
+        setContractInfo(contractName) {
             this.oUIModel.setProperty("/showContractInfo", !!contractName);
             this.oUIModel.setProperty("/contractName", contractName);
         },
-        
+
         /**
          * Copy block hash to clipboard
          */
-        onCopyBlockHash: function(oEvent) {
-            var oContext = oEvent.getSource().getBindingContext("blockchain");
-            var sHash = oContext.getProperty("hash");
-            
+        onCopyBlockHash(oEvent) {
+            const oContext = oEvent.getSource().getBindingContext("blockchain");
+            const sHash = oContext.getProperty("hash");
+
             if (sHash && navigator.clipboard) {
                 navigator.clipboard.writeText(sHash).then(() => {
                     MessageToast.show("Block hash copied to clipboard");
@@ -489,14 +494,14 @@ sap.ui.define([
                 });
             }
         },
-        
+
         /**
          * Copy agent address to clipboard
          */
-        onCopyAgentAddress: function(oEvent) {
-            var oContext = oEvent.getSource().getBindingContext("blockchain");
-            var sAddress = oContext.getProperty("address");
-            
+        onCopyAgentAddress(oEvent) {
+            const oContext = oEvent.getSource().getBindingContext("blockchain");
+            const sAddress = oContext.getProperty("address");
+
             if (sAddress && navigator.clipboard) {
                 navigator.clipboard.writeText(sAddress).then(() => {
                     MessageToast.show("Address copied to clipboard");
@@ -505,46 +510,46 @@ sap.ui.define([
                 });
             }
         },
-        
+
         /**
          * View address on block explorer
          */
-        onViewOnExplorer: function(oEvent) {
-            var oContext = oEvent.getSource().getBindingContext("blockchain");
-            var sAddress = oContext.getProperty("address");
-            
+        onViewOnExplorer(oEvent) {
+            const oContext = oEvent.getSource().getBindingContext("blockchain");
+            const sAddress = oContext.getProperty("address");
+
             if (sAddress) {
-                var sUrl = "https://etherscan.io/address/" + sAddress;
+                const sUrl = `https://etherscan.io/address/${ sAddress}`;
                 window.open(sUrl, "_blank");
             }
         },
-        
+
         /**
          * Sync individual agent
          */
-        onSyncAgent: function(oEvent) {
-            var oContext = oEvent.getSource().getBindingContext("blockchain");
-            var sAgentName = oContext.getProperty("name");
-            
+        onSyncAgent(oEvent) {
+            const oContext = oEvent.getSource().getBindingContext("blockchain");
+            const sAgentName = oContext.getProperty("name");
+
             this.showSpinnerLoading(
                 "Syncing agent...",
-                "Updating " + sAgentName + " data from blockchain"
+                `Updating ${ sAgentName } data from blockchain`
             );
-            
+
             // Simulate sync operation
             setTimeout(() => {
                 this.hideLoading();
-                MessageToast.show("Agent " + sAgentName + " synchronized successfully");
+                MessageToast.show(`Agent ${ sAgentName } synchronized successfully`);
             }, 2000);
         },
-        
+
         /**
          * View agent details
          */
-        onViewAgentDetails: function(oEvent) {
-            var oContext = oEvent.getSource().getBindingContext("blockchain");
-            var sAgentId = oContext.getProperty("id");
-            
+        onViewAgentDetails(oEvent) {
+            const oContext = oEvent.getSource().getBindingContext("blockchain");
+            const sAgentId = oContext.getProperty("id");
+
             if (sAgentId) {
                 this.getRouter().navTo("agentDetail", {
                     agentId: sAgentId

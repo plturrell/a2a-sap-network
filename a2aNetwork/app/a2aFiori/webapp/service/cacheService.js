@@ -1,9 +1,9 @@
 /**
  * Enterprise Caching Service
- * 
+ *
  * Provides intelligent caching with offline support, cache invalidation,
  * and storage management following SAP enterprise patterns.
- * 
+ *
  * @author SAP SE
  * @since 1.0.0
  * @version 1.0.0
@@ -13,7 +13,7 @@ sap.ui.define([
 ], function(Log) {
     "use strict";
 
-    var CacheService = {
+    const CacheService = {
 
         /* =========================================================== */
         /* Constants                                                   */
@@ -34,11 +34,11 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        init: function() {
+        init() {
             this._initializeStorage();
             this._startCleanupTimer();
             this._registerStorageEvents();
-            
+
             Log.info("CacheService initialized", { service: "CacheService" });
         },
 
@@ -47,11 +47,11 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        destroy: function() {
+        destroy() {
             if (this._cleanupTimer) {
                 clearInterval(this._cleanupTimer);
             }
-            
+
             Log.info("CacheService destroyed", { service: "CacheService" });
         },
 
@@ -72,30 +72,30 @@ sap.ui.define([
          * @returns {boolean} Whether caching was successful
          * @since 1.0.0
          */
-        set: function(key, data, options) {
+        set(key, data, options) {
             options = options || {};
-            
+
             try {
-                var cacheKey = this.CACHE_PREFIX + key;
-                var metaKey = this.METADATA_PREFIX + key;
-                var now = Date.now();
-                
+                const cacheKey = this.CACHE_PREFIX + key;
+                const metaKey = this.METADATA_PREFIX + key;
+                const now = Date.now();
+
                 // Prepare data for storage
-                var cacheData = {
-                    data: data,
+                const cacheData = {
+                    data,
                     timestamp: now,
                     compressed: false
                 };
-                
+
                 // Compress large objects if requested
                 if (options.compress && this._shouldCompress(data)) {
                     cacheData.data = this._compress(data);
                     cacheData.compressed = true;
                 }
-                
+
                 // Prepare metadata
-                var metadata = {
-                    key: key,
+                const metadata = {
+                    key,
                     created: now,
                     lastAccessed: now,
                     ttl: options.ttl || this.DEFAULT_TTL,
@@ -106,27 +106,27 @@ sap.ui.define([
                     accessCount: 0,
                     compressed: cacheData.compressed
                 };
-                
+
                 // Check storage limits
                 if (!this._checkStorageSpace(metadata.size)) {
-                    Log.warn("Cache storage limit exceeded", { key: key, size: metadata.size });
+                    Log.warn("Cache storage limit exceeded", { key, size: metadata.size });
                     this._evictOldEntries();
                 }
-                
+
                 // Store data and metadata
                 this._setItem(cacheKey, JSON.stringify(cacheData));
                 this._setItem(metaKey, JSON.stringify(metadata));
-                
-                Log.debug("Data cached successfully", { 
-                    key: key, 
+
+                Log.debug("Data cached successfully", {
+                    key,
                     size: metadata.size,
                     ttl: metadata.ttl,
                     tags: metadata.tags
                 });
-                
+
                 return true;
             } catch (error) {
-                Log.error("Failed to cache data", { key: key, error: error.message });
+                Log.error("Failed to cache data", { key, error: error.message });
                 return false;
             }
         },
@@ -140,60 +140,60 @@ sap.ui.define([
          * @returns {*} Cached data or null if not found/expired
          * @since 1.0.0
          */
-        get: function(key, options) {
+        get(key, options) {
             options = options || {};
             options.updateAccess = options.updateAccess !== false;
-            
+
             try {
-                var cacheKey = this.CACHE_PREFIX + key;
-                var metaKey = this.METADATA_PREFIX + key;
-                
+                const cacheKey = this.CACHE_PREFIX + key;
+                const metaKey = this.METADATA_PREFIX + key;
+
                 // Get metadata first
-                var metadataStr = this._getItem(metaKey);
+                const metadataStr = this._getItem(metaKey);
                 if (!metadataStr) {
                     return null;
                 }
-                
-                var metadata = JSON.parse(metadataStr);
-                var now = Date.now();
-                
+
+                const metadata = JSON.parse(metadataStr);
+                const now = Date.now();
+
                 // Check expiration
                 if (now > metadata.expiresAt) {
-                    Log.debug("Cache entry expired", { key: key, expiresAt: new Date(metadata.expiresAt) });
+                    Log.debug("Cache entry expired", { key, expiresAt: new Date(metadata.expiresAt) });
                     this.remove(key);
                     return null;
                 }
-                
+
                 // Get cached data
-                var cacheDataStr = this._getItem(cacheKey);
+                const cacheDataStr = this._getItem(cacheKey);
                 if (!cacheDataStr) {
                     // Metadata exists but data doesn't - clean up
                     this.remove(key);
                     return null;
                 }
-                
-                var cacheData = JSON.parse(cacheDataStr);
-                
+
+                const cacheData = JSON.parse(cacheDataStr);
+
                 // Decompress if needed
-                var data = cacheData.compressed ? 
+                const data = cacheData.compressed ?
                     this._decompress(cacheData.data) : cacheData.data;
-                
+
                 // Update access statistics
                 if (options.updateAccess) {
                     metadata.lastAccessed = now;
                     metadata.accessCount++;
                     this._setItem(metaKey, JSON.stringify(metadata));
                 }
-                
-                Log.debug("Cache hit", { 
-                    key: key, 
+
+                Log.debug("Cache hit", {
+                    key,
                     age: now - metadata.created,
-                    accessCount: metadata.accessCount 
+                    accessCount: metadata.accessCount
                 });
-                
+
                 return data;
             } catch (error) {
-                Log.error("Failed to retrieve cached data", { key: key, error: error.message });
+                Log.error("Failed to retrieve cached data", { key, error: error.message });
                 return null;
             }
         },
@@ -205,18 +205,18 @@ sap.ui.define([
          * @returns {boolean} Whether removal was successful
          * @since 1.0.0
          */
-        remove: function(key) {
+        remove(key) {
             try {
-                var cacheKey = this.CACHE_PREFIX + key;
-                var metaKey = this.METADATA_PREFIX + key;
-                
+                const cacheKey = this.CACHE_PREFIX + key;
+                const metaKey = this.METADATA_PREFIX + key;
+
                 this._removeItem(cacheKey);
                 this._removeItem(metaKey);
-                
-                Log.debug("Cache entry removed", { key: key });
+
+                Log.debug("Cache entry removed", { key });
                 return true;
             } catch (error) {
-                Log.error("Failed to remove cache entry", { key: key, error: error.message });
+                Log.error("Failed to remove cache entry", { key, error: error.message });
                 return false;
             }
         },
@@ -227,18 +227,18 @@ sap.ui.define([
          * @returns {boolean} Whether clearing was successful
          * @since 1.0.0
          */
-        clear: function() {
+        clear() {
             try {
-                var keys = this._getAllKeys();
-                var removed = 0;
-                
+                const keys = this._getAllKeys();
+                let removed = 0;
+
                 keys.forEach(function(key) {
                     if (key.startsWith(this.CACHE_PREFIX) || key.startsWith(this.METADATA_PREFIX)) {
                         this._removeItem(key);
                         removed++;
                     }
                 }.bind(this));
-                
+
                 Log.info("Cache cleared", { entriesRemoved: removed });
                 return true;
             } catch (error) {
@@ -254,33 +254,33 @@ sap.ui.define([
          * @returns {number} Number of entries invalidated
          * @since 1.0.0
          */
-        invalidateByTags: function(tags) {
+        invalidateByTags(tags) {
             if (!Array.isArray(tags) || tags.length === 0) {
                 return 0;
             }
-            
+
             try {
-                var keys = this._getAllKeys();
-                var invalidated = 0;
-                
+                const keys = this._getAllKeys();
+                let invalidated = 0;
+
                 keys.forEach(function(key) {
                     if (key.startsWith(this.METADATA_PREFIX)) {
-                        var metadataStr = this._getItem(key);
+                        const metadataStr = this._getItem(key);
                         if (metadataStr) {
-                            var metadata = JSON.parse(metadataStr);
+                            const metadata = JSON.parse(metadataStr);
                             if (metadata.tags && this._hasMatchingTag(metadata.tags, tags)) {
-                                var cacheKey = metadata.key;
+                                const cacheKey = metadata.key;
                                 this.remove(cacheKey);
                                 invalidated++;
                             }
                         }
                     }
                 }.bind(this));
-                
-                Log.info("Cache invalidated by tags", { tags: tags, entriesInvalidated: invalidated });
+
+                Log.info("Cache invalidated by tags", { tags, entriesInvalidated: invalidated });
                 return invalidated;
             } catch (error) {
-                Log.error("Failed to invalidate cache by tags", { tags: tags, error: error.message });
+                Log.error("Failed to invalidate cache by tags", { tags, error: error.message });
                 return 0;
             }
         },
@@ -291,10 +291,10 @@ sap.ui.define([
          * @returns {object} Cache statistics
          * @since 1.0.0
          */
-        getStats: function() {
+        getStats() {
             try {
-                var keys = this._getAllKeys();
-                var stats = {
+                const keys = this._getAllKeys();
+                const stats = {
                     totalEntries: 0,
                     totalSize: 0,
                     oldestEntry: null,
@@ -305,12 +305,12 @@ sap.ui.define([
                     hitRate: 0,
                     entries: []
                 };
-                
+
                 keys.forEach(function(key) {
                     if (key.startsWith(this.METADATA_PREFIX)) {
-                        var metadataStr = this._getItem(key);
+                        const metadataStr = this._getItem(key);
                         if (metadataStr) {
-                            var metadata = JSON.parse(metadataStr);
+                            const metadata = JSON.parse(metadataStr);
                             stats.totalEntries++;
                             stats.totalSize += metadata.size;
                             stats.entries.push({
@@ -324,19 +324,19 @@ sap.ui.define([
                         }
                     }
                 }.bind(this));
-                
+
                 // Calculate additional statistics
                 if (stats.entries.length > 0) {
                     stats.entries.sort((a, b) => a.created - b.created);
                     stats.oldestEntry = stats.entries[0];
                     stats.newestEntry = stats.entries[stats.entries.length - 1];
-                    
+
                     stats.entries.sort((a, b) => b.accessCount - a.accessCount);
                     stats.mostAccessed = stats.entries[0];
                 }
-                
+
                 stats.storageUsed = this._getStorageUsage();
-                
+
                 return stats;
             } catch (error) {
                 Log.error("Failed to get cache stats", { error: error.message });
@@ -353,10 +353,10 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _initializeStorage: function() {
+        _initializeStorage() {
             // Test localStorage availability
             try {
-                var testKey = "a2a-test";
+                const testKey = "a2a-test";
                 localStorage.setItem(testKey, "test");
                 localStorage.removeItem(testKey);
                 this._storageType = "localStorage";
@@ -372,7 +372,7 @@ sap.ui.define([
                     this._memoryStorage = {};
                 }
             }
-            
+
             Log.info("Cache storage initialized", { storageType: this._storageType });
         },
 
@@ -381,7 +381,7 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _startCleanupTimer: function() {
+        _startCleanupTimer() {
             this._cleanupTimer = setInterval(function() {
                 this._cleanupExpiredEntries();
             }.bind(this), this.CLEANUP_INTERVAL);
@@ -392,7 +392,7 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _registerStorageEvents: function() {
+        _registerStorageEvents() {
             if (this._storageType === "localStorage") {
                 window.addEventListener("storage", function(e) {
                     if (e.key && (e.key.startsWith(this.CACHE_PREFIX) || e.key.startsWith(this.METADATA_PREFIX))) {
@@ -409,11 +409,11 @@ sap.ui.define([
          * @param {string} value Storage value
          * @since 1.0.0
          */
-        _setItem: function(key, value) {
+        _setItem(key, value) {
             if (this._storageType === "memory") {
                 this._memoryStorage[key] = value;
             } else {
-                var storage = this._storageType === "localStorage" ? localStorage : sessionStorage;
+                const storage = this._storageType === "localStorage" ? localStorage : sessionStorage;
                 storage.setItem(key, value);
             }
         },
@@ -425,13 +425,13 @@ sap.ui.define([
          * @returns {string} Storage value
          * @since 1.0.0
          */
-        _getItem: function(key) {
+        _getItem(key) {
             if (this._storageType === "memory") {
                 return this._memoryStorage[key] || null;
-            } else {
-                var storage = this._storageType === "localStorage" ? localStorage : sessionStorage;
-                return storage.getItem(key);
             }
+            const storage = this._storageType === "localStorage" ? localStorage : sessionStorage;
+            return storage.getItem(key);
+
         },
 
         /**
@@ -440,11 +440,11 @@ sap.ui.define([
          * @param {string} key Storage key
          * @since 1.0.0
          */
-        _removeItem: function(key) {
+        _removeItem(key) {
             if (this._storageType === "memory") {
                 delete this._memoryStorage[key];
             } else {
-                var storage = this._storageType === "localStorage" ? localStorage : sessionStorage;
+                const storage = this._storageType === "localStorage" ? localStorage : sessionStorage;
                 storage.removeItem(key);
             }
         },
@@ -455,17 +455,17 @@ sap.ui.define([
          * @returns {Array<string>} Storage keys
          * @since 1.0.0
          */
-        _getAllKeys: function() {
+        _getAllKeys() {
             if (this._storageType === "memory") {
                 return Object.keys(this._memoryStorage);
-            } else {
-                var storage = this._storageType === "localStorage" ? localStorage : sessionStorage;
-                var keys = [];
-                for (var i = 0; i < storage.length; i++) {
-                    keys.push(storage.key(i));
-                }
-                return keys;
             }
+            const storage = this._storageType === "localStorage" ? localStorage : sessionStorage;
+            const keys = [];
+            for (let i = 0; i < storage.length; i++) {
+                keys.push(storage.key(i));
+            }
+            return keys;
+
         },
 
         /**
@@ -475,7 +475,7 @@ sap.ui.define([
          * @returns {number} Size in bytes
          * @since 1.0.0
          */
-        _calculateSize: function(data) {
+        _calculateSize(data) {
             return new Blob([JSON.stringify(data)]).size;
         },
 
@@ -486,8 +486,8 @@ sap.ui.define([
          * @returns {boolean} Whether to compress
          * @since 1.0.0
          */
-        _shouldCompress: function(data) {
-            var size = this._calculateSize(data);
+        _shouldCompress(data) {
+            const size = this._calculateSize(data);
             return size > 10240; // Compress if larger than 10KB
         },
 
@@ -498,20 +498,20 @@ sap.ui.define([
          * @returns {string} Compressed data
          * @since 1.0.0
          */
-        _compress: function(data) {
+        _compress(data) {
             try {
-                var jsonString = JSON.stringify(data);
-                
+                const jsonString = JSON.stringify(data);
+
                 // Implement LZ77-based compression algorithm
                 // This is a simplified version suitable for browser environments
-                var compressed = this._lzCompress(jsonString);
-                
+                const compressed = this._lzCompress(jsonString);
+
                 Log.debug("Data compressed", {
                     originalSize: jsonString.length,
                     compressedSize: compressed.length,
                     ratio: (compressed.length / jsonString.length).toFixed(2)
                 });
-                
+
                 return compressed;
             } catch (error) {
                 Log.error("Compression failed, using uncompressed data", error);
@@ -526,10 +526,10 @@ sap.ui.define([
          * @returns {*} Decompressed data
          * @since 1.0.0
          */
-        _decompress: function(compressedData) {
+        _decompress(compressedData) {
             try {
                 // Try to decompress using LZ77 algorithm
-                var decompressed = this._lzDecompress(compressedData);
+                const decompressed = this._lzDecompress(compressedData);
                 return JSON.parse(decompressed);
             } catch (error) {
                 Log.warn("Decompression failed, trying as uncompressed data", error);
@@ -550,8 +550,8 @@ sap.ui.define([
          * @returns {boolean} Whether space is available
          * @since 1.0.0
          */
-        _checkStorageSpace: function(requiredSize) {
-            var currentUsage = this._getStorageUsage();
+        _checkStorageSpace(requiredSize) {
+            const currentUsage = this._getStorageUsage();
             return (currentUsage + requiredSize) <= this.MAX_CACHE_SIZE;
         },
 
@@ -561,19 +561,19 @@ sap.ui.define([
          * @returns {number} Storage usage in bytes
          * @since 1.0.0
          */
-        _getStorageUsage: function() {
+        _getStorageUsage() {
             if (this._storageType === "memory") {
                 return JSON.stringify(this._memoryStorage).length;
-            } else {
-                var storage = this._storageType === "localStorage" ? localStorage : sessionStorage;
-                var usage = 0;
-                for (var key in storage) {
-                    if (key.startsWith(this.CACHE_PREFIX) || key.startsWith(this.METADATA_PREFIX)) {
-                        usage += storage[key].length;
-                    }
-                }
-                return usage;
             }
+            const storage = this._storageType === "localStorage" ? localStorage : sessionStorage;
+            let usage = 0;
+            for (const key in storage) {
+                if (key.startsWith(this.CACHE_PREFIX) || key.startsWith(this.METADATA_PREFIX)) {
+                    usage += storage[key].length;
+                }
+            }
+            return usage;
+
         },
 
         /**
@@ -581,32 +581,32 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _evictOldEntries: function() {
-            var keys = this._getAllKeys();
-            var metadataEntries = [];
-            
+        _evictOldEntries() {
+            const keys = this._getAllKeys();
+            const metadataEntries = [];
+
             // Collect metadata entries
             keys.forEach(function(key) {
                 if (key.startsWith(this.METADATA_PREFIX)) {
-                    var metadataStr = this._getItem(key);
+                    const metadataStr = this._getItem(key);
                     if (metadataStr) {
-                        var metadata = JSON.parse(metadataStr);
+                        const metadata = JSON.parse(metadataStr);
                         metadataEntries.push(metadata);
                     }
                 }
             }.bind(this));
-            
+
             // Sort by access time (oldest first)
             metadataEntries.sort((a, b) => a.lastAccessed - b.lastAccessed);
-            
+
             // Remove oldest entries until we have enough space
-            var removed = 0;
+            let removed = 0;
             while (this._getStorageUsage() > (this.MAX_CACHE_SIZE * 0.8) && metadataEntries.length > 0) {
-                var entry = metadataEntries.shift();
+                const entry = metadataEntries.shift();
                 this.remove(entry.key);
                 removed++;
             }
-            
+
             Log.info("Evicted old cache entries", { entriesRemoved: removed });
         },
 
@@ -615,16 +615,16 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _cleanupExpiredEntries: function() {
-            var keys = this._getAllKeys();
-            var now = Date.now();
-            var removed = 0;
-            
+        _cleanupExpiredEntries() {
+            const keys = this._getAllKeys();
+            const now = Date.now();
+            let removed = 0;
+
             keys.forEach(function(key) {
                 if (key.startsWith(this.METADATA_PREFIX)) {
-                    var metadataStr = this._getItem(key);
+                    const metadataStr = this._getItem(key);
                     if (metadataStr) {
-                        var metadata = JSON.parse(metadataStr);
+                        const metadata = JSON.parse(metadataStr);
                         if (now > metadata.expiresAt) {
                             this.remove(metadata.key);
                             removed++;
@@ -632,7 +632,7 @@ sap.ui.define([
                     }
                 }
             }.bind(this));
-            
+
             if (removed > 0) {
                 Log.debug("Cleaned up expired cache entries", { entriesRemoved: removed });
             }
@@ -646,7 +646,7 @@ sap.ui.define([
          * @returns {boolean} Whether tags match
          * @since 1.0.0
          */
-        _hasMatchingTag: function(entryTags, targetTags) {
+        _hasMatchingTag(entryTags, targetTags) {
             return targetTags.some(function(tag) {
                 return entryTags.indexOf(tag) !== -1;
             });
@@ -663,19 +663,19 @@ sap.ui.define([
          * @returns {string} Compressed string
          * @since 1.0.0
          */
-        _lzCompress: function(input) {
-            if (!input || typeof input !== 'string') {
+        _lzCompress(input) {
+            if (!input || typeof input !== "string") {
                 return input;
             }
 
-            var dictionary = {};
-            var data = (input + "").split("");
-            var out = [];
-            var currChar;
-            var phrase = data[0];
-            var code = 256;
-            
-            for (var i = 1; i < data.length; i++) {
+            const dictionary = {};
+            const data = (`${input }`).split("");
+            const out = [];
+            let currChar;
+            let phrase = data[0];
+            let code = 256;
+
+            for (let i = 1; i < data.length; i++) {
                 currChar = data[i];
                 if (dictionary[phrase + currChar] !== undefined) {
                     phrase += currChar;
@@ -687,7 +687,7 @@ sap.ui.define([
                 }
             }
             out.push(phrase.length > 1 ? dictionary[phrase] : phrase.charCodeAt(0));
-            
+
             // Convert to base64-like string for storage
             return this._encodeArray(out);
         },
@@ -699,21 +699,21 @@ sap.ui.define([
          * @returns {string} Decompressed string
          * @since 1.0.0
          */
-        _lzDecompress: function(compressed) {
-            if (!compressed || typeof compressed !== 'string') {
+        _lzDecompress(compressed) {
+            if (!compressed || typeof compressed !== "string") {
                 return compressed;
             }
 
-            var dictionary = {};
-            var data = this._decodeArray(compressed);
-            var currChar = String.fromCharCode(data[0]);
-            var oldPhrase = currChar;
-            var out = [currChar];
-            var code = 256;
-            var phrase;
-            
-            for (var i = 1; i < data.length; i++) {
-                var currCode = data[i];
+            const dictionary = {};
+            const data = this._decodeArray(compressed);
+            let currChar = String.fromCharCode(data[0]);
+            let oldPhrase = currChar;
+            const out = [currChar];
+            let code = 256;
+            let phrase;
+
+            for (let i = 1; i < data.length; i++) {
+                const currCode = data[i];
                 if (currCode < 256) {
                     phrase = String.fromCharCode(currCode);
                 } else {
@@ -725,7 +725,7 @@ sap.ui.define([
                 code++;
                 oldPhrase = phrase;
             }
-            
+
             return out.join("");
         },
 
@@ -736,9 +736,9 @@ sap.ui.define([
          * @returns {string} Encoded string
          * @since 1.0.0
          */
-        _encodeArray: function(arr) {
-            var result = "";
-            for (var i = 0; i < arr.length; i++) {
+        _encodeArray(arr) {
+            let result = "";
+            for (let i = 0; i < arr.length; i++) {
                 result += String.fromCharCode(arr[i] + 256);
             }
             return btoa(result); // Base64 encode for safe storage
@@ -751,10 +751,10 @@ sap.ui.define([
          * @returns {Array<number>} Decoded array
          * @since 1.0.0
          */
-        _decodeArray: function(str) {
-            var decoded = atob(str); // Base64 decode
-            var arr = [];
-            for (var i = 0; i < decoded.length; i++) {
+        _decodeArray(str) {
+            const decoded = atob(str); // Base64 decode
+            const arr = [];
+            for (let i = 0; i < decoded.length; i++) {
                 arr.push(decoded.charCodeAt(i) - 256);
             }
             return arr;

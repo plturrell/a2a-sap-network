@@ -1,0 +1,18 @@
+{
+  "welcome": "Bienvenue sur A2A Network",
+  "agents": "Agents",
+  "services": "Services",
+  "marketplace": "Marché",
+  "dashboard": "Tableau de bord",
+  "settings": "Paramètres",
+  "blockchain": "Blockchain",
+  "contracts": "Contrats intelligents",
+  "operations": "Opérations",
+  "notifications": "Notifications",
+  "login": "Connexion",
+  "logout": "Déconnexion",
+  "save": "Enregistrer",
+  "cancel": "Annuler",
+  "search": "Rechercher",
+  "loading": "Chargement..."
+}

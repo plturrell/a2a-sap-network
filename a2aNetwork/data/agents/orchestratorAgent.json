@@ -1,0 +1,17 @@
+{
+  "agentType": "orchestratorAgent",
+  "name": "Orchestrator Agent",
+  "address": "0xcd3B766CCDd6AE721141F452C550Ca635964ce71",
+  "endpoint": "http://localhost:8015",
+  "capabilities": [
+    "workflow_orchestration",
+    "task_scheduling",
+    "pipeline_management",
+    "coordination_services",
+    "execution_monitoring"
+  ],
+  "description": "Agent 15 - Orchestrates complex workflows across multiple agents",
+  "registrationTx": "0x0fbce1d37a1c753949625f00047c22257a923f96861b157ed337c2ce703ade5c",
+  "registrationBlock": 18,
+  "registeredAt": "2025-08-19T06:02:18.471Z"
+}

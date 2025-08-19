@@ -1,0 +1,17 @@
+{
+  "agentType": "calculationAgent",
+  "name": "Calculation Agent",
+  "address": "0xBcd4042DE499D14e55001CcbB24a551F3b954096",
+  "endpoint": "http://localhost:8010",
+  "capabilities": [
+    "mathematical_calculations",
+    "statistical_analysis",
+    "formula_execution",
+    "numerical_processing",
+    "computation_services"
+  ],
+  "description": "Agent 10 - Performs complex calculations and mathematical operations",
+  "registrationTx": "0x8f3e960483970c459d7b52d9affa3092a231312dd3dba4e32d6b767859fd1e65",
+  "registrationBlock": 13,
+  "registeredAt": "2025-08-19T06:02:18.100Z"
+}

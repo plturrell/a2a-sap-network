@@ -1,0 +1,17 @@
+{
+  "agentType": "dataProductAgent",
+  "name": "Data Product Agent",
+  "address": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "endpoint": "http://localhost:8000",
+  "capabilities": [
+    "data_product_creation",
+    "data_ingestion",
+    "data_transformation",
+    "quality_control",
+    "metadata_management"
+  ],
+  "description": "Agent 0 - Creates and manages data products with Dublin Core metadata",
+  "registrationTx": "0xa05ecd8ad99809f1ffcf08b08bac3b5fbda5a7768f86a8cf30c28d2bde64d582",
+  "registrationBlock": 3,
+  "registeredAt": "2025-08-19T06:02:17.346Z"
+}

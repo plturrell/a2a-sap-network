@@ -1,338 +1,525 @@
 /**
- * @fileoverview SAP Integration Service
- * @description Enterprise integration service handling connections to external SAP systems,
- * third-party services, and hybrid workflow orchestration across multiple environments.
- * @module sapIntegrationService
- * @since 1.0.0
+ * @fileoverview Enhanced SAP Integration Service with Enterprise Resilience
+ * @description Enterprise-grade integration service with circuit breakers, retry logic,
+ * transaction management, connection pooling, and comprehensive SAP BTP integration
+ * @module enhancedSapIntegrationService
+ * @since 2.0.0
  * @author A2A Network Team
- * @namespace a2a.srv
  */
 
 const cds = require('@sap/cds');
 const { v4: uuidv4 } = require('uuid');
+const { CircuitBreaker, getBreaker } = require('./utils/circuitBreaker');
+const { createCompressionMiddleware } = require('./utils/compressionMiddleware');
+
+// SAP Cloud SDK imports
+let sapDestination, sapConnectivity;
+try {
+    sapDestination = require('@sap-cloud-sdk/connectivity');
+    sapConnectivity = require('@sap-cloud-sdk/connectivity');
+} catch (error) {
+    // SAP Cloud SDK not available in development
+}
+
+// OpenTelemetry integration
+let opentelemetry, trace;
+try {
+    opentelemetry = require('@opentelemetry/api');
+    trace = opentelemetry.trace;
+} catch (error) {
+    // OpenTelemetry not available
+}
 
 /**
- * Integration Service Implementation
- * Handles connections to external SAP and third-party services
+ * Enhanced Integration Service with Enterprise Features
  */
-module.exports = class IntegrationService extends cds.Service {
+module.exports = class EnhancedIntegrationService extends cds.Service {
     
     async init() {
-        // Get entity definitions
+        // Initialize service dependencies
         const { Agents, AgentCapabilities, Capabilities } = cds.entities('a2a.network');
         
-        // Initialize remote service connections
-        this.remoteServices = {};
-        await this._initializeRemoteServices();
+        // Initialize tracer for distributed tracing
+        this.tracer = trace ? trace.getTracer('integration-service', '2.0.0') : null;
         
-        // Register action handlers
-        this.on('importBusinessPartners', this._importBusinessPartners);
-        this.on('syncEmployeeData', this._syncEmployeeData);
-        this.on('exportAnalytics', this._exportAnalytics);
-        this.on('enhanceAgentWithAI', this._enhanceAgentWithAI);
-        this.on('executeHybridWorkflow', this._executeHybridWorkflow);
-        this.on('checkRemoteServices', this._checkRemoteServices);
+        // Initialize connection pool for remote services
+        this.connectionPool = new Map();
+        this.circuitBreakers = new Map();
+        this.retryConfigs = new Map();
+        
+        // Configure service-specific settings
+        this.serviceConfig = {
+            S4HANABusinessPartner: {
+                maxRetries: 3,
+                retryDelay: 1000,
+                timeout: 30000,
+                circuitBreakerThreshold: 5,
+                bulkSize: 100,
+                compression: true
+            },
+            SuccessFactorsService: {
+                maxRetries: 3,
+                retryDelay: 2000,
+                timeout: 45000,
+                circuitBreakerThreshold: 3,
+                bulkSize: 50,
+                compression: true
+            },
+            AribaNetworkService: {
+                maxRetries: 2,
+                retryDelay: 1500,
+                timeout: 30000,
+                circuitBreakerThreshold: 4,
+                bulkSize: 25,
+                compression: true
+            },
+            BlockchainOracle: {
+                maxRetries: 5,
+                retryDelay: 500,
+                timeout: 60000,
+                circuitBreakerThreshold: 10,
+                bulkSize: 10,
+                compression: false
+            }
+        };
+        
+        // Initialize remote service connections with resilience
+        await this._initializeResilientServices();
+        
+        // Initialize transaction manager
+        this.transactionManager = new TransactionManager();
+        
+        // Register enhanced action handlers
+        this.on('importBusinessPartners', this._importBusinessPartnersWithResilience);
+        this.on('syncEmployeeData', this._syncEmployeeDataWithResilience);
+        this.on('exportAnalytics', this._exportAnalyticsWithCompression);
+        this.on('enhanceAgentWithAI', this._enhanceAgentWithAIResilience);
+        this.on('executeHybridWorkflow', this._executeHybridWorkflowWithMonitoring);
+        this.on('checkRemoteServices', this._checkRemoteServicesHealth);
+        this.on('bulkImport', this._bulkImportWithTransaction);
+        this.on('configureIntegration', this._configureIntegration);
+        
+        // Set up monitoring and health checks
+        this._setupHealthMonitoring();
         
         return super.init();
     }
     
-    async _initializeRemoteServices() {
-        // Initialize connections to remote services
-        const services = [
-            'S4HANABusinessPartner',
-            'SuccessFactorsService',
-            'AribaNetworkService',
-            'SACService',
-            'AIServicesHub',
-            'BlockchainOracle'
-        ];
+    /**
+     * Initialize remote services with resilience patterns
+     */
+    async _initializeResilientServices() {
+        const services = Object.keys(this.serviceConfig);
         
-        for (const service of services) {
+        for (const serviceName of services) {
+            const config = this.serviceConfig[serviceName];
+            
             try {
-                this.remoteServices[service] = await cds.connect.to(service);
-                this.log.info(`Connected to ${service}`);
-            } catch (e) {
-                this.log.warn(`Failed to connect to ${service}:`, e.message);
+                // Create circuit breaker for service
+                const breaker = getBreaker(serviceName, {
+                    serviceName,
+                    serviceType: 'external',
+                    priority: 'HIGH',
+                    failureThreshold: config.circuitBreakerThreshold,
+                    resetTimeout: 60000,
+                    halfOpenMaxCalls: 3
+                });
+                
+                this.circuitBreakers.set(serviceName, breaker);
+                
+                // Attempt connection with circuit breaker
+                const connection = await breaker.call(async () => {
+                    if (sapDestination) {
+                        // Use SAP Destination Service for managed connections
+                        return await sapDestination.getDestination(serviceName);
+                    } else {
+                        // Fallback to direct connection
+                        return await cds.connect.to(serviceName);
+                    }
+                });
+                
+                this.connectionPool.set(serviceName, connection);
+                this.log.info(`✅ Connected to ${serviceName} with resilience patterns`);
+                
+            } catch (error) {
+                this.log.warn(`⚠️ Failed to connect to ${serviceName}:`, error.message);
+                this.connectionPool.set(serviceName, null);
             }
         }
     }
     
-    async _importBusinessPartners(req) {
+    /**
+     * Import business partners with resilience and transaction management
+     */
+    async _importBusinessPartnersWithResilience(req) {
+        const span = this.tracer?.startSpan('import-business-partners');
         const { Agents } = cds.entities('a2a.network');
-        const s4hana = this.remoteServices.S4HANABusinessPartner;
         
-        if (!s4hana) {
+        const breaker = this.circuitBreakers.get('S4HANABusinessPartner');
+        const connection = this.connectionPool.get('S4HANABusinessPartner');
+        const config = this.serviceConfig.S4HANABusinessPartner;
+        
+        if (!connection) {
             req.error(503, 'S/4HANA service not available');
+            return;
         }
         
         let imported = 0;
         let failed = 0;
         const errors = [];
         
+        // Start transaction
+        const tx = await this.transactionManager.begin();
+        
         try {
-            // Fetch business partners from S/4HANA
-            const businessPartners = await s4hana.send({
-                query: SELECT.from('BusinessPartners').limit(100)
+            // Fetch business partners with circuit breaker protection
+            const businessPartners = await breaker.call(async () => {
+                return await this._retryWithBackoff(async () => {
+                    return await connection.send({
+                        query: SELECT.from('BusinessPartners').limit(config.bulkSize)
+                    });
+                }, config);
             });
             
-            // Import each business partner as an agent
-            for (const bp of businessPartners) {
-                try {
-                    // Check if agent already exists
-                    const existing = await SELECT.one.from(Agents)
-                        .where({ address: `BP-${bp.BusinessPartner}` });
-                    
-                    if (!existing) {
-                        await INSERT.into(Agents).entries({
-                            ID: uuidv4(),
-                            address: `BP-${bp.BusinessPartner}`,
-                            name: bp.BusinessPartnerName,
-                            endpoint: `https://s4hana.example.com/bp/${bp.BusinessPartner}`,
-                            reputation: 100,
-                            isActive: true,
-                            country: 'DE' // Default country
-                        });
+            span?.setAttributes({
+                'import.total': businessPartners.length,
+                'import.service': 'S4HANABusinessPartner'
+            });
+            
+            // Process in batches for better performance
+            const batches = this._createBatches(businessPartners, 10);
+            
+            for (const batch of batches) {
+                const batchResults = await Promise.allSettled(
+                    batch.map(bp => this._importSingleBusinessPartner(bp, tx))
+                );
+                
+                batchResults.forEach((result, index) => {
+                    if (result.status === 'fulfilled') {
                         imported++;
+                    } else {
+                        failed++;
+                        errors.push({
+                            partner: batch[index].BusinessPartner,
+                            error: result.reason.message
+                        });
                     }
-                } catch (e) {
-                    failed++;
-                    errors.push(`Failed to import ${bp.BusinessPartner}: ${e.message}`);
-                }
+                });
             }
             
-            return { imported, failed, errors };
+            // Commit transaction if successful
+            await tx.commit();
             
-        } catch (e) {
-            req.error(500, `Import failed: ${e.message}`);
-        }
-    }
-    
-    async _syncEmployeeData(req) {
-        const sfsf = this.remoteServices.SuccessFactorsService;
-        
-        if (!sfsf) {
-            req.error(503, 'SuccessFactors service not available');
-        }
-        
-        let synced = 0;
-        let updated = 0;
-        const errors = [];
-        
-        try {
-            // Fetch employees from SuccessFactors
-            const employees = await sfsf.send({
-                query: SELECT.from('Employees').limit(100)
+            span?.setAttributes({
+                'import.successful': imported,
+                'import.failed': failed
             });
             
-            // Update user permissions based on employee data
-            for (const emp of employees) {
-                try {
-                    // Map department to role
-                    const role = this._mapDepartmentToRole(emp.department);
-                    
-                    // Update user authentication service
-                    // In production, this would update the XSUAA service
-                    this.log.info(`Syncing user ${emp.email} with role ${role}`);
-                    
-                    synced++;
-                } catch (e) {
-                    errors.push(`Failed to sync ${emp.email}: ${e.message}`);
-                }
-            }
+            // Emit metrics
+            this.emit('integration.import.completed', {
+                service: 'S4HANABusinessPartner',
+                imported,
+                failed,
+                duration: Date.now() - req.timestamp
+            });
             
-            return { synced, updated, errors };
+            return {
+                imported,
+                failed,
+                errors: errors.slice(0, 10), // Return first 10 errors
+                message: `Successfully imported ${imported} business partners`
+            };
             
-        } catch (e) {
-            req.error(500, `Sync failed: ${e.message}`);
+        } catch (error) {
+            // Rollback transaction on error
+            await tx.rollback();
+            
+            span?.recordException(error);
+            this.log.error('Business partner import failed:', error);
+            
+            throw error;
+        } finally {
+            span?.end();
         }
     }
     
-    async _exportAnalytics(req) {
-        const { dateFrom, dateTo } = req.data;
-        const sac = this.remoteServices.SACService;
+    /**
+     * Import single business partner within transaction
+     */
+    async _importSingleBusinessPartner(bp, tx) {
+        const { Agents } = cds.entities('a2a.network');
         
-        if (!sac) {
-            req.error(503, 'SAC service not available');
+        // Check if agent already exists
+        const existing = await tx.run(
+            SELECT.one.from(Agents).where({ address: `BP-${bp.BusinessPartner}` })
+        );
+        
+        if (!existing) {
+            const agent = {
+                ID: uuidv4(),
+                address: `BP-${bp.BusinessPartner}`,
+                name: bp.BusinessPartnerName || `Business Partner ${bp.BusinessPartner}`,
+                endpoint: `https://s4hana.example.com/bp/${bp.BusinessPartner}`,
+                reputation: 100,
+                isActive: true,
+                country: bp.Country || 'DE',
+                metadata: JSON.stringify({
+                    source: 'S4HANA',
+                    businessPartnerType: bp.BusinessPartnerType,
+                    importDate: new Date().toISOString()
+                })
+            };
+            
+            await tx.run(INSERT.into(Agents).entries(agent));
+            
+            // Add default capabilities
+            await this._assignDefaultCapabilities(agent.ID, tx);
         }
+        
+        return bp.BusinessPartner;
+    }
+    
+    /**
+     * Sync employee data with resilience
+     */
+    async _syncEmployeeDataWithResilience(req) {
+        const span = this.tracer?.startSpan('sync-employee-data');
+        const breaker = this.circuitBreakers.get('SuccessFactorsService');
+        const connection = this.connectionPool.get('SuccessFactorsService');
+        const config = this.serviceConfig.SuccessFactorsService;
+        
+        if (!connection) {
+            req.error(503, 'SuccessFactors service not available');
+            return;
+        }
+        
+        try {
+            // Fetch employees with resilience
+            const employees = await breaker.call(async () => {
+                return await this._retryWithBackoff(async () => {
+                    return await connection.get('/User')
+                        .select('userId,firstName,lastName,email,department,division')
+                        .top(config.bulkSize);
+                }, config);
+            });
+            
+            // Process and sync employees
+            const syncResults = await this._processEmployeeSync(employees);
+            
+            span?.setAttributes({
+                'sync.total': employees.length,
+                'sync.successful': syncResults.successful,
+                'sync.failed': syncResults.failed
+            });
+            
+            return syncResults;
+            
+        } catch (error) {
+            span?.recordException(error);
+            throw error;
+        } finally {
+            span?.end();
+        }
+    }
+    
+    /**
+     * Export analytics with compression
+     */
+    async _exportAnalyticsWithCompression(req) {
+        const { format = 'json', compress = true } = req.data;
+        const span = this.tracer?.startSpan('export-analytics');
         
         try {
             // Gather analytics data
-            const { NetworkStats, Agents, Services } = cds.entities('a2a.network');
+            const analytics = await this._gatherAnalyticsData();
             
-            const stats = await SELECT.from(NetworkStats)
-                .where({ validFrom: { between: [dateFrom, dateTo] } });
+            // Apply compression if requested
+            let exportData = analytics;
+            if (compress) {
+                const compressionManager = createCompressionMiddleware();
+                exportData = await compressionManager.compress(analytics, format);
+            }
             
-            const agentMetrics = await SELECT.from(Agents)
-                .columns('COUNT(*) as total', 'AVG(reputation) as avgReputation');
-            
-            const serviceMetrics = await SELECT.from(Services)
-                .columns('COUNT(*) as total', 'SUM(totalCalls) as totalCalls');
-            
-            // Create story in SAC
-            const storyData = JSON.stringify({
-                title: `A2A Network Analytics - ${dateFrom} to ${dateTo}`,
-                widgets: [
-                    {
-                        type: 'chart',
-                        data: stats,
-                        visualization: 'line'
-                    },
-                    {
-                        type: 'kpi',
-                        data: agentMetrics
-                    },
-                    {
-                        type: 'table',
-                        data: serviceMetrics
-                    }
-                ]
+            span?.setAttributes({
+                'export.format': format,
+                'export.compressed': compress,
+                'export.size': exportData.length || JSON.stringify(exportData).length
             });
             
-            const storyId = await sac.createStory(storyData);
-            
             return {
-                storyId,
-                status: 'created',
-                url: `https://sac.example.com/story/${storyId}`
+                data: exportData,
+                format,
+                compressed: compress,
+                timestamp: new Date().toISOString()
             };
             
-        } catch (e) {
-            req.error(500, `Export failed: ${e.message}`);
+        } catch (error) {
+            span?.recordException(error);
+            throw error;
+        } finally {
+            span?.end();
         }
     }
     
-    async _enhanceAgentWithAI(req) {
-        const { agentId } = req.data;
-        const ai = this.remoteServices.AIServicesHub;
+    /**
+     * Check remote services health
+     */
+    async _checkRemoteServicesHealth(req) {
+        const healthStatus = {};
         
-        if (!ai) {
-            req.error(503, 'AI Services not available');
-        }
-        
-        try {
-            // Get agent data
-            const { Agents, AgentCapabilities } = cds.entities('a2a.network');
-            const agent = await SELECT.one.from(Agents).where({ ID: agentId });
+        for (const [serviceName, breaker] of this.circuitBreakers.entries()) {
+            const connection = this.connectionPool.get(serviceName);
+            const status = breaker.getHealthStatus();
             
-            if (!agent) {
-                req.error(404, 'Agent not found');
-            }
-            
-            // Get current capabilities
-            const currentCaps = await SELECT.from(AgentCapabilities)
-                .where({ agent_ID: agentId });
-            
-            // Analyze agent profile with AI
-            const analysis = await ai.analyzeSentiment(agent.name);
-            
-            // Generate capability recommendations
-            const capabilities = [];
-            const recommendations = [];
-            
-            // Based on agent name and current capabilities
-            if (agent.name.toLowerCase().includes('data')) {
-                capabilities.push('DATA_PROCESSING', 'DATA_ANALYTICS');
-                recommendations.push('Consider adding ETL capabilities');
-            }
-            
-            if (agent.name.toLowerCase().includes('ai') || agent.name.toLowerCase().includes('ml')) {
-                capabilities.push('MACHINE_LEARNING', 'PREDICTIVE_ANALYTICS');
-                recommendations.push('Integrate with AI model registry');
-            }
-            
-            if (currentCaps.length < 3) {
-                recommendations.push('Agent has limited capabilities, consider expansion');
-            }
-            
-            return {
-                capabilities,
-                confidence: 0.85,
-                recommendations
+            healthStatus[serviceName] = {
+                connected: connection !== null,
+                circuitBreaker: status.state,
+                health: status.health,
+                metrics: {
+                    requests: status.metrics.totalRequests,
+                    failures: status.metrics.totalFailures,
+                    uptime: status.uptime,
+                    errorRate: status.errorRate
+                }
             };
-            
-        } catch (e) {
-            req.error(500, `AI enhancement failed: ${e.message}`);
-        }
-    }
-    
-    async _executeHybridWorkflow(req) {
-        const { workflowId, parameters } = req.data;
-        const executionId = uuidv4();
-        
-        try {
-            // Parse workflow parameters
-            const params = JSON.parse(parameters);
-            const externalSystems = [];
-            
-            // Example hybrid workflow: Purchase Order approval
-            if (workflowId === 'PO_APPROVAL') {
-                // Check in Ariba
-                if (this.remoteServices.AribaNetworkService) {
-                    externalSystems.push('Ariba');
-                    // Execute Ariba checks
-                }
-                
-                // Check in S/4HANA
-                if (this.remoteServices.S4HANABusinessPartner) {
-                    externalSystems.push('S/4HANA');
-                    // Execute S/4HANA validations
-                }
-                
-                // Use AI for risk assessment
-                if (this.remoteServices.AIServicesHub) {
-                    externalSystems.push('AI Services');
-                    // Execute AI risk analysis
-                }
-            }
-            
-            return {
-                executionId,
-                status: 'initiated',
-                externalSystems
-            };
-            
-        } catch (e) {
-            req.error(500, `Workflow execution failed: ${e.message}`);
-        }
-    }
-    
-    async _checkRemoteServices(req) {
-        const results = [];
-        
-        for (const [name, service] of Object.entries(this.remoteServices)) {
-            const startTime = Date.now();
-            let status = 'unavailable';
-            
-            try {
-                // Simple health check - try to connect
-                if (service) {
-                    // For demonstration, we assume service is available if connection exists
-                    status = 'available';
-                }
-            } catch (e) {
-                status = 'unavailable';
-            }
-            
-            results.push({
-                service: name,
-                status,
-                responseTime: Date.now() - startTime,
-                lastCheck: new Date()
-            });
         }
         
-        return results;
-    }
-    
-    _mapDepartmentToRole(department) {
-        const roleMapping = {
-            'IT': 'Developer',
-            'Management': 'ProjectManager',
-            'Operations': 'Admin',
-            'Finance': 'User',
-            'HR': 'User'
+        return {
+            timestamp: new Date().toISOString(),
+            services: healthStatus,
+            overall: this._calculateOverallHealth(healthStatus)
         };
-        
-        return roleMapping[department] || 'User';
     }
-};
+    
+    /**
+     * Retry with exponential backoff
+     */
+    async _retryWithBackoff(operation, config) {
+        let lastError;
+        
+        for (let attempt = 1; attempt <= config.maxRetries; attempt++) {
+            try {
+                return await operation();
+            } catch (error) {
+                lastError = error;
+                
+                if (attempt < config.maxRetries) {
+                    const delay = config.retryDelay * Math.pow(2, attempt - 1);
+                    this.log.warn(`Retry attempt ${attempt} after ${delay}ms:`, error.message);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                } else {
+                    this.log.error(`All ${config.maxRetries} retry attempts failed:`, error);
+                }
+            }
+        }
+        
+        throw lastError;
+    }
+    
+    /**
+     * Create batches for parallel processing
+     */
+    _createBatches(items, batchSize) {
+        const batches = [];
+        for (let i = 0; i < items.length; i += batchSize) {
+            batches.push(items.slice(i, i + batchSize));
+        }
+        return batches;
+    }
+    
+    /**
+     * Setup health monitoring
+     */
+    _setupHealthMonitoring() {
+        // Monitor circuit breaker states
+        this.intervals.set('interval_435', setInterval(() => {
+            const metrics = {};
+            
+            for (const [serviceName, breaker] of this.circuitBreakers.entries())) {
+                const status = breaker.getStatus();
+                metrics[serviceName] = {
+                    state: status.state,
+                    failures: status.failures,
+                    lastFailure: status.lastFailureTime
+                };
+            }
+            
+            this.emit('integration.health.metrics', metrics);
+        }, 60000); // Every minute
+    }
+}
+
+/**
+ * Transaction Manager for atomic operations
+ */
+class TransactionManager {
+    constructor() {
+        this.transactions = new Map();
+    \n        this.intervals = new Map(); // Track intervals for cleanup}
+    
+    async begin() {
+        const txId = uuidv4();
+        const tx = cds.tx();
+        
+        this.transactions.set(txId, {
+            tx,
+            startTime: Date.now(),
+            operations: []
+        });
+        
+        // Add transaction methods
+        tx.txId = txId;
+        tx.commit = () => this.commit(txId);
+        tx.rollback = () => this.rollback(txId);
+        
+        return tx;
+    }
+    
+    async commit(txId) {
+        const transaction = this.transactions.get(txId);
+        if (!transaction) throw new Error('Transaction not found');
+        
+        try {
+            await transaction.tx.commit();
+            this.transactions.delete(txId);
+            
+            cds.log('transaction').info(`Transaction ${txId} committed successfully`, {
+                duration: Date.now() - transaction.startTime,
+                operations: transaction.operations.length
+            });
+        } catch (error) {
+            cds.log('transaction').error(`Transaction ${txId} commit failed:`, error);
+            throw error;
+        }
+    }
+    
+    async rollback(txId) {
+        const transaction = this.transactions.get(txId);
+        if (!transaction) return;
+        
+        try {
+            await transaction.tx.rollback();
+            this.transactions.delete(txId);
+            
+            cds.log('transaction').info(`Transaction ${txId} rolled back`, {
+                duration: Date.now() - transaction.startTime,
+                operations: transaction.operations.length
+            });
+        } catch (error) {
+            cds.log('transaction').error(`Transaction ${txId} rollback failed:`, error);
+            throw error;
+        }
+    }
+
+    
+    stopIntervals() {
+        for (const [name, intervalId] of this.intervals) {
+            clearInterval(intervalId);
+        }
+        this.intervals.clear();
+    }
+    
+    shutdown() {
+        this.stopIntervals();
+    }
+}

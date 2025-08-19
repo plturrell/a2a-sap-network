@@ -1,0 +1,20 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    <Popover
+        id="notificationPopover"
+        title="Notifications"
+        placement="Bottom"
+        contentWidth="320px">
+        <List
+            id="notificationList"
+            items="{notifications>/items}"
+            noDataText="No new notifications">
+            <StandardListItem
+                title="{notifications>title}"
+                description="{notifications>description}"
+                icon="{notifications>icon}"
+                type="Active" />
+        </List>
+    </Popover>
+</core:FragmentDefinition>

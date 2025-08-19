@@ -1,0 +1,155 @@
+# Glean Configuration for A2A Network
+# Production-ready configuration for code intelligence
+
+server:
+  host: 0.0.0.0
+  port: 8080
+  workers: 4
+  max_connections: 1000
+  request_timeout: 30s
+  
+database:
+  path: /data/glean/db
+  cache_size: 1GB
+  journal_mode: WAL
+  synchronous: NORMAL
+  
+indexing:
+  batch_size: 100
+  parallel_workers: 8
+  incremental: true
+  watch_mode: true
+  ignore_patterns:
+    - node_modules
+    - .git
+    - dist
+    - build
+    - coverage
+    - "*.min.js"
+    - "*.map"
+    
+languages:
+  javascript:
+    enabled: true
+    indexer: flow
+    extensions: [.js, .jsx, .mjs]
+    parser_options:
+      ecmaVersion: 2022
+      sourceType: module
+      jsx: true
+      
+  typescript:
+    enabled: true
+    indexer: typescript
+    extensions: [.ts, .tsx]
+    tsconfig_path: ./tsconfig.json
+    
+  python:
+    enabled: true
+    indexer: python
+    extensions: [.py]
+    python_version: "3.9"
+    
+  solidity:
+    enabled: true
+    indexer: solidity
+    extensions: [.sol]
+    compiler_version: "0.8.19"
+    
+  cds:
+    enabled: true
+    indexer: custom
+    extensions: [.cds]
+    custom_parser: ./srv/glean/parsers/cdsParser.js
+    
+query:
+  cache:
+    enabled: true
+    ttl: 300s
+    max_size: 10000
+    
+  limits:
+    max_results: 1000
+    timeout: 10s
+    max_depth: 5
+    
+  optimizations:
+    parallel_execution: true
+    index_hints: true
+    
+monitoring:
+  metrics:
+    enabled: true
+    endpoint: /metrics
+    
+  logging:
+    level: info
+    format: json
+    output: /var/log/glean/glean.log
+    
+  health_check:
+    endpoint: /health
+    interval: 30s
+    
+security:
+  authentication:
+    enabled: true
+    type: jwt
+    secret: ${GLEAN_JWT_SECRET}
+    
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 1000
+    burst: 100
+    
+  allowed_origins:
+    - http://localhost:4004
+    - http://localhost:4005
+    - https://a2a-network.cfapps.eu10.hana.ondemand.com
+    
+storage:
+  facts:
+    compression: true
+    retention_days: 90
+    
+  indexes:
+    bloom_filters: true
+    optimize_interval: 1h
+    
+  backups:
+    enabled: true
+    schedule: "0 2 * * *"
+    retention_count: 7
+    path: /backup/glean
+    
+integrations:
+  opentelemetry:
+    enabled: true
+    endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+    
+  sap_logging:
+    enabled: true
+    client_id: ${SAP_CLIENT_ID}
+    
+  github:
+    enabled: false
+    token: ${GITHUB_TOKEN}
+    
+custom_predicates:
+  - name: A2AAgents
+    schema: ./srv/glean/schemas/agents.angle
+    
+  - name: SAPServices  
+    schema: ./srv/glean/schemas/services.angle
+    
+  - name: Blockchain
+    schema: ./srv/glean/schemas/blockchain.angle
+    
+performance:
+  query_cache_size: 1000
+  index_cache_size: 5000
+  connection_pool_size: 20
+  
+  thresholds:
+    slow_query_ms: 1000
+    memory_limit_mb: 4096

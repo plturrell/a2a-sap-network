@@ -1,0 +1,793 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<mvc:View
+    controllerName="a2a.network.fiori.controller.reputationDashboard"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:cards="sap.f.cards"
+    xmlns:viz="sap.viz"
+    xmlns:micro="sap.suite.ui.microchart"
+    xmlns:uxap="sap.uxap"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:layout="sap.ui.layout"
+    xmlns:p13n="sap.m.p13n"
+    xmlns:vm="sap.ui.fl.variants"
+    displayBlock="true"
+    height="100%">
+
+    <Page id="reputationPage" 
+          title="{i18n>reputationSystemTitle}" 
+          showNavButton="true" 
+          navButtonPress="onNavBack"
+          class="sapUiResponsiveContentPadding">
+        
+        <content>
+            <f:DynamicPage id="reputationDynamicPage">
+                
+                <!-- Header -->
+                <f:header>
+                    <f:DynamicPageHeader pinnable="true">
+                        <f:content>
+                            <VBox class="sapUiMediumMarginBottom">
+                                
+                                <!-- Reputation Overview Cards -->
+                                <HBox wrap="Wrap" class="sapUiMediumMarginBottom">
+                                    <f:Card class="sapUiMediumMarginEnd" width="280px">
+                                        <f:header>
+                                            <cards:Header title="{i18n>networkReputationScore}" iconSrc="sap-icon://chart-axis"/>
+                                        </f:header>
+                                        <f:content>
+                                            <VBox class="sapUiContentPadding" alignItems="Center">
+                                                <micro:RadialMicroChart 
+                                                    percentage="{reputation>/networkStats/averageScore}" 
+                                                    size="L" 
+                                                    class="sapUiMediumMarginBottom"/>
+                                                <Text text="{reputation>/networkStats/averageScore}%" 
+                                                      class="sapUiLargeText sapThemeHighlight-asColor"/>
+                                                <Text text="{i18n>networkAverage}" class="sapUiTinyText"/>
+                                            </VBox>
+                                        </f:content>
+                                    </f:Card>
+                                    
+                                    <f:Card class="sapUiMediumMarginEnd" width="280px">
+                                        <f:header>
+                                            <cards:Header title="{i18n>totalReviews}" iconSrc="sap-icon://customer-and-supplier"/>
+                                        </f:header>
+                                        <f:content>
+                                            <VBox class="sapUiContentPadding" alignItems="Center">
+                                                <Text text="{reputation>/networkStats/totalReviews}" 
+                                                      class="sapUiLargeText sapThemePositive-asColor"/>
+                                                <Text text="{i18n>reviewsSubmitted}" class="sapUiTinyText"/>
+                                                <HBox class="sapUiTinyMarginTop">
+                                                    <VBox alignItems="Center" class="sapUiTinyMarginEnd">
+                                                        <Text text="{reputation>/networkStats/positiveReviews}" class="sapThemePositive-asColor"/>
+                                                        <Text text="{i18n>positive}" class="sapUiTinyText"/>
+                                                    </VBox>
+                                                    <VBox alignItems="Center">
+                                                        <Text text="{reputation>/networkStats/negativeReviews}" class="sapThemeNegative-asColor"/>
+                                                        <Text text="{i18n>negative}" class="sapUiTinyText"/>
+                                                    </VBox>
+                                                </HBox>
+                                            </VBox>
+                                        </f:content>
+                                    </f:Card>
+                                    
+                                    <f:Card class="sapUiMediumMarginEnd" width="280px">
+                                        <f:header>
+                                            <cards:Header title="{i18n>topPerformers}" iconSrc="sap-icon://employee"/>
+                                        </f:header>
+                                        <f:content>
+                                            <VBox class="sapUiContentPadding">
+                                                <List items="{reputation>/topPerformers}" mode="None">
+                                                    <StandardListItem 
+                                                        title="{name}"
+                                                        description="{category}"
+                                                        info="{score}%"
+                                                        infoState="Success"
+                                                        icon="sap-icon://badge"
+                                                        press="onViewAgentReputation"/>
+                                                </List>
+                                            </VBox>
+                                        </f:content>
+                                    </f:Card>
+                                    
+                                    <f:Card width="280px">
+                                        <f:header>
+                                            <cards:Header title="{i18n>yourReputation}" iconSrc="sap-icon://person-placeholder"/>
+                                        </f:header>
+                                        <f:content>
+                                            <VBox class="sapUiContentPadding" alignItems="Center">
+                                                <micro:RadialMicroChart 
+                                                    percentage="{reputation>/userStats/reputationScore}" 
+                                                    size="M" 
+                                                    class="sapUiMediumMarginBottom"/>
+                                                <Text text="{reputation>/userStats/reputationScore}%" 
+                                                      class="sapUiLargeText sapThemeHighlight-asColor"/>
+                                                <Text text="{i18n>yourAverageScore}" class="sapUiTinyText"/>
+                                                <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginTop" width="100%">
+                                                    <VBox alignItems="Center">
+                                                        <Text text="{reputation>/userStats/reviewsGiven}" class="sapThemeHighlight-asColor"/>
+                                                        <Text text="{i18n>given}" class="sapUiTinyText"/>
+                                                    </VBox>
+                                                    <VBox alignItems="Center">
+                                                        <Text text="{reputation>/userStats/reviewsReceived}" class="sapThemeHighlight-asColor"/>
+                                                        <Text text="{i18n>received}" class="sapUiTinyText"/>
+                                                    </VBox>
+                                                </HBox>
+                                            </VBox>
+                                        </f:content>
+                                    </f:Card>
+                                </HBox>
+
+                                <!-- Reputation Trend Chart -->
+                                <Panel headerText="{i18n>reputationTrends}" expandable="true" expanded="true">
+                                    <content>
+                                        <viz:Popover id="reputationTrendPopover"/>
+                                        <viz:VizFrame id="reputationTrendChart"
+                                                     vizType="line"
+                                                     width="100%"
+                                                     height="300px"
+                                                     vizProperties="{
+                                                         plotArea: {
+                                                             dataLabel: {
+                                                                 visible: false
+                                                             }
+                                                         },
+                                                         title: {
+                                                             visible: false
+                                                         },
+                                                         interaction: {
+                                                             syncValueAxis: false
+                                                         }
+                                                     }">
+                                            <viz:dataset>
+                                                <viz:FlattenedDataset data="{reputation>/reputationTrend}">
+                                                    <viz:dimensions>
+                                                        <viz:DimensionDefinition name="Date" value="{date}"/>
+                                                    </viz:dimensions>
+                                                    <viz:measures>
+                                                        <viz:MeasureDefinition name="Network Average" value="{networkAverage}"/>
+                                                        <viz:MeasureDefinition name="Your Score" value="{userScore}"/>
+                                                    </viz:measures>
+                                                </viz:FlattenedDataset>
+                                            </viz:dataset>
+                                            <viz:feeds>
+                                                <viz:FeedItem uid="valueAxis" type="Measure" values="Network Average,Your Score"/>
+                                                <viz:FeedItem uid="categoryAxis" type="Dimension" values="Date"/>
+                                            </viz:feeds>
+                                        </viz:VizFrame>
+                                    </content>
+                                </Panel>
+                            </VBox>
+                        </f:content>
+                    </f:DynamicPageHeader>
+                </f:header>
+
+                <!-- Main Content -->
+                <f:content>
+                    <IconTabBar id="reputationTabBar" expanded="true" stretchContentHeight="true">
+                        
+                        <!-- Agent Rankings Tab -->
+                        <items>
+                            <IconTabFilter key="rankings" text="{i18n>agentRankings}" icon="sap-icon://chart-axis">
+                                <content>
+                                    <VBox class="sapUiMediumMargin">
+                                        
+                                        <!-- Filters -->
+                                        <Panel headerText="{i18n>filters}" expandable="true" expanded="false">
+                                            <content>
+                                                <form:SimpleForm editable="true" layout="ResponsiveGridLayout" class="sapUiContentPadding">
+                                                    <form:content>
+                                                        <Label text="{i18n>category}"/>
+                                                        <ComboBox id="categoryFilter" 
+                                                                  selectedKey="{reputation>/filters/category}"
+                                                                  items="{reputation>/categories}"
+                                                                  selectionChange="onCategoryFilter">
+                                                            <core:Item key="{key}" text="{text}"/>
+                                                        </ComboBox>
+                                                        
+                                                        <Label text="{i18n>minimumReviews}"/>
+                                                        <Slider id="minReviewsSlider"
+                                                               min="0"
+                                                               max="100"
+                                                               value="{reputation>/filters/minReviews}"
+                                                               liveChange="onMinReviewsFilter"
+                                                               width="100%"/>
+                                                        
+                                                        <Label text="{i18n>timePeriod}"/>
+                                                        <ComboBox id="timePeriodFilter" 
+                                                                  selectedKey="{reputation>/filters/timePeriod}"
+                                                                  items="{reputation>/timePeriods}"
+                                                                  selectionChange="onTimePeriodFilter">
+                                                            <core:Item key="{key}" text="{text}"/>
+                                                        </ComboBox>
+                                                    </form:content>
+                                                </form:SimpleForm>
+                                            </content>
+                                        </Panel>
+
+                                        <!-- Rankings Table with Variant Management and P13n -->
+                                        <Table id="rankingsTable" 
+                                               items="{reputation>/rankings}" 
+                                               growing="true" 
+                                               growingThreshold="50"
+                                               mode="SingleSelect"
+                                               selectionChange="onAgentSelect"
+                                               class="sapUiMediumMarginTop">
+                                            <headerToolbar>
+                                                <Toolbar>
+                                                    <Title text="{i18n>agentReputationRankings}"/>
+                                                    <ToolbarSpacer/>
+                                                    <vm:VariantManagement id="rankingsVariant"
+                                                                      showExecuteOnSelection="true"
+                                                                      showShare="true"
+                                                                      showSetAsDefault="true"
+                                                                      standardItemText="{i18n>defaultView}"
+                                                                      select="onVariantSelect"
+                                                                      save="onVariantSave"
+                                                                      manage="onVariantManage"/>
+                                                    <ToolbarSeparator/>
+                                                    <SearchField id="agentRankingSearch" 
+                                                               width="200px" 
+                                                               search="onSearchRankings"/>
+                                                    <Button icon="sap-icon://action-settings" 
+                                                           tooltip="{i18n>tableSettings}"
+                                                           press="onTableSettings"/>
+                                                    <Button icon="sap-icon://excel-attachment" 
+                                                           tooltip="{i18n>exportToExcel}"
+                                                           press="onExportRankings"/>
+                                                </Toolbar>
+                                            </headerToolbar>
+                                            <columns>
+                                                <Column width="4rem" hAlign="Center">
+                                                    <Text text="{i18n>rank}"/>
+                                                </Column>
+                                                <Column width="12rem">
+                                                    <Text text="{i18n>agentName}"/>
+                                                </Column>
+                                                <Column width="8rem">
+                                                    <Text text="{i18n>category}"/>
+                                                </Column>
+                                                <Column width="8rem" hAlign="Center">
+                                                    <Text text="{i18n>reputationScore}"/>
+                                                </Column>
+                                                <Column width="6rem" hAlign="Center">
+                                                    <Text text="{i18n>totalReviews}"/>
+                                                </Column>
+                                                <Column width="8rem" hAlign="Center">
+                                                    <Text text="{i18n>successRate}"/>
+                                                </Column>
+                                                <Column width="8rem" hAlign="Center">
+                                                    <Text text="{i18n>avgResponseTime}"/>
+                                                </Column>
+                                                <Column width="8rem" hAlign="Center">
+                                                    <Text text="{i18n>lastActive}"/>
+                                                </Column>
+                                                <Column width="8rem" hAlign="Center">
+                                                    <Text text="{i18n>actions}"/>
+                                                </Column>
+                                            </columns>
+                                            <items>
+                                                <ColumnListItem press="onViewAgentDetails">
+                                                    <cells>
+                                                        <ObjectNumber number="{rank}" 
+                                                                     state="{path: 'rank', formatter: '.formatRankState'}"/>
+                                                        <VBox>
+                                                            <Link text="{name}" press="onViewAgentDetails" class="sapThemeHighlight-asColor"/>
+                                                            <Text text="{owner}" class="sapUiTinyText"/>
+                                                        </VBox>
+                                                        <Text text="{category}"/>
+                                                        <VBox alignItems="Center">
+                                                            <micro:RadialMicroChart 
+                                                                percentage="{reputationScore}" 
+                                                                size="S" 
+                                                                class="sapUiTinyMarginBottom"/>
+                                                            <Text text="{reputationScore}%" class="sapThemeHighlight-asColor"/>
+                                                        </VBox>
+                                                        <Text text="{totalReviews}"/>
+                                                        <VBox alignItems="Center">
+                                                            <Text text="{successRate}%" class="sapThemePositive-asColor"/>
+                                                            <ProgressIndicator percentValue="{successRate}" displayValue="" width="60px"/>
+                                                        </VBox>
+                                                        <Text text="{avgResponseTime}ms"/>
+                                                        <Text text="{path: 'lastActive', type: 'sap.ui.model.odata.type.DateTimeOffset'}"/>
+                                                        <HBox>
+                                                            <Button icon="sap-icon://detail-view" 
+                                                                    type="Transparent" 
+                                                                    tooltip="{i18n>viewDetails}"
+                                                                    press="onViewAgentDetails"
+                                                                    class="sapUiTinyMarginEnd"/>
+                                                            <Button icon="sap-icon://compare" 
+                                                                    type="Transparent" 
+                                                                    tooltip="{i18n>compare}"
+                                                                    press="onCompareAgent"/>
+                                                        </HBox>
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+                                        </Table>
+                                    </VBox>
+                                </content>
+                            </IconTabFilter>
+
+                            <!-- Reviews Tab -->
+                            <IconTabFilter key="reviews" text="{i18n>reviews}" icon="sap-icon://customer-and-supplier">
+                                <content>
+                                    <VBox class="sapUiMediumMargin">
+                                        
+                                        <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiMediumMarginBottom">
+                                            <Title text="{i18n>recentReviews}" level="H2"/>
+                                            <Button text="{i18n>submitReview}" 
+                                                    type="Emphasized" 
+                                                    icon="sap-icon://add"
+                                                    press="onSubmitReview"/>
+                                        </HBox>
+
+                                        <!-- Review Statistics -->
+                                        <HBox wrap="Wrap" class="sapUiMediumMarginBottom">
+                                            <f:Card class="sapUiMediumMarginEnd" width="200px">
+                                                <f:content>
+                                                    <VBox class="sapUiContentPadding" alignItems="Center">
+                                                        <Text text="{reputation>/reviewStats/averageRating}" 
+                                                              class="sapUiLargeText sapThemePositive-asColor"/>
+                                                        <RatingIndicator value="{reputation>/reviewStats/averageRating}" 
+                                                                        maxValue="5" 
+                                                                        displayOnly="true"/>
+                                                        <Text text="{i18n>averageRating}" class="sapUiTinyText"/>
+                                                    </VBox>
+                                                </f:content>
+                                            </f:Card>
+                                            
+                                            <f:Card class="sapUiMediumMarginEnd" width="200px">
+                                                <f:content>
+                                                    <VBox class="sapUiContentPadding" alignItems="Center">
+                                                        <Text text="{reputation>/reviewStats/thisMonth}" 
+                                                              class="sapUiLargeText sapThemeHighlight-asColor"/>
+                                                        <Text text="{i18n>reviewsThisMonth}" class="sapUiTinyText"/>
+                                                    </VBox>
+                                                </f:content>
+                                            </f:Card>
+                                            
+                                            <f:Card width="200px">
+                                                <f:content>
+                                                    <VBox class="sapUiContentPadding" alignItems="Center">
+                                                        <Text text="{reputation>/reviewStats/responseRate}" 
+                                                              class="sapUiLargeText sapThemePositive-asColor"/>
+                                                        <Text text="{i18n>responseRate}" class="sapUiTinyText"/>
+                                                    </VBox>
+                                                </f:content>
+                                            </f:Card>
+                                        </HBox>
+
+                                        <!-- Reviews List -->
+                                        <List id="reviewsList" 
+                                              items="{reputation>/reviews}" 
+                                              growing="true" 
+                                              growingThreshold="20"
+                                              showSeparators="All">
+                                            <headerToolbar>
+                                                <Toolbar>
+                                                    <Title text="{i18n>allReviews}"/>
+                                                    <ToolbarSpacer/>
+                                                    <ComboBox id="reviewTypeFilter" 
+                                                              placeholder="{i18n>filterByType}"
+                                                              items="{reputation>/reviewTypes}"
+                                                              selectionChange="onReviewTypeFilter">
+                                                        <core:Item key="{key}" text="{text}"/>
+                                                    </ComboBox>
+                                                    <ComboBox id="reviewRatingFilter" 
+                                                              placeholder="{i18n>filterByRating}"
+                                                              items="{reputation>/ratingFilters}"
+                                                              selectionChange="onReviewRatingFilter"
+                                                              class="sapUiTinyMarginBegin">
+                                                        <core:Item key="{key}" text="{text}"/>
+                                                    </ComboBox>
+                                                </Toolbar>
+                                            </headerToolbar>
+                                            <items>
+                                                <CustomListItem press="onViewReviewDetails">
+                                                    <content>
+                                                        <VBox class="sapUiContentPadding">
+                                                            <HBox justifyContent="SpaceBetween" alignItems="Start">
+                                                                <VBox>
+                                                                    <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+                                                                        <Text text="{agentName}" class="sapThemeHighlight-asColor sapUiTinyMarginEnd"/>
+                                                                        <Text text="→" class="sapUiTinyMarginEnd"/>
+                                                                        <Text text="{reviewerName}" class="sapUiTinyMarginEnd"/>
+                                                                        <ObjectStatus text="{type}" 
+                                                                                      state="{path: 'type', formatter: '.formatReviewTypeState'}"
+                                                                                      class="sapUiTinyMarginBegin"/>
+                                                                    </HBox>
+                                                                    <RatingIndicator value="{rating}" 
+                                                                                    maxValue="5" 
+                                                                                    displayOnly="true"
+                                                                                    iconSize="0.875rem"/>
+                                                                </VBox>
+                                                                <VBox alignItems="End">
+                                                                    <Text text="{path: 'date', type: 'sap.ui.model.odata.type.DateTimeOffset'}" 
+                                                                          class="sapUiTinyText"/>
+                                                                    <Text text="#{transactionId}" class="sapUiTinyText"/>
+                                                                </VBox>
+                                                            </HBox>
+                                                            <Text text="{comment}" 
+                                                                  maxLines="3" 
+                                                                  class="sapUiTinyMarginTop"/>
+                                                            <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginTop">
+                                                                <HBox wrap="Wrap">
+                                                                    <Token text="{metric}" 
+                                                                           class="sapUiTinyMarginEnd sapUiTinyMarginBottom"
+                                                                           items="{metrics}"/>
+                                                                </HBox>
+                                                                <HBox>
+                                                                    <Button icon="sap-icon://thumb-up" 
+                                                                            type="Transparent" 
+                                                                            text="{helpfulVotes}"
+                                                                            press="onVoteHelpful"
+                                                                            class="sapUiTinyMarginEnd"/>
+                                                                    <Button icon="sap-icon://comment" 
+                                                                            type="Transparent" 
+                                                                            press="onReplyToReview"
+                                                                            visible="{hasResponse}"/>
+                                                                </HBox>
+                                                            </HBox>
+                                                        </VBox>
+                                                    </content>
+                                                </CustomListItem>
+                                            </items>
+                                        </List>
+                                    </VBox>
+                                </content>
+                            </IconTabFilter>
+
+                            <!-- Analytics Tab -->
+                            <IconTabFilter key="analytics" text="{i18n>analytics}" icon="sap-icon://business-objects-experience">
+                                <content>
+                                    <VBox class="sapUiMediumMargin">
+                                        
+                                        <Title text="{i18n>reputationAnalytics}" level="H2" class="sapUiMediumMarginBottom"/>
+                                        
+                                        <!-- Key Metrics Row -->
+                                        <layout:Grid defaultSpan="XL3 L6 M6 S12" class="sapUiResponsiveMargin">
+                                            
+                                            <!-- Score Distribution -->
+                                            <f:Card class="sapUiMediumMargin">
+                                                <f:header>
+                                                    <cards:Header title="{i18n>scoreDistribution}" iconSrc="sap-icon://pie-chart"/>
+                                                </f:header>
+                                                <f:content>
+                                                    <viz:VizFrame id="scoreDistributionChart"
+                                                                 vizType="donut"
+                                                                 width="100%"
+                                                                 height="250px">
+                                                        <viz:dataset>
+                                                            <viz:FlattenedDataset data="{reputation>/scoreDistribution}">
+                                                                <viz:dimensions>
+                                                                    <viz:DimensionDefinition name="Score Range" value="{range}"/>
+                                                                </viz:dimensions>
+                                                                <viz:measures>
+                                                                    <viz:MeasureDefinition name="Agent Count" value="{count}"/>
+                                                                </viz:measures>
+                                                            </viz:FlattenedDataset>
+                                                        </viz:dataset>
+                                                        <viz:feeds>
+                                                            <viz:FeedItem uid="size" type="Measure" values="Agent Count"/>
+                                                            <viz:FeedItem uid="color" type="Dimension" values="Score Range"/>
+                                                        </viz:feeds>
+                                                    </viz:VizFrame>
+                                                </f:content>
+                                            </f:Card>
+                                            
+                                            <!-- Category Performance -->
+                                            <f:Card class="sapUiMediumMargin">
+                                                <f:header>
+                                                    <cards:Header title="{i18n>categoryPerformance}" iconSrc="sap-icon://horizontal-bar-chart"/>
+                                                </f:header>
+                                                <f:content>
+                                                    <viz:VizFrame id="categoryPerformanceChart"
+                                                                 vizType="column"
+                                                                 width="100%"
+                                                                 height="250px">
+                                                        <viz:dataset>
+                                                            <viz:FlattenedDataset data="{reputation>/categoryPerformance}">
+                                                                <viz:dimensions>
+                                                                    <viz:DimensionDefinition name="Category" value="{category}"/>
+                                                                </viz:dimensions>
+                                                                <viz:measures>
+                                                                    <viz:MeasureDefinition name="Average Score" value="{averageScore}"/>
+                                                                </viz:measures>
+                                                            </viz:FlattenedDataset>
+                                                        </viz:dataset>
+                                                        <viz:feeds>
+                                                            <viz:FeedItem uid="valueAxis" type="Measure" values="Average Score"/>
+                                                            <viz:FeedItem uid="categoryAxis" type="Dimension" values="Category"/>
+                                                        </viz:feeds>
+                                                    </viz:VizFrame>
+                                                </f:content>
+                                            </f:Card>
+                                            
+                                            <!-- Review Volume Trend -->
+                                            <f:Card class="sapUiMediumMargin">
+                                                <f:header>
+                                                    <cards:Header title="{i18n>reviewVolumeTrend}" iconSrc="sap-icon://line-chart"/>
+                                                </f:header>
+                                                <f:content>
+                                                    <viz:VizFrame id="reviewVolumeChart"
+                                                                 vizType="line"
+                                                                 width="100%"
+                                                                 height="250px">
+                                                        <viz:dataset>
+                                                            <viz:FlattenedDataset data="{reputation>/reviewVolumeTrend}">
+                                                                <viz:dimensions>
+                                                                    <viz:DimensionDefinition name="Date" value="{date}"/>
+                                                                </viz:dimensions>
+                                                                <viz:measures>
+                                                                    <viz:MeasureDefinition name="Review Count" value="{count}"/>
+                                                                </viz:measures>
+                                                            </viz:FlattenedDataset>
+                                                        </viz:dataset>
+                                                        <viz:feeds>
+                                                            <viz:FeedItem uid="valueAxis" type="Measure" values="Review Count"/>
+                                                            <viz:FeedItem uid="categoryAxis" type="Dimension" values="Date"/>
+                                                        </viz:feeds>
+                                                    </viz:VizFrame>
+                                                </f:content>
+                                            </f:Card>
+                                            
+                                            <!-- Top Reviewers -->
+                                            <f:Card class="sapUiMediumMargin">
+                                                <f:header>
+                                                    <cards:Header title="{i18n>topReviewers}" iconSrc="sap-icon://employee"/>
+                                                </f:header>
+                                                <f:content>
+                                                    <List items="{reputation>/topReviewers}" 
+                                                          mode="None" 
+                                                          class="sapUiContentPadding">
+                                                        <StandardListItem 
+                                                            title="{reviewer}"
+                                                            description="{reviews} reviews"
+                                                            info="{helpfulnessRating}%"
+                                                            infoState="Success"
+                                                            icon="sap-icon://person-placeholder"/>
+                                                    </List>
+                                                </f:content>
+                                            </f:Card>
+                                        </layout:Grid>
+                                    </VBox>
+                                </content>
+                            </IconTabFilter>
+
+                            <!-- Disputes Tab -->
+                            <IconTabFilter key="disputes" text="{i18n>disputes}" icon="sap-icon://alert">
+                                <content>
+                                    <VBox class="sapUiMediumMargin">
+                                        
+                                        <Title text="{i18n>disputeResolution}" level="H2" class="sapUiMediumMarginBottom"/>
+                                        
+                                        <!-- Dispute Statistics -->
+                                        <HBox wrap="Wrap" class="sapUiMediumMarginBottom">
+                                            <f:Card class="sapUiMediumMarginEnd" width="200px">
+                                                <f:content>
+                                                    <VBox class="sapUiContentPadding" alignItems="Center">
+                                                        <Text text="{reputation>/disputeStats/total}" 
+                                                              class="sapUiLargeText sapThemeNegative-asColor"/>
+                                                        <Text text="{i18n>totalDisputes}" class="sapUiTinyText"/>
+                                                    </VBox>
+                                                </f:content>
+                                            </f:Card>
+                                            
+                                            <f:Card class="sapUiMediumMarginEnd" width="200px">
+                                                <f:content>
+                                                    <VBox class="sapUiContentPadding" alignItems="Center">
+                                                        <Text text="{reputation>/disputeStats/resolved}" 
+                                                              class="sapUiLargeText sapThemePositive-asColor"/>
+                                                        <Text text="{i18n>resolved}" class="sapUiTinyText"/>
+                                                    </VBox>
+                                                </f:content>
+                                            </f:Card>
+                                            
+                                            <f:Card class="sapUiMediumMarginEnd" width="200px">
+                                                <f:content>
+                                                    <VBox class="sapUiContentPadding" alignItems="Center">
+                                                        <Text text="{reputation>/disputeStats/pending}" 
+                                                              class="sapUiLargeText sapThemeWarning-asColor"/>
+                                                        <Text text="{i18n>pending}" class="sapUiTinyText"/>
+                                                    </VBox>
+                                                </f:content>
+                                            </f:Card>
+                                            
+                                            <f:Card width="200px">
+                                                <f:content>
+                                                    <VBox class="sapUiContentPadding" alignItems="Center">
+                                                        <Text text="{reputation>/disputeStats/averageResolutionTime}" 
+                                                              class="sapUiLargeText sapThemeHighlight-asColor"/>
+                                                        <Text text="{i18n>avgResolutionTime}" class="sapUiTinyText"/>
+                                                    </VBox>
+                                                </f:content>
+                                            </f:Card>
+                                        </HBox>
+
+                                        <!-- Active Disputes Table with Variant Management -->
+                                        <Table id="disputesTable" 
+                                               items="{reputation>/disputes}" 
+                                               growing="true" 
+                                               growingThreshold="20">
+                                            <headerToolbar>
+                                                <Toolbar>
+                                                    <Title text="{i18n>disputesList}"/>
+                                                    <ToolbarSpacer/>
+                                                    <vm:VariantManagement id="disputesVariant"
+                                                                      showExecuteOnSelection="true"
+                                                                      showShare="true"
+                                                                      showSetAsDefault="true"
+                                                                      standardItemText="{i18n>defaultView}"
+                                                                      select="onVariantSelect"
+                                                                      save="onVariantSave"
+                                                                      manage="onVariantManage"/>
+                                                    <ToolbarSeparator/>
+                                                    <ComboBox id="disputeStatusFilter" 
+                                                              placeholder="{i18n>filterByStatus}"
+                                                              items="{reputation>/disputeStatuses}"
+                                                              selectionChange="onDisputeStatusFilter">
+                                                        <core:Item key="{key}" text="{text}"/>
+                                                    </ComboBox>
+                                                    <Button icon="sap-icon://action-settings" 
+                                                           tooltip="{i18n>tableSettings}"
+                                                           press="onDisputeTableSettings"/>
+                                                </Toolbar>
+                                            </headerToolbar>
+                                            <columns>
+                                                <Column><Text text="{i18n>disputeId}"/></Column>
+                                                <Column><Text text="{i18n>transaction}"/></Column>
+                                                <Column><Text text="{i18n>disputer}"/></Column>
+                                                <Column><Text text="{i18n>disputed}"/></Column>
+                                                <Column><Text text="{i18n>reason}"/></Column>
+                                                <Column><Text text="{i18n>status}"/></Column>
+                                                <Column><Text text="{i18n>submittedDate}"/></Column>
+                                                <Column><Text text="{i18n>actions}"/></Column>
+                                            </columns>
+                                            <items>
+                                                <ColumnListItem press="onViewDisputeDetails">
+                                                    <cells>
+                                                        <Text text="#{disputeId}"/>
+                                                        <Link text="#{transactionId}" press="onViewTransaction"/>
+                                                        <Text text="{disputerName}"/>
+                                                        <Text text="{disputedParty}"/>
+                                                        <Text text="{reason}" maxLines="2"/>
+                                                        <ObjectStatus text="{status}" 
+                                                                      state="{path: 'status', formatter: '.formatDisputeStatusState'}"/>
+                                                        <Text text="{path: 'submittedDate', type: 'sap.ui.model.odata.type.DateTimeOffset'}"/>
+                                                        <HBox>
+                                                            <Button icon="sap-icon://detail-view" 
+                                                                    type="Transparent" 
+                                                                    tooltip="{i18n>viewDetails}"
+                                                                    press="onViewDisputeDetails"
+                                                                    class="sapUiTinyMarginEnd"/>
+                                                            <Button text="{i18n>mediate}" 
+                                                                    type="Accept" 
+                                                                    press="onMediateDispute"
+                                                                    visible="{= ${status} === 'Pending' && ${canMediate}}"/>
+                                                        </HBox>
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+                                        </Table>
+                                    </VBox>
+                                </content>
+                            </IconTabFilter>
+
+                        </items>
+                    </IconTabBar>
+                </f:content>
+            </f:DynamicPage>
+        </content>
+    </Page>
+
+    <!-- Submit Review Dialog -->
+    <Dialog id="submitReviewDialog" 
+            title="{i18n>submitReview}" 
+            contentWidth="500px"
+            resizable="true"
+            draggable="true">
+        <content>
+            <form:SimpleForm editable="true" layout="ResponsiveGridLayout" class="sapUiContentPadding">
+                <form:content>
+                    <Label text="{i18n>transaction}" required="true"/>
+                    <ComboBox id="transactionSelect" 
+                              selectedKey="{reputation>/newReview/transactionId}"
+                              items="{reputation>/eligibleTransactions}">
+                        <core:Item key="{id}" text="#{id} - {agentName}"/>
+                    </ComboBox>
+                    
+                    <Label text="{i18n>overallRating}" required="true"/>
+                    <RatingIndicator id="overallRating" 
+                                    value="{reputation>/newReview/rating}"
+                                    maxValue="5"
+                                    change="onRatingChange"/>
+                    
+                    <Label text="{i18n>comment}"/>
+                    <TextArea id="reviewComment" 
+                              value="{reputation>/newReview/comment}"
+                              rows="4"
+                              placeholder="{i18n>enterDetailedComment}"/>
+                    
+                    <Label text="{i18n>specificRatings}"/>
+                    <VBox>
+                        <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
+                            <Text text="{i18n>responseTime}"/>
+                            <RatingIndicator value="{reputation>/newReview/responseTimeRating}" maxValue="5"/>
+                        </HBox>
+                        <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
+                            <Text text="{i18n>quality}"/>
+                            <RatingIndicator value="{reputation>/newReview/qualityRating}" maxValue="5"/>
+                        </HBox>
+                        <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
+                            <Text text="{i18n>communication}"/>
+                            <RatingIndicator value="{reputation>/newReview/communicationRating}" maxValue="5"/>
+                        </HBox>
+                        <HBox justifyContent="SpaceBetween" alignItems="Center">
+                            <Text text="{i18n>reliability}"/>
+                            <RatingIndicator value="{reputation>/newReview/reliabilityRating}" maxValue="5"/>
+                        </HBox>
+                    </VBox>
+                </form:content>
+            </form:SimpleForm>
+        </content>
+        <beginButton>
+            <Button text="{i18n>submit}" 
+                    type="Emphasized" 
+                    press="onConfirmSubmitReview"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>cancel}" press="onCancelSubmitReview"/>
+        </endButton>
+    </Dialog>
+
+    <!-- P13n Dialog for Table Personalization -->
+    <p13n:Dialog id="p13nDialog"
+                 showReset="true"
+                 showResetEnabled="true"
+                 ok="onP13nDialogOK"
+                 cancel="onP13nDialogCancel"
+                 reset="onP13nDialogReset">
+        <p13n:panels>
+            <p13n:ColumnsPanel id="columnsPanel"
+                              items="{p13n>/columns}"
+                              changeColumnsItems="onChangeColumnsItems">
+                <p13n:items>
+                    <p13n:ColumnsItem columnKey="{columnKey}"
+                                     visible="{visible}"
+                                     index="{index}"
+                                     text="{text}"/>
+                </p13n:items>
+            </p13n:ColumnsPanel>
+            <p13n:SortPanel id="sortPanel"
+                           items="{p13n>/sortItems}"
+                           changeSortItems="onChangeSortItems">
+                <p13n:items>
+                    <p13n:SortItem columnKey="{columnKey}"
+                                  operation="{operation}"/>
+                </p13n:items>
+            </p13n:SortPanel>
+            <p13n:FilterPanel id="filterPanel"
+                             items="{p13n>/filterItems}"
+                             changeFilterItems="onChangeFilterItems">
+                <p13n:items>
+                    <p13n:FilterItem columnKey="{columnKey}"
+                                    operation="{operation}"
+                                    value1="{value1}"
+                                    value2="{value2}"/>
+                </p13n:items>
+            </p13n:FilterPanel>
+            <p13n:GroupPanel id="groupPanel"
+                            items="{p13n>/groupItems}"
+                            changeGroupItems="onChangeGroupItems">
+                <p13n:items>
+                    <p13n:GroupItem columnKey="{columnKey}"
+                                   operation="{operation}"/>
+                </p13n:items>
+            </p13n:GroupPanel>
+        </p13n:panels>
+    </p13n:Dialog>
+
+</mvc:View>

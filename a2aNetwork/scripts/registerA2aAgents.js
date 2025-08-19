@@ -5,109 +5,159 @@
 
 const axios = require('axios');
 
-const A2A_NETWORK_API = 'http://localhost:4004/api/v1';
+const A2A_NETWORK_API = process.env.A2A_NETWORK_API_URL || 'http://localhost:4004/api/v1';
 
-// Define all agents from the a2a_agents project
+// Define all 15 real agents from the a2a_agents project
 const A2A_AGENTS = [
     {
         name: "Agent Manager",
-        endpoint: "http://localhost:8000/a2a/agent_manager/v1",
-        reputation: 200, // Highest reputation for the orchestrator
+        endpoint: process.env.AGENT_MANAGER_ENDPOINT || "http://localhost:8000/a2a/agent_manager/v1",
+        reputation: 200,
         isActive: true,
         country_code: "US",
-        address: "0xAA00000000000000000000000000000000000001",
+        address: process.env.AGENT_MANAGER_ADDRESS || (() => { throw new Error('AGENT_MANAGER_ADDRESS environment variable is required'); })(),
         description: "Manages A2A ecosystem registration, trust contracts, and workflow orchestration",
         capabilities: ["agent-registration", "trust-management", "workflow-orchestration", "ecosystem-management"]
     },
     {
         name: "Data Product Registration Agent",
-        endpoint: "http://localhost:8000/a2a/agent0/v1",
+        endpoint: process.env.AGENT0_ENDPOINT || "http://localhost:8000/a2a/agent0/v1",
         reputation: 180,
         isActive: true,
         country_code: "US",
-        address: "0xAA00000000000000000000000000000000000002",
+        address: process.env.AGENT0_ADDRESS || (() => { throw new Error('AGENT0_ADDRESS environment variable is required'); })(),
         description: "A2A v0.2.9 compliant agent for data product registration with Dublin Core metadata",
         capabilities: ["cds-csn-generation", "ord-descriptor-creation", "dublin-core-metadata", "crd-integration"]
     },
     {
         name: "Data Standardization Agent",
-        endpoint: "http://localhost:8000/a2a/agent1/v1",
+        endpoint: process.env.AGENT1_ENDPOINT || "http://localhost:8000/a2a/agent1/v1",
         reputation: 175,
         isActive: true,
         country_code: "DE",
-        address: "0xAA00000000000000000000000000000000000003",
+        address: process.env.AGENT1_ADDRESS || (() => { throw new Error('AGENT1_ADDRESS environment variable is required'); })(),
         description: "A2A v0.2.9 compliant agent for standardizing financial data to L4 hierarchical structure",
         capabilities: ["location-standardization", "account-standardization", "financial-data-processing", "hierarchy-generation"]
     },
     {
         name: "AI Preparation Agent",
-        endpoint: "http://localhost:8000/a2a/agent2/v1",
+        endpoint: process.env.AGENT2_ENDPOINT || "http://localhost:8000/a2a/agent2/v1",
         reputation: 170,
         isActive: true,
         country_code: "JP",
-        address: "0xAA00000000000000000000000000000000000004",
+        address: process.env.AGENT2_ADDRESS || (() => { throw new Error('AGENT2_ADDRESS environment variable is required'); })(),
         description: "A2A v0.2.9 compliant agent for AI data preparation and vectorization",
         capabilities: ["data-vectorization", "ai-preparation", "embedding-generation", "feature-extraction"]
     },
     {
         name: "Vector Processing Agent",
-        endpoint: "http://localhost:8000/a2a/agent3/v1",
+        endpoint: process.env.AGENT3_ENDPOINT || "http://localhost:8000/a2a/agent3/v1",
         reputation: 185,
         isActive: true,
         country_code: "SG",
-        address: "0xAA00000000000000000000000000000000000005",
+        address: process.env.AGENT3_ADDRESS || (() => { throw new Error('AGENT3_ADDRESS environment variable is required'); })(),
         description: "A2A v0.2.9 compliant agent for vector processing and knowledge graph management",
         capabilities: ["vector-processing", "hana-vector-engine", "knowledge-graph", "semantic-search"]
     },
     {
         name: "Calculation Validation Agent",
-        endpoint: "http://localhost:8000/a2a/agent4/v1",
+        endpoint: process.env.AGENT4_ENDPOINT || "http://localhost:8000/a2a/agent4/v1",
         reputation: 165,
         isActive: true,
         country_code: "IN",
-        address: "0xAA00000000000000000000000000000000000006",
+        address: process.env.AGENT4_ADDRESS || "0xAA00000000000000000000000000000000000006",
         description: "A2A v0.2.9 compliant agent for dynamic computation quality testing",
         capabilities: ["calculation-validation", "quality-testing", "computation-verification", "formula-checking"]
     },
     {
         name: "QA Validation Agent",
-        endpoint: "http://localhost:8000/a2a/agent5/v1",
+        endpoint: process.env.AGENT5_ENDPOINT || "http://localhost:8000/a2a/agent5/v1",
         reputation: 160,
         isActive: true,
         country_code: "CA",
-        address: "0xAA00000000000000000000000000000000000007",
+        address: process.env.AGENT5_ADDRESS || "0xAA00000000000000000000000000000000000007",
         description: "A2A compliant agent for dynamic factuality testing using ORD registry data",
         capabilities: ["qa-validation", "factuality-testing", "ord-validation", "data-quality-assurance"]
     },
     {
         name: "Data Manager Agent",
-        endpoint: "http://localhost:8000/a2a/data_manager/v1",
+        endpoint: process.env.DATA_MANAGER_ENDPOINT || "http://localhost:8000/a2a/data_manager/v1",
         reputation: 190,
         isActive: true,
         country_code: "UK",
-        address: "0xAA00000000000000000000000000000000000008",
+        address: process.env.DATA_MANAGER_ADDRESS || "0xAA00000000000000000000000000000000000008",
         description: "A2A v0.2.9 compliant agent for data management and storage operations",
         capabilities: ["data-storage", "data-retrieval", "data-lifecycle", "storage-optimization"]
     },
     {
         name: "Catalog Manager Agent",
-        endpoint: "http://localhost:8000/a2a/catalog_manager/v1",
+        endpoint: process.env.CATALOG_MANAGER_ENDPOINT || "http://localhost:8000/a2a/catalog_manager/v1",
         reputation: 195,
         isActive: true,
         country_code: "FR",
-        address: "0xAA00000000000000000000000000000000000009",
+        address: process.env.CATALOG_MANAGER_ADDRESS || "0xAA00000000000000000000000000000000000009",
         description: "A2A v0.2.9 compliant agent for ORD repository management",
         capabilities: ["ord-management", "catalog-operations", "metadata-management", "repository-sync"]
     },
     {
         name: "Agent Builder Agent",
-        endpoint: "http://localhost:8000/a2a/agent_builder/v1",
+        endpoint: process.env.AGENT_BUILDER_ENDPOINT || "http://localhost:8000/a2a/agent_builder/v1",
         reputation: 155,
         isActive: true,
         country_code: "AU",
-        address: "0xAA00000000000000000000000000000000000010",
+        address: process.env.AGENT_BUILDER_ADDRESS || "0xAA00000000000000000000000000000000000010",
         description: "A2A v0.2.9 compliant agent for generating and managing other A2A agents",
         capabilities: ["agent-generation", "agent-deployment", "sdk-management", "agent-templates"]
+    },
+    {
+        name: "Enhanced Calculation Agent",
+        endpoint: process.env.CALCULATION_AGENT_ENDPOINT || "http://localhost:8000/a2a/calculation_agent/v1",
+        reputation: 210,
+        isActive: true,
+        country_code: "CH",
+        address: process.env.CALCULATION_AGENT_ADDRESS || "0xAA00000000000000000000000000000000000011",
+        description: "Advanced calculation engine with self-healing capabilities and dynamic computation",
+        capabilities: ["dynamic-calculation", "self-healing", "formula-optimization", "computation-validation"]
+    },
+    {
+        name: "Reasoning Agent",
+        endpoint: process.env.REASONING_AGENT_ENDPOINT || "http://localhost:8000/a2a/reasoning_agent/v1",
+        reputation: 200,
+        isActive: true,
+        country_code: "NO",
+        address: process.env.REASONING_AGENT_ADDRESS || "0xAA00000000000000000000000000000000000012",
+        description: "Advanced reasoning and inference engine for complex decision making",
+        capabilities: ["logical-reasoning", "inference-engine", "decision-making", "knowledge-reasoning"]
+    },
+    {
+        name: "SQL Agent",
+        endpoint: process.env.SQL_AGENT_ENDPOINT || "http://localhost:8000/a2a/sql_agent/v1",
+        reputation: 175,
+        isActive: true,
+        country_code: "SE",
+        address: process.env.SQL_AGENT_ADDRESS || "0xAA00000000000000000000000000000000000013",
+        description: "Specialized agent for SQL query generation, optimization, and database operations",
+        capabilities: ["sql-generation", "query-optimization", "database-operations", "schema-analysis"]
+    },
+    {
+        name: "Developer Portal Agent Builder",
+        endpoint: process.env.DEVELOPER_PORTAL_ENDPOINT || "http://localhost:8000/a2a/developer_portal/agent_builder/v1",
+        reputation: 165,
+        isActive: true,
+        country_code: "NL",
+        address: process.env.DEVELOPER_PORTAL_ADDRESS || "0xAA00000000000000000000000000000000000014",
+        description: "Developer portal integration for agent building and deployment workflows",
+        capabilities: ["portal-integration", "developer-tools", "agent-deployment", "workflow-management"]
+    },
+    {
+        name: "Agent Builder Service",
+        endpoint: process.env.AGENT_BUILDER_SERVICE_ENDPOINT || "http://localhost:8000/a2a/developer_portal/static/agent_builder/v1",
+        reputation: 150,
+        isActive: true,
+        country_code: "DK",
+        address: process.env.AGENT_BUILDER_SERVICE_ADDRESS || "0xAA00000000000000000000000000000000000015",
+        description: "Static agent builder service for template-based agent generation",
+        capabilities: ["template-generation", "static-building", "agent-scaffolding", "code-generation"]
     }
 ];
 
@@ -180,7 +230,7 @@ async function registerAgents() {
     console.log('2. Link capabilities to agents via AgentCapabilities');
     console.log('3. Create sample workflows using these agents');
     console.log('4. Register services provided by each agent');
-    console.log('\nAccess the A2A Network UI at: http://localhost:4004/fiori-launchpad.html');
+    console.log(`\nAccess the A2A Network UI at: ${process.env.A2A_NETWORK_UI_URL || 'http://localhost:4004/fiori-launchpad.html'}');
 }
 
 // Execute the registration

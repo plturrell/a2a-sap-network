@@ -1,0 +1,18 @@
+{
+  "welcome": "A2Aネットワークへようこそ",
+  "agents": "エージェント",
+  "services": "サービス",
+  "marketplace": "マーケットプレイス",
+  "dashboard": "ダッシュボード",
+  "settings": "設定",
+  "blockchain": "ブロックチェーン",
+  "contracts": "スマートコントラクト",
+  "operations": "オペレーション",
+  "notifications": "通知",
+  "login": "ログイン",
+  "logout": "ログアウト",
+  "save": "保存",
+  "cancel": "キャンセル",
+  "search": "検索",
+  "loading": "読み込み中..."
+}

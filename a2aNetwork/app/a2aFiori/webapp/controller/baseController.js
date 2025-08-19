@@ -3,16 +3,16 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/MessageBox",
     "sap/ui/model/json/JSONModel"
-], function (Controller, MessageToast, MessageBox, JSONModel) {
+], function(Controller, MessageToast, MessageBox, JSONModel) {
     "use strict";
-    
+
     /**
      * Base Controller for A2A Network Application
-     * 
+     *
      * Provides common functionality and enterprise patterns for all controllers in the A2A Network application.
      * This controller implements SAP standard patterns for loading states, error handling, navigation,
      * and resource bundle management.
-     * 
+     *
      * @namespace a2a.network.fiori.controller
      * @class
      * @extends sap.ui.core.mvc.Controller
@@ -20,7 +20,7 @@ sap.ui.define([
      * @author SAP SE
      * @since 1.0.0
      * @version 1.0.0
-     * 
+     *
      * @example
      * // Extending BaseController in your controller
      * sap.ui.define([
@@ -41,13 +41,13 @@ sap.ui.define([
         /**
          * Called when a controller is instantiated and its View controls have been created.
          * Initializes the UI model for loading states and common controller functionality.
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @public
          * @since 1.0.0
          */
-        onInit: function () {
+        onInit() {
             // Initialize UI state model for loading states
             this.oUIModel = new JSONModel({
                 // Loading states
@@ -63,66 +63,66 @@ sap.ui.define([
                 progressState: "None",
                 progressDescription: "",
                 blockchainStep: "",
-                
+
                 // Error states
                 hasError: false,
                 errorMessage: "",
                 errorTitle: "",
-                
+
                 // Data states
                 hasNoData: false,
                 noDataMessage: "",
                 noDataIcon: "sap-icon://product",
-                
+
                 // UI states
                 busy: false,
                 editable: false,
                 hasChanges: false,
                 showDetails: false,
                 selectedItems: [],
-                
+
                 // Security states
                 csrfToken: null,
                 sessionId: null,
                 correlationId: null,
                 securityInitialized: false
             });
-            
+
             this.getView().setModel(this.oUIModel, "ui");
-            
+
             // Initialize security
             this._initializeSecurity();
         },
 
         /**
          * Gets the resource bundle for internationalization
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @public
          * @returns {sap.base.i18n.ResourceBundle} The resource bundle
          * @since 1.0.0
          */
-        getResourceBundle: function() {
+        getResourceBundle() {
             return this.getOwnerComponent().getModel("i18n").getResourceBundle();
         },
 
         /**
          * Gets the router instance
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @public
          * @returns {sap.ui.core.routing.Router} The router instance
          * @since 1.0.0
          */
-        getRouter: function() {
+        getRouter() {
             return this.getOwnerComponent().getRouter();
         },
 
         /**
          * Gets the model by name, or the default model if no name is provided
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @public
@@ -130,13 +130,13 @@ sap.ui.define([
          * @returns {sap.ui.model.Model} The model instance
          * @since 1.0.0
          */
-        getModel: function(sModelName) {
+        getModel(sModelName) {
             return this.getView().getModel(sModelName);
         },
 
         /**
          * Sets a model on the view
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @public
@@ -144,20 +144,20 @@ sap.ui.define([
          * @param {string} [sModelName] The name of the model
          * @since 1.0.0
          */
-        setModel: function(oModel, sModelName) {
+        setModel(oModel, sModelName) {
             this.getView().setModel(oModel, sModelName);
         },
 
         /**
          * Shows skeleton loading state for lists and tables
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @public
          * @param {string} [sMessage] Loading message to display
          * @since 1.0.0
          */
-        showSkeletonLoading: function(sMessage) {
+        showSkeletonLoading(sMessage) {
             this.oUIModel.setData({
                 ...this.oUIModel.getData(),
                 isLoadingSkeleton: true,
@@ -172,7 +172,7 @@ sap.ui.define([
 
         /**
          * Shows spinner loading state for actions
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @public
@@ -180,7 +180,7 @@ sap.ui.define([
          * @param {string} [sSubMessage] Additional loading context
          * @since 1.0.0
          */
-        showSpinnerLoading: function(sMessage, sSubMessage) {
+        showSpinnerLoading(sMessage, sSubMessage) {
             this.oUIModel.setData({
                 ...this.oUIModel.getData(),
                 isLoadingSkeleton: false,
@@ -196,7 +196,7 @@ sap.ui.define([
 
         /**
          * Shows progress loading state for multi-step operations
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @public
@@ -207,7 +207,7 @@ sap.ui.define([
          * @param {string} [oOptions.state] Progress state (None|Success|Warning|Error)
          * @since 1.0.0
          */
-        showProgressLoading: function(oOptions = {}) {
+        showProgressLoading(oOptions = {}) {
             this.oUIModel.setData({
                 ...this.oUIModel.getData(),
                 isLoadingSkeleton: false,
@@ -227,14 +227,14 @@ sap.ui.define([
 
         /**
          * Shows blockchain-specific loading state
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @public
          * @param {string} [sStep] Current blockchain operation step
          * @since 1.0.0
          */
-        showBlockchainLoading: function(sStep) {
+        showBlockchainLoading(sStep) {
             this.oUIModel.setData({
                 ...this.oUIModel.getData(),
                 isLoadingSkeleton: false,
@@ -249,13 +249,13 @@ sap.ui.define([
 
         /**
          * Hides all loading states
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @public
          * @since 1.0.0
          */
-        hideLoading: function() {
+        hideLoading() {
             this.oUIModel.setData({
                 ...this.oUIModel.getData(),
                 isLoadingSkeleton: false,
@@ -267,7 +267,7 @@ sap.ui.define([
 
         /**
          * Shows error state with message
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @public
@@ -275,7 +275,7 @@ sap.ui.define([
          * @param {string} [sTitle] Error title
          * @since 1.0.0
          */
-        showError: function(sMessage, sTitle) {
+        showError(sMessage, sTitle) {
             this.oUIModel.setData({
                 ...this.oUIModel.getData(),
                 isLoadingSkeleton: false,
@@ -291,7 +291,7 @@ sap.ui.define([
 
         /**
          * Shows no data state
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @public
@@ -299,7 +299,7 @@ sap.ui.define([
          * @param {string} [sIcon] No data icon
          * @since 1.0.0
          */
-        showNoData: function(sMessage, sIcon) {
+        showNoData(sMessage, sIcon) {
             this.oUIModel.setData({
                 ...this.oUIModel.getData(),
                 isLoadingSkeleton: false,
@@ -315,15 +315,15 @@ sap.ui.define([
 
         /**
          * Navigates back in browser history or to a specific route
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @public
          * @param {string} [sDefaultRoute] Default route if no history
          * @since 1.0.0
          */
-        onNavBack: function(sDefaultRoute) {
-            var sPreviousHash = this.getRouter().getHashChanger().getPreviousHash();
+        onNavBack(sDefaultRoute) {
+            const sPreviousHash = this.getRouter().getHashChanger().getPreviousHash();
             if (sPreviousHash !== undefined) {
                 window.history.go(-1);
             } else {
@@ -333,7 +333,7 @@ sap.ui.define([
 
         /**
          * Shows a message toast
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @public
@@ -341,7 +341,7 @@ sap.ui.define([
          * @param {object} [oOptions] Toast options
          * @since 1.0.0
          */
-        showMessageToast: function(sMessage, oOptions = {}) {
+        showMessageToast(sMessage, oOptions = {}) {
             MessageToast.show(sMessage, {
                 duration: oOptions.duration || 3000,
                 at: oOptions.at || MessageToast.BOTTOM_CENTER,
@@ -351,7 +351,7 @@ sap.ui.define([
 
         /**
          * Shows a message box
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @public
@@ -359,7 +359,7 @@ sap.ui.define([
          * @param {object} [oOptions] MessageBox options
          * @since 1.0.0
          */
-        showMessageBox: function(sMessage, oOptions = {}) {
+        showMessageBox(sMessage, oOptions = {}) {
             MessageBox.show(sMessage, {
                 icon: oOptions.icon || MessageBox.Icon.INFORMATION,
                 title: oOptions.title || this.getResourceBundle().getText("common.information"),
@@ -375,54 +375,54 @@ sap.ui.define([
 
         /**
          * Initializes security features including CSRF token retrieval
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @private
          * @since 1.0.0
          */
-        _initializeSecurity: function() {
+        _initializeSecurity() {
             // Generate correlation ID for request tracking
             this.oUIModel.setProperty("/correlationId", this._generateCorrelationId());
-            
+
             // Fetch CSRF token for secure operations
             this._fetchCSRFToken();
         },
 
         /**
          * Generates a unique correlation ID for request tracking
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @private
          * @returns {string} Unique correlation ID
          * @since 1.0.0
          */
-        _generateCorrelationId: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        _generateCorrelationId() {
+            return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0, v = c === "x" ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
             });
         },
 
         /**
          * Fetches CSRF token from the server
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @private
          * @since 1.0.0
          */
-        _fetchCSRFToken: async function() {
+        async _fetchCSRFToken() {
             try {
-                const response = await fetch('/api/v1/csrf-token', {
-                    method: 'GET',
-                    credentials: 'same-origin',
+                const response = await fetch("/api/v1/csrf-token", {
+                    method: "GET",
+                    credentials: "same-origin",
                     headers: {
-                        'X-Correlation-ID': this.oUIModel.getProperty("/correlationId")
+                        "X-Correlation-ID": this.oUIModel.getProperty("/correlationId")
                     }
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     this.oUIModel.setProperty("/csrfToken", data.csrfToken);
@@ -438,7 +438,7 @@ sap.ui.define([
 
         /**
          * Makes a secure AJAX request with CSRF protection and input sanitization
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @protected
@@ -451,45 +451,45 @@ sap.ui.define([
          * @returns {Promise} Fetch promise
          * @since 1.0.0
          */
-        secureRequest: async function(sUrl, oOptions = {}) {
+        async secureRequest(sUrl, oOptions = {}) {
             const {
-                method = 'GET',
+                method = "GET",
                 data = null,
                 headers = {},
                 sanitize = true
             } = oOptions;
-            
+
             // Prepare headers
             const requestHeaders = {
-                'Content-Type': 'application/json',
-                'X-Correlation-ID': this.oUIModel.getProperty("/correlationId"),
+                "Content-Type": "application/json",
+                "X-Correlation-ID": this.oUIModel.getProperty("/correlationId"),
                 ...headers
             };
-            
+
             // Add CSRF token for write operations
-            if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) {
+            if (["POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase())) {
                 const csrfToken = this.oUIModel.getProperty("/csrfToken");
                 if (csrfToken) {
-                    requestHeaders['X-CSRF-Token'] = csrfToken;
+                    requestHeaders["X-CSRF-Token"] = csrfToken;
                 }
             }
-            
+
             // Sanitize request data
             let sanitizedData = data;
             if (sanitize && data) {
                 sanitizedData = this._sanitizeRequestData(data);
             }
-            
+
             const requestOptions = {
                 method: method.toUpperCase(),
-                credentials: 'same-origin',
+                credentials: "same-origin",
                 headers: requestHeaders
             };
-            
-            if (sanitizedData && method.toUpperCase() !== 'GET') {
+
+            if (sanitizedData && method.toUpperCase() !== "GET") {
                 requestOptions.body = JSON.stringify(sanitizedData);
             }
-            
+
             try {
                 const response = await fetch(sUrl, requestOptions);
                 return await this._handleSecureResponse(response);
@@ -500,7 +500,7 @@ sap.ui.define([
 
         /**
          * Sanitizes request data to prevent XSS and injection attacks
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @private
@@ -508,16 +508,16 @@ sap.ui.define([
          * @returns {*} Sanitized data
          * @since 1.0.0
          */
-        _sanitizeRequestData: function(data) {
-            if (typeof data === 'string') {
+        _sanitizeRequestData(data) {
+            if (typeof data === "string") {
                 return this._sanitizeString(data);
             }
-            
+
             if (Array.isArray(data)) {
                 return data.map(item => this._sanitizeRequestData(item));
             }
-            
-            if (data && typeof data === 'object') {
+
+            if (data && typeof data === "object") {
                 const sanitized = {};
                 Object.keys(data).forEach(key => {
                     const sanitizedKey = this._sanitizeString(key);
@@ -525,13 +525,13 @@ sap.ui.define([
                 });
                 return sanitized;
             }
-            
+
             return data;
         },
 
         /**
          * Sanitizes a string to prevent XSS attacks
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @private
@@ -539,22 +539,24 @@ sap.ui.define([
          * @returns {string} Sanitized string
          * @since 1.0.0
          */
-        _sanitizeString: function(sInput) {
-            if (typeof sInput !== 'string') return sInput;
-            
+        _sanitizeString(sInput) {
+            if (typeof sInput !== "string") {
+                return sInput;
+            }
+
             return sInput
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#x27;')
-                .replace(/\//g, '&#x2F;')
-                .replace(/\\/g, '&#x5C;')
-                .replace(/&/g, '&amp;');
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#x27;")
+                .replace(/\//g, "&#x2F;")
+                .replace(/\\/g, "&#x5C;")
+                .replace(/&/g, "&amp;");
         },
 
         /**
          * Handles secure response processing
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @private
@@ -562,25 +564,25 @@ sap.ui.define([
          * @returns {Promise} Response data or error
          * @since 1.0.0
          */
-        _handleSecureResponse: async function(response) {
-            const correlationId = response.headers.get('X-Correlation-ID');
-            
+        async _handleSecureResponse(response) {
+            const correlationId = response.headers.get("X-Correlation-ID");
+
             if (!response.ok) {
                 let errorData;
                 try {
                     errorData = await response.json();
                 } catch (e) {
-                    errorData = { error: 'Network error', status: response.status };
+                    errorData = { error: "Network error", status: response.status };
                 }
-                
+
                 // Log security-related errors
                 if (response.status === 403 || response.status === 401) {
                     console.warn(`[SECURITY] ${response.status} response for correlation ID: ${correlationId}`);
                 }
-                
+
                 throw new Error(errorData.error || `HTTP ${response.status}`);
             }
-            
+
             try {
                 const data = await response.json();
                 return data;
@@ -592,7 +594,7 @@ sap.ui.define([
 
         /**
          * Handles request errors with proper logging
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @private
@@ -602,20 +604,20 @@ sap.ui.define([
          * @returns {Promise} Rejected promise with sanitized error
          * @since 1.0.0
          */
-        _handleRequestError: function(error, sUrl, sMethod) {
+        _handleRequestError(error, sUrl, sMethod) {
             const correlationId = this.oUIModel.getProperty("/correlationId");
-            
+
             // Log error with correlation ID
             console.error(`[REQUEST ERROR] ${sMethod} ${sUrl} - Correlation ID: ${correlationId}`, error);
-            
+
             // Return sanitized error message
-            const sanitizedMessage = error.message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const sanitizedMessage = error.message.replace(/</g, "&lt;").replace(/>/g, "&gt;");
             return Promise.reject(new Error(sanitizedMessage));
         },
 
         /**
          * Validates and sanitizes user input
-         * 
+         *
          * @function
          * @memberOf a2a.network.fiori.controller.BaseController
          * @protected
@@ -625,50 +627,54 @@ sap.ui.define([
          * @returns {boolean|*} Validation result or sanitized value
          * @since 1.0.0
          */
-        validateInput: function(sInput, sType, oOptions = {}) {
+        validateInput(sInput, sType, oOptions = {}) {
             if (!sInput && !oOptions.required) {
                 return oOptions.returnValue ? sInput : true;
             }
-            
+
             if (!sInput && oOptions.required) {
                 return oOptions.returnValue ? null : false;
             }
-            
+
             const sanitized = this._sanitizeString(sInput);
-            
+
             switch (sType) {
-                case 'email':
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    return oOptions.returnValue ? 
-                        (emailRegex.test(sanitized) ? sanitized : null) :
-                        emailRegex.test(sanitized);
-                        
-                case 'url':
-                    try {
-                        const url = new URL(sanitized);
-                        return oOptions.returnValue ? url.href : true;
-                    } catch (e) {
-                        return oOptions.returnValue ? null : false;
-                    }
-                    
-                case 'number':
-                    const num = parseFloat(sanitized);
-                    const isValid = !isNaN(num) && isFinite(num);
-                    if (oOptions.min !== undefined && num < oOptions.min) return oOptions.returnValue ? null : false;
-                    if (oOptions.max !== undefined && num > oOptions.max) return oOptions.returnValue ? null : false;
-                    return oOptions.returnValue ? (isValid ? num : null) : isValid;
-                    
-                case 'text':
-                    if (oOptions.maxLength && sanitized.length > oOptions.maxLength) {
-                        return oOptions.returnValue ? null : false;
-                    }
-                    if (oOptions.minLength && sanitized.length < oOptions.minLength) {
-                        return oOptions.returnValue ? null : false;
-                    }
-                    return oOptions.returnValue ? sanitized : true;
-                    
-                default:
-                    return oOptions.returnValue ? sanitized : true;
+            case "email":
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return oOptions.returnValue ?
+                    (emailRegex.test(sanitized) ? sanitized : null) :
+                    emailRegex.test(sanitized);
+
+            case "url":
+                try {
+                    const url = new URL(sanitized);
+                    return oOptions.returnValue ? url.href : true;
+                } catch (e) {
+                    return oOptions.returnValue ? null : false;
+                }
+
+            case "number":
+                const num = parseFloat(sanitized);
+                const isValid = !isNaN(num) && isFinite(num);
+                if (oOptions.min !== undefined && num < oOptions.min) {
+                    return oOptions.returnValue ? null : false;
+                }
+                if (oOptions.max !== undefined && num > oOptions.max) {
+                    return oOptions.returnValue ? null : false;
+                }
+                return oOptions.returnValue ? (isValid ? num : null) : isValid;
+
+            case "text":
+                if (oOptions.maxLength && sanitized.length > oOptions.maxLength) {
+                    return oOptions.returnValue ? null : false;
+                }
+                if (oOptions.minLength && sanitized.length < oOptions.minLength) {
+                    return oOptions.returnValue ? null : false;
+                }
+                return oOptions.returnValue ? sanitized : true;
+
+            default:
+                return oOptions.returnValue ? sanitized : true;
             }
         }
     });

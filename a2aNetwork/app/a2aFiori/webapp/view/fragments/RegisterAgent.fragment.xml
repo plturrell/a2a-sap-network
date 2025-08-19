@@ -1,0 +1,31 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <Dialog title="{i18n>registerAgent}" contentWidth="500px" contentHeight="400px" resizable="true" draggable="true">
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <Label text="{i18n>agentName}" required="true" />
+                <Input value="{registerModel>/name}" placeholder="{i18n>enterAgentName}" />
+                
+                <Label text="{i18n>agentAddress}" required="true" />
+                <Input value="{registerModel>/address}" placeholder="{i18n>enterAgentAddress}" />
+                
+                <Label text="{i18n>agentEndpoint}" required="true" />
+                <Input value="{registerModel>/endpoint}" placeholder="{i18n>enterAgentEndpoint}" />
+                
+                <Label text="{i18n>agentDescription}" />
+                <TextArea value="{registerModel>/description}" placeholder="{i18n>enterAgentDescription}" rows="3" />
+                
+                <CheckBox selected="{registerModel>/isActive}" text="{i18n>activeAgent}" />
+                
+                <HBox class="sapUiMediumMarginTop">
+                    <Label text="{i18n>initialReputation}" />
+                    <Slider value="{registerModel>/reputation}" min="0" max="1000" step="50" width="200px" enableTickmarks="true" />
+                    <Text text="{registerModel>/reputation}" class="sapUiSmallMarginBegin" />
+                </HBox>
+            </VBox>
+        </content>
+        <buttons>
+            <Button text="{i18n>register}" type="Emphasized" press="onRegisterAgent" />
+            <Button text="{i18n>cancel}" press="onCloseRegisterDialog" />
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

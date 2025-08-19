@@ -1,0 +1,17 @@
+{
+  "agentType": "agentBuilder",
+  "name": "Agent Builder Agent",
+  "address": "0x1CBd3b2770909D4e10f157cABC84C7264073C9Ec",
+  "endpoint": "http://localhost:8013",
+  "capabilities": [
+    "agent_creation",
+    "code_generation",
+    "template_management",
+    "deployment_automation",
+    "agent_configuration"
+  ],
+  "description": "Agent 13 - Creates and deploys new agents dynamically",
+  "registrationTx": "0xac93b324d1ce45535ea1a8e9cc88a1525cd3e0f4bb57f4100b778a05dc5096ff",
+  "registrationBlock": 16,
+  "registeredAt": "2025-08-19T06:02:18.327Z"
+}

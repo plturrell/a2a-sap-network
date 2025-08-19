@@ -1,9 +1,9 @@
 /**
  * Batch Operations Service
- * 
+ *
  * Provides efficient batch processing for OData operations, reducing network
  * overhead and improving performance for enterprise applications.
- * 
+ *
  * @author SAP SE
  * @since 1.0.0
  * @version 1.0.0
@@ -13,7 +13,7 @@ sap.ui.define([
 ], function(Log) {
     "use strict";
 
-    var BatchService = {
+    const BatchService = {
 
         /* =========================================================== */
         /* Constants                                                   */
@@ -33,12 +33,12 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        init: function() {
+        init() {
             this._batchQueue = [];
             this._batchTimer = null;
             this._requestCounter = 0;
             this._eventBus = sap.ui.getCore().getEventBus();
-            
+
             Log.info("BatchService initialized", { service: "BatchService" });
         },
 
@@ -47,13 +47,13 @@ sap.ui.define([
          * @public
          * @since 1.0.0
          */
-        destroy: function() {
+        destroy() {
             this._flushQueue();
-            
+
             if (this._batchTimer) {
                 clearTimeout(this._batchTimer);
             }
-            
+
             Log.info("BatchService destroyed", { service: "BatchService" });
         },
 
@@ -75,11 +75,11 @@ sap.ui.define([
          * @returns {Promise} Request promise
          * @since 1.0.0
          */
-        submit: function(request) {
-            var that = this;
-            
+        submit(request) {
+            const that = this;
+
             return new Promise(function(resolve, reject) {
-                var batchRequest = {
+                const batchRequest = {
                     id: that._generateRequestId(),
                     method: request.method || "GET",
                     url: request.url,
@@ -90,12 +90,12 @@ sap.ui.define([
                     changeSet: request.changeSet || false,
                     timestamp: Date.now(),
                     retryCount: 0,
-                    resolve: resolve,
-                    reject: reject
+                    resolve,
+                    reject
                 };
-                
+
                 that._addToBatch(batchRequest);
-                
+
                 Log.debug("Request added to batch queue", {
                     requestId: batchRequest.id,
                     method: batchRequest.method,
@@ -116,23 +116,23 @@ sap.ui.define([
          * @returns {Promise} Group promise
          * @since 1.0.0
          */
-        submitGroup: function(requests, options) {
+        submitGroup(requests, options) {
             options = options || {};
-            var groupId = options.groupId || this._generateGroupId();
-            var that = this;
-            
-            var groupPromises = requests.map(function(request) {
+            const groupId = options.groupId || this._generateGroupId();
+            const that = this;
+
+            const groupPromises = requests.map(function(request) {
                 request.groupId = groupId;
                 return that.submit(request);
             });
-            
+
             if (options.atomic) {
                 // All requests must succeed
                 return Promise.all(groupPromises);
-            } else {
-                // Return settled results
-                return Promise.allSettled(groupPromises);
             }
+            // Return settled results
+            return Promise.allSettled(groupPromises);
+
         },
 
         /**
@@ -142,12 +142,12 @@ sap.ui.define([
          * @returns {Promise} Flush promise
          * @since 1.0.0
          */
-        flush: function(groupId) {
+        flush(groupId) {
             if (groupId) {
                 return this._flushGroup(groupId);
-            } else {
-                return this._flushQueue();
             }
+            return this._flushQueue();
+
         },
 
         /**
@@ -156,8 +156,8 @@ sap.ui.define([
          * @returns {object} Queue status
          * @since 1.0.0
          */
-        getStatus: function() {
-            var groupStats = this._batchQueue.reduce(function(stats, request) {
+        getStatus() {
+            const groupStats = this._batchQueue.reduce(function(stats, request) {
                 if (!stats[request.groupId]) {
                     stats[request.groupId] = {
                         count: 0,
@@ -166,26 +166,26 @@ sap.ui.define([
                         oldestRequest: null
                     };
                 }
-                
-                var group = stats[request.groupId];
+
+                const group = stats[request.groupId];
                 group.count++;
                 group.methods[request.method] = (group.methods[request.method] || 0) + 1;
-                
+
                 if (request.changeSet) {
                     group.changeSets++;
                 }
-                
+
                 if (!group.oldestRequest || request.timestamp < group.oldestRequest.timestamp) {
                     group.oldestRequest = request;
                 }
-                
+
                 return stats;
             }, {});
-            
+
             return {
                 totalRequests: this._batchQueue.length,
                 groups: Object.keys(groupStats).length,
-                groupStats: groupStats,
+                groupStats,
                 isTimerActive: !!this._batchTimer
             };
         },
@@ -197,9 +197,9 @@ sap.ui.define([
          * @returns {number} Number of requests cleared
          * @since 1.0.0
          */
-        clearQueue: function(groupId) {
-            var initialLength = this._batchQueue.length;
-            
+        clearQueue(groupId) {
+            const initialLength = this._batchQueue.length;
+
             if (groupId) {
                 this._batchQueue = this._batchQueue.filter(function(request) {
                     if (request.groupId === groupId) {
@@ -214,14 +214,14 @@ sap.ui.define([
                 });
                 this._batchQueue = [];
             }
-            
-            var cleared = initialLength - this._batchQueue.length;
-            
+
+            const cleared = initialLength - this._batchQueue.length;
+
             Log.info("Batch queue cleared", {
                 requestsCleared: cleared,
                 groupId: groupId || "all"
             });
-            
+
             return cleared;
         },
 
@@ -235,9 +235,9 @@ sap.ui.define([
          * @param {object} request Batch request
          * @since 1.0.0
          */
-        _addToBatch: function(request) {
+        _addToBatch(request) {
             this._batchQueue.push(request);
-            
+
             // Sort by priority (higher priority first) and timestamp
             this._batchQueue.sort(function(a, b) {
                 if (a.priority !== b.priority) {
@@ -245,7 +245,7 @@ sap.ui.define([
                 }
                 return a.timestamp - b.timestamp;
             });
-            
+
             this._scheduleFlush();
         },
 
@@ -254,19 +254,19 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _scheduleFlush: function() {
-            var that = this;
-            
+        _scheduleFlush() {
+            const that = this;
+
             if (this._batchTimer) {
                 clearTimeout(this._batchTimer);
             }
-            
+
             // Flush immediately if queue is full
             if (this._batchQueue.length >= this.BATCH_SIZE_LIMIT) {
                 this._flushQueue();
                 return;
             }
-            
+
             // Schedule flush after timeout
             this._batchTimer = setTimeout(function() {
                 that._flushQueue();
@@ -279,27 +279,27 @@ sap.ui.define([
          * @returns {Promise} Flush promise
          * @since 1.0.0
          */
-        _flushQueue: function() {
+        _flushQueue() {
             if (this._batchQueue.length === 0) {
                 return Promise.resolve();
             }
-            
+
             if (this._batchTimer) {
                 clearTimeout(this._batchTimer);
                 this._batchTimer = null;
             }
-            
+
             // Group requests by groupId
-            var groups = this._groupRequests();
-            var flushPromises = [];
-            
+            const groups = this._groupRequests();
+            const flushPromises = [];
+
             Object.keys(groups).forEach(function(groupId) {
                 flushPromises.push(this._processBatchGroup(groupId, groups[groupId]));
             }.bind(this));
-            
+
             // Clear the queue
             this._batchQueue = [];
-            
+
             return Promise.allSettled(flushPromises);
         },
 
@@ -310,20 +310,20 @@ sap.ui.define([
          * @returns {Promise} Flush promise
          * @since 1.0.0
          */
-        _flushGroup: function(groupId) {
-            var groupRequests = this._batchQueue.filter(function(request) {
+        _flushGroup(groupId) {
+            const groupRequests = this._batchQueue.filter(function(request) {
                 return request.groupId === groupId;
             });
-            
+
             if (groupRequests.length === 0) {
                 return Promise.resolve();
             }
-            
+
             // Remove group requests from queue
             this._batchQueue = this._batchQueue.filter(function(request) {
                 return request.groupId !== groupId;
             });
-            
+
             return this._processBatchGroup(groupId, groupRequests);
         },
 
@@ -333,7 +333,7 @@ sap.ui.define([
          * @returns {object} Grouped requests
          * @since 1.0.0
          */
-        _groupRequests: function() {
+        _groupRequests() {
             return this._batchQueue.reduce(function(groups, request) {
                 if (!groups[request.groupId]) {
                     groups[request.groupId] = [];
@@ -351,19 +351,19 @@ sap.ui.define([
          * @returns {Promise} Processing promise
          * @since 1.0.0
          */
-        _processBatchGroup: function(groupId, requests) {
-            var that = this;
-            
+        _processBatchGroup(groupId, requests) {
+            const that = this;
+
             Log.info("Processing batch group", {
-                groupId: groupId,
+                groupId,
                 requestCount: requests.length
             });
-            
+
             this._eventBus.publish("BatchService", "BatchStarted", {
-                groupId: groupId,
+                groupId,
                 requestCount: requests.length
             });
-            
+
             return this._sendBatch(groupId, requests)
                 .then(function(results) {
                     that._handleBatchSuccess(groupId, requests, results);
@@ -381,13 +381,13 @@ sap.ui.define([
          * @returns {Promise} Batch promise
          * @since 1.0.0
          */
-        _sendBatch: function(groupId, requests) {
-            var that = this;
-            
+        _sendBatch(groupId, requests) {
+            const that = this;
+
             return new Promise(function(resolve, reject) {
                 // Build batch request
-                var batchData = that._buildBatchRequest(requests);
-                
+                const batchData = that._buildBatchRequest(requests);
+
                 jQuery.ajax({
                     url: "/odata/v1/$batch",
                     type: "POST",
@@ -396,17 +396,17 @@ sap.ui.define([
                     processData: false,
                     timeout: 60000 // 60 seconds timeout
                 })
-                .done(function(data, status, xhr) {
-                    try {
-                        var results = that._parseBatchResponse(xhr.responseText, requests);
-                        resolve(results);
-                    } catch (error) {
-                        reject(error);
-                    }
-                })
-                .fail(function(xhr, status, error) {
-                    reject(new Error("Batch request failed: " + error));
-                });
+                    .done(function(data, status, xhr) {
+                        try {
+                            const results = that._parseBatchResponse(xhr.responseText, requests);
+                            resolve(results);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    })
+                    .fail(function(xhr, status, error) {
+                        reject(new Error(`Batch request failed: ${ error}`));
+                    });
             });
         },
 
@@ -417,68 +417,72 @@ sap.ui.define([
          * @returns {object} Batch request data
          * @since 1.0.0
          */
-        _buildBatchRequest: function(requests) {
-            var boundary = "batch_" + this._generateBoundary();
-            var changeBoundary = "changeset_" + this._generateBoundary();
-            var content = "";
-            var hasChanges = false;
-            
+        _buildBatchRequest(requests) {
+            const boundary = `batch_${ this._generateBoundary()}`;
+            const changeBoundary = `changeset_${ this._generateBoundary()}`;
+            let content = "";
+            let _hasChanges = false;
+
             // Separate GET requests from change requests
-            var getRequests = requests.filter(function(r) { return r.method === "GET"; });
-            var changeRequests = requests.filter(function(r) { return r.method !== "GET"; });
-            
+            const getRequests = requests.filter(function(r) {
+                return r.method === "GET";
+            });
+            const changeRequests = requests.filter(function(r) {
+                return r.method !== "GET";
+            });
+
             // Add GET requests
             getRequests.forEach(function(request) {
-                content += "--" + boundary + "\r\n";
+                content += `--${ boundary }\r\n`;
                 content += "Content-Type: application/http\r\n";
                 content += "Content-Transfer-Encoding: binary\r\n";
                 content += "\r\n";
-                content += request.method + " " + request.url + " HTTP/1.1\r\n";
-                
+                content += `${request.method } ${ request.url } HTTP/1.1\r\n`;
+
                 Object.keys(request.headers).forEach(function(header) {
-                    content += header + ": " + request.headers[header] + "\r\n";
+                    content += `${header }: ${ request.headers[header] }\r\n`;
                 });
-                
+
                 content += "\r\n\r\n";
             });
-            
+
             // Add change requests in changeset
             if (changeRequests.length > 0) {
-                hasChanges = true;
-                content += "--" + boundary + "\r\n";
-                content += "Content-Type: multipart/mixed; boundary=" + changeBoundary + "\r\n";
+                _hasChanges = true;
+                content += `--${ boundary }\r\n`;
+                content += `Content-Type: multipart/mixed; boundary=${ changeBoundary }\r\n`;
                 content += "\r\n";
-                
+
                 changeRequests.forEach(function(request) {
-                    content += "--" + changeBoundary + "\r\n";
+                    content += `--${ changeBoundary }\r\n`;
                     content += "Content-Type: application/http\r\n";
                     content += "Content-Transfer-Encoding: binary\r\n";
                     content += "\r\n";
-                    content += request.method + " " + request.url + " HTTP/1.1\r\n";
-                    
+                    content += `${request.method } ${ request.url } HTTP/1.1\r\n`;
+
                     Object.keys(request.headers).forEach(function(header) {
-                        content += header + ": " + request.headers[header] + "\r\n";
+                        content += `${header }: ${ request.headers[header] }\r\n`;
                     });
-                    
+
                     if (request.data) {
-                        var requestData = typeof request.data === "string" ? 
+                        const requestData = typeof request.data === "string" ?
                             request.data : JSON.stringify(request.data);
-                        content += "Content-Length: " + requestData.length + "\r\n";
+                        content += `Content-Length: ${ requestData.length }\r\n`;
                         content += "\r\n";
                         content += requestData;
                     }
-                    
+
                     content += "\r\n";
                 });
-                
-                content += "--" + changeBoundary + "--\r\n";
+
+                content += `--${ changeBoundary }--\r\n`;
             }
-            
-            content += "--" + boundary + "--\r\n";
-            
+
+            content += `--${ boundary }--\r\n`;
+
             return {
-                content: content,
-                contentType: "multipart/mixed; boundary=" + boundary
+                content,
+                contentType: `multipart/mixed; boundary=${ boundary}`
             };
         },
 
@@ -490,32 +494,32 @@ sap.ui.define([
          * @returns {Array<object>} Parsed results
          * @since 1.0.0
          */
-        _parseBatchResponse: function(responseText, requests) {
+        _parseBatchResponse(responseText, requests) {
             try {
-                var results = [];
-                var requestIndex = 0;
-                
+                let results = [];
+                let requestIndex = 0;
+
                 // Parse the multipart response
-                var parts = this._parseMultipartResponse(responseText);
-                
-                for (var i = 0; i < parts.length; i++) {
-                    var part = parts[i];
-                    
-                    if (part.contentType && part.contentType.indexOf('multipart/mixed') !== -1) {
+                const parts = this._parseMultipartResponse(responseText);
+
+                for (let i = 0; i < parts.length; i++) {
+                    const part = parts[i];
+
+                    if (part.contentType && part.contentType.indexOf("multipart/mixed") !== -1) {
                         // This is a changeset - parse nested responses
-                        var changesetResults = this._parseChangesetResponse(part.body, requests, requestIndex);
+                        const changesetResults = this._parseChangesetResponse(part.body, requests, requestIndex);
                         results = results.concat(changesetResults);
                         requestIndex += changesetResults.length;
-                    } else if (part.body && part.body.indexOf('HTTP/1.1') !== -1) {
+                    } else if (part.body && part.body.indexOf("HTTP/1.1") !== -1) {
                         // This is a single response
-                        var singleResult = this._parseSingleResponse(part.body, requests[requestIndex]);
+                        const singleResult = this._parseSingleResponse(part.body, requests[requestIndex]);
                         if (singleResult) {
                             results.push(singleResult);
                             requestIndex++;
                         }
                     }
                 }
-                
+
                 // Ensure we have results for all requests
                 while (results.length < requests.length) {
                     results.push({
@@ -526,24 +530,24 @@ sap.ui.define([
                         headers: {}
                     });
                 }
-                
+
                 Log.debug("Batch response parsed", {
                     totalParts: parts.length,
                     totalResults: results.length,
                     requestCount: requests.length
                 });
-                
+
                 return results.slice(0, requests.length);
-                
+
             } catch (error) {
                 Log.error("Failed to parse batch response", error);
-                
+
                 // Return error results for all requests
                 return requests.map(function(request) {
                     return {
                         requestId: request.id,
                         status: 500,
-                        error: "Batch parsing failed: " + error.message,
+                        error: `Batch parsing failed: ${ error.message}`,
                         data: null,
                         headers: {}
                     };
@@ -559,32 +563,32 @@ sap.ui.define([
          * @param {Array<object>} results Batch results
          * @since 1.0.0
          */
-        _handleBatchSuccess: function(groupId, requests, results) {
-            var successful = 0;
-            var failed = 0;
-            
+        _handleBatchSuccess(groupId, requests, results) {
+            let successful = 0;
+            let failed = 0;
+
             results.forEach(function(result, index) {
-                var request = requests[index];
-                
+                const request = requests[index];
+
                 if (result.status >= 200 && result.status < 300) {
                     request.resolve(result.data);
                     successful++;
                 } else {
-                    request.reject(new Error("Request failed with status " + result.status));
+                    request.reject(new Error(`Request failed with status ${ result.status}`));
                     failed++;
                 }
             });
-            
+
             this._eventBus.publish("BatchService", "BatchCompleted", {
-                groupId: groupId,
-                successful: successful,
-                failed: failed
+                groupId,
+                successful,
+                failed
             });
-            
+
             Log.info("Batch processing completed", {
-                groupId: groupId,
-                successful: successful,
-                failed: failed
+                groupId,
+                successful,
+                failed
             });
         },
 
@@ -596,26 +600,26 @@ sap.ui.define([
          * @param {Error} error Batch error
          * @since 1.0.0
          */
-        _handleBatchError: function(groupId, requests, error) {
-            var that = this;
-            
+        _handleBatchError(groupId, requests, error) {
+            const that = this;
+
             // Retry logic
-            var canRetry = requests.every(function(request) {
+            const canRetry = requests.every(function(request) {
                 return request.retryCount < that.MAX_RETRIES;
             });
-            
+
             if (canRetry) {
                 Log.warn("Batch failed, retrying", {
-                    groupId: groupId,
+                    groupId,
                     error: error.message,
                     retryCount: requests[0].retryCount + 1
                 });
-                
+
                 // Increment retry count and re-queue
                 requests.forEach(function(request) {
                     request.retryCount++;
                 });
-                
+
                 setTimeout(function() {
                     that._processBatchGroup(groupId, requests);
                 }, that.RETRY_DELAY);
@@ -624,15 +628,15 @@ sap.ui.define([
                 requests.forEach(function(request) {
                     request.reject(error);
                 });
-                
+
                 this._eventBus.publish("BatchService", "BatchFailed", {
-                    groupId: groupId,
+                    groupId,
                     error: error.message,
                     requestCount: requests.length
                 });
-                
+
                 Log.error("Batch processing failed after max retries", {
-                    groupId: groupId,
+                    groupId,
                     error: error.message,
                     requestCount: requests.length
                 });
@@ -645,8 +649,8 @@ sap.ui.define([
          * @returns {string} Request ID
          * @since 1.0.0
          */
-        _generateRequestId: function() {
-            return "req-" + (++this._requestCounter) + "-" + Date.now();
+        _generateRequestId() {
+            return `req-${ ++this._requestCounter }-${ Date.now()}`;
         },
 
         /**
@@ -655,8 +659,8 @@ sap.ui.define([
          * @returns {string} Group ID
          * @since 1.0.0
          */
-        _generateGroupId: function() {
-            return "group-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+        _generateGroupId() {
+            return `group-${ Date.now() }-${ Math.random().toString(36).substr(2, 9)}`;
         },
 
         /**
@@ -665,7 +669,7 @@ sap.ui.define([
          * @returns {string} Boundary string
          * @since 1.0.0
          */
-        _generateBoundary: function() {
+        _generateBoundary() {
             return Date.now().toString(16) + Math.random().toString(16).substr(2);
         },
 
@@ -680,37 +684,37 @@ sap.ui.define([
          * @returns {Array<object>} Parsed parts
          * @since 1.0.0
          */
-        _parseMultipartResponse: function(responseText) {
-            var parts = [];
-            
+        _parseMultipartResponse(responseText) {
+            const parts = [];
+
             // Extract boundary from content-type
-            var boundaryMatch = responseText.match(/boundary=([^\s;]+)/);
+            let boundaryMatch = responseText.match(/boundary=([^\s;]+)/);
             if (!boundaryMatch) {
                 // Try to find boundary in response
-                var firstBoundary = responseText.match(/--([a-zA-Z0-9_]+)/);
+                const firstBoundary = responseText.match(/--([a-zA-Z0-9_]+)/);
                 if (firstBoundary) {
                     boundaryMatch = [null, firstBoundary[1]];
                 }
             }
-            
+
             if (!boundaryMatch) {
                 throw new Error("No boundary found in multipart response");
             }
-            
-            var boundary = "--" + boundaryMatch[1];
-            var sections = responseText.split(boundary);
-            
+
+            const boundary = `--${ boundaryMatch[1]}`;
+            const sections = responseText.split(boundary);
+
             // Skip first (empty) and last (closing) sections
-            for (var i = 1; i < sections.length - 1; i++) {
-                var section = sections[i].trim();
+            for (let i = 1; i < sections.length - 1; i++) {
+                const section = sections[i].trim();
                 if (section) {
-                    var part = this._parseResponsePart(section);
+                    const part = this._parseResponsePart(section);
                     if (part) {
                         parts.push(part);
                     }
                 }
             }
-            
+
             return parts;
         },
 
@@ -721,25 +725,25 @@ sap.ui.define([
          * @returns {object} Parsed part
          * @since 1.0.0
          */
-        _parseResponsePart: function(partText) {
-            var headerBodySplit = partText.indexOf('\r\n\r\n');
+        _parseResponsePart(partText) {
+            let headerBodySplit = partText.indexOf("\r\n\r\n");
             if (headerBodySplit === -1) {
-                headerBodySplit = partText.indexOf('\n\n');
+                headerBodySplit = partText.indexOf("\n\n");
             }
-            
+
             if (headerBodySplit === -1) {
                 return null;
             }
-            
-            var headerText = partText.substring(0, headerBodySplit);
-            var body = partText.substring(headerBodySplit + (partText.charAt(headerBodySplit + 2) === '\r' ? 4 : 2));
-            
-            var headers = this._parseHeaders(headerText);
-            
+
+            const headerText = partText.substring(0, headerBodySplit);
+            const body = partText.substring(headerBodySplit + (partText.charAt(headerBodySplit + 2) === "\r" ? 4 : 2));
+
+            const headers = this._parseHeaders(headerText);
+
             return {
-                headers: headers,
-                contentType: headers['content-type'] || headers['Content-Type'],
-                body: body
+                headers,
+                contentType: headers["content-type"] || headers["Content-Type"],
+                body
             };
         },
 
@@ -752,20 +756,20 @@ sap.ui.define([
          * @returns {Array<object>} Changeset results
          * @since 1.0.0
          */
-        _parseChangesetResponse: function(changesetBody, requests, startIndex) {
-            var results = [];
-            var changesetParts = this._parseMultipartResponse("Content-Type: multipart/mixed; boundary=changeset_123\r\n\r\n" + changesetBody);
-            
-            for (var i = 0; i < changesetParts.length; i++) {
-                var requestIndex = startIndex + i;
+        _parseChangesetResponse(changesetBody, requests, startIndex) {
+            const results = [];
+            const changesetParts = this._parseMultipartResponse(`Content-Type: multipart/mixed; boundary=changeset_123\r\n\r\n${ changesetBody}`);
+
+            for (let i = 0; i < changesetParts.length; i++) {
+                const requestIndex = startIndex + i;
                 if (requestIndex < requests.length) {
-                    var result = this._parseSingleResponse(changesetParts[i].body, requests[requestIndex]);
+                    const result = this._parseSingleResponse(changesetParts[i].body, requests[requestIndex]);
                     if (result) {
                         results.push(result);
                     }
                 }
             }
-            
+
             return results;
         },
 
@@ -777,36 +781,36 @@ sap.ui.define([
          * @returns {object} Parsed response
          * @since 1.0.0
          */
-        _parseSingleResponse: function(responseText, originalRequest) {
+        _parseSingleResponse(responseText, originalRequest) {
             if (!responseText || !originalRequest) {
                 return null;
             }
-            
+
             try {
                 // Parse HTTP status line
-                var statusMatch = responseText.match(/HTTP\/1\.1\s+(\d+)\s*([^\r\n]*)/);
-                var status = statusMatch ? parseInt(statusMatch[1], 10) : 200;
-                var statusText = statusMatch ? statusMatch[2].trim() : "OK";
-                
+                const statusMatch = responseText.match(/HTTP\/1\.1\s+(\d+)\s*([^\r\n]*)/);
+                const status = statusMatch ? parseInt(statusMatch[1], 10) : 200;
+                const statusText = statusMatch ? statusMatch[2].trim() : "OK";
+
                 // Split headers and body
-                var headerBodySplit = responseText.indexOf('\r\n\r\n');
+                let headerBodySplit = responseText.indexOf("\r\n\r\n");
                 if (headerBodySplit === -1) {
-                    headerBodySplit = responseText.indexOf('\n\n');
+                    headerBodySplit = responseText.indexOf("\n\n");
                 }
-                
-                var headers = {};
-                var body = "";
-                
+
+                let headers = {};
+                let body = "";
+
                 if (headerBodySplit !== -1) {
-                    var headerText = responseText.substring(responseText.indexOf('\n') + 1, headerBodySplit);
-                    body = responseText.substring(headerBodySplit + (responseText.charAt(headerBodySplit + 2) === '\r' ? 4 : 2));
+                    const headerText = responseText.substring(responseText.indexOf("\n") + 1, headerBodySplit);
+                    body = responseText.substring(headerBodySplit + (responseText.charAt(headerBodySplit + 2) === "\r" ? 4 : 2));
                     headers = this._parseHeaders(headerText);
                 }
-                
+
                 // Parse response data
-                var data = null;
-                var error = null;
-                
+                let data = null;
+                let error = null;
+
                 if (status >= 200 && status < 300) {
                     if (body.trim()) {
                         try {
@@ -820,32 +824,32 @@ sap.ui.define([
                     }
                 } else {
                     try {
-                        var errorData = JSON.parse(body);
+                        const errorData = JSON.parse(body);
                         error = errorData.error || errorData.message || statusText;
                     } catch (e) {
                         error = body || statusText;
                     }
                 }
-                
+
                 return {
                     requestId: originalRequest.id,
-                    status: status,
-                    statusText: statusText,
-                    data: data,
-                    error: error,
-                    headers: headers
+                    status,
+                    statusText,
+                    data,
+                    error,
+                    headers
                 };
-                
+
             } catch (parseError) {
                 Log.warn("Failed to parse single response", {
                     error: parseError.message,
                     requestId: originalRequest.id
                 });
-                
+
                 return {
                     requestId: originalRequest.id,
                     status: 500,
-                    error: "Response parsing failed: " + parseError.message,
+                    error: `Response parsing failed: ${ parseError.message}`,
                     data: null,
                     headers: {}
                 };
@@ -859,22 +863,22 @@ sap.ui.define([
          * @returns {object} Parsed headers
          * @since 1.0.0
          */
-        _parseHeaders: function(headerText) {
-            var headers = {};
-            var lines = headerText.split(/\r?\n/);
-            
-            for (var i = 0; i < lines.length; i++) {
-                var line = lines[i].trim();
+        _parseHeaders(headerText) {
+            const headers = {};
+            const lines = headerText.split(/\r?\n/);
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
                 if (line) {
-                    var colonIndex = line.indexOf(':');
+                    const colonIndex = line.indexOf(":");
                     if (colonIndex !== -1) {
-                        var name = line.substring(0, colonIndex).trim();
-                        var value = line.substring(colonIndex + 1).trim();
+                        const name = line.substring(0, colonIndex).trim();
+                        const value = line.substring(colonIndex + 1).trim();
                         headers[name] = value;
                     }
                 }
             }
-            
+
             return headers;
         }
     };

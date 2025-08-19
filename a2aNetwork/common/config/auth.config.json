@@ -1,0 +1,100 @@
+{
+  "authentication": {
+    "methods": ["saml", "oauth2", "local"],
+    "defaultMethod": "saml",
+    "sessionTimeout": 1800000,
+    "tokenExpiry": "8h",
+    "refreshTokenExpiry": "7d",
+    "mfaRequired": {
+      "systemAdmin": true,
+      "networkAdmin": false,
+      "agentDeveloper": false,
+      "viewer": false
+    }
+  },
+  "saml": {
+    "enabled": true,
+    "entityId": "${SAML_ENTITY_ID}",
+    "assertionConsumerServiceUrl": "${SAML_ACS_URL}",
+    "identityProviderUrl": "${SAML_IDP_URL}",
+    "certificate": "path/to/certificate.pem",
+    "attributeMapping": {
+      "email": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
+      "name": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name",
+      "roles": "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+    }
+  },
+  "oauth2": {
+    "enabled": true,
+    "clientId": "${OAUTH_CLIENT_ID}",
+    "clientSecret": "${OAUTH_CLIENT_SECRET}",
+    "authorizationUrl": "${OAUTH_AUTHORIZATION_URL}",
+    "tokenUrl": "${OAUTH_TOKEN_URL}",
+    "userInfoUrl": "${OAUTH_USERINFO_URL}",
+    "redirectUri": "${OAUTH_REDIRECT_URI}",
+    "scope": "openid profile email a2a.network a2a.agents"
+  },
+  "jwt": {
+    "algorithm": "HS256",
+    "issuer": "a2a-platform",
+    "audience": ["a2a-network", "a2a-agents", "a2a-launchpad"]
+  },
+  "security": {
+    "bcryptRounds": 10,
+    "maxLoginAttempts": 5,
+    "lockoutDuration": 900000,
+    "passwordPolicy": {
+      "minLength": 8,
+      "requireUppercase": true,
+      "requireLowercase": true,
+      "requireNumbers": true,
+      "requireSpecialChars": true
+    },
+    "cors": {
+      "allowedOrigins": "${CORS_ALLOWED_ORIGINS}".split(',').map(origin => origin.trim()),
+      "allowCredentials": true
+    }
+  },
+  "rolePermissions": {
+    "systemAdmin": {
+      "displayName": "System Administrator",
+      "permissions": ["*"],
+      "sessionDuration": 14400000
+    },
+    "networkAdmin": {
+      "displayName": "Network Administrator",
+      "permissions": [
+        "network.*",
+        "agents.read",
+        "agents.create",
+        "agents.update",
+        "agents.delete",
+        "workflows.*",
+        "analytics.read"
+      ],
+      "sessionDuration": 28800000
+    },
+    "agentDeveloper": {
+      "displayName": "Agent Developer",
+      "permissions": [
+        "agents.*",
+        "projects.*",
+        "workflows.create",
+        "workflows.update",
+        "workflows.read",
+        "network.read",
+        "analytics.read"
+      ],
+      "sessionDuration": 28800000
+    },
+    "viewer": {
+      "displayName": "Read-Only User",
+      "permissions": [
+        "*.read",
+        "analytics.view",
+        "reports.view"
+      ],
+      "sessionDuration": 43200000
+    }
+  }
+}

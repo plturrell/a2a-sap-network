@@ -1,0 +1,17 @@
+{
+  "agentType": "agentManager",
+  "name": "Agent Manager Agent",
+  "address": "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
+  "endpoint": "http://localhost:8007",
+  "capabilities": [
+    "agent_lifecycle_management",
+    "agent_registration",
+    "health_monitoring",
+    "performance_tracking",
+    "agent_coordination"
+  ],
+  "description": "Agent 7 - Central agent that manages other agents in the network",
+  "registrationTx": "0x228d466d1939c5885b98759b720255c377076116b0b4b3d67f24e1e93efa19fd",
+  "registrationBlock": 10,
+  "registeredAt": "2025-08-19T06:02:17.871Z"
+}

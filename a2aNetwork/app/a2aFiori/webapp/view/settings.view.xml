@@ -493,7 +493,7 @@
                                         <Label text="{i18n>rpcUrl}" required="true"/>
                                         <Input
                                             value="{settings>/blockchain/rpcUrl}"
-                                            placeholder="http://localhost:8545"
+                                            placeholder="{blockchain RPC URL}"
                                             change="onSettingChange"
                                             valueState="{= ${ui>/validationErrors/blockchain/rpcUrl} ? 'Error' : 'None' }"
                                             valueStateText="{ui>/validationErrors/blockchain/rpcUrl}"/>

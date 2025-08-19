@@ -176,6 +176,18 @@
                 </uxap:subSections>
             </uxap:ObjectPageSection>
             
+            <uxap:ObjectPageSection title="Documentation">
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection>
+                        <uxap:blocks>
+                            <core:HTML
+                                id="documentationContent"
+                                content='<div class="sapUiSmallMargin">Loading documentation...</div>'/>
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+
             <uxap:ObjectPageSection title="Performance">
                 <uxap:subSections>
                     <uxap:ObjectPageSubSection>

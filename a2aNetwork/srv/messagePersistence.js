@@ -426,6 +426,24 @@ class MessagePersistenceService extends cds.Service {
 
     _decompress(compressedData) {
         const zlib = require('zlib');
+
+// Track intervals for cleanup
+const activeIntervals = new Map();
+
+function stopAllIntervals() {
+    for (const [name, intervalId] of activeIntervals) {
+        clearInterval(intervalId);
+    }
+    activeIntervals.clear();
+}
+
+function shutdown() {
+    stopAllIntervals();
+}
+
+// Export cleanup function
+module.exports.shutdown = shutdown;
+
         return zlib.gunzipSync(Buffer.from(compressedData, 'base64')).toString();
     }
 
@@ -454,7 +472,7 @@ class MessagePersistenceService extends cds.Service {
 
     _initializeCleanupTasks() {
         // Cleanup Redis expired keys every hour
-        setInterval(async () => {
+        activeIntervals.set('interval_475', setInterval(async () => {
             try {
                 const expiredKeys = await this.redis.keys('message:*');
                 const pipeline = this.redis.pipeline();
@@ -469,16 +487,16 @@ class MessagePersistenceService extends cds.Service {
                 await pipeline.exec();
                 this.log.debug(`Cleaned up ${expiredKeys.length} expired Redis keys`);
             } catch (error) {
-                this.log.error('Redis cleanup failed:', error);
+                this.log.error('Redis cleanup failed:', error));
             }
         }, 3600000); // 1 hour
         
         // Archive old messages daily
-        setInterval(async () => {
+        activeIntervals.set('interval_495', setInterval(async () => {
             try {
                 await this._archiveMessages({ data: {} });
             } catch (error) {
-                this.log.error('Automated archiving failed:', error);
+                this.log.error('Automated archiving failed:', error));
             }
         }, 24 * 3600000); // 24 hours
     }

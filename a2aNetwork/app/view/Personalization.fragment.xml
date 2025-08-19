@@ -1,0 +1,25 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    <Dialog
+        id="personalizationDialog"
+        title="Personalization"
+        contentWidth="300px">
+        <content>
+            <VBox class="sapUiSmallMargin">
+                <Label text="Theme Selection" class="sapUiTinyMarginBottom"/>
+                <Select id="themeSelect" width="100%" change="onThemeChange">
+                    <core:Item key="sap_horizon" text="SAP Horizon (Default)" />
+                    <core:Item key="sap_horizon_dark" text="SAP Horizon Dark" />
+                    <core:Item key="sap_fiori_3" text="SAP Fiori 3" />
+                    <core:Item key="sap_fiori_3_dark" text="SAP Fiori 3 Dark" />
+                    <core:Item key="sap_belize" text="SAP Belize" />
+                    <core:Item key="sap_belize_plus" text="SAP Belize Deep" />
+                </Select>
+            </VBox>
+        </content>
+        <beginButton>
+            <Button text="Close" press="onClosePersonalization" />
+        </beginButton>
+    </Dialog>
+</core:FragmentDefinition>

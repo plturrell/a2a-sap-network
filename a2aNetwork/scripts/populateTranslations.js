@@ -8,7 +8,7 @@ const path = require('path');
  */
 
 async function populateTranslations() {
-    console.log('🌍 Starting translation population...');
+    log.info('🌍 Starting translation population...');
     
     try {
         // Connect to database
@@ -32,7 +32,7 @@ async function populateTranslations() {
             { code: 'he', name: 'Hebrew', nativeName: 'עברית', isDefault: false, isRTL: true, currencyCode: 'ILS', sortOrder: 13 }
         ];
         
-        console.log('📝 Inserting locale configurations...');
+        log.debug('📝 Inserting locale configurations...');
         
         // Insert or update locales
         for (const locale of locales) {
@@ -51,7 +51,7 @@ async function populateTranslations() {
                             isActive: true
                         })
                         .where({ code: locale.code });
-                    console.log(`  ✓ Updated locale: ${locale.code} (${locale.name})`);
+                    log.debug(`  ✓ Updated locale: ${locale.code} (${locale.name})`);
                 } else {
                     await INSERT.into(Locales).entries({
                         ...locale,
@@ -60,7 +60,7 @@ async function populateTranslations() {
                         timeFormat: getTimeFormat(locale.code),
                         numberFormat: getNumberFormat(locale.code)
                     });
-                    console.log(`  ✓ Created locale: ${locale.code} (${locale.name})`);
+                    log.debug(`  ✓ Created locale: ${locale.code} (${locale.name})`);
                 }
             } catch (error) {
                 console.error(`  ✗ Failed to process locale ${locale.code}:`, error.message);
@@ -74,7 +74,7 @@ async function populateTranslations() {
             const localeFiles = await fs.readdir(localeDir);
             const jsonFiles = localeFiles.filter(file => file.endsWith('.json'));
             
-            console.log(`📚 Loading translations from ${jsonFiles.length} files...`);
+            log.debug(`📚 Loading translations from ${jsonFiles.length} files...`);
             
             for (const file of jsonFiles) {
                 const locale = path.basename(file, '.json');
@@ -85,7 +85,7 @@ async function populateTranslations() {
                     const translations = JSON.parse(content);
                     
                     await processTranslationFile(translations, locale, Translations);
-                    console.log(`  ✓ Processed translations for locale: ${locale}`);
+                    log.debug(`  ✓ Processed translations for locale: ${locale}`);
                 } catch (error) {
                     console.error(`  ✗ Failed to process ${file}:`, error.message);
                 }
@@ -93,7 +93,7 @@ async function populateTranslations() {
             
         } catch (error) {
             console.warn(`⚠️  Locale directory not found: ${localeDir}`);
-            console.log('💡 Creating minimal translations for available locales...');
+            log.debug('💡 Creating minimal translations for available locales...');
             
             // Create minimal translations for core locales
             const coreTranslations = {
@@ -103,14 +103,14 @@ async function populateTranslations() {
             
             for (const [locale, translations] of Object.entries(coreTranslations)) {
                 await processTranslationFile(translations, locale, Translations);
-                console.log(`  ✓ Created core translations for: ${locale}`);
+                log.debug(`  ✓ Created core translations for: ${locale}`);
             }
         }
         
         // Generate translation statistics
         await generateStatistics(Translations, Locales);
         
-        console.log('🎉 Translation population completed successfully!');
+        log.debug('🎉 Translation population completed successfully!');
         
     } catch (error) {
         console.error('❌ Error populating translations:', error);
@@ -169,7 +169,7 @@ async function processTranslationFile(translations, locale, Translations) {
         }
     }
     
-    console.log(`    📊 ${locale}: ${inserted} inserted, ${updated} updated, ${skipped} skipped`);
+    log.debug(`    📊 ${locale}: ${inserted} inserted, ${updated} updated, ${skipped} skipped`);
 }
 
 /**
@@ -271,7 +271,7 @@ async function createCoreTranslations(locale) {
  * Generate translation statistics
  */
 async function generateStatistics(Translations, Locales) {
-    console.log('📈 Generating translation statistics...');
+    log.debug('📈 Generating translation statistics...');
     
     try {
         // Get total keys (from English)
@@ -280,18 +280,18 @@ async function generateStatistics(Translations, Locales) {
         // Get coverage by locale
         const locales = await SELECT.from(Locales).where({ isActive: true });
         
-        console.log('\n📊 Translation Coverage Report:');
-        console.log('─'.repeat(50));
+        log.debug('\n📊 Translation Coverage Report:');
+        log.debug('─'.repeat(50));
         
         for (const locale of locales) {
             const translatedKeys = await SELECT.count().from(Translations).where({ locale: locale.code });
             const coverage = totalKeys > 0 ? Math.round((translatedKeys / totalKeys) * 100) : 0;
             const bar = '█'.repeat(Math.floor(coverage / 5)) + '░'.repeat(20 - Math.floor(coverage / 5));
             
-            console.log(`${locale.code.padEnd(6)} │ ${bar} │ ${coverage}% (${translatedKeys}/${totalKeys})`);
+            log.debug(`${locale.code.padEnd(6)} │ ${bar} │ ${coverage}% (${translatedKeys}/${totalKeys})`);
         }
         
-        console.log('─'.repeat(50));
+        log.debug('─'.repeat(50));
         
         // Missing translations report
         const missingCount = await SELECT.count().from(Translations).where({
@@ -300,7 +300,7 @@ async function generateStatistics(Translations, Locales) {
         });
         
         if (missingCount > 0) {
-            console.log(`\n⚠️  ${missingCount} missing translations found`);
+            log.debug(`\n⚠️  ${missingCount} missing translations found`);
         }
         
     } catch (error) {
@@ -385,7 +385,7 @@ module.exports = {
 if (require.main === module) {
     populateTranslations()
         .then(() => {
-            console.log('✅ Translation population completed');
+            log.debug('✅ Translation population completed');
             process.exit(0);
         })
         .catch((error) => {

@@ -1,0 +1,17 @@
+schema test.1 {
+
+predicate File :
+  {
+    file : string,
+    language : string,
+    size : nat
+  }
+
+predicate Function :
+  {
+    file : string,
+    name : string,
+    complexity : nat
+  }
+
+}

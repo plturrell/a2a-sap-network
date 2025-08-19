@@ -1,3 +1,24 @@
+
+// Interval tracking for memory leak prevention
+const intervals = [];
+
+function trackInterval(intervalId) {
+    intervals.push(intervalId);
+    return intervalId;
+}
+
+function cleanupIntervals() {
+    intervals.forEach(clearInterval);
+    intervals.length = 0;
+}
+
+// Cleanup on exit
+if (typeof process !== 'undefined') {
+    process.on('exit', cleanupIntervals);
+    process.on('SIGTERM', cleanupIntervals);
+    process.on('SIGINT', cleanupIntervals);
+}
+
 sap.ui.define([
     "sap/ui/core/UIComponent",
     "sap/ui/Device",
@@ -9,10 +30,21 @@ sap.ui.define([
     "sap/ui/core/library",
     "sap/base/Log",
     "sap/base/util/UriParameters"
-], function(UIComponent, Device, JSONModel, MessageBox, MessageToast, FlexibleColumnLayoutSemanticHelper, fioriLibrary, coreLibrary, Log, UriParameters) {
+], function(
+    UIComponent,
+    Device,
+    JSONModel,
+    MessageBox,
+    MessageToast,
+    FlexibleColumnLayoutSemanticHelper,
+    fioriLibrary,
+    coreLibrary,
+    Log,
+    UriParameters
+) {
     "use strict";
 
-    var LayoutType = fioriLibrary.LayoutType;
+    const LayoutType = fioriLibrary.LayoutType;
 
     return UIComponent.extend("a2a.network.fiori.Component", {
         metadata: {
@@ -24,11 +56,12 @@ sap.ui.define([
         _oFlexibleColumnLayoutSemanticHelper: null,
 
         /**
-         * The component is initialized by UI5 automatically during the startup of the app and calls the init method once.
+         * The component is initialized by UI5 automatically during the startup of the app
+         * and calls the init method once.
          * @public
          * @override
          */
-        init: function() {
+        init() {
             // call the base component's init function
             UIComponent.prototype.init.apply(this, arguments);
 
@@ -58,7 +91,7 @@ sap.ui.define([
          * @public
          * @override
          */
-        destroy: function() {
+        destroy() {
             // disconnect WebSocket
             if (this._oSocket) {
                 this._oSocket.disconnect();
@@ -73,17 +106,20 @@ sap.ui.define([
          * This method can be called to determine whether the sapUiSizeCompact or sapUiSizeCozy
          * design mode class should be set, which influences the size appearance of some controls.
          * @public
-         * @return {string} css class, either 'sapUiSizeCompact' or 'sapUiSizeCozy' - or an empty string if no css class should be set
+         * @returns {string} css class, either 'sapUiSizeCompact' or 'sapUiSizeCozy' -
+         * or an empty string if no css class should be set
          */
-        getContentDensityClass: function() {
+        getContentDensityClass() {
             if (this._sContentDensityClass === undefined) {
                 // check whether FLP has already set the content density class; do nothing in this case
-                if (document.body.classList.contains("sapUiSizeCozy") || document.body.classList.contains("sapUiSizeCompact")) {
+                if (document.body.classList.contains("sapUiSizeCozy") ||
+                    document.body.classList.contains("sapUiSizeCompact")) {
                     this._sContentDensityClass = "";
                 } else if (!Device.support.touch) { // apply "compact" mode if touch is not supported
                     this._sContentDensityClass = "sapUiSizeCompact";
                 } else {
-                    // "cozy" in case of touch support; default for most sap.m controls, but needed for desktop-first controls like sap.ui.table.Table
+                    // "cozy" in case of touch support; default for most sap.m controls,
+                    // but needed for desktop-first controls like sap.ui.table.Table
                     this._sContentDensityClass = "sapUiSizeCozy";
                 }
             }
@@ -95,8 +131,8 @@ sap.ui.define([
          * @public
          * @returns {sap.f.FlexibleColumnLayoutSemanticHelper} the semantic helper
          */
-        getHelper: function() {
-            var oFCL = this.getRootControl().byId("fcl"),
+        getHelper() {
+            const oFCL = this.getRootControl().byId("fcl"),
                 oParams = UriParameters.fromQuery(location.search),
                 oSettings = {
                     defaultTwoColumnLayoutType: LayoutType.TwoColumnsMidExpanded,
@@ -106,7 +142,8 @@ sap.ui.define([
                 };
 
             if (!this._oFlexibleColumnLayoutSemanticHelper) {
-                this._oFlexibleColumnLayoutSemanticHelper = FlexibleColumnLayoutSemanticHelper.getInstanceFor(oFCL, oSettings);
+                this._oFlexibleColumnLayoutSemanticHelper =
+                    FlexibleColumnLayoutSemanticHelper.getInstanceFor(oFCL, oSettings);
             }
             return this._oFlexibleColumnLayoutSemanticHelper;
         },
@@ -120,8 +157,8 @@ sap.ui.define([
          * @private
          * @returns {sap.ui.model.json.JSONModel} the device model
          */
-        _createDeviceModel: function() {
-            var oModel = new JSONModel(Device);
+        _createDeviceModel() {
+            const oModel = new JSONModel(Device);
             oModel.setDefaultBindingMode("OneWay");
             return oModel;
         },
@@ -131,8 +168,8 @@ sap.ui.define([
          * @private
          * @returns {sap.ui.model.json.JSONModel} the app model
          */
-        _createAppModel: function() {
-            var oModel = new JSONModel({
+        _createAppModel() {
+            const oModel = new JSONModel({
                 busy: false,
                 delay: 0,
                 layout: LayoutType.OneColumn,
@@ -162,7 +199,7 @@ sap.ui.define([
          * Initializes services.
          * @private
          */
-        _initServices: function() {
+        _initServices() {
             // Initialize WebSocket connection
             this._initWebSocket();
 
@@ -173,7 +210,7 @@ sap.ui.define([
             this._initUserAuthentication();
 
             // Set up periodic refresh
-            setInterval(function() {
+            trackInterval(setInterval(function() {
                 this._loadNetworkStats();
             }.bind(this), 60000); // Refresh every minute
         },
@@ -182,7 +219,7 @@ sap.ui.define([
          * Initializes WebSocket connection.
          * @private
          */
-        _initWebSocket: function() {
+        _initWebSocket() {
             // Check if Socket.IO is available
             if (typeof io === "undefined") {
                 Log.warning("Socket.IO not available - real-time updates disabled");
@@ -229,8 +266,10 @@ sap.ui.define([
          * Attaches Socket.IO event handlers.
          * @private
          */
-        _attachSocketEventHandlers: function() {
-            if (!this._oSocket) return;
+        _attachSocketEventHandlers() {
+            if (!this._oSocket) {
+                return;
+            }
 
             // Agent events
             this._oSocket.on("agent:registered", function(data) {
@@ -252,9 +291,9 @@ sap.ui.define([
             // Reputation events
             this._oSocket.on("reputation:updated", function(data) {
                 this.getEventBus().publish("app", "reputationUpdated", data);
-                
+
                 // Update UI if viewing the affected agent
-                var sCurrentHash = this.getRouter().getHashChanger().getHash();
+                const sCurrentHash = this.getRouter().getHashChanger().getHash();
                 if (sCurrentHash.includes(data.agentId)) {
                     this.getModel().refresh();
                 }
@@ -276,9 +315,9 @@ sap.ui.define([
          * Loads network statistics.
          * @private
          */
-        _loadNetworkStats: function() {
-            var oModel = this.getModel();
-            var oAppModel = this.getModel("app");
+        _loadNetworkStats() {
+            const oModel = this.getModel();
+            const oAppModel = this.getModel("app");
 
             if (!oModel || !oModel.read) {
                 Log.warning("OData model not available");
@@ -291,9 +330,9 @@ sap.ui.define([
                     "$orderby": "validFrom desc",
                     "$top": 1
                 },
-                success: function(oData) {
+                success(oData) {
                     if (oData.results && oData.results.length > 0) {
-                        var oStats = oData.results[0];
+                        const oStats = oData.results[0];
                         oAppModel.setProperty("/stats", {
                             totalAgents: oStats.totalAgents || 0,
                             activeAgents: oStats.activeAgents || 0,
@@ -305,7 +344,7 @@ sap.ui.define([
                         Log.debug("Network stats loaded", oStats);
                     }
                 },
-                error: function(oError) {
+                error(oError) {
                     Log.error("Failed to load network stats", oError);
                 }
             });
@@ -315,9 +354,9 @@ sap.ui.define([
          * Initializes user authentication.
          * @private
          */
-        _initUserAuthentication: function() {
-            var oAppModel = this.getModel("app");
-            var oEnvironment = oAppModel.getProperty("/environment");
+        _initUserAuthentication() {
+            const oAppModel = this.getModel("app");
+            const oEnvironment = oAppModel.getProperty("/environment");
 
             if (oEnvironment.isBTP) {
                 // In BTP, user info comes from XSUAA
@@ -327,7 +366,7 @@ sap.ui.define([
                 oAppModel.setProperty("/currentUser", {
                     id: "local-user",
                     name: "Developer",
-                    email: "developer@a2a.network",
+                    email: sap.ushell.Container.getUser().getEmail() || "user@a2a.network",
                     roles: ["Admin", "Developer"]
                 });
                 Log.info("Running in development mode with local user");
@@ -338,14 +377,14 @@ sap.ui.define([
          * Loads user info from BTP.
          * @private
          */
-        _loadBTPUserInfo: function() {
-            var oAppModel = this.getModel("app");
+        _loadBTPUserInfo() {
+            const oAppModel = this.getModel("app");
 
             // Call user info endpoint
             jQuery.ajax({
                 url: "/user-api/currentUser",
                 type: "GET",
-                success: function(oUserInfo) {
+                success(oUserInfo) {
                     oAppModel.setProperty("/currentUser", {
                         id: oUserInfo.id,
                         name: oUserInfo.name || oUserInfo.id,
@@ -366,12 +405,12 @@ sap.ui.define([
          * @private
          * @returns {object} Environment info
          */
-        _getEnvironmentInfo: function() {
-            var sHostname = window.location.hostname;
-            var bIsBTP = sHostname.includes("cfapps") || 
+        _getEnvironmentInfo() {
+            const sHostname = window.location.hostname;
+            const bIsBTP = sHostname.includes("cfapps") ||
                          sHostname.includes("hana.ondemand.com") ||
                          sHostname.includes("cloud.sap");
-            
+
             return {
                 isBTP: bIsBTP,
                 isLocal: sHostname === "localhost" || sHostname === "127.0.0.1",
@@ -386,7 +425,7 @@ sap.ui.define([
          * @private
          * @returns {sap.base.i18n.ResourceBundle} Resource bundle
          */
-        _getResourceBundle: function() {
+        _getResourceBundle() {
             return this.getModel("i18n").getResourceBundle();
         },
 
@@ -399,53 +438,53 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _initializeErrorHandling: function() {
-            var that = this;
+        _initializeErrorHandling() {
+            const that = this;
 
             // Capture JavaScript errors
-            window.addEventListener('error', function(event) {
+            window.addEventListener("error", function(event) {
                 that._reportClientError({
                     message: event.message,
                     filename: event.filename,
                     lineno: event.lineno,
                     colno: event.colno,
-                    stack: event.error ? event.error.stack : 'No stack trace available',
+                    stack: event.error ? event.error.stack : "No stack trace available",
                     userAgent: navigator.userAgent,
                     url: window.location.href,
                     timestamp: new Date().toISOString(),
-                    type: 'javascript-error'
+                    type: "javascript-error"
                 });
             });
 
             // Capture unhandled promise rejections
-            window.addEventListener('unhandledrejection', function(event) {
+            window.addEventListener("unhandledrejection", function(event) {
                 that._reportClientError({
-                    message: event.reason ? event.reason.message || event.reason : 'Unhandled promise rejection',
-                    stack: event.reason ? event.reason.stack : 'No stack trace available',
+                    message: event.reason ? event.reason.message || event.reason : "Unhandled promise rejection",
+                    stack: event.reason ? event.reason.stack : "No stack trace available",
                     userAgent: navigator.userAgent,
                     url: window.location.href,
                     timestamp: new Date().toISOString(),
-                    type: 'unhandled-promise-rejection',
+                    type: "unhandled-promise-rejection",
                     additionalInfo: {
                         reason: event.reason
                     }
                 });
-                
+
                 // Prevent browser console error
                 event.preventDefault();
             });
 
             // Capture UI5 errors
             Log.addLogListener({
-                onLogEntry: function(oLog) {
+                onLogEntry(oLog) {
                     if (oLog.level >= 4) { // Error level and above
                         that._reportClientError({
                             message: oLog.message,
-                            stack: oLog.details || 'UI5 Error',
+                            stack: oLog.details || "UI5 Error",
                             userAgent: navigator.userAgent,
                             url: window.location.href,
                             timestamp: new Date().toISOString(),
-                            type: 'ui5-error',
+                            type: "ui5-error",
                             additionalInfo: {
                                 component: oLog.component,
                                 level: oLog.level,
@@ -464,23 +503,24 @@ sap.ui.define([
          * @private
          * @since 1.0.0
          */
-        _initializeClientMonitoring: function() {
-            var that = this;
+        _initializeClientMonitoring() {
+            const that = this;
 
             // Performance monitoring
             if (window.performance && window.performance.mark) {
                 // Mark application start
-                performance.mark('app-start');
+                performance.mark("app-start");
 
                 // Monitor page load performance
-                window.addEventListener('load', function() {
-                    performance.mark('app-loaded');
-                    
-                    var navigation = performance.getEntriesByType('navigation')[0];
+                window.addEventListener("load", function() {
+                    performance.mark("app-loaded");
+
+                    const navigation = performance.getEntriesByType("navigation")[0];
                     if (navigation) {
-                        that._reportPerformanceMetric('page-load', {
+                        that._reportPerformanceMetric("page-load", {
                             loadTime: navigation.loadEventEnd - navigation.loadEventStart,
-                            domContentLoaded: navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart,
+                            domContentLoaded: navigation.domContentLoadedEventEnd -
+                                navigation.domContentLoadedEventStart,
                             firstPaint: that._getFirstPaint(),
                             timestamp: new Date().toISOString()
                         });
@@ -490,11 +530,11 @@ sap.ui.define([
 
             // Monitor route changes
             this.getRouter().attachRouteMatched(function(oEvent) {
-                var sRouteName = oEvent.getParameter("name");
-                performance.mark('route-' + sRouteName + '-start');
-                
+                const sRouteName = oEvent.getParameter("name");
+                performance.mark(`route-${ sRouteName }-start`);
+
                 // Report route change
-                that._reportUserAction('route-change', {
+                that._reportUserAction("route-change", {
                     route: sRouteName,
                     arguments: oEvent.getParameter("arguments"),
                     timestamp: new Date().toISOString()
@@ -502,11 +542,11 @@ sap.ui.define([
             });
 
             // Monitor user interactions
-            document.addEventListener('click', function(event) {
-                var sTarget = event.target.tagName + (event.target.id ? '#' + event.target.id : '') + 
-                              (event.target.className ? '.' + event.target.className.replace(/\s+/g, '.') : '');
-                
-                that._reportUserAction('click', {
+            document.addEventListener("click", function(event) {
+                const sTarget = event.target.tagName + (event.target.id ? `#${ event.target.id}` : "") +
+                              (event.target.className ? `.${ event.target.className.replace(/\s+/g, ".")}` : "");
+
+                that._reportUserAction("click", {
                     target: sTarget,
                     timestamp: new Date().toISOString()
                 });
@@ -521,13 +561,13 @@ sap.ui.define([
          * @param {object} errorData Error information
          * @since 1.0.0
          */
-        _reportClientError: function(errorData) {
+        _reportClientError(errorData) {
             // Add correlation ID and session info
-            var oAppModel = this.getModel("app");
-            var enhancedErrorData = Object.assign({}, errorData, {
+            const oAppModel = this.getModel("app");
+            const enhancedErrorData = Object.assign({}, errorData, {
                 correlationId: this._generateCorrelationId(),
                 sessionId: oAppModel.getProperty("/sessionId"),
-                userId: oAppModel.getProperty("/currentUser/id") || 'anonymous',
+                userId: oAppModel.getProperty("/currentUser/id") || "anonymous",
                 environment: oAppModel.getProperty("/environment"),
                 buildInfo: oAppModel.getProperty("/buildInfo")
             });
@@ -538,20 +578,20 @@ sap.ui.define([
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(enhancedErrorData),
-                success: function(response) {
+                success(response) {
                     Log.debug("Error reported successfully", { errorId: response.errorId });
                 },
-                error: function(xhr, status, error) {
-                    Log.error("Failed to report error to server", { 
-                        status: status, 
-                        error: error,
-                        originalError: errorData.message 
+                error(xhr, status, error) {
+                    Log.error("Failed to report error to server", {
+                        status,
+                        error,
+                        originalError: errorData.message
                     });
                 }
             });
 
             // Also log locally for development
-            Log.error("Client Error: " + errorData.message, errorData);
+            Log.error(`Client Error: ${ errorData.message}`, errorData);
         },
 
         /**
@@ -561,11 +601,11 @@ sap.ui.define([
          * @param {object} data Metric data
          * @since 1.0.0
          */
-        _reportPerformanceMetric: function(metric, data) {
-            Log.info("Performance Metric: " + metric, data);
-            
+        _reportPerformanceMetric(metric, data) {
+            Log.info(`Performance Metric: ${ metric}`, data);
+
             // In production, send to monitoring service
-            if (window.location.hostname !== 'localhost') {
+            if (window.location.hostname !== "localhost") {
                 // Could integrate with SAP Cloud ALM or other APM solutions
             }
         },
@@ -577,22 +617,22 @@ sap.ui.define([
          * @param {object} data Action data
          * @since 1.0.0
          */
-        _reportUserAction: function(action, data) {
+        _reportUserAction(action, data) {
             // Throttle reporting to avoid too many events
             if (!this._actionThrottle) {
                 this._actionThrottle = {};
             }
-            
-            var throttleKey = action + '-' + (data.target || data.route || 'unknown');
-            var now = Date.now();
-            
+
+            const throttleKey = `${action }-${ data.target || data.route || "unknown"}`;
+            const now = Date.now();
+
             if (this._actionThrottle[throttleKey] && (now - this._actionThrottle[throttleKey] < 1000)) {
                 return; // Skip if same action within 1 second
             }
-            
+
             this._actionThrottle[throttleKey] = now;
-            
-            Log.debug("User Action: " + action, data);
+
+            Log.debug(`User Action: ${ action}`, data);
         },
 
         /**
@@ -601,10 +641,10 @@ sap.ui.define([
          * @returns {number} First paint time in milliseconds
          * @since 1.0.0
          */
-        _getFirstPaint: function() {
+        _getFirstPaint() {
             if (window.performance && window.performance.getEntriesByType) {
-                var paintEntries = performance.getEntriesByType('paint');
-                var firstPaint = paintEntries.find(entry => entry.name === 'first-paint');
+                const paintEntries = performance.getEntriesByType("paint");
+                const firstPaint = paintEntries.find(entry => entry.name === "first-paint");
                 return firstPaint ? firstPaint.startTime : 0;
             }
             return 0;
@@ -616,8 +656,9 @@ sap.ui.define([
          * @returns {string} Correlation ID
          * @since 1.0.0
          */
-        _generateCorrelationId: function() {
-            return 'client-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        _generateCorrelationId() {
+            return `client-${ Date.now() }-${
+                Math.random().toString(36).substr(2, 9)}`;
         }
     });
 });

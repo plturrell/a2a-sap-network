@@ -1,0 +1,17 @@
+{
+  "agentType": "sqlAgent",
+  "name": "SQL Agent",
+  "address": "0x71bE63f3384f5fb98995898A86B02Fb2426c5788",
+  "endpoint": "http://localhost:8011",
+  "capabilities": [
+    "sql_query_execution",
+    "database_operations",
+    "query_optimization",
+    "data_extraction",
+    "schema_management"
+  ],
+  "description": "Agent 11 - Handles SQL operations and database interactions",
+  "registrationTx": "0x84e0317eca60470883aa99990af6c73ae7f038ce3be89c4e4222e529e80fdb5d",
+  "registrationBlock": 14,
+  "registeredAt": "2025-08-19T06:02:18.171Z"
+}

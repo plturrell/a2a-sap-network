@@ -1,0 +1,42 @@
+# Development Dockerfile for A2A Network
+FROM node:20-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    python3 \
+    sqlite3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Install global tools
+RUN npm install -g @sap/cds-dk ganache-cli nodemon
+
+# Copy source code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p data logs temp gen coverage
+
+# Set permissions
+RUN chmod +x scripts/*.sh scripts/*.js
+
+# Generate development environment
+RUN node scripts/setup-dev-environment.js
+
+# Expose ports
+EXPOSE 4004 8545 6379
+
+# Development command
+CMD ["npm", "run", "dev"]

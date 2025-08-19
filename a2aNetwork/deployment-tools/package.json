@@ -1,0 +1,39 @@
+{
+  "name": "@a2a/deployment-tools",
+  "version": "1.0.0",
+  "description": "Production deployment tools for A2A Framework",
+  "main": "index.js",
+  "bin": {
+    "a2a-deploy": "./bin/a2a-deploy.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "build": "npm run build:docker && npm run build:k8s",
+    "build:docker": "node scripts/build-docker.js",
+    "build:k8s": "node scripts/build-k8s.js",
+    "test": "jest",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "commander": "^9.4.1",
+    "inquirer": "^8.2.5",
+    "chalk": "^4.1.2",
+    "ora": "^5.4.1",
+    "axios": "^1.5.0",
+    "js-yaml": "^4.1.0",
+    "dockerode": "^3.3.5",
+    "@kubernetes/client-node": "^0.19.0",
+    "aws-sdk": "^2.1450.0",
+    "azure-arm-containerservice": "^16.2.0",
+    "@google-cloud/container": "^5.4.0",
+    "terraform-generator": "^2.3.0",
+    "ansible-js": "^1.0.0",
+    "winston": "^3.10.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.6.2",
+    "eslint": "^8.46.0",
+    "nodemon": "^3.0.1"
+  }
+}

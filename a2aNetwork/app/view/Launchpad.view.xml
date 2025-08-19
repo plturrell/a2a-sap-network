@@ -1,0 +1,25 @@
+<mvc:View
+    controllerName="a2a.network.launchpad.controller.Launchpad"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m">
+    <Page title="{i18n>appTitle}" showHeader="true">
+        <headerContent>
+            <Button icon="sap-icon://refresh" press="onRefresh" tooltip="{i18n>refreshButtonTooltip}"/>
+            <Button icon="sap-icon://business-analytics" press="onOpenAnalytics" tooltip="{i18n>analyticsButtonTooltip}"/>
+            <Button icon="sap-icon://bell" press="onOpenNotifications" tooltip="{i18n>notificationsButtonTooltip}"/>
+            <Button icon="sap-icon://action-settings" press="onOpenPersonalization" tooltip="{i18n>settingsButtonTooltip}"/>
+        </headerContent>
+        <content>
+            <TileContainer id="tileContainer"
+                tiles="{launchpad>/tiles}">
+                <GenericTile
+                    header="{launchpad>header}"
+                    subheader="{launchpad>subheader}">
+                    <TileContent>
+                        <NumericContent value="{launchpad>value}" icon="{launchpad>icon}"/>
+                    </TileContent>
+                </GenericTile>
+            </TileContainer>
+        </content>
+    </Page>
+</mvc:View>

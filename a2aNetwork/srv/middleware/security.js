@@ -24,10 +24,16 @@ const corsOptions = {
       ? process.env.ALLOWED_ORIGINS.split(',')
       : process.env.NODE_ENV === 'production'
         ? ['https://a2a-network.cfapps.eu10.hana.ondemand.com']
-        : ['http://localhost:4004', 'http://localhost:4005', 'http://localhost:3000'];
+        : (process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:4004').split(',');
     
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    // Only allow requests with no origin in development mode
+    if (!origin) {
+      if (process.env.NODE_ENV === 'development') {
+        return callback(null, true);
+      } else {
+        return callback(new Error('Origin header required in production'));
+      }
+    }
     
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
@@ -128,9 +134,9 @@ const helmetConfig = helmet({
         "'self'",
         "data:",
         "https:",
-        "http://localhost:*",
+        ...(process.env.NODE_ENV !== 'production' ? ["http://localhost:*"] : []),
         "blob:"
-      ],
+      ].filter(Boolean),
       fontSrc: [
         "'self'",
         "https://ui5.sap.com",
@@ -140,12 +146,11 @@ const helmetConfig = helmet({
       ],
       connectSrc: [
         "'self'",
-        "ws://localhost:*",
-        "wss://localhost:*",
+        ...(process.env.NODE_ENV !== 'production' ? ["ws://localhost:*", "wss://localhost:*"] : []),
         "https://ui5.sap.com",
         "https://sapui5.hana.ondemand.com",
-        process.env.BLOCKCHAIN_RPC_URL || "http://localhost:8545"
-      ],
+        ...(process.env.BLOCKCHAIN_RPC_URL ? [process.env.BLOCKCHAIN_RPC_URL] : [])
+      ].filter(Boolean),
       mediaSrc: ["'none'"],
       objectSrc: ["'none'"],
       frameSrc: ["'self'"],

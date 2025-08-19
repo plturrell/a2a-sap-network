@@ -1,0 +1,17 @@
+{
+  "agentType": "reasoningAgent",
+  "name": "Reasoning Agent",
+  "address": "0xa0Ee7A142d267C1f36714E4a8F75612F20a79720",
+  "endpoint": "http://localhost:8009",
+  "capabilities": [
+    "logical_reasoning",
+    "inference_generation",
+    "decision_making",
+    "knowledge_synthesis",
+    "problem_solving"
+  ],
+  "description": "Agent 9 - Advanced reasoning and decision-making agent",
+  "registrationTx": "0xba1096e7b8cccc22474d31e04f219255a818e34a279d86a7b5f18d8bc841f4fb",
+  "registrationBlock": 12,
+  "registeredAt": "2025-08-19T06:02:18.028Z"
+}

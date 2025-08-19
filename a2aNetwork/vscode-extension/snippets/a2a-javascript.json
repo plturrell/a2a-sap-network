@@ -1,0 +1,201 @@
+{
+    "A2A Agent Template": {
+        "prefix": "a2a-agent",
+        "body": [
+            "const { Agent } = require('@a2a/sdk');",
+            "",
+            "const agent = new Agent({",
+            "  name: '${1:agent-name}',",
+            "  type: '${2:data-processor}',",
+            "  capabilities: [${3:'processing', 'validation'}]",
+            "});",
+            "",
+            "// Add service",
+            "agent.addService('${4:process}', async (data) => {",
+            "  ${5:// Implementation}",
+            "  return data;",
+            "});",
+            "",
+            "// Start the agent",
+            "agent.start();",
+            "",
+            "module.exports = agent;"
+        ],
+        "description": "Create a new A2A agent"
+    },
+
+    "A2A Service": {
+        "prefix": "a2a-service",
+        "body": [
+            "agent.addService('${1:serviceName}', async (${2:data}) => {",
+            "  try {",
+            "    ${3:// Service implementation}",
+            "    return { success: true, data: ${2:data} };",
+            "  } catch (error) {",
+            "    throw new Error(`Service error: ${error.message}`);",
+            "  }",
+            "});"
+        ],
+        "description": "Add a service to an A2A agent"
+    },
+
+    "A2A Workflow": {
+        "prefix": "a2a-workflow",
+        "body": [
+            "const { Workflow, Registry } = require('@a2a/sdk');",
+            "",
+            "const workflow = new Workflow({",
+            "  name: '${1:workflow-name}',",
+            "  registry: new Registry()",
+            "});",
+            "",
+            "// Define workflow steps",
+            "workflow",
+            "  .step('${2:step1}', { capability: '${3:processing}' })",
+            "  .step('${4:step2}', { capability: '${5:validation}' });",
+            "",
+            "// Execute workflow",
+            "async function run() {",
+            "  const result = await workflow.execute({",
+            "    input: ${6:data}",
+            "  });",
+            "  console.log('Result:', result);",
+            "}",
+            "",
+            "run();"
+        ],
+        "description": "Create a new A2A workflow"
+    },
+
+    "A2A Agent Discovery": {
+        "prefix": "a2a-discover",
+        "body": [
+            "const { Registry } = require('@a2a/sdk');",
+            "",
+            "const registry = new Registry();",
+            "",
+            "// Discover agents by capability",
+            "const agents = await registry.discover('${1:capability}');",
+            "",
+            "// Use first available agent",
+            "if (agents.length > 0) {",
+            "  const targetAgent = agents[0];",
+            "  const result = await targetAgent.call('${2:service}', ${3:data});",
+            "  console.log('Result:', result);",
+            "}"
+        ],
+        "description": "Discover and use agents from registry"
+    },
+
+    "A2A Blockchain Contract": {
+        "prefix": "a2a-contract",
+        "body": [
+            "const { Blockchain } = require('@a2a/sdk');",
+            "",
+            "const blockchain = new Blockchain();",
+            "",
+            "// Register agent on blockchain",
+            "const tx = await blockchain.registerAgent({",
+            "  name: '${1:agent-name}',",
+            "  type: '${2:agent-type}',",
+            "  stake: ${3:100}",
+            "});",
+            "",
+            "console.log('Transaction hash:', tx.hash);"
+        ],
+        "description": "Interact with A2A blockchain contracts"
+    },
+
+    "A2A Error Handler": {
+        "prefix": "a2a-error",
+        "body": [
+            "agent.on('error', (error) => {",
+            "  console.error('Agent error:', error);",
+            "  ${1:// Handle error}",
+            "});",
+            "",
+            "agent.on('disconnect', () => {",
+            "  console.log('Agent disconnected from registry');",
+            "  ${2:// Handle disconnection}",
+            "});"
+        ],
+        "description": "Add error handling to A2A agent"
+    },
+
+    "A2A Health Check": {
+        "prefix": "a2a-health",
+        "body": [
+            "// Health check endpoint",
+            "agent.addService('health', async () => {",
+            "  return {",
+            "    status: 'healthy',",
+            "    timestamp: new Date().toISOString(),",
+            "    uptime: process.uptime(),",
+            "    memory: process.memoryUsage(),",
+            "    ${1:// Additional health metrics}",
+            "  };",
+            "});"
+        ],
+        "description": "Add health check service to agent"
+    },
+
+    "A2A Configuration": {
+        "prefix": "a2a-config",
+        "body": [
+            "module.exports = {",
+            "  name: '${1:project-name}',",
+            "  version: '${2:1.0.0}',",
+            "  type: '${3:agent}',",
+            "",
+            "  agent: {",
+            "    type: '${4:data-processor}',",
+            "    capabilities: [${5:'processing'}],",
+            "    discovery: {",
+            "      enabled: true,",
+            "      interval: 30000",
+            "    }",
+            "  },",
+            "",
+            "  network: {",
+            "    retry: {",
+            "      attempts: 3,",
+            "      delay: 1000",
+            "    }",
+            "  },",
+            "",
+            "  logging: {",
+            "    level: '${6:info}',",
+            "    format: 'json'",
+            "  }",
+            "};"
+        ],
+        "description": "Create A2A configuration file"
+    },
+
+    "A2A Test Case": {
+        "prefix": "a2a-test",
+        "body": [
+            "describe('${1:Agent Name}', () => {",
+            "  let agent;",
+            "",
+            "  beforeAll(() => {",
+            "    agent = new Agent({",
+            "      name: 'test-agent',",
+            "      type: '${2:test}'",
+            "    });",
+            "  });",
+            "",
+            "  afterAll(async () => {",
+            "    await agent.stop();",
+            "  });",
+            "",
+            "  test('${3:should process data correctly}', async () => {",
+            "    const result = await agent.call('${4:service}', ${5:testData});",
+            "    expect(result).toBeDefined();",
+            "    ${6:// Add assertions}",
+            "  });",
+            "});"
+        ],
+        "description": "Create A2A agent test case"
+    }
+}

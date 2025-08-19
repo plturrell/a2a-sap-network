@@ -11,9 +11,25 @@ class BlockchainService extends BaseService {
     async initializeService() {
         const log = cds.log('blockchain-service');
         
-        // Initialize Web3
+        // Initialize Web3 with proper validation
         const { blockchain = {} } = cds.env.requires || {};
-        const rpcUrl = blockchain.rpc || process.env.BLOCKCHAIN_RPC_URL || 'http://localhost:8545';
+        const rpcUrl = blockchain.rpc || process.env.BLOCKCHAIN_RPC_URL;
+        
+        if (!rpcUrl) {
+            throw new Error('Blockchain RPC URL not configured. Set BLOCKCHAIN_RPC_URL environment variable or configure blockchain.rpc in CDS environment');
+        }
+        
+        // Validate RPC URL format and prevent localhost in production
+        if (process.env.NODE_ENV === 'production' && (rpcUrl.includes('localhost') || rpcUrl.includes('127.0.0.1'))) {
+            throw new Error('Cannot use localhost blockchain RPC URL in production environment');
+        }
+        
+        try {
+            new URL(rpcUrl); // Validate URL format
+        } catch (error) {
+            throw new Error(`Invalid blockchain RPC URL format: ${rpcUrl}`);
+        }
+        
         this.web3 = new Web3(rpcUrl);
         this.provider = new ethers.JsonRpcProvider(rpcUrl);
         
@@ -107,8 +123,12 @@ class BlockchainService extends BaseService {
                     
                     if (!address) {
                         const log = cds.log('blockchain-service');
-                        log.warn(`No deployment or env address found for contract`, { contractName: name });
-                        address = '0x' + '0'.repeat(40);
+                        log.error(`Contract address not found for ${name}`, { 
+                            contractName: name,
+                            checkedSources: ['deployments', 'environment_variables'],
+                            environment: process.env.NODE_ENV
+                        });
+                        throw new Error(`Contract ${name} address not configured. Check deployments or set ${name.toUpperCase()}_ADDRESS environment variable`);
                     }
                 }
                 
@@ -595,8 +615,22 @@ class BlockchainService extends BaseService {
     
     // Helper methods
     get defaultAccount() {
-        // In production, this should come from configuration
-        return process.env.DEFAULT_ACCOUNT || '0x' + '0'.repeat(40);
+        // Get account from secure configuration
+        const account = process.env.DEFAULT_ACCOUNT;
+        
+        if (!account) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error('DEFAULT_ACCOUNT environment variable required in production');
+            }
+            return null; // Return null instead of zero address in development
+        }
+        
+        // Validate not zero address
+        if (account === '0x' + '0'.repeat(40)) {
+            throw new Error('Cannot use zero address as default account');
+        }
+        
+        return account;
     }
 }
 

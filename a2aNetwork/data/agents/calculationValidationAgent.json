@@ -1,0 +1,17 @@
+{
+  "agentType": "calculationValidationAgent",
+  "name": "Calculation Validation Agent",
+  "address": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+  "endpoint": "http://localhost:8004",
+  "capabilities": [
+    "calculation_validation",
+    "numerical_verification",
+    "statistical_analysis",
+    "accuracy_checking",
+    "error_detection"
+  ],
+  "description": "Agent 4 - Validates calculations and numerical computations",
+  "registrationTx": "0x91a9e5c54147a9ded7d2b452130f49d77a797d6a1b70aa8274bc7c6dd45a3a29",
+  "registrationBlock": 7,
+  "registeredAt": "2025-08-19T06:02:17.655Z"
+}

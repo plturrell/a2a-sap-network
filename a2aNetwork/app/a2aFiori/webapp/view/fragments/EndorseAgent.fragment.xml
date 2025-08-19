@@ -1,0 +1,112 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:f="sap.f">
+    <Dialog
+        id="endorseAgentDialog"
+        title="Endorse Agent"
+        contentWidth="500px"
+        resizable="true"
+        draggable="true"
+        afterClose="onEndorsementCancel">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Agent Information -->
+                <Panel headerText="Agent Information" class="sapUiResponsiveMargin">
+                    <content>
+                        <form:SimpleForm 
+                            xmlns:form="sap.ui.layout.form"
+                            editable="false"
+                            layout="ResponsiveGridLayout"
+                            columnsL="2" columnsM="2">
+                            
+                            <Label text="Agent Name:" />
+                            <Text text="{endorsement>/toAgentName}" class="sapUiMediumMarginEnd" />
+                            
+                            <Label text="Agent ID:" />
+                            <Text text="{endorsement>/toAgentId}" class="sapUiMediumMarginEnd" />
+                            
+                        </form:SimpleForm>
+                    </content>
+                </Panel>
+                
+                <!-- Endorsement Details -->
+                <Panel headerText="Endorsement Details" class="sapUiResponsiveMargin">
+                    <content>
+                        <form:SimpleForm 
+                            xmlns:form="sap.ui.layout.form"
+                            editable="true"
+                            layout="ResponsiveGridLayout"
+                            columnsL="1" columnsM="1">
+                            
+                            <Label text="Endorsement Amount:" required="true" />
+                            <Slider
+                                value="{endorsement>/amount}"
+                                min="1"
+                                max="{endorsement>/maxAmount}"
+                                step="1"
+                                enableTickmarks="true"
+                                showAdvancedTooltip="true"
+                                inputsAsTooltips="true"
+                                class="sapUiMediumMarginBottom" />
+                            <HBox alignItems="Center" class="sapUiTinyMarginTop">
+                                <Text text="Amount: " />
+                                <Text text="{endorsement>/amount}" class="sapUiTinyMarginStart sapUiTinyMarginEnd" />
+                                <Text text=" points (Max: " />
+                                <Text text="{endorsement>/maxAmount}" />
+                                <Text text=")" />
+                            </HBox>
+                            
+                            <Label text="Reason:" required="true" />
+                            <Select
+                                selectedKey="{endorsement>/reason}"
+                                class="sapUiMediumMarginBottom">
+                                <items>
+                                    <core:Item key="" text="-- Please select --" />
+                                    <core:Item key="EXCELLENT_COLLABORATION" text="Excellent Collaboration" />
+                                    <core:Item key="TIMELY_ASSISTANCE" text="Timely Assistance" />
+                                    <core:Item key="HIGH_QUALITY_WORK" text="High Quality Work" />
+                                    <core:Item key="KNOWLEDGE_SHARING" text="Knowledge Sharing" />
+                                    <core:Item key="PROBLEM_SOLVING" text="Problem Solving" />
+                                    <core:Item key="INNOVATION" text="Innovation" />
+                                    <core:Item key="MENTORING" text="Mentoring" />
+                                    <core:Item key="RELIABILITY" text="Reliability" />
+                                </items>
+                            </Select>
+                            
+                            <Label text="Description (Optional):" />
+                            <TextArea
+                                value="{endorsement>/description}"
+                                placeholder="Provide additional context for this endorsement..."
+                                rows="3"
+                                maxLength="500"
+                                showExceededText="true" />
+                            
+                        </form:SimpleForm>
+                    </content>
+                </Panel>
+                
+                <!-- Warning Message -->
+                <MessageStrip
+                    text="Endorsements are permanent and will affect the agent's reputation. Please endorse responsibly."
+                    type="Information"
+                    class="sapUiMediumMarginTop" />
+                
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button
+                text="Endorse"
+                type="Emphasized"
+                press="onEndorsementConfirm"
+                enabled="{
+                    parts: [{path: 'endorsement>/reason'}, {path: 'endorsement>/amount'}],
+                    formatter: '.formatEndorsementButtonEnabled'
+                }" />
+            <Button
+                text="Cancel"
+                press="onEndorsementCancel" />
+        </buttons>
+        
+    </Dialog>
+</core:FragmentDefinition>

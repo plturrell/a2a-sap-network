@@ -1,0 +1,469 @@
+<mvc:View
+    controllerName="a2a.network.fiori.controller.CodeIntelligence"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz"
+    xmlns:layout="sap.ui.layout"
+    xmlns:f="sap.f"
+    xmlns:card="sap.f.cards"
+    xmlns="sap.m"
+    height="100%">
+    
+    <Page
+        title="{i18n>codeIntelligenceTitle}"
+        showNavButton="false"
+        enableScrolling="true"
+        class="sapUiResponsiveContentPadding">
+        
+        <content>
+            <MessageStrip
+                text="{i18n>codeIntelligenceDescription}"
+                type="Information"
+                showIcon="true"
+                class="sapUiMediumMarginBottom" />
+
+            <!-- Dashboard Header with Key Metrics -->
+            <layout:Grid
+                defaultSpan="L4 M6 S12"
+                class="sapUiMediumMarginBottom">
+                
+                <!-- Code Quality Score Card -->
+                <f:Card class="sapUiMediumMarginEnd sapUiMediumMarginBottom">
+                    <f:header>
+                        <card:Header
+                            title="{i18n>codeQualityScore}"
+                            subtitle="{i18n>overallQuality}"
+                            iconSrc="sap-icon://quality-issue" />
+                    </f:header>
+                    <f:content>
+                        <VBox class="sapUiMediumMargin">
+                            <ObjectNumber
+                                number="{dashboard>/overview/codeQualityScore}"
+                                unit="%"
+                                emphasized="true"
+                                state="{path: 'dashboard>/overview/codeQualityScore', formatter: 'formatter.qualityState'}"
+                                class="sapUiLargeMarginBottom" />
+                            <ProgressIndicator
+                                percentValue="{dashboard>/overview/codeQualityScore}"
+                                showValue="false"
+                                state="{path: 'dashboard>/overview/codeQualityScore', formatter: 'formatter.qualityState'}" />
+                        </VBox>
+                    </f:content>
+                </f:Card>
+
+                <!-- Technical Debt Card -->
+                <f:Card class="sapUiMediumMarginEnd sapUiMediumMarginBottom">
+                    <f:header>
+                        <card:Header
+                            title="{i18n>technicalDebt}"
+                            subtitle="{i18n>estimatedHours}"
+                            iconSrc="sap-icon://warning" />
+                    </f:header>
+                    <f:content>
+                        <VBox class="sapUiMediumMargin">
+                            <ObjectNumber
+                                number="{dashboard>/overview/technicalDebt}"
+                                unit="{i18n>hours}"
+                                emphasized="true"
+                                state="Warning"
+                                class="sapUiLargeMarginBottom" />
+                            <Text text="{i18n>technicalDebtDescription}" />
+                        </VBox>
+                    </f:content>
+                </f:Card>
+
+                <!-- Total Files Card -->
+                <f:Card class="sapUiMediumMarginBottom">
+                    <f:header>
+                        <card:Header
+                            title="{i18n>totalFiles}"
+                            subtitle="{i18n>analyzedFiles}"
+                            iconSrc="sap-icon://documents" />
+                    </f:header>
+                    <f:content>
+                        <VBox class="sapUiMediumMargin">
+                            <ObjectNumber
+                                number="{dashboard>/overview/totalFiles}"
+                                emphasized="true"
+                                state="None"
+                                class="sapUiLargeMarginBottom" />
+                            <Text text="{path: 'dashboard>/overview/lastUpdated', formatter: 'formatter.lastUpdatedText'}" />
+                        </VBox>
+                    </f:content>
+                </f:Card>
+            </layout:Grid>
+
+            <!-- Analysis Controls -->
+            <Panel headerText="{i18n>analysisControls}" expanded="true" class="sapUiMediumMarginBottom">
+                <content>
+                    <layout:Grid defaultSpan="L3 M6 S12" class="sapUiMediumMargin">
+                        <Label text="{i18n>analysisType}" />
+                        <Select
+                            selectedKey="{analysis>/analysisType}"
+                            change="onAnalysisTypeChange">
+                            <core:Item key="full" text="{i18n>fullAnalysis}" />
+                            <core:Item key="critical_paths" text="{i18n>criticalPaths}" />
+                            <core:Item key="circular_deps" text="{i18n>circularDependencies}" />
+                            <core:Item key="build_order" text="{i18n>buildOrder}" />
+                        </Select>
+
+                        <Label text="{i18n>includeMetrics}" />
+                        <MultiComboBox
+                            selectedKeys="{analysis>/includeMetrics}"
+                            selectionChange="onMetricSelectionChange">
+                            <core:Item key="complexity" text="{i18n>complexity}" />
+                            <core:Item key="dependencies" text="{i18n>dependencies}" />
+                            <core:Item key="duplicates" text="{i18n>duplicates}" />
+                            <core:Item key="security" text="{i18n>security}" />
+                            <core:Item key="performance" text="{i18n>performance}" />
+                        </MultiComboBox>
+
+                        <Label text="{i18n>maxDepth}" />
+                        <StepInput
+                            value="{analysis>/maxDepth}"
+                            min="1"
+                            max="10"
+                            step="1" />
+
+                        <Button
+                            text="{i18n>refreshAnalysis}"
+                            type="Emphasized"
+                            press="onRefreshAnalysis"
+                            enabled="{= !${dashboard>/isLoading}}"
+                            icon="sap-icon://refresh" />
+                    </layout:Grid>
+                </content>
+            </Panel>
+
+            <!-- Smart Code Search -->
+            <Panel headerText="{i18n>smartCodeSearch}" expanded="false" class="sapUiMediumMarginBottom">
+                <content>
+                    <VBox class="sapUiMediumMargin">
+                        <HBox class="sapUiMediumMarginBottom">
+                            <SearchField
+                                value="{search>/searchPattern}"
+                                placeholder="{i18n>searchPlaceholder}"
+                                search="onSmartSearch"
+                                width="300px"
+                                class="sapUiTinyMarginEnd" />
+                            <Select
+                                selectedKey="{search>/searchType}"
+                                width="150px">
+                                <core:Item key="semantic" text="{i18n>semanticSearch}" />
+                                <core:Item key="exact" text="{i18n>exactMatch}" />
+                                <core:Item key="fuzzy" text="{i18n>fuzzyMatch}" />
+                                <core:Item key="structural" text="{i18n>structuralMatch}" />
+                            </Select>
+                            <Button
+                                text="{i18n>search}"
+                                type="Default"
+                                press="onSmartSearch"
+                                enabled="{= !${search>/isSearching}}"
+                                icon="sap-icon://search"
+                                class="sapUiTinyMarginBegin" />
+                        </HBox>
+
+                        <!-- Search Results -->
+                        <Table
+                            items="{search>/searchResults}"
+                            visible="{= ${search>/totalResults} > 0}"
+                            mode="SingleSelection">
+                            <headerToolbar>
+                                <Toolbar>
+                                    <Title text="{i18n>searchResults} ({search>/totalResults})" />
+                                </Toolbar>
+                            </headerToolbar>
+                            <columns>
+                                <Column>
+                                    <Text text="{i18n>file}" />
+                                </Column>
+                                <Column>
+                                    <Text text="{i18n>similarity}" />
+                                </Column>
+                                <Column>
+                                    <Text text="{i18n>location}" />
+                                </Column>
+                                <Column>
+                                    <Text text="{i18n>actions}" />
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem press="onNavigateToCode">
+                                    <cells>
+                                        <Text text="{search>file}" />
+                                        <ProgressIndicator
+                                            percentValue="{path: 'search>similarity', formatter: 'formatter.percentageFromDecimal'}"
+                                            showValue="true" />
+                                        <Text text="{i18n>line} {search>startLine}" />
+                                        <Button
+                                            text="{i18n>openFile}"
+                                            type="Transparent"
+                                            press="onNavigateToCode"
+                                            icon="sap-icon://open-folder" />
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </content>
+            </Panel>
+
+            <!-- Analysis Results Tabs -->
+            <IconTabBar
+                selectedKey="complexity"
+                class="sapUiMediumMarginBottom"
+                upperCase="true">
+                
+                <!-- Complexity Analysis Tab -->
+                <items>
+                    <IconTabFilter
+                        key="complexity"
+                        text="{i18n>complexityAnalysis}"
+                        icon="sap-icon://line-chart">
+                        <content>
+                            <layout:Grid defaultSpan="L6 M12 S12">
+                                
+                                <!-- Complexity Overview -->
+                                <f:Card class="sapUiMediumMarginEnd sapUiMediumMarginBottom">
+                                    <f:header>
+                                        <card:Header
+                                            title="{i18n>complexityOverview}"
+                                            subtitle="{i18n>cyclomaticComplexity}" />
+                                    </f:header>
+                                    <f:content>
+                                        <VBox class="sapUiMediumMargin">
+                                            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                                <Text text="{i18n>averageComplexity}" />
+                                                <ObjectNumber
+                                                    number="{dashboard>/metrics/complexity/averageCyclomatic}"
+                                                    state="{path: 'dashboard>/metrics/complexity/averageCyclomatic', formatter: 'formatter.complexityState'}" />
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                                <Text text="{i18n>highComplexityFunctions}" />
+                                                <ObjectNumber
+                                                    number="{dashboard>/metrics/complexity/highComplexityFunctions}"
+                                                    state="Error" />
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Text text="{i18n>totalFunctions}" />
+                                                <ObjectNumber
+                                                    number="{dashboard>/metrics/complexity/totalFunctions}"
+                                                    state="None" />
+                                            </HBox>
+                                        </VBox>
+                                    </f:content>
+                                </f:Card>
+
+                                <!-- Complexity Chart -->
+                                <f:Card class="sapUiMediumMarginBottom">
+                                    <f:header>
+                                        <card:Header
+                                            title="{i18n>complexityTrend}"
+                                            subtitle="{i18n>last30Days}" />
+                                    </f:header>
+                                    <f:content>
+                                        <viz:Popover id="complexityChartPopover" />
+                                        <viz:VizFrame
+                                            id="complexityChart"
+                                            vizType="line"
+                                            width="100%"
+                                            height="300px">
+                                            <viz:dataset>
+                                                <viz:FlattenedDataset data="{dashboard>/charts/complexityTrend}">
+                                                    <viz:dimensions>
+                                                        <viz:DimensionDefinition name="Date" value="{date}" />
+                                                    </viz:dimensions>
+                                                    <viz:measures>
+                                                        <viz:MeasureDefinition name="Average Complexity" value="{complexity}" />
+                                                    </viz:measures>
+                                                </viz:FlattenedDataset>
+                                            </viz:dataset>
+                                        </viz:VizFrame>
+                                    </f:content>
+                                </f:Card>
+                            </layout:Grid>
+                        </content>
+                    </IconTabFilter>
+
+                    <!-- Dependency Analysis Tab -->
+                    <IconTabFilter
+                        key="dependencies"
+                        text="{i18n>dependencyAnalysis}"
+                        icon="sap-icon://tree">
+                        <content>
+                            <layout:Grid defaultSpan="L6 M12 S12">
+                                
+                                <!-- Dependency Metrics -->
+                                <f:Card class="sapUiMediumMarginEnd sapUiMediumMarginBottom">
+                                    <f:header>
+                                        <card:Header
+                                            title="{i18n>dependencyMetrics}"
+                                            subtitle="{i18n>projectDependencies}" />
+                                    </f:header>
+                                    <f:content>
+                                        <VBox class="sapUiMediumMargin">
+                                            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                                <Text text="{i18n>circularDependencies}" />
+                                                <ObjectNumber
+                                                    number="{dashboard>/metrics/dependencies/circularDependencies}"
+                                                    state="{path: 'dashboard>/metrics/dependencies/circularDependencies', formatter: 'formatter.circularDepsState'}" />
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                                <Text text="{i18n>maxDependencyDepth}" />
+                                                <ObjectNumber
+                                                    number="{dashboard>/metrics/dependencies/dependencyDepth}"
+                                                    state="None" />
+                                            </HBox>
+                                            <Button
+                                                text="{i18n>viewDependencyGraph}"
+                                                type="Default"
+                                                press="onViewDependencyGraph"
+                                                icon="sap-icon://org-chart"
+                                                class="sapUiTinyMarginTop" />
+                                        </VBox>
+                                    </f:content>
+                                </f:Card>
+
+                                <!-- Critical Paths -->
+                                <f:Card class="sapUiMediumMarginBottom">
+                                    <f:header>
+                                        <card:Header
+                                            title="{i18n>criticalPaths}"
+                                            subtitle="{i18n>importantDependencies}" />
+                                    </f:header>
+                                    <f:content>
+                                        <List items="{dashboard>/metrics/dependencies/criticalPaths}">
+                                            <StandardListItem
+                                                title="{from} → {to}"
+                                                description="{i18n>distance}: {distance}"
+                                                icon="sap-icon://chain-link"
+                                                type="Inactive" />
+                                        </List>
+                                    </f:content>
+                                </f:Card>
+                            </layout:Grid>
+                        </content>
+                    </IconTabFilter>
+
+                    <!-- Code Duplicates Tab -->
+                    <IconTabFilter
+                        key="duplicates"
+                        text="{i18n>duplicateAnalysis}"
+                        icon="sap-icon://duplicate">
+                        <content>
+                            <layout:Grid defaultSpan="L6 M12 S12">
+                                
+                                <!-- Duplicate Metrics -->
+                                <f:Card class="sapUiMediumMarginEnd sapUiMediumMarginBottom">
+                                    <f:header>
+                                        <card:Header
+                                            title="{i18n>duplicateMetrics}"
+                                            subtitle="{i18n>codeReuse}" />
+                                    </f:header>
+                                    <f:content>
+                                        <VBox class="sapUiMediumMargin">
+                                            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                                <Text text="{i18n>duplicateBlocks}" />
+                                                <ObjectNumber
+                                                    number="{dashboard>/metrics/duplicates/duplicateBlocks}"
+                                                    state="Warning" />
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Text text="{i18n>duplicatePercentage}" />
+                                                <ObjectNumber
+                                                    number="{dashboard>/metrics/duplicates/duplicatePercentage}"
+                                                    unit="%"
+                                                    state="{path: 'dashboard>/metrics/duplicates/duplicatePercentage', formatter: 'formatter.duplicateState'}" />
+                                            </HBox>
+                                        </VBox>
+                                    </f:content>
+                                </f:Card>
+
+                                <!-- Duplicate Suggestions -->
+                                <f:Card class="sapUiMediumMarginBottom">
+                                    <f:header>
+                                        <card:Header
+                                            title="{i18n>refactoringSuggestions}"
+                                            subtitle="{i18n>improvementOpportunities}" />
+                                    </f:header>
+                                    <f:content>
+                                        <List items="{dashboard>/metrics/duplicates/suggestions}">
+                                            <StandardListItem
+                                                title="{title}"
+                                                description="{description}"
+                                                icon="{path: 'automated', formatter: 'formatter.automatedIcon'}"
+                                                type="Active"
+                                                press="onExecuteRefactoring" />
+                                        </List>
+                                    </f:content>
+                                </f:Card>
+                            </layout:Grid>
+                        </content>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+
+            <!-- Recommendations and Alerts -->
+            <layout:Grid defaultSpan="L6 M12 S12">
+                
+                <!-- Recommendations -->
+                <f:Card class="sapUiMediumMarginEnd sapUiMediumMarginBottom">
+                    <f:header>
+                        <card:Header
+                            title="{i18n>recommendations}"
+                            subtitle="{i18n>improvementSuggestions}"
+                            iconSrc="sap-icon://lightbulb" />
+                    </f:header>
+                    <f:content>
+                        <List items="{dashboard>/recommendations}" mode="None">
+                            <StandardListItem
+                                title="{type}"
+                                description="{description}"
+                                info="{severity}"
+                                infoState="{path: 'severity', formatter: 'formatter.severityState'}"
+                                icon="{path: 'automated', formatter: 'formatter.automatedIcon'}"
+                                type="Active"
+                                press="onExecuteRefactoring" />
+                        </List>
+                    </f:content>
+                </f:Card>
+
+                <!-- Quality Alerts -->
+                <f:Card class="sapUiMediumMarginBottom">
+                    <f:header>
+                        <card:Header
+                            title="{i18n>qualityAlerts}"
+                            subtitle="{i18n>criticalIssues}"
+                            iconSrc="sap-icon://alert" />
+                    </f:header>
+                    <f:content>
+                        <List items="{dashboard>/alerts}" mode="None">
+                            <StandardListItem
+                                title="{message}"
+                                description="{location}"
+                                info="{severity}"
+                                infoState="{path: 'severity', formatter: 'formatter.severityState'}"
+                                icon="sap-icon://warning"
+                                type="Inactive" />
+                        </List>
+                    </f:content>
+                </f:Card>
+            </layout:Grid>
+
+            <!-- Export Controls -->
+            <Toolbar class="sapUiMediumMarginTop">
+                <ToolbarSpacer />
+                <Button
+                    text="{i18n>exportReport}"
+                    type="Default"
+                    press="onExportReport"
+                    icon="sap-icon://download" />
+            </Toolbar>
+
+        </content>
+
+        <!-- Loading Dialog -->
+        <core:Fragment fragmentName="a2a.network.fiori.view.fragments.LoadingDialog" type="XML" />
+        
+    </Page>
+</mvc:View>

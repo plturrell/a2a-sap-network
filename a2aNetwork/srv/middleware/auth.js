@@ -33,17 +33,26 @@ const sessionConfig = {
   }
 };
 
-// Environment flag to enable/disable XSUAA validation
-// SECURITY: This should always be 'true' in production
-const ENABLE_XSUAA_VALIDATION = process.env.ENABLE_XSUAA_VALIDATION !== 'false' || process.env.NODE_ENV === 'production';
+// BTP/XSUAA validation configuration
+// SECURITY: Production requires BTP mode or explicit non-BTP configuration
+const IS_BTP_ENVIRONMENT = process.env.BTP_ENVIRONMENT === 'true';
+const ALLOW_NON_BTP_AUTH = process.env.ALLOW_NON_BTP_AUTH === 'true';
 
-// Production safety check
-if (process.env.NODE_ENV === 'production' && process.env.ENABLE_XSUAA_VALIDATION === 'false') {
-  throw new Error('SECURITY ERROR: XSUAA validation MUST be enabled in production environment');
+// Production safety checks
+if (process.env.NODE_ENV === 'production') {
+  if (!IS_BTP_ENVIRONMENT && !ALLOW_NON_BTP_AUTH) {
+    throw new Error('SECURITY ERROR: Production requires either BTP_ENVIRONMENT=true or explicit ALLOW_NON_BTP_AUTH=true');
+  }
+  
+  if (ALLOW_NON_BTP_AUTH && !process.env.JWT_SECRET) {
+    throw new Error('SECURITY ERROR: JWT_SECRET must be set when using non-BTP authentication in production');
+  }
 }
 
-// Development mode check - require explicit opt-in for development auth
-const USE_DEVELOPMENT_AUTH = process.env.USE_DEVELOPMENT_AUTH === 'true' && process.env.NODE_ENV !== 'production';
+// Development mode warnings
+if (ALLOW_NON_BTP_AUTH && process.env.NODE_ENV === 'production') {
+  cds.log('auth').warn('WARNING: Running in production with non-BTP authentication mode');
+}
 
 // XSUAA JWT validation middleware
 const validateJWT = (req, res, next) => {
@@ -55,45 +64,45 @@ const validateJWT = (req, res, next) => {
   
   const token = authHeader.substring(7);
   
-  // Development mode fallback - only if explicitly enabled
-  if (USE_DEVELOPMENT_AUTH && !ENABLE_XSUAA_VALIDATION) {
-    // Log security warning for development
-    if (process.env.LOG_LEVEL !== 'silent') {
-      cds.log('auth').warn('SECURITY WARNING: Development authentication mode - NOT FOR PRODUCTION USE');
-    }
+  // Non-BTP authentication for testing outside BTP network
+  if (ALLOW_NON_BTP_AUTH && !IS_BTP_ENVIRONMENT) {
     try {
-      // Simple JWT decode for development (no signature verification)
-      const decoded = jwt.decode(token, { complete: true });
-      if (!decoded) {
-        return res.status(401).json({ error: 'Invalid token format' });
+      // Verify JWT with proper secret (not just decode)
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        throw new Error('JWT_SECRET required for non-BTP authentication');
       }
       
-      // Create mock user from token payload or use defaults
+      const decoded = jwt.verify(token, jwtSecret, { algorithms: ['HS256'] });
+      
+      if (!decoded.sub && !decoded.user_id && !decoded.id) {
+        throw new Error('Token must contain user identifier');
+      }
+      
+      // Create user from verified token
       req.user = {
-        id: decoded.payload.sub || decoded.payload.user_name || 'dev-user',
-        email: decoded.payload.email || 'developer@a2a-network.com',
-        givenName: decoded.payload.given_name || 'Developer',
-        familyName: decoded.payload.family_name || 'User',
-        roles: ['authenticated-user'], // Limited roles in dev mode
-        scopes: decoded.payload.scope ? decoded.payload.scope.split(' ') : ['user.access'],
-        tenant: decoded.payload.zid || 'local-dev',
-        zoneId: decoded.payload.zid || 'local-dev',
-        sapRoles: ['User'], // Limited SAP roles in dev mode
-        isDevelopment: true // Flag for development context
+        id: decoded.sub || decoded.user_id || decoded.id,
+        email: decoded.email || `${decoded.sub || decoded.user_id || decoded.id}@external.com`,
+        givenName: decoded.given_name || decoded.firstName || 'External',
+        familyName: decoded.family_name || decoded.lastName || 'User',
+        roles: decoded.roles || ['authenticated-user'],
+        scopes: decoded.scope ? (Array.isArray(decoded.scope) ? decoded.scope : decoded.scope.split(' ')) : ['user.access'],
+        tenant: decoded.tenant || decoded.zid || 'external',
+        zoneId: decoded.zid || 'external',
+        sapRoles: decoded.sap_roles || decoded.roles || ['User'],
+        isExternal: true // Flag for non-BTP context
       };
       
-      // Development authentication (logged to audit trail)
-      if (process.env.LOG_LEVEL === 'debug') {
-        cds.log('auth').debug(`Development authentication for user: ${req.user.id}`);
-      }
+      cds.log('auth').info(`Non-BTP authentication for user: ${req.user.id}`);
       return next();
+      
     } catch (error) {
-      cds.log('auth').error('Development JWT decode failed:', error.message);
-      return res.status(401).json({ error: 'Invalid development token' });
+      cds.log('auth').error('Non-BTP JWT validation failed:', error.message);
+      return res.status(401).json({ error: 'Invalid JWT token', details: error.message });
     }
   }
   
-  // Production XSUAA validation
+  // BTP XSUAA validation
   try {
     const xsuaaConfig = getXSUAAConfigHelper();
     
@@ -189,6 +198,23 @@ const validateAPIKey = (req, res, next) => {
   return res.status(401).json({ error: 'Invalid API key' });
 };
 
+// Development auth bypass
+function createDevelopmentUser() {
+    return {
+        id: 'dev-user',
+        name: 'Development User',
+        email: 'dev@a2a.network',
+        roles: ['authenticated-user', 'Admin', 'Developer', 'AgentManager', 'ServiceManager'],
+        sapRoles: ['authenticated-user', 'Admin', 'Developer', 'AgentManager', 'ServiceManager'],
+        scope: ['authenticated-user', 'Admin', 'Developer', 'AgentManager', 'ServiceManager'],
+        isDevelopment: true,
+        permissions: ['*'], // Full permissions in development
+        tenant: 'a2a-dev',
+        zone: 'development',
+        authType: 'development-bypass'
+    };
+}
+
 // Apply authentication middleware
 const applyAuthMiddleware = (app) => {
   // Initialize passport
@@ -197,13 +223,65 @@ const applyAuthMiddleware = (app) => {
   // API key validation for service endpoints
   app.use('/api/v1/service/*', validateAPIKey);
   
+  // SECURITY FIX: Only allow development mode bypass in development environment
+  if (process.env.USE_DEVELOPMENT_AUTH === 'true' && process.env.NODE_ENV === 'development') {
+    app.use('/api/v1/*', (req, res, next) => {
+      const log = cds.log('auth-dev');
+      log.warn(`🚀 DEVELOPMENT MODE: Bypassing authentication for ${req.originalUrl}`);
+      
+      // Always assign development user
+      req.user = createDevelopmentUser();
+      return next();
+    });
+    
+    // Also bypass for OData endpoints
+    app.use((req, res, next) => {
+      if (req.originalUrl.includes('/odata/') || req.originalUrl.includes('/api/')) {
+        req.user = req.user || createDevelopmentUser();
+      }
+      next();
+    });
+    
+    return; // Skip the normal auth setup
+  }
+  
+  // SECURITY CHECK: Prevent development auth in production
+  if (process.env.USE_DEVELOPMENT_AUTH === 'true' && process.env.NODE_ENV === 'production') {
+    throw new Error('SECURITY ERROR: Development authentication cannot be enabled in production');
+  }
+  
   // JWT validation for user endpoints
   app.use('/api/v1/*', (req, res, next) => {
+    const log = cds.log('auth-debug');
+    log.info(`Auth middleware processing: ${req.method} ${req.path}`, {
+      originalUrl: req.originalUrl,
+      query: req.query
+    });
+    
     // Skip auth for health check and public endpoints
-    if (req.path === '/health' || req.path.startsWith('/api/v1/public/')) {
+    if (req.path === '/health' || req.originalUrl.startsWith('/api/v1/public/')) {
+      log.info(`Skipping auth for health/public endpoint: ${req.originalUrl}`);
       return next();
     }
     
+    // SECURITY: All tile API endpoints must be authenticated in production
+    // Only skip authentication for true health checks and public endpoints
+    if (process.env.NODE_ENV === 'production') {
+      // No tile API bypasses allowed in production
+      log.info(`Production mode: applying auth for all API endpoints: ${req.path}`);
+    } else {
+      // Development only: Allow some tile endpoints for UI development
+      const devOnlyTileEndpoints = [
+        '/api/v1/network/health'  // Only true health check allowed
+      ];
+      const urlPath = req.originalUrl.split('?')[0];
+      if (devOnlyTileEndpoints.includes(urlPath)) {
+        log.warn(`Development only: skipping auth for ${urlPath}`);
+        return next();
+      }
+    }
+    
+    log.info(`Applying JWT validation for: ${req.path}`);
     validateJWT(req, res, next);
   });
 };

@@ -1,0 +1,47 @@
+{
+  "name": "@a2a/sdk",
+  "version": "1.0.0",
+  "description": "A2A Framework SDK for building decentralized agents",
+  "main": "index.js",
+  "module": "index.esm.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "rollup -c",
+    "test": "jest",
+    "lint": "eslint src",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "a2a",
+    "agents",
+    "blockchain",
+    "microservices",
+    "decentralized"
+  ],
+  "author": "A2A Team",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.5.0",
+    "ws": "^8.13.0",
+    "eventemitter3": "^5.0.1",
+    "uuid": "^9.0.0",
+    "joi": "^17.9.2",
+    "web3": "^4.1.0",
+    "ethers": "^6.7.1",
+    "pino": "^8.15.0"
+  },
+  "devDependencies": {
+    "jest": "^29.6.2",
+    "eslint": "^8.46.0",
+    "typescript": "^5.1.6",
+    "rollup": "^3.28.0",
+    "@rollup/plugin-node-resolve": "^15.1.0",
+    "@rollup/plugin-commonjs": "^25.0.4"
+  },
+  "files": [
+    "index.js",
+    "index.esm.js",
+    "index.d.ts",
+    "src/"
+  ]
+}

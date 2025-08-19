@@ -1,0 +1,18 @@
+{
+  "welcome": "欢迎来到A2A网络",
+  "agents": "代理",
+  "services": "服务",
+  "marketplace": "市场",
+  "dashboard": "仪表板",
+  "settings": "设置",
+  "blockchain": "区块链",
+  "contracts": "智能合约",
+  "operations": "操作",
+  "notifications": "通知",
+  "login": "登录",
+  "logout": "登出",
+  "save": "保存",
+  "cancel": "取消",
+  "search": "搜索",
+  "loading": "加载中..."
+}

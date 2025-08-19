@@ -1,0 +1,17 @@
+{
+  "agentType": "embeddingFineTuner",
+  "name": "Embedding Fine-Tuner Agent",
+  "address": "0xdF3e18d64BC6A983f673Ab319CCaE4f1a57C7097",
+  "endpoint": "http://localhost:8014",
+  "capabilities": [
+    "embedding_optimization",
+    "model_fine_tuning",
+    "vector_improvement",
+    "performance_tuning",
+    "embedding_evaluation"
+  ],
+  "description": "Agent 14 - Fine-tunes and optimizes embedding models",
+  "registrationTx": "0x4747e800abb9422b9487d4ff246a2e29f6f670c98581f2e98e2ea905a7be9740",
+  "registrationBlock": 17,
+  "registeredAt": "2025-08-19T06:02:18.400Z"
+}

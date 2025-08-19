@@ -1,0 +1,225 @@
+{
+  "name": "a2a-windsurf",
+  "displayName": "A2A Framework for Windsurf",
+  "description": "Advanced development tools for A2A agent framework in Windsurf IDE",
+  "version": "1.0.0",
+  "publisher": "a2a-framework",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Extension Packs",
+    "Snippets",
+    "Debuggers",
+    "Linters"
+  ],
+  "keywords": [
+    "a2a",
+    "agents",
+    "blockchain",
+    "windsurf",
+    "microservices"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/a2a.config.js",
+    "workspaceContains:**/package.json",
+    "onCommand:a2a.createAgent",
+    "onLanguage:javascript",
+    "onLanguage:typescript"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "a2a.createAgent",
+        "title": "Create New Agent",
+        "category": "A2A"
+      },
+      {
+        "command": "a2a.createWorkflow",
+        "title": "Create Workflow",
+        "category": "A2A"
+      },
+      {
+        "command": "a2a.deployAgent",
+        "title": "Deploy Agent",
+        "category": "A2A"
+      },
+      {
+        "command": "a2a.startDebugDashboard",
+        "title": "Open Debug Dashboard",
+        "category": "A2A"
+      },
+      {
+        "command": "a2a.validateConfig",
+        "title": "Validate Configuration",
+        "category": "A2A"
+      },
+      {
+        "command": "a2a.generateService",
+        "title": "Generate Service",
+        "category": "A2A"
+      },
+      {
+        "command": "a2a.viewAgentNetwork",
+        "title": "View Agent Network",
+        "category": "A2A"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "explorerResourceIsFolder",
+          "command": "a2a.createAgent",
+          "group": "a2a@1"
+        },
+        {
+          "when": "explorerResourceIsFolder",
+          "command": "a2a.generateService",
+          "group": "a2a@2"
+        }
+      ],
+      "editor/context": [
+        {
+          "when": "resourceExtname == .js && a2a.isA2AProject",
+          "command": "a2a.deployAgent",
+          "group": "a2a@1"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "a2a-explorer",
+          "title": "A2A Framework",
+          "icon": "$(circuit-board)"
+        }
+      ]
+    },
+    "views": {
+      "a2a-explorer": [
+        {
+          "id": "a2a.agentExplorer",
+          "name": "Agents",
+          "when": "a2a.isA2AProject"
+        },
+        {
+          "id": "a2a.networkView",
+          "name": "Network Status",
+          "when": "a2a.isA2AProject"
+        },
+        {
+          "id": "a2a.blockchainView",
+          "name": "Blockchain",
+          "when": "a2a.hasBlockchain"
+        },
+        {
+          "id": "a2a.servicesView",
+          "name": "Services",
+          "when": "a2a.isA2AProject"
+        }
+      ]
+    },
+    "snippets": [
+      {
+        "language": "javascript",
+        "path": "./snippets/a2a-javascript.json"
+      },
+      {
+        "language": "typescript",
+        "path": "./snippets/a2a-typescript.json"
+      }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": "a2a.config.json",
+        "url": "./schemas/a2a-config.schema.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "A2A Framework",
+      "properties": {
+        "a2a.autoValidate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically validate A2A configuration on save"
+        },
+        "a2a.debugPort": {
+          "type": "number",
+          "default": 8080,
+          "description": "Port for debug dashboard"
+        },
+        "a2a.registryUrl": {
+          "type": "string",
+          "default": "http://localhost:3000",
+          "description": "Default registry URL"
+        },
+        "a2a.enableLivePreview": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable live preview of agent network"
+        }
+      }
+    },
+    "debuggers": [
+      {
+        "type": "a2a-agent",
+        "label": "A2A Agent Debug",
+        "configurationAttributes": {
+          "launch": {
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Path to agent entry point"
+              },
+              "args": {
+                "type": "array",
+                "description": "Agent arguments"
+              },
+              "env": {
+                "type": "object",
+                "description": "Environment variables"
+              },
+              "registry": {
+                "type": "string",
+                "description": "Registry URL"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "taskDefinitions": [
+      {
+        "type": "a2a",
+        "required": ["task"],
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The A2A task to run"
+          },
+          "agent": {
+            "type": "string",
+            "description": "Target agent name"
+          }
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "^18.x",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "axios": "^1.5.0",
+    "ws": "^8.13.0",
+    "yaml": "^2.3.2"
+  }
+}
