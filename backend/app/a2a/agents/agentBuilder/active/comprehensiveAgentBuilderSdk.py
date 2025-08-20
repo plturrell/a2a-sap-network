@@ -38,113 +38,28 @@ import warnings
 warnings.filterwarnings('ignore', category=UserWarning)
 
 # Code analysis and generation
-try:
-    import jinja2
-    JINJA2_AVAILABLE = True
-except ImportError:
-    JINJA2_AVAILABLE = False
-
-try:
-    import yaml
-    YAML_AVAILABLE = True
-except ImportError:
-    YAML_AVAILABLE = False
+import jinja2
+import yaml
 
 # Semantic search capabilities
-try:
-    from sentence_transformers import SentenceTransformer
-    SENTENCE_TRANSFORMERS_AVAILABLE = True
-except ImportError:
-    SENTENCE_TRANSFORMERS_AVAILABLE = False
+from sentence_transformers import SentenceTransformer
 
-# Import SDK components - corrected paths
-try:
-    # Try primary SDK path
-    from ....a2a.sdk.agentBase import A2AAgentBase
-    from ....a2a.sdk.decorators import a2a_handler, a2a_skill, a2a_task
-    from ....a2a.sdk.types import A2AMessage, MessageRole
-    from ....a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
-except ImportError:
-    try:
-        # Try alternative SDK path  
-        from ....a2a_test.sdk.agentBase import A2AAgentBase
-        from ....a2a_test.sdk.decorators import a2a_handler, a2a_skill, a2a_task
-        from ....a2a_test.sdk.types import A2AMessage, MessageRole
-        from ....a2a_test.sdk.utils import create_agent_id, create_error_response, create_success_response
-    except ImportError:
-        # Fallback local SDK definitions
-        from typing import Dict, Any, Callable
-        import asyncio
-        from abc import ABC, abstractmethod
-        
-        # Create minimal base class if SDK not available
-        class A2AAgentBase(ABC):
-            def __init__(self, agent_id: str, name: str, description: str, version: str, base_url: str):
-                self.agent_id = agent_id
-                self.name = name  
-                self.description = description
-                self.version = version
-                self.base_url = base_url
-                self.skills = {}
-                self.handlers = {}
-            
-            @abstractmethod
-            async def initialize(self) -> None:
-                pass
-            
-            @abstractmethod
-            async def shutdown(self) -> None:
-                pass
-        
-        # Create fallback decorators
-        def a2a_handler(method: str):
-            def decorator(func):
-                func._a2a_handler = {'method': method}
-                return func
-            return decorator
-        
-        def a2a_skill(name: str, description: str = "", **kwargs):
-            def decorator(func):
-                func._a2a_skill = {'name': name, 'description': description, **kwargs}
-                return func
-            return decorator
-        
-        def a2a_task(name: str, description: str = "", **kwargs):
-            def decorator(func):
-                func._a2a_task = {'name': name, 'description': description, **kwargs}
-                return func
-            return decorator
-        
-        def create_agent_id():
-            return f"agent_{int(time.time())}"
-        
-        def create_error_response(message: str, code: str = "error", details: Dict[str, Any] = None):
-            return {"success": False, "error": {"message": message, "code": code, "details": details or {}}}
-        
-        def create_success_response(data: Dict[str, Any]):
-            return {"success": True, "data": data}
+# Import SDK components
+from app.a2a.sdk.agentBase import A2AAgentBase
+from app.a2a.sdk import a2a_handler, a2a_skill, a2a_task
+from app.a2a.sdk.types import A2AMessage, MessageRole
+from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
+from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 
 # Real Grok AI Integration
-try:
-    from openai import AsyncOpenAI
-    GROK_AVAILABLE = True
-except ImportError:
-    GROK_AVAILABLE = False
+from openai import AsyncOpenAI
 
 # Real Web3 Blockchain Integration
-try:
-    from web3 import Web3
-    from eth_account import Account
-    WEB3_AVAILABLE = True
-except ImportError:
-    WEB3_AVAILABLE = False
+from web3 import Web3
+from eth_account import Account
 
 # Network connectivity for cross-agent communication
-try:
-    import aiohttp
-    AIOHTTP_AVAILABLE = True
-except ImportError:
-    AIOHTTP_AVAILABLE = False
+import aiohttp
 
 # MCP integration decorators
 def mcp_tool(name: str, description: str = "", **kwargs):
@@ -223,112 +138,7 @@ class CodeGenerationPattern:
     success_rate: float = 0.0
     usage_count: int = 0
 
-class BlockchainQueueMixin:
-    """Mixin for blockchain queue message processing"""
-    
-    def __init__(self):
-        self.blockchain_queue_enabled = False
-        self.web3_client = None
-        self.account = None
-        self._initialize_blockchain()
-    
-    def _initialize_blockchain(self):
-        """Initialize blockchain connection"""
-        try:
-            if WEB3_AVAILABLE:
-                # Try to connect to blockchain
-                rpc_url = os.getenv('BLOCKCHAIN_RPC_URL', 'http://localhost:8545')
-                private_key = os.getenv('A2A_PRIVATE_KEY')
-                
-                if private_key:
-                    self.web3_client = Web3(Web3.HTTPProvider(rpc_url))
-                    self.account = Account.from_key(private_key)
-                    
-                    if self.web3_client.is_connected():
-                        self.blockchain_queue_enabled = True
-                        logger.info("Blockchain connection established")
-                    else:
-                        logger.warning("Blockchain connection failed")
-                else:
-                    logger.warning("No private key found - blockchain features disabled")
-            else:
-                logger.warning("Web3 not available - blockchain features disabled")
-        except Exception as e:
-            logger.error(f"Blockchain initialization failed: {e}")
-    
-    async def process_blockchain_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
-        """Process message from blockchain queue"""
-        try:
-            if not self.blockchain_queue_enabled:
-                return {"success": False, "error": "Blockchain not enabled"}
-            
-            # Extract message data
-            operation = message.get('operation', 'unknown')
-            data = message.get('data', {})
-            
-            # Process based on operation type
-            if operation == 'agent_deployment':
-                return await self._validate_agent_deployment_blockchain(data)
-            elif operation == 'template_consensus':
-                return await self._process_template_consensus(data)
-            elif operation == 'code_verification':
-                return await self._verify_generated_code_blockchain(data)
-            else:
-                return {"success": False, "error": f"Unknown operation: {operation}"}
-                
-        except Exception as e:
-            logger.error(f"Blockchain message processing failed: {e}")
-            return {"success": False, "error": str(e)}
-    
-    async def _validate_agent_deployment_blockchain(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Validate agent deployment via blockchain consensus"""
-        try:
-            # Simulate blockchain validation
-            validation_result = {
-                "valid": True,
-                "confidence": 0.92,
-                "consensus": True,
-                "validators": 7,
-                "deployment_hash": hashlib.sha256(str(data).encode()).hexdigest(),
-                "validation_time": time.time()
-            }
-            
-            return {"success": True, "validation": validation_result}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
-    
-    async def _process_template_consensus(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Process template consensus from multiple agents"""
-        try:
-            # Simulate template consensus processing
-            consensus_result = {
-                "consensus_reached": True,
-                "agreed_template": data.get('proposed_template', {}),
-                "voting_agents": 5,
-                "agreement_score": 0.88
-            }
-            
-            return {"success": True, "consensus": consensus_result}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
-    
-    async def _verify_generated_code_blockchain(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Verify generated code via blockchain"""
-        try:
-            # Simulate code verification
-            verification_result = {
-                "verified": True,
-                "code_quality": data.get('claimed_quality', 0.85),
-                "security_score": 0.91,
-                "verification_confidence": 0.89,
-                "verified_by": "blockchain_consensus"
-            }
-            
-            return {"success": True, "code_verification": verification_result}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
-
-class ComprehensiveAgentBuilderSDK(A2AAgentBase, BlockchainQueueMixin):
+class ComprehensiveAgentBuilderSDK(A2AAgentBase, BlockchainIntegrationMixin):
     """
     Comprehensive Agent Builder with Real AI Intelligence
     
@@ -352,10 +162,12 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase, BlockchainQueueMixin):
             version="3.0.0",
             base_url=base_url
         )
-        BlockchainQueueMixin.__init__(self)
+        BlockchainIntegrationMixin.__init__(self)
         
         # Data Manager configuration
-        self.data_manager_agent_url = "http://localhost:8001"
+        self.data_manager_agent_url = os.getenv("DATA_MANAGER_URL")
+        if not self.data_manager_agent_url:
+            raise ValueError("DATA_MANAGER_URL environment variable must be set")
         self.use_data_manager = True
         self.agent_builder_training_table = "agent_builder_training_data"
         self.template_patterns_table = "agent_template_patterns"
@@ -370,38 +182,30 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase, BlockchainQueueMixin):
         self.feature_scaler = StandardScaler()
         
         # Code generation model for intelligent template creation
-        self.embedding_model = None
-        if SENTENCE_TRANSFORMERS_AVAILABLE:
-            try:
-                self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-                logger.info("Code semantic analysis model loaded successfully")
-            except Exception as e:
-                logger.warning(f"Failed to load semantic analysis model: {e}")
+        try:
+            self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+            logger.info("Code semantic analysis model loaded successfully")
+        except Exception as e:
+            raise RuntimeError(f"Failed to load semantic analysis model: {e}")
         
         # Grok AI Integration for advanced code generation
-        self.grok_client = None
-        self.grok_available = False
-        if GROK_AVAILABLE:
-            try:
-                # Use real Grok API key from environment or codebase
-                api_key = os.getenv('GROK_API_KEY') or "xai-GjOhyMGlKR6lA3xqhc8sBjhfJNXLGGI7NvY0xbQ9ZElNkgNrIGAqjEfGUYoLhONHfzQ3bI5Rj2TjhXzO8wWTg"
-                
-                if api_key:
-                    self.grok_client = AsyncOpenAI(
-                        api_key=api_key,
-                        base_url="https://api.x.ai/v1"
-                    )
-                    self.grok_available = True
-                    logger.info("Grok AI client initialized successfully")
-            except Exception as e:
-                logger.warning(f"Grok AI initialization failed: {e}")
+        api_key = os.getenv('GROK_API_KEY')
+        if not api_key:
+            raise ValueError("GROK_API_KEY environment variable must be set")
+        
+        try:
+            self.grok_client = AsyncOpenAI(
+                api_key=api_key,
+                base_url="https://api.x.ai/v1"
+            )
+            logger.info("Grok AI client initialized successfully")
+        except Exception as e:
+            raise RuntimeError(f"Grok AI initialization failed: {e}")
         
         # Template engine setup
-        self.template_engine = None
-        if JINJA2_AVAILABLE:
-            template_loader = jinja2.FileSystemLoader(searchpath="./templates")
-            self.template_engine = jinja2.Environment(loader=template_loader)
-            logger.info("Jinja2 template engine initialized")
+        template_loader = jinja2.FileSystemLoader(searchpath="./templates")
+        self.template_engine = jinja2.Environment(loader=template_loader)
+        logger.info("Jinja2 template engine initialized")
         
         # Agent templates and patterns
         self.agent_templates = {
@@ -648,11 +452,12 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase, BlockchainQueueMixin):
             if build_options.get("include_tests", True):
                 test_results = await self._generate_agent_tests_ai(generated_code, agent_spec)
             
-            # Blockchain validation if enabled
+            # Blockchain validation (required if enabled)
             blockchain_validation = None
-            if build_options.get("enable_blockchain", True) and self.blockchain_queue_enabled:
+            if build_options.get("enable_blockchain", True):
                 self.method_performance["blockchain_validation"]["total"] += 1
-                blockchain_validation = await self._validate_agent_deployment_blockchain({
+                blockchain_validation = await self.validate_on_blockchain({
+                    "validation_type": "agent_deployment",
                     "build_id": build_id,
                     "agent_code": generated_code,
                     "quality_score": quality_assessment.get("overall_score", 0.8)
@@ -1043,7 +848,7 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase, BlockchainQueueMixin):
             
         except Exception as e:
             logger.error(f"Template selection failed: {e}")
-            return {"name": "fallback_template", "category": "general", "complexity_score": 0.5}
+            raise RuntimeError(f"Failed to select template: {str(e)}")
     
     async def _generate_agent_code_ai(self, agent_spec: Dict[str, Any], template: Dict[str, Any], build_options: Dict[str, Any]) -> str:
         """Generate agent code using AI"""
@@ -1069,11 +874,10 @@ from datetime import datetime
 from dataclasses import dataclass
 
 # Import SDK components
-from app.a2a.sdk import (
-    A2AAgentBase, a2a_handler, a2a_skill, a2a_task,
-    A2AMessage, MessageRole, create_agent_id
-)
-from app.a2a.sdk.utils import create_error_response, create_success_response
+from app.a2a.sdk.agentBase import A2AAgentBase
+from app.a2a.sdk import a2a_handler, a2a_skill, a2a_task
+from app.a2a.sdk.types import A2AMessage, MessageRole
+from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
 
 logger = logging.getLogger(__name__)
 
@@ -1354,10 +1158,9 @@ class {class_name}(A2AAgentBase):
     async def store_training_data(self, data_type: str, data: Dict[str, Any]) -> bool:
         """Store training data via Data Manager agent"""
         try:
-            if not self.use_data_manager:
-                # Store in memory as fallback
-                self.training_data.setdefault(data_type, []).append(data)
-                return True
+            # Data Manager is required
+            if not self.data_manager_agent_url:
+                raise RuntimeError("Data Manager URL not configured - cannot store training data")
             
             # Prepare request for Data Manager
             request_data = {
@@ -1366,54 +1169,47 @@ class {class_name}(A2AAgentBase):
                 "data_type": data_type
             }
             
-            # Send to Data Manager (will fail gracefully if not running)
-            if AIOHTTP_AVAILABLE:
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(
-                        f"{self.data_manager_agent_url}/store_data",
-                        json=request_data,
-                        timeout=aiohttp.ClientTimeout(total=5)
-                    ) as response:
-                        if response.status == 200:
-                            return True
-                        else:
-                            # Fallback to memory storage
-                            self.training_data.setdefault(data_type, []).append(data)
-                            return True
-            else:
-                # Fallback to memory storage
-                self.training_data.setdefault(data_type, []).append(data)
-                return True
+            # Send to Data Manager
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{self.data_manager_agent_url}/store_data",
+                    json=request_data,
+                    timeout=aiohttp.ClientTimeout(total=5)
+                ) as response:
+                    if response.status == 200:
+                        return True
+                    else:
+                        logger.error(f"Data Manager storage failed with status {response.status}")
+                        return False
                         
         except Exception as e:
-            logger.warning(f"Data Manager storage failed, using memory: {e}")
-            # Always fallback to memory storage
-            self.training_data.setdefault(data_type, []).append(data)
-            return True
+            logger.error(f"Data Manager storage failed: {e}")
+            return False
     
     async def get_training_data(self, data_type: str) -> List[Dict[str, Any]]:
         """Retrieve training data via Data Manager agent"""
         try:
-            if not self.use_data_manager:
-                return self.training_data.get(data_type, [])
+            # Data Manager is required
+            if not self.data_manager_agent_url:
+                raise RuntimeError("Data Manager URL not configured - cannot retrieve training data")
             
-            # Try to fetch from Data Manager first
-            if AIOHTTP_AVAILABLE:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(
-                        f"{self.data_manager_agent_url}/get_data/{self.agent_builder_training_table}",
-                        params={"data_type": data_type},
-                        timeout=aiohttp.ClientTimeout(total=5)
-                    ) as response:
-                        if response.status == 200:
-                            data = await response.json()
-                            return data.get("data", [])
+            # Fetch from Data Manager
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"{self.data_manager_agent_url}/get_data/{self.agent_builder_training_table}",
+                    params={"data_type": data_type},
+                    timeout=aiohttp.ClientTimeout(total=5)
+                ) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data.get("data", [])
+                    else:
+                        logger.error(f"Data Manager retrieval failed with status {response.status}")
+                        return []
                     
         except Exception as e:
-            logger.warning(f"Data Manager retrieval failed, using memory: {e}")
-        
-        # Fallback to memory
-        return self.training_data.get(data_type, [])
+            logger.error(f"Data Manager retrieval failed: {e}")
+            return []
     
     # Additional helper methods
     
@@ -1457,17 +1253,16 @@ class {class_name}(A2AAgentBase):
     async def _test_connections(self):
         """Test connections to external services"""
         try:
-            # Test Data Manager connection
-            if self.use_data_manager and AIOHTTP_AVAILABLE:
-                try:
-                    async with aiohttp.ClientSession() as session:
-                        async with session.get(f"{self.data_manager_agent_url}/health", timeout=aiohttp.ClientTimeout(total=2)) as response:
-                            if response.status == 200:
-                                logger.info("✅ Data Manager connection successful")
-                            else:
-                                logger.warning("⚠️ Data Manager connection failed")
-                except:
-                    logger.warning("⚠️ Data Manager not responding (training data will be memory-only)")
+            # Test Data Manager connection (required)
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(f"{self.data_manager_agent_url}/health", timeout=aiohttp.ClientTimeout(total=2)) as response:
+                        if response.status == 200:
+                            logger.info("✅ Data Manager connection successful")
+                        else:
+                            logger.warning("⚠️ Data Manager connection failed")
+            except Exception as e:
+                logger.error(f"Data Manager not responding: {e}")
             
             logger.info("Connection tests complete")
         except Exception as e:
@@ -1561,7 +1356,13 @@ class {class_name}(A2AAgentBase):
 if __name__ == "__main__":
     # Test the agent
     async def test_agent():
-        agent = ComprehensiveAgentBuilderSDK("http://localhost:8000")
+        base_url = os.getenv("A2A_BASE_URL")
+        if not base_url:
+            raise ValueError("A2A_BASE_URL environment variable must be set")
+        data_manager_url = os.getenv("DATA_MANAGER_URL")
+        if not data_manager_url:
+            raise ValueError("DATA_MANAGER_URL environment variable must be set")
+        agent = ComprehensiveAgentBuilderSDK(base_url)
         await agent.initialize()
         print("✅ Comprehensive Agent Builder test successful")
     
