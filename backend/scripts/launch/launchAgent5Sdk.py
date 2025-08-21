@@ -33,6 +33,12 @@ from app.a2a.core.telemetry import setup_telemetry
 from app.a2a.core.authManager import AuthManager
 from prometheus_client import start_http_server, Counter, Histogram, Gauge
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
@@ -74,9 +80,9 @@ async def lifespan(app: FastAPI):
         
         # Initialize agent with A2A integration
         agent_instance = await initialize_agent(
-            base_url=config.get('base_url', 'http://localhost:8007'),
-            data_manager_url=config.get('data_manager_url', 'http://localhost:8001'),
-            catalog_manager_url=config.get('catalog_manager_url', 'http://localhost:8002'),
+            base_url=config.get('base_url', os.getenv("A2A_SERVICE_URL")),
+            data_manager_url=config.get('data_manager_url', "os.getenv("DATA_MANAGER_URL")"),
+            catalog_manager_url=config.get('catalog_manager_url', "os.getenv("CATALOG_MANAGER_URL")"),
             cache_ttl=config.get('cache_ttl', 3600),
             max_tests_per_product=config.get('max_tests_per_product', 50)
         )

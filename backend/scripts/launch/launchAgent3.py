@@ -40,10 +40,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Configuration
 AGENT3_PORT = int(os.getenv("AGENT3_PORT", "8004"))
 AGENT3_HOST = os.getenv("AGENT3_HOST", "0.0.0.0")
-AGENT2_URL = os.getenv("AGENT2_URL", "http://localhost:8003")
+AGENT2_URL = os.getenv("AGENT2_URL", "os.getenv("AGENT_MANAGER_URL")")
 
 
 @asynccontextmanager
@@ -55,7 +61,7 @@ async def lifespan(app: FastAPI):
     
     try:
         # Initialize Agent 3
-        base_url = f"http://{AGENT3_HOST}:{AGENT3_PORT}"
+        base_url = f"https://{AGENT3_HOST}:{AGENT3_PORT}"
         agent3 = VectorProcessingAgent(
             base_url=base_url,
             agent_id="vector_processing_agent_3"
@@ -81,7 +87,7 @@ async def lifespan(app: FastAPI):
             agent_registration = {
                 "agent_id": "vector_processing_agent_3",
                 "agent_card": agent_card,
-                "service_endpoint": f"http://{AGENT3_HOST}:{AGENT3_PORT}",
+                "service_endpoint": f"https://{AGENT3_HOST}:{AGENT3_PORT}",
                 "capabilities": {
                     "vector_database_ingestion": True,
                     "knowledge_graph_construction": True, 

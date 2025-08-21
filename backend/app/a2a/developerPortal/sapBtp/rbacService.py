@@ -3,6 +3,19 @@ Role-Based Access Control (RBAC) Service for SAP BTP Integration
 Provides comprehensive user authorization and permission management
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import json
 import jwt
@@ -14,8 +27,8 @@ import logging
 from pydantic import BaseModel, Field
 from fastapi import HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-import httpx
-
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 logger = logging.getLogger(__name__)
 
 security = HTTPBearer()

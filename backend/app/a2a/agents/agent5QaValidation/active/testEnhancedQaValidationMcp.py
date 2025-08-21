@@ -13,6 +13,12 @@ import time
 import random
 from datetime import datetime
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -39,7 +45,7 @@ async def test_enhanced_qa_validation_agent():
         
         # Create agent
         agent = EnhancedQAValidationAgentMCP(
-            base_url="http://localhost:8005",
+            base_url=os.getenv("A2A_SERVICE_URL"),
             enable_monitoring=False,  # Disable for testing
             enable_semantic_validation=True,
             enable_websocket_manager=True
@@ -221,8 +227,8 @@ async def test_enhanced_qa_validation_agent():
                 "question": f"Sample question {i}?",
                 "expected_answer": f"Answer {i}",
                 "actual_answer": f"Response {i}",
-                "difficulty": random.choice(["easy", "medium", "hard"]),
-                "question_type": random.choice(["factual", "inferential", "comparative"]),
+                "difficulty": secrets.choice(["easy", "medium", "hard"]),
+                "question_type": secrets.choice(["factual", "inferential", "comparative"]),
                 "complexity_score": random.uniform(0.1, 1.0)
             }
             sample_test_cases.append(test_case)

@@ -1,4 +1,10 @@
-"""
+"
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
+""
 Standalone API Gateway Server for A2A Network
 """
 
@@ -56,9 +62,9 @@ app = FastAPI(
 # CORS middleware with secure configuration
 # CRITICAL SECURITY: Never use "*" for origins when credentials are allowed
 allowed_origins = os.getenv("CORS_ORIGINS", "").split(",") if os.getenv("CORS_ORIGINS") else [
-    "http://localhost:3000",  # Default development frontend
-    "http://localhost:8080",  # Alternative dev port
-    "http://127.0.0.1:3000",  # localhost alternative
+    "os.getenv("A2A_FRONTEND_URL")",  # Default development frontend
+    "os.getenv("A2A_GATEWAY_URL")",  # Alternative dev port
+    os.getenv("A2A_SERVICE_URL"),  # localhost alternative
 ]
 
 app.add_middleware(

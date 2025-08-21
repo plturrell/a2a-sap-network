@@ -12,6 +12,12 @@ import time
 import random
 from datetime import datetime
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -34,7 +40,7 @@ async def test_enhanced_vector_processing_agent():
         
         # Create agent (without HANA for testing)
         agent = EnhancedVectorProcessingAgentMCP(
-            base_url="http://localhost:8003",
+            base_url=os.getenv("AGENT_MANAGER_URL"),
             hana_config=None,  # No HANA for testing
             enable_monitoring=False  # Disable for testing
         )
@@ -275,7 +281,7 @@ async def test_enhanced_vector_processing_agent():
         for i in range(100):
             if i % 10 == 0:
                 # Every 10th vector is corrupted
-                vec_type = random.choice(["zero", "extreme", "corrupted"])
+                vec_type = secrets.choice(["zero", "extreme", "corrupted"])
                 corrupted_vectors.append(create_test_vector(vector_type=vec_type))
             else:
                 corrupted_vectors.append(create_test_vector("normal"))

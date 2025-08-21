@@ -1,3 +1,4 @@
+import os
 """
 Comprehensive test suite for Enhanced Agent Manager
 Tests MCP integration and validates 100/100 score improvements
@@ -10,6 +11,12 @@ from datetime import datetime, timedelta
 
 from .enhancedAgentManagerAgent import EnhancedAgentManagerAgent, AgentStatus, WorkflowStatus, TrustLevel
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 
 class EnhancedAgentManagerTest:
     """Test suite for Enhanced Agent Manager"""
@@ -81,7 +88,7 @@ class EnhancedAgentManagerTest:
             registration_result = await self.agent_manager.call_mcp_tool("advanced_agent_registration", {
                 "agent_id": "test_agent_1",
                 "agent_name": "Test Agent 1",
-                "base_url": "http://localhost:8001",
+                "base_url": os.getenv("DATA_MANAGER_URL"),
                 "capabilities": {
                     "data_processing": True,
                     "vector_operations": True,
@@ -300,7 +307,7 @@ class EnhancedAgentManagerTest:
         try:
             # Test health check with detailed metrics
             health_result = await self.agent_manager.call_mcp_tool("comprehensive_health_check", {
-                "base_url": "http://localhost:8000",  # Self-check
+                "base_url": os.getenv("A2A_BASE_URL"),  # Self-check
                 "timeout_seconds": 10,
                 "detailed_metrics": True,
                 "performance_tests": False  # Skip for test

@@ -21,6 +21,12 @@ from a2a_network.python_sdk.blockchain import get_blockchain_client, initialize_
 from a2a_network.python_sdk.blockchain.agent_adapter import create_blockchain_adapter
 from app.a2a.core.a2aTypes import A2AMessage
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -46,7 +52,7 @@ AGENT2_PORT = int(os.getenv("AGENT2_PORT", "8003"))
 AGENT2_HOST = os.getenv("AGENT2_HOST", "0.0.0.0")
 
 # A2A Network blockchain configuration
-A2A_RPC_URL = os.getenv("A2A_RPC_URL", "http://localhost:8545")
+A2A_RPC_URL = os.getenv("A2A_RPC_URL", "os.getenv("A2A_RPC_URL", os.getenv("BLOCKCHAIN_RPC_URL"))")
 A2A_AGENT_PRIVATE_KEY = os.getenv("A2A_AGENT2_PRIVATE_KEY")
 
 # Initialize the agent (will be created after blockchain setup)

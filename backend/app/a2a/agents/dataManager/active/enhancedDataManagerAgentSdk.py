@@ -94,6 +94,10 @@ from app.a2a.core.asyncPatterns import (
 # Import network services
 from app.a2a.network import get_network_connector, get_registration_service, get_messaging_service
 
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
+
 logger = logging.getLogger(__name__)
 
 

@@ -119,6 +119,10 @@ class HANAVectorEngine:
         try:
             # Import HANA driver
             import hdbcli.dbapi as hana_driver
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             
             # Create connection
             self._connection = hana_driver.connect(

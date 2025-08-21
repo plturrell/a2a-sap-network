@@ -1,3 +1,14 @@
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
 #!/usr/bin/env python3
 """
 Production deployment script for Context Engineering Agent
@@ -26,6 +37,12 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 from contextEngineering.contextEngineeringAgent import ContextEngineeringAgent
 from a2aCommon import A2AMessage, MessageRole
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -47,7 +64,7 @@ class ContextAgentDeployment:
         config = {
             # Base configuration
             "agent_id": os.getenv("CONTEXT_AGENT_ID", "context_engineering_agent"),
-            "base_url": os.getenv("CONTEXT_AGENT_URL", "http://localhost:8090"),
+            "base_url": os.getenv("CONTEXT_AGENT_URL"),
             "port": int(os.getenv("CONTEXT_AGENT_PORT", "8090")),
             "host": os.getenv("CONTEXT_AGENT_HOST", "0.0.0.0"),
             
@@ -66,8 +83,8 @@ class ContextAgentDeployment:
             "embedding_model": os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
             
             # Integration settings
-            "agent_manager_url": os.getenv("AGENT_MANAGER_URL", "http://localhost:8080"),
-            "registry_url": os.getenv("REGISTRY_URL", "http://localhost:8081"),
+            "agent_manager_url": os.getenv("AGENT_MANAGER_URL", "os.getenv("A2A_GATEWAY_URL")"),
+            "registry_url": os.getenv("REGISTRY_URL"),
             
             # Performance settings
             "workers": int(os.getenv("WORKERS", "4")),
@@ -129,7 +146,8 @@ class ContextAgentDeployment:
         if self.config.get("agent_manager_url"):
             try:
                 import aiohttp
-                async with aiohttp.ClientSession() as session:
+                async with # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
+        # aiohttp\.ClientSession() as session:
                     async with session.get(
                         f"{self.config['agent_manager_url']}/health",
                         timeout=aiohttp.ClientTimeout(total=5)

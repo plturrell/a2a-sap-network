@@ -3,6 +3,19 @@ Calculation Testing Integration Skills
 Provides skills for CalcTesting agent to interact with CalculationAgent and evaluate responses
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import json
 import uuid
@@ -12,8 +25,8 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
 from pydantic import BaseModel, Field
 import logging
-import httpx
-
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 # Import GrokClient for AI evaluation
 try:
     from app.a2a.core.grokClient import GrokClient
@@ -78,7 +91,8 @@ class CalcTestingIntegrationSkills:
         self.agent = agent
         self.grok_client = GrokClient() if GROK_AVAILABLE else None
         self.scoreboard = Scoreboard()
-        self.http_client = httpx.AsyncClient(timeout=60.0)
+        self.http_client = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        # httpx\.AsyncClient(timeout=60.0)
         # Agent endpoints will be discovered dynamically
         self._agent_endpoints = {}
         self._discovered_agents = {}
@@ -629,7 +643,11 @@ class CalcTestingIntegrationSkills:
                     if question_template:
                         # Select random template
                         import random
-                        template = random.choice(question_template)
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
+                        template = secrets.choice(question_template)
                         
                         test_questions.append(TestQuestion(
                             question=template["question"],

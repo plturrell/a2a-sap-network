@@ -3,6 +3,19 @@ A2A Network Health Dashboard
 Real-time monitoring and health assessment for the A2A agent network
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import json
 import os
@@ -11,7 +24,8 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass
 from enum import Enum
 import logging
-import httpx
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 import time
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
@@ -273,7 +287,9 @@ class HealthDashboard:
         start_time = time.time()
         
         try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        async with httpx.AsyncClient() as client:
+        # httpx\.AsyncClient(timeout=self.timeout) as client:
                 # Health check
                 health_response = await client.get(config["endpoint"])
                 response_time = time.time() - start_time

@@ -3,6 +3,19 @@ Enhanced Project Data Models for A2A Developer Portal
 Connects to real data sources and provides comprehensive project management
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import json
 import os
@@ -17,8 +30,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy import create_engine, Column, String, DateTime, Text, JSON, Integer, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
-import httpx
-
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 logger = logging.getLogger(__name__)
 
 Base = declarative_base()

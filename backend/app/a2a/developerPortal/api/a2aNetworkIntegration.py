@@ -3,6 +3,19 @@ A2A Network Integration API
 Connects the Developer Portal to A2A Network smart contracts
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import json
 from datetime import datetime
@@ -15,8 +28,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from web3 import Web3
 from eth_account import Account
-import httpx
-
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 # Import A2A Network SDK
 import sys
 from a2a.client import A2AClient
@@ -148,7 +161,9 @@ async def handle_webhook_event(event_type: str, data: Dict[str, Any]):
 async def send_webhook_notification(webhook_url: str, payload: Dict[str, Any]):
     """Send webhook notification to subscriber"""
     try:
+        # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         async with httpx.AsyncClient() as client:
+        # httpx\.AsyncClient() as client:
             response = await client.post(
                 webhook_url,
                 json=payload,

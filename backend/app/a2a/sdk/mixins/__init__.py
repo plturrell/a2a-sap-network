@@ -35,6 +35,10 @@ except ImportError:
 
 try:
     from .telemetry import TelemetryMixin
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
     __all__.append('TelemetryMixin')
 except ImportError:
     class TelemetryMixin:

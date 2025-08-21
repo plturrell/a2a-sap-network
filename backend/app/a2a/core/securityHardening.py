@@ -521,9 +521,12 @@ class SecurityHardeningManager:
         """Encrypt sensitive data"""
         try:
             # Simple encryption for demo (use proper encryption in production)
-            self.config["encryption_key"]
+            encryption_key = self.config["encryption_key"]
             # In production, use proper encryption like AES
-            return base64.b64encode(data.encode()).decode()
+            # For now, using base64 as placeholder with key validation
+            if encryption_key:
+                return base64.b64encode(data.encode()).decode()
+            return data
         except Exception as e:
             logger.error(f"Encryption error: {e}")
             return data

@@ -34,7 +34,7 @@ async def launch_sql_agent(port: int = 8150, host: str = "0.0.0.0"):
     logger.info("=" * 80)
     
     # Create base URL
-    base_url = f"http://{host}:{port}"
+    base_url = f"https://{host}:{port}"
     
     # Initialize agent
     logger.info(f"📡 Initializing SQL Agent on {base_url}")

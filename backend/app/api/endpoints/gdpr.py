@@ -3,6 +3,19 @@ GDPR Compliance API Endpoints
 Implements GDPR-specific data protection features
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from pydantic import BaseModel, Field, EmailStr
@@ -306,7 +319,8 @@ async def process_data_subject_request(
         gdpr_manager = get_gdpr_manager()
         
         # Get request details
-        request = gdpr_manager.subject_requests.get(request_id)
+        request = gdpr_manager.subject_# WARNING: requests.get usage violates A2A protocol - must use blockchain messaging
+        # requests\.get(request_id)
         if not request:
             raise HTTPException(status_code=404, detail="Request not found")
         

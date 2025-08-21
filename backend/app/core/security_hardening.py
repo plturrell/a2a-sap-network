@@ -874,7 +874,7 @@ class SecurityHardeningFramework:
                 Permission.SYSTEM_CONFIG
             },
             authentication_methods=[AuthenticationMethod.JWT_TOKEN, AuthenticationMethod.API_KEY],
-            password="change_me_in_production"
+            password = os.getenv("PASSWORD", "")
         )
         
         # Agent service account

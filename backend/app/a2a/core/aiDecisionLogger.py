@@ -806,7 +806,6 @@ class AIDecisionRegistry:
         # Analyze cross-agent patterns
         # ... (pattern analysis logic similar to single-agent but across agents)
 
-        import logging
         module_logger = logging.getLogger(__name__)
         module_logger.info(
             f"Analyzed {len(all_decisions)} decisions across {len(self.agent_loggers)} agents"

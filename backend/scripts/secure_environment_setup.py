@@ -322,6 +322,10 @@ class SecureEnvironmentSetup:
             for key, value in secure_config.items():
                 # Replace the line that starts with this key
                 import re
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
                 pattern = f"^{key}=.*$"
                 replacement = f"{key}={value}"
                 env_content = re.sub(pattern, replacement, env_content, flags=re.MULTILINE)

@@ -1368,7 +1368,7 @@ class MCPValidationTools:
         examples = {
             "email": ["user@example.com", "test.email+tag@domain.co.uk"],
             "phone": ["+1-555-123-4567", "(555) 123-4567"],
-            "url": ["https://example.com", "http://subdomain.example.org/path"],
+            "url": ["https://example.com", "https://subdomain.example.org/path"],
             "date_iso": ["2023-12-25", "2024-01-01"],
             "uuid": ["123e4567-e89b-12d3-a456-426614174000"]
         }

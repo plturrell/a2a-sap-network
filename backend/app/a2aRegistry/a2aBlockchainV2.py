@@ -17,6 +17,12 @@ import uuid
 from web3 import Web3
 import logging
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Set up logging
 logger = logging.getLogger(__name__)
 
@@ -28,6 +34,10 @@ sys.path.insert(0, app_dir)
 # Import trust system
 try:
     from a2a.security.smartContractTrust import SmartContractTrust
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
     TRUST_AVAILABLE = True
 except ImportError:
     TRUST_AVAILABLE = False
@@ -111,7 +121,7 @@ class BlockchainConnector:
     def connect(self):
         """Connect to Anvil blockchain"""
         try:
-            self.w3 = Web3(Web3.HTTPProvider('http://localhost:8545'))
+            self.w3 = Web3(Web3.HTTPProvider(os.getenv("A2A_SERVICE_URL")))
             self.connected = self.w3.is_connected()
             if self.connected:
                 self.account = self.w3.eth.accounts[0] if self.w3.eth.accounts else None

@@ -1,3 +1,4 @@
+import os
 #!/usr/bin/env python3
 """
 Create Business Data Cloud A2A Smart Contract Project
@@ -20,6 +21,12 @@ from app.a2a.developer_portal.models.project_models import (
     DeploymentStatus, ProjectMetrics, ProjectDependency, DeploymentConfig
 )
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 class BDCProjectCreator:
     """Creates the Business Data Cloud A2A smart contract project"""
     
@@ -36,7 +43,7 @@ class BDCProjectCreator:
                 "name": "Data Product Registration Agent",
                 "description": "Handles data product registration with Dublin Core compliance",
                 "type": "DataProductAgent",
-                "endpoint": "http://localhost:8003",
+                "endpoint": "os.getenv("AGENT_MANAGER_URL")",
                 "capabilities": [
                     "data_product_registration",
                     "dublin_core_metadata", 
@@ -60,7 +67,7 @@ class BDCProjectCreator:
                 "name": "Data Standardization Agent",
                 "description": "Standardizes data across multiple formats and schemas",
                 "type": "DataStandardizationAgent",
-                "endpoint": "http://localhost:8004",
+                "endpoint": os.getenv("A2A_SERVICE_URL"),
                 "capabilities": [
                     "data_standardization",
                     "schema_validation",
@@ -85,7 +92,7 @@ class BDCProjectCreator:
                 "name": "AI Preparation Agent", 
                 "description": "Prepares data for AI processing with semantic enrichment",
                 "type": "AIPreparationAgent",
-                "endpoint": "http://localhost:8005",
+                "endpoint": os.getenv("A2A_SERVICE_URL"),
                 "capabilities": [
                     "semantic_enrichment",
                     "grok_api_integration",
@@ -109,7 +116,7 @@ class BDCProjectCreator:
                 "name": "Vector Processing Agent",
                 "description": "Handles vector embeddings and knowledge graph operations", 
                 "type": "VectorProcessingAgent",
-                "endpoint": "http://localhost:8008",
+                "endpoint": os.getenv("A2A_SERVICE_URL"),
                 "capabilities": [
                     "vector_embeddings",
                     "knowledge_graph",
@@ -133,7 +140,7 @@ class BDCProjectCreator:
                 "name": "Calculation Validation Agent",
                 "description": "Validates computational results using template-based testing",
                 "type": "CalcValidationAgent", 
-                "endpoint": "http://localhost:8006",
+                "endpoint": os.getenv("A2A_SERVICE_URL"),
                 "capabilities": [
                     "template_based_testing",
                     "computation_validation",
@@ -157,7 +164,7 @@ class BDCProjectCreator:
                 "name": "QA Validation Agent",
                 "description": "Performs factuality testing using SimpleQA methodology",
                 "type": "QAValidationAgent",
-                "endpoint": "http://localhost:8007", 
+                "endpoint": os.getenv("A2A_SERVICE_URL"), 
                 "capabilities": [
                     "simpleqa_testing",
                     "ord_discovery",
@@ -185,7 +192,7 @@ class BDCProjectCreator:
                 "name": "Data Manager Agent",
                 "description": "Central data management with HANA and SQLite integration",
                 "type": "DataManagerAgent",
-                "endpoint": "http://localhost:8001",
+                "endpoint": "os.getenv("DATA_MANAGER_URL")",
                 "capabilities": [
                     "data_storage",
                     "hana_integration", 
@@ -198,7 +205,7 @@ class BDCProjectCreator:
                 "name": "Catalog Manager Agent", 
                 "description": "Service discovery and catalog management",
                 "type": "CatalogManagerAgent",
-                "endpoint": "http://localhost:8002",
+                "endpoint": "os.getenv("CATALOG_MANAGER_URL")",
                 "capabilities": [
                     "service_discovery",
                     "catalog_management",
@@ -211,7 +218,7 @@ class BDCProjectCreator:
                 "name": "Agent Manager",
                 "description": "Workflow orchestration and agent coordination",
                 "type": "AgentManagerAgent", 
-                "endpoint": "http://localhost:8000",
+                "endpoint": "os.getenv("A2A_BASE_URL")",
                 "capabilities": [
                     "workflow_orchestration",
                     "agent_coordination",
@@ -306,8 +313,8 @@ class BDCProjectCreator:
                 "A2A_PROTOCOL_VERSION": "0.2.9",
                 "SMART_CONTRACT_NETWORK": "ethereum",
                 "TRUST_CONTRACT_ID": "bdc_a2a_trust_v1",
-                "DATA_MANAGER_URL": "http://localhost:8001", 
-                "CATALOG_MANAGER_URL": "http://localhost:8002"
+                "DATA_MANAGER_URL": "os.getenv("DATA_MANAGER_URL")", 
+                "CATALOG_MANAGER_URL": "os.getenv("CATALOG_MANAGER_URL")"
             },
             resource_limits={
                 "memory": "2Gi",
@@ -406,12 +413,12 @@ class BDCProjectCreator:
     def _generate_complete_workflow_bpmn(self) -> str:
         """Generate BPMN XML for complete A2A workflow"""
         return """<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
-                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
-                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
-                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+<bpmn:definitions xmlns:bpmn="https://www.omg.org/spec/BPMN/20100524/MODEL" 
+                  xmlns:bpmndi="https://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="https://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="https://www.omg.org/spec/DD/20100524/DI"
                   id="complete_a2a_workflow"
-                  targetNamespace="http://bpmn.io/schema/bpmn">
+                  targetNamespace="https://bpmn.io/schema/bpmn">
   <bpmn:process id="CompleteA2AWorkflow" name="Complete A2A Data Processing" isExecutable="true">
     
     <bpmn:startEvent id="start_event" name="Data Input">
@@ -482,9 +489,9 @@ class BDCProjectCreator:
     def _generate_smart_contract_workflow_bpmn(self) -> str:
         """Generate BPMN XML for smart contract integration workflow"""
         return """<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+<bpmn:definitions xmlns:bpmn="https://www.omg.org/spec/BPMN/20100524/MODEL"
                   id="smart_contract_integration_workflow"
-                  targetNamespace="http://bpmn.io/schema/bpmn">
+                  targetNamespace="https://bpmn.io/schema/bpmn">
   <bpmn:process id="SmartContractIntegration" name="Smart Contract Integration" isExecutable="true">
     
     <bpmn:startEvent id="start_contract" name="Agent Deployment">

@@ -20,6 +20,12 @@ from a2a_network.python_sdk.blockchain.agent_adapter import create_blockchain_ad
 from a2a_network.python_sdk.blockchain.ord_blockchain_adapter import create_ord_blockchain_adapter
 from app.a2a.agents.catalog_manager_agent import create_catalog_manager_agent
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -46,7 +52,7 @@ CATALOG_MANAGER_HOST = os.getenv("CATALOG_MANAGER_HOST", "0.0.0.0")
 ORD_REGISTRY_URL = os.getenv("ORD_REGISTRY_URL", "http://localhost:8000/api/v1/ord")
 
 # A2A Network blockchain configuration
-A2A_RPC_URL = os.getenv("A2A_RPC_URL", "http://localhost:8545")
+A2A_RPC_URL = os.getenv("A2A_RPC_URL", "os.getenv("A2A_RPC_URL", os.getenv("BLOCKCHAIN_RPC_URL"))")
 A2A_AGENT_PRIVATE_KEY = os.getenv("A2A_CATALOG_MANAGER_PRIVATE_KEY")
 
 # Catalog Manager configuration
@@ -55,7 +61,7 @@ CATALOG_MANAGER_CONFIG = {
     "name": "Catalog Manager Agent",
     "description": "AI-powered ORD repository management with advanced metadata enhancement",
     "version": "1.0.0",
-    "base_url": f"http://{CATALOG_MANAGER_HOST}:{CATALOG_MANAGER_PORT}",
+    "base_url": f"https://{CATALOG_MANAGER_HOST}:{CATALOG_MANAGER_PORT}",
     "capabilities": [
         "ord_repository_management",
         "ai_metadata_enhancement", 
@@ -66,10 +72,10 @@ CATALOG_MANAGER_CONFIG = {
         "multi_model_ai"
     ],
     "endpoints": {
-        "agent_card": f"http://{CATALOG_MANAGER_HOST}:{CATALOG_MANAGER_PORT}/a2a/catalog_manager/v1/.well-known/agent.json",
-        "rpc": f"http://{CATALOG_MANAGER_HOST}:{CATALOG_MANAGER_PORT}/a2a/catalog_manager/v1/rpc",
-        "message": f"http://{CATALOG_MANAGER_HOST}:{CATALOG_MANAGER_PORT}/a2a/catalog_manager/v1/message",
-        "health": f"http://{CATALOG_MANAGER_HOST}:{CATALOG_MANAGER_PORT}/a2a/catalog_manager/v1/health"
+        "agent_card": f"https://{CATALOG_MANAGER_HOST}:{CATALOG_MANAGER_PORT}/a2a/catalog_manager/v1/.well-known/agent.json",
+        "rpc": f"https://{CATALOG_MANAGER_HOST}:{CATALOG_MANAGER_PORT}/a2a/catalog_manager/v1/rpc",
+        "message": f"https://{CATALOG_MANAGER_HOST}:{CATALOG_MANAGER_PORT}/a2a/catalog_manager/v1/message",
+        "health": f"https://{CATALOG_MANAGER_HOST}:{CATALOG_MANAGER_PORT}/a2a/catalog_manager/v1/health"
     }
 }
 
@@ -90,7 +96,7 @@ async def startup_event():
         logger.info(f"✅ Connected to A2A Network: {blockchain_client.agent_identity.address}")
         
         # Initialize Catalog Manager agent
-        base_url = f"http://{CATALOG_MANAGER_HOST}:{CATALOG_MANAGER_PORT}"
+        base_url = f"https://{CATALOG_MANAGER_HOST}:{CATALOG_MANAGER_PORT}"
         catalog_manager = create_catalog_manager_agent(
             base_url=base_url,
             ord_registry_url=ORD_REGISTRY_URL

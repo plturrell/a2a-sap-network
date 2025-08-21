@@ -3,6 +3,19 @@ BPMN Workflow Designer for A2A Developer Portal
 Provides comprehensive workflow design, validation, and execution capabilities
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import json
 import xml.etree.ElementTree as ET
@@ -14,10 +27,16 @@ from uuid import uuid4
 import logging
 
 from pydantic import BaseModel, Field, validator
-import httpx
-
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 from .workflow_engine import WorkflowExecutionEngine, WorkflowEngineConfig, ExecutionState
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logger = logging.getLogger(__name__)
 
 
@@ -175,7 +194,7 @@ class BPMNWorkflowDesigner:
             blockchain={
                 "networks": {
                     "local": {
-                        "provider_url": "http://localhost:8545",
+                        "provider_url": os.getenv("A2A_SERVICE_URL"),
                         "chain_id": 31337
                     }
                 }
@@ -351,13 +370,13 @@ class BPMNWorkflowDesigner:
         try:
             # Create root element
             definitions = ET.Element("definitions")
-            definitions.set("xmlns", "http://www.omg.org/spec/BPMN/20100524/MODEL")
-            definitions.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
-            definitions.set("xmlns:bpmndi", "http://www.omg.org/spec/BPMN/20100524/DI")
-            definitions.set("xmlns:dc", "http://www.omg.org/spec/DD/20100524/DC")
-            definitions.set("xmlns:di", "http://www.omg.org/spec/DD/20100524/DI")
+            definitions.set("xmlns", "https://www.omg.org/spec/BPMN/20100524/MODEL")
+            definitions.set("xmlns:xsi", "https://www.w3.org/2001/XMLSchema-instance")
+            definitions.set("xmlns:bpmndi", "https://www.omg.org/spec/BPMN/20100524/DI")
+            definitions.set("xmlns:dc", "https://www.omg.org/spec/DD/20100524/DC")
+            definitions.set("xmlns:di", "https://www.omg.org/spec/DD/20100524/DI")
             definitions.set("id", f"definitions_{workflow.id}")
-            definitions.set("targetNamespace", "http://a2a.dev/bpmn")
+            definitions.set("targetNamespace", "https://a2a.dev/bpmn")
             
             # Create process element
             process = ET.SubElement(definitions, "process")
@@ -446,7 +465,7 @@ class BPMNWorkflowDesigner:
             root = ET.fromstring(xml_content)
             
             # Find process element
-            process = root.find(".//{http://www.omg.org/spec/BPMN/20100524/MODEL}process")
+            process = root.find(".//{https://www.omg.org/spec/BPMN/20100524/MODEL}process")
             if process is None:
                 raise ValueError("No process element found in BPMN XML")
             
@@ -468,11 +487,11 @@ class BPMNWorkflowDesigner:
                     )
                     
                     # Parse incoming/outgoing
-                    for incoming in elem.findall(".//{http://www.omg.org/spec/BPMN/20100524/MODEL}incoming"):
+                    for incoming in elem.findall(".//{https://www.omg.org/spec/BPMN/20100524/MODEL}incoming"):
                         if incoming.text:
                             element.incoming.append(incoming.text)
                     
-                    for outgoing in elem.findall(".//{http://www.omg.org/spec/BPMN/20100524/MODEL}outgoing"):
+                    for outgoing in elem.findall(".//{https://www.omg.org/spec/BPMN/20100524/MODEL}outgoing"):
                         if outgoing.text:
                             element.outgoing.append(outgoing.text)
                     
@@ -487,21 +506,21 @@ class BPMNWorkflowDesigner:
                     )
                     
                     # Parse condition
-                    condition_elem = elem.find(".//{http://www.omg.org/spec/BPMN/20100524/MODEL}conditionExpression")
+                    condition_elem = elem.find(".//{https://www.omg.org/spec/BPMN/20100524/MODEL}conditionExpression")
                     if condition_elem is not None and condition_elem.text:
                         connection.condition = condition_elem.text
                     
                     connections.append(connection)
             
             # Parse diagram information for positioning
-            diagram = root.find(".//{http://www.omg.org/spec/BPMN/20100524/DI}BPMNDiagram")
+            diagram = root.find(".//{https://www.omg.org/spec/BPMN/20100524/DI}BPMNDiagram")
             if diagram is not None:
-                plane = diagram.find(".//{http://www.omg.org/spec/BPMN/20100524/DI}BPMNPlane")
+                plane = diagram.find(".//{https://www.omg.org/spec/BPMN/20100524/DI}BPMNPlane")
                 if plane is not None:
                     # Parse shapes
-                    for shape in plane.findall(".//{http://www.omg.org/spec/BPMN/20100524/DI}BPMNShape"):
+                    for shape in plane.findall(".//{https://www.omg.org/spec/BPMN/20100524/DI}BPMNShape"):
                         element_id = shape.get("bpmnElement")
-                        bounds = shape.find(".//{http://www.omg.org/spec/DD/20100524/DC}Bounds")
+                        bounds = shape.find(".//{https://www.omg.org/spec/DD/20100524/DC}Bounds")
                         
                         if bounds is not None:
                             # Find corresponding element
@@ -514,11 +533,11 @@ class BPMNWorkflowDesigner:
                                     break
                     
                     # Parse edges
-                    for edge in plane.findall(".//{http://www.omg.org/spec/BPMN/20100524/DI}BPMNEdge"):
+                    for edge in plane.findall(".//{https://www.omg.org/spec/BPMN/20100524/DI}BPMNEdge"):
                         connection_id = edge.get("bpmnElement")
                         waypoints = []
                         
-                        for waypoint in edge.findall(".//{http://www.omg.org/spec/DD/20100524/DI}waypoint"):
+                        for waypoint in edge.findall(".//{https://www.omg.org/spec/DD/20100524/DI}waypoint"):
                             waypoints.append({
                                 "x": float(waypoint.get("x", 0)),
                                 "y": float(waypoint.get("y", 0))

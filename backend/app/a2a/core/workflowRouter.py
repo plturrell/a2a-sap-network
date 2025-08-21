@@ -19,6 +19,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../../a2aNetwork'))
 from trustSystem.service import TrustSystemService
 from registry.service import ORDRegistryService as A2ARegistryService
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/a2a/workflows", tags=["A2A Workflow Orchestration"])
@@ -89,7 +95,7 @@ def get_registry_service() -> Optional[A2ARegistryService]:
     """Get A2A registry service if available"""
     try:
         # Use default base URL for registry service
-        base_url = "http://localhost:8000"  # Default registry URL
+        base_url = os.getenv("A2A_SERVICE_URL")  # Default registry URL
         return A2ARegistryService(base_url=base_url)
     except Exception as e:
         logger.warning(f"Registry service unavailable: {e}")

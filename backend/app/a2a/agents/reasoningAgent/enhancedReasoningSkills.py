@@ -630,7 +630,7 @@ class EnhancedReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
                     probs = pheromone_matrix[curr, :]
                     if probs.sum() > 0:
                         probs = probs / probs.sum()
-                        next_pos = np.random.choice(10, p=probs)
+                        next_pos = np.secrets.choice(10, p=probs)
                         new_position[i] = next_pos / 9.0
             agent.position = new_position
     
@@ -1682,6 +1682,10 @@ class EnhancedReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
         # Try Grok-4 first for intelligent dialectical synthesis
         try:
             from .grokReasoning import GrokReasoning
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             grok = GrokReasoning()
             
             # Prepare dialectical arguments for Grok-4

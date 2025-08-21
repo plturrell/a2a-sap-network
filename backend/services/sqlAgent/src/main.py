@@ -3,6 +3,12 @@ Main entry point for SQL Agent
 A2A Microservice for SQL operations and database management
 """
 
+import warnings
+
+# Suppress warnings about unrecognized blockchain networks from eth_utils
+warnings.filterwarnings("ignore", message="Network 345 with name 'Yooldo Verse Mainnet'")
+warnings.filterwarnings("ignore", message="Network 12611 with name 'Astar zkEVM'")
+
 import asyncio
 import logging
 import os
@@ -12,24 +18,20 @@ from datetime import datetime
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-sys.path.append('../shared')
-sys.path.append('../../shared')
+# Add the shared directory to Python path for a2aCommon imports
+shared_path = os.path.join(os.path.dirname(__file__), '..', '..', 'shared')
+sys.path.insert(0, os.path.abspath(shared_path))
 
 # Try to import the agent, fallback to simple service if not available
-try:
-    from agent import SQLAgent
-    from a2aCommon.microservice.baseService import A2AMicroservice
-    AGENT_AVAILABLE = True
-except ImportError as e:
-    print(f"Agent import failed: {e}. Running in simple mode.")
-    AGENT_AVAILABLE = False
+from agent import SQLAgent
+AGENT_AVAILABLE = True
 
 logger = logging.getLogger(__name__)
 
 # Global agent instance
 agent_instance = None
 
-if AGENT_AVAILABLE:
+if True:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         """Manage application lifecycle"""
@@ -38,10 +40,18 @@ if AGENT_AVAILABLE:
         # Startup
         logger.info("Starting SQL Agent service...")
         
-        # Initialize agent
-        base_url = os.getenv("A2A_AGENT_URL", "http://localhost:8009")
-        agent_manager_url = os.getenv("A2A_MANAGER_URL", "http://localhost:8000")
-        downstream_agent_url = os.getenv("A2A_DOWNSTREAM_URL", "http://localhost:8010")
+        # Initialize agent - REQUIRE environment variables for A2A compliance
+        base_url = os.getenv("A2A_AGENT_URL")
+        if not base_url:
+            raise ValueError("A2A_AGENT_URL environment variable is required for A2A protocol compliance")
+        
+        agent_manager_url = os.getenv("A2A_MANAGER_URL") or os.getenv("A2A_BASE_URL")
+        if not agent_manager_url:
+            raise ValueError("A2A_MANAGER_URL or A2A_BASE_URL environment variable is required")
+        
+        downstream_agent_url = os.getenv("A2A_DOWNSTREAM_URL") or os.getenv("A2A_AGENT_MANAGER_URL")
+        if not downstream_agent_url:
+            raise ValueError("A2A_DOWNSTREAM_URL or A2A_AGENT_MANAGER_URL environment variable is required")
         
         try:
             agent_instance = SQLAgent(
@@ -69,12 +79,12 @@ if AGENT_AVAILABLE:
         logger.info("SQL Agent service shut down")
 
     # Create FastAPI app with A2A microservice base
-    app = A2AMicroservice(
+    app = FastAPI(
         title="SQL Agent",
         description="A2A Microservice for SQL operations and database management",
         version="3.0.0",
         lifespan=lifespan
-    ).app
+    )
 else:
     # Simple FastAPI app when agent is not available
     app = FastAPI(
@@ -103,7 +113,7 @@ async def health():
             "note": "Running without A2A agent (missing dependencies)"
         }
 
-if AGENT_AVAILABLE:
+if True:
     @app.get("/stats")
     async def get_stats():
         """Get SQL operation statistics"""

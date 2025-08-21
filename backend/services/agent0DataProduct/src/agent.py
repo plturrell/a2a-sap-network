@@ -3,6 +3,19 @@ Data Product Registration Agent - SDK Version
 Agent 0: Enhanced with A2A SDK for simplified development and maintenance
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import json
 import os
@@ -14,15 +27,19 @@ import hashlib
 from uuid import uuid4
 
 import sys
-sys.path.append('../shared')
+import os
+# Add the shared directory to Python path for a2aCommon imports
+shared_path = os.path.join(os.path.dirname(__file__), '..', '..', 'shared')
+sys.path.insert(0, os.path.abspath(shared_path))
 
 from a2aCommon import (
     A2AAgentBase, a2a_handler, a2a_skill, a2a_task,
     A2AMessage, MessageRole
 )
 from a2aCommon.sdk.utils import create_success_response, create_error_response, create_agent_id
-from app.a2a.core.workflowContext import workflowContextManager
-from app.a2a.core.workflowMonitor import workflow_monitor
+# Workflow imports commented out - need to be properly installed
+# from app.a2a.core.workflowContext import workflowContextManager
+# from app.a2a.core.workflowMonitor import workflow_monitor
 from a2aCommon.security.smartContractTrust import sign_a2a_message
 from a2aCommon.security.delegationContracts import DelegationAction
 from a2aCommon.skills.accountStandardizer import AccountStandardizer
@@ -431,20 +448,9 @@ class DataProductRegistrationAgentSDK(A2AAgentBase):
     async def _register_ord_descriptor(self, ord_descriptor: Dict[str, Any]) -> Dict[str, Any]:
         """Register ORD descriptor with registry"""
         try:
-            import httpx
-            
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    f"{self.ord_registry_url}/api/v1/ord/register",
-                    json=ord_descriptor,
-                    timeout=30
-                )
-                
-                if response.status_code == 201:
-                    return response.json()
-                else:
-                    raise Exception(f"Registration failed: {response.status_code}")
-                    
+            # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+            # Temporarily disabled until blockchain messaging is implemented
+            raise NotImplementedError("ORD registration disabled - must use blockchain messaging")
         except Exception as e:
             logger.error(f"ORD registration failed: {e}")
             raise

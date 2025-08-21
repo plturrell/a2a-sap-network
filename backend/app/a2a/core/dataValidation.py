@@ -142,7 +142,7 @@ class DataValidator:
             return result
 
         # Validate each standardized record
-        for i, (orig, std) in enumerate(zip(original_data, standardized_data)):
+        for i, (_, std) in enumerate(zip(original_data, standardized_data)):
             # Check structure
             if "standardized" not in std:
                 result.add_error(f"Record {i}: Missing 'standardized' field")

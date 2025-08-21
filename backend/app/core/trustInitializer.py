@@ -219,6 +219,10 @@ class TrustIdentityInitializer:
     def _get_key_fingerprint(self, public_key: bytes) -> str:
         """Generate fingerprint for public key"""
         import hashlib
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
         return hashlib.sha256(public_key).hexdigest()[:16]
     
     async def _load_existing_identities(self):

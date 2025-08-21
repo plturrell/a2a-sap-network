@@ -19,6 +19,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.a2a.agents.agent_manager_agent import AgentManagerAgent
 from app.a2a.agents import agent_manager_router
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -33,7 +39,7 @@ async def create_agent_manager_app():
     # Initialize the Agent Manager
     agent_id = "agent_manager"
     agent_name = "Agent Manager"
-    base_url = "http://localhost:8005"
+    base_url = os.getenv("A2A_AGENT_BASE_URL", os.getenv("SERVICE_BASE_URL"))
     
     # Agent Manager capabilities
     capabilities = {

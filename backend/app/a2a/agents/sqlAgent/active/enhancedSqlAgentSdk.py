@@ -63,6 +63,10 @@ from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 # Import enhanced SQL skills
 try:
     from .enhancedSQLSkills import EnhancedSQLSkills
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
     ENHANCED_SQL_SKILLS_AVAILABLE = True
 except ImportError:
     ENHANCED_SQL_SKILLS_AVAILABLE = False
@@ -244,6 +248,9 @@ class EnhancedSqlAgentSDK(A2AAgentBase, BlockchainIntegrationMixin):
         """Initialize agent with AI intelligence components"""
         logger.info(f"Initializing {self.name} with AI Intelligence Framework...")
         
+        # Establish standard trust relationships FIRST
+        await self.establish_standard_trust_relationships()
+        
         # Initialize AI components
         await self.ai_framework.initialize()
         
@@ -259,7 +266,20 @@ class EnhancedSqlAgentSDK(A2AAgentBase, BlockchainIntegrationMixin):
         # Set up query monitoring
         await self._setup_query_monitoring()
         
-        logger.info(f"{self.name} initialized successfully with AI intelligence")
+        # Discover relevant agents for SQL processing collaboration
+        available_agents = await self.discover_agents(
+            capabilities=["data_validation", "calculation_validation", "qa_validation", "quality_control"],
+            agent_types=["validation", "analysis", "data_processing"]
+        )
+        
+        # Store discovered agents for collaborative SQL processing
+        self.collaborative_agents = {
+            "validation_agents": [agent for agent in available_agents if "validation" in agent.get("capabilities", [])],
+            "data_agents": [agent for agent in available_agents if "data" in agent.get("agent_type", "")],
+            "analysis_agents": [agent for agent in available_agents if "analysis" in agent.get("capabilities", [])]
+        }
+        
+        logger.info(f"{self.name} initialized successfully with AI intelligence and {len(available_agents)} collaborative agents")
 
     async def shutdown(self) -> None:
         """Cleanup with AI intelligence preservation"""
@@ -371,6 +391,36 @@ class EnhancedSqlAgentSDK(A2AAgentBase, BlockchainIntegrationMixin):
             
             # Update statistics
             self._update_query_stats(optimization_result)
+            
+            # Store query result in data_manager
+            await self.store_agent_data(
+                data_type="nl2sql_conversion",
+                data={
+                    "query_id": f"query_{datetime.utcnow().timestamp()}",
+                    "original_query": nl_query,
+                    "sql_query": optimization_result.sql_query,
+                    "confidence_score": optimization_result.confidence_score,
+                    "query_type": optimization_result.query_type,
+                    "optimization_applied": optimization_result.optimization_suggestions,
+                    "security_level": query_context.security_level,
+                    "performance_metrics": optimization_result.performance_metrics
+                },
+                metadata={
+                    "domain": query_context.domain,
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            )
+            
+            # Update agent status with agent_manager
+            await self.update_agent_status(
+                status="active",
+                details={
+                    "last_query_processed": nl_query[:100] + "..." if len(nl_query) > 100 else nl_query,
+                    "total_queries_processed": self.query_stats.get("total_queries", 0),
+                    "average_confidence": self.query_stats.get("average_confidence", 0.0),
+                    "active_capabilities": ["nl2sql", "sql_optimization", "security_analysis"]
+                }
+            )
             
             return create_success_response({
                 "query_id": f"query_{datetime.utcnow().timestamp()}",

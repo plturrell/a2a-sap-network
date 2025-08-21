@@ -3,12 +3,26 @@ Authentication Manager for Platform Integrations
 Handles OAuth2, token caching, and refresh logic
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import json
 import time
 from typing import Dict, Optional, Any
 from datetime import datetime
 import logging
-import httpx
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -95,48 +109,54 @@ class OAuth2Client:
         return token_data["access_token"]
 
     async def _request_token(self, refresh_token: Optional[str] = None) -> Dict[str, Any]:
-        """Request new token from OAuth2 server"""
-        async with httpx.AsyncClient() as client:
-            data = {"client_id": self.client_id, "client_secret": self.client_secret}
+        """Request new token from OAuth2 server via A2A blockchain messaging"""
+        # A2A Protocol Compliance: Use blockchain messaging for OAuth2 token requests
+        from .networkClient import A2ANetworkClient
+        
+        network_client = A2ANetworkClient(agent_id="auth_manager")
+        
+        token_request = {
+            "operation": "oauth2_token_request",
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "token_url": self.token_url,
+            "grant_type": "refresh_token" if refresh_token else "client_credentials",
+            "refresh_token": refresh_token,
+            "scope": self.scope,
+            "timestamp": datetime.utcnow().isoformat()
+        }
 
-            if refresh_token:
-                data["grant_type"] = "refresh_token"
-                data["refresh_token"] = refresh_token
-            else:
-                data["grant_type"] = "client_credentials"
-                if self.scope:
-                    data["scope"] = self.scope
+        try:
+            response = await network_client.send_a2a_message(
+                to_agent="oauth_proxy_agent",
+                message=token_request,
+                message_type="OAUTH2_TOKEN_REQUEST"
+            )
+            
+            if not response or response.get('error'):
+                error_msg = f"OAuth2 token request failed via blockchain: {response.get('error', 'Unknown error')}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
+            
+            token_data = response.get("token_data", {})
+            
+            if not token_data.get("access_token"):
+                raise RuntimeError("No access token received from OAuth2 proxy agent")
 
-            try:
-                response = await client.post(
-                    self.token_url,
-                    data=data,
-                    headers={"Content-Type": "application/x-www-form-urlencoded"},
-                    timeout=30.0,
-                )
-                response.raise_for_status()
+            # Cache the token
+            self.token_cache.set_token(
+                self.cache_key,
+                token_data["access_token"],
+                token_data.get("expires_in", 3600),
+                token_data.get("refresh_token"),
+            )
 
-                token_data = response.json()
+            logger.info(f"✅ Successfully obtained OAuth2 token for {self.cache_key} via blockchain")
+            return token_data
 
-                # Cache the token
-                self.token_cache.set_token(
-                    self.cache_key,
-                    token_data["access_token"],
-                    token_data.get("expires_in", 3600),
-                    token_data.get("refresh_token"),
-                )
-
-                logger.info(f"Successfully obtained OAuth2 token for {self.cache_key}")
-                return token_data
-
-            except httpx.HTTPStatusError as e:
-                logger.error(
-                    f"OAuth2 token request failed: {e.response.status_code} - {e.response.text}"
-                )
-                raise
-            except Exception as e:
-                logger.error(f"OAuth2 token request error: {e}")
-                raise
+        except Exception as e:
+            logger.error(f"❌ OAuth2 token request error via blockchain: {e}")
+            raise RuntimeError(f"OAuth2 token request failed: {e}")
 
 
 class BasicAuthClient:

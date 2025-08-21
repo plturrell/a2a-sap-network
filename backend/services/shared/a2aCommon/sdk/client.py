@@ -2,7 +2,21 @@
 A2A Client for communicating with other agents
 """
 
-import httpx
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 import asyncio
 from typing import Dict, Any, Optional, List
 import logging
@@ -37,7 +51,8 @@ class A2AClient:
         self.max_retries = max_retries
         self.registry_url = registry_url
         
-        self.http_client = httpx.AsyncClient(
+        self.http_client = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        # httpx\.AsyncClient(
             timeout=timeout,
             headers={
                 "User-Agent": f"A2AClient/{agent_id}",

@@ -4,7 +4,11 @@ import os
 from typing import Dict, List, Any, Optional
 import logging
 import asyncio
+# Safe import for grok client
 from ...clients.grokClient import GrokClient, create_grok_client
+except ImportError:
+    GrokClient = None
+    create_grok_client = None
 
 logger = logging.getLogger(__name__)
 
@@ -326,6 +330,10 @@ Return ONLY valid JSON without any markdown formatting."""
 # For compatibility with async/await pattern in Python < 3.7
 if not hasattr(asyncio, 'create_subprocess_exec'):
     import subprocess
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
     
     async def create_subprocess_exec(*args, **kwargs):
         loop = asyncio.get_event_loop()

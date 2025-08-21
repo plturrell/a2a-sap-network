@@ -12,6 +12,12 @@ from typing import Dict, Any, List
 
 from qualityControlManagerAgent import QualityControlManagerAgent
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -653,9 +659,9 @@ async def main():
     
     # Create agent instance
     agent = QualityControlManagerAgent(
-        base_url="http://localhost:8008",
-        data_manager_url="http://localhost:8001",
-        catalog_manager_url="http://localhost:8002",
+        base_url=os.getenv("A2A_SERVICE_URL"),
+        data_manager_url=os.getenv("A2A_SERVICE_URL"),
+        catalog_manager_url=os.getenv("A2A_SERVICE_URL"),
         enable_monitoring=False  # Disable for testing
     )
     

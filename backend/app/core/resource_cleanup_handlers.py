@@ -249,6 +249,10 @@ class ResourceCleanupManager:
         """Force garbage collection and log memory usage"""
         try:
             import psutil
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             process = psutil.Process()
             memory_before = process.memory_info().rss / 1024 / 1024  # MB
             

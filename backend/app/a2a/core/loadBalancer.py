@@ -259,7 +259,7 @@ class AgentLoadBalancer:
         if not instances:
             return None
 
-        return random.choice(instances)
+        return secrets.choice(instances)
 
     def _ip_hash_select(
         self, instances: List[AgentInstance], client_ip: Optional[str]

@@ -266,7 +266,7 @@ class EmbeddingPatternMatcher:
         clusters = defaultdict(list)
         
         # Initialize cluster centers randomly
-        indices = np.random.choice(len(texts), min(num_clusters, len(texts)), replace=False)
+        indices = np.secrets.choice(len(texts), min(num_clusters, len(texts)), replace=False)
         centers = embeddings[indices]
         
         # Assign texts to nearest cluster

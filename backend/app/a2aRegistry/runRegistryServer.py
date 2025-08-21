@@ -13,10 +13,24 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from datetime import datetime
 
-# Set up Python path
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
+# Set up Python path - add both parent and current dir
 current_dir = os.path.dirname(os.path.abspath(__file__))
-app_dir = os.path.dirname(current_dir)
-sys.path.insert(0, app_dir)
+parent_dir = os.path.dirname(current_dir)
+grandparent_dir = os.path.dirname(parent_dir)
+
+# Add paths in correct order
+if grandparent_dir not in sys.path:
+    sys.path.insert(0, grandparent_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
 
 # Global registry instance
 registry_service = None
@@ -33,23 +47,25 @@ async def lifespan(app: FastAPI):
     try:
         # Try to import trust system from correct location
         try:
-            from a2a.core.trustManager import TrustManager
+            from app.a2a.core.trustManager import TrustManager
             trust_system = TrustManager()
             print("✅ Trust system initialized (using TrustManager)")
         except:
             # Fallback to direct import
-            sys.path.insert(0, os.path.join(app_dir, "a2a", "core"))
-            from trustManager import TrustManager
-            trust_system = TrustManager()
-            print("✅ Trust system initialized (using direct import)")
+            try:
+                from a2a.core.trustManager import TrustManager
+                trust_system = TrustManager()
+                print("✅ Trust system initialized (using direct import)")
+            except:
+                print("⚠️ Trust system not available, continuing without trust integration")
+                trust_system = None
     except Exception as e:
         print(f"⚠️ Trust system failed: {e}")
         trust_system = None
     
     # Initialize registry with trust integration
     try:
-        # Import locally to avoid circular imports
-        sys.path.append(current_dir)
+        # Import directly since we've set up the path correctly
         from service import A2ARegistryService
         
         registry_service = A2ARegistryService(
@@ -100,7 +116,7 @@ async def register_blockchain_agents():
         agent1_card = AgentCard(
             name="Blockchain Financial Agent",
             description="On-chain financial analysis and portfolio management",
-            url="http://localhost:3000",
+            url=os.getenv("A2A_SERVICE_URL"),
             version="1.0.0",
             protocolVersion="0.2.9",
             provider=AgentProvider(
@@ -148,7 +164,7 @@ async def register_blockchain_agents():
         agent2_card = AgentCard(
             name="Blockchain Message Agent",
             description="On-chain message routing and communication",
-            url="http://localhost:3001",
+            url=os.getenv("A2A_SERVICE_URL"),
             version="1.0.0",
             protocolVersion="0.2.9",
             provider=AgentProvider(
@@ -344,7 +360,7 @@ if __name__ == "__main__":
     print("🚀 Starting Trust-Aware A2A Registry Server...")
     print("   • Blockchain: Anvil (localhost:8545)")
     print("   • Registry: Trust-aware agent discovery")
-    print("   • Server: http://localhost:8080")
+    print("   • Server: http://localhost:8000")
     
     uvicorn.run(
         app,

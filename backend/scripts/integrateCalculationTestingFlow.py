@@ -14,7 +14,7 @@ import logging
 # Set up blockchain contract addresses from deployment with correct prefix
 os.environ['A2A_AGENT_REGISTRY_ADDRESS'] = '0x5FbDB2315678afecb367f032d93F642f64180aa3'
 os.environ['A2A_MESSAGE_ROUTER_ADDRESS'] = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512'
-os.environ['A2A_NETWORK_RPC_URL'] = 'http://localhost:8545'
+os.environ['A2A_NETWORK_RPC_URL'] = "os.getenv("A2A_RPC_URL", os.getenv("BLOCKCHAIN_RPC_URL"))"
 os.environ['A2A_NETWORK_CHAIN_ID'] = '31337'
 os.environ['A2A_NETWORK'] = 'localhost'
 
@@ -40,6 +40,12 @@ from app.a2a.agents.dataManager.active.dataManagerAgentSdk import DataManagerAge
 # Import trust system
 from trustSystem.smartContractTrust import SmartContractTrust, initialize_agent_trust
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -56,9 +62,9 @@ class CalculationTestingIntegrator:
         logger.info("🚀 Initializing agents for calculation testing flow...")
         
         # Get agent URLs from environment or use localhost for local development
-        calc_validation_url = os.getenv("CALC_VALIDATION_AGENT_URL", "http://localhost:8004")
-        calculation_agent_url = os.getenv("CALCULATION_AGENT_URL", "http://localhost:8007")
-        data_manager_url = os.getenv("DATA_MANAGER_URL", "http://localhost:8001")
+        calc_validation_url = os.getenv("CALC_VALIDATION_AGENT_URL")
+        calculation_agent_url = os.getenv("CALCULATION_AGENT_URL")
+        data_manager_url = os.getenv("DATA_MANAGER_URL", "os.getenv("DATA_MANAGER_URL")")
         
         # Initialize CalcValidation Agent (Agent 4)
         calc_validation_agent = CalcValidationAgentSDK(

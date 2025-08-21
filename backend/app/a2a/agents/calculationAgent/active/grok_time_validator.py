@@ -319,6 +319,10 @@ class GrokRealTimeValidator:
     def _generate_cache_key(self, query: str, result: Any) -> str:
         """Generate cache key for validation result"""
         import hashlib
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
         cache_string = f"{query}:{str(result)}"
         return hashlib.md5(cache_string.encode()).hexdigest()
     

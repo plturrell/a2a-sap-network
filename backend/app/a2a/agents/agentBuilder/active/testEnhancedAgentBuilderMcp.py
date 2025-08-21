@@ -25,7 +25,7 @@ os.environ['PROMETHEUS_PORT'] = '8019'
 
 # Sample BPMN XML for testing
 SAMPLE_BPMN_XML = '''<?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL">
+<definitions xmlns="https://www.omg.org/spec/BPMN/20100524/MODEL">
   <process id="sample_workflow" name="Sample Workflow">
     <startEvent id="start" name="Start"/>
     <serviceTask id="task1" name="Process Data" implementation="data_processor"/>
@@ -70,7 +70,7 @@ async def test_enhanced_agent_builder():
         
         # Create agent
         agent = EnhancedAgentBuilderMCP(
-            base_url="http://localhost:8019",
+            base_url=os.getenv("A2A_SERVICE_URL"),
             templates_path=temp_dir,
             enable_monitoring=False,  # Disable for testing
             enable_advanced_validation=True,
@@ -165,6 +165,12 @@ import asyncio
 import json
 from app.a2a.sdk import A2AAgentBase, a2a_handler, a2a_skill, a2a_task
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 class SampleAgent(A2AAgentBase):
     """Sample agent for testing"""
     

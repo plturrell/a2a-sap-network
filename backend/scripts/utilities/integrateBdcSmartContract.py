@@ -31,6 +31,12 @@ from app.a2a.agents.catalogManager.active.catalogManagerAgentSdk import CatalogM
 # Import project creator
 from create_bdc_a2a_project import BDCProjectCreator
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -74,7 +80,7 @@ class BDCSmartContractIntegrator:
             try:
                 subprocess.run([
                     "forge", "script", "script/DeployBDCA2A.s.sol:DeployBDCA2A",
-                    "--rpc-url", "http://localhost:8545",
+                    "--rpc-url", "os.getenv("A2A_RPC_URL", os.getenv("BLOCKCHAIN_RPC_URL"))",
                     "--broadcast",
                     "--private-key", deployment_key
                 ], check=True, capture_output=True, text=True)
@@ -149,16 +155,16 @@ class BDCSmartContractIntegrator:
             "agent_registry_address": self.contract_addresses["agent_registry"],
             "message_router_address": self.contract_addresses["message_router"],
             "blockchain_network": "ethereum",
-            "rpc_url": "http://localhost:8545",
+            "rpc_url": "os.getenv("A2A_RPC_URL", os.getenv("BLOCKCHAIN_RPC_URL"))",
             "protocol_version": "0.2.9"
         }
         
         try:
             # Initialize Agent 0 - Data Product Registration
             self.agents["agent0"] = DataProductRegistrationAgentSDK(
-                base_url="http://localhost:8003",
-                data_manager_url="http://localhost:8001",
-                catalog_manager_url="http://localhost:8002",
+                base_url="os.getenv("AGENT_MANAGER_URL")",
+                data_manager_url="os.getenv("DATA_MANAGER_URL")",
+                catalog_manager_url="os.getenv("CATALOG_MANAGER_URL")",
                 smart_contract_config=smart_contract_config
             )
             await self.agents["agent0"].initialize()
@@ -166,9 +172,9 @@ class BDCSmartContractIntegrator:
             
             # Initialize Agent 1 - Data Standardization
             self.agents["agent1"] = DataStandardizationAgentSDK(
-                base_url="http://localhost:8004",
-                data_manager_url="http://localhost:8001",
-                catalog_manager_url="http://localhost:8002",
+                base_url=os.getenv("A2A_SERVICE_URL"),
+                data_manager_url="os.getenv("DATA_MANAGER_URL")",
+                catalog_manager_url="os.getenv("CATALOG_MANAGER_URL")",
                 smart_contract_config=smart_contract_config
             )
             await self.agents["agent1"].initialize()
@@ -176,9 +182,9 @@ class BDCSmartContractIntegrator:
             
             # Initialize Agent 2 - AI Preparation
             self.agents["agent2"] = AIPreparationAgentSDK(
-                base_url="http://localhost:8005",
-                data_manager_url="http://localhost:8001",
-                catalog_manager_url="http://localhost:8002",
+                base_url=os.getenv("A2A_SERVICE_URL"),
+                data_manager_url="os.getenv("DATA_MANAGER_URL")",
+                catalog_manager_url="os.getenv("CATALOG_MANAGER_URL")",
                 smart_contract_config=smart_contract_config
             )
             await self.agents["agent2"].initialize()
@@ -186,9 +192,9 @@ class BDCSmartContractIntegrator:
             
             # Initialize Agent 3 - Vector Processing
             self.agents["agent3"] = VectorProcessingAgentSDK(
-                base_url="http://localhost:8008",
-                data_manager_url="http://localhost:8001", 
-                catalog_manager_url="http://localhost:8002",
+                base_url=os.getenv("A2A_SERVICE_URL"),
+                data_manager_url="os.getenv("DATA_MANAGER_URL")", 
+                catalog_manager_url="os.getenv("CATALOG_MANAGER_URL")",
                 smart_contract_config=smart_contract_config
             )
             await self.agents["agent3"].initialize()
@@ -196,9 +202,9 @@ class BDCSmartContractIntegrator:
             
             # Initialize Agent 4 - Calculation Validation
             self.agents["agent4"] = CalcValidationAgentSDK(
-                base_url="http://localhost:8006",
-                data_manager_url="http://localhost:8001",
-                catalog_manager_url="http://localhost:8002",
+                base_url=os.getenv("A2A_SERVICE_URL"),
+                data_manager_url="os.getenv("DATA_MANAGER_URL")",
+                catalog_manager_url="os.getenv("CATALOG_MANAGER_URL")",
                 smart_contract_config=smart_contract_config
             )
             await self.agents["agent4"].initialize()
@@ -206,9 +212,9 @@ class BDCSmartContractIntegrator:
             
             # Initialize Agent 5 - QA Validation
             self.agents["agent5"] = QAValidationAgentSDK(
-                base_url="http://localhost:8007",
-                data_manager_url="http://localhost:8001",
-                catalog_manager_url="http://localhost:8002",
+                base_url=os.getenv("A2A_SERVICE_URL"),
+                data_manager_url="os.getenv("DATA_MANAGER_URL")",
+                catalog_manager_url="os.getenv("CATALOG_MANAGER_URL")",
                 smart_contract_config=smart_contract_config
             )
             await self.agents["agent5"].initialize()
@@ -229,7 +235,7 @@ class BDCSmartContractIntegrator:
         try:
             # Data Manager
             self.agents["data_manager"] = DataManagerAgentSDK(
-                base_url="http://localhost:8001",
+                base_url="os.getenv("DATA_MANAGER_URL")",
                 smart_contract_config=smart_contract_config
             )
             await self.agents["data_manager"].initialize()
@@ -237,8 +243,8 @@ class BDCSmartContractIntegrator:
             
             # Catalog Manager
             self.agents["catalog_manager"] = CatalogManagerAgentSDK(
-                base_url="http://localhost:8002",
-                data_manager_url="http://localhost:8001",
+                base_url="os.getenv("CATALOG_MANAGER_URL")",
+                data_manager_url="os.getenv("DATA_MANAGER_URL")",
                 smart_contract_config=smart_contract_config
             )
             await self.agents["catalog_manager"].initialize()
@@ -258,37 +264,37 @@ class BDCSmartContractIntegrator:
             {
                 "agent_id": "agent0_data_product",
                 "agent_type": "DATA_PRODUCT_REGISTRATION",
-                "endpoint": "http://localhost:8003",
+                "endpoint": "os.getenv("AGENT_MANAGER_URL")",
                 "capabilities": ["data_product_registration", "dublin_core_metadata"]
             },
             {
                 "agent_id": "agent1_standardization", 
                 "agent_type": "DATA_STANDARDIZATION",
-                "endpoint": "http://localhost:8004",
+                "endpoint": os.getenv("A2A_SERVICE_URL"),
                 "capabilities": ["data_standardization", "schema_validation"]
             },
             {
                 "agent_id": "agent2_ai_preparation",
                 "agent_type": "AI_PREPARATION", 
-                "endpoint": "http://localhost:8005",
+                "endpoint": os.getenv("A2A_SERVICE_URL"),
                 "capabilities": ["semantic_enrichment", "grok_api_integration"]
             },
             {
                 "agent_id": "agent3_vector_processing",
                 "agent_type": "VECTOR_PROCESSING",
-                "endpoint": "http://localhost:8008", 
+                "endpoint": os.getenv("A2A_SERVICE_URL"), 
                 "capabilities": ["vector_embeddings", "knowledge_graph"]
             },
             {
                 "agent_id": "agent4_calc_validation",
                 "agent_type": "CALC_VALIDATION",
-                "endpoint": "http://localhost:8006",
+                "endpoint": os.getenv("A2A_SERVICE_URL"),
                 "capabilities": ["template_based_testing", "computation_validation"]
             },
             {
                 "agent_id": "agent5_qa_validation", 
                 "agent_type": "QA_VALIDATION",
-                "endpoint": "http://localhost:8007",
+                "endpoint": os.getenv("A2A_SERVICE_URL"),
                 "capabilities": ["simpleqa_testing", "ord_discovery"]
             }
         ]

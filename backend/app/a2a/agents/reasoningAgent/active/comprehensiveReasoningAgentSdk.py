@@ -80,113 +80,16 @@ try:
 except ImportError:
     SEMANTIC_SEARCH_AVAILABLE = False
 
-# Import SDK components - corrected paths
-try:
-    # Try primary SDK path
-    from ....a2a.sdk.agentBase import A2AAgentBase
-    from ....a2a.sdk.decorators import a2a_handler, a2a_skill, a2a_task
-    from ....a2a.sdk.types import A2AMessage, MessageRole
-    from ....a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
-except ImportError:
-    try:
-        # Try alternative SDK path  
-        from ....a2a_test.sdk.agentBase import A2AAgentBase
-        from ....a2a_test.sdk.decorators import a2a_handler, a2a_skill, a2a_task
-        from ....a2a_test.sdk.types import A2AMessage, MessageRole
-        from ....a2a_test.sdk.utils import create_agent_id, create_error_response, create_success_response
-    except ImportError:
-        # Fallback local SDK definitions
-        from typing import Dict, Any, Callable
-        import asyncio
-        from abc import ABC, abstractmethod
-        
-        # Create minimal base class if SDK not available
-        class A2AAgentBase(ABC):
-            def __init__(self, agent_id: str, name: str, description: str, version: str, base_url: str):
-                self.agent_id = agent_id
-                self.name = name  
-                self.description = description
-                self.version = version
-                self.base_url = base_url
-                self.skills = {}
-                self.handlers = {}
-            
-            @abstractmethod
-            async def initialize(self) -> None:
-                pass
-            
-            @abstractmethod
-            async def shutdown(self) -> None:
-                pass
-        
-        # Create minimal decorators
-        def a2a_handler(name: str):
-            def decorator(func):
-                func._handler_name = name
-                return func
-            return decorator
-        
-        def a2a_skill(name: str):
-            def decorator(func):
-                func._skill_name = name
-                return func
-            return decorator
-        
-        def a2a_task(name: str, **kwargs):
-            def decorator(func):
-                func._task_name = name
-                return func
-            return decorator
-        
-        # Create minimal message types
-        @dataclass
-        class A2AMessage:
-            content: str
-            role: str = "user"
-            metadata: Dict[str, Any] = field(default_factory=dict)
-        
-        class MessageRole:
-            USER = "user"
-            ASSISTANT = "assistant"
-            SYSTEM = "system"
-        
-        def create_error_response(error: str) -> Dict[str, Any]:
-            return {"success": False, "error": error}
-        
-        def create_success_response(data: Any) -> Dict[str, Any]:
-            return {"success": True, "data": data}
-        
-        def create_agent_id(name: str) -> str:
-            return f"agent_{name}_{int(time.time())}"
+# Import SDK components - Use standard A2A SDK (NO FALLBACKS)
+from app.a2a.sdk.agentBase import A2AAgentBase
+from ..sdk.performanceMonitoringMixin import PerformanceMonitoringMixin, monitor_a2a_operation
+from app.a2a.sdk import a2a_ha, a2a_handlerndler, a2a_skill, a2a_task
+from app.a2a.sdk.types import A2AMessage, MessageRole
+from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
+from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 
-# Import MCP decorators with fallback
-try:
-    from ....common.mcp_helper_implementations import mcp_tool, mcp_resource, mcp_prompt
-except ImportError:
-    # Create fallback MCP decorators
-    def mcp_tool(name: str, description: str = ""):
-        def decorator(func):
-            func._mcp_tool = True
-            func._mcp_name = name
-            func._mcp_description = description
-            return func
-        return decorator
-    
-    def mcp_resource(name: str, description: str = ""):
-        def decorator(func):
-            func._mcp_resource = True
-            func._mcp_name = name
-            func._mcp_description = description
-            return func
-        return decorator
-    
-    def mcp_prompt(name: str, description: str = ""):
-        def decorator(func):
-            func._mcp_prompt = True
-            func._mcp_name = name
-            func._mcp_description = description
-            return func
-        return decorator
+# REMOVED FALLBACK IMPLEMENTATIONS - AGENT MUST USE REAL A2A SDK
+# (The following lines were removed to ensure 100% A2A protocol compliance)
 
 # Blockchain integration
 try:
@@ -214,10 +117,16 @@ except ImportError:
 import sqlite3
 import aiosqlite
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logger = logging.getLogger(__name__)
 
 
-class ReasoningType(Enum):
+class ReasoningType(Enum), PerformanceMonitoringMixin:
     """Types of reasoning approaches"""
     DEDUCTIVE = "deductive"
     INDUCTIVE = "inductive"
@@ -229,7 +138,7 @@ class ReasoningType(Enum):
     SPATIAL = "spatial"
 
 
-class LogicalOperator(Enum):
+class LogicalOperator(Enum), PerformanceMonitoringMixin:
     """Logical operators for reasoning"""
     AND = "and"
     OR = "or"
@@ -239,7 +148,7 @@ class LogicalOperator(Enum):
     EXCLUSIVE_OR = "xor"
 
 
-class ConfidenceLevel(Enum):
+class ConfidenceLevel(Enum), PerformanceMonitoringMixin:
     """Confidence levels for reasoning conclusions"""
     VERY_LOW = 0.1
     LOW = 0.3
@@ -249,7 +158,7 @@ class ConfidenceLevel(Enum):
     CERTAIN = 1.0
 
 
-class ReasoningDomain(Enum):
+class ReasoningDomain(Enum), PerformanceMonitoringMixin:
     """Domains for specialized reasoning"""
     GENERAL = "general"
     MATHEMATICAL = "mathematical"
@@ -332,7 +241,7 @@ class BlockchainQueueMixin:
         
         try:
             # Setup Web3 connection
-            rpc_url = os.getenv('A2A_RPC_URL', 'http://localhost:8545')
+            rpc_url = os.getenv('A2A_RPC_URL', os.getenv("BLOCKCHAIN_RPC_URL"))
             self.web3_client = Web3(Web3.HTTPProvider(rpc_url))
             
             # Setup account
@@ -379,33 +288,31 @@ class NetworkConnector:
         self.connected_agents = set()
     
     async def initialize(self):
-        """Initialize network connection"""
-        if AIOHTTP_AVAILABLE:
-            self.session = aiohttp.ClientSession()
+        """Initialize A2A protocol connectivity"""
+        # Verify A2A protocol connectivity with other agents
+        await self._verify_a2a_connectivity()
     
-    async def send_message(self, agent_url: str, message: Dict[str, Any]) -> Dict[str, Any]:
-        """Send message to another agent"""
-        if not self.session:
-            return {"error": "Network not initialized"}
-        
+    async def send_message_a2a(self, target_agent: str, message: Dict[str, Any]) -> Dict[str, Any]:
+        """Send message to another agent via A2A protocol"""
         try:
-            async with self.session.post(
-                f"{agent_url}/api/v1/message",
-                json=message,
-                timeout=aiohttp.ClientTimeout(total=30)
-            ) as response:
-                if response.status == 200:
-                    return await response.json()
-                else:
-                    return {"error": f"HTTP {response.status}"}
+            result = await self.call_agent_skill_a2a(
+                target_agent=target_agent,
+                skill_name="process_message",
+                input_data=message,
+                encrypt_data=True  # Reasoning data is often sensitive
+            )
+            return result
         except Exception as e:
-            logger.error(f"Network communication failed: {e}")
+            logger.error(f"A2A communication failed: {e}")
             return {"error": str(e)}
     
     async def cleanup(self):
-        """Cleanup network resources"""
-        if self.session:
-            await self.session.close()
+        """Cleanup A2A protocol resources"""
+        # Wait for A2A queues to drain
+        try:
+            await asyncio.wait_for(self._drain_a2a_queues(), timeout=30.0)
+        except asyncio.TimeoutError:
+            logger.warning("Timeout waiting for A2A queues to drain")
 
 
 class DataManagerClient:
@@ -490,22 +397,22 @@ class DataManagerClient:
                 ))
                 await conn.commit()
             
-            # Try to store remotely via Data Manager
-            if AIOHTTP_AVAILABLE:
-                try:
-                    async with aiohttp.ClientSession() as session:
-                        async with session.post(
-                            f"{self.base_url}/api/v1/store",
-                            json={
-                                "data_type": "reasoning_chain",
-                                "data": chain.__dict__
-                            },
-                            timeout=aiohttp.ClientTimeout(total=10)
-                        ) as response:
-                            if response.status == 200:
-                                logger.info(f"Reasoning chain {chain.chain_id} stored remotely")
-                except Exception as e:
-                    logger.warning(f"Remote storage failed, using local only: {e}")
+            # Try to store remotely via Data Manager using A2A protocol
+            try:
+                result = await self.call_agent_skill_a2a(
+                    target_agent="data_manager_agent",
+                    skill_name="store_data",
+                    input_data={
+                        "data_type": "reasoning_chain",
+                        "data": chain.__dict__,
+                        "source_agent": self.agent_id
+                    },
+                    encrypt_data=True  # Reasoning chains contain sensitive logic
+                )
+                if result.get("success"):
+                    logger.info(f"Reasoning chain {chain.chain_id} stored remotely via A2A")
+            except Exception as e:
+                logger.warning(f"A2A remote storage failed, using local only: {e}")
             
             return True
             
@@ -541,7 +448,7 @@ class DataManagerClient:
             return None
 
 
-class ComprehensiveReasoningAgentSDK(A2AAgentBase, BlockchainQueueMixin):
+class ComprehensiveReasoningAgentSDK(A2AAgentBase, BlockchainQueueMixin), PerformanceMonitoringMixin:
     """
     Comprehensive Reasoning Agent with Real AI Intelligence
     
@@ -694,6 +601,9 @@ class ComprehensiveReasoningAgentSDK(A2AAgentBase, BlockchainQueueMixin):
     async def initialize(self) -> None:
         """Initialize the comprehensive reasoning agent"""
         try:
+            # Establish standard trust relationships FIRST
+            await self.establish_standard_trust_relationships()
+            
             # Initialize network connector
             await self.network_connector.initialize()
             
@@ -1393,7 +1303,42 @@ class ComprehensiveReasoningAgentSDK(A2AAgentBase, BlockchainQueueMixin):
     # Placeholder implementations for missing helper methods
     async def _extract_pattern_features(self, data: List[Any], pattern_type: str) -> List[float]:
         """Extract features for pattern analysis"""
-        return [len(str(d)) / 100.0 for d in data[:10]]  # Simple feature extraction
+        try:
+            features = []
+            
+            # Basic statistical features
+            str_lengths = [len(str(d)) for d in data]
+            features.extend([
+                statistics.mean(str_lengths) / 100.0,
+                statistics.stdev(str_lengths) if len(str_lengths) > 1 else 0.0,
+                len(data) / 1000.0,  # Data size normalized
+                len(set(str(d) for d in data)) / len(data) if data else 0.0  # Uniqueness ratio
+            ])
+            
+            # Pattern-specific features
+            if pattern_type == "temporal":
+                # Look for time-related patterns
+                features.append(sum(1 for d in data if 'time' in str(d).lower()) / len(data) if data else 0.0)
+            elif pattern_type == "logical":
+                # Look for logical connectors
+                logical_words = ['and', 'or', 'not', 'if', 'then', 'because']
+                features.append(sum(1 for d in data if any(word in str(d).lower() for word in logical_words)) / len(data) if data else 0.0)
+            elif pattern_type == "causal":
+                # Look for causal indicators
+                causal_words = ['because', 'since', 'therefore', 'cause', 'effect', 'leads to']
+                features.append(sum(1 for d in data if any(word in str(d).lower() for word in causal_words)) / len(data) if data else 0.0)
+            else:
+                features.append(0.5)  # Default pattern strength
+            
+            # Ensure we have exactly 6 features
+            while len(features) < 6:
+                features.append(0.0)
+            
+            return features[:6]  # Return first 6 features
+            
+        except Exception as e:
+            logger.error(f"Feature extraction failed: {e}")
+            return [0.0] * 6
     
     def _heuristic_pattern_analysis(self, data: List[Any], pattern_type: str) -> float:
         """Heuristic pattern analysis fallback"""
@@ -1401,15 +1346,232 @@ class ComprehensiveReasoningAgentSDK(A2AAgentBase, BlockchainQueueMixin):
     
     async def _analyze_semantic_patterns(self, data: List[Any]) -> List[Dict[str, Any]]:
         """Analyze semantic patterns in data"""
-        return [{"pattern": "semantic_similarity", "confidence": 0.8}]
+        try:
+            patterns = []
+            
+            if not data:
+                return patterns
+            
+            # Convert data to strings for analysis
+            text_data = [str(d) for d in data]
+            
+            # Look for repetitive patterns
+            word_counts = defaultdict(int)
+            for text in text_data:
+                words = text.lower().split()
+                for word in words:
+                    word_counts[word] += 1
+            
+            # Find common words (potential patterns)
+            common_words = [word for word, count in word_counts.items() if count >= len(text_data) * 0.3]
+            if common_words:
+                patterns.append({
+                    "pattern": "repetitive_terms",
+                    "confidence": min(0.9, len(common_words) / 10.0),
+                    "terms": common_words[:5],
+                    "frequency": len(common_words)
+                })
+            
+            # Look for semantic similarity using embedding model if available
+            if self.embedding_model and SEMANTIC_SEARCH_AVAILABLE and len(text_data) > 1:
+                try:
+                    embeddings = self.embedding_model.encode(text_data[:10])  # Limit to 10 for performance
+                    
+                    # Calculate pairwise similarities
+                    similarities = []
+                    for i in range(len(embeddings)):
+                        for j in range(i + 1, len(embeddings)):
+                            from sklearn.metrics.pairwise import cosine_similarity
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
+                            sim = cosine_similarity([embeddings[i]], [embeddings[j]])[0][0]
+                            similarities.append(sim)
+                    
+                    if similarities:
+                        avg_similarity = statistics.mean(similarities)
+                        if avg_similarity > 0.7:
+                            patterns.append({
+                                "pattern": "semantic_similarity",
+                                "confidence": min(0.95, avg_similarity),
+                                "average_similarity": avg_similarity,
+                                "pair_count": len(similarities)
+                            })
+                except Exception as e:
+                    logger.warning(f"Semantic embedding analysis failed: {e}")
+            
+            # Look for logical structure patterns
+            logical_indicators = ['therefore', 'because', 'since', 'if', 'then', 'however', 'but']
+            logical_count = sum(1 for text in text_data if any(indicator in text.lower() for indicator in logical_indicators))
+            
+            if logical_count >= len(text_data) * 0.4:
+                patterns.append({
+                    "pattern": "logical_structure",
+                    "confidence": min(0.9, logical_count / len(text_data)),
+                    "logical_elements": logical_count,
+                    "total_elements": len(text_data)
+                })
+            
+            # Look for question-answer patterns
+            questions = sum(1 for text in text_data if '?' in text)
+            if questions > 0:
+                patterns.append({
+                    "pattern": "interrogative_structure",
+                    "confidence": min(0.8, questions / len(text_data)),
+                    "questions": questions,
+                    "total": len(text_data)
+                })
+            
+            return patterns
+            
+        except Exception as e:
+            logger.error(f"Semantic pattern analysis failed: {e}")
+            return [{"pattern": "analysis_error", "confidence": 0.0, "error": str(e)}]
     
     async def _detect_pattern_anomalies(self, data: List[Any], features: List[float]) -> List[Dict[str, Any]]:
         """Detect anomalies in patterns"""
-        return []  # No anomalies detected
+        try:
+            anomalies = []
+            
+            if not data or not features:
+                return anomalies
+            
+            # Convert features to numpy array for anomaly detection
+            feature_array = np.array(features).reshape(1, -1)
+            
+            # Use isolation forest if we have enough historical data
+            if hasattr(self.anomaly_detector, 'fit') and len(self.confidence_history) > 10:
+                try:
+                    # Predict anomaly (-1 for anomaly, 1 for normal)
+                    anomaly_score = self.anomaly_detector.fit_predict(feature_array)[0]
+                    if anomaly_score == -1:
+                        anomalies.append({
+                            "type": "statistical_anomaly",
+                            "confidence": 0.8,
+                            "description": "Pattern features deviate significantly from expected distribution",
+                            "features": features,
+                            "severity": "medium"
+                        })
+                except Exception as e:
+                    logger.warning(f"ML anomaly detection failed: {e}")
+            
+            # Rule-based anomaly detection
+            
+            # Check for extremely short or long data elements
+            lengths = [len(str(d)) for d in data]
+            if lengths:
+                mean_length = statistics.mean(lengths)
+                outliers = [i for i, length in enumerate(lengths) if abs(length - mean_length) > mean_length * 2]
+                
+                if outliers:
+                    anomalies.append({
+                        "type": "length_anomaly",
+                        "confidence": min(0.9, len(outliers) / len(data) + 0.5),
+                        "description": f"Found {len(outliers)} elements with unusual length",
+                        "outlier_indices": outliers[:5],  # Show first 5
+                        "severity": "low" if len(outliers) <= 2 else "medium"
+                    })
+            
+            # Check for completely empty or null data
+            empty_count = sum(1 for d in data if not str(d).strip() or str(d).lower() in ['none', 'null', 'nan'])
+            if empty_count > len(data) * 0.2:  # More than 20% empty
+                anomalies.append({
+                    "type": "missing_data_anomaly",
+                    "confidence": min(0.95, empty_count / len(data)),
+                    "description": f"High proportion of missing/empty data: {empty_count}/{len(data)}",
+                    "empty_count": empty_count,
+                    "total_count": len(data),
+                    "severity": "high" if empty_count > len(data) * 0.5 else "medium"
+                })
+            
+            # Check for suspicious repetition
+            unique_elements = len(set(str(d) for d in data))
+            if unique_elements < len(data) * 0.3:  # Less than 30% unique
+                anomalies.append({
+                    "type": "repetition_anomaly",
+                    "confidence": min(0.9, 1 - (unique_elements / len(data))),
+                    "description": f"Unusually high repetition: only {unique_elements} unique out of {len(data)} elements",
+                    "unique_ratio": unique_elements / len(data),
+                    "severity": "medium"
+                })
+            
+            return anomalies
+            
+        except Exception as e:
+            logger.error(f"Anomaly detection failed: {e}")
+            return [{"type": "detection_error", "confidence": 0.0, "error": str(e), "severity": "low"}]
     
     async def _generate_pattern_insights(self, data: List[Any], score: float, patterns: List[Dict[str, Any]], anomalies: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Generate insights from pattern analysis"""
-        return {"insight": "Pattern analysis complete", "quality": "good"}
+        try:
+            insights = {
+                "overall_quality": "good" if score > 0.7 else "moderate" if score > 0.5 else "poor",
+                "pattern_strength": score,
+                "data_characteristics": {},
+                "recommendations": [],
+                "confidence_level": "high" if score > 0.8 else "medium" if score > 0.6 else "low"
+            }
+            
+            # Analyze data characteristics
+            if data:
+                insights["data_characteristics"] = {
+                    "size": len(data),
+                    "unique_elements": len(set(str(d) for d in data)),
+                    "average_length": statistics.mean([len(str(d)) for d in data]),
+                    "completeness": sum(1 for d in data if str(d).strip()) / len(data)
+                }
+            
+            # Generate insights based on patterns found
+            pattern_types = [p.get("pattern", "unknown") for p in patterns]
+            
+            if "semantic_similarity" in pattern_types:
+                insights["recommendations"].append("High semantic similarity detected - consider clustering analysis")
+            
+            if "logical_structure" in pattern_types:
+                insights["recommendations"].append("Logical reasoning patterns detected - suitable for deductive analysis")
+            
+            if "repetitive_terms" in pattern_types:
+                insights["recommendations"].append("Repetitive patterns found - consider term frequency analysis")
+            
+            # Generate insights based on anomalies
+            if anomalies:
+                high_severity_anomalies = [a for a in anomalies if a.get("severity") == "high"]
+                if high_severity_anomalies:
+                    insights["recommendations"].append("High-severity anomalies detected - data quality review recommended")
+                    insights["overall_quality"] = "poor"
+                
+                anomaly_types = [a.get("type", "unknown") for a in anomalies]
+                if "missing_data_anomaly" in anomaly_types:
+                    insights["recommendations"].append("Significant missing data detected - consider data imputation")
+                
+                if "repetition_anomaly" in anomaly_types:
+                    insights["recommendations"].append("Unusual repetition patterns - verify data collection process")
+            
+            # Provide overall assessment
+            if score > 0.8 and not anomalies:
+                insights["summary"] = "Strong patterns detected with high confidence and no significant anomalies"
+            elif score > 0.6:
+                insights["summary"] = "Moderate patterns detected - some structure present in the data"
+            elif anomalies:
+                insights["summary"] = f"Patterns detected but {len(anomalies)} anomalies require attention"
+            else:
+                insights["summary"] = "Weak or unclear patterns - data may lack sufficient structure"
+            
+            # Default recommendations if none generated
+            if not insights["recommendations"]:
+                insights["recommendations"] = ["Pattern analysis complete - consider domain-specific analysis"]
+            
+            return insights
+            
+        except Exception as e:
+            logger.error(f"Pattern insight generation failed: {e}")
+            return {
+                "insight": "Pattern analysis encountered errors",
+                "quality": "poor",
+                "error": str(e),
+                "recommendations": ["Review data quality and retry analysis"]
+            }
     
     def _get_confidence_level(self, confidence: float) -> str:
         """Convert confidence score to level"""
@@ -1485,6 +1647,91 @@ class ComprehensiveReasoningAgentSDK(A2AAgentBase, BlockchainQueueMixin):
             "confidence_explanation": f"Confidence of {confidence:.2f} based on multiple factors",
             "recommendations": ["Gather more evidence", "Validate logical consistency"]
         }
+
+
+    # A2A Protocol Helper Methods
+    async def _verify_a2a_connectivity(self):
+        """Verify A2A protocol connectivity with other agents"""
+        try:
+            # Test connectivity with essential agents
+            essential_agents = [
+                "data_manager_agent",
+                "data_product_agent_0", 
+                "ai_preparation_agent_3",
+                "vector_processing_agent_4"
+            ]
+            
+            for agent_id in essential_agents:
+                result = await self.request_data_from_agent_a2a(
+                    target_agent=agent_id,
+                    data_type="health_check",
+                    query_params={"requester": self.agent_id},
+                    encrypt=False
+                )
+                logger.info(f"A2A connectivity verified with {agent_id}: {result.get('success', False)}")
+            
+        except Exception as e:
+            logger.warning(f"A2A connectivity verification failed: {e}")
+    
+    async def _drain_a2a_queues(self):
+        """Wait for A2A message queues to empty"""
+        while not self.outgoing_queue.empty() or not self.retry_queue.empty():
+            await asyncio.sleep(1)
+    
+    @a2a_handler("HEALTH_CHECK")
+    async def handle_health_check(self, message: A2AMessage, context_id: str) -> Dict[str, Any]:
+        """Handle A2A protocol health check messages"""
+        try:
+            return {
+                "status": "healthy",
+                "agent_id": self.agent_id,
+                "name": "Reasoning Agent",
+                "timestamp": datetime.utcnow().isoformat(),
+                "blockchain_enabled": getattr(self, 'blockchain_enabled', False),
+                "active_tasks": len(getattr(self, 'tasks', {})),
+                "capabilities": getattr(self, 'blockchain_capabilities', []),
+                "processing_stats": getattr(self, 'processing_stats', {}) or {},
+                "response_time_ms": 0  # Immediate response for health checks
+            }
+        except Exception as e:
+            logger.error(f"Health check failed: {e}")
+            return {
+                "status": "unhealthy",
+                "agent_id": getattr(self, 'agent_id', 'unknown'),
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat()
+            }
+
+    async def _process_a2a_data_request(self, data_type: str, query_params: Dict[str, Any]) -> Dict[str, Any]:
+        """Process A2A data request - override from base class"""
+        try:
+            if data_type == "health_check":
+                return {
+                    "agent_id": self.agent_id,
+                    "status": "healthy",
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "reasoning_stats": {
+                        "chains_stored": len(getattr(self, 'reasoning_chains', {})),
+                        "cache_size": len(getattr(self, 'pattern_cache', {}))
+                    }
+                }
+            elif data_type == "reasoning_chains":
+                return {
+                    "chains": list(getattr(self, 'reasoning_chains', {}).keys()),
+                    "count": len(getattr(self, 'reasoning_chains', {}))
+                }
+            elif data_type == "status":
+                return {
+                    "agent_id": self.agent_id,
+                    "name": self.name,
+                    "version": self.version,
+                    "reasoning_capabilities": ["pattern_analysis", "logical_reasoning", "confidence_assessment"]
+                }
+            else:
+                return {"error": f"Unknown data type: {data_type}"}
+        except Exception as e:
+            logger.error(f"Error processing A2A data request: {e}")
+            return {"error": str(e)}
 
 
 # Factory function

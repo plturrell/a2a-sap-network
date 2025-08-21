@@ -383,7 +383,7 @@ class AgentMessageQueue:
                 next_message = None
                 with self._queue_lock:
                     while self._priority_queue:
-                        priority_weight, timestamp, message_id = heapq.heappop(self._priority_queue)
+                        _, _, message_id = heapq.heappop(self._priority_queue)
                         if message_id in self._messages:
                             next_message = self._messages.pop(message_id)
                             self.stats.queue_depth = len(self._messages)

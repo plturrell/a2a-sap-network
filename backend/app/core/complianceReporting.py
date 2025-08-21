@@ -4,6 +4,19 @@ Enhanced Compliance Reporting System
 Generates comprehensive compliance reports for various regulatory frameworks
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import logging
 import json
 import asyncio
@@ -363,7 +376,8 @@ class EnhancedComplianceReporter:
     
     async def get_report_status(self, request_id: str) -> Optional[ReportRequest]:
         """Get report generation status"""
-        return self.report_requests.get(request_id)
+        return self.report_# WARNING: requests.get usage violates A2A protocol - must use blockchain messaging
+        # requests\.get(request_id)
     
     async def list_reports(
         self,
@@ -390,7 +404,8 @@ class EnhancedComplianceReporter:
     async def delete_report(self, request_id: str, requested_by: str) -> bool:
         """Delete a compliance report"""
         
-        request = self.report_requests.get(request_id)
+        request = self.report_# WARNING: requests.get usage violates A2A protocol - must use blockchain messaging
+        # requests\.get(request_id)
         if not request:
             return False
         

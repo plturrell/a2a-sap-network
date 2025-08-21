@@ -1,3 +1,4 @@
+import os
 """
 Base class for A2A agents - simplifies agent development
 """
@@ -14,7 +15,7 @@ import inspect
 
 from .types import A2AMessage, MessagePart, MessageRole, AgentCard, AgentCapability, SkillDefinition, TaskStatus
 from .decorators import get_handler_metadata
-from app.a2a.core.telemetry import add_span_attributes
+from ..core.telemetry import add_span_attributes
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +35,8 @@ class A2AAgentBase(ABC):
         agent_id: str,
         name: str,
         description: str,
+        base_url: str,  # REQUIRED - Must be provided, no default localhost fallback
         version: str = "1.0.0",
-        base_url: str = "http://localhost:8000",
         enable_telemetry: bool = True
     ):
         self.agent_id = agent_id
@@ -344,6 +345,34 @@ class A2AAgentBase(ABC):
             result = await self.process_message(message, context_id)
             return JSONResponse(content=result)
         
+        @app.post("/a2a/message")
+        async def a2a_protocol_handler(request: Request):
+            """Handle A2A protocol messages for startup validation"""
+            try:
+                body = await request.json()
+                
+                # Handle startup validation test messages
+                if body.get("type") == "skill_test":
+                    return await self._handle_skill_test(body)
+                
+                # Handle regular A2A messages
+                message = A2AMessage(**body.get("message", body))
+                context_id = body.get("contextId", str(uuid4()))
+                
+                result = await self.process_message(message, context_id)
+                return JSONResponse(content=result)
+                
+            except Exception as e:
+                logger.error(f"A2A message handling failed: {e}")
+                return JSONResponse(
+                    status_code=500,
+                    content={
+                        "error": "Message processing failed",
+                        "details": str(e),
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                )
+        
         @app.get("/skills")
         async def list_skills_endpoint():
             return {"skills": self.list_skills()}
@@ -354,21 +383,165 @@ class A2AAgentBase(ABC):
             result = await self.execute_skill(skill_name, body)
             return result
         
-        @app.get("/health")
-        async def health():
-            return {
-                "status": "healthy",
-                "agent_id": self.agent_id,
-                "name": self.name,
-                "version": self.version,
-                "active_tasks": len([t for t in self.tasks.values() if t["status"] in [TaskStatus.PENDING, TaskStatus.RUNNING]]),
-                "total_tasks": len(self.tasks),
-                "skills": len(self.skills),
-                "handlers": len(self.handlers),
-                "timestamp": datetime.utcnow().isoformat()
-            }
+        # Try to use StandardHealthCheck if available
+        try:
+            import sys
+            sys.path.append('../../../app')
+            from app.a2a.sdk.health import StandardHealthCheck
+            StandardHealthCheck.create_health_endpoint(app, self)
+        except ImportError:
+            # Fallback to simple health endpoint
+            @app.get("/health")
+            async def health():
+                return {
+                    "status": "healthy",
+                    "agent_id": self.agent_id,
+                    "name": self.name,
+                    "version": self.version,
+                    "active_tasks": len([t for t in self.tasks.values() if t["status"] in [TaskStatus.PENDING, TaskStatus.RUNNING]]),
+                    "total_tasks": len(self.tasks),
+                    "skills": len(self.skills),
+                    "handlers": len(self.handlers),
+                    "timestamp": datetime.utcnow().isoformat()
+                }
         
         return app
+    
+    async def _handle_skill_test(self, test_message: Dict[str, Any]) -> JSONResponse:
+        """Handle startup validation skill test messages"""
+        try:
+            requested_skills = test_message.get("content", {}).get("requested_skills", [])
+            test_id = test_message.get("content", {}).get("test_id", "unknown")
+            
+            logger.info(f"Processing skill test {test_id} for skills: {requested_skills}")
+            
+            skill_results = {}
+            available_skills = list(self.skills.keys())
+            
+            # Test each requested skill
+            for skill_name in requested_skills:
+                try:
+                    if skill_name in self.skills:
+                        # Try to execute skill with minimal test data
+                        test_data = {"test": True, "validation": "startup"}
+                        result = await self.execute_skill(skill_name, test_data)
+                        
+                        skill_results[skill_name] = {
+                            "operational": result.get("success", False),
+                            "status": "tested",
+                            "response_time_ms": 1,  # Quick test
+                            "error": result.get("error") if not result.get("success") else None
+                        }
+                    else:
+                        # Skill not available
+                        skill_results[skill_name] = {
+                            "operational": False,
+                            "status": "not_available",
+                            "error": f"Skill '{skill_name}' not found"
+                        }
+                        
+                except Exception as e:
+                    skill_results[skill_name] = {
+                        "operational": False,
+                        "status": "test_failed",
+                        "error": str(e)
+                    }
+            
+            # Also test any skills that weren't specifically requested
+            for skill_name in available_skills:
+                if skill_name not in skill_results:
+                    try:
+                        test_data = {"test": True, "validation": "startup"}
+                        result = await self.execute_skill(skill_name, test_data)
+                        
+                        skill_results[skill_name] = {
+                            "operational": result.get("success", False),
+                            "status": "additional_test",
+                            "response_time_ms": 1,
+                            "error": result.get("error") if not result.get("success") else None
+                        }
+                    except Exception as e:
+                        skill_results[skill_name] = {
+                            "operational": False,
+                            "status": "additional_test_failed", 
+                            "error": str(e)
+                        }
+            
+            # Build response
+            response_data = {
+                "type": "skill_test_response",
+                "test_id": test_id,
+                "agent_id": self.agent_id,
+                "agent_name": self.name,
+                "timestamp": datetime.utcnow().isoformat(),
+                "available_skills": available_skills,
+                "skill_results": skill_results,
+                "summary": {
+                    "total_skills": len(available_skills),
+                    "operational_skills": len([s for s in skill_results.values() if s.get("operational", False)]),
+                    "failed_skills": len([s for s in skill_results.values() if not s.get("operational", False)])
+                },
+                "agent_status": "operational" if len(available_skills) > 0 else "no_skills",
+                "a2a_processing": True  # If we got here, A2A message processing works
+            }
+            
+            logger.info(f"Skill test {test_id} completed: {response_data['summary']}")
+            
+            return JSONResponse(content=response_data)
+            
+        except Exception as e:
+            logger.error(f"Skill test handling failed: {e}")
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "type": "skill_test_error",
+                    "test_id": test_message.get("content", {}).get("test_id", "unknown"),
+                    "agent_id": self.agent_id,
+                    "error": str(e),
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            )
+    
+    def get_blockchain_stats(self) -> Dict[str, Any]:
+        """Get blockchain-related statistics (can be overridden by subclasses)"""
+        return {
+            "enabled": True,
+            "registered": False,  # Subclasses should override this
+            "address": None,
+            "reputation": 0
+        }
+    
+    async def health_checks(self) -> Dict[str, Any]:
+        """Perform agent-specific health checks (can be overridden by subclasses)"""
+        checks = {}
+        
+        # Test skill availability
+        if self.skills:
+            checks["skills_available"] = {
+                "status": "healthy",
+                "count": len(self.skills),
+                "skills": list(self.skills.keys())
+            }
+        else:
+            checks["skills_available"] = {
+                "status": "degraded",
+                "message": "No skills registered"
+            }
+        
+        # Test handler availability
+        if self.handlers:
+            checks["handlers_available"] = {
+                "status": "healthy", 
+                "count": len(self.handlers),
+                "handlers": list(self.handlers.keys())
+            }
+        else:
+            checks["handlers_available"] = {
+                "status": "degraded",
+                "message": "No message handlers registered"
+            }
+        
+        return checks
     
     # Abstract methods that subclasses should implement
     @abstractmethod

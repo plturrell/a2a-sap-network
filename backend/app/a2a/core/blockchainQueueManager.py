@@ -15,6 +15,12 @@ import logging
 # Import blockchain components
 from .trustManager import sign_a2a_message
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logger = logging.getLogger(__name__)
 
 
@@ -113,6 +119,252 @@ class QueueMetrics(BaseModel):
     blockchain_sync_status: str = "synced"
 
 
+class A2AQueueContract:
+    """
+    Interface to the A2ATaskQueue smart contract
+    Handles all blockchain interactions for the queue system
+    """
+    
+    def __init__(self, web3_client, contract_address: Optional[str], agent_id: str):
+        self.web3_client = web3_client
+        self.contract_address = contract_address
+        self.agent_id = agent_id
+        self.contract = None
+        
+        if contract_address and hasattr(web3_client, 'web3'):
+            # Load contract ABI
+            self.contract_abi = self._get_queue_contract_abi()
+            try:
+                self.contract = web3_client.web3.eth.contract(
+                    address=web3_client.web3.to_checksum_address(contract_address),
+                    abi=self.contract_abi
+                )
+                logger.info(f"Queue contract initialized at {contract_address}")
+            except Exception as e:
+                logger.warning(f"Could not initialize queue contract: {e}")
+    
+    def _get_queue_contract_abi(self):
+        """Get the ABI for the A2ATaskQueue contract"""
+        # Minimal ABI for task queue operations
+        return [
+            {
+                "name": "createTask",
+                "type": "function",
+                "inputs": [
+                    {"name": "skillName", "type": "string"},
+                    {"name": "parameters", "type": "bytes"},
+                    {"name": "priority", "type": "uint8"},
+                    {"name": "deadline", "type": "uint256"},
+                    {"name": "gasLimit", "type": "uint256"}
+                ],
+                "outputs": [{"name": "taskId", "type": "bytes32"}],
+                "stateMutability": "payable"
+            },
+            {
+                "name": "assignTask",
+                "type": "function",
+                "inputs": [{"name": "taskId", "type": "bytes32"}],
+                "outputs": [],
+                "stateMutability": "nonpayable"
+            },
+            {
+                "name": "startTask",
+                "type": "function",
+                "inputs": [{"name": "taskId", "type": "bytes32"}],
+                "outputs": [],
+                "stateMutability": "nonpayable"
+            },
+            {
+                "name": "completeTask",
+                "type": "function",
+                "inputs": [
+                    {"name": "taskId", "type": "bytes32"},
+                    {"name": "resultHash", "type": "bytes32"}
+                ],
+                "outputs": [],
+                "stateMutability": "nonpayable"
+            },
+            {
+                "name": "failTask",
+                "type": "function",
+                "inputs": [
+                    {"name": "taskId", "type": "bytes32"},
+                    {"name": "reason", "type": "string"}
+                ],
+                "outputs": [],
+                "stateMutability": "nonpayable"
+            },
+            {
+                "name": "getPendingTasks",
+                "type": "function",
+                "inputs": [
+                    {"name": "priority", "type": "uint8"},
+                    {"name": "limit", "type": "uint256"}
+                ],
+                "outputs": [{"name": "taskIds", "type": "bytes32[]"}],
+                "stateMutability": "view"
+            },
+            {
+                "name": "tasks",
+                "type": "function",
+                "inputs": [{"name": "taskId", "type": "bytes32"}],
+                "outputs": [
+                    {"name": "taskId", "type": "bytes32"},
+                    {"name": "requester", "type": "address"},
+                    {"name": "assignedAgent", "type": "address"},
+                    {"name": "skillName", "type": "string"},
+                    {"name": "parameters", "type": "bytes"},
+                    {"name": "priority", "type": "uint8"},
+                    {"name": "status", "type": "uint8"},
+                    {"name": "createdAt", "type": "uint256"},
+                    {"name": "deadline", "type": "uint256"},
+                    {"name": "gasLimit", "type": "uint256"},
+                    {"name": "reward", "type": "uint256"},
+                    {"name": "resultHash", "type": "bytes32"},
+                    {"name": "errorMessage", "type": "string"}
+                ],
+                "stateMutability": "view"
+            }
+        ]
+    
+    async def enqueue_task(self, queue_name: str, task_data: dict, priority: str, 
+                          deadline: int, gas_limit: int = 500000, reward_wei: int = 0):
+        """Submit a task to the blockchain queue"""
+        if not self.contract or not hasattr(self.web3_client, 'agent_identity'):
+            logger.warning("Queue contract not initialized, skipping blockchain submission")
+            return None
+            
+        try:
+            # Convert priority to contract enum
+            priority_map = {
+                'low': 0, 'medium': 1, 'high': 2, 'critical': 3
+            }
+            priority_value = priority_map.get(priority.lower(), 1)
+            
+            # Encode task parameters
+            encoded_params = self.web3_client.web3.codec.encode(
+                ['string'], [json.dumps(task_data)]
+            )
+            
+            # Build transaction
+            tx = self.contract.functions.createTask(
+                queue_name,
+                encoded_params,
+                priority_value,
+                deadline,
+                gas_limit
+            ).build_transaction({
+                'from': self.web3_client.agent_identity.address,
+                'value': reward_wei,
+                'gas': gas_limit,
+                'gasPrice': self.web3_client.web3.eth.gas_price,
+                'nonce': self.web3_client.web3.eth.get_transaction_count(
+                    self.web3_client.agent_identity.address
+                )
+            })
+            
+            # Sign and send transaction
+            signed_tx = self.web3_client.agent_identity.account.sign_transaction(tx)
+            tx_hash = self.web3_client.web3.eth.send_raw_transaction(signed_tx.raw_transaction)
+            
+            # Wait for receipt
+            receipt = self.web3_client.web3.eth.wait_for_transaction_receipt(tx_hash)
+            
+            if receipt.status == 1:
+                # Extract task ID from logs
+                logs = self.contract.events.TaskCreated().process_receipt(receipt)
+                if logs:
+                    task_id = logs[0]['args']['taskId']
+                    logger.info(f"Task created on blockchain: {task_id.hex()}")
+                    return task_id.hex()
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Failed to submit task to blockchain: {e}")
+            return None
+    
+    async def get_pending_tasks(self, priority: str = 'medium', limit: int = 10):
+        """Get pending tasks from blockchain"""
+        if not self.contract:
+            return []
+            
+        try:
+            priority_map = {
+                'low': 0, 'medium': 1, 'high': 2, 'critical': 3
+            }
+            priority_value = priority_map.get(priority.lower(), 1)
+            
+            task_ids = self.contract.functions.getPendingTasks(
+                priority_value, limit
+            ).call()
+            
+            return [task_id.hex() for task_id in task_ids]
+            
+        except Exception as e:
+            logger.error(f"Failed to get pending tasks: {e}")
+            return []
+    
+    async def update_task_status(self, task_id: str, status: str, result_data: Optional[dict] = None):
+        """Update task status on blockchain"""
+        if not self.contract or not hasattr(self.web3_client, 'agent_identity'):
+            return False
+            
+        try:
+            task_id_bytes = bytes.fromhex(task_id)
+            
+            if status == 'processing':
+                tx = self.contract.functions.startTask(task_id_bytes).build_transaction({
+                    'from': self.web3_client.agent_identity.address,
+                    'gas': 100000,
+                    'gasPrice': self.web3_client.web3.eth.gas_price,
+                    'nonce': self.web3_client.web3.eth.get_transaction_count(
+                        self.web3_client.agent_identity.address
+                    )
+                })
+            elif status == 'completed' and result_data:
+                result_hash = self.web3_client.web3.keccak(
+                    text=json.dumps(result_data)
+                )
+                tx = self.contract.functions.completeTask(
+                    task_id_bytes, result_hash
+                ).build_transaction({
+                    'from': self.web3_client.agent_identity.address,
+                    'gas': 150000,
+                    'gasPrice': self.web3_client.web3.eth.gas_price,
+                    'nonce': self.web3_client.web3.eth.get_transaction_count(
+                        self.web3_client.agent_identity.address
+                    )
+                })
+            elif status == 'failed':
+                reason = result_data.get('error', 'Unknown error') if result_data else 'Unknown error'
+                tx = self.contract.functions.failTask(
+                    task_id_bytes, reason
+                ).build_transaction({
+                    'from': self.web3_client.agent_identity.address,
+                    'gas': 150000,
+                    'gasPrice': self.web3_client.web3.eth.gas_price,
+                    'nonce': self.web3_client.web3.eth.get_transaction_count(
+                        self.web3_client.agent_identity.address
+                    )
+                })
+            else:
+                return False
+            
+            # Sign and send transaction
+            signed_tx = self.web3_client.agent_identity.account.sign_transaction(tx)
+            tx_hash = self.web3_client.web3.eth.send_raw_transaction(signed_tx.raw_transaction)
+            
+            # Wait for receipt
+            receipt = self.web3_client.web3.eth.wait_for_transaction_receipt(tx_hash)
+            
+            return receipt.status == 1
+            
+        except Exception as e:
+            logger.error(f"Failed to update task status: {e}")
+            return False
+
+
 class BlockchainQueueManager:
     """
     Blockchain-integrated queue management system for A2A agents
@@ -161,7 +413,7 @@ class BlockchainQueueManager:
             raise ValueError("A2A_BLOCKCHAIN_URL environment variable is required in production")
         else:
             logger.warning("No A2A_BLOCKCHAIN_URL configured, using localhost for development only")
-            return "http://localhost:8545"
+            return os.getenv("A2A_SERVICE_URL")
 
     async def _initialize_blockchain_connection(self):
         """Initialize connection to A2A blockchain network"""
@@ -172,7 +424,11 @@ class BlockchainQueueManager:
                 sdk_path = os.path.join(os.path.dirname(__file__), '../../../a2aNetwork/sdk')
                 if sdk_path not in sys.path:
                     sys.path.append(sdk_path)
-                from pythonSdk.blockchain.web3Client import Web3Client
+                from app.a2a.sdk.blockchain.web3Client import A2ABlockchainClient as Web3Client
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
                 logger.info("Successfully imported Web3Client")
             except ImportError as ie:
                 logger.warning(f"Could not import Web3Client: {ie}. Using fallback mode.")
@@ -189,17 +445,16 @@ class BlockchainQueueManager:
                 chain_id=self.blockchain_config["chain_id"],
             )
 
-            # TODO: Initialize queue contract when classes are implemented
-            # self.queue_contract = A2AQueueContract(
-            #     web3_client=self.blockchain_client,
-            #     contract_address=self.blockchain_config["contract_address"],
-            # )
-
-            # TODO: Register agent as queue participant when implementation is ready
-            # registration_tx = await self.queue_contract.register_queue_participant(
-            #     agent_id=self.agent_id,
-            #     capabilities=["task_processing", "queue_management", "consensus_voting"],
-            # )
+            # Initialize queue contract
+            self.queue_contract = A2AQueueContract(
+                web3_client=self.blockchain_client,
+                contract_address=self.blockchain_config.get("queue_contract_address"),
+                agent_id=self.agent_id,
+            )
+            
+            # Register agent with the blockchain registry if needed
+            if hasattr(self.blockchain_client, 'agent_identity'):
+                logger.info(f"Agent blockchain address: {self.blockchain_client.agent_identity.address}")
 
             logger.info(f"✅ Blockchain queue manager initialized for {self.agent_id}")
             logger.info(f"   Network: {self.blockchain_config['network_url']}")
@@ -222,24 +477,26 @@ class BlockchainQueueManager:
 
             # Submit to blockchain
             if self.blockchain_client and self.queue_contract:
-                # Create blockchain transaction
-                tx_hash = await self.queue_contract.enqueue_task(
-                    queue_name=queue_name,
+                # Calculate deadline (e.g., 1 hour from now)
+                deadline = int(datetime.utcnow().timestamp()) + (task.timeout_seconds or 3600)
+                
+                # Submit task to blockchain
+                blockchain_task_id = await self.queue_contract.enqueue_task(
+                    queue_name=task.skill_name,  # Use skill name as queue identifier
                     task_data=task_data,
                     priority=task.priority.value,
-                    sender=self.agent_id,
+                    deadline=deadline,
                     gas_limit=task.gas_limit,
+                    reward_wei=int(task.context.get('reward_eth', 0) * 1e18) if task.context else 0
                 )
+                
+                if blockchain_task_id:
+                    task.blockchain_hash = blockchain_task_id
+                    logger.info(f"📦 Task {task.task_id} submitted to blockchain")
+                    logger.info(f"   Blockchain ID: {blockchain_task_id}")
+                else:
+                    logger.warning("Task submitted but no blockchain ID returned")
 
-                # Wait for confirmation
-                receipt = await self.blockchain_client.wait_for_transaction(tx_hash)
-
-                task.blockchain_hash = tx_hash
-                task.block_number = receipt.blockNumber
-
-                logger.info(f"📦 Task {task.task_id} submitted to blockchain queue '{queue_name}'")
-                logger.info(f"   TX Hash: {tx_hash}")
-                logger.info(f"   Block: {receipt.blockNumber}")
 
             # Add to local queue for processing
             if queue_name not in self.local_queues:
@@ -296,12 +553,14 @@ class BlockchainQueueManager:
                 task.status = TaskStatus.ASSIGNED
 
                 # Update on blockchain
-                if self.blockchain_client and self.queue_contract:
-                    await self.queue_contract.update_task_status(
-                        task_id=task.task_id,
-                        new_status=TaskStatus.ASSIGNED.value,
-                        agent_id=self.agent_id,
+                if self.blockchain_client and self.queue_contract and task.blockchain_hash:
+                    success = await self.queue_contract.update_task_status(
+                        task_id=task.blockchain_hash,
+                        status='processing',
+                        result_data={"agent_id": self.agent_id}
                     )
+                    if success:
+                        logger.info(f"✅ Task {task.task_id} status updated on blockchain")
 
                 # Update metrics
                 metrics = self.queue_metrics[queue_name]

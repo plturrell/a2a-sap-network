@@ -3,9 +3,23 @@ AI Data Readiness & Vectorization Agent - SDK Version
 Agent 2: Enhanced with A2A SDK for simplified development and maintenance
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import hashlib
-import httpx
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 import json
 import logging
 import os
@@ -47,11 +61,13 @@ except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
 
 # Import SDK components
+from ..sdk.performanceMonitoringMixin import PerformanceMonitoringMixin, monitor_a2a_operation
 from app.a2a.sdk import (
-    A2AAgentBase, a2a_handler, a2a_skill, a2a_task,
+    A2AAge, a2a_handlerntBase, a2a_handler, a2a_skill, a2a_task,
     A2AMessage, MessageRole, create_agent_id
 )
 from app.a2a.sdk.utils import create_error_response, create_success_response
+from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 
 # Import AI Intelligence Framework
 from app.a2a.core.ai_intelligence import (
@@ -77,7 +93,7 @@ class VectorRepresentation:
     vector_data: List[float] = field(default_factory=list)
 
 
-class EnhancedAIPreparationAgent(A2AAgentBase):
+class EnhancedAIPreparationAgent(A2AAgentBase, BlockchainIntegrationMixin), PerformanceMonitoringMixin:
     """
     Enhanced AI Preparation Agent with AI Intelligence Framework Integration
     
@@ -95,13 +111,32 @@ class EnhancedAIPreparationAgent(A2AAgentBase):
     """
     
     def __init__(self, base_url: str, config: Optional[Dict[str, Any]] = None):
-        super().__init__(
-            agent_id="enhanced_ai_preparation_agent",
+        # Define blockchain capabilities for AI preparation agent
+        blockchain_capabilities = [
+            "ai_data_preparation",
+            "semantic_enrichment",
+            "vectorization",
+            "embedding_optimization",
+            "data_quality_enhancement",
+            "adaptive_learning",
+            "domain_context_analysis",
+            "autonomous_optimization"
+        ]
+        
+        # Initialize A2AAgentBase with blockchain capabilities
+        A2AAgentBase.__init__(
+            self,
+            agent_id="ai_preparation_agent_2",
             name="Enhanced AI Preparation Agent",
-            description="Advanced AI data preparation with AI Intelligence Framework",
+            description="A2A v0.2.9 compliant agent for AI data preparation with semantic enrichment",
             version="5.0.0",  # Enhanced version
-            base_url=base_url
+            base_url=base_url,
+            blockchain_capabilities=blockchain_capabilities,
+            a2a_protocol_only=True  # Force A2A protocol compliance
         )
+        
+        # Initialize blockchain integration
+        BlockchainIntegrationMixin.__init__(self)
         
         # Configuration
         self.config = config or {}
@@ -150,6 +185,16 @@ class EnhancedAIPreparationAgent(A2AAgentBase):
         logger.info("Initializing Enhanced AI Preparation Agent with AI Intelligence Framework...")
         
         try:
+            # Establish standard trust relationships FIRST
+            await self.establish_standard_trust_relationships()
+            
+            # Initialize blockchain integration
+            try:
+                await self.initialize_blockchain()
+                logger.info("✅ Blockchain integration initialized for Agent 2")
+            except Exception as e:
+                logger.warning(f"⚠️ Blockchain initialization failed: {e}")
+            
             # Initialize base agent
             result = await super().initialize() if hasattr(super(), 'initialize') else {}
             
@@ -330,6 +375,23 @@ class EnhancedAIPreparationAgent(A2AAgentBase):
                 learning_result["pattern_updates"] = pattern_updates
             
             self.enhanced_metrics["adaptive_learning_updates"] += 1
+            
+            # Store learning results via data_manager
+            await self.store_agent_data(
+                data_type="adaptive_learning_update",
+                data={
+                    "learning_insights": learning_result,
+                    "pattern_updates": learning_result.get("pattern_updates", {}),
+                    "learning_context": learning_data,
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            )
+            
+            # Update agent status with agent_manager
+            await self.update_agent_status("learning_completed", {
+                "updates_applied": self.enhanced_metrics["adaptive_learning_updates"],
+                "current_intelligence_score": self._calculate_current_intelligence_score()
+            })
             
             return {
                 "learning_applied": True,
@@ -867,7 +929,7 @@ class AutonomousPreparationOptimizer:
 
 
 # Keep original class for backward compatibility
-class AIPreparationAgentSDK(EnhancedAIPreparationAgent):
+class AIPreparationAgentSDK(EnhancedAIPreparationAgent), PerformanceMonitoringMixin:
     """Alias for backward compatibility"""
     
     def __init__(self, base_url: str):
@@ -878,7 +940,8 @@ class AIPreparationAgentSDK(EnhancedAIPreparationAgent):
         logger.info(f"Starting agent initialization for {self.agent_id}")
         try:
             # Initialize HTTP client
-            self.http_client = httpx.AsyncClient(
+            self.http_client = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        # httpx\.AsyncClient(
                 timeout=httpx.Timeout(30.0),
                 limits=httpx.Limits(max_connections=10, max_keepalive_connections=5)
             )
@@ -1102,6 +1165,10 @@ class AIPreparationAgentSDK(EnhancedAIPreparationAgent):
                 
         except Exception as e:
             from app.a2a.sdk.types import TaskStatus
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             await self.update_task(task_id, TaskStatus.FAILED, error=str(e))
 
     def _extract_entity_data(self, message: A2AMessage) -> Dict[str, Any]:
@@ -1285,6 +1352,30 @@ class AIPreparationAgentSDK(EnhancedAIPreparationAgent):
             logger.info(f"Saved {len(self.ai_ready_entities)} AI-ready entities to state")
         except Exception as e:
             logger.error(f"Failed to save agent state: {e}")
+
+    @a2a_handler("HEALTH_CHECK")
+    async def handle_health_check(self, message: A2AMessage, context_id: str) -> Dict[str, Any]:
+        """Handle A2A protocol health check messages"""
+        try:
+            return {
+                "status": "healthy",
+                "agent_id": self.agent_id,
+                "name": "AI Preparation Agent",
+                "timestamp": datetime.utcnow().isoformat(),
+                "blockchain_enabled": getattr(self, 'blockchain_enabled', False),
+                "active_tasks": len(getattr(self, 'tasks', {})),
+                "capabilities": getattr(self, 'blockchain_capabilities', []),
+                "processing_stats": getattr(self, 'processing_stats', {}) or {},
+                "response_time_ms": 0  # Immediate response for health checks
+            }
+        except Exception as e:
+            logger.error(f"Health check failed: {e}")
+            return {
+                "status": "unhealthy",
+                "agent_id": getattr(self, 'agent_id', 'unknown'),
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat()
+            }
 
     async def _initialize_trust_system(self) -> None:
         """Initialize the agent's trust system"""

@@ -27,6 +27,10 @@ try:
         get_trust_contract
     )
     from trustSystem.delegationContracts import (
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
         get_delegation_contract, DelegationAction, can_agent_delegate, 
         record_delegation_usage, create_delegation_contract
     )

@@ -1,0 +1,96 @@
+# A2A ChatAgent CLI Configuration - Production Environment
+# This configuration is optimized for production deployment with full security
+
+# Basic settings
+base_url: "${A2A_CHATAGENT_URL:-http://a2a-chatagent:8000}"
+environment: "production"
+log_level: "INFO"
+timeout: 60
+max_retries: 5
+
+# Database configuration (PostgreSQL for production)
+database:
+  type: "postgresql"
+  # Connection string will be built from environment variables
+  connection_string: null
+  pool_size: 20
+  max_overflow: 10
+  echo_sql: false
+
+# Authentication settings (secure for production)
+auth:
+  # JWT secret MUST be set via A2A_JWT_SECRET environment variable
+  jwt_secret: null
+  jwt_algorithm: "HS256"
+  jwt_expiry_hours: 8  # Shorter expiry for production
+  enable_jwt: true
+  enable_api_key: true
+  environment: "production"
+
+# Redis configuration (required for production)
+redis:
+  url: "${REDIS_URL:-redis://a2a-redis:6379/0}"
+  enabled: true
+  pool_size: 10
+
+# All agents for comprehensive testing
+test_agents:
+  - "data-processor"
+  - "nlp-agent"
+  - "crypto-trader"
+  - "file-manager"
+  - "web-scraper"
+  - "image-processor"
+  - "code-reviewer"
+  - "database-agent"
+  - "api-manager"
+  - "workflow-engine"
+
+# Production agent endpoints (using service discovery)
+# These will be automatically discovered via Kubernetes/Docker services
+agent_endpoints: {}  # Will be populated via service discovery
+
+# CLI specific settings
+cli:
+  interactive_prompt: "A2A-PROD> "
+  show_timestamps: true
+  show_agent_routing: false  # Reduced output for production
+  color_output: true
+  progress_bars: true
+
+# Monitoring settings (enabled for production)
+monitoring:
+  enable_metrics: true
+  enable_tracing: true
+  enable_health_checks: true
+  otlp_endpoint: "${OTLP_ENDPOINT:-http://jaeger:4317}"
+  prometheus_endpoint: "${PROMETHEUS_ENDPOINT:-http://prometheus:9090}"
+
+# Network settings (more conservative for production)
+network:
+  connection_timeout: 30
+  read_timeout: 60
+  max_connections: 200
+  retry_attempts: 5
+  retry_delay: 2
+
+# Security settings
+security:
+  enable_tls: true
+  verify_certificates: true
+  allowed_hosts:
+    - "*.a2a.internal"
+    - "localhost"  # For CLI testing only
+
+# Rate limiting (for CLI testing)
+rate_limiting:
+  requests_per_minute: 60
+  requests_per_hour: 1000
+  burst_limit: 10
+
+# Advanced features
+features:
+  enable_conversation_history: true
+  enable_agent_analytics: true
+  enable_performance_monitoring: true
+  enable_error_tracking: true

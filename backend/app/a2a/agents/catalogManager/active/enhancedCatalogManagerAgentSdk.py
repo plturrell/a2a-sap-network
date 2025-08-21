@@ -15,6 +15,19 @@ Enhanced Capabilities:
 - Autonomous catalog optimization and metadata enhancement
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import datetime
 import json
@@ -29,7 +42,8 @@ from uuid import uuid4
 from dataclasses import dataclass, field
 from enum import Enum
 import aiosqlite
-import httpx
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 import numpy as np
 import hashlib
 
@@ -1259,6 +1273,10 @@ class EnhancedCatalogManagerAgent(A2AAgentBase, BlockchainIntegrationMixin):
         """Generate a verification hash for search results"""
         try:
             import hashlib
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             
             result_summary = f"{query}_{len(results or [])}_{datetime.utcnow().strftime('%Y%m%d')}"
             return hashlib.sha256(result_summary.encode()).hexdigest()[:16]

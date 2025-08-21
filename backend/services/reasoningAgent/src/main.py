@@ -3,6 +3,12 @@ Main entry point for Reasoning Agent
 A2A Microservice for logical reasoning and decision making
 """
 
+import warnings
+
+# Suppress warnings about unrecognized blockchain networks from eth_utils
+warnings.filterwarnings("ignore", message="Network 345 with name 'Yooldo Verse Mainnet'")
+warnings.filterwarnings("ignore", message="Network 12611 with name 'Astar zkEVM'")
+
 import asyncio
 import logging
 import os
@@ -11,24 +17,20 @@ import uvicorn
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-sys.path.append('../shared')
-sys.path.append('../../shared')
+# Add the shared directory to Python path for a2aCommon imports
+shared_path = os.path.join(os.path.dirname(__file__), '..', '..', 'shared')
+sys.path.insert(0, os.path.abspath(shared_path))
 
 # Try to import the agent, fallback to simple service if not available
-try:
-    from agent import ReasoningAgent
-    from a2aCommon.microservice.baseService import A2AMicroservice
-    AGENT_AVAILABLE = True
-except ImportError as e:
-    print(f"Agent import failed: {e}. Running in simple mode.")
-    AGENT_AVAILABLE = False
+from agent import ReasoningAgent
+AGENT_AVAILABLE = True
 
 logger = logging.getLogger(__name__)
 
 # Global agent instance
 agent_instance = None
 
-if AGENT_AVAILABLE:
+if True:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         """Manage application lifecycle"""
@@ -37,10 +39,18 @@ if AGENT_AVAILABLE:
         # Startup
         logger.info("Starting Reasoning Agent service...")
         
-        # Initialize agent
-        base_url = os.getenv("A2A_AGENT_URL", "http://localhost:8008")
-        agent_manager_url = os.getenv("A2A_MANAGER_URL", "http://localhost:8000")
-        downstream_agent_url = os.getenv("A2A_DOWNSTREAM_URL", "http://localhost:8009")
+        # Initialize agent - REQUIRE environment variables for A2A compliance
+        base_url = os.getenv("A2A_AGENT_URL")
+        if not base_url:
+            raise ValueError("A2A_AGENT_URL environment variable is required for A2A protocol compliance")
+        
+        agent_manager_url = os.getenv("A2A_MANAGER_URL") or os.getenv("A2A_BASE_URL")
+        if not agent_manager_url:
+            raise ValueError("A2A_MANAGER_URL or A2A_BASE_URL environment variable is required")
+        
+        downstream_agent_url = os.getenv("A2A_DOWNSTREAM_URL")
+        if not downstream_agent_url:
+            raise ValueError("A2A_DOWNSTREAM_URL environment variable is required")
         
         try:
             agent_instance = ReasoningAgent(
@@ -68,12 +78,12 @@ if AGENT_AVAILABLE:
         logger.info("Reasoning Agent service shut down")
 
     # Create FastAPI app with A2A microservice base
-    app = A2AMicroservice(
+    app = FastAPI(
         title="Reasoning Agent",
         description="A2A Microservice for logical reasoning and decision making",
         version="3.0.0",
         lifespan=lifespan
-    ).app
+    )
 else:
     # Simple FastAPI app when agent is not available
     app = FastAPI(
@@ -82,27 +92,49 @@ else:
         version="3.0.0"
     )
 
-@app.get("/health")
-async def health():
-    """Health check endpoint"""
+# Use standardized health endpoints
+try:
+    import sys
+    sys.path.append('../../app')
+    from app.a2a.sdk.health import StandardHealthCheck
+    
+    # Create standardized health endpoints
     if AGENT_AVAILABLE and agent_instance:
-        return {
-            "status": "healthy",
-            "service": "Reasoning Agent",
-            "version": "3.0.0",
-            "agent_registered": agent_instance.is_registered,
-            "mode": "full"
-        }
+        StandardHealthCheck.create_health_endpoint(app, agent_instance)
     else:
-        return {
-            "status": "healthy",
-            "service": "Reasoning Agent",
-            "version": "3.0.0",
-            "mode": "simple",
-            "note": "Running without A2A agent (missing dependencies)"
-        }
+        # Fallback health endpoint for simple mode
+        @app.get("/health")
+        async def health():
+            return {
+                "status": "healthy",
+                "service": "Reasoning Agent",
+                "version": "3.0.0",
+                "mode": "simple",
+                "note": "Running without A2A agent (missing dependencies)"
+            }
+except ImportError:
+    # Fallback if StandardHealthCheck not available
+    @app.get("/health")
+    async def health():
+        """Health check endpoint"""
+        if AGENT_AVAILABLE and agent_instance:
+            return {
+                "status": "healthy",
+                "service": "Reasoning Agent",
+                "version": "3.0.0",
+                "agent_registered": agent_instance.is_registered,
+                "mode": "full"
+            }
+        else:
+            return {
+                "status": "healthy",
+                "service": "Reasoning Agent",
+                "version": "3.0.0",
+                "mode": "simple",
+                "note": "Running without A2A agent (missing dependencies)"
+            }
 
-if AGENT_AVAILABLE:
+if True:
     @app.get("/stats")
     async def get_stats():
         """Get reasoning statistics"""

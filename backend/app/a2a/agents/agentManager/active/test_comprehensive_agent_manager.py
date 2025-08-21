@@ -17,12 +17,18 @@ sys.path.append('/Users/apple/projects/a2a/a2aAgents/backend')
 # Import the comprehensive agent manager
 from comprehensiveAgentManagerSdk import ComprehensiveAgentManagerSDK
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 async def test_agent_manager():
     print('🎯 Testing Comprehensive Agent Manager Real AI Integration')
     print('=' * 70)
     
     # Initialize agent
-    agent = ComprehensiveAgentManagerSDK('http://localhost:8080')
+    agent = ComprehensiveAgentManagerSDK(os.getenv("A2A_SERVICE_URL"))
     await agent.initialize()
     
     # Test 1: Check if ML models are properly initialized
@@ -222,7 +228,7 @@ async def test_agent_manager():
         registration_result = await agent.register_agent({
             'name': 'TestAgent',
             'version': '1.0.0',
-            'endpoint': 'http://localhost:9999',
+            'endpoint': os.getenv("A2A_SERVICE_URL"),
             'capabilities': ['data_processing', 'calculation'],
             'metadata': {'test': True, 'environment': 'testing'}
         })
@@ -378,12 +384,16 @@ async def test_agent_manager():
         
         # Test storing a sample agent registration
         from comprehensiveAgentManagerSdk import AgentRegistration, AgentStatus, AgentCapability
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
         
         sample_registration = AgentRegistration(
             agent_id="test_agent_123",
             name="TestAgent",
             version="1.0.0",
-            endpoint="http://localhost:8888",
+            endpoint=os.getenv("A2A_SERVICE_URL"),
             capabilities=[AgentCapability.DATA_PROCESSING],
             status=AgentStatus.RUNNING,
             metadata={"test": True},

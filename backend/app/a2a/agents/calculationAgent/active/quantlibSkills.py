@@ -191,6 +191,10 @@ class QuantLibSkills:
         
         try:
             import numpy as np
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             
             # Calculate returns
             returns = np.diff(portfolio_values) / portfolio_values[:-1]

@@ -76,6 +76,12 @@ from .contextCoordination import (
     SynchronizationState
 )
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -99,7 +105,7 @@ CONTEXT_CACHE_TTL = int(os.getenv('CONTEXT_CACHE_TTL', '3600'))
 MAX_MEMORY_CONTEXTS = int(os.getenv('MAX_MEMORY_CONTEXTS', '10000'))
 VECTOR_SIMILARITY_THRESHOLD = float(os.getenv('VECTOR_SIMILARITY_THRESHOLD', '0.7'))
 ENABLE_REDIS_CACHE = os.getenv('ENABLE_REDIS_CACHE', 'true').lower() == 'true'
-REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379')
+REDIS_URL = os.getenv('REDIS_URL', "os.getenv("REDIS_URL", "redis://localhost:6379")")
 
 
 class ContextQualityLevel(Enum):
@@ -2076,7 +2082,7 @@ class ContextEngineeringAgent(A2AAgentBase, PerformanceOptimizationMixin):
 
 
 # Production agent launcher
-def create_production_agent(base_url: str = "http://localhost:8091", config: Optional[Dict[str, Any]] = None):
+def create_production_agent(base_url: str = os.getenv("A2A_SERVICE_URL"), config: Optional[Dict[str, Any]] = None):
     """Create production-ready context engineering agent"""
     return ContextEngineeringAgent(base_url, config)
 

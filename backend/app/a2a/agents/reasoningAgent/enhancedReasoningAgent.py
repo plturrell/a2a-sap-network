@@ -22,8 +22,7 @@ from pydantic import BaseModel, Field
 logger = logging.getLogger(__name__)
 
 # Import SDK components including MCP
-try:
-    from app.a2a.sdk.agentBase import A2AAgentBase
+from app.a2a.sdk.agentBase import A2AAgentBase
 except ImportError:
     logger.error("Failed to import A2AAgentBase - using base class")
     class A2AAgentBase:
@@ -33,8 +32,7 @@ except ImportError:
             self.description = description
             self.version = version
             
-try:
-    from app.a2a.sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
+from app.a2a.sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
 except ImportError:
     logger.error("Failed to import MCP decorators - creating stubs")
     def mcp_tool(*args, **kwargs):
@@ -51,8 +49,7 @@ except ImportError:
         return decorator
 
 # Import with fallbacks for testing
-try:
-    from app.a2a.sdk.types import A2AMessage, MessagePart, MessageRole, TaskStatus, AgentCard
+from app.a2a.sdk.types import A2AMessage, MessagePart, MessageRole, TaskStatus, AgentCard
 except ImportError:
     logger.warning("SDK types not available - using stub classes")
     class A2AMessage:
@@ -87,8 +84,11 @@ except ImportError:
         pass
 
 # Import MCP skill coordination system
-try:
-    from app.a2a.sdk.mcpSkillCoordination import MCPSkillCoordinationMixin, skill_depends_on, skill_provides
+from app.a2a.sdk.mcpSkillCoordination import MCPSkillCoordinationMixin, skill_depends_on, skill_provides
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
 except ImportError:
     logger.warning("MCP skill coordination not available - using stubs")
     class MCPSkillCoordinationMixin:

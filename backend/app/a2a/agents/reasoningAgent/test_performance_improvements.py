@@ -243,8 +243,7 @@ async def test_blackboard_performance():
     
     try:
         # Import with fallback for testing
-        try:
-            from blackboardArchitecture import BlackboardController
+from blackboardArchitecture import BlackboardController
         except ImportError:
             print("⚠️  Blackboard architecture not available for testing")
             return True
@@ -309,6 +308,10 @@ async def test_memory_leak_prevention():
         # Simulate creating and cleaning up many resources
         from asyncGrokClient import AsyncGrokReasoning, GrokConfig
         from asyncCleanupManager import get_cleanup_manager
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
         
         cleanup_manager = get_cleanup_manager()
         

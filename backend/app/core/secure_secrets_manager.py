@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 class SecretType(str, Enum):
     """Types of secrets managed by the system"""
     API_KEY = "api_key"
-    DATABASE_PASSWORD = "database_password"
+    DATABASE_password = os.getenv("PASSWORD", "")
     JWT_SECRET = "jwt_secret"
     ENCRYPTION_KEY = "encryption_key"
     PRIVATE_KEY = "private_key"

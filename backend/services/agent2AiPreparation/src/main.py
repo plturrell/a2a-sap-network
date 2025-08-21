@@ -4,14 +4,25 @@ Agent 2 - AI Preparation Microservice
 A2A compliant agent for preparing data for AI/ML processing
 """
 
+import warnings
+
+# Suppress warnings about unrecognized blockchain networks from eth_utils
+warnings.filterwarnings("ignore", message="Network 345 with name 'Yooldo Verse Mainnet'")
+warnings.filterwarnings("ignore", message="Network 12611 with name 'Astar zkEVM'")
+
 import asyncio
 import os
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .agent import AIPreparationAgent
-from .router import create_a2a_router
+import sys
+import os
+# Add the services directory to Python path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
+from agent2AiPreparation.src.agent import AIPreparationAgent
+from agent2AiPreparation.src.router import create_a2a_router
 
 async def main():
     # Get configuration from environment variables
@@ -20,8 +31,8 @@ async def main():
     base_url = os.getenv("A2A_AGENT_BASE_URL", f"http://localhost:{port}")
     
     # A2A network configuration
-    agent_manager_url = os.getenv("A2A_AGENT_MANAGER_URL", os.getenv("A2A_AGENT_MANAGER_URL", "http://agent-manager:8007"))
-    downstream_agent_url = os.getenv("A2A_DOWNSTREAM_AGENT_URL", os.getenv("A2A_DOWNSTREAM_URL_3", "http://agent3:8004"))
+    agent_manager_url = os.getenv("A2A_AGENT_MANAGER_URL", os.getenv("A2A_AGENT_MANAGER_URL", "https://agent-manager:8007"))
+    downstream_agent_url = os.getenv("A2A_DOWNSTREAM_AGENT_URL", os.getenv("A2A_DOWNSTREAM_URL_3", "https://agent3:8004"))
     
     # Create agent instance
     agent = AIPreparationAgent(

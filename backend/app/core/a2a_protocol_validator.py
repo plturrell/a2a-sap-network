@@ -178,7 +178,6 @@ class MessageFormatRule(ValidationRule):
                     results.append(self.create_result(
                         "Message payload exceeds size limit",
                         {"payload_size": payload_size, "limit": 1024 * 1024},
-                        severity=ValidationSeverity.WARNING,
                         suggestion="Consider using message streaming for large payloads"
                     ))
             except (TypeError, ValueError):
@@ -297,7 +296,6 @@ class SecurityValidationRule(ValidationRule):
                 results.append(self.create_result(
                     "Message from anonymous or unknown sender",
                     {"sender": message.sender},
-                    severity=ValidationSeverity.WARNING,
                     suggestion="Implement proper agent authentication"
                 ))
         
@@ -306,7 +304,6 @@ class SecurityValidationRule(ValidationRule):
             results.append(self.create_result(
                 "Message from low-trust source",
                 {"trust_level": context.trust_level, "threshold": 0.3},
-                severity=ValidationSeverity.WARNING,
                 suggestion="Verify sender identity and message authenticity"
             ))
         
@@ -323,7 +320,6 @@ class SecurityValidationRule(ValidationRule):
             results.append(self.create_result(
                 "Message lacks digital signature",
                 {"trust_level": context.trust_level},
-                severity=ValidationSeverity.WARNING,
                 suggestion="Sign messages for integrity verification"
             ))
         
@@ -368,7 +364,6 @@ class AgentBehaviorRule(ValidationRule):
                     results.append(self.create_result(
                         f"High message frequency detected: {message_rate:.2f} msg/sec",
                         {"message_rate": message_rate, "threshold": 10},
-                        severity=ValidationSeverity.WARNING,
                         suggestion="Implement rate limiting or batch processing"
                     ))
         

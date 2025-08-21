@@ -4,6 +4,12 @@ Data Manager - A2A Microservice
 Central data persistence service for the A2A network
 """
 
+import warnings
+
+# Suppress warnings about unrecognized blockchain networks from eth_utils
+warnings.filterwarnings("ignore", message="Network 345 with name 'Yooldo Verse Mainnet'")
+warnings.filterwarnings("ignore", message="Network 12611 with name 'Astar zkEVM'")
+
 import sys
 import os
 # Add path for imports
@@ -17,14 +23,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from agent import DataManagerAgent
 from router import create_a2a_router
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 async def main():
     # Get configuration from environment variables
-    port = int(os.getenv("A2A_AGENT_PORT", "8008"))
+    port = int(os.getenv("A2A_AGENT_PORT", "8011"))
     host = os.getenv("A2A_AGENT_HOST", "0.0.0.0")
     base_url = os.getenv("A2A_AGENT_BASE_URL", f"http://localhost:{port}")
     
     # A2A network configuration
-    agent_manager_url = os.getenv("A2A_AGENT_MANAGER_URL", "http://agent-manager:8007")
+    agent_manager_url = os.getenv("A2A_AGENT_MANAGER_URL", "https://agent-manager:8007")
     
     # Storage configuration
     storage_backend = os.getenv("STORAGE_BACKEND", "sqlite")
@@ -57,15 +69,18 @@ async def main():
     # Add CORS middleware for A2A communication with secure configuration
     # SECURITY: Never use "*" for origins when credentials are allowed
     allowed_origins = os.getenv("CORS_ORIGINS", "").split(",") if os.getenv("CORS_ORIGINS") else [
-        os.getenv("A2A_FRONTEND_URL", "http://localhost:3000"),
-        os.getenv("A2A_GATEWAY_URL", "http://localhost:8080"),  # Gateway
-        "http://gateway:8080",       # Internal gateway service
-        "http://agent-manager:8010", # Agent Manager internal
+        os.getenv("A2A_FRONTEND_URL"),
+        os.getenv("A2A_GATEWAY_URL"),  # Gateway
+        "https://gateway:8080",       # Internal gateway service
+        "https://agent-manager:8010", # Agent Manager internal
     ]
+    
+    # Filter out None values and empty strings
+    valid_origins = [origin.strip() for origin in allowed_origins if origin and isinstance(origin, str) and origin.strip()]
     
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[origin.strip() for origin in allowed_origins if origin.strip()],
+        allow_origins=valid_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
         allow_headers=["Accept", "Content-Type", "Authorization", "X-API-Key", "X-Agent-ID", "X-A2A-Protocol"],

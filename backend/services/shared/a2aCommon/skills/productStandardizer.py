@@ -4,7 +4,11 @@ import os
 from typing import Dict, List, Any, Optional
 import logging
 import asyncio
+# Safe import for grok client
 from ...clients.grokClient import GrokClient, create_grok_client
+except ImportError:
+    GrokClient = None
+    create_grok_client = None
 
 logger = logging.getLogger(__name__)
 
@@ -339,6 +343,10 @@ Important: Only include the fields I've asked for above. Return ONLY valid JSON 
             if response.content:
                 # Parse JSON response
                 import re
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
                 # Remove any markdown code blocks if present
                 json_str = re.sub(r'```json\s*|\s*```', '', response.content)
                 enriched_data = json.loads(json_str)

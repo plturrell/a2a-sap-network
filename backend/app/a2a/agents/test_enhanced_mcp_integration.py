@@ -18,6 +18,12 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 from reasoningAgent.enhancedMcpToolIntegration import EnhancedMCPReasoningAgent, create_enhanced_mcp_reasoning_agent
 from agentManager.active.enhancedMcpAgentManager import EnhancedMCPAgentManager, create_enhanced_mcp_agent_manager
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logger = logging.getLogger(__name__)
 
 
@@ -27,14 +33,14 @@ class TestEnhancedMCPIntegration:
     @pytest.fixture
     async def reasoning_agent(self):
         """Create test reasoning agent"""
-        agent = create_enhanced_mcp_reasoning_agent("http://localhost:8080")
+        agent = create_enhanced_mcp_reasoning_agent(os.getenv("A2A_SERVICE_URL"))
         await agent.initialize()
         return agent
     
     @pytest.fixture 
     async def agent_manager(self):
         """Create test agent manager"""
-        manager = create_enhanced_mcp_agent_manager("http://localhost:8080")
+        manager = create_enhanced_mcp_agent_manager(os.getenv("A2A_SERVICE_URL"))
         await manager.initialize()
         return manager
     
@@ -439,8 +445,8 @@ async def run_enhanced_mcp_integration_tests():
     print("=" * 60)
     
     # Initialize test instances
-    reasoning_agent = create_enhanced_mcp_reasoning_agent("http://localhost:8080")
-    agent_manager = create_enhanced_mcp_agent_manager("http://localhost:8080")
+    reasoning_agent = create_enhanced_mcp_reasoning_agent(os.getenv("A2A_SERVICE_URL"))
+    agent_manager = create_enhanced_mcp_agent_manager(os.getenv("A2A_SERVICE_URL"))
     
     await reasoning_agent.initialize()
     await agent_manager.initialize()

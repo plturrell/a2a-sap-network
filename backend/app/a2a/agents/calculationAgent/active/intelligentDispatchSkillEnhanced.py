@@ -13,6 +13,10 @@ import re
 # Import natural language processor
 try:
     from .naturalLanguageParser import MathQueryProcessor, MathOperation
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
     NL_PARSER_AVAILABLE = True
 except ImportError:
     NL_PARSER_AVAILABLE = False

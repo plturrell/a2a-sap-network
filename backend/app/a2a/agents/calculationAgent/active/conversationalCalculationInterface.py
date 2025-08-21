@@ -212,6 +212,10 @@ class ConversationalCalculationInterface:
             
             # Parse JSON response
             import re
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             json_match = re.search(r'\{.*\}', analysis_response.content, re.DOTALL)
             if json_match:
                 try:

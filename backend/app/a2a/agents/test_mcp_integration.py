@@ -24,6 +24,12 @@ from ..common.mcpValidationTools import MCPValidationTools
 from ..common.mcpQualityAssessmentTools import MCPQualityAssessmentTools
 
 
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
+
 class TestRealMCPIntegration:
     """Real integration tests that verify MCP tools work together"""
     
@@ -34,7 +40,7 @@ class TestRealMCPIntegration:
         test_dir = tempfile.mkdtemp()
         
         # Initialize real agents with actual MCP tools
-        base_url = "http://localhost:8000"
+        base_url = os.getenv("A2A_SERVICE_URL")
         
         agents = {
             "data_product": AdvancedMCPDataProductAgent(base_url),
@@ -401,8 +407,8 @@ class TestMCPToolChaining:
     async def test_validation_chain(self):
         """Test chaining validation tools across agents"""
         # Initialize agents
-        data_agent = AdvancedMCPDataProductAgent("http://localhost:8000")
-        std_agent = AdvancedMCPStandardizationAgent("http://localhost:8000")
+        data_agent = AdvancedMCPDataProductAgent(os.getenv("A2A_SERVICE_URL"))
+        std_agent = AdvancedMCPStandardizationAgent(os.getenv("A2A_SERVICE_URL"))
         
         # Create test data with validation issues
         test_data = {
@@ -453,7 +459,7 @@ class TestMCPPerformanceAndScaling:
     @pytest.mark.asyncio
     async def test_performance_under_load(self):
         """Test MCP tool performance with realistic load"""
-        agent = AdvancedMCPVectorProcessingAgent("http://localhost:8000")
+        agent = AdvancedMCPVectorProcessingAgent(os.getenv("A2A_SERVICE_URL"))
         
         # Generate large dataset
         num_vectors = 1000
@@ -490,7 +496,7 @@ class TestMCPErrorScenarios:
     @pytest.mark.asyncio
     async def test_validation_error_handling(self):
         """Test how MCP tools handle validation errors"""
-        agent = AdvancedMCPCalculationValidationAgent("http://localhost:8000")
+        agent = AdvancedMCPCalculationValidationAgent(os.getenv("A2A_SERVICE_URL"))
         
         # Test with malformed calculation request
         malformed_request = {
@@ -509,7 +515,7 @@ class TestMCPErrorScenarios:
     @pytest.mark.asyncio
     async def test_resource_exhaustion_handling(self):
         """Test MCP tools when resources are constrained"""
-        agent = AdvancedMCPVectorProcessingAgent("http://localhost:8000")
+        agent = AdvancedMCPVectorProcessingAgent(os.getenv("A2A_SERVICE_URL"))
         
         # Try to process extremely large vectors
         huge_vectors = [[i] * 10000 for i in range(100)]  # 100 vectors of 10k dimensions

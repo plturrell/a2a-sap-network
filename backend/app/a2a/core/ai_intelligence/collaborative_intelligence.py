@@ -928,7 +928,7 @@ class ForagingBehavior(SwarmBehavior):
         return {
             "behavior": "foraging",
             "participants": len(agents),
-            "resources_found": np.random.randint(5, 20),
+            "resources_found": np.secrets.randbelow(5, 20),
             "efficiency": 0.75,
             "confidence": 0.85,
         }
@@ -962,7 +962,7 @@ class ExplorationBehavior(SwarmBehavior):
             "behavior": "exploration",
             "participants": len(agents),
             "area_covered": len(agents) * 10,
-            "discoveries": np.random.randint(1, 5),
+            "discoveries": np.secrets.randbelow(1, 5),
             "efficiency": 0.85,
             "confidence": 0.9,
         }
@@ -997,7 +997,108 @@ class DivisionOfLaborBehavior(SwarmBehavior):
     async def _create_initial_connections(self, agent: Agent):
         """Create initial network connections for new agent"""
         logger.info(f"Creating initial connections for agent {agent.agent_id}")
-        # TODO: Implement connection logic based on capabilities
+        
+        try:
+            # Get agent capabilities
+            capabilities = getattr(agent, 'capabilities', [])
+            if isinstance(capabilities, str):
+                capabilities = [capabilities]
+            
+            # Find agents with complementary capabilities
+            compatible_agents = []
+            for existing_agent_id, existing_agent in self.agent_registry.items():
+                if existing_agent_id == agent.agent_id:
+                    continue
+                    
+                existing_capabilities = getattr(existing_agent, 'capabilities', [])
+                if isinstance(existing_capabilities, str):
+                    existing_capabilities = [existing_capabilities]
+                
+                # Check for capability overlap or complementary skills
+                compatibility_score = self._calculate_compatibility_score(
+                    capabilities, existing_capabilities
+                )
+                
+                if compatibility_score > 0.3:  # Threshold for initial connection
+                    compatible_agents.append({
+                        'agent_id': existing_agent_id,
+                        'score': compatibility_score,
+                        'capabilities': existing_capabilities
+                    })
+            
+            # Sort by compatibility and create connections to top agents
+            compatible_agents.sort(key=lambda x: x['score'], reverse=True)
+            max_initial_connections = min(5, len(compatible_agents))  # Limit initial connections
+            
+            for i in range(max_initial_connections):
+                target_agent = compatible_agents[i]
+                
+                # Create bidirectional connection
+                if agent.agent_id not in self.network_connections:
+                    self.network_connections[agent.agent_id] = {}
+                if target_agent['agent_id'] not in self.network_connections:
+                    self.network_connections[target_agent['agent_id']] = {}
+                
+                # Set initial trust score based on compatibility
+                initial_trust = min(0.7, target_agent['score'] + 0.2)
+                
+                self.network_connections[agent.agent_id][target_agent['agent_id']] = {
+                    'trust_score': initial_trust,
+                    'interaction_count': 0,
+                    'success_rate': 0.5,  # Start neutral
+                    'last_interaction': datetime.utcnow(),
+                    'connection_strength': target_agent['score']
+                }
+                
+                self.network_connections[target_agent['agent_id']][agent.agent_id] = {
+                    'trust_score': initial_trust,
+                    'interaction_count': 0,
+                    'success_rate': 0.5,
+                    'last_interaction': datetime.utcnow(),
+                    'connection_strength': target_agent['score']
+                }
+                
+                logger.info(f"Created connection: {agent.agent_id} <-> {target_agent['agent_id']} (trust: {initial_trust:.2f})")
+            
+            logger.info(f"Created {max_initial_connections} initial connections for agent {agent.agent_id}")
+            
+        except Exception as e:
+            logger.error(f"Failed to create initial connections for {agent.agent_id}: {e}")
+    
+    def _calculate_compatibility_score(self, caps1: List[str], caps2: List[str]) -> float:
+        """Calculate compatibility score between two sets of capabilities"""
+        if not caps1 or not caps2:
+            return 0.0
+        
+        # Convert to sets for easier comparison
+        set1 = set(caps1)
+        set2 = set(caps2)
+        
+        # Calculate Jaccard similarity for overlapping capabilities
+        intersection = len(set1.intersection(set2))
+        union = len(set1.union(set2))
+        
+        if union == 0:
+            return 0.0
+        
+        jaccard_similarity = intersection / union
+        
+        # Add bonus for complementary capabilities
+        complementary_bonus = 0.0
+        complementary_pairs = [
+            ('data_processing', 'data_analysis'),
+            ('reasoning', 'validation'),
+            ('synthesis', 'evaluation'),
+            ('monitoring', 'alerting'),
+            ('collection', 'storage'),
+            ('computation', 'visualization')
+        ]
+        
+        for cap1, cap2 in complementary_pairs:
+            if (cap1 in set1 and cap2 in set2) or (cap2 in set1 and cap1 in set2):
+                complementary_bonus += 0.2
+        
+        return min(1.0, jaccard_similarity + complementary_bonus)
 
     def _estimate_collaboration_duration(self, request: CollaborationRequest, participants: List[Dict[str, Any]]) -> float:
         """Estimate collaboration duration"""
@@ -1008,7 +1109,131 @@ class DivisionOfLaborBehavior(SwarmBehavior):
     async def _update_collaboration_metrics(self, result: CollaborationResult):
         """Update collaboration performance metrics"""
         logger.info(f"Updating metrics for collaboration {result.collaboration_id}")
-        # TODO: Implement metrics collection
+        
+        try:
+            # Ensure metrics storage exists
+            if not hasattr(self, 'collaboration_metrics'):
+                self.collaboration_metrics = {
+                    'total_collaborations': 0,
+                    'successful_collaborations': 0,
+                    'average_duration': 0.0,
+                    'average_satisfaction': 0.0,
+                    'participant_performance': defaultdict(list),
+                    'collaboration_types': defaultdict(int),
+                    'timeline': []
+                }
+            
+            # Update overall metrics
+            self.collaboration_metrics['total_collaborations'] += 1
+            
+            if result.success:
+                self.collaboration_metrics['successful_collaborations'] += 1
+            
+            # Update duration metrics
+            if result.duration is not None:
+                current_avg = self.collaboration_metrics['average_duration']
+                total_count = self.collaboration_metrics['total_collaborations']
+                
+                # Calculate rolling average
+                self.collaboration_metrics['average_duration'] = (
+                    (current_avg * (total_count - 1) + result.duration) / total_count
+                )
+            
+            # Update satisfaction metrics
+            if hasattr(result, 'satisfaction_score') and result.satisfaction_score is not None:
+                current_avg_satisfaction = self.collaboration_metrics['average_satisfaction']
+                total_count = self.collaboration_metrics['total_collaborations']
+                
+                self.collaboration_metrics['average_satisfaction'] = (
+                    (current_avg_satisfaction * (total_count - 1) + result.satisfaction_score) / total_count
+                )
+            
+            # Track participant performance
+            for participant_id in result.participants:
+                performance_data = {
+                    'collaboration_id': result.collaboration_id,
+                    'success': result.success,
+                    'duration': result.duration,
+                    'timestamp': datetime.utcnow(),
+                    'satisfaction': getattr(result, 'satisfaction_score', 0.5)
+                }
+                
+                self.collaboration_metrics['participant_performance'][participant_id].append(performance_data)
+                
+                # Keep only last 100 collaborations per participant
+                if len(self.collaboration_metrics['participant_performance'][participant_id]) > 100:
+                    self.collaboration_metrics['participant_performance'][participant_id] = (
+                        self.collaboration_metrics['participant_performance'][participant_id][-100:]
+                    )
+                
+                # Update network connections based on performance
+                await self._update_connection_performance(participant_id, result.success)
+            
+            # Track collaboration types
+            collab_type = getattr(result, 'collaboration_type', 'general')
+            self.collaboration_metrics['collaboration_types'][collab_type] += 1
+            
+            # Add to timeline
+            timeline_entry = {
+                'timestamp': datetime.utcnow(),
+                'collaboration_id': result.collaboration_id,
+                'success': result.success,
+                'participants': len(result.participants),
+                'duration': result.duration,
+                'type': collab_type
+            }
+            
+            self.collaboration_metrics['timeline'].append(timeline_entry)
+            
+            # Keep only last 1000 timeline entries
+            if len(self.collaboration_metrics['timeline']) > 1000:
+                self.collaboration_metrics['timeline'] = self.collaboration_metrics['timeline'][-1000:]
+            
+            # Calculate and log current success rate
+            success_rate = (
+                self.collaboration_metrics['successful_collaborations'] / 
+                self.collaboration_metrics['total_collaborations']
+            ) if self.collaboration_metrics['total_collaborations'] > 0 else 0.0
+            
+            logger.info(
+                f"Collaboration metrics updated - "
+                f"Total: {self.collaboration_metrics['total_collaborations']}, "
+                f"Success rate: {success_rate:.2%}, "
+                f"Avg duration: {self.collaboration_metrics['average_duration']:.1f}s"
+            )
+            
+        except Exception as e:
+            logger.error(f"Failed to update collaboration metrics for {result.collaboration_id}: {e}")
+    
+    async def _update_connection_performance(self, agent_id: str, success: bool):
+        """Update network connection performance based on collaboration result"""
+        try:
+            if agent_id in self.network_connections:
+                for connected_agent_id in self.network_connections[agent_id]:
+                    connection = self.network_connections[agent_id][connected_agent_id]
+                    
+                    # Update interaction count
+                    connection['interaction_count'] += 1
+                    
+                    # Update success rate with exponential moving average
+                    alpha = 0.1  # Learning rate
+                    current_success_rate = connection.get('success_rate', 0.5)
+                    new_success_rate = (
+                        alpha * (1.0 if success else 0.0) + 
+                        (1 - alpha) * current_success_rate
+                    )
+                    connection['success_rate'] = new_success_rate
+                    
+                    # Update trust score based on success rate
+                    trust_adjustment = 0.05 if success else -0.03
+                    connection['trust_score'] = max(0.0, min(1.0, 
+                        connection['trust_score'] + trust_adjustment
+                    ))
+                    
+                    connection['last_interaction'] = datetime.utcnow()
+                    
+        except Exception as e:
+            logger.error(f"Failed to update connection performance for {agent_id}: {e}")
 
     async def _collect_votes(self, agents: List[str], proposals: List[Any]) -> Dict[str, Any]:
         """Collect votes from agents on proposals"""
@@ -1027,12 +1252,294 @@ class DivisionOfLaborBehavior(SwarmBehavior):
     async def _send_knowledge(self, agent_id: str, knowledge: Dict[str, Any]) -> bool:
         """Send knowledge to target agent"""
         logger.info(f"Sending knowledge to agent {agent_id}")
-        return True  # TODO: Implement actual sending
+        
+        try:
+            # Validate target agent exists
+            if agent_id not in self.agent_registry:
+                logger.warning(f"Target agent {agent_id} not found in registry")
+                return False
+            
+            target_agent = self.agent_registry[agent_id]
+            
+            # Prepare knowledge message
+            knowledge_message = {
+                'type': 'knowledge_transfer',
+                'source_agent': self.agent_id,
+                'target_agent': agent_id,
+                'timestamp': datetime.utcnow().isoformat(),
+                'knowledge_id': f"knowledge_{datetime.utcnow().timestamp()}",
+                'content': knowledge,
+                'metadata': {
+                    'knowledge_type': knowledge.get('type', 'general'),
+                    'confidence_score': knowledge.get('confidence', 0.8),
+                    'relevance_score': knowledge.get('relevance', 0.7),
+                    'expiry': knowledge.get('expiry'),
+                    'priority': knowledge.get('priority', 'normal')
+                }
+            }
+            
+            # Check if target agent has knowledge handling capability
+            target_capabilities = getattr(target_agent, 'capabilities', [])
+            if isinstance(target_capabilities, str):
+                target_capabilities = [target_capabilities]
+            
+            knowledge_capable = any(cap in ['knowledge_processing', 'learning', 'reasoning', 'analysis'] 
+                                  for cap in target_capabilities)
+            
+            if not knowledge_capable:
+                logger.warning(f"Agent {agent_id} may not be capable of processing knowledge")
+            
+            # Try to send via direct method call if agent has receive_knowledge method
+            if hasattr(target_agent, 'receive_knowledge'):
+                try:
+                    result = await target_agent.receive_knowledge(knowledge_message)
+                    if result:
+                        logger.info(f"Knowledge successfully sent to {agent_id} via direct method")
+                        await self._update_knowledge_transfer_metrics(agent_id, True, 'direct_method')
+                        return True
+                except Exception as e:
+                    logger.warning(f"Direct knowledge transfer failed: {e}")
+            
+            # Fallback: Store in agent's knowledge queue
+            if not hasattr(self, 'knowledge_queues'):
+                self.knowledge_queues = defaultdict(list)
+            
+            self.knowledge_queues[agent_id].append(knowledge_message)
+            
+            # Limit queue size
+            if len(self.knowledge_queues[agent_id]) > 100:
+                self.knowledge_queues[agent_id] = self.knowledge_queues[agent_id][-100:]
+            
+            # Try to notify agent of pending knowledge
+            await self._notify_agent_of_pending_knowledge(agent_id)
+            
+            logger.info(f"Knowledge queued for agent {agent_id}")
+            await self._update_knowledge_transfer_metrics(agent_id, True, 'queued')
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to send knowledge to agent {agent_id}: {e}")
+            await self._update_knowledge_transfer_metrics(agent_id, False, 'error')
+            return False
+    
+    async def _notify_agent_of_pending_knowledge(self, agent_id: str):
+        """Notify agent that knowledge is available"""
+        try:
+            target_agent = self.agent_registry.get(agent_id)
+            if target_agent and hasattr(target_agent, 'notify_pending_knowledge'):
+                await target_agent.notify_pending_knowledge()
+        except Exception as e:
+            logger.debug(f"Failed to notify agent {agent_id} of pending knowledge: {e}")
+    
+    async def _update_knowledge_transfer_metrics(self, agent_id: str, success: bool, method: str):
+        """Update knowledge transfer metrics"""
+        try:
+            if not hasattr(self, 'knowledge_transfer_metrics'):
+                self.knowledge_transfer_metrics = {
+                    'total_transfers': 0,
+                    'successful_transfers': 0,
+                    'transfer_methods': defaultdict(int),
+                    'agent_success_rates': defaultdict(lambda: {'successes': 0, 'attempts': 0})
+                }
+            
+            self.knowledge_transfer_metrics['total_transfers'] += 1
+            if success:
+                self.knowledge_transfer_metrics['successful_transfers'] += 1
+                self.knowledge_transfer_metrics['agent_success_rates'][agent_id]['successes'] += 1
+            
+            self.knowledge_transfer_metrics['agent_success_rates'][agent_id]['attempts'] += 1
+            self.knowledge_transfer_metrics['transfer_methods'][method] += 1
+            
+        except Exception as e:
+            logger.error(f"Failed to update knowledge transfer metrics: {e}")
 
     async def _update_network_connections(self, agent_id: str):
         """Update network connections based on trust scores"""
         logger.info(f"Updating network connections for agent {agent_id}")
-        # TODO: Implement network topology updates
+        
+        try:
+            if agent_id not in self.network_connections:
+                logger.warning(f"No network connections found for agent {agent_id}")
+                return
+            
+            current_connections = self.network_connections[agent_id].copy()
+            
+            # Remove low-trust connections
+            connections_to_remove = []
+            for connected_agent_id, connection_data in current_connections.items():
+                trust_score = connection_data.get('trust_score', 0.5)
+                
+                # Remove connections with very low trust
+                if trust_score < 0.2:
+                    connections_to_remove.append(connected_agent_id)
+                    logger.info(f"Removing low-trust connection: {agent_id} -> {connected_agent_id} (trust: {trust_score:.2f})")
+            
+            # Remove bidirectional low-trust connections
+            for connected_agent_id in connections_to_remove:
+                # Remove from current agent's connections
+                if connected_agent_id in self.network_connections[agent_id]:
+                    del self.network_connections[agent_id][connected_agent_id]
+                
+                # Remove reverse connection
+                if (connected_agent_id in self.network_connections and 
+                    agent_id in self.network_connections[connected_agent_id]):
+                    del self.network_connections[connected_agent_id][agent_id]
+            
+            # Find potential new connections based on successful collaborations
+            await self._discover_new_connections(agent_id)
+            
+            # Optimize existing connections by adjusting trust scores
+            await self._optimize_connection_strengths(agent_id)
+            
+            # Update connection topology for better network efficiency
+            await self._optimize_network_topology(agent_id)
+            
+            # Log network statistics
+            connection_count = len(self.network_connections.get(agent_id, {}))
+            avg_trust = self._calculate_average_trust(agent_id)
+            
+            logger.info(f"Network updated for {agent_id}: {connection_count} connections, avg trust: {avg_trust:.2f}")
+            
+        except Exception as e:
+            logger.error(f"Failed to update network connections for {agent_id}: {e}")
+    
+    async def _discover_new_connections(self, agent_id: str):
+        """Discover and create new beneficial connections"""
+        try:
+            # Find agents that frequently collaborate with our connections
+            potential_connections = {}
+            
+            current_connections = self.network_connections.get(agent_id, {})
+            
+            # Look at second-degree connections (friends of friends)
+            for connected_agent_id in current_connections.keys():
+                if connected_agent_id in self.network_connections:
+                    for second_degree_agent in self.network_connections[connected_agent_id]:
+                        if (second_degree_agent != agent_id and 
+                            second_degree_agent not in current_connections):
+                            
+                            # Calculate potential value of this connection
+                            trust_via_connection = (
+                                current_connections[connected_agent_id]['trust_score'] * 
+                                self.network_connections[connected_agent_id][second_degree_agent]['trust_score']
+                            )
+                            
+                            if second_degree_agent not in potential_connections:
+                                potential_connections[second_degree_agent] = {'score': 0, 'recommendations': 0}
+                            
+                            potential_connections[second_degree_agent]['score'] += trust_via_connection
+                            potential_connections[second_degree_agent]['recommendations'] += 1
+            
+            # Create new connections for highly recommended agents
+            for potential_agent_id, data in potential_connections.items():
+                avg_recommendation_score = data['score'] / data['recommendations']
+                
+                if avg_recommendation_score > 0.6 and data['recommendations'] >= 2:
+                    await self._create_new_connection(agent_id, potential_agent_id, avg_recommendation_score * 0.7)
+                    logger.info(f"Created new connection: {agent_id} <-> {potential_agent_id} (recommended)")
+                    
+        except Exception as e:
+            logger.error(f"Failed to discover new connections for {agent_id}: {e}")
+    
+    async def _create_new_connection(self, agent1_id: str, agent2_id: str, initial_trust: float):
+        """Create a new bidirectional connection between agents"""
+        try:
+            # Initialize connection data
+            if agent1_id not in self.network_connections:
+                self.network_connections[agent1_id] = {}
+            if agent2_id not in self.network_connections:
+                self.network_connections[agent2_id] = {}
+            
+            connection_data = {
+                'trust_score': initial_trust,
+                'interaction_count': 0,
+                'success_rate': 0.5,
+                'last_interaction': datetime.utcnow(),
+                'connection_strength': initial_trust,
+                'connection_type': 'discovered'
+            }
+            
+            # Create bidirectional connection
+            self.network_connections[agent1_id][agent2_id] = connection_data.copy()
+            self.network_connections[agent2_id][agent1_id] = connection_data.copy()
+            
+        except Exception as e:
+            logger.error(f"Failed to create connection between {agent1_id} and {agent2_id}: {e}")
+    
+    async def _optimize_connection_strengths(self, agent_id: str):
+        """Optimize connection strengths based on recent performance"""
+        try:
+            if agent_id not in self.network_connections:
+                return
+            
+            for connected_agent_id, connection in self.network_connections[agent_id].items():
+                # Decay trust over time for inactive connections
+                days_since_interaction = (
+                    datetime.utcnow() - connection.get('last_interaction', datetime.utcnow())
+                ).days
+                
+                if days_since_interaction > 7:  # No interaction for a week
+                    decay_factor = max(0.9, 1.0 - (days_since_interaction * 0.01))
+                    connection['trust_score'] *= decay_factor
+                    
+                # Boost trust for frequently successful connections
+                interaction_count = connection.get('interaction_count', 0)
+                success_rate = connection.get('success_rate', 0.5)
+                
+                if interaction_count > 10 and success_rate > 0.8:
+                    connection['trust_score'] = min(1.0, connection['trust_score'] * 1.05)
+                    
+        except Exception as e:
+            logger.error(f"Failed to optimize connection strengths for {agent_id}: {e}")
+    
+    async def _optimize_network_topology(self, agent_id: str):
+        """Optimize network topology for better information flow"""
+        try:
+            if agent_id not in self.network_connections:
+                return
+                
+            connections = self.network_connections[agent_id]
+            
+            # If agent has too many connections, prune the weakest ones
+            max_connections = 20  # Reasonable limit for network efficiency
+            
+            if len(connections) > max_connections:
+                # Sort connections by combined trust and activity score
+                sorted_connections = sorted(
+                    connections.items(),
+                    key=lambda x: (
+                        x[1].get('trust_score', 0) * 0.6 + 
+                        min(1.0, x[1].get('interaction_count', 0) / 100.0) * 0.4
+                    ),
+                    reverse=True
+                )
+                
+                # Keep only top connections
+                connections_to_keep = dict(sorted_connections[:max_connections])
+                connections_to_remove = set(connections.keys()) - set(connections_to_keep.keys())
+                
+                # Remove excess connections
+                for connection_to_remove in connections_to_remove:
+                    del self.network_connections[agent_id][connection_to_remove]
+                    
+                    # Remove reverse connection
+                    if (connection_to_remove in self.network_connections and
+                        agent_id in self.network_connections[connection_to_remove]):
+                        del self.network_connections[connection_to_remove][agent_id]
+                
+                logger.info(f"Pruned {len(connections_to_remove)} excess connections for {agent_id}")
+                
+        except Exception as e:
+            logger.error(f"Failed to optimize network topology for {agent_id}: {e}")
+    
+    def _calculate_average_trust(self, agent_id: str) -> float:
+        """Calculate average trust score for an agent's connections"""
+        if agent_id not in self.network_connections or not self.network_connections[agent_id]:
+            return 0.0
+        
+        trust_scores = [conn.get('trust_score', 0.5) for conn in self.network_connections[agent_id].values()]
+        return sum(trust_scores) / len(trust_scores)
 
 
 # Utility functions

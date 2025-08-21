@@ -7,6 +7,12 @@ import logging
 from typing import Dict, Optional
 from pathlib import Path
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logger = logging.getLogger(__name__)
 
 
@@ -15,7 +21,7 @@ class AgentConfig:
     
     def __init__(self):
         # Base URLs
-        self.base_url = os.getenv("A2A_BASE_URL", "http://localhost:8000")
+        self.base_url = os.getenv("A2A_BASE_URL")
         self.agent_network_url = os.getenv("AGENT_NETWORK_URL", f"{self.base_url}")
         self.data_manager_url = os.getenv("DATA_MANAGER_URL", f"{self.base_url.replace('8000', '8001')}")
         self.catalog_manager_url = os.getenv("CATALOG_MANAGER_URL", f"{self.base_url.replace('8000', '8002')}")

@@ -3,6 +3,19 @@ A2A Developer Portal - IDE for A2A Agent Development
 Web-based IDE with BPMN designer, code editor, and agent management
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import json
 import os
@@ -18,8 +31,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from pydantic import BaseModel
-import httpx
-
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 from ..agents.agent_builder_agent_sdk import AgentBuilderAgentSDK, AgentGenerationRequest, BPMNWorkflow
 
 # SAP BTP Integration imports
@@ -32,6 +45,12 @@ from .sap_btp.logging_service import get_logger, setup_logging, LogCategory
 # Import deployment pipeline
 from .deployment.deployment_pipeline import DeploymentPipeline, DeploymentConfig, DeploymentTarget, DeploymentEnvironment
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # SAP CAP compliant logger
 logger = get_logger(__name__)
 
@@ -77,7 +96,7 @@ class DeveloperPortalServer:
         
         # Initialize Agent Builder
         self.agent_builder = AgentBuilderAgentSDK(
-            base_url="http://localhost:8000",
+            base_url=os.getenv("A2A_SERVICE_URL"),
             templates_path=str(self.workspace_path / "templates")
         )
         
@@ -95,7 +114,7 @@ class DeveloperPortalServer:
         self.blockchain_config = {
             "networks": {
                 "local": {
-                    "provider_url": config.get("blockchain", {}).get("local_provider", "http://localhost:8545"),
+                    "provider_url": config.get("blockchain", {}).get("local_provider", os.getenv("A2A_SERVICE_URL")),
                     "chain_id": 31337
                 },
                 "testnet": {

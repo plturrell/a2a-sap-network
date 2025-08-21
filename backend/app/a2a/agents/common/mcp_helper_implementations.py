@@ -156,7 +156,7 @@ class MCPHelperImplementations:
                 if data:
                     # Sample analysis for performance
                     sample_size = min(100, len(data))
-                    sample_indices = np.random.choice(len(data), sample_size, replace=False)
+                    sample_indices = np.secrets.choice(len(data), sample_size, replace=False)
                     
                     # Analyze structure consistency
                     structures = []

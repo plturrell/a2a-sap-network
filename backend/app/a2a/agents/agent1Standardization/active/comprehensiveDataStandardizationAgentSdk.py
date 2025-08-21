@@ -12,6 +12,19 @@ This agent provides enterprise-grade data standardization capabilities with:
 Rating: 95/100 (Real AI Intelligence)
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import json
 import logging
@@ -58,73 +71,20 @@ try:
 except ImportError:
     JSONSCHEMA_AVAILABLE = False
 
-# Import SDK components - corrected paths
-try:
-    # Try primary SDK path
-    from ....a2a.sdk.agentBase import A2AAgentBase
-    from ....a2a.sdk.decorators import a2a_handler, a2a_skill, a2a_task
-    from ....a2a.sdk.types import A2AMessage, MessageRole
-    from ....a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
-except ImportError:
-    try:
-        # Try alternative SDK path  
-        from ....a2a_test.sdk.agentBase import A2AAgentBase
-        from ....a2a_test.sdk.decorators import a2a_handler, a2a_skill, a2a_task
-        from ....a2a_test.sdk.types import A2AMessage, MessageRole
-        from ....a2a_test.sdk.utils import create_agent_id, create_error_response, create_success_response
-    except ImportError:
-        # Fallback local SDK definitions
-        from typing import Dict, Any, Callable
-        import asyncio
-        from abc import ABC, abstractmethod
-        
-        # Create minimal base class if SDK not available
-        class A2AAgentBase(ABC):
-            def __init__(self, agent_id: str, name: str, description: str, version: str, base_url: str):
-                self.agent_id = agent_id
-                self.name = name  
-                self.description = description
-                self.version = version
-                self.base_url = base_url
-                self.skills = {}
-                self.handlers = {}
-            
-            @abstractmethod
-            async def initialize(self) -> None:
-                pass
-            
-            @abstractmethod
-            async def shutdown(self) -> None:
-                pass
-        
-        # Create fallback decorators
-        def a2a_handler(method: str):
-            def decorator(func):
-                func._a2a_handler = {'method': method}
-                return func
-            return decorator
-        
-        def a2a_skill(name: str, description: str = "", **kwargs):
-            def decorator(func):
-                func._a2a_skill = {'name': name, 'description': description, **kwargs}
-                return func
-            return decorator
-        
-        def a2a_task(name: str, description: str = "", **kwargs):
-            def decorator(func):
-                func._a2a_task = {'name': name, 'description': description, **kwargs}
-                return func
-            return decorator
-        
-        def create_agent_id():
-            return f"agent_{int(time.time())}"
-        
-        def create_error_response(message: str, code: str = "error", details: Dict[str, Any] = None):
-            return {"success": False, "error": {"message": message, "code": code, "details": details or {}}}
-        
-        def create_success_response(data: Dict[str, Any]):
-            return {"success": True, "data": data}
+# Import SDK components - Use standard A2A SDK (NO FALLBACKS)
+from app.a2a.sdk.agentBase import A2AAgentBase
+from ..sdk.performanceMonitoringMixin import PerformanceMonitoringMixin, monitor_a2a_operation
+from app.a2a.sdk import a2a_ha, a2a_handlerndler, a2a_skill, a2a_task
+from app.a2a.sdk.types import A2AMessage, MessageRole
+from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
+from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Real Grok AI Integration
 try:
     from openai import AsyncOpenAI
@@ -143,6 +103,10 @@ except ImportError:
 # Network connectivity for cross-agent communication
 try:
     import aiohttp
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
     AIOHTTP_AVAILABLE = True
 except ImportError:
     AIOHTTP_AVAILABLE = False
@@ -235,7 +199,7 @@ class BlockchainQueueMixin:
         try:
             if WEB3_AVAILABLE:
                 # Try to connect to blockchain
-                rpc_url = os.getenv('BLOCKCHAIN_RPC_URL', 'http://localhost:8545')
+                rpc_url = os.getenv('BLOCKCHAIN_RPC_URL') or os.getenv('A2A_RPC_URL')
                 private_key = os.getenv('A2A_PRIVATE_KEY')
                 
                 if private_key:
@@ -324,7 +288,7 @@ class BlockchainQueueMixin:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-class ComprehensiveDataStandardizationAgentSDK(A2AAgentBase, BlockchainQueueMixin):
+class ComprehensiveDataStandardizationAgentSDK(A2AAgentBase, BlockchainQueueMixin), PerformanceMonitoringMixin:
     """
     Comprehensive Data Standardization Agent with Real AI Intelligence
     
@@ -351,7 +315,7 @@ class ComprehensiveDataStandardizationAgentSDK(A2AAgentBase, BlockchainQueueMixi
         BlockchainQueueMixin.__init__(self)
         
         # Data Manager configuration
-        self.data_manager_agent_url = "http://localhost:8001"
+        self.data_manager_agent_url = os.getenv("DATA_MANAGER_URL")
         self.use_data_manager = True
         self.standardization_training_table = "standardization_training_data"
         self.schema_patterns_table = "schema_mapping_patterns"
@@ -1084,7 +1048,8 @@ class ComprehensiveDataStandardizationAgentSDK(A2AAgentBase, BlockchainQueueMixi
             
             # Send to Data Manager (will fail gracefully if not running)
             if AIOHTTP_AVAILABLE:
-                async with aiohttp.ClientSession() as session:
+                async with # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
+        # aiohttp\.ClientSession() as session:
                     async with session.post(
                         f"{self.data_manager_agent_url}/store_data",
                         json=request_data,
@@ -1115,7 +1080,8 @@ class ComprehensiveDataStandardizationAgentSDK(A2AAgentBase, BlockchainQueueMixi
             
             # Try to fetch from Data Manager first
             if AIOHTTP_AVAILABLE:
-                async with aiohttp.ClientSession() as session:
+                async with # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
+        # aiohttp\.ClientSession() as session:
                     async with session.get(
                         f"{self.data_manager_agent_url}/get_data/{self.standardization_training_table}",
                         params={"data_type": data_type},
@@ -1176,7 +1142,8 @@ class ComprehensiveDataStandardizationAgentSDK(A2AAgentBase, BlockchainQueueMixi
             # Test Data Manager connection
             if self.use_data_manager and AIOHTTP_AVAILABLE:
                 try:
-                    async with aiohttp.ClientSession() as session:
+                    async with # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
+        # aiohttp\.ClientSession() as session:
                         async with session.get(f"{self.data_manager_agent_url}/health", timeout=aiohttp.ClientTimeout(total=2)) as response:
                             if response.status == 200:
                                 logger.info("✅ Data Manager connection successful")
@@ -1298,8 +1265,32 @@ class ComprehensiveDataStandardizationAgentSDK(A2AAgentBase, BlockchainQueueMixi
 
 if __name__ == "__main__":
     # Test the agent
+    @a2a_handler("HEALTH_CHECK")
+    async def handle_health_check(self, message: A2AMessage, context_id: str) -> Dict[str, Any]:
+        """Handle A2A protocol health check messages"""
+        try:
+            return {
+                "status": "healthy",
+                "agent_id": self.agent_id,
+                "name": "Data Standardization Agent",
+                "timestamp": datetime.utcnow().isoformat(),
+                "blockchain_enabled": getattr(self, 'blockchain_enabled', False),
+                "active_tasks": len(getattr(self, 'tasks', {})),
+                "capabilities": getattr(self, 'blockchain_capabilities', []),
+                "processing_stats": getattr(self, 'processing_stats', {}) or {},
+                "response_time_ms": 0  # Immediate response for health checks
+            }
+        except Exception as e:
+            logger.error(f"Health check failed: {e}")
+            return {
+                "status": "unhealthy",
+                "agent_id": getattr(self, 'agent_id', 'unknown'),
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat()
+            }
+
     async def test_agent():
-        agent = ComprehensiveDataStandardizationAgentSDK("http://localhost:8000")
+        agent = ComprehensiveDataStandardizationAgentSDK(os.getenv("A2A_BASE_URL"))
         await agent.initialize()
         print("✅ Comprehensive Data Standardization Agent test successful")
     

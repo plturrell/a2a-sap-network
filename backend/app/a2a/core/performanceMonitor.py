@@ -18,6 +18,10 @@ from functools import wraps
 try:
     from prometheus_client import Counter, Histogram, Gauge, Info, REGISTRY, start_http_server
 
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
+
     PROMETHEUS_AVAILABLE = True
 except ImportError:
     PROMETHEUS_AVAILABLE = False

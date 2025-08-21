@@ -52,6 +52,23 @@ field_mappings:
   source:
     optional: true
     include_system_info: true
+    
+  catalog:
+    optional: true
+    mappings:
+      name: "title"
+      description: "description"
+      owner: "creator"
+      created_date: "date"
+      catalog_type: "type"
+      domain: "subject"
+      business_area: "subject"
+      classification: "rights"
+      access_level: "rights"
+      governance_tier: "relation"
+      compliance_framework: "coverage"
+    template: "Data Catalog - {catalog_type} for {domain}"
+    default_type: "Catalog"
 
 compliance:
   iso_15836: true          # Dublin Core Metadata Element Set

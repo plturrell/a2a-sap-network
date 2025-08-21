@@ -15,12 +15,18 @@ sys.path.append('/Users/apple/projects/a2a/a2aAgents/backend')
 # Import the comprehensive catalog manager
 from comprehensiveCatalogManagerSdk import ComprehensiveCatalogManagerSDK
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 async def test_catalog_manager():
     print('🔬 Testing Comprehensive Catalog Manager Real AI Integration')
     print('=' * 65)
     
     # Initialize agent
-    agent = ComprehensiveCatalogManagerSDK('http://localhost:8080')
+    agent = ComprehensiveCatalogManagerSDK(os.getenv("A2A_SERVICE_URL"))
     await agent.initialize()
     
     # Test 1: Check if ML models are properly initialized

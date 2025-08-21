@@ -10,6 +10,12 @@ import os
 from pathlib import Path
 import logging
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -82,7 +88,7 @@ def deploy_contracts():
         result = subprocess.run([
             "forge", "script", 
             "script/DeployBDCA2A.s.sol:DeployBDCA2A",
-            "--rpc-url", "http://localhost:8545",
+            "--rpc-url", "os.getenv("A2A_RPC_URL", os.getenv("BLOCKCHAIN_RPC_URL"))",
             "--broadcast",
             "--private-key", private_key,
             "--root", str(network_dir)
@@ -181,7 +187,7 @@ def verify_contracts(addresses):
                 "curl", "-s", "-X", "POST", 
                 "-H", "Content-Type: application/json",
                 "--data", f'{{"jsonrpc":"2.0","method":"eth_getCode","params":["{address}","latest"],"id":1}}',
-                "http://localhost:8545"
+                "os.getenv("A2A_RPC_URL", os.getenv("BLOCKCHAIN_RPC_URL"))"
             ], capture_output=True, text=True, timeout=10)
             
             if result.returncode == 0:
@@ -244,7 +250,7 @@ def main():
         "deployment_success": deployment_success,
         "all_verified": all_verified,
         "blockchain": "anvil",
-        "rpc_url": "http://localhost:8545",
+        "rpc_url": "os.getenv("A2A_RPC_URL", os.getenv("BLOCKCHAIN_RPC_URL"))",
         "chain_id": 31337
     }
     

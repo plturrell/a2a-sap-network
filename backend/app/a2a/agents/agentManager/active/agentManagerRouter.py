@@ -9,6 +9,12 @@ from fastapi.responses import JSONResponse
 from .agentManagerAgent import AgentManagerAgent, AgentRegistrationRequest, TrustContractRequest, WorkflowRequest
 from app.a2a.core.a2aTypes import A2AMessage, MessagePart, MessageRole
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Trust system imports
 try:
     import sys
@@ -52,6 +58,10 @@ def initialize_agent_manager():
             import sys
             sys.path.insert(0, '/Users/apple/projects/a2a/a2aNetwork')
             from trustSystem.smartContractTrust import get_trust_contract
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
         except ImportError:
             # Fallback if trust system not available
             def get_trust_contract():
@@ -62,7 +72,7 @@ def initialize_agent_manager():
         agent_name = "Agent Manager"
         # Allow test environments to run without explicitly setting this variable.
         # Default to a localhost base URL if the environment variable is absent.
-        base_url = os.getenv("AGENT_MANAGER_BASE_URL", "http://localhost:8003")
+        base_url = os.getenv("AGENT_MANAGER_BASE_URL", os.getenv("AGENT_MANAGER_URL"))
         
         # Agent Manager capabilities
         capabilities = {

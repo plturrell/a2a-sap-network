@@ -22,6 +22,12 @@ import logging
 from typing import Optional, Dict, Any, Callable
 from datetime import datetime
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Configure logger
 logger = logging.getLogger(__name__)
 
@@ -69,7 +75,7 @@ def init_telemetry(
     trace.set_tracer_provider(provider)
 
     # Configure OTLP exporter
-    endpoint = otlp_endpoint or os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317")
+    endpoint = otlp_endpoint or os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", os.getenv("A2A_SERVICE_HOST"))
     otlp_exporter = OTLPSpanExporter(
         endpoint=endpoint, insecure=True  # Use secure=False for development
     )

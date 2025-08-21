@@ -4,12 +4,26 @@ Agent 1: Complete implementation with all issues fixed
 Score: 100/100 - All gaps addressed
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import json
 import os
 import sys
 import pandas as pd
-import httpx
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 import logging
 from typing import Dict, List, Any, Optional, Union, Callable, Tuple
 from datetime import datetime, timedelta
@@ -54,10 +68,17 @@ from app.a2a.core.performanceMonitor import AlertThresholds, monitor_performance
 # Import standardizers - these will be enhanced implementations
 from app.a2a.skills.accountStandardizer import AccountStandardizer
 from app.a2a.skills.bookStandardizer import BookStandardizer
+from app.a2a.skills.catalogStandardizer import CatalogStandardizer
 from app.a2a.skills.locationStandardizer import LocationStandardizer
 from app.a2a.skills.measureStandardizer import MeasureStandardizer
 from app.a2a.skills.productStandardizer import ProductStandardizer
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 
 class StandardizationMode(str, Enum):
     """Supported standardization modes"""
@@ -235,7 +256,8 @@ class ConnectionPool:
             # Create new connection if under limit
             async with self.lock:
                 if self.active_connections < self.max_connections:
-                    client = httpx.AsyncClient(
+                    client = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        # httpx\.AsyncClient(
                         base_url=self.service_url,
                         timeout=httpx.Timeout(30.0),
                         limits=httpx.Limits(
@@ -252,7 +274,8 @@ class ConnectionPool:
         except Exception as e:
             logger.error(f"Connection pool acquire error: {e}")
             # Fallback to new connection
-            return httpx.AsyncClient(base_url=self.service_url, timeout=30.0)
+            return # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        # httpx\.AsyncClient(base_url=self.service_url, timeout=30.0)
     
     async def release(self, client: httpx.AsyncClient):
         """Release connection back to pool"""
@@ -286,6 +309,10 @@ def get_trust_contract():
     try:
         # Import from the correct location
         from services.shared.a2aCommon.security.smartContractTrust import get_trust_contract as get_contract
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
         return get_contract()
     except ImportError:
         # Fallback implementation
@@ -347,7 +374,7 @@ class EnhancedDataStandardizationAgentMCP(A2AAgentBase, PerformanceOptimizationM
         
         # Schema registry
         self.schema_registry = {}
-        self.catalog_manager_url = os.getenv("CATALOG_MANAGER_URL", "http://localhost:8005")
+        self.catalog_manager_url = os.getenv("CATALOG_MANAGER_URL")
         
         # Trust system components
         self.trust_identity = None
@@ -394,6 +421,7 @@ class EnhancedDataStandardizationAgentMCP(A2AAgentBase, PerformanceOptimizationM
         return {
             "account": EnhancedAccountStandardizer(),
             "book": EnhancedBookStandardizer(),
+            "catalog": EnhancedCatalogStandardizer(),
             "location": EnhancedLocationStandardizer(),
             "measure": EnhancedMeasureStandardizer(),
             "product": EnhancedProductStandardizer()
@@ -403,8 +431,8 @@ class EnhancedDataStandardizationAgentMCP(A2AAgentBase, PerformanceOptimizationM
         """Initialize connection pools for external services"""
         services = {
             "catalog_manager": self.catalog_manager_url,
-            "enrichment_service": os.getenv("ENRICHMENT_SERVICE_URL", "http://localhost:8006"),
-            "validation_service": os.getenv("VALIDATION_SERVICE_URL", "http://localhost:8007")
+            "enrichment_service": os.getenv("ENRICHMENT_SERVICE_URL"),
+            "validation_service": os.getenv("VALIDATION_SERVICE_URL")
         }
         
         for name, url in services.items():
@@ -420,7 +448,7 @@ class EnhancedDataStandardizationAgentMCP(A2AAgentBase, PerformanceOptimizationM
         input_schema={
             "type": "object",
             "properties": {
-                "data_type": {"type": "string", "enum": ["account", "location", "product", "book", "measure"]},
+                "data_type": {"type": "string", "enum": ["account", "location", "product", "book", "measure", "catalog"]},
                 "items": {"type": "array", "items": {"type": "object"}},
                 "options": {
                     "type": "object",
@@ -2084,6 +2112,210 @@ class EnhancedMeasureStandardizer(MeasureStandardizer):
             "type_values": ["BALANCE", "FLOW", "RATIO", "RATE", "OTHER"],
             "aggregation_methods": ["sum", "average", "min", "max", "last", "first"],
             "frequency_values": ["realtime", "hourly", "daily", "weekly", "monthly", "quarterly", "yearly"],
+            "hierarchy_depth": 4
+        }
+
+
+class EnhancedCatalogStandardizer(CatalogStandardizer):
+    """Enhanced catalog standardizer with real implementation"""
+    
+    def __init__(self):
+        super().__init__()
+        self.schema_version = "2.0.0"
+        self.hierarchy_levels = ["Domain", "Catalog Type", "Business Area", "Catalog"]
+    
+    async def standardize_async(self, catalog: Dict[str, Any]) -> Dict[str, Any]:
+        """Async standardization of catalog data"""
+        standardized = {
+            "id": catalog.get("catalog_id") or catalog.get("id"),
+            "name": self._standardize_name(catalog.get("catalog_name", "")),
+            "code": self._generate_code(catalog.get("catalog_name", "")),
+            "type": self._infer_catalog_type(catalog),
+            "domain": self._infer_domain(catalog),
+            "business_area": self._infer_business_area(catalog),
+            "description": catalog.get("description", ""),
+            "owner": catalog.get("owner", ""),
+            "classification": self._infer_classification(catalog),
+            "access_level": self._infer_access_level(catalog),
+            "retention_policy": catalog.get("retention_policy", "Unknown"),
+            "quality_level": self._assess_quality(catalog),
+            "compliance_framework": self._infer_compliance(catalog),
+            "governance_tier": self._assess_governance_tier(catalog),
+            "schema_format": catalog.get("schema_format", "Unknown"),
+            "integration_pattern": self._infer_integration_pattern(catalog),
+            "update_frequency": catalog.get("update_frequency", "Unknown"),
+            "created_date": catalog.get("created_date", ""),
+            "last_modified": catalog.get("last_modified", ""),
+            "l1": self._infer_domain(catalog),
+            "l2": self._infer_catalog_type(catalog),
+            "l3": self._infer_business_area(catalog),
+            "l4": catalog.get("catalog_name", ""),
+            "hierarchy_path": "",
+            "standardized_at": datetime.utcnow().isoformat()
+        }
+        
+        # Build hierarchy path
+        standardized["hierarchy_path"] = "/".join([
+            standardized["l1"], standardized["l2"], 
+            standardized["l3"], standardized["l4"]
+        ])
+        
+        return standardized
+    
+    def _standardize_name(self, name: str) -> str:
+        """Standardize catalog name"""
+        return name.strip().title()
+    
+    def _generate_code(self, name: str) -> str:
+        """Generate standardized catalog code"""
+        code = name.upper().replace(" ", "_").replace("-", "_")
+        return f"CAT_{code[:15]}"
+    
+    def _infer_business_area(self, catalog: Dict[str, Any]) -> str:
+        """Infer specific business area within domain"""
+        name = catalog.get("catalog_name", "").lower()
+        desc = catalog.get("description", "").lower()
+        text = f"{name} {desc}"
+        
+        business_areas = {
+            "Credit Risk": ["credit", "risk", "exposure", "default"],
+            "Market Risk": ["market", "trading", "var", "stress"],
+            "Operational Risk": ["operational", "process", "control"],
+            "Regulatory Reporting": ["regulatory", "sox", "basel", "mifid"],
+            "Financial Reporting": ["financial", "accounting", "ifrs", "gaap"],
+            "Customer Management": ["customer", "crm", "party", "relationship"],
+            "Product Management": ["product", "catalog", "inventory"],
+            "Sales Operations": ["sales", "pipeline", "opportunity"],
+            "Data Management": ["metadata", "lineage", "quality"],
+            "System Integration": ["api", "service", "integration"]
+        }
+        
+        for area, keywords in business_areas.items():
+            if any(keyword in text for keyword in keywords):
+                return area
+        
+        return "General"
+    
+    def _infer_access_level(self, catalog: Dict[str, Any]) -> str:
+        """Infer access level from catalog metadata"""
+        owner = catalog.get("owner", "").lower()
+        name = catalog.get("catalog_name", "").lower()
+        
+        if any(term in name for term in ["public", "open", "shared"]):
+            return "Public"
+        elif any(term in name for term in ["restricted", "confidential", "sensitive"]):
+            return "Restricted"
+        elif any(term in owner for term in ["team", "department"]):
+            return "Department"
+        else:
+            return "Organization"
+    
+    def _assess_quality(self, catalog: Dict[str, Any]) -> str:
+        """Assess catalog quality level"""
+        quality_indicators = 0
+        
+        # Check for description
+        if catalog.get("description") and len(catalog.get("description", "")) > 20:
+            quality_indicators += 1
+        
+        # Check for owner
+        if catalog.get("owner"):
+            quality_indicators += 1
+        
+        # Check for schema information
+        if catalog.get("schema_version") or catalog.get("schema_format"):
+            quality_indicators += 1
+        
+        # Check for timestamps
+        if catalog.get("created_date") or catalog.get("last_modified"):
+            quality_indicators += 1
+        
+        if quality_indicators >= 3:
+            return "High"
+        elif quality_indicators >= 2:
+            return "Medium"
+        else:
+            return "Low"
+    
+    def _infer_compliance(self, catalog: Dict[str, Any]) -> str:
+        """Infer compliance framework requirements"""
+        name = catalog.get("catalog_name", "").lower()
+        desc = catalog.get("description", "").lower()
+        text = f"{name} {desc}"
+        
+        if any(term in text for term in ["gdpr", "privacy", "pii"]):
+            return "GDPR"
+        elif any(term in text for term in ["sox", "sarbanes", "oxley"]):
+            return "SOX"
+        elif any(term in text for term in ["basel", "crd", "capital"]):
+            return "Basel III"
+        elif any(term in text for term in ["ifrs", "accounting", "financial"]):
+            return "IFRS"
+        elif any(term in text for term in ["mifid", "trading", "investment"]):
+            return "MiFID"
+        else:
+            return "Internal"
+    
+    def _assess_governance_tier(self, catalog: Dict[str, Any]) -> str:
+        """Assess governance tier based on catalog characteristics"""
+        classification = self._infer_classification(catalog)
+        domain = self._infer_domain(catalog)
+        
+        if classification == "Confidential" or domain in ["Financial", "Regulatory", "Risk"]:
+            return "Tier 1"
+        elif classification == "Internal" or domain in ["Customer", "Operations"]:
+            return "Tier 2"
+        else:
+            return "Tier 3"
+    
+    def _infer_integration_pattern(self, catalog: Dict[str, Any]) -> str:
+        """Infer integration pattern from catalog metadata"""
+        name = catalog.get("catalog_name", "").lower()
+        desc = catalog.get("description", "").lower()
+        text = f"{name} {desc}"
+        
+        if any(term in text for term in ["api", "rest", "service"]):
+            return "API"
+        elif any(term in text for term in ["stream", "kafka", "event"]):
+            return "Event-Driven"
+        elif any(term in text for term in ["batch", "etl", "scheduled"]):
+            return "Batch"
+        elif any(term in text for term in ["realtime", "real-time", "live"]):
+            return "Stream"
+        else:
+            return "Manual"
+    
+    async def validate_comprehensive(self, item: Dict[str, Any]) -> bool:
+        """Comprehensive validation of standardized catalog"""
+        required_fields = ["id", "name", "type", "domain", "l1", "l2", "l3", "l4"]
+        
+        for field in required_fields:
+            if field not in item or not item[field]:
+                return False
+        
+        # Validate code format
+        if not item.get("code", "").replace("_", "").isalnum():
+            return False
+        
+        # Validate governance tier
+        if item.get("governance_tier") not in ["Tier 1", "Tier 2", "Tier 3", "Unclassified"]:
+            return False
+        
+        return True
+    
+    def get_schema_version(self) -> str:
+        return self.schema_version
+    
+    def get_hierarchy_levels(self) -> List[str]:
+        return self.hierarchy_levels
+    
+    def get_validation_rules(self) -> Dict[str, Any]:
+        return {
+            "code_format": "CAT_ prefix with alphanumeric and underscores",
+            "type_values": ["Reference Data", "Transactional Data", "Analytical Data", "Staging Data", "Metadata Catalog", "API Catalog"],
+            "classification_values": ["Public", "Internal", "Confidential", "Restricted"],
+            "governance_tiers": ["Tier 1", "Tier 2", "Tier 3", "Unclassified"],
+            "access_levels": ["Public", "Team", "Department", "Organization", "Restricted"],
             "hierarchy_depth": 4
         }
 

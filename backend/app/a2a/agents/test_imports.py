@@ -6,6 +6,12 @@ Test script to verify imports work correctly
 import sys
 import logging
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -54,7 +60,7 @@ def test_create_agents():
         from .agent0DataProduct.active.advancedMcpDataProductAgent import AdvancedMCPDataProductAgent
         
         # Try to create an agent
-        agent = AdvancedMCPDataProductAgent("http://localhost:8000")
+        agent = AdvancedMCPDataProductAgent(os.getenv("A2A_SERVICE_URL"))
         
         # Verify MCP tools are real instances
         from ..common.mcpPerformanceTools import MCPPerformanceTools
@@ -76,7 +82,7 @@ async def test_mcp_functionality():
     try:
         from .agent0DataProduct.active.advancedMcpDataProductAgent import AdvancedMCPDataProductAgent
         
-        agent = AdvancedMCPDataProductAgent("http://localhost:8000")
+        agent = AdvancedMCPDataProductAgent(os.getenv("A2A_SERVICE_URL"))
         
         # Test performance measurement
         import time
@@ -151,5 +157,9 @@ def main():
 
 if __name__ == "__main__":
     import asyncio
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
     success = main()
     sys.exit(0 if success else 1)

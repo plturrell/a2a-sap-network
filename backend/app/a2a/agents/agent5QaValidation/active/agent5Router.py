@@ -1,3 +1,4 @@
+import os
 """
 FastAPI Router for Agent 5 (QA Validation Agent)
 Handles HTTP endpoints and WebSocket streaming for ORD-integrated factuality testing
@@ -12,13 +13,42 @@ from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, De
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from .qa_validation_agent_sdk import (
-    QAValidationAgentSDK, 
-    QAValidationRequest,
-    TestMethodology,
-    ResourceType,
-    MetadataSource
+from .qaValidationAgentSdk import (
+    QaValidationAgentSDK as QAValidationAgentSDK,
+    QAValidationResult
 )
+
+# Define missing classes locally
+class QAValidationRequest(BaseModel):
+    data_product_id: str
+    test_type: str
+    parameters: Dict[str, Any] = {}
+
+from enum import Enum
+
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
+class TestMethodology(str, Enum):
+    BASIC = "basic"
+    COMPREHENSIVE = "comprehensive"
+    STATISTICAL = "statistical"
+    SIMPLEQA = "simpleqa"
+
+class ResourceType(str, Enum):
+    FILE = "file"
+    DATABASE = "database"
+    API = "api"
+    DATA_PRODUCTS = "data_products"
+    APIS = "apis"
+
+class MetadataSource(str, Enum):
+    MANUAL = "manual"
+    EXTRACTED = "extracted"
+    GENERATED = "generated"
 
 logger = logging.getLogger(__name__)
 
@@ -100,9 +130,9 @@ router = APIRouter(prefix="/agent5", tags=["Agent 5 - QA Validation"])
 
 @router.post("/initialize")
 async def initialize_agent_endpoint(
-    base_url: str = "http://localhost:8007",
-    data_manager_url: str = "http://localhost:8001",
-    catalog_manager_url: str = "http://localhost:8002",
+    base_url: str = os.getenv("A2A_SERVICE_URL"),
+    data_manager_url: str = os.getenv("A2A_SERVICE_URL"),
+    catalog_manager_url: str = os.getenv("A2A_SERVICE_URL"),
     cache_ttl: int = 3600,
     max_tests_per_product: int = 50
 ):

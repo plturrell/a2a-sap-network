@@ -4,6 +4,12 @@ Agent Manager - A2A Network Orchestrator Microservice
 Central management for A2A agent discovery, health monitoring, and workflow orchestration
 """
 
+import warnings
+
+# Suppress warnings about unrecognized blockchain networks from eth_utils
+warnings.filterwarnings("ignore", message="Network 345 with name 'Yooldo Verse Mainnet'")
+warnings.filterwarnings("ignore", message="Network 12611 with name 'Astar zkEVM'")
+
 import asyncio
 import os
 import uvicorn
@@ -11,8 +17,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import redis.asyncio as redis
 
-from .agent import AgentManager
-from .router import create_a2a_router
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from agent import AgentManager
+from router import create_a2a_router
 
 async def main():
     # Get configuration from environment variables

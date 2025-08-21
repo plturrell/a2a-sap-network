@@ -349,6 +349,10 @@ async def health_check():
     try:
         from langchain_hana import HanaDB, HanaInternalEmbeddings
         from hdbcli import dbapi
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
         hana_status = "available"
     except ImportError:
         hana_status = "not_available"

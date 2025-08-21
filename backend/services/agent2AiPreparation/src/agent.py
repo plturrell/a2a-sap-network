@@ -3,6 +3,19 @@ AI Preparation Agent - A2A Microservice
 Agent 2: Prepares standardized data for AI/ML processing
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import json
 import os
@@ -14,13 +27,25 @@ import logging
 import numpy as np
 from dataclasses import dataclass
 from typing import Dict, List, Any, Optional
-import httpx
-
+from collections import defaultdict
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 # Add backend path to import GrokClient
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../../backend'))
-from app.clients.grokClient import GrokClient, GrokConfig
+try:
+    from app.clients.grokClient import GrokClient, GrokConfig
+except ImportError:
+    # Fallback if client not available
+    GrokClient = None
+    GrokConfig = None
 
-sys.path.append('../shared')
+sys.path.append('../../shared')
+
+import sys
+import os
+# Add the shared directory to Python path for a2aCommon imports
+shared_path = os.path.join(os.path.dirname(__file__), '..', '..', 'shared')
+sys.path.insert(0, os.path.abspath(shared_path))
 
 from a2aCommon import (
     A2AAgentBase, a2a_handler, a2a_skill, a2a_task,
@@ -36,8 +61,8 @@ from adaptive_learning import (
     AdaptiveVocabularyExpander
 )
 from embeddingFinetuner import Agent2EmbeddingSkill
-import httpx
-
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 logger = logging.getLogger(__name__)
 
 
@@ -104,6 +129,16 @@ class AIPreparationAgent(A2AAgentBase):
         # HTTP client for API communication
         self.http_client = None
         
+        # Semantic processing rules
+        self.semantic_rules = {
+            "product": {
+                "financial_categories": ["derivatives", "securities", "bonds", "equities"]
+            },
+            "account": {
+                "regulatory_types": ["trust", "escrow", "reserve", "regulatory"]
+            }
+        }
+        
         # A2A state tracking
         self.is_ready = False
         self.is_registered = False
@@ -120,10 +155,7 @@ class AIPreparationAgent(A2AAgentBase):
         os.makedirs(self.output_dir, exist_ok=True)
         
         # Initialize HTTP client
-        self.http_client = httpx.AsyncClient(
-            timeout=httpx.Timeout(30.0),
-            limits=httpx.Limits(max_keepalive_connections=50)
-        )
+        self.http_client = None  # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         
         # Initialize A2A trust identity (placeholder for now)
         # TODO: Implement actual trust identity initialization when trust system is ready
@@ -1650,6 +1682,10 @@ Focus on financial and business implications. Be specific and actionable."""
             # Parse response
             if response.content:
                 import re
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
                 # Remove markdown code blocks if present
                 json_str = re.sub(r'```json\s*|\s*```', '', response.content)
                 enrichment = json.loads(json_str)

@@ -17,8 +17,7 @@ from pathlib import Path
 from app.a2a.sdk.decorators import a2a_skill, a2a_handler, a2a_task
 
 # Import mixins with fallback
-try:
-    from app.a2a.sdk.mixins import PerformanceMonitorMixin, SecurityHardenedMixin
+from app.a2a.sdk.mixins import PerformanceMonitorMixin, SecurityHardenedMixin
 except ImportError:
     # Fallback stubs
     class PerformanceMonitorMixin:
@@ -27,24 +26,21 @@ except ImportError:
         pass
 
 # Import trust identity with fallback
-try:
-    from app.a2a.core.trustIdentity import TrustIdentity
+from app.a2a.core.trustIdentity import TrustIdentity
 except ImportError:
     # Fallback stub
     class TrustIdentity:
         def __init__(self, **kwargs):
             pass
 # Import data validation with fallback
-try:
-    from app.a2a.core.dataValidation import DataValidator
+from app.a2a.core.dataValidation import DataValidator
 except ImportError:
     class DataValidator:
         @staticmethod
         def validate_input(data, schema): return True
 
 # Import grok client with fallback
-try:
-    from app.clients.grokClient import GrokClient, get_grok_client
+from app.clients.grokClient import GrokClient, get_grok_client
 except ImportError:
     from app.a2a.core.grokClient import GrokClient
     def get_grok_client(): return GrokClient()
@@ -861,6 +857,10 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
         if isinstance(error.failed_output, (float, np.floating)):
             # Use higher precision arithmetic
             from decimal import Decimal, getcontext
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             getcontext().prec = 50  # Higher precision
             
             try:

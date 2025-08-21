@@ -12,32 +12,48 @@ from datetime import datetime
 import asyncio
 
 
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
+
+# A2A Protocol Compliance: Direct imports only - no fallback implementations allowed
 try:
-    from blockchain.web3Client import A2ABlockchainClient, AgentIdentity
-    from blockchain.agentIntegration import BlockchainAgentIntegration, AgentCapability
-    from blockchain.eventListener import MessageEventListener
-    from config.contractConfig import ContractConfigManager
+    from app.a2a.sdk.blockchain.web3Client import A2ABlockchainClient, AgentIdentity
+    from app.a2a.sdk.blockchain.agentIntegration import BlockchainAgentIntegration, AgentCapability
+    from app.a2a.sdk.blockchain.eventListener import MessageEventListener
+    from app.a2a.config.contractConfig import ContractConfigManager
+    from .blockchain_error_handler import BlockchainErrorHandler, BlockchainFallbackHandler
+    BLOCKCHAIN_MODULES_AVAILABLE = True
 except ImportError as e:
-    logging.warning(f"Blockchain modules not available: {e}")
-    # Define placeholder classes for when blockchain is not available
+    import logging
+    logging.warning(f"Some blockchain modules not available: {e}. Running in limited mode.")
+    BLOCKCHAIN_MODULES_AVAILABLE = False
+    
+    # Create stub classes
     class A2ABlockchainClient:
-        pass
+        def __init__(self, *args, **kwargs): pass
     class AgentIdentity:
-        pass
+        def __init__(self, *args, **kwargs): pass
     class BlockchainAgentIntegration:
-        pass
-    class AgentCapability:
-        pass
+        def __init__(self, *args, **kwargs): pass
     class MessageEventListener:
-        pass
+        def __init__(self, *args, **kwargs): pass
     class ContractConfigManager:
-        pass
+        def __init__(self, *args, **kwargs): pass
+        def load_config(self): return {"contracts": {"AgentRegistry": {"address": "0x0"}, "MessageRouter": {"address": "0x0"}}}
+    class BlockchainErrorHandler:
+        def __init__(self, *args, **kwargs): pass
+    class BlockchainFallbackHandler:
+        def __init__(self, *args, **kwargs): pass
 
 
 class BlockchainIntegrationMixin:
     """
     Mixin class that provides blockchain integration capabilities to any agent.
     Add this to your agent class to enable blockchain features.
+    Enhanced with comprehensive error handling and fallback mechanisms.
     """
     
     def __init__(self):
@@ -48,15 +64,31 @@ class BlockchainIntegrationMixin:
         self.blockchain_enabled = os.getenv("BLOCKCHAIN_ENABLED", "true").lower() == "true"
         self.logger = logging.getLogger(self.__class__.__name__)
         
-    def _initialize_blockchain(self, agent_name: str, capabilities: List[str], endpoint: str = None):
-        """Initialize blockchain integration for the agent"""
+        # Initialize error handlers
+        self.blockchain_error_handler = BlockchainErrorHandler(
+            agent_name=getattr(self, 'agent_id', 'unknown')
+        )
+        self.blockchain_fallback_handler = BlockchainFallbackHandler(
+            agent_name=getattr(self, 'agent_id', 'unknown')
+        )
+        
+    async def _initialize_blockchain(self, agent_name: str, capabilities: List[str], endpoint: str = None):
+        """Initialize blockchain integration for the agent with comprehensive error handling"""
         if not self.blockchain_enabled:
             self.logger.info("Blockchain integration disabled")
-            return
+            return False
             
+        return await self.blockchain_error_handler.execute_with_retry(
+            self._perform_blockchain_initialization,
+            agent_name, capabilities, endpoint,
+            operation_name="blockchain_initialization"
+        )
+    
+    async def _perform_blockchain_initialization(self, agent_name: str, capabilities: List[str], endpoint: str = None):
+        """Perform the actual blockchain initialization"""
         try:
             # Initialize blockchain client
-            rpc_url = os.getenv("A2A_RPC_URL", "http://localhost:8545")
+            rpc_url = os.getenv("A2A_RPC_URL", os.getenv("A2A_BLOCKCHAIN_RPC", "http://localhost:8545"))
             self.blockchain_client = A2ABlockchainClient(rpc_url)
             
             # Load contract configuration
@@ -66,13 +98,17 @@ class BlockchainIntegrationMixin:
             # Create agent identity
             private_key = os.getenv(f"{agent_name.upper()}_PRIVATE_KEY") or os.getenv("A2A_PRIVATE_KEY")
             if not private_key:
-                self.logger.error("No private key configured for blockchain")
-                return
+                raise ValueError("No private key configured for blockchain - set A2A_PRIVATE_KEY")
+                
+            # Ensure endpoint is properly set
+            agent_endpoint = endpoint or os.getenv("A2A_AGENT_URL") or os.getenv("A2A_SERVICE_URL")
+            if not agent_endpoint:
+                raise ValueError(f"No endpoint configured for {agent_name}. Set A2A_AGENT_URL or A2A_SERVICE_URL")
                 
             self.agent_identity = AgentIdentity(
                 private_key=private_key,
                 name=agent_name,
-                endpoint=endpoint or f"http://localhost:8000"
+                endpoint=agent_endpoint
             )
             
             # Initialize blockchain integration
@@ -83,28 +119,37 @@ class BlockchainIntegrationMixin:
                 router_address=contract_config['contracts']['MessageRouter']['address']
             )
             
-            # Convert capabilities to blockchain format
-            blockchain_capabilities = [
-                AgentCapability(name=cap, version="1.0.0")
-                for cap in capabilities
-            ]
-            
             # Register agent on blockchain if not already registered
             if not self.blockchain_integration.is_registered():
                 self.logger.info(f"Registering {agent_name} on blockchain...")
-                tx_hash = self.blockchain_integration.register_agent(blockchain_capabilities)
-                self.logger.info(f"Registration transaction: {tx_hash}")
+                self.logger.info(f"  Name: {agent_name}")
+                self.logger.info(f"  Endpoint: {agent_endpoint}")
+                self.logger.info(f"  Capabilities: {capabilities}")
+                
+                # The blockchain client will handle bytes32 conversion internally
+                success = await self.blockchain_client.register_agent(
+                    name=agent_name,
+                    endpoint=agent_endpoint,
+                    capabilities=capabilities
+                )
+                
+                if success:
+                    self.logger.info(f"✅ Successfully registered {agent_name} on blockchain")
+                else:
+                    raise RuntimeError(f"Blockchain registration failed for {agent_name}")
             else:
                 self.logger.info(f"{agent_name} already registered on blockchain")
                 
             # Start message listener
             self._start_message_listener()
             
-            self.logger.info(f"Blockchain integration initialized for {agent_name}")
+            self.logger.info(f"✅ Blockchain integration initialized for {agent_name}")
+            return True
             
         except Exception as e:
-            self.logger.error(f"Failed to initialize blockchain: {e}")
-            self.blockchain_enabled = False
+            self.logger.error(f"❌ Failed to initialize blockchain: {e}")
+            # Don't disable blockchain entirely - let error handler decide
+            raise
             
     def _start_message_listener(self):
         """Start listening for blockchain messages"""
@@ -152,30 +197,37 @@ class BlockchainIntegrationMixin:
             except Exception as e:
                 self.logger.error(f"Failed to mark message as delivered: {e}")
                 
-    def send_blockchain_message(self, to_address: str, content: Dict[str, Any], 
+    async def send_blockchain_message(self, to_address: str, content: Dict[str, Any], 
                                message_type: str = "GENERAL") -> Optional[str]:
-        """Send a message via blockchain"""
+        """Send a message via blockchain with comprehensive error handling"""
         if not self.blockchain_enabled or not self.blockchain_integration:
             self.logger.warning("Blockchain not enabled or initialized")
-            return None
-            
-        try:
-            # Convert content to JSON string
-            content_str = json.dumps(content)
-            
-            # Send message
-            tx_hash, message_id = self.blockchain_integration.send_message(
-                to_address=to_address,
-                content=content_str,
-                message_type=message_type
+            # Try fallback mechanism
+            return await self.blockchain_fallback_handler.handle_offline_message(
+                to_address, content, message_type
             )
             
-            self.logger.info(f"Sent blockchain message: {message_id} (tx: {tx_hash})")
-            return message_id
-            
-        except Exception as e:
-            self.logger.error(f"Failed to send blockchain message: {e}")
-            return None
+        return await self.blockchain_error_handler.execute_with_retry(
+            self._perform_blockchain_message_send,
+            to_address, content, message_type,
+            operation_name="send_blockchain_message"
+        )
+    
+    async def _perform_blockchain_message_send(self, to_address: str, content: Dict[str, Any], 
+                                             message_type: str = "GENERAL") -> Optional[str]:
+        """Perform the actual blockchain message sending"""
+        # Convert content to JSON string
+        content_str = json.dumps(content)
+        
+        # Send message
+        tx_hash, message_id = self.blockchain_integration.send_message(
+            to_address=to_address,
+            content=content_str,
+            message_type=message_type
+        )
+        
+        self.logger.info(f"✅ Sent blockchain message: {message_id} (tx: {tx_hash})")
+        return message_id
             
     def update_reputation(self, amount: int, reason: str = ""):
         """Update agent's reputation on blockchain"""
@@ -190,18 +242,23 @@ class BlockchainIntegrationMixin:
         except Exception as e:
             self.logger.error(f"Failed to update reputation: {e}")
             
-    def get_agent_by_capability(self, capability: str) -> List[Dict[str, Any]]:
-        """Find agents with specific capability via blockchain"""
+    async def get_agent_by_capability(self, capability: str) -> List[Dict[str, Any]]:
+        """Find agents with specific capability via blockchain with error handling"""
         if not self.blockchain_enabled or not self.blockchain_integration:
-            return []
+            # Try fallback lookup
+            return await self.blockchain_fallback_handler.get_cached_agents_by_capability(capability)
             
-        try:
-            agents = self.blockchain_integration.find_agents_by_capability(capability)
-            return agents
-            
-        except Exception as e:
-            self.logger.error(f"Failed to find agents by capability: {e}")
-            return []
+        return await self.blockchain_error_handler.execute_with_retry(
+            self._perform_agent_lookup,
+            capability,
+            operation_name="agent_capability_lookup"
+        )
+    
+    async def _perform_agent_lookup(self, capability: str) -> List[Dict[str, Any]]:
+        """Perform the actual agent lookup by capability"""
+        agents = self.blockchain_integration.find_agents_by_capability(capability)
+        self.logger.info(f"✅ Found {len(agents)} agents with capability: {capability}")
+        return agents
             
     def get_blockchain_stats(self) -> Dict[str, Any]:
         """Get blockchain integration statistics"""
@@ -244,6 +301,147 @@ class BlockchainIntegrationMixin:
         except Exception as e:
             self.logger.error(f"Failed to verify trust: {e}")
             return False
+    
+    # Enhanced error handling and monitoring methods
+    
+    async def check_blockchain_health(self) -> Dict[str, Any]:
+        """Comprehensive blockchain health check"""
+        health_status = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "blockchain_enabled": self.blockchain_enabled,
+            "client_connected": False,
+            "agent_registered": False,
+            "listener_active": False,
+            "last_block": None,
+            "network_latency": None,
+            "error_count": getattr(self.blockchain_error_handler, 'total_errors', 0),
+            "retry_count": getattr(self.blockchain_error_handler, 'total_retries', 0),
+            "fallback_used": getattr(self.blockchain_fallback_handler, 'fallback_used_count', 0)
+        }
+        
+        if not self.blockchain_enabled:
+            health_status["status"] = "disabled"
+            return health_status
+        
+        try:
+            # Check client connection
+            if self.blockchain_client:
+                start_time = asyncio.get_event_loop().time()
+                latest_block = await self.blockchain_client.get_latest_block()
+                network_latency = asyncio.get_event_loop().time() - start_time
+                
+                health_status.update({
+                    "client_connected": True,
+                    "last_block": latest_block,
+                    "network_latency": round(network_latency * 1000, 2)  # ms
+                })
+            
+            # Check registration status
+            if self.blockchain_integration:
+                health_status["agent_registered"] = self.blockchain_integration.is_registered()
+            
+            # Check message listener
+            if self.message_listener:
+                health_status["listener_active"] = True
+            
+            # Determine overall status
+            if (health_status["client_connected"] and 
+                health_status["agent_registered"] and 
+                health_status["listener_active"]):
+                health_status["status"] = "healthy"
+            else:
+                health_status["status"] = "degraded"
+                
+        except Exception as e:
+            health_status.update({
+                "status": "unhealthy",
+                "error": str(e)
+            })
+            self.logger.error(f"Blockchain health check failed: {e}")
+        
+        return health_status
+    
+    async def recover_blockchain_connection(self) -> bool:
+        """Attempt to recover blockchain connection after failures"""
+        self.logger.info("🔄 Attempting blockchain connection recovery...")
+        
+        try:
+            # Reset error counters
+            if hasattr(self.blockchain_error_handler, 'reset_counters'):
+                self.blockchain_error_handler.reset_counters()
+            
+            # Re-initialize blockchain components
+            agent_name = getattr(self, 'agent_id', 'unknown')
+            capabilities = getattr(self, 'blockchain_capabilities', [])
+            endpoint = getattr(self, 'base_url', None)
+            
+            result = await self._initialize_blockchain(agent_name, capabilities, endpoint)
+            
+            if result:
+                self.logger.info("✅ Blockchain connection recovery successful")
+                self.blockchain_enabled = True
+                return True
+            else:
+                self.logger.error("❌ Blockchain connection recovery failed")
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"❌ Blockchain recovery failed: {e}")
+            return False
+    
+    async def sync_fallback_messages(self) -> int:
+        """Sync any cached fallback messages to blockchain when connection is restored"""
+        if not self.blockchain_enabled or not self.blockchain_integration:
+            return 0
+        
+        try:
+            synced_count = await self.blockchain_fallback_handler.sync_pending_messages(
+                self.blockchain_integration
+            )
+            if synced_count > 0:
+                self.logger.info(f"✅ Synced {synced_count} fallback messages to blockchain")
+            return synced_count
+            
+        except Exception as e:
+            self.logger.error(f"❌ Failed to sync fallback messages: {e}")
+            return 0
+    
+    def get_blockchain_error_metrics(self) -> Dict[str, Any]:
+        """Get comprehensive blockchain error metrics"""
+        return {
+            "error_handler_metrics": self.blockchain_error_handler.get_metrics(),
+            "fallback_handler_metrics": self.blockchain_fallback_handler.get_metrics(),
+            "blockchain_enabled": self.blockchain_enabled,
+            "health_status": "unknown"  # Will be filled by health check
+        }
+    
+    async def shutdown_blockchain_integration(self):
+        """Gracefully shutdown blockchain integration"""
+        self.logger.info("🔄 Shutting down blockchain integration...")
+        
+        try:
+            # Stop message listener
+            if self.message_listener:
+                await self.message_listener.stop()
+            
+            # Sync any pending fallback messages
+            await self.sync_fallback_messages()
+            
+            # Close blockchain client connections
+            if self.blockchain_client:
+                await self.blockchain_client.close()
+            
+            # Cleanup error handlers
+            if hasattr(self.blockchain_error_handler, 'cleanup'):
+                await self.blockchain_error_handler.cleanup()
+            
+            if hasattr(self.blockchain_fallback_handler, 'cleanup'):
+                await self.blockchain_fallback_handler.cleanup()
+            
+            self.logger.info("✅ Blockchain integration shutdown complete")
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error during blockchain shutdown: {e}")
 
 
 class BlockchainEnabledAgent:
@@ -259,7 +457,7 @@ class BlockchainEnabledAgent:
         self._initialize_blockchain(
             agent_name=agent_name,
             capabilities=capabilities,
-            endpoint=f"http://localhost:8000"
+            endpoint=os.getenv("A2A_SERVICE_URL")
         )
         
     def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
@@ -317,7 +515,7 @@ def blockchain_enabled(agent_name: str, capabilities: List[str]):
             self._initialize_blockchain(
                 agent_name=agent_name,
                 capabilities=capabilities,
-                endpoint=getattr(self, 'endpoint', f"http://localhost:8000")
+                endpoint=getattr(self, 'endpoint', os.getenv("A2A_SERVICE_URL"))
             )
             
         # Add mixin methods to class

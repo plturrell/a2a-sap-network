@@ -6,6 +6,12 @@ import asyncio
 import os
 from agentManagerAgentMcp import AgentManagerAgentMCP
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 async def test_real_agent_manager():
     """Test the real Agent Manager with MCP"""
     
@@ -14,7 +20,7 @@ async def test_real_agent_manager():
     
     try:
         # Create agent manager
-        agent_manager = AgentManagerAgentMCP(base_url="http://localhost:8000")
+        agent_manager = AgentManagerAgentMCP(base_url=os.getenv("A2A_BASE_URL"))
         print("✅ Agent Manager created successfully")
         
         # Check MCP tools
@@ -38,7 +44,7 @@ async def test_real_agent_manager():
         reg_result = await agent_manager.register_agent_mcp(
             agent_id="test_agent_1",
             agent_name="Test Agent",
-            base_url="http://localhost:8001",
+            base_url=os.getenv("DATA_MANAGER_URL"),
             capabilities={"data_processing": True, "analysis": True},
             skills=[{"id": "skill1", "name": "Data Analysis"}]
         )

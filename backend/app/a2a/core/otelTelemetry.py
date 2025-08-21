@@ -26,6 +26,12 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExport
 from opentelemetry.trace import Status, StatusCode
 from opentelemetry.propagators.b3 import B3MultiFormat
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logger = logging.getLogger(__name__)
 
 
@@ -34,7 +40,7 @@ class TelemetryConfig:
 
     def __init__(self):
         self.service_name = os.getenv("OTEL_SERVICE_NAME", "a2a-agent")
-        self.otlp_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")
+        self.otlp_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
         self.metrics_port = int(os.getenv("OTEL_METRICS_PORT", "8000"))
         self.enable_console_export = os.getenv("OTEL_CONSOLE_EXPORT", "false").lower() == "true"
         self.environment = os.getenv("ENVIRONMENT", "development")

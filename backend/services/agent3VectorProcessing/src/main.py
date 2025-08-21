@@ -4,14 +4,25 @@ Agent 3 - Vector Processing Microservice
 A2A compliant agent for storing vectors and enabling similarity search
 """
 
+import warnings
+
+# Suppress warnings about unrecognized blockchain networks from eth_utils
+warnings.filterwarnings("ignore", message="Network 345 with name 'Yooldo Verse Mainnet'")
+warnings.filterwarnings("ignore", message="Network 12611 with name 'Astar zkEVM'")
+
 import asyncio
 import os
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .agent import VectorProcessingAgent
-from .router import create_a2a_router
+import sys
+import os
+# Add the services directory to Python path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
+from agent3VectorProcessing.src.agent import VectorProcessingAgent
+from agent3VectorProcessing.src.router import create_a2a_router
 
 async def main():
     # Get configuration from environment variables
@@ -20,7 +31,7 @@ async def main():
     base_url = os.getenv("A2A_AGENT_BASE_URL", f"http://localhost:{port}")
     
     # A2A network configuration
-    agent_manager_url = os.getenv("A2A_AGENT_MANAGER_URL", os.getenv("A2A_AGENT_MANAGER_URL", "http://agent-manager:8007"))
+    agent_manager_url = os.getenv("A2A_AGENT_MANAGER_URL", os.getenv("A2A_AGENT_MANAGER_URL", "https://agent-manager:8007"))
     
     # Vector database configuration
     vector_db_config = {

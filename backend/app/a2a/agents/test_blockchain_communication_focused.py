@@ -16,6 +16,12 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
 import traceback
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -51,7 +57,7 @@ class FocusedBlockchainCommunicationTester:
                 "module_path": "agent6QualityControl.active.qualityControlManagerAgent", 
                 "class_name": "QualityControlManagerAgent",
                 "init_pattern": "base_url",
-                "base_url": "http://localhost:8002",
+                "base_url": os.getenv("A2A_SERVICE_URL"),
                 "expected_handlers": ["_handle_blockchain_quality_validation", "_handle_blockchain_compliance_checking"],
                 "capabilities": ["quality_assurance", "test_execution", "validation_reporting"]
             },
@@ -59,7 +65,7 @@ class FocusedBlockchainCommunicationTester:
                 "module_path": "dataManager.active.enhancedDataManagerAgentSdk",
                 "class_name": "EnhancedDataManagerAgentSDK",
                 "init_pattern": "base_url",
-                "base_url": "http://localhost:8003",
+                "base_url": os.getenv("A2A_SERVICE_URL"),
                 "expected_handlers": ["_handle_blockchain_data_validation", "_handle_blockchain_data_transformation"],
                 "capabilities": ["data_operations", "data_validation", "data_transformation"]
             },
@@ -67,7 +73,7 @@ class FocusedBlockchainCommunicationTester:
                 "module_path": "agent5QaValidation.active.enhancedQaValidationAgentSdk",
                 "class_name": "EnhancedQAValidationAgent", 
                 "init_pattern": "base_url_simple",
-                "base_url": "http://localhost:8005",
+                "base_url": os.getenv("A2A_SERVICE_URL"),
                 "expected_handlers": ["_handle_blockchain_qa_validation", "_handle_blockchain_consensus_validation"],
                 "capabilities": ["qa_validation", "quality_assurance", "consensus_validation"]
             },
@@ -75,7 +81,7 @@ class FocusedBlockchainCommunicationTester:
                 "module_path": "calculationAgent.active.enhancedCalculationAgentSdk",
                 "class_name": "EnhancedCalculationAgentSDK",
                 "init_pattern": "base_url_simple", 
-                "base_url": "http://localhost:8006",
+                "base_url": os.getenv("A2A_SERVICE_URL"),
                 "expected_handlers": ["_handle_blockchain_calculation_request", "_handle_blockchain_distributed_calculation"],
                 "capabilities": ["calculation_requests", "distributed_calculation", "formula_verification"]
             },
@@ -83,7 +89,7 @@ class FocusedBlockchainCommunicationTester:
                 "module_path": "catalogManager.active.enhancedCatalogManagerAgentSdk",
                 "class_name": "EnhancedCatalogManagerAgent",
                 "init_pattern": "base_url_simple",
-                "base_url": "http://localhost:8007", 
+                "base_url": os.getenv("A2A_SERVICE_URL"), 
                 "expected_handlers": ["_handle_blockchain_catalog_search", "_handle_blockchain_resource_registration"],
                 "capabilities": ["catalog_search", "resource_registration", "metadata_indexing"]
             },
@@ -91,7 +97,7 @@ class FocusedBlockchainCommunicationTester:
                 "module_path": "agentBuilder.active.enhancedAgentBuilderAgentSdk",
                 "class_name": "EnhancedAgentBuilderAgent",
                 "init_pattern": "base_url_simple",
-                "base_url": "http://localhost:8008",
+                "base_url": os.getenv("A2A_SERVICE_URL"),
                 "expected_handlers": ["_handle_blockchain_agent_creation", "_handle_blockchain_template_management"],
                 "capabilities": ["agent_creation", "template_management", "deployment_automation"]
             },
@@ -99,7 +105,7 @@ class FocusedBlockchainCommunicationTester:
                 "module_path": "embeddingFineTuner.active.enhancedEmbeddingFineTunerAgentSdk", 
                 "class_name": "EnhancedEmbeddingFineTunerAgent",
                 "init_pattern": "base_url_simple",
-                "base_url": "http://localhost:8009",
+                "base_url": os.getenv("A2A_SERVICE_URL"),
                 "expected_handlers": ["_handle_blockchain_embedding_optimization", "_handle_blockchain_model_fine_tuning"],
                 "capabilities": ["embedding_optimization", "model_fine_tuning", "model_collaboration"]
             },
@@ -107,7 +113,7 @@ class FocusedBlockchainCommunicationTester:
                 "module_path": "sqlAgent.active.enhancedSqlAgentSdk",
                 "class_name": "EnhancedSqlAgentSDK",
                 "init_pattern": "base_url_simple", 
-                "base_url": "http://localhost:8010",
+                "base_url": os.getenv("A2A_SERVICE_URL"),
                 "expected_handlers": ["_handle_blockchain_sql_query_execution", "_handle_blockchain_database_operations"],
                 "capabilities": ["sql_query_execution", "database_operations", "query_optimization"]
             }

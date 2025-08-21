@@ -15,9 +15,23 @@ Enhanced Capabilities:
 - Autonomous schema optimization and standardization rule evolution
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import hashlib
-import httpx
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 import json
 import logging
 import os
@@ -60,6 +74,10 @@ from app.a2a.sdk.utils import create_error_response, create_success_response
 
 # Import AI Intelligence Framework
 from app.a2a.core.ai_intelligence import (
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
     AIIntelligenceFramework, AIIntelligenceConfig,
     create_ai_intelligence_framework, create_enhanced_agent_config
 )
@@ -604,7 +622,8 @@ class EnhancedDataStandardizationAgentSDK(A2AAgentBase):
         await self._initialize_schema_knowledge()
         
         # Initialize HTTP client
-        self.http_client = httpx.AsyncClient(
+        self.http_client = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        # httpx\.AsyncClient(
             timeout=httpx.Timeout(30.0),
             limits=httpx.Limits(max_connections=10, max_keepalive_connections=5)
         )

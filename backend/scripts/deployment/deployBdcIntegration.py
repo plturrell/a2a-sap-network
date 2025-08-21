@@ -13,6 +13,12 @@ from typing import Dict, Any, List
 import logging
 from datetime import datetime
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -74,7 +80,7 @@ class BDCIntegrationDeployer:
         self.agents_config = {
             "agent0_data_product": {
                 "name": "Data Product Registration Agent",
-                "endpoint": "http://localhost:8003",
+                "endpoint": "os.getenv("AGENT_MANAGER_URL")",
                 "type": "DATA_PRODUCT_REGISTRATION",
                 "capabilities": ["data_product_registration", "dublin_core_metadata"],
                 "smart_contract": {
@@ -85,7 +91,7 @@ class BDCIntegrationDeployer:
             },
             "agent1_standardization": {
                 "name": "Data Standardization Agent", 
-                "endpoint": "http://localhost:8004",
+                "endpoint": os.getenv("A2A_SERVICE_URL"),
                 "type": "DATA_STANDARDIZATION",
                 "capabilities": ["data_standardization", "schema_validation"],
                 "smart_contract": {
@@ -96,7 +102,7 @@ class BDCIntegrationDeployer:
             },
             "agent2_ai_preparation": {
                 "name": "AI Preparation Agent",
-                "endpoint": "http://localhost:8005", 
+                "endpoint": os.getenv("A2A_SERVICE_URL"), 
                 "type": "AI_PREPARATION",
                 "capabilities": ["semantic_enrichment", "grok_api_integration"],
                 "smart_contract": {
@@ -107,7 +113,7 @@ class BDCIntegrationDeployer:
             },
             "agent3_vector_processing": {
                 "name": "Vector Processing Agent",
-                "endpoint": "http://localhost:8008",
+                "endpoint": os.getenv("A2A_SERVICE_URL"),
                 "type": "VECTOR_PROCESSING", 
                 "capabilities": ["vector_embeddings", "knowledge_graph"],
                 "smart_contract": {
@@ -118,7 +124,7 @@ class BDCIntegrationDeployer:
             },
             "agent4_calc_validation": {
                 "name": "Calculation Validation Agent",
-                "endpoint": "http://localhost:8006",
+                "endpoint": os.getenv("A2A_SERVICE_URL"),
                 "type": "CALC_VALIDATION",
                 "capabilities": ["template_based_testing", "computation_validation"],
                 "smart_contract": {
@@ -129,7 +135,7 @@ class BDCIntegrationDeployer:
             },
             "agent5_qa_validation": {
                 "name": "QA Validation Agent",
-                "endpoint": "http://localhost:8007",
+                "endpoint": os.getenv("A2A_SERVICE_URL"),
                 "type": "QA_VALIDATION",
                 "capabilities": ["simpleqa_testing", "ord_discovery"],
                 "smart_contract": {
@@ -140,7 +146,7 @@ class BDCIntegrationDeployer:
             },
             "data_manager": {
                 "name": "Data Manager Agent",
-                "endpoint": "http://localhost:8001",
+                "endpoint": "os.getenv("DATA_MANAGER_URL")",
                 "type": "DATA_MANAGER", 
                 "capabilities": ["data_storage", "hana_integration"],
                 "smart_contract": {
@@ -151,7 +157,7 @@ class BDCIntegrationDeployer:
             },
             "catalog_manager": {
                 "name": "Catalog Manager Agent",
-                "endpoint": "http://localhost:8002",
+                "endpoint": "os.getenv("CATALOG_MANAGER_URL")",
                 "type": "CATALOG_MANAGER",
                 "capabilities": ["service_discovery", "catalog_management"],
                 "smart_contract": {

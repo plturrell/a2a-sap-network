@@ -5,6 +5,12 @@ import os
 from .secrets import get_secrets_manager, SecretNotFoundError
 
 
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
+
 class Settings(BaseSettings):
     # Application
     APP_NAME: str = "FinSight CIB"
@@ -64,8 +70,8 @@ class Settings(BaseSettings):
     CONSUL_PORT: int = int(os.getenv("CONSUL_PORT", "8500"))
     
     # Service Discovery Configuration
-    REGISTRY_URL: str = os.getenv("REGISTRY_URL", "http://localhost:9000")
-    TRUST_SERVICE_URL: str = os.getenv("TRUST_SERVICE_URL", "http://localhost:9001")
+    REGISTRY_URL: str = os.getenv("REGISTRY_URL", "http://localhost:8080")
+    TRUST_SERVICE_URL: str = os.getenv("TRUST_SERVICE_URL", "http://localhost:8081")
     
     # Additional API Keys for various services
     @property

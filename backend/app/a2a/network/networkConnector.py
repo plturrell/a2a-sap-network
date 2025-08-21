@@ -315,6 +315,10 @@ class NetworkConnector:
             local_dp_path = "/tmp/a2a_local_data_products.json"
             
             import json
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             data_products = {}
             
             # Load existing data products

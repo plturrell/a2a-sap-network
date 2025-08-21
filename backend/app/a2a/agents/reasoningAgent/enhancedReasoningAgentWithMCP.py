@@ -1,3 +1,4 @@
+import os
 """
 Enhanced Reasoning Agent with MCP Tool Integration
 Example of how to update agent SDKs to use the new MCP tools
@@ -10,6 +11,12 @@ from ...sdk.mcpSkillCoordination import MCPSkillCoordinator
 from .mcpReasoningConfidenceCalculator import mcp_confidence_calculator
 from .mcpSemanticSimilarityCalculator import mcp_similarity_calculator
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logger = logging.getLogger(__name__)
 
 
@@ -291,7 +298,7 @@ async def example_usage():
     Example of how to use MCP tools in agent code
     """
     # Initialize agent
-    agent = EnhancedReasoningAgentWithMCP("http://localhost:8000")
+    agent = EnhancedReasoningAgentWithMCP("os.getenv("A2A_BASE_URL")")
     await agent.initialize()
     
     # Example 1: Direct MCP tool usage

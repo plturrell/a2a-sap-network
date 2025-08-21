@@ -11,6 +11,12 @@ import json
 import time
 from datetime import datetime
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -33,7 +39,7 @@ async def test_enhanced_ai_preparation_agent():
         
         # Create agent
         agent = EnhancedAIPreparationAgentMCP(
-            base_url="http://localhost:8002",
+            base_url=os.getenv("CATALOG_MANAGER_URL"),
             enable_monitoring=False  # Disable for testing
         )
         print(f"✅ Agent created: {agent.name} (ID: {agent.agent_id})")

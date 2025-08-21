@@ -6,6 +6,7 @@ Implements the Model Context Protocol JSON-RPC 2.0 specification
 import asyncio
 import json
 import logging
+import os
 import traceback
 import uuid
 from typing import Dict, Any, List, Optional, Callable, Union
@@ -27,6 +28,10 @@ try:
     from fastapi import FastAPI, WebSocket, HTTPException
     from fastapi.responses import JSONResponse
     import uvicorn
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
     FASTAPI_AVAILABLE = True
 except ImportError:
     FASTAPI_AVAILABLE = False

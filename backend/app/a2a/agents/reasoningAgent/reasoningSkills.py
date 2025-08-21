@@ -951,6 +951,10 @@ class ReasoningOrchestrationSkills(PerformanceMonitorMixin):
         try:
             # Import the enhanced blackboard architecture
             from .blackboardArchitecture import blackboard_reasoning as enhanced_blackboard_reasoning
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             
             # Extract question and context
             question = request.question if hasattr(request, 'question') else str(request)

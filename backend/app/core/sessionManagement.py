@@ -35,6 +35,10 @@ from .errorHandling import AuthenticationError, SecurityError, ValidationError
 from .secrets import get_secrets_manager
 from .securityMonitoring import report_security_event, EventType, ThreatLevel
 
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
+
 logger = logging.getLogger(__name__)
 
 # Password hashing context (optional)

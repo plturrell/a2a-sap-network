@@ -18,6 +18,12 @@ sys.path.insert(0, str(app_path))
 from app.a2a.agents.reasoningAgent.reasoningAgent import ReasoningAgent
 from app.a2a.sdk.server import create_a2a_server
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -31,11 +37,11 @@ async def main():
     try:
         # Configuration
         config = {
-            "base_url": os.getenv("REASONING_AGENT_URL", "http://localhost:8008"),
-            "agent_network_url": os.getenv("AGENT_NETWORK_URL", "http://localhost:8000"),
-            "data_manager_url": os.getenv("DATA_MANAGER_URL", "http://localhost:8001"),
-            "catalog_manager_url": os.getenv("CATALOG_MANAGER_URL", "http://localhost:8002"),
-            "agent_manager_url": os.getenv("AGENT_MANAGER_URL", "http://localhost:8003"),
+            "base_url": os.getenv("REASONING_AGENT_URL"),
+            "agent_network_url": os.getenv("AGENT_NETWORK_URL", "os.getenv("A2A_BASE_URL")"),
+            "data_manager_url": os.getenv("DATA_MANAGER_URL", "os.getenv("DATA_MANAGER_URL")"),
+            "catalog_manager_url": os.getenv("CATALOG_MANAGER_URL", "os.getenv("CATALOG_MANAGER_URL")"),
+            "agent_manager_url": os.getenv("AGENT_MANAGER_URL", "os.getenv("AGENT_MANAGER_URL")"),
             "max_sub_agents": int(os.getenv("MAX_SUB_AGENTS", "10")),
             "reasoning_timeout": int(os.getenv("REASONING_TIMEOUT", "300"))
         }

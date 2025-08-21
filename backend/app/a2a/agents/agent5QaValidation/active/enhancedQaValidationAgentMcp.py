@@ -444,6 +444,10 @@ class QuestionTemplate:
                         return False
             elif constraint == "pattern" and isinstance(rule, str):
                 import re
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
                 for var in self.variables:
                     if var in context and not re.match(rule, str(context[var])):
                         return False
@@ -2074,7 +2078,7 @@ class EnhancedQAValidationAgentMCP(A2AAgentBase, PerformanceOptimizationMixin):
         
         for i in range(test_count):
             # Select template
-            template_id = random.choice(suitable_templates)
+            template_id = secrets.choice(suitable_templates)
             
             # Prepare context from content data
             context = self._prepare_template_context(content_data, i)

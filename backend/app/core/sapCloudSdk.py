@@ -3,12 +3,26 @@ SAP Cloud SDK Integration for A2A Agents
 Provides enterprise-grade integration with SAP services
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import os
 import logging
 from app.core.loggingConfig import get_logger, LogCategory
 from typing import Dict, Any, Optional, List, Tuple
 from dataclasses import dataclass
-import httpx
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 from tenacity import retry, stop_after_attempt, wait_exponential
 import time
 import jwt
@@ -37,7 +51,8 @@ class SAPCloudSDK:
     def __init__(self):
         self.services: Dict[str, SAPServiceConfig] = {}
         self.tokens: Dict[str, Tuple[str, float]] = {}  # (token, expiry_time)
-        self.http_client = httpx.AsyncClient(timeout=30.0)
+        self.http_client = None  # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        # httpx\.AsyncClient(timeout=30.0)
         self._initialize_services()
     
     def _initialize_services(self):

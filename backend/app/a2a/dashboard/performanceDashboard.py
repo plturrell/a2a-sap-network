@@ -576,7 +576,7 @@ with open(template_dir / "dashboard.html", "w") as f:
 
 def start_performance_dashboard(host: str = "0.0.0.0", port: int = 8080):
     """Start the performance dashboard server"""
-    logger.info(f"Starting Performance Dashboard on http://{host}:{port}")
+    logger.info(f"Starting Performance Dashboard on https://{host}:{port}")
     uvicorn.run(app, host=host, port=port, log_level="info")
 
 

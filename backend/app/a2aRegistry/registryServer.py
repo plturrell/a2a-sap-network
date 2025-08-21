@@ -13,6 +13,12 @@ from datetime import datetime
 from typing import Dict, Any, List
 import asyncio
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Set up Python path - go up to backend/app level
 current_dir = os.path.dirname(os.path.abspath(__file__))
 app_dir = os.path.dirname(current_dir)
@@ -41,7 +47,7 @@ def initialize_trust_system():
         agents_registry[AGENT1_ADDRESS] = {
             "name": "Blockchain Financial Agent",
             "description": "On-chain financial analysis and portfolio management",
-            "url": "http://localhost:3000",
+            "url": os.getenv("A2A_SERVICE_URL"),
             "type": "blockchain_financial_agent",
             "skills": ["portfolio-analysis", "risk-assessment"],
             "status": "active",
@@ -52,7 +58,7 @@ def initialize_trust_system():
         agents_registry[AGENT2_ADDRESS] = {
             "name": "Blockchain Message Agent", 
             "description": "On-chain message routing and communication",
-            "url": "http://localhost:3001",
+            "url": os.getenv("A2A_SERVICE_URL"),
             "type": "blockchain_message_agent",
             "skills": ["message-routing", "data-transformation"],
             "status": "active",

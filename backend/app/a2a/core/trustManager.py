@@ -161,6 +161,10 @@ class TrustManager:
                 try:
                     import json
 
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
+
                     serialized = json.dumps(message, default=str, sort_keys=True)
                     message_dict = json.loads(serialized)
                     return self._trust_functions["sign_a2a_message"](message_dict, agent_id)

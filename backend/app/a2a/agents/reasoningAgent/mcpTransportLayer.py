@@ -442,7 +442,7 @@ class MCPHTTPTransport:
         
         # Run in background
         asyncio.create_task(self.server.serve())
-        logger.info(f"MCP HTTP server started on http://{self.host}:{self.port}")
+        logger.info(f"MCP HTTP server started on https://{self.host}:{self.port}")
     
     async def stop(self):
         """Stop HTTP server"""
@@ -596,6 +596,10 @@ class MCPTransportManager:
 async def test_transport_layer():
     """Test the transport layer"""
     from mcpReasoningAgent import MCPReasoningAgent
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
     
     # Create reasoning agent
     agent = MCPReasoningAgent()

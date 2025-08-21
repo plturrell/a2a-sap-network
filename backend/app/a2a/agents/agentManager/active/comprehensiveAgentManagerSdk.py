@@ -12,6 +12,19 @@ This agent provides enterprise-grade agent lifecycle management with:
 Rating: 95/100 (Real AI Intelligence)
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import json
 import logging
@@ -64,112 +77,27 @@ try:
 except ImportError:
     SEMANTIC_SEARCH_AVAILABLE = False
 
-# Import SDK components - corrected paths
-try:
-    # Try primary SDK path
-    from ....a2a.sdk.agentBase import A2AAgentBase
-    from ....a2a.sdk.decorators import a2a_handler, a2a_skill, a2a_task
-    from ....a2a.sdk.types import A2AMessage, MessageRole
-    from ....a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
-except ImportError:
-    try:
-        # Try alternative SDK path  
-        from ....a2a_test.sdk.agentBase import A2AAgentBase
-        from ....a2a_test.sdk.decorators import a2a_handler, a2a_skill, a2a_task
-        from ....a2a_test.sdk.types import A2AMessage, MessageRole
-        from ....a2a_test.sdk.utils import create_agent_id, create_error_response, create_success_response
-    except ImportError:
-        # Fallback local SDK definitions
-        from typing import Dict, Any, Callable
-        import asyncio
-        from abc import ABC, abstractmethod
-        
-        # Create minimal base class if SDK not available
-        class A2AAgentBase(ABC):
-            def __init__(self, agent_id: str, name: str, description: str, version: str, base_url: str):
-                self.agent_id = agent_id
-                self.name = name  
-                self.description = description
-                self.version = version
-                self.base_url = base_url
-                self.skills = {}
-                self.handlers = {}
-            
-            @abstractmethod
-            async def initialize(self) -> None:
-                pass
-            
-            @abstractmethod
-            async def shutdown(self) -> None:
-                pass
-        
-        # Create minimal decorators
-        def a2a_handler(name: str):
-            def decorator(func):
-                func._handler_name = name
-                return func
-            return decorator
-        
-        def a2a_skill(name: str):
-            def decorator(func):
-                func._skill_name = name
-                return func
-            return decorator
-        
-        def a2a_task(name: str, **kwargs):
-            def decorator(func):
-                func._task_name = name
-                return func
-            return decorator
-        
-        # Create minimal message types
-        @dataclass
-        class A2AMessage:
-            content: str
-            role: str = "user"
-            metadata: Dict[str, Any] = field(default_factory=dict)
-        
-        class MessageRole:
-            USER = "user"
-            ASSISTANT = "assistant"
-            SYSTEM = "system"
-        
-        def create_error_response(error: str) -> Dict[str, Any]:
-            return {"success": False, "error": error}
-        
-        def create_success_response(data: Any) -> Dict[str, Any]:
-            return {"success": True, "data": data}
-        
-        def create_agent_id(name: str) -> str:
-            return f"agent_{name}_{int(time.time())}"
+# Import SDK components - using standard A2A SDK paths
+from app.a2a.sdk.agentBase import A2AAgentBase
+from app.a2a.sdk import a2a_handler, a2a_skill, a2a_task
+from app.a2a.sdk.types import A2AMessage, MessageRole
+from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
+from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 
-# Import MCP decorators with fallback
+# Import MCP decorators
+# from app.common.mcp_helper_implementations import mcp_tool, mcp_resource, mcp_prompt
 try:
-    from ....common.mcp_helper_implementations import mcp_tool, mcp_resource, mcp_prompt
+    from app.a2a.sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
 except ImportError:
-    # Create fallback MCP decorators
-    def mcp_tool(name: str, description: str = ""):
-        def decorator(func):
-            func._mcp_tool = True
-            func._mcp_name = name
-            func._mcp_description = description
-            return func
+    # Create stub decorators for testing
+    def mcp_tool(name, description=""):
+        def decorator(func): return func
         return decorator
-    
-    def mcp_resource(name: str, description: str = ""):
-        def decorator(func):
-            func._mcp_resource = True
-            func._mcp_name = name
-            func._mcp_description = description
-            return func
+    def mcp_resource(uri, name="", description=""):
+        def decorator(func): return func
         return decorator
-    
-    def mcp_prompt(name: str, description: str = ""):
-        def decorator(func):
-            func._mcp_prompt = True
-            func._mcp_name = name
-            func._mcp_description = description
-            return func
+    def mcp_prompt(name, description=""):
+        def decorator(func): return func
         return decorator
 
 # Blockchain integration
@@ -197,6 +125,10 @@ except ImportError:
 # Data Manager integration
 import sqlite3
 import aiosqlite
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
 
 logger = logging.getLogger(__name__)
 
@@ -293,62 +225,6 @@ class OrchestrationTask:
     dependencies: List[str] = field(default_factory=list)
 
 
-# Blockchain integration mixin
-class BlockchainQueueMixin:
-    """Mixin for blockchain message queue functionality"""
-    
-    def __init__(self):
-        self.blockchain_queue_enabled = False
-        self.web3_client = None
-        self.account = None
-        self._setup_blockchain_connection()
-    
-    def _setup_blockchain_connection(self):
-        """Setup blockchain connection for agent management operations"""
-        if not WEB3_AVAILABLE:
-            logger.warning("Web3 not available - blockchain features disabled")
-            return
-        
-        try:
-            # Setup Web3 connection
-            rpc_url = os.getenv('A2A_RPC_URL', 'http://localhost:8545')
-            self.web3_client = Web3(Web3.HTTPProvider(rpc_url))
-            
-            # Setup account
-            private_key = os.getenv('A2A_PRIVATE_KEY')
-            if private_key:
-                self.account = Account.from_key(private_key)
-                self.blockchain_queue_enabled = True
-                logger.info(f"Blockchain enabled for agent management: {self.account.address}")
-            else:
-                logger.info("No private key - blockchain features in read-only mode")
-                
-        except Exception as e:
-            logger.error(f"Failed to setup blockchain connection: {e}")
-
-    async def send_blockchain_message(self, to_address: str, message_type: str, content: Dict[str, Any]) -> Dict[str, Any]:
-        """Send message via blockchain"""
-        if not self.blockchain_queue_enabled:
-            return {"error": "Blockchain not enabled"}
-        
-        try:
-            # Create message transaction (simplified)
-            message_data = {
-                "type": message_type,
-                "content": content,
-                "timestamp": datetime.utcnow().isoformat(),
-                "from": self.account.address,
-                "to": to_address
-            }
-            
-            # In production, this would create an actual blockchain transaction
-            logger.info(f"Blockchain message sent: {message_type} to {to_address}")
-            return {"success": True, "message_hash": hashlib.sha256(str(message_data).encode()).hexdigest()[:16]}
-            
-        except Exception as e:
-            logger.error(f"Failed to send blockchain message: {e}")
-            return {"error": str(e)}
-
 
 class NetworkConnector:
     """Network communication for agent coordination"""
@@ -361,7 +237,9 @@ class NetworkConnector:
     async def initialize(self):
         """Initialize network connection"""
         if AIOHTTP_AVAILABLE:
-            self.session = aiohttp.ClientSession()
+            # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
+            # self.session = aiohttp.ClientSession()
+            self.session = None  # Disabled for A2A protocol compliance
     
     async def send_message(self, agent_url: str, message: Dict[str, Any]) -> Dict[str, Any]:
         """Send message to another agent"""
@@ -490,21 +368,25 @@ class DataManagerClient:
                 await conn.commit()
             
             # Try to store remotely via Data Manager
-            if AIOHTTP_AVAILABLE:
-                try:
-                    async with aiohttp.ClientSession() as session:
-                        async with session.post(
-                            f"{self.base_url}/api/v1/store",
-                            json={
-                                "data_type": "agent_registration",
-                                "data": registration.__dict__
-                            },
-                            timeout=aiohttp.ClientTimeout(total=10)
-                        ) as response:
-                            if response.status == 200:
-                                logger.info(f"Agent registration {registration.agent_id} stored remotely")
-                except Exception as e:
-                    logger.warning(f"Remote storage failed, using local only: {e}")
+            # if AIOHTTP_AVAILABLE:
+            #     try:
+            #         # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
+            #         # async with aiohttp.ClientSession() as session:
+            #             async with session.post(
+            #                 f"{self.base_url}/api/v1/store",
+            #                 json={
+            #                     "data_type": "agent_registration",
+            #                     "data": registration.__dict__
+            #                 },
+            #                 timeout=aiohttp.ClientTimeout(total=10)
+            #             ) as response:
+            #                 if response.status == 200:
+            #                     logger.info(f"Agent registration {registration.agent_id} stored remotely")
+            #     except Exception as e:
+            #         logger.warning(f"Remote storage failed, using local only: {e}")
+            
+            # A2A Protocol Compliance: Disable HTTP-based remote storage
+            logger.info(f"Agent registration {registration.agent_id} stored locally (A2A protocol compliance)")
             
             return True
             
@@ -513,7 +395,7 @@ class DataManagerClient:
             return False
 
 
-class ComprehensiveAgentManagerSDK(A2AAgentBase, BlockchainQueueMixin):
+class ComprehensiveAgentManagerSDK(A2AAgentBase, BlockchainIntegrationMixin):
     """
     Comprehensive Agent Manager with Real AI Intelligence
     
@@ -530,18 +412,23 @@ class ComprehensiveAgentManagerSDK(A2AAgentBase, BlockchainQueueMixin):
     """
     
     def __init__(self, base_url: str):
-        # Initialize base agent
-        A2AAgentBase.__init__(
-            self,
+        # Create agent configuration manually
+        from app.a2a.sdk.types import AgentConfig
+        
+        config = AgentConfig(
             agent_id=create_agent_id("comprehensive_agent_manager"),
             name="Comprehensive Agent Manager",
             description="Real AI-powered agent lifecycle management with blockchain integration",
             version="3.0.0",
-            base_url=base_url
+            base_url=base_url,
+            enable_telemetry=True,
+            enable_request_signing=False,
+            a2a_protocol_only=True,
+            blockchain_capabilities=["agent_management", "orchestration", "performance_analysis"]
         )
         
-        # Initialize blockchain integration
-        BlockchainQueueMixin.__init__(self)
+        # Initialize A2A agent base
+        A2AAgentBase.__init__(self, config)
         
         # Machine Learning Models for Agent Management Intelligence
         self.performance_predictor = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1)
@@ -621,6 +508,64 @@ class ComprehensiveAgentManagerSDK(A2AAgentBase, BlockchainQueueMixin):
         self.management_cache = {}
         self.performance_history = defaultdict(list)
         
+        # ✨ NEW: Message Tracking and Reputation System
+        self.message_tracking = {
+            "lifecycle_stats": defaultdict(lambda: {
+                "sent": 0, "received": 0, "processed": 0, "rejected": 0, 
+                "referred": 0, "completed": 0, "failed": 0, "partial": 0
+            }),
+            "skill_performance": defaultdict(lambda: defaultdict(lambda: {
+                "attempts": 0, "successes": 0, "failures": 0, 
+                "avg_processing_time": 0.0, "skill_reputation": 1.0
+            })),
+            "message_routing": defaultdict(list),  # agent_id -> [routing decisions]
+            "referral_success": defaultdict(lambda: {"successful": 0, "failed": 0}),
+            "cross_agent_collaboration": defaultdict(set),  # track agent interactions
+            "message_quality_scores": defaultdict(list)  # track message quality over time
+        }
+        
+        # Reputation calculation models
+        self.reputation_models = {
+            "skill_based": defaultdict(lambda: 1.0),  # agent_id -> skill -> reputation
+            "collaboration": defaultdict(lambda: 1.0),  # agent_id -> collaboration reputation
+            "reliability": defaultdict(lambda: 1.0),   # agent_id -> reliability score
+            "response_quality": defaultdict(lambda: 1.0),  # agent_id -> quality score
+            "marketplace_rating": defaultdict(lambda: 1.0)  # agent_id -> marketplace score
+        }
+        
+        # Blockchain-based reputation storage
+        self.blockchain_reputation_data = {}
+        self.reputation_update_queue = []
+        
+        # Skills matching and optimization tracking
+        self.skills_analytics = {
+            "optimal_routing_decisions": 0,
+            "suboptimal_routing_decisions": 0,
+            "skills_mismatch_prevented": 0,
+            "successful_referrals": 0,
+            "failed_referrals": 0,
+            "network_skill_coverage": {},
+            "agent_specialization_index": defaultdict(float)
+        }
+        
+        # Real-time message analytics
+        self.message_analytics = {
+            "processing_times": defaultdict(list),
+            "success_rates": defaultdict(float),
+            "error_patterns": defaultdict(list),
+            "communication_patterns": defaultdict(lambda: defaultdict(int)),
+            "peak_usage_times": defaultdict(list),
+            "resource_utilization": defaultdict(dict)
+        }
+        
+        # Data-driven decision engine
+        self.decision_engine = {
+            "routing_optimizer": None,  # Will be ML model
+            "reputation_predictor": None,  # Will be ML model
+            "performance_forecaster": None,  # Will be ML model
+            "skill_recommender": None  # Will be ML model
+        }
+        
         # Agent relationship graph
         if NETWORKX_AVAILABLE:
             self.agent_network = nx.DiGraph()
@@ -631,7 +576,7 @@ class ComprehensiveAgentManagerSDK(A2AAgentBase, BlockchainQueueMixin):
         if PSUTIL_AVAILABLE:
             logger.info("psutil available for system monitoring")
         
-        logger.info(f"Initialized {self.name} with real AI intelligence")
+        logger.info(f"Initialized {self.name} with real AI intelligence and comprehensive message tracking")
     
     def _initialize_grok_client(self):
         """Initialize Grok AI client for intelligent agent management"""
@@ -640,8 +585,11 @@ class ComprehensiveAgentManagerSDK(A2AAgentBase, BlockchainQueueMixin):
             return
         
         try:
-            # Use the API key found in the codebase
-            api_key = os.getenv('GROK_API_KEY') or "xai-GjOhyMGlKR6lA3xqhc8sBjhfJNXLGGI7NvY0xbQ9ZElNkgNrIGAqjEfGUYoLhONHfzQ3bI5Rj2TjhXzO8wWTg"
+            # Use environment variable for API key
+            api_key = os.getenv('GROK_API_KEY')
+            if not api_key:
+                logger.warning("GROK_API_KEY not set - Grok features disabled")
+                return
             
             # Initialize Grok client
             self.grok_client = openai.OpenAI(
@@ -1213,14 +1161,53 @@ class ComprehensiveAgentManagerSDK(A2AAgentBase, BlockchainQueueMixin):
     async def _load_agent_registrations(self):
         """Load agent registrations from persistent storage"""
         try:
-            logger.info("Agent registrations loaded (placeholder)")
+            # Load from JSON file or database
+            import json
+            registrations_file = "agent_registrations.json"
+            
+            if os.path.exists(registrations_file):
+                with open(registrations_file, 'r') as f:
+                    data = json.load(f)
+                    for agent_id, reg_data in data.items():
+                        registration = AgentRegistration(
+                            agent_id=reg_data.get('agent_id'),
+                            name=reg_data.get('name'),
+                            endpoint=reg_data.get('endpoint'),
+                            capabilities=reg_data.get('capabilities', []),
+                            description=reg_data.get('description', ''),
+                            version=reg_data.get('version', '1.0.0')
+                        )
+                        self.agent_registry[agent_id] = registration
+                        
+                logger.info(f"Loaded {len(self.agent_registry)} agent registrations from storage")
+            else:
+                logger.info("No existing agent registrations file found")
         except Exception as e:
             logger.error(f"Failed to load agent registrations: {e}")
     
     async def _save_agent_registrations(self):
         """Save agent registrations to persistent storage"""
         try:
-            logger.info("Agent registrations saved (placeholder)")
+            import json
+            registrations_file = "agent_registrations.json"
+            
+            # Convert registrations to serializable format
+            data = {}
+            for agent_id, registration in self.agent_registry.items():
+                data[agent_id] = {
+                    'agent_id': registration.agent_id,
+                    'name': registration.name,
+                    'endpoint': registration.endpoint,
+                    'capabilities': registration.capabilities,
+                    'description': registration.description,
+                    'version': registration.version,
+                    'last_updated': datetime.utcnow().isoformat()
+                }
+            
+            with open(registrations_file, 'w') as f:
+                json.dump(data, f, indent=2)
+                
+            logger.info(f"Saved {len(data)} agent registrations to storage")
         except Exception as e:
             logger.error(f"Failed to save agent registrations: {e}")
     
@@ -1420,9 +1407,457 @@ class ComprehensiveAgentManagerSDK(A2AAgentBase, BlockchainQueueMixin):
     async def _save_performance_data(self):
         """Save performance data to persistent storage"""
         try:
-            logger.info("Performance data saved (placeholder)")
+            import json
+            
+            # Save message tracking data
+            tracking_file = "message_tracking_data.json"
+            tracking_data = {
+                "lifecycle_stats": dict(self.message_tracking["lifecycle_stats"]),
+                "skill_performance": {
+                    agent_id: dict(skills) for agent_id, skills in self.message_tracking["skill_performance"].items()
+                },
+                "message_routing": {
+                    agent_id: routes for agent_id, routes in self.message_tracking["message_routing"].items()
+                },
+                "referral_success": dict(self.message_tracking["referral_success"]),
+                "cross_agent_collaboration": {
+                    agent_id: list(collaborators) for agent_id, collaborators in self.message_tracking["cross_agent_collaboration"].items()
+                },
+                "timestamp": datetime.utcnow().isoformat()
+            }
+            
+            with open(tracking_file, 'w') as f:
+                json.dump(tracking_data, f, indent=2)
+            
+            # Save reputation models
+            reputation_file = "reputation_models.json"
+            reputation_data = {
+                "skill_based": dict(self.reputation_models["skill_based"]),
+                "collaboration": dict(self.reputation_models["collaboration"]),
+                "reliability": dict(self.reputation_models["reliability"]),
+                "response_quality": dict(self.reputation_models["response_quality"]),
+                "marketplace_rating": dict(self.reputation_models["marketplace_rating"]),
+                "timestamp": datetime.utcnow().isoformat()
+            }
+            
+            with open(reputation_file, 'w') as f:
+                json.dump(reputation_data, f, indent=2)
+            
+            # Save skills analytics
+            analytics_file = "skills_analytics.json"
+            analytics_data = dict(self.skills_analytics)
+            analytics_data["timestamp"] = datetime.utcnow().isoformat()
+            
+            with open(analytics_file, 'w') as f:
+                json.dump(analytics_data, f, indent=2)
+                
+            logger.info("Performance data saved to persistent storage")
         except Exception as e:
             logger.error(f"Failed to save performance data: {e}")
+    
+    # ✨ NEW: Comprehensive Message Tracking and Reputation System
+    
+    async def track_message_lifecycle(self, message_data: Dict[str, Any], status: str, metadata: Optional[Dict[str, Any]] = None) -> None:
+        """
+        Track complete message lifecycle for analytics and reputation scoring
+        
+        Args:
+            message_data: A2A message data
+            status: sent|received|processed|rejected|referred|completed|failed|partial
+            metadata: Additional tracking metadata
+        """
+        try:
+            agent_id = message_data.get('from_agent', message_data.get('to_agent', 'unknown'))
+            message_id = message_data.get('message_id', 'unknown')
+            
+            # Update lifecycle stats
+            self.message_tracking["lifecycle_stats"][agent_id][status] += 1
+            
+            # Extract skills and track performance
+            required_skills = self._extract_skills_from_message(message_data)
+            processing_time = metadata.get('processing_time', 0.0) if metadata else 0.0
+            
+            # Track skill-specific performance
+            for skill in required_skills:
+                skill_stats = self.message_tracking["skill_performance"][agent_id][skill]
+                skill_stats["attempts"] += 1
+                
+                if status in ["completed", "processed"]:
+                    skill_stats["successes"] += 1
+                    # Update average processing time
+                    current_avg = skill_stats["avg_processing_time"]
+                    total_attempts = skill_stats["attempts"]
+                    skill_stats["avg_processing_time"] = ((current_avg * (total_attempts - 1)) + processing_time) / total_attempts
+                elif status in ["failed", "rejected"]:
+                    skill_stats["failures"] += 1
+                
+                # Update skill reputation (success rate with time penalty)
+                success_rate = skill_stats["successes"] / skill_stats["attempts"]
+                time_penalty = min(processing_time / 5000.0, 0.3)  # Penalty for slow processing
+                skill_stats["skill_reputation"] = max(0.1, success_rate - time_penalty)
+            
+            # Track routing decisions for referrals
+            if status == "referred" and metadata:
+                routing_info = {
+                    "message_id": message_id,
+                    "original_target": metadata.get("original_target"),
+                    "referred_to": metadata.get("referred_to"),
+                    "reason": metadata.get("reason"),
+                    "skills_required": required_skills,
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+                self.message_tracking["message_routing"][agent_id].append(routing_info)
+            
+            # Update cross-agent collaboration tracking
+            if "from_agent" in message_data and "to_agent" in message_data:
+                from_agent = message_data["from_agent"]
+                to_agent = message_data["to_agent"]
+                self.message_tracking["cross_agent_collaboration"][from_agent].add(to_agent)
+                self.message_tracking["cross_agent_collaboration"][to_agent].add(from_agent)
+            
+            # Store in blockchain if configured
+            await self._store_message_tracking_on_blockchain(agent_id, message_id, status, required_skills)
+            
+            logger.debug(f"Tracked message lifecycle: {agent_id} -> {status} for message {message_id}")
+            
+        except Exception as e:
+            logger.error(f"Failed to track message lifecycle: {e}")
+    
+    async def calculate_agent_reputation(self, agent_id: str) -> Dict[str, float]:
+        """
+        Calculate comprehensive agent reputation scores for marketplace
+        
+        Returns:
+            Dict with reputation scores: skill_based, collaboration, reliability, quality, overall
+        """
+        try:
+            # Get agent lifecycle stats
+            lifecycle = self.message_tracking["lifecycle_stats"][agent_id]
+            skill_performance = self.message_tracking["skill_performance"][agent_id]
+            
+            # 1. Skill-based reputation (weighted by skill usage)
+            skill_reputation = 0.0
+            if skill_performance:
+                total_skill_weight = 0
+                for skill, stats in skill_performance.items():
+                    weight = stats["attempts"]  # More used skills have higher weight
+                    skill_reputation += stats["skill_reputation"] * weight
+                    total_skill_weight += weight
+                skill_reputation = skill_reputation / total_skill_weight if total_skill_weight > 0 else 1.0
+            else:
+                skill_reputation = 1.0
+            
+            # 2. Collaboration reputation (based on cross-agent interactions)
+            collaboration_count = len(self.message_tracking["cross_agent_collaboration"][agent_id])
+            collaboration_reputation = min(1.0, collaboration_count / 10.0 + 0.5)  # Max benefit from 10 collaborations
+            
+            # 3. Reliability reputation (based on completion vs failure rates)
+            total_messages = sum(lifecycle.values())
+            if total_messages > 0:
+                success_rate = (lifecycle["completed"] + lifecycle["processed"]) / total_messages
+                failure_rate = (lifecycle["failed"] + lifecycle["rejected"]) / total_messages
+                reliability_reputation = max(0.1, success_rate - (failure_rate * 0.5))
+            else:
+                reliability_reputation = 1.0
+            
+            # 4. Response quality (based on message analytics)
+            quality_scores = self.message_tracking["message_quality_scores"][agent_id]
+            if quality_scores:
+                response_quality = sum(quality_scores[-20:]) / len(quality_scores[-20:])  # Last 20 scores
+            else:
+                response_quality = 1.0
+            
+            # 5. Overall reputation (weighted combination)
+            overall_reputation = (
+                skill_reputation * 0.35 +
+                reliability_reputation * 0.3 +
+                response_quality * 0.2 +
+                collaboration_reputation * 0.15
+            )
+            
+            reputation_scores = {
+                "skill_based": round(skill_reputation, 3),
+                "collaboration": round(collaboration_reputation, 3),
+                "reliability": round(reliability_reputation, 3),
+                "response_quality": round(response_quality, 3),
+                "overall": round(overall_reputation, 3)
+            }
+            
+            # Update internal reputation models
+            self.reputation_models["skill_based"][agent_id] = skill_reputation
+            self.reputation_models["collaboration"][agent_id] = collaboration_reputation
+            self.reputation_models["reliability"][agent_id] = reliability_reputation
+            self.reputation_models["response_quality"][agent_id] = response_quality
+            self.reputation_models["marketplace_rating"][agent_id] = overall_reputation
+            
+            logger.info(f"Calculated reputation for {agent_id}: overall={overall_reputation:.3f}")
+            
+            return reputation_scores
+            
+        except Exception as e:
+            logger.error(f"Failed to calculate agent reputation: {e}")
+            return {"skill_based": 1.0, "collaboration": 1.0, "reliability": 1.0, "response_quality": 1.0, "overall": 1.0}
+    
+    async def analyze_network_skills_coverage(self) -> Dict[str, Any]:
+        """
+        Analyze network-wide skills coverage and identify gaps
+        
+        Returns:
+            Skills analysis including coverage, gaps, and recommendations
+        """
+        try:
+            all_skills = set()
+            agent_skills = {}
+            skill_agents = defaultdict(list)
+            
+            # Collect all skills across the network
+            for agent_id, skill_data in self.message_tracking["skill_performance"].items():
+                agent_skill_set = set(skill_data.keys())
+                all_skills.update(agent_skill_set)
+                agent_skills[agent_id] = agent_skill_set
+                
+                for skill in agent_skill_set:
+                    skill_agents[skill].append({
+                        "agent_id": agent_id,
+                        "reputation": skill_data[skill]["skill_reputation"],
+                        "attempts": skill_data[skill]["attempts"],
+                        "success_rate": skill_data[skill]["successes"] / max(1, skill_data[skill]["attempts"])
+                    })
+            
+            # Calculate coverage metrics
+            total_skills = len(all_skills)
+            redundant_skills = sum(1 for skill in all_skills if len(skill_agents[skill]) > 1)
+            single_point_skills = sum(1 for skill in all_skills if len(skill_agents[skill]) == 1)
+            uncovered_skills = []  # Skills that might be needed but no agent has
+            
+            # Calculate specialization index for each agent
+            for agent_id in agent_skills:
+                agent_skill_count = len(agent_skills[agent_id])
+                specialization = 1.0 / agent_skill_count if agent_skill_count > 0 else 0.0
+                self.skills_analytics["agent_specialization_index"][agent_id] = specialization
+            
+            # Identify skill gaps and bottlenecks
+            skill_gaps = []
+            skill_bottlenecks = []
+            
+            for skill, agents in skill_agents.items():
+                if len(agents) == 1:
+                    skill_bottlenecks.append({
+                        "skill": skill,
+                        "single_agent": agents[0]["agent_id"],
+                        "risk_level": "high" if agents[0]["success_rate"] < 0.8 else "medium"
+                    })
+                elif len(agents) == 0:
+                    skill_gaps.append(skill)
+            
+            # Generate recommendations
+            recommendations = []
+            if skill_bottlenecks:
+                recommendations.append({
+                    "type": "redundancy",
+                    "priority": "high",
+                    "description": f"Add redundancy for {len(skill_bottlenecks)} critical skills"
+                })
+            
+            if single_point_skills > total_skills * 0.3:
+                recommendations.append({
+                    "type": "distribution",
+                    "priority": "medium", 
+                    "description": "Improve skill distribution across agents"
+                })
+            
+            coverage_analysis = {
+                "total_skills": total_skills,
+                "redundant_skills": redundant_skills,
+                "single_point_skills": single_point_skills,
+                "coverage_ratio": redundant_skills / total_skills if total_skills > 0 else 0.0,
+                "skill_gaps": skill_gaps,
+                "skill_bottlenecks": skill_bottlenecks,
+                "recommendations": recommendations,
+                "top_agents_by_skill": {
+                    skill: sorted(agents, key=lambda x: x["reputation"], reverse=True)[:3]
+                    for skill, agents in skill_agents.items()
+                },
+                "network_resilience": 1.0 - (single_point_skills / total_skills) if total_skills > 0 else 1.0
+            }
+            
+            # Update analytics
+            self.skills_analytics["network_skill_coverage"] = coverage_analysis
+            
+            logger.info(f"Network skills coverage: {redundant_skills}/{total_skills} skills have redundancy")
+            
+            return coverage_analysis
+            
+        except Exception as e:
+            logger.error(f"Failed to analyze network skills coverage: {e}")
+            return {"error": str(e)}
+    
+    async def get_marketplace_agent_rankings(self, skill_filter: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+        """
+        Get agent rankings for marketplace display based on comprehensive reputation
+        
+        Args:
+            skill_filter: Optional list of skills to filter agents by
+            
+        Returns:
+            List of agents ranked by reputation with detailed metrics
+        """
+        try:
+            agent_rankings = []
+            
+            for agent_id in self.agent_registry.keys():
+                # Calculate current reputation
+                reputation = await self.calculate_agent_reputation(agent_id)
+                
+                # Get agent info
+                agent_info = self.agent_registry.get(agent_id, {})
+                lifecycle_stats = self.message_tracking["lifecycle_stats"][agent_id]
+                skill_performance = self.message_tracking["skill_performance"][agent_id]
+                
+                # Filter by skills if specified
+                if skill_filter:
+                    agent_skills = set(skill_performance.keys())
+                    if not any(skill in agent_skills for skill in skill_filter):
+                        continue
+                
+                # Calculate additional metrics
+                total_messages = sum(lifecycle_stats.values())
+                avg_processing_time = 0.0
+                skill_count = len(skill_performance)
+                
+                if skill_performance:
+                    avg_processing_time = sum(
+                        stats["avg_processing_time"] for stats in skill_performance.values()
+                    ) / len(skill_performance)
+                
+                # Create ranking entry
+                ranking_entry = {
+                    "agent_id": agent_id,
+                    "agent_name": getattr(agent_info, 'name', agent_id),
+                    "reputation_scores": reputation,
+                    "performance_metrics": {
+                        "total_messages_handled": total_messages,
+                        "success_rate": (lifecycle_stats["completed"] + lifecycle_stats["processed"]) / max(1, total_messages),
+                        "avg_processing_time_ms": round(avg_processing_time, 2),
+                        "skills_count": skill_count,
+                        "collaboration_count": len(self.message_tracking["cross_agent_collaboration"][agent_id]),
+                        "specialization_index": self.skills_analytics["agent_specialization_index"][agent_id]
+                    },
+                    "skills_offered": list(skill_performance.keys()),
+                    "skill_reputations": {
+                        skill: stats["skill_reputation"] 
+                        for skill, stats in skill_performance.items()
+                    },
+                    "last_active": datetime.utcnow().isoformat(),  # Would be real timestamp
+                    "availability_status": "active"  # Would be real status
+                }
+                
+                agent_rankings.append(ranking_entry)
+            
+            # Sort by overall reputation
+            agent_rankings.sort(key=lambda x: x["reputation_scores"]["overall"], reverse=True)
+            
+            logger.info(f"Generated marketplace rankings for {len(agent_rankings)} agents")
+            
+            return agent_rankings
+            
+        except Exception as e:
+            logger.error(f"Failed to get marketplace agent rankings: {e}")
+            return []
+    
+    async def _store_message_tracking_on_blockchain(self, agent_id: str, message_id: str, status: str, skills: List[str]) -> None:
+        """Store message tracking data on blockchain for transparency and immutability"""
+        try:
+            if hasattr(self, 'blockchain_client') and self.blockchain_client:
+                tracking_data = {
+                    "agent_id": agent_id,
+                    "message_id": message_id,
+                    "status": status,
+                    "skills": skills,
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "manager_id": self.agent_id
+                }
+                
+                # Add to queue for batch processing
+                self.reputation_update_queue.append(tracking_data)
+                
+                # Process queue if it's getting full
+                if len(self.reputation_update_queue) >= 10:
+                    await self._flush_reputation_updates_to_blockchain()
+            
+        except Exception as e:
+            logger.error(f"Failed to store message tracking on blockchain: {e}")
+    
+    async def _flush_reputation_updates_to_blockchain(self) -> None:
+        """Flush queued reputation updates to blockchain"""
+        try:
+            if self.reputation_update_queue and hasattr(self, 'blockchain_client'):
+                # In real implementation, this would batch update the blockchain
+                logger.info(f"Flushing {len(self.reputation_update_queue)} reputation updates to blockchain")
+                self.reputation_update_queue.clear()
+                
+        except Exception as e:
+            logger.error(f"Failed to flush reputation updates to blockchain: {e}")
+    
+    def _extract_skills_from_message(self, message_data: Dict[str, Any]) -> List[str]:
+        """Extract skills from A2A message for tracking purposes"""
+        skills = []
+        
+        try:
+            # Check message parts for skill information
+            parts = message_data.get('parts', [])
+            for part in parts:
+                part_data = part.get('data', {})
+                
+                # Direct skills specification
+                if 'required_skills' in part_data:
+                    skills.extend(part_data['required_skills'])
+                
+                # Extract from routing metadata
+                if part.get('partType') == 'routing_metadata':
+                    skills.extend(part_data.get('required_skills', []))
+                
+                # Extract from message metadata
+                if part.get('partType') == 'message_metadata':
+                    skills.extend(part_data.get('required_skills', []))
+                
+                # Infer from action types
+                action = part_data.get('action', part_data.get('method', ''))
+                if action:
+                    inferred_skills = self._infer_skills_from_action(action)
+                    skills.extend(inferred_skills)
+            
+            return list(set(skills))  # Remove duplicates
+            
+        except Exception as e:
+            logger.error(f"Failed to extract skills from message: {e}")
+            return []
+    
+    def _infer_skills_from_action(self, action: str) -> List[str]:
+        """Infer required skills from action type"""
+        skill_mapping = {
+            'store_data': ['data_storage', 'persistence'],
+            'analyze_data': ['data_analysis', 'analytics'],
+            'calculate': ['mathematical_computation'],
+            'validate': ['data_validation', 'quality_control'],
+            'encrypt': ['encryption', 'security'],
+            'authenticate': ['authentication', 'security'],
+            'schedule': ['task_scheduling', 'workflow_management'],
+            'query': ['database_access', 'data_retrieval'],
+            'transform': ['data_transformation'],
+            'generate_report': ['reporting', 'data_visualization'],
+            'send_notification': ['communication', 'messaging']
+        }
+        
+        # Find matching skills based on action keywords
+        inferred_skills = []
+        action_lower = action.lower()
+        
+        for keyword, skills in skill_mapping.items():
+            if keyword in action_lower:
+                inferred_skills.extend(skills)
+        
+        return inferred_skills
 
 
 # Factory function

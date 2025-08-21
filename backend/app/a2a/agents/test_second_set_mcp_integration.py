@@ -23,13 +23,19 @@ from .agent3VectorProcessing.active.advancedMcpVectorProcessingAgent import Adva
 from .agent4CalcValidation.active.advancedMcpCalculationValidationAgent import AdvancedMCPCalculationValidationAgent
 
 
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
+
 class TestAdvancedMCPDataProductAgent:
     """Test suite for Advanced MCP Data Product Agent"""
     
     @pytest.fixture
     async def data_product_agent(self):
         """Create test instance of data product agent"""
-        agent = AdvancedMCPDataProductAgent("http://localhost:8000")
+        agent = AdvancedMCPDataProductAgent(os.getenv("A2A_SERVICE_URL"))
         
         # Mock the MCP tool providers
         agent.performance_tools = AsyncMock()
@@ -200,7 +206,7 @@ class TestAdvancedMCPStandardizationAgent:
     @pytest.fixture
     async def standardization_agent(self):
         """Create test instance of standardization agent"""
-        agent = AdvancedMCPStandardizationAgent("http://localhost:8000")
+        agent = AdvancedMCPStandardizationAgent(os.getenv("A2A_SERVICE_URL"))
         
         # Mock the MCP tool providers
         agent.performance_tools = AsyncMock()
@@ -353,7 +359,7 @@ class TestAdvancedMCPVectorProcessingAgent:
     @pytest.fixture
     async def vector_agent(self):
         """Create test instance of vector processing agent"""
-        agent = AdvancedMCPVectorProcessingAgent("http://localhost:8000")
+        agent = AdvancedMCPVectorProcessingAgent(os.getenv("A2A_SERVICE_URL"))
         
         # Mock the MCP tool providers
         agent.performance_tools = AsyncMock()
@@ -515,7 +521,7 @@ class TestAdvancedMCPCalculationValidationAgent:
     @pytest.fixture
     async def calculation_agent(self):
         """Create test instance of calculation validation agent"""
-        agent = AdvancedMCPCalculationValidationAgent("http://localhost:8000")
+        agent = AdvancedMCPCalculationValidationAgent(os.getenv("A2A_SERVICE_URL"))
         
         # Mock the MCP tool providers
         agent.performance_tools = AsyncMock()
@@ -692,7 +698,7 @@ class TestMCPResourceIntegration:
     @pytest.mark.asyncio
     async def test_data_product_registry_resource(self):
         """Test data product registry MCP resource"""
-        agent = AdvancedMCPDataProductAgent("http://localhost:8000")
+        agent = AdvancedMCPDataProductAgent(os.getenv("A2A_SERVICE_URL"))
         
         # Add test data to registry
         agent.data_products = {
@@ -717,7 +723,7 @@ class TestMCPResourceIntegration:
     @pytest.mark.asyncio
     async def test_schema_registry_resource(self):
         """Test schema registry MCP resource"""
-        agent = AdvancedMCPStandardizationAgent("http://localhost:8000")
+        agent = AdvancedMCPStandardizationAgent(os.getenv("A2A_SERVICE_URL"))
         
         # Add test data to registries
         agent.schema_registry = {
@@ -739,7 +745,7 @@ class TestMCPResourceIntegration:
     @pytest.mark.asyncio
     async def test_vector_stores_resource(self):
         """Test vector stores MCP resource"""
-        agent = AdvancedMCPVectorProcessingAgent("http://localhost:8000")
+        agent = AdvancedMCPVectorProcessingAgent(os.getenv("A2A_SERVICE_URL"))
         
         # Add test data to vector stores
         agent.vector_stores = {
@@ -769,7 +775,7 @@ class TestMCPPromptIntegration:
     @pytest.mark.asyncio
     async def test_data_product_advisor_prompt(self):
         """Test data product advisor MCP prompt"""
-        agent = AdvancedMCPDataProductAgent("http://localhost:8000")
+        agent = AdvancedMCPDataProductAgent(os.getenv("A2A_SERVICE_URL"))
         
         # Mock the private methods
         agent._analyze_current_product_state_mcp = AsyncMock(return_value={
@@ -801,7 +807,7 @@ class TestMCPPromptIntegration:
     @pytest.mark.asyncio
     async def test_standardization_advisor_prompt(self):
         """Test standardization advisor MCP prompt"""
-        agent = AdvancedMCPStandardizationAgent("http://localhost:8000")
+        agent = AdvancedMCPStandardizationAgent(os.getenv("A2A_SERVICE_URL"))
         
         # Mock the private methods
         agent._analyze_standardization_state_mcp = AsyncMock(return_value={

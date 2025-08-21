@@ -1010,6 +1010,10 @@ class SQLiteClient:
             raise RuntimeError("Security manager not enabled")
         
         from app.core.databaseSecurityManager import DatabaseRole, SecurityLevel
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
         
         # Convert string roles and security level to enums
         role_enums = [DatabaseRole(role) for role in roles]

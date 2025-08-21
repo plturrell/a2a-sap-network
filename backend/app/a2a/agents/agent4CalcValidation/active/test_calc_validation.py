@@ -18,6 +18,12 @@ from app.a2a.agents.agent4CalcValidation.active.calcValidationAgentSdk import (
     CalcValidationAgentSDK
 )
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -31,7 +37,7 @@ async def test_calc_validation_agent():
     """Test the calculation validation agent"""
     
     # Create agent
-    agent = CalcValidationAgentSDK("http://localhost:8004")
+    agent = CalcValidationAgentSDK(os.getenv("A2A_SERVICE_URL"))
     
     try:
         # Initialize

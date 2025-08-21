@@ -3,6 +3,19 @@ Data Manager Agent - A2A Microservice
 Handles persistent storage and retrieval of data in the A2A network
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import json
 import os
@@ -11,7 +24,8 @@ from datetime import datetime, timedelta
 import logging
 from dataclasses import dataclass, field, asdict
 from enum import Enum
-import httpx
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 from contextlib import asynccontextmanager
 import aiosqlite
 import asyncpg
@@ -21,7 +35,10 @@ from hdbcli import dbapi
 import sqlite3
 
 import sys
-sys.path.append('/Users/apple/projects/a2a/a2aAgents/backend/services/shared')
+import os
+current_dir = os.path.dirname(os.path.abspath(__file__))
+shared_dir = os.path.join(os.path.dirname(os.path.dirname(current_dir)), 'shared')
+sys.path.insert(0, shared_dir)
 
 from a2aCommon import (
     A2AAgentBase, a2a_handler, a2a_skill, a2a_task,
@@ -29,14 +46,25 @@ from a2aCommon import (
 )
 from a2aCommon.sdk.utils import create_success_response, create_error_response
 
-# Import blockchain components
-sys.path.append('/Users/apple/projects/a2a/a2aNetwork/pythonSdk')
-from blockchain.web3Client import A2ABlockchainClient, AgentIdentity
-from blockchain.agentIntegration import BlockchainAgentIntegration, AgentCapability
-from blockchain.eventListener import MessageEventListener
-from config.contractConfig import ContractConfigManager
-
 logger = logging.getLogger(__name__)
+
+# Import blockchain components
+import os
+sdk_path = os.path.join(os.path.dirname(__file__), '../../../../a2aNetwork/sdk/pythonSdk')
+if os.path.exists(sdk_path):
+    sys.path.insert(0, sdk_path)
+    try:
+        from blockchain.web3Client import A2ABlockchainClient, AgentIdentity
+        from blockchain.agentIntegration import BlockchainAgentIntegration, AgentCapability
+        from blockchain.eventListener import MessageEventListener
+        from config.contractConfig import ContractConfigManager
+        BLOCKCHAIN_AVAILABLE = True
+    except ImportError as e:
+        logger.warning(f"Blockchain components not available: {e}")
+        BLOCKCHAIN_AVAILABLE = False
+else:
+    logger.warning(f"SDK path not found: {sdk_path}")
+    BLOCKCHAIN_AVAILABLE = False
 
 
 class StorageBackend(str, Enum):
@@ -131,10 +159,7 @@ class DataManagerAgent(A2AAgentBase):
         logger.info(f"Initializing Data Manager with {self.storage_backend.value} backend...")
         
         # Initialize HTTP client for A2A communication
-        self.http_client = httpx.AsyncClient(
-            timeout=httpx.Timeout(30.0),
-            limits=httpx.Limits(max_keepalive_connections=50)
-        )
+        self.http_client = None  # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         
         # Initialize storage backend
         if self.storage_backend == StorageBackend.SQLITE:
@@ -336,9 +361,8 @@ class DataManagerAgent(A2AAgentBase):
             
             # Initialize blockchain client
             self.blockchain_client = A2ABlockchainClient(
-                rpc_url=os.getenv("A2A_RPC_URL", "http://localhost:8545"),
-                private_key=os.getenv("A2A_PRIVATE_KEY"),
-                network="localhost"
+                rpc_url=os.getenv("A2A_RPC_URL") or os.getenv("BLOCKCHAIN_RPC_URL"),
+                private_key=os.getenv("A2A_PRIVATE_KEY")
             )
             
             # Initialize agent identity
@@ -1137,6 +1161,10 @@ class DataManagerAgent(A2AAgentBase):
     async def create_task(self, task_type: str, metadata: Dict[str, Any]) -> str:
         """Create and track a task"""
         import uuid
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
         task_id = str(uuid.uuid4())
         
         self.tasks[task_id] = {

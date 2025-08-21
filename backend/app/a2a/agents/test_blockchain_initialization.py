@@ -16,6 +16,12 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
 import traceback
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -50,55 +56,55 @@ class BlockchainInitializationTester:
                 "module_path": "agent6QualityControl.active.qualityControlManagerAgent", 
                 "class_name": "QualityControlManagerAgent",
                 "init_pattern": "base_url_only",  # __init__(self, base_url)
-                "base_url": "http://localhost:8002"
+                "base_url": os.getenv("A2A_SERVICE_URL")
             },
             "dataManager": {
                 "module_path": "dataManager.active.enhancedDataManagerAgentSdk",
                 "class_name": "EnhancedDataManagerAgentSDK", 
                 "init_pattern": "base_url_only",
-                "base_url": "http://localhost:8003"
+                "base_url": os.getenv("A2A_SERVICE_URL")
             },
             "agent4CalcValidation": {
                 "module_path": "agent4CalcValidation.active.enhancedCalcValidationAgentSdk",
                 "class_name": "EnhancedCalcValidationAgent",
                 "init_pattern": "base_url_config",  # __init__(self, base_url, config=None)
-                "base_url": "http://localhost:8004"
+                "base_url": os.getenv("A2A_SERVICE_URL")
             },
             "agent5QaValidation": {
                 "module_path": "agent5QaValidation.active.enhancedQaValidationAgentSdk",
                 "class_name": "EnhancedQAValidationAgent",
                 "init_pattern": "base_url_config",
-                "base_url": "http://localhost:8005"
+                "base_url": os.getenv("A2A_SERVICE_URL")
             },
             "calculationAgent": {
                 "module_path": "calculationAgent.active.enhancedCalculationAgentSdk",
                 "class_name": "EnhancedCalculationAgentSDK",
                 "init_pattern": "base_url_config",
-                "base_url": "http://localhost:8006"
+                "base_url": os.getenv("A2A_SERVICE_URL")
             },
             "catalogManager": {
                 "module_path": "catalogManager.active.enhancedCatalogManagerAgentSdk",
                 "class_name": "EnhancedCatalogManagerAgent",
                 "init_pattern": "base_url_config",
-                "base_url": "http://localhost:8007"
+                "base_url": os.getenv("A2A_SERVICE_URL")
             },
             "agentBuilder": {
                 "module_path": "agentBuilder.active.enhancedAgentBuilderAgentSdk",
                 "class_name": "EnhancedAgentBuilderAgent",
                 "init_pattern": "base_url_config",
-                "base_url": "http://localhost:8008"
+                "base_url": os.getenv("A2A_SERVICE_URL")
             },
             "embeddingFineTuner": {
                 "module_path": "embeddingFineTuner.active.enhancedEmbeddingFineTunerAgentSdk",
                 "class_name": "EnhancedEmbeddingFineTunerAgent",
                 "init_pattern": "base_url_config", 
-                "base_url": "http://localhost:8009"
+                "base_url": os.getenv("A2A_SERVICE_URL")
             },
             "sqlAgent": {
                 "module_path": "sqlAgent.active.enhancedSqlAgentSdk",
                 "class_name": "EnhancedSqlAgentSDK",
                 "init_pattern": "base_url_config",
-                "base_url": "http://localhost:8010"
+                "base_url": os.getenv("A2A_SERVICE_URL")
             },
             "reasoningAgent": {
                 "module_path": "reasoningAgent.enhancedReasoningAgent",
@@ -110,25 +116,25 @@ class BlockchainInitializationTester:
                 "module_path": "agent0DataProduct.active.enhancedDataProductAgentSdk",
                 "class_name": "EnhancedDataProductAgentSDK",
                 "init_pattern": "base_url_config",
-                "base_url": "http://localhost:8012"
+                "base_url": os.getenv("A2A_SERVICE_URL")
             },
             "standardizationAgent": {
                 "module_path": "agent1Standardization.active.enhancedDataStandardizationAgentSdk",
                 "class_name": "EnhancedDataStandardizationAgentSDK",
                 "init_pattern": "base_url_config",
-                "base_url": "http://localhost:8013"
+                "base_url": os.getenv("A2A_SERVICE_URL")
             },
             "aiPreparationAgent": {
                 "module_path": "agent2AiPreparation.active.aiPreparationAgentSdk",
                 "class_name": "AIPreparationAgentSDK",
                 "init_pattern": "base_url_config",
-                "base_url": "http://localhost:8014"
+                "base_url": os.getenv("A2A_SERVICE_URL")
             },
             "vectorProcessingAgent": {
                 "module_path": "agent3VectorProcessing.active.vectorProcessingAgentSdk",
                 "class_name": "VectorProcessingAgentSDK",
                 "init_pattern": "base_url_config",
-                "base_url": "http://localhost:8015"
+                "base_url": os.getenv("A2A_SERVICE_URL")
             }
         }
         

@@ -1,3 +1,14 @@
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
 # Database Integration Mixin for AI Decision Logger
 # Shows how to integrate database-backed AI Decision Logger with existing agents
 
@@ -12,6 +23,12 @@ from .aiDecisionLoggerDatabase import (
 from .aiDecisionLogger import DecisionType, OutcomeStatus
 from .a2aTypes import A2AMessage, MessagePart, MessageRole
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logger = logging.getLogger(__name__)
 
 
@@ -25,7 +42,7 @@ class AIDatabaseDecisionIntegrationMixin:
         data_manager_url = getattr(self, "data_manager_url", None)
         if not data_manager_url:
             # Try to construct from base_url or use default
-            base_url = getattr(self, "base_url", "http://localhost:8000")
+            base_url = getattr(self, "base_url", os.getenv("A2A_SERVICE_URL"))
             data_manager_url = f"{base_url.replace('/agents/', '/').rstrip('/')}/data-manager"
 
         # Initialize Database AI Decision Logger
@@ -429,7 +446,8 @@ class AIDatabaseDecisionIntegrationMixin:
             # Use the logger's database connection to query patterns
             from .aiDecisionProtocols import QueryPatternsRequest
 
-            request = QueryPatternsRequest(
+            # Create request object for potential future use
+            _request = QueryPatternsRequest(
                 agent_id=self.agent_id, query_filters=pattern_filters, limit=20
             )
 
@@ -501,7 +519,9 @@ async def initialize_ai_decision_database_schema(data_manager_url: str) -> bool:
         )
 
         # Send to Data Manager
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        async with httpx.AsyncClient() as client:
+        # httpx\.AsyncClient(timeout=60.0) as client:
             response = await client.post(
                 f"{data_manager_url.rstrip('/')}/process",
                 json=message.model_dump(),

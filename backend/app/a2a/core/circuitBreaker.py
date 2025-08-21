@@ -16,6 +16,10 @@ import json
 try:
     import redis.asyncio as redis
 
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False

@@ -23,6 +23,10 @@ import weakref
 
 try:
     from hdbcli import dbapi
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
     HANA_AVAILABLE = True
 except ImportError:
     HANA_AVAILABLE = False

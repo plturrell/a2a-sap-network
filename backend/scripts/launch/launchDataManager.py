@@ -17,6 +17,12 @@ from app.a2a.agents.data_manager_agent import DataManagerAgent, create_data_mana
 from a2a_network.python_sdk.blockchain import get_blockchain_client, initialize_blockchain_client
 from a2a_network.python_sdk.blockchain.agent_adapter import create_blockchain_adapter
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -55,7 +61,7 @@ async def startup_event():
     logger.info("🚀 Starting Data Manager Agent on port 8003")
     
     # Initialize blockchain client
-    A2A_RPC_URL = os.getenv("A2A_RPC_URL", "http://localhost:8545")
+    A2A_RPC_URL = os.getenv("A2A_RPC_URL", os.getenv("BLOCKCHAIN_RPC_URL"))
     A2A_AGENT_PRIVATE_KEY = os.getenv("A2A_DATA_MANAGER_PRIVATE_KEY")
     
     logger.info("🔗 Connecting to A2A Network blockchain...")
@@ -68,7 +74,7 @@ async def startup_event():
     
     # Initialize agent
     data_manager_agent = DataManagerAgent(
-        base_url="http://localhost:8003",
+        base_url=os.getenv("AGENT_MANAGER_URL"),
         ord_registry_url="http://localhost:8000/api/v1/ord"
     )
     
@@ -78,7 +84,7 @@ async def startup_event():
         name="Data Manager Agent",
         description="Manages data storage, archival, and retrieval operations",
         version="1.0.0",
-        endpoint="http://localhost:8003",
+        endpoint=os.getenv("AGENT_MANAGER_URL"),
         capabilities=[
             "data_storage",
             "data_archival", 

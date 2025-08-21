@@ -320,7 +320,7 @@ class ExplainabilityFramework:
             modified_input = original_input.copy()
 
             # Randomly modify some features
-            features_to_modify = np.random.choice(
+            features_to_modify = np.secrets.choice(
                 list(original_input.keys()), size=min(2, len(original_input)), replace=False
             )
 
@@ -345,7 +345,7 @@ class ExplainabilityFramework:
                 "no_decision",
                 "opposite_decision",
             ]
-            simulated_output = np.random.choice(output_variations)
+            simulated_output = np.secrets.choice(output_variations)
 
             counterfactual = {
                 "id": f"counterfactual_{i}",

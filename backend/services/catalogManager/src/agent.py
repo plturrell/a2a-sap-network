@@ -3,6 +3,19 @@ Catalog Manager Agent - A2A Microservice
 Manages Open Resource Discovery (ORD) registry and data product catalog
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import json
 import os
@@ -11,7 +24,8 @@ from datetime import datetime, timedelta
 import logging
 from dataclasses import dataclass, field, asdict
 from enum import Enum
-import httpx
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 from contextlib import asynccontextmanager
 import aiosqlite
 import redis.asyncio as redis
@@ -21,7 +35,10 @@ import uuid
 import numpy as np
 
 import sys
-sys.path.append('../shared')
+import os
+current_dir = os.path.dirname(os.path.abspath(__file__))
+shared_dir = os.path.join(os.path.dirname(os.path.dirname(current_dir)), 'shared')
+sys.path.insert(0, shared_dir)
 
 from a2aCommon import (
     A2AAgentBase, a2a_handler, a2a_skill, a2a_task,
@@ -142,10 +159,7 @@ class CatalogManagerAgent(A2AAgentBase):
         logger.info("Initializing Catalog Manager...")
         
         # Initialize HTTP client
-        self.http_client = httpx.AsyncClient(
-            timeout=httpx.Timeout(30.0),
-            limits=httpx.Limits(max_keepalive_connections=50)
-        )
+        self.http_client = None  # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         
         # Initialize database
         await self._initialize_database()
@@ -255,7 +269,7 @@ class CatalogManagerAgent(A2AAgentBase):
                     "quality_scoring": True,
                     "usage_analytics": True
                 },
-                "handlers": [h.name for h in self.handlers.values()],
+                "handlers": list(self.handlers.keys()),
                 "skills": [s.name for s in self.skills.values()]
             }
             

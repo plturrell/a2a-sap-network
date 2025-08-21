@@ -46,7 +46,7 @@ def create_test_config():
             }
         },
         "blockchain": {
-            "local_provider": "http://localhost:8545",
+            "local_provider": os.getenv("A2A_SERVICE_URL"),
             "testnet_provider": "https://sepolia.infura.io/v3/YOUR_INFURA_KEY",
             "contracts": {
                 "AgentRegistry": "0x0000000000000000000000000000000000000000",
@@ -79,6 +79,16 @@ sys.path.insert(0, str(Path(__file__).parent))
 from portalServer import create_developer_portal
 import uvicorn
 
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
+
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 async def main():
     # Load config
     with open("portal_config.json", "r") as f:

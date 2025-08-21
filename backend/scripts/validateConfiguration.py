@@ -82,7 +82,7 @@ class ConfigurationValidator:
         for name, url in urls_to_check:
             if "localhost" in url and config.blockchain_network == "mainnet":
                 self.errors.append(f"{name} contains localhost but network is mainnet: {url}")
-            elif not url.startswith(("http://", "https://")):
+            elif not url.startswith(("https://", "https://")):
                 self.errors.append(f"{name} is not a valid URL: {url}")
             else:
                 print(f"  ✓ {name}: {url}")

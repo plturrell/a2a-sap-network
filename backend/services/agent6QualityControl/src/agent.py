@@ -13,6 +13,12 @@ from enum import Enum
 
 sys.path.append('../shared')
 
+import sys
+import os
+# Add the shared directory to Python path for a2aCommon imports
+shared_path = os.path.join(os.path.dirname(__file__), '..', '..', 'shared')
+sys.path.insert(0, os.path.abspath(shared_path))
+
 from a2aCommon import (
     A2AAgentBase, a2a_handler, a2a_skill,
     A2AMessage, MessageRole

@@ -405,6 +405,10 @@ class ChaosMetricsCollector:
         """Collect current system metrics"""
         try:
             import psutil
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             
             metrics = {
                 "cpu_usage": psutil.cpu_percent(interval=1),
@@ -470,7 +474,7 @@ class ChaosMetricsCollector:
         """Check connectivity between two agents"""
         # Simulate connectivity check
         return {
-            "reachable": random.choice([True, False]),
+            "reachable": secrets.choice([True, False]),
             "latency_ms": random.uniform(10, 500),
             "packet_loss": random.uniform(0, 0.1)
         }

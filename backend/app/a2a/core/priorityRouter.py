@@ -16,6 +16,7 @@ import heapq
 
 from .messageQueue import MessagePriority
 from .loadBalancer import AgentLoadBalancer, AgentInstance, get_load_balancer
+from .networkClient import NetworkClient, get_network_client
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +124,7 @@ class PriorityRouter:
     def __init__(self, policy: RoutingPolicy = None):
         self.policy = policy or RoutingPolicy()
         self.load_balancer: Optional[AgentLoadBalancer] = None
+        self.network_client: Optional[NetworkClient] = None
 
         # Priority queues per agent
         self.priority_queues: Dict[str, List[Tuple[float, RoutingRequest]]] = defaultdict(list)
@@ -153,6 +155,7 @@ class PriorityRouter:
     async def initialize(self):
         """Initialize router and start background processing"""
         self.load_balancer = await get_load_balancer()
+        self.network_client = await get_network_client()
         self._running = True
         self._processor_task = asyncio.create_task(self._process_queues())
         logger.info("Priority router initialized")
@@ -422,7 +425,6 @@ class PriorityRouter:
             if queue_key in self.preemptible_tasks:
                 for task_id in self.preemptible_tasks[queue_key]:
                     if task_id in self.active_routes:
-                        self.active_routes[task_id]
                         # Find original request priority
                         for _, queued_req in self.priority_queues[queue_key]:
                             if queued_req.message_id == task_id:
@@ -518,10 +520,10 @@ class PriorityRouter:
             if instance.instance_id in request.excluded_instances:
                 continue
 
-            # Check required capabilities (simplified - assumes instance has all capabilities)
+            # Check required capabilities
             if request.required_capabilities:
-                # In real implementation, would check instance capabilities
-                pass
+                if not await self._check_instance_capabilities(instance, request.required_capabilities):
+                    continue
 
             # Check if preferred instance
             if request.preferred_instances:
@@ -588,8 +590,15 @@ class PriorityRouter:
                             logger.warning(f"Message {request.message_id} expired in queue")
                             continue
 
-                        # Process the request (simplified - would actually send to instance)
-                        self.queue_metrics[queue_key].messages_routed += 1
+                        # Process the request by sending to instance
+                        success = await self._deliver_message_to_instance(request, queue_key)
+                        if success:
+                            self.queue_metrics[queue_key].messages_routed += 1
+                        else:
+                            # Re-queue message for retry
+                            if request.qos_level != QoSLevel.BEST_EFFORT:
+                                heapq.heappush(queue, (-self._calculate_priority_score(request), request))
+                            continue
 
                         # Update wait time metrics
                         wait_time = (datetime.utcnow() - request.created_at).total_seconds()
@@ -652,6 +661,86 @@ class PriorityRouter:
             }
 
         return status
+
+    async def _check_instance_capabilities(self, instance: AgentInstance, required_capabilities: List[str]) -> bool:
+        """Check if instance supports required capabilities"""
+        if not self.network_client:
+            logger.warning("Network client not available for capability check")
+            return True  # Assume capabilities are met if we can't check
+        
+        try:
+            return await self.network_client.check_capabilities(instance.base_url, required_capabilities)
+        except Exception as e:
+            logger.error(f"Error checking capabilities for {instance.instance_id}: {e}")
+            return False
+
+    async def _deliver_message_to_instance(self, request: RoutingRequest, queue_key: str) -> bool:
+        """Deliver message to the target instance"""
+        if not self.network_client:
+            logger.error("Network client not available for message delivery")
+            return False
+        
+        # Extract instance info from queue key
+        agent_id, instance_id = queue_key.split(':', 1)
+        
+        # Find the instance
+        instance = None
+        for inst in await self._get_available_instances(request):
+            if inst.instance_id == instance_id:
+                instance = inst
+                break
+        
+        if not instance:
+            logger.error(f"Instance {instance_id} not found for message delivery")
+            return False
+        
+        try:
+            # Prepare message payload
+            message_payload = {
+                "id": request.message_id,
+                "agent_id": request.agent_id,
+                "context_id": request.context_id,
+                "payload": request.payload,
+                "priority": request.priority.value,
+                "qos_level": request.qos_level.value,
+                "deadline": request.deadline.isoformat() if request.deadline else None,
+                "created_at": request.created_at.isoformat(),
+                "routing_metadata": {
+                    "queue_key": queue_key,
+                    "priority_score": self._calculate_priority_score(request),
+                    "routing_timestamp": datetime.utcnow().isoformat()
+                }
+            }
+            
+            # Send message with appropriate priority header
+            priority_header = "high" if request.priority in [MessagePriority.HIGH, MessagePriority.CRITICAL] else "normal"
+            
+            response = await self.network_client.send_message(
+                instance.base_url,
+                message_payload,
+                priority=priority_header
+            )
+            
+            # Check if delivery was successful
+            success = response.status_code in [200, 202]  # 200 = processed, 202 = accepted for processing
+            
+            if success:
+                logger.debug(f"Message {request.message_id} delivered to {instance_id}")
+                
+                # Update instance metrics
+                delivery_time = response.response_time
+                instance.response_times.append(delivery_time)
+                if len(instance.response_times) > 100:
+                    instance.response_times = instance.response_times[-100:]
+                
+            else:
+                logger.warning(f"Message delivery failed: {request.message_id} -> {instance_id}, status: {response.status_code}")
+            
+            return success
+            
+        except Exception as e:
+            logger.error(f"Error delivering message {request.message_id} to {instance_id}: {e}")
+            return False
 
     def get_routing_metrics(self) -> Dict[str, Any]:
         """Get overall routing metrics"""

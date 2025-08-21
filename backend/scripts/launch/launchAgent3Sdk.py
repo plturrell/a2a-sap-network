@@ -7,10 +7,16 @@ import asyncio
 import uvicorn
 from app.a2a.agents.agent3_vector_processing.active.vector_processing_agent_sdk import VectorProcessingAgentSDK
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 async def main():
     # Create agent
     agent = VectorProcessingAgentSDK(
-        base_url="http://localhost:8004"
+        base_url=os.getenv("A2A_SERVICE_URL")
     )
     
     # Initialize

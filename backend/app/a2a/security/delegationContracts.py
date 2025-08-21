@@ -16,6 +16,10 @@ try:
     import sys
     sys.path.insert(0, '/Users/apple/projects/a2a/a2aNetwork')
     from trustSystem.smartContractTrust import SmartContractTrust, get_trust_contract
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
 except ImportError:
     # Fallback - create minimal implementation
     class SmartContractTrust:

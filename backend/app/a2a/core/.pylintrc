@@ -35,6 +35,12 @@ disable=
     W0621,  # redefined-outer-name (common in imports and factory patterns)
     W0511,  # fixme (TODO comments are fine during development)
     W0212,  # protected-access (sometimes needed for testing/integration)
+    W0631,  # undefined-loop-variable (false positive in specific scoping)
+    W0105,  # pointless-string-statement (docstrings in functions)
+    W0719,  # broad-exception-raised (defensive coding)
+    W0108,  # unnecessary-lambda (lambda needed for specific use cases)
+    W0612,  # unused-variable (variables in loops and unpacking)
+    W1309,  # f-string-without-interpolation (consistent string formatting)
 
 [FORMAT]
 # Maximum number of characters on a single line.

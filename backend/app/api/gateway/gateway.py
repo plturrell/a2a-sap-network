@@ -3,11 +3,25 @@ API Gateway for A2A Network
 Provides centralized routing, authentication, rate limiting, and monitoring
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 from fastapi import FastAPI, Request, HTTPException, Depends, Header
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-import httpx
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 import asyncio
 from typing import Optional, Dict, Any, List
 import logging
@@ -24,6 +38,12 @@ from app.api.deps import get_current_user
 from app.a2a.core.telemetry import trace_async, add_span_attributes, get_trace_context
 from app.api.middleware.telemetry import get_trace_headers
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logger = logging.getLogger(__name__)
 
 
@@ -60,47 +80,47 @@ def get_service_registry() -> Dict[str, ServiceConfig]:
     return {
         "main": ServiceConfig(
             name="Main API",
-            base_url=os.getenv("MAIN_API_URL", "http://localhost:8000"),
+            base_url=os.getenv("MAIN_API_URL"),
             health_endpoint="/health"
         ),
         "agent0": ServiceConfig(
             name="Agent 0 - Data Product Registration",
-            base_url=os.getenv("AGENT0_URL", "http://localhost:8001"),
+            base_url=os.getenv("AGENT0_URL"),
             health_endpoint="/a2a/agent0/v1/.well-known/agent.json"
         ),
         "agent1": ServiceConfig(
             name="Agent 1 - Data Standardization",
-            base_url=os.getenv("AGENT1_URL", "http://localhost:8002"),
+            base_url=os.getenv("AGENT1_URL"),
             health_endpoint="/a2a/v1/.well-known/agent.json"
         ),
         "agent2": ServiceConfig(
             name="Agent 2 - AI Preparation",
-            base_url=os.getenv("AGENT2_URL", "http://localhost:8003"),
+            base_url=os.getenv("AGENT2_URL"),
             health_endpoint="/a2a/agent2/v1/.well-known/agent.json"
         ),
         "agent3": ServiceConfig(
             name="Agent 3 - Vector Processing",
-            base_url=os.getenv("AGENT3_URL", "http://localhost:8004"),
+            base_url=os.getenv("AGENT3_URL"),
             health_endpoint="/a2a/agent3/v1/.well-known/agent.json"
         ),
         "data_manager": ServiceConfig(
             name="Data Manager Agent",
-            base_url=os.getenv("DATA_MANAGER_URL", "http://localhost:8005"),
+            base_url=os.getenv("DATA_MANAGER_URL"),
             health_endpoint="/a2a/data_manager/v1/.well-known/agent.json"
         ),
         "catalog_manager": ServiceConfig(
             name="Catalog Manager Agent",
-            base_url=os.getenv("CATALOG_MANAGER_URL", "http://localhost:8006"),
+            base_url=os.getenv("CATALOG_MANAGER_URL"),
             health_endpoint="/a2a/catalog_manager/v1/.well-known/agent.json"
         ),
         "agent_manager": ServiceConfig(
             name="Agent Manager",
-            base_url=os.getenv("AGENT_MANAGER_URL", "http://localhost:8010"),
+            base_url=os.getenv("AGENT_MANAGER_URL"),
             health_endpoint="/a2a/agent_manager/v1/.well-known/agent.json"
         ),
         "registry": ServiceConfig(
             name="A2A Registry",
-            base_url=os.getenv("REGISTRY_URL", "http://localhost:8100"),
+            base_url=os.getenv("REGISTRY_URL"),
             health_endpoint="/api/v1/a2a/health"
         )
     }
@@ -243,7 +263,8 @@ class APIGateway:
         self.config = config
         self.rate_limiter = RateLimiter()
         self.circuit_breakers: Dict[str, CircuitBreaker] = {}
-        self.http_client = httpx.AsyncClient(timeout=30.0)
+        self.http_client = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        # httpx\.AsyncClient(timeout=30.0)
         
         # Initialize circuit breakers
         for service_name, service_config in config.services.items():

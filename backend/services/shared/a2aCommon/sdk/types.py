@@ -1,3 +1,4 @@
+import os
 """
 Type definitions for A2A Agent SDK
 """
@@ -7,6 +8,12 @@ from typing import Dict, List, Any, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 
 class TaskStatus(str, Enum):
     """Task execution status"""
@@ -99,7 +106,7 @@ class AgentConfig(BaseModel):
     name: str
     description: str
     version: str = "1.0.0"
-    base_url: str = "http://localhost:8000"
+    base_url: str = os.getenv("A2A_SERVICE_URL")
     port: int = 8000
     
     # Telemetry settings

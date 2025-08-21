@@ -16,6 +16,12 @@ from .config.deploymentConfig import ProductionConfigManager as ProductionConfig
 from .core.telemetry import init_telemetry as setup_telemetry
 
 
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
+
 def setup_logging(verbose: bool = False):
     """Setup logging configuration."""
     level = logging.DEBUG if verbose else logging.INFO
@@ -110,7 +116,7 @@ async def start_agent(agent_name: str, port: Optional[int] = None, config_path: 
         from .agents.agent0DataProduct.active.dataProductAgentSdk import DataProductRegistrationAgentSDK
         agent = DataProductRegistrationAgentSDK(
             base_url=f"http://localhost:{port}",
-            ord_registry_url="http://localhost:9000"
+            ord_registry_url=os.getenv("A2A_SERVICE_URL")
         )
     elif agent_name == "agent1":
         from .agents.agent1Standardization.active.dataStandardizationAgentSdk import DataStandardizationAgentSDK

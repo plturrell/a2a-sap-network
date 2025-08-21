@@ -16,6 +16,7 @@ import random
 
 from .loadBalancer import AgentLoadBalancer, AgentInstance, get_load_balancer
 from .circuitBreaker import EnhancedCircuitBreaker, CircuitBreakerConfig, CircuitState
+from .networkClient import NetworkClient, get_network_client
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +125,7 @@ class FailoverManager:
     def __init__(self, config: FailoverConfig = None):
         self.config = config or FailoverConfig()
         self.load_balancer: Optional[AgentLoadBalancer] = None
+        self.network_client: Optional[NetworkClient] = None
 
         # Failover groups and states
         self.failover_groups: Dict[str, FailoverGroup] = {}
@@ -153,12 +155,16 @@ class FailoverManager:
         self._running = False
         self._monitor_task = None
         self._recovery_task = None
+        
+        # Instance URL registry
+        self.instance_urls: Dict[str, str] = {}
 
         logger.info(f"Initialized failover manager with strategy: {self.config.strategy.value}")
 
     async def initialize(self):
         """Initialize failover manager and start monitoring"""
         self.load_balancer = await get_load_balancer()
+        self.network_client = await get_network_client()
         self._running = True
         self._monitor_task = asyncio.create_task(self._monitor_instances())
         self._recovery_task = asyncio.create_task(self._recovery_loop())
@@ -459,8 +465,8 @@ class FailoverManager:
                     if target_instance:
                         self.load_balancer.register_instance(group.agent_id, target_instance)
 
-            # Step 3: Update routing tables (simulated)
-            # In real implementation, would update network routing
+            # Step 3: Update routing tables
+            await self._update_routing_tables(group, source_id, target_id)
 
             # Step 4: Drain connections from source (if still accessible)
             # This would gracefully close existing connections
@@ -613,20 +619,30 @@ class FailoverManager:
     async def _check_instance_health(self, instance_id: str) -> bool:
         """Check health of a specific instance"""
         try:
-            # This is a simplified health check
-            # In real implementation, would make HTTP health check call
-
             # Check circuit breaker state
             cb = self.circuit_breakers.get(instance_id)
             if cb and cb.state == CircuitState.OPEN:
                 return False
 
-            # Simulate health check with some randomness for testing
-            # In production, would make actual HTTP request
-            if random.random() > 0.1:  # 90% success rate for testing
-                return True
-            else:
+            if not self.network_client:
+                logger.warning("Network client not available for health check")
                 return False
+
+            # Get instance URL
+            instance_url = await self._get_instance_url(instance_id)
+            if not instance_url:
+                logger.warning(f"URL not found for instance {instance_id}")
+                return False
+
+            # Perform actual health check
+            is_healthy = await self.network_client.health_check(instance_url, timeout=5)
+            
+            if is_healthy:
+                logger.debug(f"Health check passed for {instance_id}")
+            else:
+                logger.warning(f"Health check failed for {instance_id}")
+                
+            return is_healthy
 
         except Exception as e:
             logger.error(f"Health check failed for {instance_id}: {e}")
@@ -703,10 +719,13 @@ class FailoverManager:
         logger.info(f"Attempting recovery for instance {plan.instance_id}")
 
         try:
-            # Execute recovery steps (simplified)
+            # Execute recovery steps
             for step in plan.recovery_steps:
                 logger.debug(f"Recovery step for {plan.instance_id}: {step}")
-                await asyncio.sleep(1)  # Simulate step execution
+                success = await self._execute_recovery_step(plan.instance_id, step)
+                if not success:
+                    logger.warning(f"Recovery step failed: {step} for {plan.instance_id}")
+                    return False
 
             # Verify instance is healthy
             is_healthy = await self._check_instance_health(plan.instance_id)
@@ -780,6 +799,152 @@ class FailoverManager:
                 len(group.instances) for group in self.failover_groups.values()
             ),
         }
+
+    async def _get_instance_url(self, instance_id: str) -> Optional[str]:
+        """Get URL for a specific instance"""
+        if instance_id in self.instance_urls:
+            return self.instance_urls[instance_id]
+        
+        # Try to find instance in failover groups
+        for group in self.failover_groups.values():
+            for instance in group.instances:
+                if instance.instance_id == instance_id:
+                    url = instance.base_url
+                    self.instance_urls[instance_id] = url
+                    return url
+        
+        # Default to localhost-based URL for development
+        port = 8000 + int(instance_id.split('_')[-1]) if '_' in instance_id else 8000
+        url = f"http://localhost:{port}"
+        self.instance_urls[instance_id] = url
+        return url
+
+    def register_instance_url(self, instance_id: str, url: str):
+        """Register URL for an instance"""
+        self.instance_urls[instance_id] = url
+        logger.info(f"Registered instance {instance_id} at {url}")
+
+    async def _update_routing_tables(self, group: FailoverGroup, source_id: str, target_id: str) -> bool:
+        """Update routing tables to redirect traffic from source to target"""
+        if not self.network_client:
+            logger.warning("Network client not available for routing table updates")
+            return False
+            
+        try:
+            # Prepare routing update
+            routing_update = {
+                "failover_group": group.group_id,
+                "source_instance": source_id,
+                "target_instance": target_id,
+                "timestamp": datetime.utcnow().isoformat(),
+                "operation": "failover"
+            }
+            
+            # Update routing on all healthy instances in the group
+            success_count = 0
+            for instance in group.instances:
+                if instance.instance_id in [source_id, target_id]:
+                    continue  # Skip the failover instances
+                    
+                try:
+                    instance_url = await self._get_instance_url(instance.instance_id)
+                    if instance_url:
+                        success = await self.network_client.update_routing_table(
+                            instance_url, routing_update
+                        )
+                        if success:
+                            success_count += 1
+                except Exception as e:
+                    logger.warning(f"Failed to update routing on {instance.instance_id}: {e}")
+                    continue
+            
+            logger.info(f"Updated routing tables on {success_count} instances for failover {source_id} -> {target_id}")
+            return success_count > 0
+            
+        except Exception as e:
+            logger.error(f"Failed to update routing tables: {e}")
+            return False
+
+    async def _execute_recovery_step(self, instance_id: str, step: str) -> bool:
+        """Execute a specific recovery step on an instance"""
+        if not self.network_client:
+            logger.warning("Network client not available for recovery step execution")
+            return False
+            
+        try:
+            instance_url = await self._get_instance_url(instance_id)
+            if not instance_url:
+                logger.error(f"URL not found for instance {instance_id}")
+                return False
+            
+            # Map recovery step to parameters
+            parameters = self._get_recovery_step_parameters(step)
+            
+            # Execute recovery step
+            success = await self.network_client.execute_recovery_step(
+                instance_url, step, parameters
+            )
+            
+            if success:
+                logger.debug(f"Recovery step '{step}' executed successfully on {instance_id}")
+            else:
+                logger.warning(f"Recovery step '{step}' failed on {instance_id}")
+                
+            return success
+            
+        except Exception as e:
+            logger.error(f"Error executing recovery step '{step}' on {instance_id}: {e}")
+            return False
+
+    def _get_recovery_step_parameters(self, step: str) -> Dict[str, Any]:
+        """Get parameters for a specific recovery step"""
+        step_parameters = {
+            "Wait for instance to stabilize": {
+                "wait_time": 30,
+                "check_interval": 5
+            },
+            "Perform extended health checks": {
+                "check_count": 5,
+                "check_interval": 10,
+                "required_success_rate": 0.8
+            },
+            "Verify service availability": {
+                "endpoints": ["/health", "/ready", "/metrics"],
+                "timeout": 10
+            },
+            "Test with synthetic transactions": {
+                "transaction_count": 10,
+                "timeout": 30
+            },
+            "Wait for circuit breaker timeout": {
+                "timeout": self.config.recovery_threshold * 30  # 30s per threshold
+            },
+            "Perform gradual health checks": {
+                "initial_interval": 60,
+                "success_threshold": 3
+            },
+            "Reset circuit breaker if healthy": {
+                "health_check_count": 5
+            },
+            "Verify network connectivity": {
+                "ping_targets": ["8.8.8.8", "1.1.1.1"],
+                "timeout": 10
+            },
+            "Check for split-brain conditions": {
+                "quorum_check": True,
+                "witness_nodes": True
+            },
+            "Validate data consistency": {
+                "consistency_checks": ["version", "checksum", "replica_count"],
+                "timeout": 60
+            },
+            "Rejoin cluster if safe": {
+                "safety_checks": True,
+                "gradual_rejoin": True
+            }
+        }
+        
+        return step_parameters.get(step, {})
 
 
 # Global failover manager instance

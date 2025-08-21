@@ -1,0 +1,79 @@
+# A2A ChatAgent CLI Configuration - Testing Environment
+# This configuration is optimized for automated testing and CI/CD
+
+# Basic settings
+base_url: "http://localhost:8000"
+environment: "testing"
+log_level: "WARNING"  # Reduced logging for cleaner test output
+timeout: 15  # Shorter timeout for faster test feedback
+max_retries: 2
+
+# Database configuration (In-memory SQLite for testing)
+database:
+  type: "sqlite"
+  connection_string: "sqlite+aiosqlite:///:memory:"
+  echo_sql: false
+
+# Authentication settings (minimal for testing)
+auth:
+  jwt_secret: "test-secret-key-not-for-production"
+  jwt_algorithm: "HS256"
+  jwt_expiry_hours: 1  # Short expiry for testing
+  enable_jwt: true
+  enable_api_key: true
+  environment: "testing"
+
+# Redis configuration (disabled for testing)
+redis:
+  url: "redis://localhost:6379/1"  # Different DB for testing
+  enabled: false  # Disabled to avoid external dependencies
+
+# Subset of agents for faster testing
+test_agents:
+  - "data-processor"
+  - "nlp-agent"
+  - "file-manager"
+
+# Mock agent endpoints for testing
+agent_endpoints:
+  data-processor: "http://localhost:9001"
+  nlp-agent: "http://localhost:9002"
+  file-manager: "http://localhost:9003"
+  web-scraper: "http://localhost:9004"
+  crypto-trader: "http://localhost:9005"
+
+# CLI specific settings (optimized for testing)
+cli:
+  interactive_prompt: "TEST> "
+  show_timestamps: false  # Cleaner test output
+  show_agent_routing: false
+  color_output: false  # No ANSI colors in CI
+  progress_bars: false  # No progress bars in automated testing
+
+# Monitoring settings (minimal for testing)
+monitoring:
+  enable_metrics: false
+  enable_tracing: false
+  enable_health_checks: false
+
+# Network settings (faster for testing)
+network:
+  connection_timeout: 5
+  read_timeout: 10
+  max_connections: 10
+  retry_attempts: 1
+  retry_delay: 0.5
+
+# Test-specific settings
+testing:
+  mock_agents: true
+  mock_responses: false
+  validate_schemas: true
+  record_interactions: true
+  fail_fast: true
+
+# Performance settings for testing
+performance:
+  max_concurrent_requests: 5
+  request_delay: 0.1
+  batch_size: 3

@@ -934,6 +934,10 @@ def get_trust_contract():
     """Get trust contract instance - implementation for missing function"""
     try:
         from services.shared.a2aCommon.security.smartContractTrust import get_trust_contract as get_contract
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
         return get_contract()
     except ImportError:
         logger.warning("Trust contract not available, using placeholder")

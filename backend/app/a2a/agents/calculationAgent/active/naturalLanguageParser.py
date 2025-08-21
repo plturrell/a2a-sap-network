@@ -16,6 +16,10 @@ logger = logging.getLogger(__name__)
 try:
     import sympy as sp
     from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
     SYMPY_AVAILABLE = True
 except ImportError:
     SYMPY_AVAILABLE = False

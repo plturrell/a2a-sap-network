@@ -8,6 +8,12 @@ import json
 import logging
 from typing import Dict, Any, Optional
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logger = logging.getLogger(__name__)
 
 
@@ -94,7 +100,7 @@ class MinimalBTPConfig:
                 'schema': os.getenv('HANA_SCHEMA', 'A2A_AGENTS')
             },
             'xsuaa': {
-                'url': os.getenv('XSUAA_URL', 'http://localhost:8080'),
+                'url': os.getenv('XSUAA_URL', os.getenv("A2A_GATEWAY_URL")),
                 'client_id': os.getenv('XSUAA_CLIENT_ID', 'local-client'),
                 'client_secret': os.getenv('XSUAA_CLIENT_SECRET', 'local-secret')
             },

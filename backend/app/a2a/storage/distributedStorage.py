@@ -10,12 +10,31 @@ import logging
 import asyncio
 from datetime import datetime, timedelta
 import aioredis
+except ImportError:
+    aioredis = None
+
 import aioetcd3
+except ImportError:
+    aioetcd3 = None
 import aiofiles
 import os
 from pathlib import Path
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 from app.core.config import settings
+except ImportError:
+    # Fallback configuration
+    class Settings:
+        def __init__(self):
+            self.redis_url = "redis://localhost:6379"
+            self.etcd_url = os.getenv("A2A_SERVICE_URL")
+            self.storage_backend = "local"
+    settings = Settings()
 
 logger = logging.getLogger(__name__)
 
@@ -277,6 +296,10 @@ class LocalFileBackend(StorageBackend):
     def _sanitize_key(self, key: str) -> str:
         """Sanitize key to prevent path traversal attacks"""
         import re
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
         # Remove any path separators and dangerous characters
         sanitized = re.sub(r'[/\\:.?*"<>|]', '_', key)
         # Ensure it doesn't start with dots or underscores that could be hidden

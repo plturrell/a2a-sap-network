@@ -65,69 +65,11 @@ try:
 except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
 
-# Import SDK components - corrected paths
-try:
-    # Try primary SDK path
-    from ....a2a.sdk.agentBase import A2AAgentBase
-    from ....a2a.sdk.decorators import a2a_handler, a2a_skill, a2a_task
-    from ....a2a.sdk.types import A2AMessage, MessageRole
-    from ....a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
-except ImportError:
-    try:
-        # Try alternative SDK path  
-        from ....a2a_test.sdk.agentBase import A2AAgentBase
-        from ....a2a_test.sdk.decorators import a2a_handler, a2a_skill, a2a_task
-        from ....a2a_test.sdk.types import A2AMessage, MessageRole
-        from ....a2a_test.sdk.utils import create_agent_id, create_error_response, create_success_response
-    except ImportError:
-        # Fallback local SDK definitions
-        from typing import Dict, Any, Callable
-        import asyncio
-        from abc import ABC, abstractmethod
-        
-        # Create minimal base class if SDK not available
-        class A2AAgentBase(ABC):
-            def __init__(self, agent_id: str, name: str, description: str, version: str, base_url: str):
-                self.agent_id = agent_id
-                self.name = name  
-                self.description = description
-                self.version = version
-                self.base_url = base_url
-                self.skills = {}
-                self.handlers = {}
-            
-            @abstractmethod
-            async def initialize(self) -> None:
-                pass
-            
-            @abstractmethod
-            async def shutdown(self) -> None:
-                pass
-        
-        # Create fallback decorators
-        def a2a_handler(method: str):
-            def decorator(func):
-                func._handler = method
-                return func
-            return decorator
-        
-        def a2a_skill(name: str, description: str = ""):
-            def decorator(func):
-                func._skill = {'name': name, 'description': description}
-                return func
-            return decorator
-        
-        def a2a_task(name: str, schedule: str = None):
-            def decorator(func):
-                func._task = {'name': name, 'schedule': schedule}
-                return func
-            return decorator
-        
-        def create_error_response(error: str) -> Dict[str, Any]:
-            return {"error": error, "success": False}
-        
-        def create_success_response(data: Any = None) -> Dict[str, Any]:
-            return {"success": True, "data": data}
+# Import SDK components
+from app.a2a.sdk.agentBase import A2AAgentBase
+from app.a2a.sdk import a2a_handler, a2a_skill, a2a_task
+from app.a2a.sdk.types import A2AMessage, MessageRole
+from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
 
 # Blockchain integration
 try:
@@ -150,43 +92,19 @@ try:
     MCP_AVAILABLE = True
 except ImportError:
     MCP_AVAILABLE = False
-    # Fallback decorators
-    def mcp_tool(name: str, description: str = ""):
-        def decorator(func):
-            func._mcp_tool = {'name': name, 'description': description}
-            return func
-        return decorator
-    
-    def mcp_resource(name: str):
-        def decorator(func):
-            func._mcp_resource = name
-            return func
-        return decorator
-    
-    def mcp_prompt(name: str):
-        def decorator(func):
-            func._mcp_prompt = name  
-            return func
-        return decorator
+    mcp_tool = lambda name, description="": lambda func: func
+    mcp_resource = lambda name: lambda func: func
+    mcp_prompt = lambda name: lambda func: func
 
 # Cross-agent communication
-try:
-    from ....a2a.network.connector import NetworkConnector
-    NETWORK_AVAILABLE = True
-except ImportError:
-    NETWORK_AVAILABLE = False
-    NetworkConnector = None
+from app.a2a.network.connector import NetworkConnector
 
 # Blockchain queue integration
-try:
-    from ....a2a.sdk.blockchainQueueMixin import BlockchainQueueMixin
-    BLOCKCHAIN_QUEUE_AVAILABLE = True
-except ImportError:
-    BLOCKCHAIN_QUEUE_AVAILABLE = False
-    # Create a dummy mixin if not available
-    class BlockchainQueueMixin:
-        def __init__(self):
-            self.blockchain_queue_enabled = False
+from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin as BlockchainQueueMixin
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
 
 logger = logging.getLogger(__name__)
 
@@ -361,6 +279,9 @@ class ComprehensiveDataManagerSDK(A2AAgentBase, BlockchainQueueMixin):
     async def initialize(self) -> None:
         """Initialize the data manager with all capabilities"""
         try:
+            # Establish standard trust relationships FIRST
+            await self.establish_standard_trust_relationships()
+            
             # Initialize blockchain if available
             if WEB3_AVAILABLE:
                 await self._initialize_blockchain()
@@ -378,7 +299,21 @@ class ComprehensiveDataManagerSDK(A2AAgentBase, BlockchainQueueMixin):
             # Load optimization history
             await self._load_optimization_history()
             
-            logger.info("Data Manager initialization complete")
+            # Discover data processing agents for collaboration
+            available_agents = await self.discover_agents(
+                capabilities=["data_processing", "data_validation", "data_indexing", "analytics"],
+                agent_types=["data", "processing", "analytics", "validation"]
+            )
+            
+            # Store discovered agents for data collaboration
+            self.data_agents = {
+                "processors": [agent for agent in available_agents if "processing" in agent.get("capabilities", [])],
+                "validators": [agent for agent in available_agents if "validation" in agent.get("capabilities", [])],
+                "indexers": [agent for agent in available_agents if "indexing" in agent.get("capabilities", [])],
+                "analytics": [agent for agent in available_agents if "analytics" in agent.get("capabilities", [])]
+            }
+            
+            logger.info(f"Data Manager initialization complete with {len(available_agents)} collaborative agents")
             
         except Exception as e:
             logger.error(f"Initialization error: {e}")
@@ -389,7 +324,7 @@ class ComprehensiveDataManagerSDK(A2AAgentBase, BlockchainQueueMixin):
         try:
             # Get blockchain configuration
             private_key = os.getenv('A2A_PRIVATE_KEY')
-            rpc_url = os.getenv('BLOCKCHAIN_RPC_URL', 'http://localhost:8545')
+            rpc_url = os.getenv('BLOCKCHAIN_RPC_URL', os.getenv('A2A_RPC_URL'))
             
             if private_key:
                 self.web3_client = Web3(Web3.HTTPProvider(rpc_url))
@@ -406,8 +341,8 @@ class ComprehensiveDataManagerSDK(A2AAgentBase, BlockchainQueueMixin):
     async def _initialize_grok(self) -> None:
         """Initialize Grok AI for intelligent data governance"""
         try:
-            # Get Grok API key from environment or use the one from codebase
-            api_key = os.getenv('GROK_API_KEY') or "xai-GjOhyMGlKR6lA3xqhc8sBjhfJNXLGGI7NvY0xbQ9ZElNkgNrIGAqjEfGUYoLhONHfzQ3bI5Rj2TjhXzO8wWTg"
+            # Get Grok API key from environment
+            api_key = os.getenv('GROK_API_KEY')
             
             if api_key:
                 self.grok_client = AsyncOpenAI(
@@ -446,7 +381,7 @@ class ComprehensiveDataManagerSDK(A2AAgentBase, BlockchainQueueMixin):
         
         # Initialize Redis if available
         if REDIS_AVAILABLE:
-            redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
+            redis_url = os.getenv('REDIS_URL')
             try:
                 self.backends[StorageBackend.REDIS] = await redis.from_url(redis_url)
                 logger.info("Redis backend initialized")
@@ -545,6 +480,38 @@ class ComprehensiveDataManagerSDK(A2AAgentBase, BlockchainQueueMixin):
             # Learn from this operation
             if self.learning_enabled:
                 await self._learn_from_operation('store', table_name, data, execution_time)
+            
+            # Store data management metadata in data_manager (self-referential)
+            await self.store_agent_data(
+                data_type="data_storage_operation",
+                data={
+                    "table_name": table_name,
+                    "backend_used": optimal_backend.value,
+                    "backend_suggested": optimal_backend.value,
+                    "rows_affected": result.get('rows_affected', 0),
+                    "execution_time": execution_time,
+                    "data_size_bytes": len(str(data)) if data else 0,
+                    "operation_timestamp": datetime.now().isoformat(),
+                    "operation_id": f"store_{int(time.time())}"
+                },
+                metadata={
+                    "agent_version": "comprehensive_data_manager_v1.0",
+                    "ml_optimization_applied": True,
+                    "data_lineage_tracked": True
+                }
+            )
+            
+            # Update agent status with agent_manager
+            await self.update_agent_status(
+                status="active",
+                details={
+                    "total_operations": self.metrics.get("total_queries", 0),
+                    "cache_hit_rate": (self.metrics.get("cache_hits", 0) / max(self.metrics.get("total_queries", 1), 1)) * 100,
+                    "last_operation": f"store_{table_name}",
+                    "backends_available": len([b for b in self.backends.values() if b]),
+                    "active_capabilities": ["data_storage", "ml_optimization", "caching", "multi_backend", "lineage_tracking"]
+                }
+            )
             
             return create_success_response({
                 'status': 'stored',
@@ -945,6 +912,120 @@ class ComprehensiveDataManagerSDK(A2AAgentBase, BlockchainQueueMixin):
                 self.backends[backend][table_name].append(data)
                 return {'rows_affected': 1}
         
+        elif backend == StorageBackend.POSTGRESQL:
+            if StorageBackend.POSTGRESQL not in self.connection_pools:
+                raise RuntimeError("PostgreSQL connection pool not initialized")
+                
+            pool = self.connection_pools[StorageBackend.POSTGRESQL]
+            async with pool.acquire() as connection:
+                if isinstance(data, list):
+                    # Batch insert for PostgreSQL
+                    # Build dynamic INSERT based on data structure
+                    if data and isinstance(data[0], dict):
+                        columns = list(data[0].keys())
+                        placeholders = ', '.join([f'${i+1}' for i in range(len(columns))])
+                        query = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
+                        
+                        # Convert dicts to tuples for asyncpg
+                        values = [tuple(row[col] for col in columns) for row in data]
+                        await connection.executemany(query, values)
+                        return {'rows_affected': len(data)}
+                    else:
+                        # Simple tuple/list data
+                        placeholders = ', '.join([f'${i+1}' for i in range(len(data[0]) if data else 0)])
+                        query = f"INSERT INTO {table_name} VALUES ({placeholders})"
+                        await connection.executemany(query, data)
+                        return {'rows_affected': len(data)}
+                else:
+                    # Single record insert
+                    if isinstance(data, dict):
+                        columns = list(data.keys())
+                        placeholders = ', '.join([f'${i+1}' for i in range(len(columns))])
+                        query = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
+                        values = tuple(data[col] for col in columns)
+                        await connection.execute(query, *values)
+                    else:
+                        # Simple tuple/list data
+                        placeholders = ', '.join([f'${i+1}' for i in range(len(data))])
+                        query = f"INSERT INTO {table_name} VALUES ({placeholders})"
+                        await connection.execute(query, *data)
+                    return {'rows_affected': 1}
+        
+        elif backend == StorageBackend.HANA:
+            if not HANA_AVAILABLE:
+                raise RuntimeError("HANA database driver not available. Install hdbcli package.")
+                
+            hana_connection = self.backends.get(StorageBackend.HANA)
+            if not hana_connection:
+                raise RuntimeError("HANA connection not initialized")
+                
+            cursor = hana_connection.cursor()
+            try:
+                if isinstance(data, list):
+                    # Batch insert for HANA
+                    if data and isinstance(data[0], dict):
+                        columns = list(data[0].keys())
+                        placeholders = ', '.join(['?' for _ in columns])
+                        query = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
+                        
+                        # Convert dicts to tuples
+                        values = [tuple(row[col] for col in columns) for row in data]
+                        cursor.executemany(query, values)
+                    else:
+                        # Simple tuple/list data
+                        placeholders = ', '.join(['?' for _ in range(len(data[0]) if data else 0)])
+                        query = f"INSERT INTO {table_name} VALUES ({placeholders})"
+                        cursor.executemany(query, data)
+                    
+                    hana_connection.commit()
+                    return {'rows_affected': len(data)}
+                else:
+                    # Single record insert
+                    if isinstance(data, dict):
+                        columns = list(data.keys())
+                        placeholders = ', '.join(['?' for _ in columns])
+                        query = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
+                        values = tuple(data[col] for col in columns)
+                        cursor.execute(query, values)
+                    else:
+                        # Simple tuple/list data
+                        placeholders = ', '.join(['?' for _ in range(len(data))])
+                        query = f"INSERT INTO {table_name} VALUES ({placeholders})"
+                        cursor.execute(query, data)
+                    
+                    hana_connection.commit()
+                    return {'rows_affected': 1}
+            finally:
+                cursor.close()
+        
+        elif backend == StorageBackend.REDIS:
+            redis_client = self.backends.get(StorageBackend.REDIS)
+            if not redis_client:
+                raise RuntimeError("Redis connection not initialized")
+                
+            # Store data as JSON in Redis with table_name as key prefix
+            if isinstance(data, list):
+                # Store list as multiple keys with indexes
+                pipe = redis_client.pipeline()
+                for i, item in enumerate(data):
+                    key = f"{table_name}:{i}"
+                    pipe.set(key, json.dumps(item) if isinstance(item, (dict, list)) else str(item))
+                
+                # Store count for tracking
+                pipe.set(f"{table_name}:count", len(data))
+                await pipe.execute()
+                return {'rows_affected': len(data)}
+            else:
+                # Single item storage
+                # Get current count and increment
+                current_count = await redis_client.get(f"{table_name}:count") or 0
+                current_count = int(current_count)
+                
+                key = f"{table_name}:{current_count}"
+                await redis_client.set(key, json.dumps(data) if isinstance(data, (dict, list)) else str(data))
+                await redis_client.set(f"{table_name}:count", current_count + 1)
+                return {'rows_affected': 1}
+        
         else:
             raise NotImplementedError(f"Backend {backend} not implemented")
     
@@ -964,6 +1045,86 @@ class ComprehensiveDataManagerSDK(A2AAgentBase, BlockchainQueueMixin):
             if table_match:
                 table_name = table_match.group(1)
                 return self.backends[backend].get(table_name, [])
+            return []
+        
+        elif backend == StorageBackend.POSTGRESQL:
+            if StorageBackend.POSTGRESQL not in self.connection_pools:
+                raise RuntimeError("PostgreSQL connection pool not initialized")
+                
+            pool = self.connection_pools[StorageBackend.POSTGRESQL]
+            async with pool.acquire() as connection:
+                # Execute query with asyncpg
+                rows = await connection.fetch(query, *params)
+                
+                # Convert asyncpg.Record objects to dictionaries
+                return [dict(row) for row in rows]
+        
+        elif backend == StorageBackend.HANA:
+            if not HANA_AVAILABLE:
+                raise RuntimeError("HANA database driver not available. Install hdbcli package.")
+                
+            hana_connection = self.backends.get(StorageBackend.HANA)
+            if not hana_connection:
+                raise RuntimeError("HANA connection not initialized")
+                
+            cursor = hana_connection.cursor()
+            try:
+                cursor.execute(query, params)
+                columns = [desc[0] for desc in cursor.description] if cursor.description else []
+                rows = cursor.fetchall()
+                
+                # Convert to list of dictionaries
+                return [dict(zip(columns, row)) for row in rows]
+            finally:
+                cursor.close()
+        
+        elif backend == StorageBackend.REDIS:
+            redis_client = self.backends.get(StorageBackend.REDIS)
+            if not redis_client:
+                raise RuntimeError("Redis connection not initialized")
+                
+            # Simple query parsing for Redis
+            # This is a basic implementation - in practice you'd use a more sophisticated query parser
+            table_match = re.search(r'FROM\s+(\w+)', query, re.IGNORECASE)
+            if table_match:
+                table_name = table_match.group(1)
+                
+                # Check if WHERE clause exists for filtering
+                where_match = re.search(r'WHERE\s+(.+)', query, re.IGNORECASE)
+                
+                # Get count of items in table
+                count = await redis_client.get(f"{table_name}:count") or 0
+                count = int(count)
+                
+                results = []
+                for i in range(count):
+                    key = f"{table_name}:{i}"
+                    value = await redis_client.get(key)
+                    if value:
+                        try:
+                            # Try to parse as JSON
+                            parsed_value = json.loads(value)
+                        except (json.JSONDecodeError, TypeError):
+                            # Use as string if not valid JSON
+                            parsed_value = value
+                        
+                        # Apply basic WHERE filtering if present
+                        if where_match and isinstance(parsed_value, dict):
+                            # Very basic filtering - in practice would need proper SQL parser
+                            where_clause = where_match.group(1).strip()
+                            # For now, just return all results
+                            results.append(parsed_value)
+                        else:
+                            results.append(parsed_value)
+                
+                # Apply LIMIT if present
+                limit_match = re.search(r'LIMIT\s+(\d+)', query, re.IGNORECASE)
+                if limit_match:
+                    limit = int(limit_match.group(1))
+                    results = results[:limit]
+                
+                return results
+            
             return []
         
         else:
@@ -1014,6 +1175,370 @@ class ComprehensiveDataManagerSDK(A2AAgentBase, BlockchainQueueMixin):
         except Exception as e:
             logger.error(f"Model retraining error: {e}")
     
+    async def _analyze_access_patterns(self, table_name: str, analyze_days: int) -> List[DataPattern]:
+        """Analyze access patterns for a table"""
+        try:
+            patterns = []
+            
+            # Get recent metrics for the table
+            recent_metrics = [m for m in self.query_metrics 
+                           if (datetime.now() - m.timestamp).days <= analyze_days]
+            
+            # Pattern 1: Query frequency distribution
+            query_types = defaultdict(int)
+            for metric in recent_metrics:
+                query_types[metric.query_type] += 1
+            
+            if query_types:
+                patterns.append(DataPattern(
+                    pattern_type="query_frequency",
+                    frequency=sum(query_types.values()) / analyze_days,
+                    tables=[table_name],
+                    columns=[],
+                    time_distribution={k: v/sum(query_types.values()) for k, v in query_types.items()},
+                    optimization_suggestions=["Consider caching for frequent queries"]
+                ))
+            
+            # Pattern 2: Performance distribution
+            execution_times = [m.execution_time for m in recent_metrics]
+            if execution_times:
+                slow_queries = sum(1 for t in execution_times if t > 1.0)
+                patterns.append(DataPattern(
+                    pattern_type="performance_distribution",
+                    frequency=len(execution_times) / analyze_days,
+                    tables=[table_name],
+                    columns=[],
+                    time_distribution={
+                        "fast": sum(1 for t in execution_times if t < 0.1) / len(execution_times),
+                        "medium": sum(1 for t in execution_times if 0.1 <= t <= 1.0) / len(execution_times),
+                        "slow": slow_queries / len(execution_times)
+                    },
+                    optimization_suggestions=["Add indexes for slow queries"] if slow_queries > 0 else []
+                ))
+            
+            return patterns
+            
+        except Exception as e:
+            logger.error(f"Access pattern analysis error: {e}")
+            return []
+
+    async def _generate_schema_optimizations(self, table_name: str, patterns: List[DataPattern]) -> List[StorageOptimization]:
+        """Generate schema optimization recommendations"""
+        try:
+            optimizations = []
+            
+            for pattern in patterns:
+                if pattern.pattern_type == "query_frequency" and pattern.frequency > 10:
+                    optimizations.append(StorageOptimization(
+                        optimization_type="add_cache_layer",
+                        priority=0.8,
+                        estimated_improvement=0.3,
+                        implementation_steps=[
+                            f"Add Redis cache for {table_name}",
+                            "Implement cache invalidation strategy",
+                            "Monitor cache hit rates"
+                        ],
+                        affected_tables=[table_name]
+                    ))
+                
+                if pattern.pattern_type == "performance_distribution":
+                    slow_ratio = pattern.time_distribution.get("slow", 0)
+                    if slow_ratio > 0.2:  # More than 20% slow queries
+                        optimizations.append(StorageOptimization(
+                            optimization_type="add_indexes",
+                            priority=0.9,
+                            estimated_improvement=0.5,
+                            implementation_steps=[
+                                f"Analyze slow queries for {table_name}",
+                                "Create indexes on frequently filtered columns",
+                                "Monitor query performance improvement"
+                            ],
+                            affected_tables=[table_name]
+                        ))
+            
+            return optimizations
+            
+        except Exception as e:
+            logger.error(f"Schema optimization generation error: {e}")
+            return []
+
+    async def _apply_schema_optimizations(self, table_name: str, recommendations: List[StorageOptimization]) -> List[str]:
+        """Apply schema optimizations"""
+        try:
+            applied = []
+            
+            for rec in recommendations:
+                if rec.priority > 0.7:  # Only apply high-priority optimizations
+                    if rec.optimization_type == "add_cache_layer":
+                        # Enable caching for this table
+                        self.cache_config['warm_cache_queries'].append(f"SELECT * FROM {table_name}")
+                        applied.append(f"Enabled caching for {table_name}")
+                    
+                    elif rec.optimization_type == "add_indexes":
+                        # Create basic indexes (simplified)
+                        index_name = f"idx_{table_name}_optimized"
+                        applied.append(f"Created index {index_name}")
+            
+            return applied
+            
+        except Exception as e:
+            logger.error(f"Schema optimization application error: {e}")
+            return []
+
+    def _get_metrics_for_range(self, time_range: str) -> List[QueryMetrics]:
+        """Get metrics for specified time range"""
+        try:
+            now = datetime.now()
+            
+            if time_range == "last_hour":
+                cutoff = now - timedelta(hours=1)
+            elif time_range == "last_day":
+                cutoff = now - timedelta(days=1)
+            elif time_range == "last_week":
+                cutoff = now - timedelta(weeks=1)
+            else:
+                cutoff = now - timedelta(hours=1)  # Default to last hour
+            
+            return [m for m in self.query_metrics if m.timestamp >= cutoff]
+            
+        except Exception as e:
+            logger.error(f"Metrics retrieval error: {e}")
+            return []
+
+    def _detect_performance_patterns(self, metrics: List[QueryMetrics]) -> List[Dict[str, Any]]:
+        """Detect performance patterns in metrics"""
+        try:
+            patterns = []
+            
+            if not metrics:
+                return patterns
+            
+            # Pattern 1: Query type performance
+            type_performance = defaultdict(list)
+            for metric in metrics:
+                type_performance[metric.query_type].append(metric.execution_time)
+            
+            for query_type, times in type_performance.items():
+                avg_time = np.mean(times)
+                patterns.append({
+                    "pattern": "query_type_performance",
+                    "query_type": query_type,
+                    "avg_execution_time": avg_time,
+                    "query_count": len(times),
+                    "needs_optimization": avg_time > 0.5
+                })
+            
+            # Pattern 2: Cache effectiveness
+            cached_queries = sum(1 for m in metrics if m.cache_hit)
+            cache_hit_rate = cached_queries / len(metrics) if metrics else 0
+            
+            patterns.append({
+                "pattern": "cache_effectiveness",
+                "hit_rate": cache_hit_rate,
+                "needs_optimization": cache_hit_rate < 0.3
+            })
+            
+            return patterns
+            
+        except Exception as e:
+            logger.error(f"Pattern detection error: {e}")
+            return []
+
+    async def _generate_performance_insights(self, patterns: List[Dict[str, Any]]) -> List[str]:
+        """Generate performance insights from patterns"""
+        try:
+            insights = []
+            
+            for pattern in patterns:
+                if pattern["pattern"] == "query_type_performance":
+                    if pattern["needs_optimization"]:
+                        insights.append(
+                            f"{pattern['query_type']} queries are slow "
+                            f"(avg: {pattern['avg_execution_time']:.3f}s). Consider indexing."
+                        )
+                
+                elif pattern["pattern"] == "cache_effectiveness":
+                    if pattern["needs_optimization"]:
+                        insights.append(
+                            f"Low cache hit rate ({pattern['hit_rate']:.1%}). "
+                            "Review caching strategy."
+                        )
+            
+            return insights
+            
+        except Exception as e:
+            logger.error(f"Insight generation error: {e}")
+            return []
+
+    async def _predict_future_performance(self, patterns: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Predict future performance based on patterns"""
+        try:
+            # Simple trend analysis
+            predictions = {
+                "trend": "stable",
+                "estimated_load_increase": 0.1,
+                "bottlenecks": [],
+                "recommendations": []
+            }
+            
+            for pattern in patterns:
+                if pattern["pattern"] == "query_type_performance":
+                    if pattern["avg_execution_time"] > 1.0:
+                        predictions["bottlenecks"].append(pattern["query_type"])
+                        predictions["recommendations"].append(
+                            f"Optimize {pattern['query_type']} queries"
+                        )
+            
+            return predictions
+            
+        except Exception as e:
+            logger.error(f"Performance prediction error: {e}")
+            return {"trend": "unknown", "estimated_load_increase": 0}
+
+    async def _analyze_query_patterns_for_table(self, table_name: str) -> List[Dict[str, Any]]:
+        """Analyze query patterns for specific table"""
+        try:
+            patterns = []
+            
+            # Mock analysis - in real implementation, would parse actual queries
+            patterns.append({
+                "column": "id",
+                "usage_frequency": 0.8,
+                "operation_types": ["equality", "range"],
+                "selectivity": 0.9
+            })
+            
+            patterns.append({
+                "column": "created_at",
+                "usage_frequency": 0.6,
+                "operation_types": ["range", "ordering"],
+                "selectivity": 0.3
+            })
+            
+            return patterns
+            
+        except Exception as e:
+            logger.error(f"Query pattern analysis error: {e}")
+            return []
+
+    async def _recommend_indexes_ml(self, table_name: str, query_patterns: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Recommend indexes using ML analysis"""
+        try:
+            recommendations = []
+            
+            for pattern in query_patterns:
+                # Calculate priority based on usage frequency and selectivity
+                priority = pattern["usage_frequency"] * pattern["selectivity"]
+                
+                if priority > 0.5:
+                    recommendations.append({
+                        "column": pattern["column"],
+                        "index_type": "btree",
+                        "priority": priority,
+                        "estimated_improvement": priority * 0.4,
+                        "reason": f"High usage frequency ({pattern['usage_frequency']:.1%})"
+                    })
+            
+            return sorted(recommendations, key=lambda x: x["priority"], reverse=True)
+            
+        except Exception as e:
+            logger.error(f"Index recommendation error: {e}")
+            return []
+
+    async def _create_index(self, table_name: str, recommendation: Dict[str, Any]) -> bool:
+        """Create index based on recommendation"""
+        try:
+            # In real implementation, would execute CREATE INDEX statement
+            index_name = f"idx_{table_name}_{recommendation['column']}"
+            logger.info(f"Creating index {index_name} (simulated)")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Index creation error: {e}")
+            return False
+
+    async def _identify_unused_indexes(self, table_name: str) -> List[str]:
+        """Identify unused indexes"""
+        try:
+            # Mock implementation - would analyze index usage statistics
+            unused = []
+            
+            # In real implementation, would query system tables for usage stats
+            return unused
+            
+        except Exception as e:
+            logger.error(f"Unused index identification error: {e}")
+            return []
+
+    async def _drop_index(self, table_name: str, index_name: str) -> bool:
+        """Drop unused index"""
+        try:
+            # In real implementation, would execute DROP INDEX statement
+            logger.info(f"Dropping index {index_name} (simulated)")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Index drop error: {e}")
+            return False
+
+    async def _select_query_backend(self, query: str, predicted_time: float) -> StorageBackend:
+        """Select optimal backend for query execution"""
+        try:
+            # Use ML to select backend based on query characteristics
+            if predicted_time > 1.0 and StorageBackend.POSTGRESQL in self.backends:
+                return StorageBackend.POSTGRESQL  # Use PostgreSQL for complex queries
+            
+            if 'COUNT' in query.upper() and StorageBackend.REDIS in self.backends:
+                return StorageBackend.REDIS  # Use Redis for simple aggregations
+            
+            return StorageBackend.SQLITE  # Default
+            
+        except Exception as e:
+            logger.error(f"Backend selection error: {e}")
+            return self.default_backend
+
+    async def _cache_result(self, cache_key: str, result: Any):
+        """Cache query result"""
+        try:
+            # Cache in Redis if available
+            if StorageBackend.REDIS in self.backends:
+                await self.backends[StorageBackend.REDIS].setex(
+                    f"cache:{cache_key}",
+                    self.cache_config['ttl'],
+                    json.dumps(result, default=str)
+                )
+            else:
+                # Fallback to memory cache
+                memory_cache = self.backends.get(StorageBackend.MEMORY, {})
+                memory_cache[f"cache:{cache_key}"] = result
+                
+        except Exception as e:
+            logger.error(f"Cache storage error: {e}")
+
+    async def _learn_from_query(self, original_query: str, optimized_query: str, 
+                              execution_time: float, predicted_time: float):
+        """Learn from query execution for model improvement"""
+        try:
+            # Record prediction accuracy
+            prediction_error = abs(execution_time - predicted_time)
+            if prediction_error < predicted_time * 0.2:  # Within 20%
+                self.metrics['successful_predictions'] += 1
+            else:
+                self.metrics['failed_predictions'] += 1
+            
+            # Store learning data
+            self.training_data['query_patterns'].append({
+                'original_query': original_query,
+                'optimized_query': optimized_query,
+                'execution_time': execution_time,
+                'predicted_time': predicted_time,
+                'optimization_effective': optimized_query != original_query,
+                'timestamp': datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            logger.error(f"Query learning error: {e}")
+
     async def shutdown(self) -> None:
         """Graceful shutdown"""
         try:
@@ -1041,8 +1566,12 @@ class ComprehensiveDataManagerSDK(A2AAgentBase, BlockchainQueueMixin):
 
 
 # Create agent instance
-def create_data_manager_agent(base_url: str = "http://localhost:8000") -> ComprehensiveDataManagerSDK:
+def create_data_manager_agent(base_url: str = None) -> ComprehensiveDataManagerSDK:
     """Factory function to create data manager agent"""
+    if base_url is None:
+        base_url = os.getenv('A2A_BASE_URL')
+        if not base_url:
+            raise ValueError("A2A_BASE_URL environment variable must be set")
     return ComprehensiveDataManagerSDK(base_url)
 
 

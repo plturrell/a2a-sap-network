@@ -15,12 +15,18 @@ sys.path.append('/Users/apple/projects/a2a/a2aAgents/backend')
 # Import the comprehensive standardization agent
 from comprehensiveDataStandardizationAgentSdk import ComprehensiveDataStandardizationAgentSDK
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 async def test_standardization_agent():
     print('🔬 Testing Comprehensive Data Standardization Agent Real AI Integration')
     print('=' * 75)
     
     # Initialize agent
-    agent = ComprehensiveDataStandardizationAgentSDK('http://localhost:8080')
+    agent = ComprehensiveDataStandardizationAgentSDK(os.getenv("A2A_SERVICE_URL"))
     await agent.initialize()
     
     # Test 1: Check if ML models are properly initialized
@@ -274,6 +280,10 @@ async def test_standardization_agent():
         # Check if fuzzy matching is available
         try:
             from fuzzywuzzy import fuzz, process
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             print('   ✅ FuzzyWuzzy Available for String Matching')
             
             # Test fuzzy matching

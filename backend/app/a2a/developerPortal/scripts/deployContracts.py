@@ -12,10 +12,16 @@ from web3 import Web3
 from eth_account import Account
 import subprocess
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Configuration
 NETWORKS = {
     "local": {
-        "rpc_url": "http://localhost:8545",
+        "rpc_url": os.getenv("A2A_SERVICE_URL"),
         "chain_id": 31337,
         "gas_price": 20000000000  # 20 gwei
     },

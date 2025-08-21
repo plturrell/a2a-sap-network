@@ -19,6 +19,12 @@ import uuid
 import web3
 from web3 import Web3
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Set up Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 app_dir = os.path.dirname(current_dir)
@@ -96,7 +102,7 @@ class A2ATask(BaseModel):
 # Blockchain connection
 class BlockchainConnector:
     def __init__(self):
-        self.w3 = Web3(Web3.HTTPProvider('http://localhost:8545'))  # Anvil
+        self.w3 = Web3(Web3.HTTPProvider(os.getenv("A2A_SERVICE_URL")))  # Anvil
         self.contract = None
         self.account = None
         

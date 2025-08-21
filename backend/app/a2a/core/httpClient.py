@@ -2,8 +2,22 @@
 Enhanced HTTP Client with Connection Pooling and Retry Logic
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
-import httpx
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 from typing import Dict, Any, Optional, Union, Callable
 import logging
 from urllib.parse import urljoin
@@ -52,7 +66,8 @@ class ConnectionPool:
             if not base_url.startswith("https://") and not base_url.startswith("http://localhost"):
                 logger.warning(f"⚠️ Using insecure HTTP for non-localhost: {base_url}")
 
-            self._clients[base_url] = httpx.AsyncClient(
+            self._clients[base_url] = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        # httpx\.AsyncClient(
                 base_url=base_url,
                 limits=self.limits,
                 timeout=httpx.Timeout(30.0),
@@ -193,9 +208,9 @@ class EnhancedHTTPClient:
                     )
                     await asyncio.sleep(backoff)
 
-            except CircuitBreakerOpenError:
+            except CircuitBreakerOpenError as e:
                 # Don't retry if circuit is open
-                raise
+                raise CircuitBreakerOpenError("Circuit breaker is open") from e
 
             except (httpx.ConnectError, httpx.TimeoutException, httpx.NetworkError) as e:
                 last_exception = e
@@ -254,18 +269,27 @@ class PlatformHTTPClient(EnhancedHTTPClient):
         self.platform_id = platform_id
         self.auth_manager = auth_manager
 
-    async def request(self, method: str, endpoint: str, **kwargs) -> httpx.Response:
+    async def request(
+        self,
+        method: str,
+        endpoint: str,
+        headers: Optional[Dict[str, str]] = None,
+        json_data: Optional[Dict[str, Any]] = None,
+        params: Optional[Dict[str, str]] = None,
+        data: Optional[Union[Dict, bytes]] = None,
+        timeout: Optional[float] = None,
+    ) -> httpx.Response:
         """Make request with automatic auth headers"""
         # Get auth headers if auth manager provided
         if self.auth_manager:
             auth_headers = await self.auth_manager.get_auth_headers(self.platform_id)
 
             # Merge with provided headers
-            headers = kwargs.get("headers", {})
+            if headers is None:
+                headers = {}
             headers.update(auth_headers)
-            kwargs["headers"] = headers
 
-        return await super().request(method, endpoint, **kwargs)
+        return await super().request(method, endpoint, headers, json_data, params, data, timeout)
 
 
 # Global connection pool

@@ -22,6 +22,10 @@ from fastapi import Request, HTTPException, status
 from fastapi.responses import JSONResponse
 import jwt
 
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
+
 logger = logging.getLogger(__name__)
 
 

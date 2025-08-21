@@ -1,3 +1,14 @@
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
 # Database-backed AI Decision Logger for A2A Agents
 # Integrates with Data Manager Agent for persistent storage
 
@@ -9,8 +20,8 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 from uuid import uuid4
-import httpx
-
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 from .aiDecisionLogger import (
     DecisionType,
     OutcomeStatus,
@@ -63,7 +74,8 @@ class AIDecisionDatabaseLogger:
         }
 
         # HTTP client for Data Manager communication
-        self.http_client = httpx.AsyncClient(timeout=30.0)
+        self.http_client = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        # httpx\.AsyncClient(timeout=30.0)
 
         # Background tasks will be started explicitly once a running event loop is available
         self._analysis_task = None
@@ -78,7 +90,8 @@ class AIDecisionDatabaseLogger:
         """Public helper to start background tasks when inside an event loop."""
         # Ensure http client available
         if self.http_client.is_closed:
-            self.http_client = httpx.AsyncClient(timeout=30.0)
+            self.http_client = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        # httpx\.AsyncClient(timeout=30.0)
         if not (self._analysis_task and not self._analysis_task.done()):
             self._start_background_tasks()
 
@@ -113,7 +126,6 @@ class AIDecisionDatabaseLogger:
         exercise public async APIs by explicitly calling `await logger.start_background_tasks()`
         once a loop is available, or by running within an async test (pytest-asyncio).
         """
-        """Start background analysis and cache management tasks"""
 
         async def analysis_loop():
             while True:
@@ -167,7 +179,7 @@ class AIDecisionDatabaseLogger:
                 return response.json()
             else:
                 logger.error(f"Data Manager error: {response.status_code} - {response.text}")
-                raise Exception(f"Data Manager request failed: {response.status_code}")
+                raise RuntimeError(f"Data Manager request failed: {response.status_code}")
 
         except Exception as e:
             logger.error(f"Failed to communicate with Data Manager: {e}")

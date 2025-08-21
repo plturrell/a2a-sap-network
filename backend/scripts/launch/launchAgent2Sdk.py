@@ -1,3 +1,4 @@
+import os
 #!/usr/bin/env python3
 """
 Launch Agent 2 (AI Preparation) - SDK Version
@@ -7,10 +8,16 @@ import asyncio
 import uvicorn
 from app.a2a.agents.agent2_ai_preparation.active.ai_preparation_agent_sdk import AIPreparationAgentSDK
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 async def main():
     # Create agent
     agent = AIPreparationAgentSDK(
-        base_url="http://localhost:8003"
+        base_url="os.getenv("AGENT_MANAGER_URL")"
     )
     
     # Initialize

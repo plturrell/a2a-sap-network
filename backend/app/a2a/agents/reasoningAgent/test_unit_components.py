@@ -389,6 +389,10 @@ class TestGrokReasoning(unittest.IsolatedAsyncioTestCase):
         """Set up test environment"""
         try:
             from grokReasoning import GrokReasoning
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             self.GrokReasoning = GrokReasoning
             self.grok_available = True
         except ImportError:

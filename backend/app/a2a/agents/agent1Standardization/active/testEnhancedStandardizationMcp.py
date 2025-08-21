@@ -10,6 +10,12 @@ import logging
 import json
 from datetime import datetime
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,7 +24,7 @@ logger = logging.getLogger(__name__)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../../.."))
 os.environ['AGENT_PRIVATE_KEY'] = 'test_key_12345'
 os.environ['STANDARDIZATION_OUTPUT_DIR'] = '/tmp/standardized_data'
-os.environ['CATALOG_MANAGER_URL'] = 'http://localhost:8005'
+os.environ['CATALOG_MANAGER_URL'] = os.getenv("A2A_SERVICE_URL")
 
 async def test_enhanced_standardization_agent():
     """Test the enhanced Data Standardization Agent with MCP"""
@@ -32,7 +38,7 @@ async def test_enhanced_standardization_agent():
         
         # Create agent
         agent = EnhancedDataStandardizationAgentMCP(
-            base_url="http://localhost:8001",
+            base_url=os.getenv("DATA_MANAGER_URL"),
             enable_monitoring=False  # Disable for testing
         )
         print(f"✅ Agent created: {agent.name} (ID: {agent.agent_id})")

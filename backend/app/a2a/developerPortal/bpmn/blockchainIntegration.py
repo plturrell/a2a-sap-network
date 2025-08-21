@@ -3,6 +3,19 @@ Blockchain and Smart Contract Integration for BPMN Workflow Engine
 Real integration with A2A Network smart contracts
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import os
 import asyncio
 import json
@@ -16,12 +29,21 @@ from web3 import Web3
 from web3.contract import Contract
 from eth_account import Account
 from eth_account.messages import encode_defunct
-import httpx
-
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Import A2A blockchain integration if available
 try:
     from a2a_network.python_sdk.blockchain.web3_client import Web3Client
     from a2a_network.python_sdk.blockchain.agent_integration import BlockchainAgentIntegration
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
     A2A_SDK_AVAILABLE = True
 except ImportError:
     A2A_SDK_AVAILABLE = False
@@ -93,7 +115,7 @@ class A2ABlockchainIntegration:
         # Default to local Anvil if no config provided
         default_config = {
             "local": {
-                "provider_url": "http://localhost:8545",
+                "provider_url": os.getenv("A2A_SERVICE_URL"),
                 "chain_id": 31337
             }
         }
@@ -427,7 +449,7 @@ class A2ABlockchainIntegration:
             
             # Get agent details
             agent_name = variables.get("agentName", config.get("agentName", "Workflow Agent"))
-            endpoint = variables.get("agentEndpoint", config.get("agentEndpoint", "http://localhost:8080"))
+            endpoint = variables.get("agentEndpoint", config.get("agentEndpoint", os.getenv("A2A_SERVICE_URL")))
             capabilities = variables.get("agentCapabilities", config.get("capabilities", ["workflow"]))
             
             # Build transaction

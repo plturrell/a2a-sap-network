@@ -182,7 +182,7 @@ class A2ADebateCoordination:
         
         # Collect A2A arguments
         for agent_id, task in argument_tasks:
-try:
+            try:
                 argument_response = await asyncio.wait_for(task, timeout=15)
                 if argument_response:
                     round_result["a2a_arguments"].append({
@@ -225,7 +225,7 @@ try:
             
             # Process evaluations
             for agent_id, task in evaluation_tasks:
-try:
+                try:
                     evaluation = await asyncio.wait_for(task, timeout=10)
                     if evaluation:
                         confidence_change = evaluation.get("confidence_change", 0.0)
@@ -250,7 +250,7 @@ try:
                                    signed_request: A2AMessage) -> Dict[str, Any]:
         """Request argument from A2A agent using proper A2A messaging"""
         
-try:
+        try:
             # Use A2A service discovery to get agent endpoint
             agent_endpoint = agent_info.get("endpoint")
             if not agent_endpoint:
@@ -288,7 +288,7 @@ try:
         convergence_score = max(0.0, 1.0 - confidence_variance)
         
         # Calculate position similarity using enhanced semantic similarity
-from .semanticSimilarityCalculator import calculate_text_similarity
+        from .semanticSimilarityCalculator import calculate_text_similarity
         
         similarity_scores = []
         for i, pos1 in enumerate(positions):
@@ -305,7 +305,7 @@ from .semanticSimilarityCalculator import calculate_text_similarity
     async def _synthesize_a2a_debate_result(self, debate_state: Dict[str, Any]) -> Dict[str, Any]:
         """Synthesize debate result using A2A synthesis agents"""
         
-try:
+        try:
             # Discover A2A synthesis agents
             synthesis_agents = await discover_synthesis_agents(
                 capabilities=["debate_synthesis", "consensus_building"],
@@ -392,7 +392,7 @@ class A2ABlackboardCoordination:
         blackboard_id = str(uuid.uuid4())[:8]
         logger.info(f"🧠 Starting A2A blackboard reasoning {blackboard_id}")
         
-try:
+        try:
             # Discover A2A knowledge agents
             knowledge_agents = await discover_qa_agents(
                 capabilities=["knowledge_contribution", "analysis", "synthesis"],
@@ -472,7 +472,7 @@ try:
         # Collect A2A contributions
         contributions = []
         for agent_id, task in contribution_tasks:
-try:
+            try:
                 contribution = await asyncio.wait_for(task, timeout=15)
                 if contribution:
                     contribution["contributor_agent"] = agent_id
@@ -492,7 +492,7 @@ try:
                                    signed_request: A2AMessage) -> Dict[str, Any]:
         """Request knowledge contribution using A2A messaging"""
         
-try:
+        try:
             agent_endpoint = agent_info.get("endpoint")
             if not agent_endpoint:
                 return {}
@@ -539,7 +539,7 @@ try:
     async def _attempt_a2a_synthesis(self, blackboard: Dict[str, Any]) -> Dict[str, Any]:
         """Attempt solution synthesis using A2A synthesis agents"""
         
-try:
+        try:
             # Use discovered synthesis agents or internal synthesis
             synthesis_agents = await discover_synthesis_agents(
                 capabilities=["blackboard_synthesis", "knowledge_integration"],
@@ -613,7 +613,7 @@ class A2APeerToPeerCoordination:
         swarm_id = str(uuid.uuid4())[:8]
         logger.info(f"🐝 Starting A2A P2P swarm reasoning {swarm_id}")
         
-try:
+        try:
             # Discover A2A reasoning agents for swarm
             swarm_agents = await discover_reasoning_engines(
                 capabilities=["exploration", "peer_reasoning", "collaboration"],
@@ -686,7 +686,7 @@ try:
         # Collect A2A exploration results
         exploration_results = []
         for agent_id, task in exploration_tasks:
-try:
+            try:
                 result = await asyncio.wait_for(task, timeout=20)
                 if result:
                     result["explorer_agent"] = agent_id
@@ -727,7 +727,7 @@ try:
                                      signed_request: A2AMessage) -> Dict[str, Any]:
         """Request exploration using A2A messaging"""
         
-try:
+        try:
             agent_endpoint = agent_info.get("endpoint")
             if not agent_endpoint:
                 return {}
@@ -774,7 +774,7 @@ try:
         # Collect exchange results
         exchanges = []
         for task in exchange_tasks:
-try:
+            try:
                 exchange_result = await asyncio.wait_for(task, timeout=15)
                 if exchange_result:
                     exchanges.append(exchange_result)
@@ -789,7 +789,7 @@ try:
                                           swarm_id: str) -> Dict[str, Any]:
         """Facilitate bilateral peer exchange between A2A agents"""
         
-try:
+        try:
             # Send result1 to agent2 for peer review
             peer_review_request = A2AMessage(
                 message_id=create_agent_id(),
@@ -855,7 +855,7 @@ class A2AMultiAgentCoordinator:
         
         logger.info(f"🎯 Coordinating A2A multi-agent reasoning: {task.coordination_pattern.value}")
         
-try:
+        try:
             if task.coordination_pattern == A2ACoordinationPattern.DEBATE:
                 proposals = task.context.get("proposals", [])
                 return await self.debate_coordinator.coordinate_agent_debate(proposals)
@@ -894,3 +894,266 @@ try:
             "agents_requested": task.required_agents,
             "recommendation": "Retry with different coordination pattern or more available A2A agents"
         }
+
+    async def _send_a2a_position_assignment(self, agent_info: Dict[str, Any], signed_message: A2AMessage):
+        """Send position assignment to A2A agent"""
+        try:
+            agent_endpoint = agent_info.get("endpoint")
+            if not agent_endpoint:
+                logger.error(f"No endpoint found for agent {agent_info['agent_id']}")
+                return
+
+            # Send A2A message through proper channels
+            response = await self.reasoning_agent._send_a2a_message(
+                agent_endpoint,
+                signed_message,
+                expected_response_type="position_assignment_confirmation"
+            )
+            
+            if response and await verify_a2a_message(response):
+                logger.info(f"Position assigned to {agent_info['agent_id']}")
+            else:
+                logger.warning(f"Position assignment failed for {agent_info['agent_id']}")
+                
+        except Exception as e:
+            logger.error(f"Position assignment failed: {e}")
+
+    async def _request_a2a_evaluation(self, agent_info: Dict[str, Any], signed_request: A2AMessage) -> Dict[str, Any]:
+        """Request evaluation from A2A agent"""
+        try:
+            agent_endpoint = agent_info.get("endpoint")
+            if not agent_endpoint:
+                return {}
+
+            response = await self.reasoning_agent._send_a2a_message(
+                agent_endpoint,
+                signed_request,
+                expected_response_type="debate_evaluation_response"
+            )
+            
+            if response and await verify_a2a_message(response):
+                return response.content
+            else:
+                return {}
+                
+        except Exception as e:
+            logger.error(f"A2A evaluation request failed: {e}")
+            return {}
+
+    async def _internal_debate_synthesis(self, debate_state: Dict[str, Any]) -> Dict[str, Any]:
+        """Internal synthesis of debate results"""
+        try:
+            positions = list(debate_state["positions"].values())
+            if not positions:
+                return {
+                    "consensus": "No positions available for synthesis",
+                    "confidence": 0.0,
+                    "method": "internal_debate_synthesis",
+                    "participants": 0
+                }
+
+            # Calculate weighted consensus
+            total_confidence = sum(pos["confidence"] for pos in positions)
+            weighted_responses = []
+            
+            for pos in positions:
+                weight = pos["confidence"] / max(total_confidence, 0.1)
+                position_answer = pos["position"].get("answer", "No answer provided")
+                weighted_responses.append({
+                    "answer": position_answer,
+                    "weight": weight,
+                    "confidence": pos["confidence"]
+                })
+
+            # Select best weighted response
+            best_response = max(weighted_responses, key=lambda x: x["weight"] * x["confidence"])
+            
+            return {
+                "consensus": best_response["answer"],
+                "confidence": total_confidence / len(positions),
+                "method": "internal_debate_synthesis",
+                "participants": len(positions),
+                "debate_rounds": len(debate_state.get("rounds", [])),
+                "consensus_reached": debate_state.get("consensus_reached", False)
+            }
+            
+        except Exception as e:
+            logger.error(f"Internal debate synthesis failed: {e}")
+            return {
+                "consensus": "Synthesis failed",
+                "confidence": 0.0,
+                "method": "internal_debate_synthesis_fallback",
+                "error": str(e)
+            }
+
+    async def _final_a2a_blackboard_synthesis(self, blackboard: Dict[str, Any]) -> Dict[str, Any]:
+        """Final synthesis of blackboard knowledge"""
+        try:
+            contributions = blackboard.get("knowledge_contributions", [])
+            if not contributions:
+                return {
+                    "solution": "No knowledge contributions available",
+                    "confidence": 0.0,
+                    "method": "final_blackboard_synthesis",
+                    "knowledge_sources": 0
+                }
+
+            # Aggregate knowledge by confidence
+            high_confidence_contributions = [c for c in contributions if c.get("confidence", 0) > 0.7]
+            medium_confidence_contributions = [c for c in contributions if 0.4 <= c.get("confidence", 0) <= 0.7]
+            
+            # Build synthesis from high-confidence contributions first
+            synthesis_parts = []
+            if high_confidence_contributions:
+                for contrib in high_confidence_contributions:
+                    synthesis_parts.append(contrib.get("knowledge", ""))
+            elif medium_confidence_contributions:
+                for contrib in medium_confidence_contributions[:2]:  # Limit to top 2
+                    synthesis_parts.append(contrib.get("knowledge", ""))
+
+            final_solution = " ".join(filter(None, synthesis_parts))
+            if not final_solution:
+                final_solution = f"Analysis of problem: {blackboard.get('problem', 'Unknown problem')}"
+
+            avg_confidence = sum(c.get("confidence", 0) for c in contributions) / len(contributions)
+            
+            return {
+                "solution": final_solution,
+                "confidence": avg_confidence,
+                "method": "final_blackboard_synthesis",
+                "knowledge_sources": len(contributions),
+                "high_confidence_sources": len(high_confidence_contributions),
+                "synthesis_iterations": len(blackboard.get("synthesis_attempts", []))
+            }
+            
+        except Exception as e:
+            logger.error(f"Final blackboard synthesis failed: {e}")
+            return {
+                "solution": "Synthesis failed",
+                "confidence": 0.0,
+                "method": "final_blackboard_synthesis_fallback",
+                "error": str(e)
+            }
+
+    async def _internal_a2a_synthesis(self, blackboard: Dict[str, Any]) -> Dict[str, Any]:
+        """Internal A2A blackboard synthesis"""
+        try:
+            contributions = blackboard.get("knowledge_contributions", [])
+            problem = blackboard.get("problem", "Unknown problem")
+            
+            if not contributions:
+                return {
+                    "synthesis": f"No contributions available for: {problem}",
+                    "confidence": 0.1,
+                    "method": "internal_a2a_synthesis",
+                    "sources": 0
+                }
+
+            # Simple synthesis by combining top contributions
+            sorted_contributions = sorted(
+                contributions, 
+                key=lambda x: x.get("confidence", 0), 
+                reverse=True
+            )
+            
+            top_contributions = sorted_contributions[:3]  # Top 3 contributions
+            
+            synthesis_text = f"Based on {len(contributions)} knowledge sources: "
+            for i, contrib in enumerate(top_contributions):
+                knowledge = contrib.get("knowledge", "")
+                if knowledge:
+                    synthesis_text += f"({i+1}) {knowledge[:100]}... "
+
+            avg_confidence = sum(c.get("confidence", 0) for c in top_contributions) / len(top_contributions)
+            
+            return {
+                "synthesis": synthesis_text,
+                "confidence": min(avg_confidence, 0.8),  # Cap at 0.8 for internal synthesis
+                "method": "internal_a2a_synthesis",
+                "sources": len(contributions),
+                "top_sources": len(top_contributions)
+            }
+            
+        except Exception as e:
+            logger.error(f"Internal A2A synthesis failed: {e}")
+            return {
+                "synthesis": f"Internal synthesis failed for: {problem}",
+                "confidence": 0.1,
+                "method": "internal_a2a_synthesis_fallback",
+                "error": str(e)
+            }
+
+    async def _achieve_a2a_swarm_convergence(self, swarm_network: Dict[str, Any]) -> Dict[str, Any]:
+        """Achieve convergence in A2A swarm reasoning"""
+        try:
+            exploration_results = swarm_network.get("exploration_results", [])
+            peer_exchanges = swarm_network.get("peer_exchanges", [])
+            
+            if not exploration_results:
+                return {
+                    "solution": "No exploration results available for convergence",
+                    "confidence": 0.1,
+                    "method": "swarm_convergence",
+                    "participants": 0
+                }
+
+            # Calculate convergence based on exploration and peer feedback
+            convergence_score = 0.0
+            synthesis_elements = []
+            
+            # Weight exploration results by quality
+            for result in exploration_results:
+                confidence = result.get("confidence", 0.5)
+                exploration = result.get("exploration", "")
+                if exploration and confidence > 0.4:
+                    synthesis_elements.append({
+                        "content": exploration,
+                        "weight": confidence,
+                        "source": result.get("explorer_agent", "unknown")
+                    })
+                    convergence_score += confidence
+
+            # Add insights from peer exchanges
+            for exchange in peer_exchanges:
+                synthesis_content = exchange.get("synthesis", "")
+                if synthesis_content:
+                    synthesis_elements.append({
+                        "content": synthesis_content,
+                        "weight": exchange.get("confidence", 0.5),
+                        "source": "peer_exchange"
+                    })
+
+            # Create final synthesis
+            if synthesis_elements:
+                # Sort by weight and take top elements
+                sorted_elements = sorted(synthesis_elements, key=lambda x: x["weight"], reverse=True)
+                top_elements = sorted_elements[:3]
+                
+                final_solution = "Swarm convergence synthesis: "
+                for elem in top_elements:
+                    final_solution += f"{elem['content'][:80]}... "
+                
+                avg_confidence = sum(elem["weight"] for elem in top_elements) / len(top_elements)
+                convergence_score = avg_confidence
+            else:
+                final_solution = f"Swarm analysis of: {swarm_network.get('question', 'Unknown question')}"
+                convergence_score = 0.2
+
+            return {
+                "solution": final_solution,
+                "confidence": min(convergence_score, 0.9),
+                "method": "swarm_convergence",
+                "participants": len(exploration_results),
+                "peer_exchanges": len(peer_exchanges),
+                "convergence_achieved": convergence_score > 0.6,
+                "synthesis_elements": len(synthesis_elements)
+            }
+            
+        except Exception as e:
+            logger.error(f"Swarm convergence failed: {e}")
+            return {
+                "solution": "Swarm convergence failed",
+                "confidence": 0.1,
+                "method": "swarm_convergence_fallback",
+                "error": str(e)
+            }

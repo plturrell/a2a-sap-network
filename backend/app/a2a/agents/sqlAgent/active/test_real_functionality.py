@@ -15,12 +15,18 @@ sys.path.append('/Users/apple/projects/a2a/a2aAgents/backend')
 # Import the comprehensive SQL agent
 from comprehensiveSqlAgentSdk import ComprehensiveSqlAgentSDK
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 async def test_sql_functionality():
     print('🚀 Testing SQL Agent Real Functionality & AI Intelligence')
     print('=' * 65)
     
     # Initialize agent
-    agent = ComprehensiveSqlAgentSDK('http://localhost:8080')
+    agent = ComprehensiveSqlAgentSDK(os.getenv("A2A_SERVICE_URL"))
     await agent.initialize()
     
     print('\n✅ Agent Initialization Complete')

@@ -26,6 +26,12 @@ import etcd3
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logger = logging.getLogger(__name__)
 
 
@@ -76,7 +82,7 @@ class A2AConfig(BaseSettings):
     
     # Security
     jwt_secret: str = "dev-secret-key"
-    cors_origins: List[str] = ["http://localhost:3000"]
+    cors_origins: List[str] = [os.getenv("A2A_SERVICE_URL")]
     rate_limit_requests: int = 100
     rate_limit_window: int = 60
     

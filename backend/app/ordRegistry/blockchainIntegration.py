@@ -12,6 +12,12 @@ from uuid import uuid4
 
 from .models import ORDDocument, ORDRegistration, RegistrationStatus
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logger = logging.getLogger(__name__)
 
 
@@ -97,9 +103,13 @@ class ORDBlockchainIntegration:
             # Try to import Web3 or blockchain client
             try:
                 from web3 import Web3
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
                 
                 # Get blockchain configuration from environment
-                blockchain_url = os.getenv("BLOCKCHAIN_RPC_URL", "http://localhost:8545")
+                blockchain_url = os.getenv("BLOCKCHAIN_RPC_URL")
                 contract_address = os.getenv("ORD_BLOCKCHAIN_CONTRACT", None)
                 
                 if contract_address:

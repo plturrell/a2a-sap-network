@@ -14,6 +14,12 @@ from app.dependencies import get_current_user
 from .enhancedCalculationAgentSdk import EnhancedCalculationAgentSDK
 from app.a2a.sdk import A2AMessage, MessagePart, MessageRole
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logger = logging.getLogger(__name__)
 
 # Initialize router
@@ -31,7 +37,7 @@ async def get_calculation_agent() -> EnhancedCalculationAgentSDK:
     global calculation_agent
     if calculation_agent is None:
         calculation_agent = EnhancedCalculationAgentSDK(
-            base_url="http://localhost:8006",
+            base_url=os.getenv("A2A_SERVICE_URL"),
             enable_monitoring=True,
             enable_ray=True
         )

@@ -2,6 +2,19 @@
 Comprehensive Security Monitoring and Alerting System
 Real-time security event detection, analysis, and automated response
 """
+
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
 import platform
 
 import asyncio
@@ -339,9 +352,12 @@ class AlertingSystem:
                     "short": False
                 })
             
-            async with httpx.AsyncClient() as client:
-                response = await client.post(webhook_url, json=slack_payload)
-                response.raise_for_status()
+            # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+            # WARNING: HTTP client disabled - A2A protocol compliance
+            # async with httpx.AsyncClient() as client:
+            #     response = await client.post(webhook_url, json=slack_payload)
+            #     response.raise_for_status()
+            logger.warning("Slack notifications disabled - HTTP client usage violates A2A protocol")
                 
         except Exception as e:
             logger.error(f"Failed to send Slack alert: {e}")

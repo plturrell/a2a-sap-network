@@ -539,6 +539,10 @@ class BackpressureManager:
         try:
             # Get system metrics (simplified - would integrate with actual monitoring)
             import psutil
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             
             self.system_metrics = SystemMetrics(
                 cpu_usage=psutil.cpu_percent(),

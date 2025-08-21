@@ -1303,6 +1303,10 @@ class EnhancedCalculationAgentSDK(A2AAgentBase, BlockchainIntegrationMixin):
         """Generate a verification hash for calculation result"""
         try:
             import hashlib
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             
             hash_input = f"{expression}_{result.get('result_value', '')}_{result.get('confidence_score', 0.0)}"
             return hashlib.sha256(hash_input.encode()).hexdigest()[:16]

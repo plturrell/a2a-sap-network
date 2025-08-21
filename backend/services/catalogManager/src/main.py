@@ -4,15 +4,30 @@ Catalog Manager - A2A Microservice
 ORD Registry and Data Product Catalog for the A2A network
 """
 
+import warnings
+
+# Suppress warnings about unrecognized blockchain networks from eth_utils
+warnings.filterwarnings("ignore", message="Network 345 with name 'Yooldo Verse Mainnet'")
+warnings.filterwarnings("ignore", message="Network 12611 with name 'Astar zkEVM'")
+
 import asyncio
 import os
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .agent import CatalogManagerAgent
-from .router import create_a2a_router
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from agent import CatalogManagerAgent
+from router import create_a2a_router
+
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 async def main():
     # Get configuration from environment variables
     port = int(os.getenv("A2A_AGENT_PORT", "8012"))
@@ -20,8 +35,8 @@ async def main():
     base_url = os.getenv("A2A_AGENT_BASE_URL", f"http://localhost:{port}")
     
     # A2A network configuration
-    agent_manager_url = os.getenv("A2A_AGENT_MANAGER_URL", "http://agent-manager:8010")
-    data_manager_url = os.getenv("A2A_DATA_MANAGER_URL", "http://data-manager:8011")
+    agent_manager_url = os.getenv("A2A_AGENT_MANAGER_URL")
+    data_manager_url = os.getenv("A2A_DATA_MANAGER_URL")
     
     # Create agent instance
     agent = CatalogManagerAgent(

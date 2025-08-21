@@ -23,6 +23,12 @@ from app.a2a.agents.reasoningAgent.reasoningSkills import (
 from app.a2a.sdk.types import A2AMessage, MessageRole
 
 
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
+
 class TestReasoningAgent:
     """Test suite for Reasoning Agent"""
     
@@ -30,8 +36,8 @@ class TestReasoningAgent:
     async def reasoning_agent(self):
         """Create a reasoning agent instance for testing"""
         agent = ReasoningAgent(
-            base_url="http://localhost:8008",
-            agent_network_url="http://localhost:8000",
+            base_url=os.getenv("A2A_SERVICE_URL"),
+            agent_network_url=os.getenv("A2A_SERVICE_URL"),
             max_sub_agents=5,
             reasoning_timeout=60
         )

@@ -231,7 +231,7 @@ class A2AMessageSerializer:
             raise MessageSerializationError(f"Deserialization failed: {e}")
 
     def serialize_to_base64(
-        self, message: A2AMessage, format: Optional[SerializationFormat] = None
+        self, message: A2AMessage, serialization_format: Optional[SerializationFormat] = None
     ) -> str:
         """
         Serialize message and encode as base64 string for transport
@@ -244,7 +244,7 @@ class A2AMessageSerializer:
             Base64 encoded serialized message with metadata header
         """
         try:
-            serialized = self.serialize(message, format)
+            serialized = self.serialize(message, serialization_format)
 
             # Create metadata header
             metadata = {
@@ -449,10 +449,10 @@ def get_message_serializer() -> A2AMessageSerializer:
 
 # Convenience functions
 def serialize_message(
-    message: A2AMessage, format: Optional[SerializationFormat] = None
+    message: A2AMessage, serialization_format: Optional[SerializationFormat] = None
 ) -> SerializedMessage:
     """Serialize A2A message using global serializer"""
-    return get_message_serializer().serialize(message, format)
+    return get_message_serializer().serialize(message, serialization_format)
 
 
 def deserialize_message(serialized_message: SerializedMessage) -> A2AMessage:
@@ -460,9 +460,9 @@ def deserialize_message(serialized_message: SerializedMessage) -> A2AMessage:
     return get_message_serializer().deserialize(serialized_message)
 
 
-def serialize_to_base64(message: A2AMessage, format: Optional[SerializationFormat] = None) -> str:
+def serialize_to_base64(message: A2AMessage, serialization_format: Optional[SerializationFormat] = None) -> str:
     """Serialize message to base64 string using global serializer"""
-    return get_message_serializer().serialize_to_base64(message, format)
+    return get_message_serializer().serialize_to_base64(message, serialization_format)
 
 
 def deserialize_from_base64(base64_message: str) -> A2AMessage:

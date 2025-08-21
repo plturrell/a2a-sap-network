@@ -8,6 +8,12 @@ import os
 import sys
 import logging
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,7 +31,7 @@ async def test_real_mcp():
         print("✅ Import successful!")
         
         # Create agent
-        agent = AgentManagerAgentMCP(base_url="http://localhost:8000")
+        agent = AgentManagerAgentMCP(base_url=os.getenv("A2A_SERVICE_URL"))
         print(f"✅ Agent created: {agent.name} (ID: {agent.agent_id})")
         
         # Check if MCP server was created

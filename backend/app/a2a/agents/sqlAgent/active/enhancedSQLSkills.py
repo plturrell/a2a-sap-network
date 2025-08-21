@@ -190,6 +190,10 @@ class EnhancedSQLSkills:
         if SPACY_AVAILABLE:
             try:
                 import spacy
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
                 # Use configurable spaCy model
                 spacy_model = os.getenv("SPACY_MODEL", "en_core_web_sm")
                 self.nlp_models['spacy'] = spacy.load(spacy_model)

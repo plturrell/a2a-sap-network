@@ -103,6 +103,10 @@ print("\n7. Testing trust initializer components...")
 try:
     from core.trustInitializer import TrustIdentityInitializer
     from core.trustMiddleware import TrustMiddleware
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
     
     initializer = TrustIdentityInitializer()
     middleware = TrustMiddleware()

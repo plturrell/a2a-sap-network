@@ -3,13 +3,26 @@ A2A Help-Seeking System
 Enables agents to actively request help from other agents when encountering problems
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import logging
 import os
 from typing import Dict, List, Optional, Any, Callable
 from datetime import datetime
 from uuid import uuid4
-import httpx
-
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 from .a2aTypes import A2AMessage, MessagePart, MessageRole
 from .helpActionEngine import AgentHelpActionSystem
 from .skillScopeValidator import get_trust_based_help_validator, HelpRequestType
@@ -335,22 +348,33 @@ class AgentHelpSeeker:
             endpoint = f"{target_url}/a2a/v1/messages"
 
             async def make_help_request():
-                async with httpx.AsyncClient(timeout=30.0) as client:
-                    response = await client.post(
-                        endpoint,
-                        json=help_message.model_dump(),
-                        headers={
-                            "Content-Type": "application/json",
-                            "X-A2A-Protocol": "0.2.9",
-                            "X-Help-Request": "true",
-                        },
+                # A2A Protocol Compliance: Use blockchain messaging instead of direct HTTP
+                if hasattr(self, 'send_blockchain_message'):
+                    # Use blockchain messaging if available
+                    message_id = await self.send_blockchain_message(
+                        to_address=target_agent,
+                        content=help_message.model_dump(),
+                        message_type="HELP_REQUEST"
                     )
-
-                    if response.status_code != 200:
-                        # Let circuit breaker handle HTTP errors
-                        raise httpx.RequestError(f"HTTP {response.status_code}: {response.text}")
-
-                    return response.json()
+                    if message_id:
+                        return {"message_id": message_id, "status": "sent_via_blockchain"}
+                    else:
+                        raise RuntimeError("Failed to send help request via blockchain")
+                else:
+                    # Fallback: A2A Network Client (should route through blockchain)
+                    from .networkClient import A2ANetworkClient
+                    network_client = A2ANetworkClient(agent_id=getattr(self, 'agent_id', 'unknown'))
+                    
+                    response = await network_client.send_message(
+                        to_agent=target_agent,
+                        message=help_message.model_dump(),
+                        message_type="HELP_REQUEST"
+                    )
+                    
+                    if not response or response.get('error'):
+                        raise RuntimeError(f"A2A network request failed: {response.get('error', 'Unknown error')}")
+                    
+                    return response
 
             # Execute with circuit breaker protection
             result = await self.circuit_breaker.call(make_help_request)

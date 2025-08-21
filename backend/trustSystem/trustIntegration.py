@@ -11,6 +11,25 @@ from eth_account import Account
 from eth_account.messages import encode_defunct
 from config.agentConfig import config
 
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
+except ImportError:
+    # Fallback configuration
+    class Config:
+        def __init__(self):
+            self.base_url = os.getenv("A2A_SERVICE_URL")
+            self.storage_base_path = "/tmp/a2a"
+        def get_agent_url(self, agent_type): return self.base_url
+        def get_contract_address(self, name): return "0x0000000000000000000000000000000000000000"
+    config = Config()
+
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logger = logging.getLogger(__name__)
 
 

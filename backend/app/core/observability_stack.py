@@ -45,6 +45,10 @@ except ImportError:
 from ..a2a.core.telemetry import trace_async, add_span_attributes
 from ..clients.redisClient import RedisClient, RedisConfig
 
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
+
 logger = logging.getLogger(__name__)
 
 

@@ -1,9 +1,15 @@
 import os
+import sys
+import warnings
+
+# Suppress warnings about unrecognized blockchain networks from eth_utils
+warnings.filterwarnings("ignore", message="Network 345 with name 'Yooldo Verse Mainnet'")
+warnings.filterwarnings("ignore", message="Network 12611 with name 'Astar zkEVM'")
 
 # Add project root to the Python path to resolve import issues
-# project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-# if project_root not in sys.path:
-#     sys.path.insert(0, project_root)
+project_root = os.path.abspath(os.path.dirname(__file__))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -306,11 +312,9 @@ try:
     if config_manager:
         cors_config = config_manager.get_cors_config()
         # Security: Never use "*" for origins when credentials are allowed
-        allowed_origins = cors_config.origins if cors_config.origins else [
-            "http://localhost:3000",  # Default development frontend
-            "http://localhost:8080",  # Alternative dev port
-            "http://127.0.0.1:3000",  # localhost alternative
-        ]
+        # Get CORS origins from environment with fallback to localhost for development
+        default_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8080,http://127.0.0.1:3000").split(",")
+        allowed_origins = cors_config.origins if cors_config.origins else [origin.strip() for origin in default_origins]
         
         app.add_middleware(
             CORSMiddleware,

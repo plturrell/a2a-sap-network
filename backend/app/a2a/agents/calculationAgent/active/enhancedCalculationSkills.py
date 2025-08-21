@@ -1061,6 +1061,10 @@ class EnhancedCalculationSkills:
         try:
             # Extract parameters
             import re
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             
             # Future value
             fv_match = re.search(r'\$?(\d+(?:,\d{3})*(?:\.\d+)?)', expression)

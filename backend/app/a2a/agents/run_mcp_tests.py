@@ -1,3 +1,4 @@
+import os
 #!/usr/bin/env python3
 """
 Run real MCP integration tests to verify functionality
@@ -22,11 +23,17 @@ from agent3VectorProcessing.active.advancedMcpVectorProcessingAgent import Advan
 from agent4CalcValidation.active.advancedMcpCalculationValidationAgent import AdvancedMCPCalculationValidationAgent
 
 
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
+
 async def test_mcp_tools_are_real():
     """Test that MCP tools are real instances, not mocks"""
     logger.info("=== Testing MCP Tool Reality ===")
     
-    agent = AdvancedMCPDataProductAgentFixed("http://localhost:8000")
+    agent = AdvancedMCPDataProductAgentFixed(os.getenv("A2A_BASE_URL"))
     
     # Check tool types
     from ..common.mcpPerformanceTools import MCPPerformanceTools
@@ -45,7 +52,7 @@ async def test_real_performance_measurement():
     """Test real performance measurement"""
     logger.info("\n=== Testing Real Performance Measurement ===")
     
-    agent = AdvancedMCPDataProductAgentFixed("http://localhost:8000")
+    agent = AdvancedMCPDataProductAgentFixed(os.getenv("A2A_BASE_URL"))
     
     # Measure real operation
     start_time = datetime.now().timestamp()
@@ -77,7 +84,7 @@ async def test_real_validation():
     """Test real validation functionality"""
     logger.info("\n=== Testing Real Validation ===")
     
-    agent = AdvancedMCPStandardizationAgent("http://localhost:8000")
+    agent = AdvancedMCPStandardizationAgent(os.getenv("A2A_BASE_URL"))
     
     # Test schema validation
     test_schema = {
@@ -130,7 +137,7 @@ async def test_real_quality_assessment():
     """Test real quality assessment"""
     logger.info("\n=== Testing Real Quality Assessment ===")
     
-    agent = AdvancedMCPDataProductAgentFixed("http://localhost:8000")
+    agent = AdvancedMCPDataProductAgentFixed(os.getenv("A2A_BASE_URL"))
     
     # Assess data product quality
     result = await agent.quality_tools.assess_data_product_quality(
@@ -171,10 +178,10 @@ async def test_cross_agent_workflow():
     logger.info("\n=== Testing Cross-Agent Workflow ===")
     
     # Initialize agents
-    data_agent = AdvancedMCPDataProductAgentFixed("http://localhost:8000")
-    std_agent = AdvancedMCPStandardizationAgent("http://localhost:8000")
-    vec_agent = AdvancedMCPVectorProcessingAgent("http://localhost:8000")
-    calc_agent = AdvancedMCPCalculationValidationAgent("http://localhost:8000")
+    data_agent = AdvancedMCPDataProductAgentFixed(os.getenv("A2A_BASE_URL"))
+    std_agent = AdvancedMCPStandardizationAgent(os.getenv("A2A_BASE_URL"))
+    vec_agent = AdvancedMCPVectorProcessingAgent(os.getenv("A2A_BASE_URL"))
+    calc_agent = AdvancedMCPCalculationValidationAgent(os.getenv("A2A_BASE_URL"))
     
     # Step 1: Register data product
     logger.info("Step 1: Registering data product...")
@@ -275,7 +282,7 @@ async def test_mcp_resources():
     """Test MCP resource access"""
     logger.info("\n=== Testing MCP Resources ===")
     
-    agent = AdvancedMCPDataProductAgentFixed("http://localhost:8000")
+    agent = AdvancedMCPDataProductAgentFixed(os.getenv("A2A_BASE_URL"))
     
     # Add test product
     test_product = {
@@ -305,7 +312,7 @@ async def test_error_handling():
     """Test error handling in MCP tools"""
     logger.info("\n=== Testing Error Handling ===")
     
-    agent = AdvancedMCPCalculationValidationAgent("http://localhost:8000")
+    agent = AdvancedMCPCalculationValidationAgent(os.getenv("A2A_BASE_URL"))
     
     # Test with division by zero
     result = await agent.comprehensive_calculation_validation(

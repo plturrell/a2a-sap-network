@@ -438,7 +438,7 @@ class {{ agent_class_name }}(A2AAgentBase{% for mixin in sdk_mixins %}, {{ mixin
 if __name__ == "__main__":
     import sys
     
-    agent = {{ agent_class_name }}(base_url="http://localhost:8000")
+    agent = {{ agent_class_name }}(base_url=os.getenv("A2A_SERVICE_URL"))
     # Add startup logic here
 '''
     
@@ -597,14 +597,31 @@ class {{ agent_class_name }}(A2AAgentBase{% for mixin in sdk_mixins %}, {{ mixin
     
     def _load_validation_rules(self):
         """Load validation rules from configuration."""
-        # Implementation for loading validation rules
-        pass
+        # Load standard validation rules
+        self.validation_rules = {
+            'required_fields': ['id', 'type', 'data'],
+            'field_types': {
+                'id': str,
+                'type': str,
+                'data': dict
+            },
+            'business_rules': {
+                'max_data_size': 1024 * 1024,  # 1MB max
+                'allowed_types': ['document', 'record', 'transaction'],
+                'required_metadata': ['created_at', 'version']
+            },
+            'semantic_rules': {
+                'relationship_validation': True,
+                'reference_integrity': True,
+                'domain_constraints': True
+            }
+        }
 
 
 if __name__ == "__main__":
     import sys
     
-    agent = {{ agent_class_name }}(base_url="http://localhost:8000")
+    agent = {{ agent_class_name }}(base_url=os.getenv("A2A_SERVICE_URL"))
     # Add startup logic here
 '''
     
@@ -779,7 +796,7 @@ class {{ agent_class_name }}(A2AAgentBase{% for mixin in sdk_mixins %}, {{ mixin
 if __name__ == "__main__":
     import sys
     
-    agent = {{ agent_class_name }}(base_url="http://localhost:8000")
+    agent = {{ agent_class_name }}(base_url=os.getenv("A2A_SERVICE_URL"))
     # Add startup logic here
 '''
     
@@ -860,14 +877,53 @@ class {{ agent_class_name }}(A2AAgentBase{% for mixin in sdk_mixins %}, {{ mixin
 if __name__ == "__main__":
     import sys
     
-    agent = {{ agent_class_name }}(base_url="http://localhost:8000")
+    agent = {{ agent_class_name }}(base_url=os.getenv("A2A_SERVICE_URL"))
     # Add startup logic here
 '''
     
     def _load_existing_templates(self):
-        """Load existing template definitions."""
-        # Implementation for loading user-defined templates
-        pass
+        """Load existing template definitions from disk."""
+        try:
+            # Look for custom template files
+            if self.templates_path.exists():
+                for template_file in self.templates_path.glob('*.j2'):
+                    if template_file.stem in ['basic_data_processor', 'advanced_validator', 'enterprise_calculator']:
+                        continue  # Skip built-in templates
+                    
+                    # Try to load template metadata
+                    metadata_file = template_file.with_suffix('.yaml')
+                    if metadata_file.exists():
+                        try:
+                            with open(metadata_file, 'r') as f:
+                                template_config = yaml.safe_load(f)
+                            
+                            # Create AgentTemplate from config
+                            template = AgentTemplate(
+                                template_id=template_config['template_id'],
+                                name=template_config['name'],
+                                description=template_config['description'],
+                                agent_type=AgentType(template_config['agent_type']),
+                                template_type=TemplateType(template_config['template_type']),
+                                template_path=str(template_file.name),
+                                required_components=[SDKComponent(comp) for comp in template_config.get('required_components', [])],
+                                optional_components=[SDKComponent(comp) for comp in template_config.get('optional_components', [])],
+                                configuration_schema=template_config.get('configuration_schema', {}),
+                                example_config=template_config.get('example_config', {}),
+                                created_at=datetime.fromisoformat(template_config['created_at']),
+                                version=template_config.get('version', '1.0.0'),
+                                tags=template_config.get('tags', [])
+                            )
+                            
+                            self.templates[template.template_id] = template
+                            logger.info(f"Loaded custom template: {template.template_id}")
+                            
+                        except Exception as e:
+                            logger.error(f"Failed to load template {template_file}: {e}")
+                            
+            logger.info(f"Loaded {len(self.templates)} total templates")
+            
+        except Exception as e:
+            logger.error(f"Failed to load existing templates: {e}")
     
     async def generate_agent(self, config: AgentConfiguration) -> GenerationResult:
         """
@@ -1018,7 +1074,7 @@ class Test{config.agent_id.replace('_', '').title()}Agent:
     async def agent(self):
         """Create agent instance for testing."""
         return {config.agent_id.replace('_', '').title()}Agent(
-            base_url="http://localhost:8000",
+            base_url=os.getenv("A2A_SERVICE_URL"),
             config={config.custom_config}
         )
     
@@ -1072,9 +1128,15 @@ The following SDK components are included:
 ```python
 from {config.agent_id} import {config.agent_id.replace('_', '').title()}Agent
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Initialize agent
 agent = {config.agent_id.replace('_', '').title()}Agent(
-    base_url="http://localhost:8000",
+    base_url=os.getenv("A2A_SERVICE_URL"),
     config={config.custom_config}
 )
 

@@ -70,8 +70,9 @@ except ImportError:
         return {"message": args[1] if len(args) > 1 else {}, "signature": {"status": "trust_system_unavailable"}}
 
 # Import SDK components
+from ..sdk.performanceMonitoringMixin import PerformanceMonitoringMixin, monitor_a2a_operation
 from app.a2a.sdk import (
-    A2AAgentBase, a2a_handler, a2a_skill, a2a_task,
+    A2AAge, a2a_handlerntBase, a2a_handler, a2a_skill, a2a_task,
     A2AMessage, MessageRole, create_agent_id
 )
 from app.a2a.sdk.utils import create_error_response, create_success_response
@@ -94,7 +95,7 @@ from app.a2a.network import get_network_connector, get_registration_service, get
 logger = logging.getLogger(__name__)
 
 
-class FineTuningStrategy(str, Enum):
+class FineTuningStrategy(str, Enum), PerformanceMonitoringMixin:
     CONTRASTIVE_LEARNING = "contrastive_learning"
     FEEDBACK_DRIVEN = "feedback_driven"
     DOMAIN_ADAPTIVE = "domain_adaptive"
@@ -103,7 +104,7 @@ class FineTuningStrategy(str, Enum):
     META_LEARNING = "meta_learning"
 
 
-class EmbeddingDomain(str, Enum):
+class EmbeddingDomain(str, Enum), PerformanceMonitoringMixin:
     GENERAL = "general"
     FINANCIAL = "financial"
     LEGAL = "legal"
@@ -157,7 +158,7 @@ class FineTuningResult:
     error_details: Optional[str] = None
 
 
-class EnhancedEmbeddingFineTunerAgent(A2AAgentBase, BlockchainIntegrationMixin):
+class EnhancedEmbeddingFineTunerAgent(A2AAgentBase, BlockchainIntegrationMixin), PerformanceMonitoringMixin:
     """
     Enhanced Embedding Fine-tuner Agent with AI Intelligence Framework and Blockchain
     
@@ -1143,12 +1144,40 @@ class EnhancedEmbeddingFineTunerAgent(A2AAgentBase, BlockchainIntegrationMixin):
         """Generate a verification hash for optimization result"""
         try:
             import hashlib
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             
             hash_input = f"{data.get('domain', '')}_{result.get('improvement_score', 0.0)}_{result.get('optimization_method', '')}"
             return hashlib.sha256(hash_input.encode()).hexdigest()[:16]
         except Exception:
             return "optimization_hash_unavailable"
     
+    @a2a_handler("HEALTH_CHECK")
+    async def handle_health_check(self, message: A2AMessage, context_id: str) -> Dict[str, Any]:
+        """Handle A2A protocol health check messages"""
+        try:
+            return {
+                "status": "healthy",
+                "agent_id": self.agent_id,
+                "name": "Embedding Fine Tuner Agent",
+                "timestamp": datetime.utcnow().isoformat(),
+                "blockchain_enabled": getattr(self, 'blockchain_enabled', False),
+                "active_tasks": len(getattr(self, 'tasks', {})),
+                "capabilities": getattr(self, 'blockchain_capabilities', []),
+                "processing_stats": getattr(self, 'processing_stats', {}) or {},
+                "response_time_ms": 0  # Immediate response for health checks
+            }
+        except Exception as e:
+            logger.error(f"Health check failed: {e}")
+            return {
+                "status": "unhealthy",
+                "agent_id": getattr(self, 'agent_id', 'unknown'),
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat()
+            }
+
     async def cleanup(self) -> None:
         """Cleanup agent resources with AI state preservation"""
         try:

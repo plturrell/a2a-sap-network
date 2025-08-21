@@ -66,11 +66,49 @@ class StreamableResource:
         
     async def get_content(self) -> Any:
         """Get current resource content"""
-        raise NotImplementedError
+        return {
+            "uri": self.uri,
+            "name": self.name,
+            "description": self.description,
+            "last_modified": self.last_modified.isoformat(),
+            "subscriber_count": len(self.subscribers),
+            "change_count": len(self.change_history),
+            "content": "Base streamable resource - override in subclass"
+        }
         
     async def stream_updates(self) -> AsyncIterator[ResourceChange]:
         """Stream resource updates"""
-        raise NotImplementedError
+        # Default implementation yields historical changes then waits
+        # Override in subclass for real-time streaming
+        
+        # Yield historical changes first
+        for change in self.change_history[-10:]:  # Last 10 changes
+            yield change
+            await asyncio.sleep(0.1)  # Small delay between historical events
+        
+        # For base class, create periodic heartbeat updates
+        while True:
+            await asyncio.sleep(30.0)  # 30 second intervals
+            
+            # Create heartbeat change
+            heartbeat_change = ResourceChange(
+                resource_uri=self.uri,
+                change_type=ResourceChangeType.UPDATED,
+                timestamp=datetime.utcnow(),
+                new_value={
+                    "status": "active",
+                    "heartbeat": True,
+                    "subscriber_count": len(self.subscribers)
+                },
+                metadata={
+                    "type": "heartbeat",
+                    "interval": 30
+                }
+            )
+            
+            # Only yield if there are subscribers
+            if self.subscribers:
+                yield heartbeat_change
         
     def add_subscriber(self, subscription_id: str):
         """Add a subscriber"""

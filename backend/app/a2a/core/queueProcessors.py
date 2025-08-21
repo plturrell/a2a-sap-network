@@ -3,12 +3,25 @@ Queue Processor Implementations for Enhanced Queue Manager
 Provides reusable processors for common queue patterns
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import logging
 from typing import Dict, Any, Optional, Callable, List
 from datetime import datetime
-import aiohttp
-
+# Direct HTTP calls not allowed - use A2A protocol
+# import aiohttp  # REMOVED: A2A protocol violation
 from .queueManager import QueueProcessor, QueueMessage, QueuePriority
 
 logger = logging.getLogger(__name__)
@@ -94,7 +107,8 @@ class HTTPProcessor(QueueProcessor):
     async def process(self, message: QueueMessage) -> bool:
         """Send message to HTTP endpoint"""
         try:
-            async with aiohttp.ClientSession() as session:
+            async with # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
+        # aiohttp\.ClientSession() as session:
                 request_data = {
                     "message_id": message.id,
                     "payload": message.payload,

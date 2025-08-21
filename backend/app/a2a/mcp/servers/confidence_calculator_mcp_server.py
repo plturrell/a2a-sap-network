@@ -209,6 +209,10 @@ class StandaloneConfidenceFactorsServer:
             print("FastAPI not available, starting simple HTTP server")
             from http.server import HTTPServer, BaseHTTPRequestHandler
             import json
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             
             class MCPHandler(BaseHTTPRequestHandler):
                 def do_GET(self):

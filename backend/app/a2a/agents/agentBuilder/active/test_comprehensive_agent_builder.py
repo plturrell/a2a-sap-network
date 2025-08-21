@@ -20,7 +20,7 @@ async def test_agent_builder():
     print('=' * 70)
     
     # Initialize agent
-    agent = ComprehensiveAgentBuilderSDK('http://localhost:8080')
+    agent = ComprehensiveAgentBuilderSDK(os.getenv("A2A_SERVICE_URL"))
     await agent.initialize()
     
     # Test 1: Check if ML models are properly initialized
@@ -199,6 +199,12 @@ import asyncio
 from app.a2a.sdk import A2AAgentBase, a2a_skill
 from app.a2a.sdk.utils import create_success_response
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 class TestAgentSDK(A2AAgentBase):
     """Test agent with AI capabilities"""
     

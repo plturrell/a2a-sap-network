@@ -3,8 +3,22 @@ Async Grok Client with Connection Pooling and Caching
 Performance-optimized client for Grok-4 API calls
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
-import httpx
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 import json
 import time
 import hashlib
@@ -68,7 +82,8 @@ class AsyncGrokConnectionPool:
                         pool=5.0
                     )
                     
-                    self._client = httpx.AsyncClient(
+                    self._client = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        # httpx\.AsyncClient(
                         limits=limits,
                         timeout=timeout,
                         verify=True,

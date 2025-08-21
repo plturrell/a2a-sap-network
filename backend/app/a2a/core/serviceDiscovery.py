@@ -3,10 +3,24 @@ Real Service Discovery System for A2A Network
 Replaces fallback mechanisms with proper service registry integration
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import logging
 import os
-import httpx
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -66,48 +80,48 @@ class ServiceDiscovery:
                 logger.debug(f"Returning {len(cached_services)} cached services for {service_type}")
                 return cached_services
 
-            # Query real A2A registry
-            async with httpx.AsyncClient(timeout=self.client_timeout) as client:
-                query_params = {"service_type": service_type, "active": True}
-
-                if capabilities:
-                    query_params["capabilities"] = ",".join(capabilities)
-
-                response = await client.get(
-                    f"{self.registry_url}/api/v1/agents/search", params=query_params
-                )
-                response.raise_for_status()
-
-                agents_data = response.json()
-                services = []
-
-                for agent_data in agents_data.get("agents", []):
-                    service = ServiceEndpoint(
-                        service_name=agent_data["name"],
-                        agent_id=agent_data["agent_id"],
-                        endpoint_url=agent_data["endpoint"],
-                        capabilities=agent_data.get("capabilities", []),
-                        health_status="unknown",
-                        metadata=agent_data.get("metadata", {}),
-                    )
-                    services.append(service)
-
-                # Cache the results
-                self._cache_services(cache_key, services)
-
-                logger.info(f"Discovered {len(services)} services for {service_type}")
-                return services
-
-        except httpx.HTTPStatusError as e:
-            error_msg = (
-                f"Service discovery failed with HTTP {e.response.status_code}: {e.response.text}"
+            # A2A Protocol Compliance: Use blockchain-based service discovery
+            from .networkClient import A2ANetworkClient
+            
+            network_client = A2ANetworkClient(agent_id="service_discovery")
+            
+            discovery_request = {
+                "operation": "discover_agents",
+                "service_type": service_type,
+                "capabilities": capabilities or [],
+                "active_only": True
+            }
+            
+            response = await network_client.send_a2a_message(
+                to_agent="agent_registry",
+                message=discovery_request,
+                message_type="SERVICE_DISCOVERY"
             )
-            logger.error(error_msg)
-            raise RuntimeError(error_msg)
-        except httpx.RequestError as e:
-            error_msg = f"Service registry unreachable: {e}"
-            logger.error(error_msg)
-            raise RuntimeError(error_msg)
+            
+            if not response or response.get('error'):
+                error_msg = f"Blockchain service discovery failed: {response.get('error', 'Registry unreachable via blockchain')}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
+            
+            agents_data = response.get("agents", [])
+            services = []
+
+            for agent_data in agents_data:
+                service = ServiceEndpoint(
+                    service_name=agent_data["name"],
+                    agent_id=agent_data["agent_id"],
+                    endpoint_url=agent_data["endpoint"],
+                    capabilities=agent_data.get("capabilities", []),
+                    health_status="unknown",
+                    metadata=agent_data.get("metadata", {}),
+                )
+                services.append(service)
+
+            # Cache the results
+            self._cache_services(cache_key, services)
+
+            logger.info(f"✅ Discovered {len(services)} services for {service_type} via blockchain")
+            return services
         except Exception as e:
             error_msg = f"Service discovery failed: {e}"
             logger.error(error_msg)
@@ -148,29 +162,43 @@ class ServiceDiscovery:
 
     async def health_check_service(self, service: ServiceEndpoint) -> bool:
         """
-        Perform health check on a service endpoint
+        Perform health check on a service endpoint via A2A blockchain messaging
         Returns real health status - no mock responses
         """
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(f"{service.endpoint_url}/health")
-
-                if response.status_code == 200:
-                    health_data = response.json()
-                    service.health_status = health_data.get("status", "healthy")
-                    service.last_health_check = datetime.utcnow()
-
-                    # Reset failure count on success
-                    self.service_health_status[service.agent_id] = 0
-
-                    return service.health_status == "healthy"
-                else:
-                    service.health_status = "unhealthy"
-                    self._record_health_failure(service.agent_id)
-                    return False
+            # A2A Protocol Compliance: Use blockchain messaging for health checks
+            from .networkClient import A2ANetworkClient
+            
+            network_client = A2ANetworkClient(agent_id="service_discovery")
+            
+            health_request = {
+                "operation": "health_check",
+                "timestamp": datetime.utcnow().isoformat()
+            }
+            
+            response = await network_client.send_a2a_message(
+                to_agent=service.agent_id,
+                message=health_request,
+                message_type="HEALTH_CHECK"
+            )
+            
+            if response and response.get("status") == "healthy":
+                service.health_status = "healthy"
+                service.last_health_check = datetime.utcnow()
+                
+                # Reset failure count on success
+                self.service_health_status[service.agent_id] = 0
+                
+                logger.debug(f"✅ Health check passed for {service.agent_id}")
+                return True
+            else:
+                service.health_status = "unhealthy"
+                self._record_health_failure(service.agent_id)
+                logger.warning(f"⚠️ Health check failed for {service.agent_id}: {response}")
+                return False
 
         except Exception as e:
-            logger.warning(f"Health check failed for {service.agent_id}: {e}")
+            logger.warning(f"❌ Health check failed for {service.agent_id}: {e}")
             service.health_status = "unhealthy"
             service.last_health_check = datetime.utcnow()
             self._record_health_failure(service.agent_id)
@@ -178,33 +206,39 @@ class ServiceDiscovery:
 
     async def register_service(self, service: ServiceEndpoint) -> bool:
         """
-        Register a service with the A2A network registry
+        Register a service with the A2A network registry via blockchain
         Real registration - no mock implementations
         """
         try:
-            async with httpx.AsyncClient(timeout=self.client_timeout) as client:
-                registration_data = {
-                    "agent_id": service.agent_id,
-                    "name": service.service_name,
-                    "endpoint": service.endpoint_url,
-                    "capabilities": service.capabilities,
-                    "metadata": service.metadata or {},
-                }
+            # A2A Protocol Compliance: Use blockchain messaging for registration
+            from .networkClient import A2ANetworkClient
+            
+            network_client = A2ANetworkClient(agent_id="service_discovery")
+            
+            registration_data = {
+                "operation": "register_agent",
+                "agent_id": service.agent_id,
+                "name": service.service_name,
+                "endpoint": service.endpoint_url,
+                "capabilities": service.capabilities,
+                "metadata": service.metadata or {},
+                "timestamp": datetime.utcnow().isoformat()
+            }
 
-                response = await client.post(
-                    f"{self.registry_url}/api/v1/agents/register", json=registration_data
-                )
-                response.raise_for_status()
-
-                logger.info(f"Successfully registered service {service.agent_id}")
-                return True
-
-        except httpx.HTTPStatusError as e:
-            error_msg = (
-                f"Service registration failed with HTTP {e.response.status_code}: {e.response.text}"
+            response = await network_client.send_a2a_message(
+                to_agent="agent_registry",
+                message=registration_data,
+                message_type="AGENT_REGISTRATION"
             )
-            logger.error(error_msg)
-            raise RuntimeError(error_msg)
+            
+            if response and response.get("status") == "success":
+                logger.info(f"✅ Successfully registered service {service.agent_id} via blockchain")
+                return True
+            else:
+                error_msg = f"Blockchain service registration failed: {response.get('error', 'Unknown error')}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
+
         except Exception as e:
             error_msg = f"Service registration failed: {e}"
             logger.error(error_msg)
@@ -212,18 +246,36 @@ class ServiceDiscovery:
 
     async def deregister_service(self, agent_id: str) -> bool:
         """
-        Deregister a service from the A2A network registry
+        Deregister a service from the A2A network registry via blockchain
         """
         try:
-            async with httpx.AsyncClient(timeout=self.client_timeout) as client:
-                response = await client.delete(f"{self.registry_url}/api/v1/agents/{agent_id}")
-                response.raise_for_status()
+            # A2A Protocol Compliance: Use blockchain messaging for deregistration
+            from .networkClient import A2ANetworkClient
+            
+            network_client = A2ANetworkClient(agent_id="service_discovery")
+            
+            deregistration_data = {
+                "operation": "deregister_agent",
+                "agent_id": agent_id,
+                "timestamp": datetime.utcnow().isoformat()
+            }
 
+            response = await network_client.send_a2a_message(
+                to_agent="agent_registry",
+                message=deregistration_data,
+                message_type="AGENT_DEREGISTRATION"
+            )
+            
+            if response and response.get("status") == "success":
                 # Remove from local cache
                 self._remove_from_cache(agent_id)
-
-                logger.info(f"Successfully deregistered service {agent_id}")
+                
+                logger.info(f"✅ Successfully deregistered service {agent_id} via blockchain")
                 return True
+            else:
+                error_msg = f"Blockchain service deregistration failed: {response.get('error', 'Unknown error')}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
 
         except Exception as e:
             error_msg = f"Service deregistration failed: {e}"

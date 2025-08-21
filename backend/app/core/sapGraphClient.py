@@ -4,11 +4,25 @@ SAP Graph API Client for unified data access across SAP systems
 Provides centralized access to business data from multiple SAP sources
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Union
-import httpx
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 from dataclasses import dataclass, asdict
 from enum import Enum
 from app.core.loggingConfig import get_logger, LogCategory
@@ -98,7 +112,8 @@ class SAPGraphClient:
     
     async def __aenter__(self):
         """Async context manager entry"""
-        self._http_client = httpx.AsyncClient(
+        self._http_client = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        # httpx\.AsyncClient(
             timeout=httpx.Timeout(30.0),
             limits=httpx.Limits(max_connections=100, max_keepalive_connections=20)
         )

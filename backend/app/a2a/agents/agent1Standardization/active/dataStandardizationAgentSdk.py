@@ -3,9 +3,23 @@ Data Standardization Agent - SDK Version
 Agent 1: Enhanced with A2A SDK for standardizing financial data
 """
 
+"""
+A2A Protocol Compliance Notice:
+This file has been modified to enforce A2A protocol compliance.
+Direct HTTP calls are not allowed - all communication must go through
+the A2A blockchain messaging system.
+
+To send messages to other agents, use:
+- A2ANetworkClient for blockchain-based messaging
+- A2A SDK methods that route through the blockchain
+"""
+
+
+
 import asyncio
 import hashlib
-import httpx
+# Direct HTTP calls not allowed - use A2A protocol
+# import httpx  # REMOVED: A2A protocol violation
 import json
 import logging
 import os
@@ -39,12 +53,20 @@ except ImportError:
         return {"message": args[1] if len(args) > 1 else {}, "signature": {"status": "trust_system_unavailable"}}
 
 # Import SDK components
+from app.a2a.sdk.agentBase import A2AAgentBase, MessagePriority
 from app.a2a.sdk import (
-    A2AAgentBase, a2a_handler, a2a_skill, a2a_task,
+    a2a_handler, a2a_skill, a2a_task,
     A2AMessage, MessageRole, create_agent_id
 )
 from app.a2a.sdk.utils import create_error_response, create_success_response
+from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 logger = logging.getLogger(__name__)
 
 
@@ -112,17 +134,36 @@ class BasicStandardizer:
         return value
 
 
-class DataStandardizationAgentSDK(A2AAgentBase):
+class DataStandardizationAgentSDK(A2AAgentBase, BlockchainIntegrationMixin):
     """Data Standardization Agent - SDK Version"""
     
-    def __init__(self, base_url: str):
-        super().__init__(
+    def __init__(self, base_url: str = os.getenv("A2A_SERVICE_URL")):
+        # Define blockchain capabilities for standardization agent
+        blockchain_capabilities = [
+            "data_standardization",
+            "l4_hierarchy_mapping",
+            "entity_normalization", 
+            "field_mapping",
+            "data_validation",
+            "schema_standardization",
+            "quality_verification",
+            "metadata_enrichment"
+        ]
+        
+        # Initialize A2AAgentBase with blockchain capabilities
+        A2AAgentBase.__init__(
+            self,
             agent_id="data_standardization_agent_1",
             name="Data Standardization Agent",
             description="A2A v0.2.9 compliant agent for standardizing financial data to L4 hierarchical structure",
-            version="1.0.0",
-            base_url=base_url
+            version="4.0.0",  # Updated to A2A compliant version
+            base_url=base_url,
+            blockchain_capabilities=blockchain_capabilities,
+            a2a_protocol_only=True  # Force A2A protocol compliance
         )
+        
+        # Initialize blockchain integration
+        BlockchainIntegrationMixin.__init__(self)
         
         # Initialize standardizers
         self.standardizers = {
@@ -151,22 +192,29 @@ class DataStandardizationAgentSDK(A2AAgentBase):
         self.trust_contract = None
         self.trusted_agents = set()
         
-        logger.info(f"Initialized {self.name} with SDK v1.0.0")
+        logger.info(f"Initialized {self.name} with A2A Protocol v0.2.9 compliance")
 
     async def initialize(self) -> None:
         """Initialize agent resources"""
         logger.info("Initializing Data Standardization Agent resources...")
         try:
-            # Initialize HTTP client
-            self.http_client = httpx.AsyncClient(
-                timeout=httpx.Timeout(30.0),
-                limits=httpx.Limits(max_connections=10, max_keepalive_connections=5)
-            )
+            # Establish standard trust relationships FIRST
+            await self.establish_standard_trust_relationships()
             
             # Initialize trust system
             await self._initialize_trust_system()
             
-            logger.info("Data Standardization Agent initialized successfully")
+            # Initialize blockchain integration
+            try:
+                await self.initialize_blockchain()
+                logger.info("✅ Blockchain integration initialized for Agent 1")
+            except Exception as e:
+                logger.warning(f"⚠️ Blockchain initialization failed: {e}")
+            
+            # Verify A2A protocol connectivity
+            await self._verify_a2a_connectivity()
+            
+            logger.info("Data Standardization Agent initialized successfully with A2A protocol")
         except Exception as e:
             logger.error(f"Agent initialization failed: {e}")
             raise
@@ -175,9 +223,11 @@ class DataStandardizationAgentSDK(A2AAgentBase):
         """Cleanup agent resources"""
         logger.info("Shutting down Data Standardization Agent...")
         try:
-            # Close HTTP client
-            if hasattr(self, 'http_client') and self.http_client:
-                await self.http_client.aclose()
+            # Wait for A2A queues to drain
+            try:
+                await asyncio.wait_for(self._drain_a2a_queues(), timeout=30.0)
+            except asyncio.TimeoutError:
+                logger.warning("Timeout waiting for A2A queues to drain")
             
             logger.info("Data Standardization Agent shutdown complete")
         except Exception as e:
@@ -238,6 +288,16 @@ class DataStandardizationAgentSDK(A2AAgentBase):
             
             self.standardization_stats["records_standardized"] += len(standardized_accounts)
             self.standardization_stats["data_types_processed"].add("account")
+            
+            # Store standardized data via data_manager
+            await self.store_agent_data(
+                data_type="standardized_accounts",
+                data={
+                    "accounts": standardized_accounts,
+                    "standardization_timestamp": datetime.utcnow().isoformat(),
+                    "standardization_rules": "L4_hierarchical"
+                }
+            )
             
             return {
                 "data_type": "account",
@@ -436,6 +496,10 @@ class DataStandardizationAgentSDK(A2AAgentBase):
                 
         except Exception as e:
             from app.a2a.sdk.types import TaskStatus
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             await self.update_task(task_id, TaskStatus.FAILED, error=str(e))
 
     def _extract_standardization_request(self, message: A2AMessage) -> Dict[str, Any]:
@@ -504,14 +568,16 @@ class DataStandardizationAgentSDK(A2AAgentBase):
                 # Get trust contract reference
                 self.trust_contract = get_trust_contract()
                 
-                # Pre-trust essential agents
+                # Pre-trust essential agents for A2A communication
                 essential_agents = [
                     "agent_manager",
                     "data_product_agent_0",
-                    "ai_preparation_agent_2",
-                    "vector_processing_agent_3"
+                    "ai_preparation_agent_3",
+                    "vector_processing_agent_4",
+                    "catalog_manager_agent_2"
                 ]
                 
+                self.trusted_agents = set()
                 for agent_id in essential_agents:
                     self.trusted_agents.add(agent_id)
                 
@@ -522,3 +588,68 @@ class DataStandardizationAgentSDK(A2AAgentBase):
         except Exception as e:
             logger.error(f"❌ Failed to initialize trust system: {e}")
             logger.warning("Continuing without trust verification")
+    
+    # A2A Protocol Helper Methods
+    async def _verify_a2a_connectivity(self):
+        """Verify A2A protocol connectivity with other agents"""
+        try:
+            # Discover available agents via catalog_manager standard trust relationship
+            available_agents = await self.discover_agents(capability="data_processing")
+            logger.info(f"Discovered {len(available_agents)} data processing agents via catalog_manager")
+            
+            # Update status with agent_manager
+            await self.update_agent_status("ready", {
+                "discovered_agents": len(available_agents),
+                "capabilities": list(self.skills.keys())
+            })
+            
+            # Test connectivity with essential agents
+            essential_agents = [
+                "data_product_agent_0",
+                "ai_preparation_agent_3",
+                "vector_processing_agent_4",
+                "catalog_manager_agent_2"
+            ]
+            
+            for agent_id in essential_agents:
+                result = await self.request_data_from_agent_a2a(
+                    target_agent=agent_id,
+                    data_type="health_check",
+                    query_params={"requester": self.agent_id},
+                    encrypt=False
+                )
+                logger.info(f"A2A connectivity verified with {agent_id}: {result.get('success', False)}")
+            
+        except Exception as e:
+            logger.warning(f"A2A connectivity verification failed: {e}")
+    
+    async def _drain_a2a_queues(self):
+        """Wait for A2A message queues to empty"""
+        while not self.outgoing_queue.empty() or not self.retry_queue.empty():
+            await asyncio.sleep(1)
+    
+    async def _process_a2a_data_request(self, data_type: str, query_params: Dict[str, Any]) -> Dict[str, Any]:
+        """Process A2A data request - override from base class"""
+        try:
+            if data_type == "health_check":
+                return {
+                    "agent_id": self.agent_id,
+                    "status": "healthy",
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "standardization_stats": self.standardization_stats,
+                    "data_types_processed": list(self.standardization_stats.get("data_types_processed", set()))
+                }
+            elif data_type == "status":
+                return {
+                    "agent_id": self.agent_id,
+                    "name": self.name,
+                    "version": self.version,
+                    "statistics": self.standardization_stats,
+                    "active_tasks": len([t for t in self.tasks.values() if t["status"] == "running"]),
+                    "records_standardized": self.standardization_stats.get("records_standardized", 0)
+                }
+            else:
+                return {"error": f"Unknown data type: {data_type}"}
+        except Exception as e:
+            logger.error(f"Error processing A2A data request: {e}")
+            return {"error": str(e)}

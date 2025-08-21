@@ -11,11 +11,14 @@ from datetime import datetime
 from enum import Enum
 import json
 
-try:
-    from .grokReasoning import GrokReasoning
+from .grokReasoning import GrokReasoning
 except ImportError:
     # For direct imports
     from grokReasoning import GrokReasoning
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
 
 logger = logging.getLogger(__name__)
 

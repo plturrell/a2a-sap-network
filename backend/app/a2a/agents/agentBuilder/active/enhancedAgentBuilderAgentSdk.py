@@ -1270,6 +1270,10 @@ class EnhancedAgentBuilderAgent(A2AAgentBase, BlockchainIntegrationMixin):
         """Generate a verification hash for agent creation result"""
         try:
             import hashlib
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
             
             hash_input = f"{specification.get('name', '')}_{result.get('agent_id', '')}_{result.get('status', '')}"
             return hashlib.sha256(hash_input.encode()).hexdigest()[:16]

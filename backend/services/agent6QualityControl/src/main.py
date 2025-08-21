@@ -3,6 +3,12 @@ Main entry point for Agent 6 - Quality Control Manager
 A2A Microservice for orchestrating quality control processes
 """
 
+import warnings
+
+# Suppress warnings about unrecognized blockchain networks from eth_utils
+warnings.filterwarnings("ignore", message="Network 345 with name 'Yooldo Verse Mainnet'")
+warnings.filterwarnings("ignore", message="Network 12611 with name 'Astar zkEVM'")
+
 import asyncio
 import logging
 import os
@@ -11,12 +17,20 @@ import uvicorn
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-sys.path.append('../shared')
-sys.path.append('../../shared')
+import sys
+import os
+# Add the shared directory to Python path for a2aCommon imports
+shared_path = os.path.join(os.path.dirname(__file__), '..', '..', 'shared')
+sys.path.insert(0, os.path.abspath(shared_path))
 
 from agent import QualityControlAgent
-from a2aCommon.microservice.baseService import A2AMicroservice
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 
 logger = logging.getLogger(__name__)
 
@@ -32,9 +46,9 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Quality Control Manager service...")
     
     # Initialize agent
-    base_url = os.getenv("A2A_AGENT_URL", "http://localhost:8006")
-    agent_manager_url = os.getenv("A2A_MANAGER_URL", "http://localhost:8000")
-    downstream_agent_url = os.getenv("A2A_DOWNSTREAM_URL", "http://localhost:8007")
+    base_url = os.getenv("A2A_AGENT_URL")
+    agent_manager_url = os.getenv("A2A_MANAGER_URL", os.getenv("A2A_BASE_URL"))
+    downstream_agent_url = os.getenv("A2A_DOWNSTREAM_URL")
     
     agent_instance = QualityControlAgent(
         base_url=base_url,
@@ -58,12 +72,12 @@ async def lifespan(app: FastAPI):
 
 
 # Create FastAPI app with A2A microservice base
-app = A2AMicroservice(
+app = FastAPI(
     title="Agent 6 - Quality Control Manager",
     description="A2A Microservice for orchestrating quality control processes and managing quality gates",
     version="3.0.0",
     lifespan=lifespan
-).app
+)
 
 
 @app.get("/health")

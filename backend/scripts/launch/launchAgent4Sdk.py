@@ -20,6 +20,12 @@ from contextlib import asynccontextmanager
 
 from app.a2a.agents.agent4_calc_validation.active.agent4_router import initialize_agent, router
 
+
+# A2A Protocol Compliance: Require environment variables
+required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
+missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -35,12 +41,12 @@ logger = logging.getLogger(__name__)
 # Configuration
 AGENT_HOST = os.getenv("AGENT4_HOST", "0.0.0.0")
 AGENT_PORT = int(os.getenv("AGENT4_PORT", "8006"))
-BASE_URL = os.getenv("AGENT4_BASE_URL", f"http://{AGENT_HOST}:{AGENT_PORT}")
+BASE_URL = os.getenv("AGENT4_BASE_URL", f"https://{AGENT_HOST}:{AGENT_PORT}")
 TEMPLATE_REPOSITORY_URL = os.getenv("TEMPLATE_REPOSITORY_URL")
 
 # A2A Agent Integration URLs
-DATA_MANAGER_URL = os.getenv("DATA_MANAGER_URL", "http://localhost:8001")
-CATALOG_MANAGER_URL = os.getenv("CATALOG_MANAGER_URL", "http://localhost:8002")
+DATA_MANAGER_URL = os.getenv("DATA_MANAGER_URL", "os.getenv("DATA_MANAGER_URL")")
+CATALOG_MANAGER_URL = os.getenv("CATALOG_MANAGER_URL", "os.getenv("CATALOG_MANAGER_URL")")
 
 # Global agent reference
 agent_instance = None

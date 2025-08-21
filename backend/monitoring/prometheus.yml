@@ -10,7 +10,7 @@ scrape_configs:
   # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
   - job_name: 'prometheus'
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ['${PROMETHEUS_HOST:-prometheus}:${PROMETHEUS_PORT:-9090}']
 
   # A2A Agents monitoring
   - job_name: 'a2a-main-api'
@@ -75,4 +75,4 @@ scrape_configs:
   # Node exporter (if available)
   - job_name: 'node'
     static_configs:
-      - targets: ['localhost:9100']
+      - targets: ['${NODE_EXPORTER_HOST:-node-exporter}:${NODE_EXPORTER_PORT:-9100}']

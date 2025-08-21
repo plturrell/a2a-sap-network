@@ -15,8 +15,7 @@ from typing import (
     AsyncContextManager, AsyncIterator
 )
 
-try:
-    from typing import ParamSpec
+from typing import ParamSpec
 except ImportError:
     from typing_extensions import ParamSpec
 from datetime import datetime, timedelta
@@ -26,6 +25,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from app.core.loggingConfig import get_logger, LogCategory, log_operation
 from app.core.exceptions import (
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
     A2ABaseException, A2ATimeoutError, A2AConcurrencyError, 
     A2AResourceExhaustionError, ErrorSeverity
 )

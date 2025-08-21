@@ -61,69 +61,11 @@ try:
 except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
 
-# Import SDK components - corrected paths
-try:
-    # Try primary SDK path
-    from ....a2a.sdk.agentBase import A2AAgentBase
-    from ....a2a.sdk.decorators import a2a_handler, a2a_skill, a2a_task
-    from ....a2a.sdk.types import A2AMessage, MessageRole
-    from ....a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
-except ImportError:
-    try:
-        # Try alternative SDK path  
-        from ....a2a_test.sdk.agentBase import A2AAgentBase
-        from ....a2a_test.sdk.decorators import a2a_handler, a2a_skill, a2a_task
-        from ....a2a_test.sdk.types import A2AMessage, MessageRole
-        from ....a2a_test.sdk.utils import create_agent_id, create_error_response, create_success_response
-    except ImportError:
-        # Fallback local SDK definitions
-        from typing import Dict, Any, Callable
-        import asyncio
-        from abc import ABC, abstractmethod
-        
-        # Create minimal base class if SDK not available
-        class A2AAgentBase(ABC):
-            def __init__(self, agent_id: str, name: str, description: str, version: str, base_url: str):
-                self.agent_id = agent_id
-                self.name = name  
-                self.description = description
-                self.version = version
-                self.base_url = base_url
-                self.skills = {}
-                self.handlers = {}
-            
-            @abstractmethod
-            async def initialize(self) -> None:
-                pass
-            
-            @abstractmethod
-            async def shutdown(self) -> None:
-                pass
-        
-        # Create fallback decorators
-        def a2a_handler(method: str):
-            def decorator(func):
-                func._handler = method
-                return func
-            return decorator
-        
-        def a2a_skill(name: str, description: str = ""):
-            def decorator(func):
-                func._skill = {'name': name, 'description': description}
-                return func
-            return decorator
-        
-        def a2a_task(name: str, schedule: str = None):
-            def decorator(func):
-                func._task = {'name': name, 'schedule': schedule}
-                return func
-            return decorator
-        
-        def create_error_response(error: str) -> Dict[str, Any]:
-            return {"error": error, "success": False}
-        
-        def create_success_response(data: Any = None) -> Dict[str, Any]:
-            return {"success": True, "data": data}
+# Import SDK components - direct imports only
+from app.a2a.sdk.agentBase import A2AAgentBase
+from app.a2a.sdk import a2a_handler, a2a_skill, a2a_task
+from app.a2a.sdk.types import A2AMessage, MessageRole
+from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
 
 # Blockchain integration
 try:
@@ -146,43 +88,21 @@ try:
     MCP_AVAILABLE = True
 except ImportError:
     MCP_AVAILABLE = False
-    # Fallback decorators
-    def mcp_tool(name: str, description: str = ""):
-        def decorator(func):
-            func._mcp_tool = {'name': name, 'description': description}
-            return func
-        return decorator
-    
-    def mcp_resource(name: str):
-        def decorator(func):
-            func._mcp_resource = name
-            return func
-        return decorator
-    
-    def mcp_prompt(name: str):
-        def decorator(func):
-            func._mcp_prompt = name  
-            return func
-        return decorator
+    mcp_tool = None
+    mcp_resource = None
+    mcp_prompt = None
 
-# Cross-agent communication
-try:
-    from ....a2a.network.connector import NetworkConnector
-    NETWORK_AVAILABLE = True
-except ImportError:
-    NETWORK_AVAILABLE = False
-    NetworkConnector = None
+# Cross-agent communication - direct import
+from app.a2a.network.connector import NetworkConnector
+NETWORK_AVAILABLE = True
 
-# Blockchain queue integration
-try:
-    from ....a2a.sdk.blockchainQueueMixin import BlockchainQueueMixin
-    BLOCKCHAIN_QUEUE_AVAILABLE = True
-except ImportError:
-    BLOCKCHAIN_QUEUE_AVAILABLE = False
-    # Create a dummy mixin if not available
-    class BlockchainQueueMixin:
-        def __init__(self):
-            self.blockchain_queue_enabled = False
+# Blockchain integration - direct import
+from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
+
+
+# A2A Protocol Compliance: All imports must be available
+# No fallback implementations allowed - the agent must have all required dependencies
+BLOCKCHAIN_QUEUE_AVAILABLE = True
 
 logger = logging.getLogger(__name__)
 
@@ -275,7 +195,7 @@ class QualityTrend:
     forecast: List[Tuple[datetime, float]]
 
 
-class ComprehensiveQualityControlSDK(A2AAgentBase, BlockchainQueueMixin):
+class ComprehensiveQualityControlSDK(A2AAgentBase, BlockchainIntegrationMixin):
     """
     Comprehensive Quality Control Agent with Real AI Intelligence
     
@@ -434,7 +354,7 @@ class ComprehensiveQualityControlSDK(A2AAgentBase, BlockchainQueueMixin):
         self.quality_history = defaultdict(list)
         
         # Data Manager integration
-        self.data_manager_agent_url = os.getenv('DATA_MANAGER_URL', 'http://localhost:8001')
+        self.data_manager_agent_url = os.getenv('DATA_MANAGER_URL')
         self.use_data_manager = True
         
         logger.info(f"Initialized Comprehensive Quality Control Agent v{self.version}")
@@ -467,7 +387,7 @@ class ComprehensiveQualityControlSDK(A2AAgentBase, BlockchainQueueMixin):
         try:
             # Get blockchain configuration
             private_key = os.getenv('A2A_PRIVATE_KEY')
-            rpc_url = os.getenv('BLOCKCHAIN_RPC_URL', 'http://localhost:8545')
+            rpc_url = os.getenv('BLOCKCHAIN_RPC_URL')
             
             if private_key:
                 self.web3_client = Web3(Web3.HTTPProvider(rpc_url))
@@ -484,8 +404,8 @@ class ComprehensiveQualityControlSDK(A2AAgentBase, BlockchainQueueMixin):
     async def _initialize_grok(self) -> None:
         """Initialize Grok AI for quality insights"""
         try:
-            # Get Grok API key from environment or use the one from codebase
-            api_key = os.getenv('GROK_API_KEY') or "xai-GjOhyMGlKR6lA3xqhc8sBjhfJNXLGGI7NvY0xbQ9ZElNkgNrIGAqjEfGUYoLhONHfzQ3bI5Rj2TjhXzO8wWTg"
+            # Get Grok API key from environment
+            api_key = os.getenv('GROK_API_KEY')
             
             if api_key:
                 self.grok_client = AsyncOpenAI(
@@ -552,8 +472,7 @@ class ComprehensiveQualityControlSDK(A2AAgentBase, BlockchainQueueMixin):
         except Exception as e:
             logger.error(f"Error loading quality history: {e}")
     
-    # MCP-decorated quality control skills
-    @mcp_tool("assess_quality", "Comprehensive quality assessment with ML insights")
+    # Quality control skills
     @a2a_skill("assess_quality", "Multi-dimensional quality assessment")
     async def assess_quality(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Perform comprehensive quality assessment using ML models"""
@@ -666,7 +585,6 @@ class ComprehensiveQualityControlSDK(A2AAgentBase, BlockchainQueueMixin):
             self.method_performance[method_name]['total'] += 1
             return create_error_response(f"Assessment error: {str(e)}")
     
-    @mcp_tool("detect_anomalies", "Detect quality anomalies using ML models")
     @a2a_skill("detect_anomalies", "ML-powered anomaly detection")
     async def detect_anomalies(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Detect quality anomalies using advanced ML techniques"""
@@ -702,7 +620,6 @@ class ComprehensiveQualityControlSDK(A2AAgentBase, BlockchainQueueMixin):
             logger.error(f"Anomaly detection error: {e}")
             return create_error_response(f"Anomaly detection error: {str(e)}")
     
-    @mcp_tool("monitor_trends", "Monitor quality trends with statistical analysis")
     @a2a_skill("monitor_trends", "Quality trend monitoring")
     async def monitor_trends(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Monitor quality trends using statistical analysis and ML"""
@@ -740,7 +657,6 @@ class ComprehensiveQualityControlSDK(A2AAgentBase, BlockchainQueueMixin):
             logger.error(f"Trend monitoring error: {e}")
             return create_error_response(f"Trend monitoring error: {str(e)}")
     
-    @mcp_tool("continuous_improvement", "Generate continuous improvement recommendations")
     @a2a_skill("continuous_improvement", "AI-driven improvement suggestions")
     async def continuous_improvement(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Generate continuous improvement recommendations using AI"""
@@ -780,7 +696,6 @@ class ComprehensiveQualityControlSDK(A2AAgentBase, BlockchainQueueMixin):
             logger.error(f"Continuous improvement error: {e}")
             return create_error_response(f"Continuous improvement error: {str(e)}")
     
-    @mcp_tool("compliance_audit", "Automated compliance audit with standards verification")
     @a2a_skill("compliance_audit", "Standards compliance verification")
     async def compliance_audit(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Perform automated compliance audit against quality standards"""
@@ -1072,8 +987,12 @@ class ComprehensiveQualityControlSDK(A2AAgentBase, BlockchainQueueMixin):
 
 
 # Create agent instance
-def create_quality_control_agent(base_url: str = "http://localhost:8000") -> ComprehensiveQualityControlSDK:
+def create_quality_control_agent(base_url: str = None) -> ComprehensiveQualityControlSDK:
     """Factory function to create quality control agent"""
+    if base_url is None:
+        base_url = os.getenv("A2A_BASE_URL")
+        if not base_url:
+            raise ValueError("A2A_BASE_URL environment variable must be set")
     return ComprehensiveQualityControlSDK(base_url)
 
 

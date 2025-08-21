@@ -649,7 +649,7 @@ async def example_error_handling():
             raise Exception("Execution reverted: Out of gas")
         
         # Success
-        return f"tx_hash_{random.randint(1000, 9999)}"
+        return f"tx_hash_{secrets.randbelow(1000, 9999)}"
     
     # Test error handling
     handler = BlockchainErrorHandler()

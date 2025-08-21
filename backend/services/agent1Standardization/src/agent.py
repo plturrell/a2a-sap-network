@@ -10,7 +10,13 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 import logging
 
-sys.path.append('../shared')
+sys.path.append('../../shared')
+
+import sys
+import os
+# Add the shared directory to Python path for a2aCommon imports
+shared_path = os.path.join(os.path.dirname(__file__), '..', '..', 'shared')
+sys.path.insert(0, os.path.abspath(shared_path))
 
 from a2aCommon import (
     A2AAgentBase, a2a_handler, a2a_skill,
@@ -227,3 +233,9 @@ class DataStandardizationAgent(A2AAgentBase):
             if isinstance(content, dict):
                 return content.get('data_to_standardize', content.get('data', None))
         return None
+    
+    async def shutdown(self) -> None:
+        """Cleanup agent resources"""
+        logger.info("Shutting down Data Standardization Agent...")
+        await self.deregister_from_network()
+        logger.info("Data Standardization Agent shutdown complete")

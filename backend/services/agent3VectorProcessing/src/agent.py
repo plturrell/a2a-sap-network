@@ -14,7 +14,13 @@ from dataclasses import dataclass
 import hashlib
 
 import sys
-sys.path.append('../shared')
+sys.path.append('../../shared')
+
+import sys
+import os
+# Add the shared directory to Python path for a2aCommon imports
+shared_path = os.path.join(os.path.dirname(__file__), '..', '..', 'shared')
+sys.path.insert(0, os.path.abspath(shared_path))
 
 from a2aCommon import (
     A2AAgentBase, a2a_handler, a2a_skill, a2a_task,
@@ -363,6 +369,42 @@ class VectorProcessingAgent(A2AAgentBase):
             if key not in metadata or metadata[key] != value:
                 return False
         return True
+    
+    async def _initialize_trust_identity(self) -> None:
+        """Initialize agent's trust identity for A2A network"""
+        logger.info(f"Trust identity initialization placeholder for {self.agent_id}")
+        pass
+    
+    async def create_task(self, task_type: str, metadata: Dict[str, Any]) -> str:
+        """Create and track a new task"""
+        import uuid
+        task_id = str(uuid.uuid4())
+        
+        if not hasattr(self, 'tasks'):
+            self.tasks = {}
+        
+        self.tasks[task_id] = {
+            "task_id": task_id,
+            "type": task_type,
+            "status": "pending",
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat(),
+            "metadata": metadata
+        }
+        
+        return task_id
+    
+    async def update_task_status(self, task_id: str, status: str, update_data: Dict[str, Any] = None):
+        """Update task status and metadata"""
+        if not hasattr(self, 'tasks'):
+            self.tasks = {}
+            
+        if task_id in self.tasks:
+            self.tasks[task_id]["status"] = status
+            self.tasks[task_id]["updated_at"] = datetime.utcnow().isoformat()
+            
+            if update_data:
+                self.tasks[task_id]["metadata"].update(update_data)
     
     async def shutdown(self) -> None:
         """Cleanup agent resources"""

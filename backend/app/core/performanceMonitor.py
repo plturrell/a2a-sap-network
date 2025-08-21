@@ -176,6 +176,7 @@ class PerformanceMonitor:
                 span = self.tracer.start_span(operation)
                 self.active_requests.add(1, {"operation": operation})
                 
+                success = False
                 try:
                     result = await func(*args, **kwargs)
                     success = True
@@ -214,6 +215,7 @@ class PerformanceMonitor:
                 span = self.tracer.start_span(operation)
                 self.active_requests.add(1, {"operation": operation})
                 
+                success = False
                 try:
                     result = func(*args, **kwargs)
                     success = True
