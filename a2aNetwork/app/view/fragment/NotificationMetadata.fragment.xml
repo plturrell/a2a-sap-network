@@ -1,0 +1,31 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    
+    <HBox wrap="Wrap" class="metadataTags">
+        <ObjectStatus 
+            text="{notificationModel>metadata/fromAgent}"
+            icon="sap-icon://collaborate"
+            state="Neutral"
+            class="metadataTag sapUiTinyMarginEnd sapUiTinyMarginBottom"
+            visible="{= ${notificationModel>metadata/fromAgent} !== undefined}"/>
+        <ObjectStatus 
+            text="{path: 'notificationModel>createdAt', formatter: '.formatRelativeTime'}"
+            icon="sap-icon://time"
+            state="Neutral"
+            class="metadataTag sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+        <ObjectStatus 
+            text="{notificationModel>metadata/conversationId}"
+            icon="sap-icon://conversation"
+            state="Neutral"
+            class="metadataTag sapUiTinyMarginEnd sapUiTinyMarginBottom"
+            visible="{= ${notificationModel>metadata/conversationId} !== undefined}"/>
+        <ObjectStatus 
+            text="{notificationModel>metadata/routingRule/name}"
+            icon="sap-icon://filter"
+            state="Neutral"
+            class="metadataTag sapUiTinyMarginEnd sapUiTinyMarginBottom"
+            visible="{= ${notificationModel>metadata/routingRule/name} !== undefined}"/>
+    </HBox>
+    
+</core:FragmentDefinition>

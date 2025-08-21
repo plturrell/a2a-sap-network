@@ -28,10 +28,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'app', 'launchpad.html'));
 });
 
-// Serve test launchpad
-app.get('/test-launchpad', (req, res) => {
-  res.sendFile(path.join(__dirname, 'test-launchpad.html'));
-});
+// Test launchpad removed - use main launchpad for testing
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -47,7 +44,7 @@ app.get('/health', (req, res) => {
 app.listen(PORT, () => {
   console.log(`📁 Static file server running on http://localhost:${PORT}`);
   console.log(`📄 Main launchpad: http://localhost:${PORT}/`);
-  console.log(`🧪 Test launchpad: http://localhost:${PORT}/test-launchpad`);
+  console.log(`🧪 Test environment: http://localhost:${PORT}/app/a2aFiori/`);
   console.log(`❤️  Health check: http://localhost:${PORT}/health`);
 });
 

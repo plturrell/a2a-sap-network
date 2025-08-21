@@ -1,0 +1,32 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    
+    <HBox wrap="Wrap" class="requestItems">
+        <ObjectStatus 
+            text="Data Access"
+            icon="sap-icon://database"
+            state="Neutral"
+            visible="{= ${notificationModel>a2aMessage/intentClassification} === 'data_request'}"
+            class="requestItem sapUiTinyMarginEnd"/>
+        <ObjectStatus 
+            text="Approval Required"
+            icon="sap-icon://accept"
+            state="Warning"
+            visible="{= ${notificationModel>a2aMessage/intentClassification} === 'approval_request'}"
+            class="requestItem sapUiTinyMarginEnd"/>
+        <ObjectStatus 
+            text="Error Report"
+            icon="sap-icon://error"
+            state="Error"
+            visible="{= ${notificationModel>a2aMessage/intentClassification} === 'error_report'}"
+            class="requestItem sapUiTinyMarginEnd"/>
+        <ObjectStatus 
+            text="Status Update"
+            icon="sap-icon://status-in-process"
+            state="Information"
+            visible="{= ${notificationModel>a2aMessage/intentClassification} === 'status_update'}"
+            class="requestItem sapUiTinyMarginEnd"/>
+    </HBox>
+    
+</core:FragmentDefinition>

@@ -77,8 +77,8 @@ npm run dev
 ## 🖼️ User Interface
 
 ### Main Launchpad
-- **Production**: http://localhost:4004/app/launchpad.html
-- **Development**: http://localhost:4004/app/test-launchpad.html
+- **SAP Fiori Launchpad**: http://localhost:4004/app/launchpad.html
+- **A2A Fiori App**: http://localhost:4004/app/a2aFiori/
 
 ### API Endpoints
 - **Health Check**: http://localhost:4004/health
@@ -148,9 +148,8 @@ This checks:
 ```
 a2aNetwork/
 ├── app/                    # Frontend applications
-│   ├── launchpad.html     # Production launchpad
-│   ├── test-launchpad.html # Development launchpad
-│   └── a2aFiori/          # Main Fiori app
+│   ├── launchpad.html     # SAP Fiori Launchpad
+│   └── a2aFiori/          # Main SAP UI5 application
 ├── srv/                   # Backend services
 │   ├── server.js          # Main server
 │   ├── middleware/        # Security, auth, etc.

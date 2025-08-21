@@ -216,21 +216,6 @@ resources:
       config:
         acquireTimeoutInSeconds: 60
         maxAcquireRetries: 3
-          - metric_type: responsetime
-            threshold: 1000
-            operator: ">"
-            adjustment: "+1"
-          - metric_type: cpu
-            threshold: 20
-            operator: "<"
-            adjustment: "-1"
-        schedules:
-          - recurrence: "0 8 * * 1-5"
-            min_instance_count: 2
-            max_instance_count: 10
-          - recurrence: "0 20 * * 1-5"
-            min_instance_count: 1
-            max_instance_count: 3
 
 parameters:
   deploy_mode: html5-repo
