@@ -34,7 +34,7 @@ const ENV_DEFAULTS = {
   DEFAULT_NETWORK: 'localhost',
   RPC_URL: 'http://localhost:8545',
   CHAIN_ID: '31337',
-  CORS_ALLOWED_ORIGINS: 'http://localhost:3000,http://localhost:4004,http://localhost:8080'
+  CORS_ALLOWED_ORIGINS: 'http://localhost:4004,http://localhost:8080'
 };
 
 /**

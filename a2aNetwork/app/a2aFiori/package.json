@@ -11,6 +11,10 @@
     "test": "echo \"No tests specified\"",
     "preload": "ui5 build preload --clean-dest --config ui5.yaml --all"
   },
+  "dependencies": {
+    "ws": "^8.14.2",
+    "web-push": "^3.6.6"
+  },
   "devDependencies": {
     "@ui5/cli": "^3.9.1",
     "@sap/ux-ui5-tooling": "^1.11.0",
