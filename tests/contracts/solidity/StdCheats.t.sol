@@ -9,6 +9,9 @@ contract StdCheatsTest is Test {
     Bar test;
 
     using stdJson for string;
+    
+    // Event declarations for logging
+    event log_named_uint(string key, uint256 val);
 
     function setUp() public {
         test = new Bar();

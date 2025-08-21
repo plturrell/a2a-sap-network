@@ -17,20 +17,31 @@ contract ERC721ConsecutiveTarget is StdUtils, ERC721Consecutive {
     uint256 public totalMinted = 0;
 
     constructor(address[] memory receivers, uint256[] memory batches) ERC721("", "") {
-        for (uint256 i = 0; i < batches.length; i++) {
-            address receiver = receivers[i % receivers.length];
+        uint256 batchLength = batches.length;
+        uint256 receiverLength = receivers.length;
+        for (uint256 i; i < batchLength; ++i) {
+            address receiver = receivers[i % receiverLength];
             uint96 batchSize = uint96(bound(batches[i], 0, _maxBatchSize()));
             _mintConsecutive(receiver, batchSize);
             totalMinted += batchSize;
         }
     }
 
-    function burn(uint256 tokenId) public {
+    /**
+     * @notice Burns a specific token
+     * @param tokenId The ID of the token to burn
+     */
+    function burn(uint256 tokenId) external {
         _burn(tokenId);
     }
 }
 
 contract ERC721ConsecutiveTest is Test {
+    /**
+     * @notice Tests that the balance matches the total minted tokens
+     * @param receiver The address receiving tokens
+     * @param batches Array of batch sizes to mint
+     */
     function test_balance(address receiver, uint256[] calldata batches) public {
         vm.assume(receiver != address(0));
 
@@ -39,6 +50,12 @@ contract ERC721ConsecutiveTest is Test {
         assertEq(token.balanceOf(receiver), token.totalMinted());
     }
 
+    /**
+     * @notice Tests token ownership and invalid token ID handling
+     * @param receiver The address receiving tokens
+     * @param batches Array of batch sizes to mint
+     * @param unboundedTokenId Two token IDs for testing valid and invalid cases
+     */
     function test_ownership(address receiver, uint256[] calldata batches, uint256[2] calldata unboundedTokenId) public {
         vm.assume(receiver != address(0));
 

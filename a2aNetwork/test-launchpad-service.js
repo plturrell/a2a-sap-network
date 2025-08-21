@@ -44,11 +44,15 @@ async function testLaunchpadService() {
         // Test 2: getAgentStatus
         console.log('🧪 Test 2: getAgentStatus');
         try {
-            const agentStatus = await LaunchpadService.send({
-                query: 'getAgentStatus',
-                data: { agentId: 0 }
+            const response = await fetch(`${url}/odata/v4/launchpad/getAgentStatus`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ agentId: 0 })
             });
             
+            const agentStatus = await response.json();
             console.log('✅ Agent Status Response:');
             console.log(JSON.stringify(agentStatus, null, 2));
         } catch (error) {
@@ -60,11 +64,15 @@ async function testLaunchpadService() {
         // Test 3: getBlockchainStats
         console.log('🧪 Test 3: getBlockchainStats');
         try {
-            const blockchainStats = await LaunchpadService.send({
-                query: 'getBlockchainStats',
-                data: { id: 'blockchain_dashboard' }
+            const response = await fetch(`${url}/odata/v4/launchpad/getBlockchainStats`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: 'blockchain_dashboard' })
             });
             
+            const blockchainStats = await response.json();
             console.log('✅ Blockchain Stats Response:');
             console.log(JSON.stringify(blockchainStats, null, 2));
         } catch (error) {
@@ -76,11 +84,15 @@ async function testLaunchpadService() {
         // Test 4: getServicesCount
         console.log('🧪 Test 4: getServicesCount');
         try {
-            const servicesCount = await LaunchpadService.send({
-                query: 'getServicesCount',
-                data: {}
+            const response = await fetch(`${url}/odata/v4/launchpad/getServicesCount`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
             });
             
+            const servicesCount = await response.json();
             console.log('✅ Services Count Response:');
             console.log(JSON.stringify(servicesCount, null, 2));
         } catch (error) {
@@ -92,11 +104,15 @@ async function testLaunchpadService() {
         // Test 5: getHealthSummary
         console.log('🧪 Test 5: getHealthSummary');
         try {
-            const healthSummary = await LaunchpadService.send({
-                query: 'getHealthSummary',
-                data: {}
+            const response = await fetch(`${url}/odata/v4/launchpad/getHealthSummary`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
             });
             
+            const healthSummary = await response.json();
             console.log('✅ Health Summary Response:');
             console.log(JSON.stringify(healthSummary, null, 2));
         } catch (error) {

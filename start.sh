@@ -762,7 +762,7 @@ start_network() {
     npm run build > "$LOG_DIR/cds-build.log" 2>&1 || log_warning "CDS build failed, continuing anyway"
     
     log_info "Initializing database..."
-    if [ "$NODE_ENV" = "production" ] && [ -n "$HANA_HOST" ]; then
+    if [ "$NODE_ENV" = "production" ] && [ -n "${HANA_HOST:-}" ]; then
         log_info "Deploying to HANA database..."
         npm run db:migrate > "$LOG_DIR/db-deploy.log" 2>&1 || log_warning "HANA database deployment failed"
     else
@@ -781,7 +781,7 @@ start_network() {
     export CDS_ENV=development
     
     # Set database configuration based on environment
-    if [ "$NODE_ENV" = "production" ] && [ -n "$HANA_HOST" ]; then
+    if [ "$NODE_ENV" = "production" ] && [ -n "${HANA_HOST:-}" ]; then
         export CDS_REQUIRES_DB_KIND=hana-cloud
         export CDS_REQUIRES_DB_CREDENTIALS_HOST=$HANA_HOST
         export CDS_REQUIRES_DB_CREDENTIALS_PORT=${HANA_PORT:-30015}
@@ -1398,7 +1398,7 @@ start_notification_system() {
     log_info "Starting Integrated Notification System..."
     
     # Set required environment variables for notifications
-    export NOTIFICATION_PORT=${NOTIFICATION_PORT:-8022}
+    export NOTIFICATION_PORT=${NOTIFICATION_PORT:-4006}
     export A2A_NOTIFICATION_URL="http://localhost:$NOTIFICATION_PORT"
     
     # Start the notification system with proper environment
@@ -1416,7 +1416,7 @@ start_notification_system() {
         node srv/startRealNotificationSystem.js > "$LOG_DIR/notification-system.log" 2>&1 &
     
     local notification_pid=$!
-    echo $notification_pid > "$PID_DIR/notification.pid"
+    echo $notification_pid > "$PID_DIR/notification-system.pid"
     
     # Wait for notification system to initialize
     log_info "Waiting for notification system to initialize..."
@@ -1719,6 +1719,9 @@ show_status() {
     if [ -f "$PID_DIR/frontend.pid" ]; then
     echo "║  🖥️  Frontend UI:        http://localhost:3000                               ║"
     fi
+    if [ -f "$PID_DIR/notification-system.pid" ]; then
+    echo "║  🔔 Notifications:      ws://localhost:4006/notifications/v2                ║"
+    fi
     if [ -f "$PID_DIR/mcp-enhanced-test.pid" ]; then
     echo "║  📡 MCP Servers:        http://localhost:8100-8109 (10 servers)             ║"
     fi
@@ -1775,7 +1778,7 @@ cleanup() {
     done
     
     # Stop any remaining Python processes on agent ports and new service ports
-    for port in {8000..8015} 8020 8080 8089 8090 8091 3000 3001; do
+    for port in {8000..8015} 8020 8080 8089 8090 8091 3000 3001 4006; do
         local pid=$(lsof -ti :$port 2>/dev/null)
         if [ ! -z "$pid" ]; then
             log_info "Stopping process on port $port"
