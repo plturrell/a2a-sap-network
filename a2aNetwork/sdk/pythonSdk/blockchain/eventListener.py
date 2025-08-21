@@ -345,7 +345,7 @@ class MessageEventListener:
             
             # Sign and send
             signed_txn = self.blockchain_client.agent_identity.account.sign_transaction(transaction)
-            tx_hash = self.blockchain_client.web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            tx_hash = self.blockchain_client.web3.eth.send_raw_transaction(signed_txn.raw_transaction)
             
             # Wait for confirmation
             receipt = self.blockchain_client.web3.eth.wait_for_transaction_receipt(tx_hash)

@@ -84,8 +84,9 @@ contract AgentRegistryUpgradeable is Initializable, UUPSUpgradeable, OwnableUpgr
      * @param initialOwner The address that will own the contract
      */
     function initialize(address initialOwner) public initializer {
-        __Ownable_init(initialOwner);
+        __Ownable_init();
         __UUPSUpgradeable_init();
+        _transferOwnership(initialOwner);
 
         AgentRegistryStorage storage $ = _getAgentRegistryStorage();
         $.paused = false;

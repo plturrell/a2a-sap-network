@@ -1,0 +1,170 @@
+<mvc:View
+    controllerName="a2a.network.fiori.controller.agentDetails"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.f"
+    xmlns:card="sap.f.cards"
+    xmlns:microchart="sap.suite.ui.microchart"
+    displayBlock="true">
+    
+    <Page
+        id="agentDetailsPage"
+        title="{/agent/name}"
+        showNavButton="true"
+        navButtonPress=".onNavBack"
+        class="sapUiContentPadding">
+        
+        <headerContent>
+            <Button icon="sap-icon://refresh" press=".onRefresh" tooltip="Refresh" />
+            <Button icon="sap-icon://action-settings" press=".onConfigureAgent" tooltip="Configure" />
+        </headerContent>
+        
+        <content>
+            <f:GridContainer>
+                <!-- Agent Status Card -->
+                <f:Card>
+                    <f:header>
+                        <card:Header
+                            title="Agent Status"
+                            subtitle="{/agent/type} - Port {/agent/port}"
+                            iconSrc="{/agent/icon}"
+                            iconDisplayShape="Circle"
+                            iconBackgroundColor="{/agent/color}"/>
+                    </f:header>
+                    <f:content>
+                        <VBox class="sapUiMediumMargin">
+                            <ObjectStatus
+                                title="Status"
+                                text="{= ${/agent/status} === 'healthy' ? 'Online' : ${/agent/status} === 'error' ? 'Error' : 'Offline' }"
+                                state="{= ${/agent/status} === 'healthy' ? 'Success' : ${/agent/status} === 'error' ? 'Error' : 'None' }"
+                                icon="{= ${/agent/status} === 'healthy' ? 'sap-icon://sys-enter-2' : 'sap-icon://sys-cancel-2' }"/>
+                            
+                            <HBox class="sapUiSmallMarginTop">
+                                <Label text="Uptime:" class="sapUiSmallMarginEnd"/>
+                                <Text text="{/agent/uptime}%" />
+                            </HBox>
+                            
+                            <HBox class="sapUiMediumMarginTop" justifyContent="SpaceEvenly">
+                                <Button text="Start" type="Accept" press=".onStartAgent" enabled="{= ${/agent/status} !== 'healthy' }" />
+                                <Button text="Stop" type="Reject" press=".onStopAgent" enabled="{= ${/agent/status} === 'healthy' }" />
+                                <Button text="Restart" type="Emphasized" press=".onRestartAgent" />
+                            </HBox>
+                        </VBox>
+                    </f:content>
+                </f:Card>
+                
+                <!-- Performance Metrics Card -->
+                <f:Card>
+                    <f:header>
+                        <card:Header title="Performance Metrics" subtitle="Last 24 hours"/>
+                    </f:header>
+                    <f:content>
+                        <VBox class="sapUiMediumMargin">
+                            <microchart:RadialMicroChart
+                                size="M"
+                                percentage="{/performance/successRate}"
+                                class="sapUiSmallMarginBottom">
+                                <microchart:target>
+                                    <microchart:RadialMicroChartLabel>
+                                        <microchart:label>Success Rate</microchart:label>
+                                    </microchart:RadialMicroChartLabel>
+                                </microchart:target>
+                            </microchart:RadialMicroChart>
+                            
+                            <FlexBox justifyContent="SpaceBetween" class="sapUiTinyMarginTop">
+                                <VBox>
+                                    <Label text="Total Tasks:" design="Bold"/>
+                                    <Text text="{/performance/totalTasks}" />
+                                </VBox>
+                                <VBox>
+                                    <Label text="Avg Response:" design="Bold"/>
+                                    <Text text="{/performance/avgResponseTime}ms" />
+                                </VBox>
+                                <VBox>
+                                    <Label text="Reputation:" design="Bold"/>
+                                    <Text text="{/performance/reputation}" />
+                                </VBox>
+                            </FlexBox>
+                        </VBox>
+                    </f:content>
+                </f:Card>
+                
+                <!-- Recent Tasks Card -->
+                <f:Card>
+                    <f:header>
+                        <card:Header title="Recent Tasks" subtitle="Last 10 tasks"/>
+                    </f:header>
+                    <f:content>
+                        <List items="{/tasks}" mode="None">
+                            <StandardListItem
+                                title="{name}"
+                                description="Duration: {duration}"
+                                info="{
+                                    path: 'timestamp',
+                                    formatter: '.formatTimestamp'
+                                }"
+                                infoState="{= ${status} === 'completed' ? 'Success' : ${status} === 'failed' ? 'Error' : 'Warning' }"
+                                icon="{= ${status} === 'completed' ? 'sap-icon://accept' : ${status} === 'failed' ? 'sap-icon://error' : 'sap-icon://pending' }"/>
+                        </List>
+                        
+                        <Button text="View All Tasks" type="Transparent" press=".onViewLogs" class="sapUiSmallMargin"/>
+                    </f:content>
+                </f:Card>
+                
+                <!-- Agent Interactions Card -->
+                <f:Card>
+                    <f:header>
+                        <card:Header title="Agent Interactions" subtitle="Recent communications"/>
+                    </f:header>
+                    <f:content>
+                        <List items="{/interactions}" mode="None">
+                            <StandardListItem
+                                title="{partner}"
+                                description="{type}: {message}"
+                                info="{time}"
+                                icon="sap-icon://discussion-2"/>
+                        </List>
+                    </f:content>
+                </f:Card>
+                
+                <!-- Quick Actions Card -->
+                <f:Card>
+                    <f:header>
+                        <card:Header title="Quick Actions"/>
+                    </f:header>
+                    <f:content>
+                        <VBox class="sapUiMediumMargin">
+                            <Button text="View Logs" icon="sap-icon://activity-items" type="Transparent" press=".onViewLogs" width="100%" class="sapUiTinyMarginBottom"/>
+                            <Button text="Performance History" icon="sap-icon://line-chart" type="Transparent" width="100%" class="sapUiTinyMarginBottom"/>
+                            <Button text="Dependencies" icon="sap-icon://org-chart" type="Transparent" width="100%" class="sapUiTinyMarginBottom"/>
+                            <Button text="API Documentation" icon="sap-icon://document-text" type="Transparent" width="100%" class="sapUiTinyMarginBottom"/>
+                            <Button text="Export Metrics" icon="sap-icon://download" type="Transparent" width="100%"/>
+                        </VBox>
+                    </f:content>
+                </f:Card>
+                
+                <!-- Agent Configuration Card -->
+                <f:Card>
+                    <f:header>
+                        <card:Header title="Configuration" subtitle="Agent settings"/>
+                    </f:header>
+                    <f:content>
+                        <VBox class="sapUiMediumMargin">
+                            <Label text="Endpoint:" design="Bold"/>
+                            <Text text="http://localhost:{/agent/port}" class="sapUiSmallMarginBottom"/>
+                            
+                            <Label text="Protocol Version:" design="Bold"/>
+                            <Text text="A2A v0.2.9" class="sapUiSmallMarginBottom"/>
+                            
+                            <Label text="MCP Integration:" design="Bold"/>
+                            <Text text="Enabled" class="sapUiSmallMarginBottom"/>
+                            
+                            <Button text="Advanced Settings" icon="sap-icon://settings" press=".onConfigureAgent" type="Emphasized"/>
+                        </VBox>
+                    </f:content>
+                </f:Card>
+            </f:GridContainer>
+        </content>
+    </Page>
+</mvc:View>

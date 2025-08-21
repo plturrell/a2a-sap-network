@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
     
     # Initialize trust system
     try:
-        from a2a.security.smartContractTrust import SmartContractTrust
+        from ..trustSystem.smartContractTrust import SmartContractTrust
         trust_system = SmartContractTrust()
         print("✅ Trust system initialized")
     except Exception as e:
@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
     try:
         # Import locally to avoid circular imports
         sys.path.append(current_dir)
-        from service import A2ARegistryService
+        from .service import A2ARegistryService
         
         registry_service = A2ARegistryService(
             enable_trust_integration=(trust_system is not None)
@@ -77,7 +77,7 @@ async def register_blockchain_agents():
     AGENT2_ADDRESS = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
     
     try:
-        from models import (
+        from .models import (
             AgentRegistrationRequest, AgentCard, AgentProvider, 
             AgentCapabilities, AgentSkill
         )
@@ -254,7 +254,7 @@ async def list_agents(registry: object = Depends(get_registry)):
 async def search_agents(request: dict, registry: object = Depends(get_registry)):
     """Search agents with trust-aware ranking"""
     try:
-        from models import AgentSearchRequest
+        from .models import AgentSearchRequest
         search_request = AgentSearchRequest(**request)
         results = await registry.search_agents(search_request)
         return results
@@ -265,7 +265,7 @@ async def search_agents(request: dict, registry: object = Depends(get_registry))
 async def match_workflow(request: dict, registry: object = Depends(get_registry)):
     """Match agents for workflow with trust filtering"""
     try:
-        from models import WorkflowMatchRequest
+        from .models import WorkflowMatchRequest
         workflow_request = WorkflowMatchRequest(**request)
         results = await registry.match_workflow_agents(workflow_request)
         return results

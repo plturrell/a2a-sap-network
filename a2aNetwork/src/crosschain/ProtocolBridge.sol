@@ -6,7 +6,7 @@ import "../MessageRouter.sol";
 import "../MultiSigPausable.sol";
 import "./MessageTranslator.sol";
 import "./ExternalProtocolOracle.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /**
  * @title ProtocolBridge

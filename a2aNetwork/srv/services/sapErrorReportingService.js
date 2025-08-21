@@ -17,7 +17,7 @@ class ErrorReportingService {
         this.errorStore = new Map();
         this.errorStats = {
             total: 0,
-            byCategory: {\n        this.intervals = new Map(); // Track intervals for cleanup},
+            byCategory: {},
             byComponent: {},
             byUser: {},
             bySeverity: {
@@ -37,9 +37,11 @@ class ErrorReportingService {
         };
         
         this.logger = loggingService.child('error-reporting');
+        this.intervals = new Map(); // Track intervals for cleanup
         
         // Clean up old errors every hour
-        this.intervals.set('interval_42', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => this._cleanupOldErrors(), 3600000));
+        const cleanupInterval = setInterval(() => this._cleanupOldErrors(), 3600000);
+        this.intervals.set('cleanup', cleanupInterval);
     }
 
     /**

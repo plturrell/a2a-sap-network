@@ -2,7 +2,6 @@ const { ethers } = require('ethers');
 const fs = require('fs');
 const path = require('path');
 
-async async function deployTestContracts() {
 (async () => {
     console.log('🚀 Deploying test contracts to local blockchain...');
     

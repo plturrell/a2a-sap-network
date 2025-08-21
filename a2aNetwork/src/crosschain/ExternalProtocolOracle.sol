@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import "../MultiSigPausable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /**
  * @title ExternalProtocolOracle

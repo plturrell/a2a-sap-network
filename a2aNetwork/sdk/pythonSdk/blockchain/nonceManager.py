@@ -246,7 +246,7 @@ class TransactionManager:
                 signed_txn = account.sign_transaction(transaction)
                 
                 # Submit to blockchain
-                tx_hash = self.web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+                tx_hash = self.web3.eth.send_raw_transaction(signed_txn.raw_transaction)
                 
                 # Track transaction
                 self.pending_transactions[tx_hash.hex()] = {

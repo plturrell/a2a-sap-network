@@ -17,7 +17,8 @@ class GrokSealAdapter extends BaseService {
         this.performanceMetrics = new Map();
         this.learningMemory = new Map();
         this.selfEditStrategies = new Set();
-    \n        this.intervals = new Map(); // Track intervals for cleanup}
+    
+        this.intervals = new Map(); // Track intervals for cleanup
 
     /**
      * Initialize SEAL adapter with Grok integration
@@ -496,13 +497,14 @@ Format as actionable JSON strategy.
      */
     _startContinuousLearning() {
         // Run learning evaluation every hour
-        this.intervals.set('interval_499', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(async () => {
+        const learningInterval = setInterval(async () => {
             try {
                 await this._performContinuousLearning();
             } catch (error) {
-                this.logger.error('Continuous learning iteration failed:', error));
+                this.logger.error('Continuous learning iteration failed:', error);
             }
         }, 3600000); // 1 hour
+        this.intervals.set('continuous_learning', learningInterval);
     }
 
     /**

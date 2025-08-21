@@ -1,0 +1,82 @@
+[MASTER]
+# Specify a configuration file.
+#rcfile=
+
+# Python code to execute
+init-hook='import sys; sys.path.append(".")'
+
+# Add files or directories to the blacklist
+ignore=CVS,node_modules,lib,scripts,deployment,app,srv,db,contracts,test,tests,docs,data
+
+# Pickle collected data for later comparisons.
+persistent=yes
+
+# List of plugins
+load-plugins=
+
+[MESSAGES CONTROL]
+# Disable specific warnings
+disable=
+    C0114,  # missing-module-docstring
+    C0115,  # missing-class-docstring  
+    C0116,  # missing-function-docstring
+    R0903,  # too-few-public-methods
+    R0913,  # too-many-arguments
+    R0914,  # too-many-locals
+    W1203,  # logging-fstring-interpolation (use f-strings in logs is fine)
+    E1101,  # no-member (for Pydantic/Enum false positives)
+    E1120,  # no-value-for-parameter (false positives with class methods)
+    E0611,  # no-name-in-module (false positives with dynamic imports)
+    E0401,  # import-error (missing optional dependencies)
+    R0902,  # too-many-instance-attributes
+    C0103,  # invalid-name (for module names)
+    W0613,  # unused-argument (many interface methods have unused args)
+    W0707,  # raise-missing-from (exception chaining not always needed)
+    W0603,  # global-statement (singletons and factory patterns need globals)
+    W0621,  # redefined-outer-name (common in imports and factory patterns)
+    W0511,  # fixme (TODO comments are fine during development)
+    W0212,  # protected-access (sometimes needed for testing/integration)
+    W0631,  # undefined-loop-variable (false positive in specific scoping)
+    W0105,  # pointless-string-statement (docstrings in functions)
+    W0719,  # broad-exception-raised (defensive coding)
+    W0108,  # unnecessary-lambda (lambda needed for specific use cases)
+    W0612,  # unused-variable (variables in loops and unpacking)
+    W1309,  # f-string-without-interpolation (consistent string formatting)
+    W0718,  # broad-exception-caught (defensive coding in distributed systems)
+    W1514,  # unspecified-encoding (many files don't specify encoding)
+    W0611,  # unused-import (imports used by type checkers or future features)
+    W0404,  # reimported (conditional imports and local scoping)
+    W0702,  # bare-except (defensive exception handling)
+    W0602,  # global-variable-not-assigned (global declarations without assignment)
+
+[FORMAT]
+# Maximum number of characters on a single line.
+max-line-length=100
+
+# String used as indentation unit
+indent-string='    '
+
+[DESIGN]
+# Maximum number of attributes for a class
+max-attributes=15
+
+# Maximum number of arguments for function / method
+max-args=10
+
+# Maximum number of return statements in function / method body
+max-returns=10
+
+[IMPORTS]
+# List of modules that can be imported at any level
+allow-any-import-level=
+
+[CLASSES]
+# List of valid names for the first argument in a class method.
+valid-classmethod-first-arg=cls
+
+# List of valid names for the first argument in a metaclass class method.
+valid-metaclass-classmethod-first-arg=cls
+
+[EXCEPTIONS]
+# Exceptions that will emit a warning when being caught
+overgeneral-exceptions=builtins.Exception

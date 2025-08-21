@@ -31,7 +31,8 @@ class SapSealGovernance extends BaseService {
         this.riskMatrices = new Map();
         this.mitigationStrategies = new Map();
         this.incidentHistory = [];
-    \n        this.intervals = new Map(); // Track intervals for cleanup}
+    
+        this.intervals = new Map(); // Track intervals for cleanup
 
     /**
      * Initialize SAP SEAL Governance

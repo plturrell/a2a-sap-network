@@ -41,7 +41,9 @@ class TraceManager {
             activeTraces: 0,
             averageResponseTime: 0,
             errorRate: 0
-        \n        this.intervals = new Map(); // Track intervals for cleanup};
+        };
+        
+        this.intervals = new Map(); // Track intervals for cleanup
         
         // Start cleanup interval
         this.startCleanupInterval();
@@ -385,9 +387,10 @@ class TraceManager {
      * Start cleanup interval to manage memory
      */
     startCleanupInterval() {
-        this.intervals.set('interval_388', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => {
+        const cleanupInterval = setInterval(() => {
             this.cleanupOldTraces();
-        }, 60 * 60 * 1000)); // Run every hour
+        }, 60 * 60 * 1000); // Run every hour
+        this.intervals.set('trace_cleanup', cleanupInterval);
     }
 
     /**

@@ -17,7 +17,9 @@ class CacheService {
             misses: 0,
             evictions: 0,
             totalRequests: 0
-        \n        this.intervals = new Map(); // Track intervals for cleanup};
+        };
+        
+        this.intervals = new Map(); // Track intervals for cleanup
         
         // Default cache settings
         this.defaultTTL = 5 * 60 * 1000; // 5 minutes

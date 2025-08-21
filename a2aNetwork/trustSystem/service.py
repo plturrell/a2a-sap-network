@@ -59,7 +59,7 @@ class TrustSystemService:
                 raise ValueError("A2A Registry service is required for agent registration")
             
             # Create proper AgentRegistrationRequest for A2A Registry
-            from app.a2a_registry.models import AgentRegistrationRequest, AgentCard
+            from ..registry.models import AgentRegistrationRequest, AgentCard
             
             # Convert dict to AgentCard if needed
             agent_card = request.agent_card
@@ -210,7 +210,7 @@ class TrustSystemService:
                 raise ValueError("A2A Registry service is required for workflow creation")
             
             # Create proper WorkflowPlanRequest for A2A Registry
-            from app.a2a_registry.models import WorkflowPlanRequest, WorkflowPlanStage
+            from ..registry.models import WorkflowPlanRequest, WorkflowPlanStage
             
             # Convert workflow definition to WorkflowPlanRequest format
             stages = []

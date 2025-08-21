@@ -64,6 +64,9 @@ class A2AService extends BaseApplicationService {
     this.on('calculateReputation', req => this._calculateReputation(req))
     this.on('deployContract', req => this._deployContract(req))
     this.on('syncBlockchain', req => this._syncBlockchain(req))
+    
+    // SAP Fiori Launchpad tile data handlers - Real data only
+    require('./launchpadService').call(this)
 
     // Initialize extracted modules
     this[$workflowExecutor] = new WorkflowExecutor()

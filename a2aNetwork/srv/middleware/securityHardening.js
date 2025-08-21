@@ -89,22 +89,24 @@ class ProductionSecurityManager {
         this.securityEvents = [];
         this.blockedIPs = new Map();
         this.suspiciousPatterns = new Map();
+        this.intervals = new Map(); // Track intervals for cleanup
         this.initializeSecurityMonitoring();
-    \n        this.intervals = new Map(); // Track intervals for cleanup}
     
     /**
      * Initialize security monitoring
      */
     initializeSecurityMonitoring() {
         // Monitor for suspicious patterns
-        this.intervals.set('interval_100', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => {
+        const suspiciousInterval = setInterval(() => {
             this.analyzeSuspiciousPatterns();
-        }, 60000)); // Every minute
+        }, 60000); // Every minute
+        this.intervals.set('suspicious_patterns', suspiciousInterval);
         
         // Clean up old blocks
-        this.intervals.set('interval_105', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => {
+        const cleanupInterval = setInterval(() => {
             this.cleanupBlockedIPs();
-        }, 300000)); // Every 5 minutes
+        }, 300000); // Every 5 minutes
+        this.intervals.set('blocked_ips_cleanup', cleanupInterval);
     }
     
     /**

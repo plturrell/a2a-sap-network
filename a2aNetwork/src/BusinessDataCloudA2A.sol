@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import "./AgentRegistry.sol";
 import "./MessageRouter.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /**

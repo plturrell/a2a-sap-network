@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A2A Network - SAP Fiori Launchpad</title>
+
+    <!-- Development Mode Launchpad Configuration -->
+    <script>
+        // Development mode configuration
+        window["sap-ushell-config"] = {
+            defaultRenderer: "fiori2",
+            renderers: {
+                fiori2: {
+                    componentData: {
+                        config: {
+                            enableSearch: true,
+                            enablePersonalization: true,
+                            enableTagFiltering: false,
+                            enableCatalogTagFilter: false,
+                            enableAbout: true,
+                            enableUserDefaultParameters: true,
+                            disableSortedLockedGroups: false,
+                            enableTileActionsIcon: true,
+                            enableSetTheme: true,
+                            enableAccessibility: true,
+                            enableHelp: true,
+                            enableUserImage: false,
+                            enableBackGroundShapes: true,
+                            animationMode: "minimal",
+                            sessionTimeoutReminderInMinutes: 60,
+                            sessionTimeoutIntervalInMinutes: 120,
+                            sessionTimeoutTileStopRefreshIntervalInMinutes: 90,
+                            rootIntent: "Shell-home",
+                            preloadLibrariesForRootIntent: false,
+                            enableNotificationsUI: true,
+                            logo: "/resources/sap/ui/core/mimes/logo/sap_55x27.png",
+                            title: "A2A Network",
+                            moveAppFinderActionToShellHeader: true
+                        }
+                    }
+                }
+            },
+            applications: {
+                "Shell-home": {
+                    productSwitch: true
+                }
+            },
+            services: {
+                LaunchPage: {
+                    adapter: {
+                        config: {
+                            groups: [
+                                {
+                                    id: "core_processing_agents",
+                                    title: "Core Processing Agents",
+                                    isPreset: true,
+                                    isVisible: true,
+                                    isGroupLocked: false,
+                                    tiles: [
+                                        {
+                                            id: "agent0_data_product",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "Data Product Agent",
+                                                subtitle: "Port 8000",
+                                                icon: "sap-icon://product",
+                                                targetURL: "#A2ANetwork-agent&/agent/0",
+                                                info: "Data Operations",
+                                                serviceUrl: "/api/v1/agents/0/status",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        },
+                                        {
+                                            id: "agent1_standardization",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "Data Standardization",
+                                                subtitle: "Port 8001",
+                                                icon: "sap-icon://synchronize",
+                                                targetURL: "#A2ANetwork-agent&/agent/1",
+                                                info: "Standardization",
+                                                serviceUrl: "/api/v1/agents/1/status",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        },
+                                        {
+                                            id: "agent2_ai_preparation",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "AI Preparation",
+                                                subtitle: "Port 8002",
+                                                icon: "sap-icon://artificial-intelligence",
+                                                targetURL: "#A2ANetwork-agent&/agent/2",
+                                                info: "AI Processing",
+                                                serviceUrl: "/api/v1/agents/2/status",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        },
+                                        {
+                                            id: "agent3_vector_processing",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "Vector Processing",
+                                                subtitle: "Port 8003",
+                                                icon: "sap-icon://scatter-chart",
+                                                targetURL: "#A2ANetwork-agent&/agent/3",
+                                                info: "Vector Operations",
+                                                serviceUrl: "/api/v1/agents/3/status",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        },
+                                        {
+                                            id: "agent4_calc_validation",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "Calc Validation",
+                                                subtitle: "Port 8004",
+                                                icon: "sap-icon://validate",
+                                                targetURL: "#A2ANetwork-agent&/agent/4",
+                                                info: "Validation",
+                                                serviceUrl: "/api/v1/agents/4/status",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        },
+                                        {
+                                            id: "agent5_qa_validation",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "QA Validation",
+                                                subtitle: "Port 8005",
+                                                icon: "sap-icon://quality-issue",
+                                                targetURL: "#A2ANetwork-agent&/agent/5",
+                                                info: "Quality Assurance",
+                                                serviceUrl: "/api/v1/agents/5/status",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    id: "management_control_agents",
+                                    title: "Management & Control Agents",
+                                    isPreset: true,
+                                    isVisible: true,
+                                    isGroupLocked: false,
+                                    tiles: [
+                                        {
+                                            id: "agent6_quality_control",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "Quality Control Manager",
+                                                subtitle: "Port 8006",
+                                                icon: "sap-icon://process",
+                                                targetURL: "#A2ANetwork-agent&/agent/6",
+                                                info: "Quality Management",
+                                                serviceUrl: "/api/v1/agents/6/status",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        },
+                                        {
+                                            id: "agent7_agent_manager",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "Agent Manager",
+                                                subtitle: "Port 8007",
+                                                icon: "sap-icon://org-chart",
+                                                targetURL: "#A2ANetwork-agent&/agent/7",
+                                                info: "Agent Orchestration",
+                                                serviceUrl: "/api/v1/agents/7/status",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        },
+                                        {
+                                            id: "agent8_data_manager",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "Data Manager",
+                                                subtitle: "Port 8008",
+                                                icon: "sap-icon://database",
+                                                targetURL: "#A2ANetwork-agent&/agent/8",
+                                                info: "Data Management",
+                                                serviceUrl: "/api/v1/agents/8/status",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        },
+                                        {
+                                            id: "agent9_reasoning",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "Reasoning Agent",
+                                                subtitle: "Port 8009",
+                                                icon: "sap-icon://decision",
+                                                targetURL: "#A2ANetwork-agent&/agent/9",
+                                                info: "Advanced Inference",
+                                                serviceUrl: "/api/v1/agents/9/status",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    id: "specialized_agents",
+                                    title: "Specialized Agents",
+                                    isPreset: true,
+                                    isVisible: true,
+                                    isGroupLocked: false,
+                                    tiles: [
+                                        {
+                                            id: "agent10_calculation",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "Calculation Agent",
+                                                subtitle: "Port 8010",
+                                                icon: "sap-icon://sum",
+                                                targetURL: "#A2ANetwork-agent&/agent/10",
+                                                info: "Math Operations",
+                                                serviceUrl: "/api/v1/agents/10/status",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        },
+                                        {
+                                            id: "agent11_sql",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "SQL Agent",
+                                                subtitle: "Port 8011",
+                                                icon: "sap-icon://table-view",
+                                                targetURL: "#A2ANetwork-agent&/agent/11",
+                                                info: "Database Queries",
+                                                serviceUrl: "/api/v1/agents/11/status",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        },
+                                        {
+                                            id: "agent12_catalog_manager",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "Catalog Manager",
+                                                subtitle: "Port 8012",
+                                                icon: "sap-icon://course-book",
+                                                targetURL: "#A2ANetwork-agent&/agent/12",
+                                                info: "ORD Registry",
+                                                serviceUrl: "/api/v1/agents/12/status",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        },
+                                        {
+                                            id: "agent13_agent_builder",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "Agent Builder",
+                                                subtitle: "Port 8013",
+                                                icon: "sap-icon://build",
+                                                targetURL: "#A2ANetwork-agent&/agent/13",
+                                                info: "Template Management",
+                                                serviceUrl: "/api/v1/agents/13/status",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        },
+                                        {
+                                            id: "agent14_embedding_tuner",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "Embedding Fine-Tuner",
+                                                subtitle: "Port 8014",
+                                                icon: "sap-icon://machine-learning",
+                                                targetURL: "#A2ANetwork-agent&/agent/14",
+                                                info: "ML Training",
+                                                serviceUrl: "/api/v1/agents/14/status",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        },
+                                        {
+                                            id: "agent15_orchestrator",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "Orchestrator Agent",
+                                                subtitle: "Port 8015",
+                                                icon: "sap-icon://workflow-tasks",
+                                                targetURL: "#A2ANetwork-agent&/agent/15",
+                                                info: "Workflow Control",
+                                                serviceUrl: "/api/v1/agents/15/status",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    id: "system_overview_group",
+                                    title: "System Overview",
+                                    isPreset: true,
+                                    isVisible: true,
+                                    isGroupLocked: false,
+                                    tiles: [
+                                        {
+                                            id: "network_dashboard",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "Network Dashboard",
+                                                subtitle: "System Overview",
+                                                icon: "sap-icon://dashboard",
+                                                targetURL: "#A2ANetwork-manage&/dashboard",
+                                                info: "Real-time Metrics",
+                                                serviceUrl: "/api/v1/network/overview",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        },
+                                        {
+                                            id: "blockchain_monitor",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "Blockchain Monitor",
+                                                subtitle: "Chain Status",
+                                                icon: "sap-icon://chain-link",
+                                                targetURL: "#A2ANetwork-manage&/blockchain",
+                                                info: "Block Explorer",
+                                                serviceUrl: "/api/v1/blockchain/status",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        },
+                                        {
+                                            id: "service_marketplace",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "Service Marketplace",
+                                                subtitle: "Available Services",
+                                                icon: "sap-icon://retail-store",
+                                                targetURL: "#A2ANetwork-manage&/marketplace",
+                                                info: "Browse Services",
+                                                serviceUrl: "/api/v1/services/count",
+                                                serviceRefreshInterval: 60
+                                            }
+                                        },
+                                        {
+                                            id: "system_health",
+                                            tileType: "sap.ushell.ui.tile.DynamicTile",
+                                            properties: {
+                                                title: "System Health",
+                                                subtitle: "Performance Monitor",
+                                                icon: "sap-icon://stethoscope",
+                                                targetURL: "#A2ANetwork-manage&/health",
+                                                info: "Health Status",
+                                                serviceUrl: "/api/v1/health/summary",
+                                                serviceRefreshInterval: 30
+                                            }
+                                        }
+                                    ]
+                                }
+                            ],
+                            catalogs: []
+                        }
+                    }
+                },
+                NavTargetResolution: {
+                    adapter: {
+                        config: {
+                            applications: {
+                                "A2ANetwork-manage": {
+                                    sap: {
+                                        app: {
+                                            id: "a2a.network.fiori",
+                                            applicationVersion: {
+                                                version: "2.0.0"
+                                            },
+                                            title: "A2A Network Management",
+                                            subTitle: "Agent Ecosystem Control",
+                                            shortTitle: "A2A Network",
+                                            info: "Manage all 16 A2A agents"
+                                        },
+                                        ui: {
+                                            technology: "UI5",
+                                            icons: {
+                                                icon: "sap-icon://network-settings"
+                                            },
+                                            deviceTypes: {
+                                                desktop: true,
+                                                tablet: true,
+                                                phone: true
+                                            }
+                                        },
+                                        ui5: {
+                                            componentName: "a2a.network.fiori"
+                                        },
+                                        flp: {
+                                            type: "application"
+                                        }
+                                    },
+                                    url: "./a2aFiori/webapp/",
+                                    applicationType: "URL",
+                                    navigationMode: "embedded"
+                                },
+                                "A2ANetwork-agent": {
+                                    sap: {
+                                        app: {
+                                            id: "a2a.network.agent",
+                                            applicationVersion: {
+                                                version: "2.0.0"
+                                            },
+                                            title: "Agent Details",
+                                            subTitle: "Individual Agent View",
+                                            shortTitle: "Agent View"
+                                        },
+                                        ui: {
+                                            technology: "UI5",
+                                            icons: {
+                                                icon: "sap-icon://employee"
+                                            },
+                                            deviceTypes: {
+                                                desktop: true,
+                                                tablet: true,
+                                                phone: true
+                                            }
+                                        },
+                                        ui5: {
+                                            componentName: "a2a.network.fiori"
+                                        },
+                                        flp: {
+                                            type: "application"
+                                        }
+                                    },
+                                    url: "./a2aFiori/webapp/",
+                                    applicationType: "URL",
+                                    navigationMode: "embedded"
+                                }
+                            }
+                        }
+                    }
+                },
+                ClientSideTargetResolution: {
+                    adapter: {
+                        config: {
+                            applications: {
+                                "A2ANetwork-manage": {
+                                    sap: {
+                                        app: {
+                                            id: "a2a.network.fiori",
+                                            applicationVersion: {
+                                                version: "1.0.0-dev"
+                                            }
+                                        },
+                                        flp: {
+                                            type: "application"
+                                        }
+                                    },
+                                    url: "./a2aFiori/webapp/",
+                                    applicationType: "URL"
+                                }
+                            }
+                        }
+                    }
+                },
+                UserInfo: {
+                    adapter: {
+                        config: {
+                            themes: [
+                                { id: "sap_horizon", name: "SAP Horizon" },
+                                { id: "sap_horizon_dark", name: "SAP Horizon Dark" },
+                                { id: "sap_fiori_3", name: "SAP Quartz Light" },
+                                { id: "sap_fiori_3_dark", name: "SAP Quartz Dark" }
+                            ]
+                        }
+                    }
+                }
+            }
+        };
+
+        // Development mode flag
+        window.A2A_DEV_MODE = true;
+    </script>
+
+    <!-- UI5 Bootstrap -->
+    <script
+        id="sap-ui-bootstrap"
+        src="https://ui5.sap.com/1.120.0/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-compatVersion="edge"
+        data-sap-ui-frameOptions="allow"
+        data-sap-ui-async="true"
+        data-sap-ui-preload=""
+        data-sap-ui-logLevel="INFO"
+        data-sap-ui-resourceroots='{
+            "a2a.network.fiori": "./a2aFiori/webapp"
+        }'>
+    </script>
+
+    <!-- SAP Fiori Launchpad Bootstrap -->
+    <script id="sap-ushell-bootstrap" src="https://ui5.sap.com/1.120.0/test-resources/sap/ushell/bootstrap/sandbox.js" 
+            data-sap-ui-config='{"xx-bootTask": true}'></script>
+
+    <style>
+        /* Development mode indicator */
+        body::before {
+            content: "DEVELOPMENT MODE";
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff5722;
+            color: white;
+            padding: 2px 10px;
+            font-size: 12px;
+            z-index: 10000;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+    <!-- SAP Compliance CSS -->
+    <link rel="stylesheet" type="text/css" href="css/launchpad-sap-compliance.css">
+
+</head>
+
+<body class="sapUiBody" id="content">
+    <!-- Shell will be rendered here -->
+    
+    <script>
+        // Initialize SAP Fiori Launchpad when everything is loaded
+        sap.ui.getCore().attachInit(function() {
+            console.log("SAP UI5 Core initialized");
+            
+            // Wait for shell bootstrap to complete
+            sap.ushell.bootstrap("sandbox").then(function() {
+                console.log("SAP Shell bootstrap completed");
+                
+                // Get the shell container and render it
+                sap.ushell.Container.createRenderer("fiori2", true).then(function(oRenderer) {
+                    console.log("SAP Shell renderer created");
+                    oRenderer.placeAt("content");
+                    console.log("SAP Shell rendered successfully");
+                });
+            }).catch(function(error) {
+                console.error("SAP Shell bootstrap failed:", error);
+                document.getElementById("content").innerHTML = 
+                    '<div style="padding: 20px; color: red; font-family: Arial;">'+
+                    '<h2>SAP Fiori Shell Loading Error</h2>'+
+                    '<p>Error: ' + error.message + '</p>'+
+                    '<p>Please check browser console for details.</p>'+
+                    '</div>';
+            });
+        });
+    </script>
+</body>
+</html>

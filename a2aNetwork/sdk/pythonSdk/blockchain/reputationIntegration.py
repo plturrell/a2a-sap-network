@@ -17,8 +17,8 @@ from enum import Enum
 import hashlib
 import time
 
-from .web3Client import Web3Client
-from .eventListener import BlockchainEventListener
+from .web3Client import A2ABlockchainClient as Web3Client
+from .eventListener import MessageEventListener as BlockchainEventListener
 
 logger = logging.getLogger(__name__)
 
@@ -94,9 +94,7 @@ class ReputationIntegration:
             
             # Initialize event listener
             self.event_listener = BlockchainEventListener(
-                self.web3_client.web3,
-                self.contract,
-                self._handle_reputation_event
+                blockchain_client=self.web3_client
             )
             
         except Exception as e:

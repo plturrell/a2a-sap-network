@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./interfaces/IAgentRegistry.sol";
 
@@ -112,10 +112,10 @@ contract AgentServiceMarketplace is
             name: name,
             description: description,
             capabilities: capabilities,
-            basePrice: basePrice,
+            basePrice: uint128(basePrice),
             serviceType: serviceType,
-            minReputation: minReputation,
-            maxConcurrent: maxConcurrent,
+            minReputation: uint64(minReputation),
+            maxConcurrent: uint32(maxConcurrent),
             currentActive: 0,
             active: true
         });
@@ -146,12 +146,12 @@ contract AgentServiceMarketplace is
             serviceId: serviceId,
             requester: msg.sender,
             provider: service.provider,
-            agreedPrice: msg.value,
-            deadline: deadline,
+            agreedPrice: uint128(msg.value),
+            deadline: uint64(deadline),
             status: ServiceStatus.Listed,
             parameters: parameters,
             result: "",
-            escrowAmount: msg.value
+            escrowAmount: uint128(msg.value)
         });
         
         service.currentActive++;
@@ -224,7 +224,6 @@ contract AgentServiceMarketplace is
         uint256 providerPayment = request.escrowAmount - platformFee;
         
         // SECURITY FIX: Update state BEFORE external calls to prevent reentrancy
-        uint256 escrowToRelease = request.escrowAmount;
         request.escrowAmount = 0;
         services[request.serviceId].currentActive--;
         
@@ -349,9 +348,10 @@ contract AgentServiceMarketplace is
         require(block.timestamp >= upgradeProposalTime + UPGRADE_DELAY, "Timelock not expired");
         
         // Verify implementation hasn't changed
+        address implementationAddress = proposedImplementation;
         bytes32 currentCodeHash;
         assembly {
-            currentCodeHash := extcodehash(proposedImplementation)
+            currentCodeHash := extcodehash(implementationAddress)
         }
         require(currentCodeHash == proposedImplementationCodeHash, "Implementation code changed");
         

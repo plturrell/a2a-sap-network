@@ -455,7 +455,8 @@ module.exports = class EnhancedIntegrationService extends cds.Service {
 class TransactionManager {
     constructor() {
         this.transactions = new Map();
-    \n        this.intervals = new Map(); // Track intervals for cleanup}
+    
+        this.intervals = new Map(); // Track intervals for cleanup
     
     async begin() {
         const txId = uuidv4();

@@ -145,6 +145,9 @@ class CircuitBreaker extends EventEmitter {
             patterns: new Map()
         };
         
+        // Initialize intervals tracking
+        this.intervals = new Map();
+        
         // Initialize SAP integrations
         this.initializeSAPIntegrations();
         
@@ -201,6 +204,18 @@ class CircuitBreaker extends EventEmitter {
             }
         } catch (error) {
             cds.log('circuit-breaker').warn('Alert Notification service setup failed:', error);
+        }
+    }
+    
+    /**
+     * Stop adaptive monitoring
+     */
+    stopAdaptiveMonitoring() {
+        if (this.intervals) {
+            for (const [name, intervalId] of this.intervals) {
+                clearInterval(intervalId);
+            }
+            this.intervals.clear();
         }
     }
     

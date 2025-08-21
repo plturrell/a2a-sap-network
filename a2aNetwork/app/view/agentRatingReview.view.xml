@@ -1,0 +1,266 @@
+<mvc:View
+    controllerName="a2a.controller.agentRatingReview"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz.ui5.controls"
+    displayBlock="true">
+    
+    <Page
+        id="agentRatingReviewPage"
+        title="{i18n>agentRatingReviewTitle}"
+        showNavButton="true"
+        navButtonPress=".onNavBack">
+        
+        <content>
+            <f:FlexibleColumnLayout id="ratingReviewLayout" layout="TwoColumnsMidExpanded">
+                
+                <!-- Left Column: Agent Selection and Overview -->
+                <f:beginColumnPages>
+                    <Page title="{i18n>selectAgent}">
+                        <content>
+                            <VBox class="sapUiMediumMargin">
+                                
+                                <!-- Agent Selection -->
+                                <Panel headerText="{i18n>agentSelection}">
+                                    <content>
+                                        <form:SimpleForm
+                                            editable="true"
+                                            layout="ResponsiveGridLayout"
+                                            labelSpanXL="3"
+                                            labelSpanL="3"
+                                            labelSpanM="3"
+                                            labelSpanS="12"
+                                            adjustLabelSpan="false"
+                                            emptySpanXL="4"
+                                            emptySpanL="4"
+                                            emptySpanM="4"
+                                            emptySpanS="0"
+                                            columnsXL="1"
+                                            columnsL="1"
+                                            columnsM="1">
+                                            <form:content>
+                                                <Label text="{i18n>selectAgentLabel}:" />
+                                                <ComboBox
+                                                    id="agentComboBox"
+                                                    placeholder="{i18n>selectAgentPlaceholder}"
+                                                    items="{/agents}"
+                                                    selectionChange=".onAgentSelectionChange">
+                                                    <core:Item key="{agentId}" text="{name} ({agentId})" />
+                                                </ComboBox>
+                                            </form:content>
+                                        </form:SimpleForm>
+                                    </content>
+                                </Panel>
+                                
+                                <!-- Agent Overview Card -->
+                                <Panel 
+                                    id="agentOverviewPanel"
+                                    headerText="{i18n>agentOverview}"
+                                    visible="{= ${/selectedAgent} !== undefined }">
+                                    <content>
+                                        <VBox class="sapUiSmallMargin">
+                                            <ObjectHeader
+                                                title="{/selectedAgent/name}"
+                                                number="{/selectedAgent/overallRating}"
+                                                numberUnit="{i18n>stars}"
+                                                numberState="{= ${/selectedAgent/overallRating} >= 4 ? 'Success' : ${/selectedAgent/overallRating} >= 3 ? 'Warning' : 'Error' }">
+                                                <attributes>
+                                                    <ObjectAttribute title="{i18n>totalReviews}" text="{/selectedAgent/totalReviews}" />
+                                                    <ObjectAttribute title="{i18n>successRate}" text="{/selectedAgent/successRate}%" />
+                                                    <ObjectAttribute title="{i18n>avgResponseTime}" text="{/selectedAgent/avgResponseTime} ms" />
+                                                </attributes>
+                                                <statuses>
+                                                    <ObjectStatus 
+                                                        text="{/selectedAgent/status}"
+                                                        state="{= ${/selectedAgent/status} === 'Active' ? 'Success' : 'Error' }" />
+                                                </statuses>
+                                            </ObjectHeader>
+                                            
+                                            <!-- Rating Distribution -->
+                                            <Title text="{i18n>ratingDistribution}" class="sapUiMediumMarginTop" />
+                                            <VBox id="ratingDistributionContainer" height="300px" />
+                                            
+                                        </VBox>
+                                    </content>
+                                </Panel>
+                                
+                            </VBox>
+                        </content>
+                    </Page>
+                </f:beginColumnPages>
+                
+                <!-- Middle Column: Submit Review and Review History -->
+                <f:midColumnPages>
+                    <Page title="{i18n>reviewsAndRatings}">
+                        <content>
+                            <VBox class="sapUiMediumMargin">
+                                
+                                <!-- Submit New Review -->
+                                <Panel 
+                                    headerText="{i18n>submitReview}"
+                                    expandable="true"
+                                    expanded="true">
+                                    <content>
+                                        <form:SimpleForm
+                                            id="reviewForm"
+                                            editable="true"
+                                            layout="ResponsiveGridLayout"
+                                            labelSpanXL="3"
+                                            labelSpanL="3"
+                                            labelSpanM="3"
+                                            labelSpanS="12">
+                                            <form:content>
+                                                
+                                                <!-- Task Reference -->
+                                                <Label text="{i18n>taskReference}:" required="true" />
+                                                <Input 
+                                                    id="taskIdInput"
+                                                    placeholder="{i18n>enterTaskId}"
+                                                    value="{/newReview/taskId}"
+                                                    required="true" />
+                                                
+                                                <!-- Rating Categories -->
+                                                <Label text="{i18n>performanceRating}:" />
+                                                <RatingIndicator
+                                                    id="performanceRating"
+                                                    maxValue="5"
+                                                    value="{/newReview/performanceRating}"
+                                                    tooltip="{i18n>performanceTooltip}" />
+                                                
+                                                <Label text="{i18n>accuracyRating}:" />
+                                                <RatingIndicator
+                                                    id="accuracyRating"
+                                                    maxValue="5"
+                                                    value="{/newReview/accuracyRating}"
+                                                    tooltip="{i18n>accuracyTooltip}" />
+                                                
+                                                <Label text="{i18n>communicationRating}:" />
+                                                <RatingIndicator
+                                                    id="communicationRating"
+                                                    maxValue="5"
+                                                    value="{/newReview/communicationRating}"
+                                                    tooltip="{i18n>communicationTooltip}" />
+                                                
+                                                <Label text="{i18n>overallRating}:" />
+                                                <RatingIndicator
+                                                    id="overallRatingInput"
+                                                    maxValue="5"
+                                                    value="{/newReview/overallRating}"
+                                                    tooltip="{i18n>overallTooltip}" />
+                                                
+                                                <!-- Review Text -->
+                                                <Label text="{i18n>reviewComments}:" />
+                                                <TextArea
+                                                    id="reviewTextArea"
+                                                    value="{/newReview/comments}"
+                                                    placeholder="{i18n>enterReviewComments}"
+                                                    rows="4"
+                                                    width="100%" />
+                                                
+                                                <!-- Stake Amount Display -->
+                                                <Label text="{i18n>requiredStake}:" />
+                                                <Text text="{/requiredStakeAmount} ETH" />
+                                                
+                                            </form:content>
+                                        </form:SimpleForm>
+                                        
+                                        <HBox justifyContent="End" class="sapUiSmallMarginTop">
+                                            <Button
+                                                text="{i18n>submitReview}"
+                                                type="Emphasized"
+                                                press=".onSubmitReview"
+                                                enabled="{= ${/newReview/taskId} !== '' && ${/newReview/overallRating} > 0 }" />
+                                        </HBox>
+                                    </content>
+                                </Panel>
+                                
+                                <!-- Review History -->
+                                <Panel 
+                                    headerText="{i18n>reviewHistory}"
+                                    class="sapUiMediumMarginTop">
+                                    <content>
+                                        <Table
+                                            id="reviewHistoryTable"
+                                            items="{/reviews}"
+                                            growing="true"
+                                            growingThreshold="10"
+                                            mode="SingleSelectMaster">
+                                            <headerToolbar>
+                                                <OverflowToolbar>
+                                                    <content>
+                                                        <Title text="{i18n>recentReviews}" level="H2"/>
+                                                        <ToolbarSpacer/>
+                                                        <SearchField
+                                                            placeholder="{i18n>searchReviews}"
+                                                            search=".onSearchReviews" />
+                                                        <Button
+                                                            icon="sap-icon://filter"
+                                                            press=".onFilterReviews" />
+                                                    </content>
+                                                </OverflowToolbar>
+                                            </headerToolbar>
+                                            <columns>
+                                                <Column>
+                                                    <Text text="{i18n>reviewer}" />
+                                                </Column>
+                                                <Column minScreenWidth="Tablet">
+                                                    <Text text="{i18n>taskId}" />
+                                                </Column>
+                                                <Column>
+                                                    <Text text="{i18n>rating}" />
+                                                </Column>
+                                                <Column minScreenWidth="Desktop">
+                                                    <Text text="{i18n>date}" />
+                                                </Column>
+                                                <Column minScreenWidth="Desktop">
+                                                    <Text text="{i18n>validationStatus}" />
+                                                </Column>
+                                            </columns>
+                                            <items>
+                                                <ColumnListItem press=".onReviewPress">
+                                                    <cells>
+                                                        <ObjectIdentifier
+                                                            title="{reviewerName}"
+                                                            text="{reviewerAddress}" />
+                                                        <Text text="{taskId}" />
+                                                        <RatingIndicator
+                                                            maxValue="5"
+                                                            value="{overallRating}"
+                                                            editable="false" />
+                                                        <Text text="{
+                                                            path: 'timestamp',
+                                                            formatter: '.formatter.formatDate'
+                                                        }" />
+                                                        <ObjectStatus
+                                                            text="{validationStatus}"
+                                                            state="{= ${validationStatus} === 'Validated' ? 'Success' : ${validationStatus} === 'Pending' ? 'Warning' : 'Error' }" />
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+                                        </Table>
+                                    </content>
+                                </Panel>
+                                
+                            </VBox>
+                        </content>
+                    </Page>
+                </f:midColumnPages>
+                
+            </f:FlexibleColumnLayout>
+        </content>
+        
+        <footer>
+            <OverflowToolbar>
+                <ToolbarSpacer />
+                <Button
+                    text="{i18n>refreshData}"
+                    icon="sap-icon://refresh"
+                    press=".onRefreshData" />
+            </OverflowToolbar>
+        </footer>
+        
+    </Page>
+</mvc:View>

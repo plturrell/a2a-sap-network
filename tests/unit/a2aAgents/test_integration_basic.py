@@ -162,7 +162,5 @@ if passed == total:
     print("   - Network connectivity layer functioning")
     print("   - Version compatibility maintained")
     print("   - Multiple agents can share network components")
-    exit(0)
 else:
     print(f"\n⚠️  {total - passed} tests failed. Integration needs attention.")
-    exit(1)

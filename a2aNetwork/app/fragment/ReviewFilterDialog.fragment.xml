@@ -1,0 +1,68 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="reviewFilterDialog"
+        title="{i18n>filterReviews}"
+        contentWidth="500px">
+        
+        <content>
+            <form:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                labelSpanXL="4"
+                labelSpanL="4"
+                labelSpanM="4"
+                labelSpanS="12">
+                <form:content>
+                    
+                    <!-- Rating Filter -->
+                    <Label text="{i18n>minimumRating}:" />
+                    <RatingIndicator
+                        id="filterMinRating"
+                        maxValue="5"
+                        value="0" />
+                    
+                    <!-- Date Range -->
+                    <Label text="{i18n>dateFrom}:" />
+                    <DatePicker
+                        id="filterDateFrom"
+                        placeholder="{i18n>selectDate}" />
+                    
+                    <Label text="{i18n>dateTo}:" />
+                    <DatePicker
+                        id="filterDateTo"
+                        placeholder="{i18n>selectDate}" />
+                    
+                    <!-- Validation Status -->
+                    <Label text="{i18n>validationStatus}:" />
+                    <ComboBox
+                        id="filterValidationStatus"
+                        placeholder="{i18n>selectStatus}">
+                        <core:Item key="all" text="{i18n>all}" />
+                        <core:Item key="validated" text="{i18n>validated}" />
+                        <core:Item key="pending" text="{i18n>pending}" />
+                        <core:Item key="rejected" text="{i18n>rejected}" />
+                    </ComboBox>
+                    
+                </form:content>
+            </form:SimpleForm>
+        </content>
+        
+        <beginButton>
+            <Button
+                text="{i18n>applyFilter}"
+                type="Emphasized"
+                press=".onApplyReviewFilter" />
+        </beginButton>
+        
+        <endButton>
+            <Button
+                text="{i18n>cancel}"
+                press=".onCancelReviewFilter" />
+        </endButton>
+        
+    </Dialog>
+</core:FragmentDefinition>

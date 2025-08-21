@@ -13,7 +13,7 @@ class BlockchainCache {
         this.redisClient = null;
         this.defaultTTL = 30; // 30 seconds
         this.cacheConfig = {
-            'agentInfo': { ttl: 300 \n        this.intervals = new Map(); // Track intervals for cleanup}, // 5 minutes
+            'agentInfo': { ttl: 300 }, // 5 minutes
             'agentReputation': { ttl: 60 }, // 1 minute
             'serviceInfo': { ttl: 300 }, // 5 minutes
             'networkStats': { ttl: 30 }, // 30 seconds
@@ -22,6 +22,7 @@ class BlockchainCache {
             'ordDocumentsByTag': { ttl: 300 } // 5 minutes
         };
         
+        this.intervals = new Map(); // Track intervals for cleanup
         this.initializeRedis();
     }
 
@@ -256,8 +257,12 @@ class BlockchainCache {
 const blockchainCache = new BlockchainCache();
 
 // Setup cleanup interval
-this.intervals.set('interval_259', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => {
+const cleanupInterval = setInterval(() => {
     blockchainCache.cleanupExpired();
-}, 60000)); // Clean up every minute
+}, 60000); // Clean up every minute
+
+// Track interval for cleanup
+const activeIntervals = new Map();
+activeIntervals.set('blockchain_cleanup', cleanupInterval);
 
 module.exports = blockchainCache;

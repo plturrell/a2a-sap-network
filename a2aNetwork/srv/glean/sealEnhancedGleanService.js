@@ -1,7 +1,11 @@
 const cds = require('@sap/cds');
-const EnhancedGleanService = require('./enhancedGleanService');
+const EnhancedGleanService = require('./gleanService');
 const GrokSealAdapter = require('../seal/grokSealAdapter');
 const ReinforcementLearningEngine = require('../seal/reinforcementLearningEngine');
+const { exec } = require('child_process');
+const { promisify } = require('util');
+const path = require('path');
+const execAsync = promisify(exec);
 
 // Track intervals for cleanup
 const activeIntervals = new Map();
@@ -51,6 +55,24 @@ class SealEnhancedGleanService extends EnhancedGleanService {
         // SAP compliance for SEAL
         this.sealAuditLog = [];
         this.complianceFlags = new Set();
+        
+        // Quality orchestration components
+        this.qualitySkills = {
+            linting: {
+                python: ['pylint', 'flake8', 'mypy', 'ruff', 'bandit'],
+                javascript: ['eslint'],
+                security: ['semgrep']
+            },
+            testing: {
+                python: 'pytest',
+                javascript: 'jest',
+                coverage: 'coverage'
+            }
+        };
+        
+        // Quality analysis cache
+        this.qualityCache = new Map();
+        this.qualityHistory = [];
     }
 
     /**
@@ -73,6 +95,9 @@ class SealEnhancedGleanService extends EnhancedGleanService {
         
         // Initialize performance baselines
         await this._initializePerformanceBaselines();
+        
+        // Initialize quality orchestration
+        await this.initializeQualityOrchestration();
     }
 
     /**
@@ -400,6 +425,9 @@ class SealEnhancedGleanService extends EnhancedGleanService {
                 return await this.getSealPerformanceMetrics(timeRange);
             });
         });
+        
+        // Register quality orchestration actions
+        this._registerQualityOrchestrationActions();
     }
 
     /**
@@ -555,9 +583,9 @@ class SealEnhancedGleanService extends EnhancedGleanService {
             try {
                 await this._performContinuousLearningIteration();
             } catch (error) {
-                this.logger.error('Continuous learning iteration failed:', error));
+                this.logger.error('Continuous learning iteration failed:', error);
             }
-        }, 1800000); // Every 30 minutes
+        }, 1800000)); // Every 30 minutes
     }
 
     /**
@@ -630,6 +658,889 @@ class SealEnhancedGleanService extends EnhancedGleanService {
      */
     _generateAdaptationId() {
         return `seal-adaptation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    }
+    
+    /**
+     * Initialize quality orchestration capabilities
+     */
+    async initializeQualityOrchestration() {
+        this.logger.info('Initializing quality orchestration with MCP skills');
+        
+        // Register quality MCP endpoints
+        this._registerQualityMCPEndpoints();
+        
+        // Initialize quality baseline metrics
+        await this._initializeQualityBaselines();
+        
+        // Start quality monitoring
+        this._startQualityMonitoring();
+    }
+    
+    /**
+     * Register quality orchestration MCP endpoints
+     * @private
+     */
+    _registerQualityMCPEndpoints() {
+        // MCP tool definitions
+        this.on('tools/list', async () => ({
+            tools: [
+                {
+                    name: 'analyze_quality',
+                    description: 'Run unified quality analysis with AI reasoning',
+                    inputSchema: {
+                        type: 'object',
+                        properties: {
+                            projectId: { type: 'string', description: 'Project identifier' },
+                            path: { type: 'string', description: 'Path to analyze' },
+                            includeTests: { type: 'boolean', default: true },
+                            includeLinting: { type: 'boolean', default: true },
+                            includeSecurity: { type: 'boolean', default: true },
+                            autoFix: { type: 'boolean', default: false },
+                            aiReasoning: { type: 'boolean', default: true }
+                        },
+                        required: ['projectId']
+                    }
+                },
+                {
+                    name: 'run_linters',
+                    description: 'Execute specific linting tools',
+                    inputSchema: {
+                        type: 'object',
+                        properties: {
+                            path: { type: 'string' },
+                            linters: { type: 'array', items: { type: 'string' } },
+                            autoFix: { type: 'boolean', default: false }
+                        },
+                        required: ['path']
+                    }
+                },
+                {
+                    name: 'run_tests',
+                    description: 'Execute test suites with coverage',
+                    inputSchema: {
+                        type: 'object',
+                        properties: {
+                            path: { type: 'string' },
+                            testPattern: { type: 'string' },
+                            coverage: { type: 'boolean', default: true }
+                        },
+                        required: ['path']
+                    }
+                },
+                {
+                    name: 'analyze_security',
+                    description: 'Run security vulnerability analysis',
+                    inputSchema: {
+                        type: 'object',
+                        properties: {
+                            path: { type: 'string' },
+                            deep: { type: 'boolean', default: true },
+                            autoFix: { type: 'boolean', default: false }
+                        },
+                        required: ['path']
+                    }
+                },
+                {
+                    name: 'get_quality_report',
+                    description: 'Get comprehensive quality report with AI insights',
+                    inputSchema: {
+                        type: 'object',
+                        properties: {
+                            projectId: { type: 'string' },
+                            format: { type: 'string', enum: ['json', 'html', 'markdown'], default: 'json' }
+                        },
+                        required: ['projectId']
+                    }
+                }
+            ]
+        }));
+        
+        // Tool execution
+        this.on('tools/call', async (req) => {
+            const { name, arguments: args } = req.data;
+            
+            switch(name) {
+                case 'analyze_quality':
+                    return await this.analyzeCodeQuality(args.projectId, args);
+                case 'run_linters':
+                    return await this._runSpecificLinters(args.path, args.linters, args.autoFix);
+                case 'run_tests':
+                    return await this._runTests(args.path, args.testPattern, args.coverage);
+                case 'analyze_security':
+                    return await this._runSecurityAnalysis(args.path, args.deep, args.autoFix);
+                case 'get_quality_report':
+                    return await this._generateQualityReport(args.projectId, args.format);
+                default:
+                    throw new Error(`Unknown tool: ${name}`);
+            }
+        });
+    }
+    
+    /**
+     * Register quality orchestration actions
+     * @private
+     */
+    _registerQualityOrchestrationActions() {
+        // Unified quality analysis
+        this.on('analyzeCodeQuality', async (req) => {
+            return await this._withErrorHandling('analyzeCodeQuality', async () => {
+                const { projectId, options } = req.data;
+                return await this.analyzeCodeQuality(projectId, options);
+            });
+        });
+        
+        // Quality trend analysis
+        this.on('analyzeQualityTrends', async (req) => {
+            return await this._withErrorHandling('analyzeQualityTrends', async () => {
+                const { projectId, timeRange } = req.data;
+                return await this.analyzeQualityTrends(projectId, timeRange);
+            });
+        });
+        
+        // Auto-fix quality issues
+        this.on('fixQualityIssues', async (req) => {
+            return await this._withErrorHandling('fixQualityIssues', async () => {
+                const { issues, strategy } = req.data;
+                return await this.fixQualityIssues(issues, strategy);
+            });
+        });
+    }
+    
+    /**
+     * Unified quality analysis with AI reasoning
+     */
+    async analyzeCodeQuality(projectId, options = {}) {
+        this.logger.info(`Performing unified quality analysis for project ${projectId}`);
+        
+        const startTime = Date.now();
+        const cacheKey = `quality-${projectId}-${JSON.stringify(options)}`;
+        
+        // Check cache
+        if (!options.forceRefresh && this.qualityCache.has(cacheKey)) {
+            const cached = this.qualityCache.get(cacheKey);
+            if (Date.now() - cached.timestamp < 300000) { // 5 min cache
+                return cached.result;
+            }
+        }
+        
+        try {
+            // Phase 1: Gather all quality data
+            const qualityState = {
+                linterResults: options.includeLinting !== false ? 
+                    await this._runLinters(projectId, options.path) : null,
+                testResults: options.includeTests !== false ? 
+                    await this._runTests(options.path || projectId) : null,
+                securityResults: options.includeSecurity !== false ?
+                    await this._runSecurityScan(projectId, options.path) : null,
+                gleanAnalysis: await this._performBaseAnalysis(projectId, 'quality'),
+                healthStatus: await this._checkHealthStatus(projectId)
+            };
+            
+            // Phase 2: AI reasoning on combined results
+            const reasoning = options.aiReasoning !== false ?
+                await this._performQualityReasoning(qualityState, projectId) : null;
+            
+            // Phase 3: Apply auto-fixes if requested
+            let fixResults = null;
+            if (options.autoFix) {
+                fixResults = await this._applyQualityFixes(qualityState, reasoning);
+            }
+            
+            // Phase 4: Learn from patterns
+            await this.rlEngine.updateFromQualityResults(qualityState, reasoning);
+            
+            // Phase 5: Generate unified report
+            const result = {
+                projectId,
+                timestamp: new Date().toISOString(),
+                executionTime: Date.now() - startTime,
+                issues: this._unifyQualityIssues(qualityState),
+                metrics: this._calculateQualityMetrics(qualityState),
+                recommendations: reasoning?.recommendations || [],
+                insights: reasoning?.insights || [],
+                qualityScore: this._calculateUnifiedQualityScore(qualityState, reasoning),
+                fixesApplied: fixResults,
+                learningApplied: true,
+                trends: await this._getQualityTrends(projectId)
+            };
+            
+            // Cache result
+            this.qualityCache.set(cacheKey, {
+                result,
+                timestamp: Date.now()
+            });
+            
+            // Store in history
+            this.qualityHistory.push({
+                ...result,
+                state: qualityState
+            });
+            
+            // Audit trail
+            await this._recordQualityAnalysis(result);
+            
+            return result;
+            
+        } catch (error) {
+            this.logger.error('Quality analysis failed:', error);
+            return {
+                projectId,
+                error: error.message,
+                fallbackAnalysis: await this._performFallbackQualityAnalysis(projectId)
+            };
+        }
+    }
+    
+    /**
+     * Run linting tools
+     * @private
+     */
+    async _runLinters(projectId, targetPath) {
+        this.logger.info(`Running linters for ${targetPath || projectId}`);
+        
+        const projectRoot = await this._getProjectRoot(projectId);
+        const scanPath = targetPath || projectRoot;
+        
+        // Use existing code quality scanner
+        const scannerPath = path.join(process.cwd(), '../../tests/a2a_mcp/tools/code_quality_scanner.py');
+        
+        try {
+            const { stdout } = await execAsync(
+                `python "${scannerPath}" --path "${scanPath}" --output json`,
+                { maxBuffer: 10 * 1024 * 1024 } // 10MB buffer
+            );
+            
+            return JSON.parse(stdout);
+        } catch (error) {
+            this.logger.error('Linter execution failed:', error);
+            
+            // Fallback to individual linters
+            return await this._runIndividualLinters(scanPath);
+        }
+    }
+    
+    /**
+     * Run tests with coverage
+     * @private
+     */
+    async _runTests(targetPath, testPattern, coverage = true) {
+        this.logger.info(`Running tests for ${targetPath}`);
+        
+        const testCommands = {
+            python: coverage ? 
+                `pytest "${targetPath}" ${testPattern ? `-k "${testPattern}"` : ''} --cov --cov-report=json` :
+                `pytest "${targetPath}" ${testPattern ? `-k "${testPattern}"` : ''} --json-report`,
+            javascript: coverage ?
+                `jest "${targetPath}" ${testPattern ? `--testNamePattern="${testPattern}"` : ''} --coverage --json` :
+                `jest "${targetPath}" ${testPattern ? `--testNamePattern="${testPattern}"` : ''} --json`
+        };
+        
+        const results = {
+            passed: 0,
+            failed: 0,
+            skipped: 0,
+            coverage: null,
+            failures: []
+        };
+        
+        // Determine project type and run appropriate tests
+        try {
+            const projectType = await this._detectProjectType(targetPath);
+            const command = testCommands[projectType];
+            
+            if (command) {
+                const { stdout } = await execAsync(command, { 
+                    cwd: targetPath,
+                    maxBuffer: 10 * 1024 * 1024 
+                });
+                
+                // Parse test results
+                const testData = JSON.parse(stdout);
+                results.passed = testData.passed || 0;
+                results.failed = testData.failed || 0;
+                results.skipped = testData.skipped || 0;
+                results.failures = testData.failures || [];
+                
+                if (coverage && testData.coverage) {
+                    results.coverage = testData.coverage;
+                }
+            }
+        } catch (error) {
+            this.logger.error('Test execution failed:', error);
+            results.error = error.message;
+        }
+        
+        return results;
+    }
+    
+    /**
+     * Run security analysis
+     * @private
+     */
+    async _runSecurityScan(projectId, targetPath) {
+        this.logger.info(`Running security scan for ${targetPath || projectId}`);
+        
+        const projectRoot = await this._getProjectRoot(projectId);
+        const scanPath = targetPath || projectRoot;
+        
+        // Use existing security scanner
+        const securityPath = path.join(process.cwd(), '../../a2aAgents/backend/security_scan_and_fix.py');
+        
+        try {
+            const { stdout } = await execAsync(
+                `python "${securityPath}" --path "${scanPath}" --output json`,
+                { maxBuffer: 10 * 1024 * 1024 }
+            );
+            
+            return JSON.parse(stdout);
+        } catch (error) {
+            this.logger.error('Security scan failed:', error);
+            return {
+                error: error.message,
+                findings: []
+            };
+        }
+    }
+    
+    /**
+     * Perform AI reasoning on quality results
+     * @private
+     */
+    async _performQualityReasoning(qualityState, projectId) {
+        const prompt = `
+        Based on these comprehensive quality analysis results:
+        
+        Linter Issues: ${qualityState.linterResults?.issues?.length || 0}
+        - Critical: ${qualityState.linterResults?.issues?.filter(i => i.severity === 'critical').length || 0}
+        - High: ${qualityState.linterResults?.issues?.filter(i => i.severity === 'high').length || 0}
+        
+        Test Results: ${qualityState.testResults?.passed || 0} passed, ${qualityState.testResults?.failed || 0} failed
+        Coverage: ${qualityState.testResults?.coverage?.percentage || 'N/A'}%
+        
+        Security Findings: ${qualityState.securityResults?.findings?.length || 0}
+        Code Complexity: ${qualityState.gleanAnalysis?.complexity || 'N/A'}
+        
+        Analyze and determine:
+        1. Root causes of quality issues
+        2. Which issues should be fixed first (prioritization)
+        3. Patterns that indicate systemic problems
+        4. Specific recommendations for improvement
+        5. Predict potential future issues based on current patterns
+        `;
+        
+        const reasoning = await this.sealAdapter.performSelfEdit(
+            prompt,
+            'quality-reasoning',
+            {
+                projectId,
+                analysisType: 'unified-quality',
+                includeActionableSteps: true
+            }
+        );
+        
+        return {
+            recommendations: reasoning.recommendations || [],
+            insights: reasoning.insights || [],
+            prioritizedIssues: reasoning.prioritizedIssues || [],
+            predictedIssues: reasoning.predictions || [],
+            systemicPatterns: reasoning.patterns || [],
+            confidenceScore: reasoning.confidence || 0.7
+        };
+    }
+    
+    /**
+     * Unify quality issues from all sources
+     * @private
+     */
+    _unifyQualityIssues(qualityState) {
+        const unifiedIssues = [];
+        
+        // Add linter issues
+        if (qualityState.linterResults?.issues) {
+            qualityState.linterResults.issues.forEach(issue => {
+                unifiedIssues.push({
+                    id: `lint-${issue.id}`,
+                    source: 'linter',
+                    type: issue.issue_type,
+                    severity: issue.severity,
+                    file: issue.file_path,
+                    line: issue.line,
+                    message: issue.message,
+                    tool: issue.tool,
+                    fixable: issue.auto_fixable
+                });
+            });
+        }
+        
+        // Add test failures
+        if (qualityState.testResults?.failures) {
+            qualityState.testResults.failures.forEach(failure => {
+                unifiedIssues.push({
+                    id: `test-${failure.id || Date.now()}`,
+                    source: 'test',
+                    type: 'test_failure',
+                    severity: 'high',
+                    file: failure.file,
+                    line: failure.line,
+                    message: failure.message,
+                    tool: 'pytest/jest',
+                    fixable: false
+                });
+            });
+        }
+        
+        // Add security findings
+        if (qualityState.securityResults?.findings) {
+            qualityState.securityResults.findings.forEach(finding => {
+                unifiedIssues.push({
+                    id: `sec-${finding.id || Date.now()}`,
+                    source: 'security',
+                    type: finding.finding_type,
+                    severity: finding.severity.toLowerCase(),
+                    file: finding.file_path,
+                    line: finding.line_number,
+                    message: finding.description,
+                    tool: 'security-scanner',
+                    fixable: finding.auto_fixable || false
+                });
+            });
+        }
+        
+        return unifiedIssues;
+    }
+    
+    /**
+     * Calculate unified quality score
+     * @private
+     */
+    _calculateUnifiedQualityScore(qualityState, reasoning) {
+        let score = 100;
+        
+        // Deduct for linter issues
+        if (qualityState.linterResults?.issues) {
+            const severityWeights = {
+                critical: 10,
+                high: 5,
+                medium: 2,
+                low: 0.5,
+                info: 0.1
+            };
+            
+            qualityState.linterResults.issues.forEach(issue => {
+                score -= severityWeights[issue.severity] || 1;
+            });
+        }
+        
+        // Deduct for test failures
+        if (qualityState.testResults) {
+            const testScore = qualityState.testResults.passed / 
+                (qualityState.testResults.passed + qualityState.testResults.failed);
+            score *= testScore;
+        }
+        
+        // Deduct for security issues
+        if (qualityState.securityResults?.findings) {
+            qualityState.securityResults.findings.forEach(finding => {
+                score -= finding.severity === 'CRITICAL' ? 15 : 
+                         finding.severity === 'HIGH' ? 8 : 3;
+            });
+        }
+        
+        // Apply AI confidence factor
+        if (reasoning?.confidenceScore) {
+            score *= reasoning.confidenceScore;
+        }
+        
+        return Math.max(0, Math.min(100, score));
+    }
+    
+    /**
+     * Start quality monitoring
+     * @private
+     */
+    _startQualityMonitoring() {
+        // Monitor quality metrics every 10 minutes
+        activeIntervals.set('quality-monitoring', setInterval(async () => {
+            try {
+                await this._performQualityMonitoringIteration();
+            } catch (error) {
+                this.logger.error('Quality monitoring failed:', error);
+            }
+        }, 600000)); // 10 minutes
+    }
+    
+    /**
+     * Get project root path
+     * @private
+     */
+    async _getProjectRoot(projectId) {
+        // Map project ID to actual path
+        // This is a simplified version - in production, this would query a project registry
+        const projectPaths = {
+            'a2a': path.join(process.cwd(), '../..'),
+            'a2aAgents': path.join(process.cwd(), '../../a2aAgents'),
+            'a2aNetwork': path.join(process.cwd(), '..')
+        };
+        
+        return projectPaths[projectId] || process.cwd();
+    }
+    
+    /**
+     * Detect project type
+     * @private
+     */
+    async _detectProjectType(targetPath) {
+        try {
+            // Check for Python project
+            await execAsync(`test -f "${targetPath}/setup.py" || test -f "${targetPath}/pyproject.toml"`);
+            return 'python';
+        } catch {
+            try {
+                // Check for JavaScript project
+                await execAsync(`test -f "${targetPath}/package.json"`);
+                return 'javascript';
+            } catch {
+                return 'unknown';
+            }
+        }
+    }
+    
+    /**
+     * Initialize quality baselines
+     * @private
+     */
+    async _initializeQualityBaselines() {
+        // Initialize baseline metrics for quality tracking
+        this.qualityBaselines = {
+            averageQualityScore: 75,
+            averageLinterIssues: 50,
+            averageTestCoverage: 80,
+            averageSecurityFindings: 5
+        };
+    }
+    
+    /**
+     * Check health status
+     * @private
+     */
+    async _checkHealthStatus(projectId) {
+        // Use comprehensive health check
+        const healthPath = path.join(process.cwd(), '../../comprehensive_health_check.py');
+        try {
+            const { stdout } = await execAsync(`python "${healthPath}" --project ${projectId} --json`);
+            return JSON.parse(stdout);
+        } catch (error) {
+            return { status: 'unknown', error: error.message };
+        }
+    }
+    
+    /**
+     * Calculate quality metrics
+     * @private
+     */
+    _calculateQualityMetrics(qualityState) {
+        return {
+            totalIssues: (qualityState.linterResults?.issues?.length || 0) +
+                        (qualityState.testResults?.failed || 0) +
+                        (qualityState.securityResults?.findings?.length || 0),
+            criticalIssues: qualityState.linterResults?.issues?.filter(i => i.severity === 'critical').length || 0,
+            testCoverage: qualityState.testResults?.coverage?.percentage || 0,
+            codeComplexity: qualityState.gleanAnalysis?.complexity || 0
+        };
+    }
+    
+    /**
+     * Get quality trends
+     * @private
+     */
+    async _getQualityTrends(projectId) {
+        // Analyze historical data
+        const recentHistory = this.qualityHistory
+            .filter(h => h.projectId === projectId)
+            .slice(-10);
+        
+        if (recentHistory.length < 2) {
+            return { trend: 'insufficient_data' };
+        }
+        
+        const scores = recentHistory.map(h => h.qualityScore);
+        const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+        const latestScore = scores[scores.length - 1];
+        
+        return {
+            trend: latestScore > avgScore ? 'improving' : 'declining',
+            averageScore: avgScore,
+            latestScore: latestScore,
+            dataPoints: scores.length
+        };
+    }
+    
+    /**
+     * Apply quality fixes
+     * @private
+     */
+    async _applyQualityFixes(qualityState, reasoning) {
+        const fixes = [];
+        
+        // Apply linter fixes
+        if (qualityState.linterResults?.issues) {
+            const fixableIssues = qualityState.linterResults.issues.filter(i => i.auto_fixable);
+            for (const issue of fixableIssues) {
+                try {
+                    // Run auto-fix command based on tool
+                    const fixCommand = this._getFixCommand(issue.tool, issue.file_path);
+                    if (fixCommand) {
+                        await execAsync(fixCommand);
+                        fixes.push({ issueId: issue.id, status: 'fixed' });
+                    }
+                } catch (error) {
+                    fixes.push({ issueId: issue.id, status: 'failed', error: error.message });
+                }
+            }
+        }
+        
+        return { fixesAttempted: fixes.length, fixes };
+    }
+    
+    /**
+     * Get fix command for tool
+     * @private
+     */
+    _getFixCommand(tool, filePath) {
+        const fixCommands = {
+            'pylint': null, // Pylint doesn't auto-fix
+            'flake8': null, // Flake8 doesn't auto-fix
+            'black': `black "${filePath}"`,
+            'ruff': `ruff --fix "${filePath}"`,
+            'eslint': `eslint --fix "${filePath}"`,
+            'prettier': `prettier --write "${filePath}"`
+        };
+        
+        return fixCommands[tool];
+    }
+    
+    /**
+     * Record quality analysis
+     * @private
+     */
+    async _recordQualityAnalysis(result) {
+        // Add to audit log
+        this.sealAuditLog.push({
+            timestamp: new Date(),
+            action: 'quality_analysis',
+            projectId: result.projectId,
+            qualityScore: result.qualityScore,
+            issueCount: result.issues.length
+        });
+    }
+    
+    /**
+     * Perform fallback quality analysis
+     * @private
+     */
+    async _performFallbackQualityAnalysis(projectId) {
+        // Simple fallback analysis
+        return {
+            projectId,
+            qualityScore: 50,
+            issues: [],
+            message: 'Fallback analysis - limited functionality'
+        };
+    }
+    
+    /**
+     * Run individual linters
+     * @private
+     */
+    async _runIndividualLinters(scanPath) {
+        const results = { issues: [] };
+        
+        // Try to run individual linters
+        for (const [language, linters] of Object.entries(this.qualitySkills.linting)) {
+            for (const linter of linters) {
+                try {
+                    const { stdout } = await execAsync(`${linter} "${scanPath}" --output-format json`, {
+                        maxBuffer: 5 * 1024 * 1024
+                    });
+                    const linterResults = JSON.parse(stdout);
+                    results.issues.push(...linterResults);
+                } catch (error) {
+                    // Linter might not be installed or failed
+                    this.logger.warn(`Linter ${linter} failed:`, error.message);
+                }
+            }
+        }
+        
+        return results;
+    }
+    
+    /**
+     * Run specific linters
+     * @private
+     */
+    async _runSpecificLinters(path, linters, autoFix) {
+        const results = [];
+        
+        for (const linter of linters || Object.values(this.qualitySkills.linting).flat()) {
+            try {
+                const command = autoFix && this._getFixCommand(linter, path) ?
+                    this._getFixCommand(linter, path) :
+                    `${linter} "${path}"`;
+                    
+                const { stdout } = await execAsync(command);
+                results.push({ linter, status: 'success', output: stdout });
+            } catch (error) {
+                results.push({ linter, status: 'error', error: error.message });
+            }
+        }
+        
+        return results;
+    }
+    
+    /**
+     * Run security analysis
+     * @private
+     */
+    async _runSecurityAnalysis(path, deep, autoFix) {
+        return await this._runSecurityScan(null, path);
+    }
+    
+    /**
+     * Generate quality report
+     * @private
+     */
+    async _generateQualityReport(projectId, format) {
+        const latestAnalysis = this.qualityHistory
+            .filter(h => h.projectId === projectId)
+            .pop();
+            
+        if (!latestAnalysis) {
+            // Run new analysis
+            const analysis = await this.analyzeCodeQuality(projectId);
+            return this._formatReport(analysis, format);
+        }
+        
+        return this._formatReport(latestAnalysis, format);
+    }
+    
+    /**
+     * Format report based on type
+     * @private
+     */
+    _formatReport(analysis, format) {
+        switch (format) {
+            case 'html':
+                return this._generateHTMLReport(analysis);
+            case 'markdown':
+                return this._generateMarkdownReport(analysis);
+            default:
+                return analysis;
+        }
+    }
+    
+    /**
+     * Generate HTML report
+     * @private
+     */
+    _generateHTMLReport(analysis) {
+        return `
+        <html>
+        <head><title>Quality Report - ${analysis.projectId}</title></head>
+        <body>
+            <h1>Quality Report</h1>
+            <h2>Score: ${analysis.qualityScore}/100</h2>
+            <h3>Issues: ${analysis.issues.length}</h3>
+            <ul>
+            ${analysis.issues.map(i => `<li>${i.severity}: ${i.message}</li>`).join('')}
+            </ul>
+        </body>
+        </html>`;
+    }
+    
+    /**
+     * Generate Markdown report
+     * @private
+     */
+    _generateMarkdownReport(analysis) {
+        return `# Quality Report - ${analysis.projectId}
+
+## Score: ${analysis.qualityScore}/100
+
+### Issues Found: ${analysis.issues.length}
+
+${analysis.issues.map(i => `- **${i.severity}**: ${i.message} (${i.file}:${i.line})`).join('\n')}
+
+### Recommendations
+${analysis.recommendations.map(r => `- ${r}`).join('\n')}
+`;
+    }
+    
+    /**
+     * Perform quality monitoring iteration
+     * @private
+     */
+    async _performQualityMonitoringIteration() {
+        // Monitor all active projects
+        for (const projectId of ['a2a', 'a2aAgents', 'a2aNetwork']) {
+            try {
+                const analysis = await this.analyzeCodeQuality(projectId, { 
+                    includeTests: false,  // Skip tests for monitoring
+                    aiReasoning: false    // Skip AI for performance
+                });
+                
+                // Check for quality degradation
+                if (analysis.qualityScore < this.qualityBaselines.averageQualityScore * 0.8) {
+                    this.logger.warn(`Quality degradation detected in ${projectId}: ${analysis.qualityScore}`);
+                }
+            } catch (error) {
+                this.logger.error(`Quality monitoring failed for ${projectId}:`, error);
+            }
+        }
+    }
+    
+    /**
+     * Analyze quality trends
+     */
+    async analyzeQualityTrends(projectId, timeRange) {
+        const trends = await this._getQualityTrends(projectId);
+        
+        // Use AI to analyze trends
+        if (trends.dataPoints > 5) {
+            const reasoning = await this.sealAdapter.performSelfEdit(
+                `Analyze these quality trends: ${JSON.stringify(trends)}`,
+                'trend-analysis'
+            );
+            
+            trends.aiAnalysis = reasoning;
+        }
+        
+        return trends;
+    }
+    
+    /**
+     * Fix quality issues with strategy
+     */
+    async fixQualityIssues(issues, strategy = 'conservative') {
+        const fixableIssues = issues.filter(i => i.fixable);
+        const results = [];
+        
+        for (const issue of fixableIssues) {
+            if (strategy === 'conservative' && issue.severity !== 'critical') {
+                continue;
+            }
+            
+            try {
+                const fixCommand = this._getFixCommand(issue.tool, issue.file);
+                if (fixCommand) {
+                    await execAsync(fixCommand);
+                    results.push({ issueId: issue.id, status: 'fixed' });
+                }
+            } catch (error) {
+                results.push({ issueId: issue.id, status: 'failed', error: error.message });
+            }
+        }
+        
+        return results;
     }
 }
 

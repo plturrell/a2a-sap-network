@@ -24,7 +24,8 @@ class LoggingService {
         this.correlationStore = new Map();
         
         this._initializeLogger();
-    \n        this.intervals = new Map(); // Track intervals for cleanup}
+        this.intervals = new Map(); // Track intervals for cleanup
+    }
 
     /**
      * Initialize Winston logger with multiple transports
@@ -468,8 +469,12 @@ class LoggingService {
 const loggingService = new LoggingService();
 
 // Clean up correlations every hour
-this.intervals.set('interval_471', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => {
+const correlationCleanupInterval = setInterval(() => {
     loggingService.cleanupCorrelations();
-}, 3600000));
+}, 3600000);
+
+// Track interval for cleanup
+const activeIntervals = new Map();
+activeIntervals.set('correlation_cleanup', correlationCleanupInterval);
 
 module.exports = loggingService;

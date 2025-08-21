@@ -77,7 +77,8 @@ class ErrorHandler {
             [ErrorSeverity.HIGH]: 5,
             [ErrorSeverity.MEDIUM]: 20,
             [ErrorSeverity.LOW]: 50
-        \n        this.intervals = new Map(); // Track intervals for cleanup};
+        };
+        this.intervals = new Map(); // Track intervals for cleanup
     }
 
     /**
@@ -400,9 +401,13 @@ class ErrorHandler {
 const globalErrorHandler = new ErrorHandler();
 
 // Reset error counts every hour
-this.intervals.set('interval_403', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => {
+const resetInterval = setInterval(() => {
     globalErrorHandler.resetCounts();
-}, 3600000));
+}, 3600000);
+
+// Track interval for cleanup
+const activeIntervals = new Map();
+activeIntervals.set('error_reset', resetInterval);
 
 module.exports = {
     ErrorHandler,

@@ -1,0 +1,26 @@
+{
+  "timestamp": "2025-08-21T05:28:25.061095",
+  "total_tests": 5,
+  "avg_accuracy_delta": 35,
+  "avg_methodology_delta": 35,
+  "avg_explanation_delta": 38,
+  "avg_overall_delta": 35.599999999999994,
+  "max_degradation": 35.599999999999994,
+  "acceptable_quality": false,
+  "quality_grade": "F",
+  "speed_advantage": 1.8979591836734695,
+  "recommendations": [
+    "URGENT: LNN quality unacceptable - consider retraining",
+    "Increase Grok API training data collection",
+    "LNN significantly underperforming - review training data quality",
+    "Speed advantage minimal - optimize LNN inference"
+  ],
+  "trend_direction": "insufficient_data",
+  "test_categories": {
+    "basic_math": 1,
+    "calculus": 1,
+    "error_detection": 1,
+    "complex_reasoning": 1,
+    "integration": 1
+  }
+}

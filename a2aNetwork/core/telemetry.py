@@ -6,6 +6,8 @@ Provides OpenTelemetry integration for distributed tracing and monitoring
 import logging
 import functools
 from typing import Dict, Any, Optional
+from opentelemetry.trace import Tracer
+from opentelemetry.metrics import Meter
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -19,7 +21,9 @@ def init_telemetry(
     service_name: str,
     agent_id: Optional[str] = None,
     sampling_rate: float = 1.0,
-    endpoint: Optional[str] = None
+    endpoint: Optional[str] = None,
+    tracer_provider: Optional[Any] = None,
+    meter_provider: Optional[Any] = None
 ) -> bool:
     """
     Initialize OpenTelemetry for the service
@@ -34,61 +38,56 @@ def init_telemetry(
         bool: True if initialization successful
     """
     global _telemetry_initialized, _tracer, _meter
-    
+
     try:
-        # Try to import OpenTelemetry modules
-        try:
-            from opentelemetry import trace, metrics
-            from opentelemetry.sdk.trace import TracerProvider
-            from opentelemetry.sdk.trace.export import BatchSpanProcessor
-            from opentelemetry.sdk.metrics import MeterProvider
-            from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-            from opentelemetry.sdk.resources import Resource, SERVICE_NAME
-            
-            # Create resource
-            resource = Resource(attributes={
-                SERVICE_NAME: service_name,
-                "agent.id": agent_id or "unknown",
-                "service.version": "1.0.0"
-            })
-            
-            # Setup tracing
+        from opentelemetry import trace, metrics
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+        from opentelemetry.sdk.metrics import MeterProvider
+        from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+        from opentelemetry.sdk.resources import Resource, SERVICE_NAME
+
+        resource = Resource(attributes={
+            SERVICE_NAME: service_name,
+            "agent.id": agent_id or "unknown",
+            "service.version": "1.0.0"
+        })
+
+        if not tracer_provider:
             tracer_provider = TracerProvider(resource=resource)
-            trace.set_tracer_provider(tracer_provider)
-            
-            # Setup span processor
-            if endpoint:
-                span_exporter = OTLPSpanExporter(endpoint=endpoint)
-                span_processor = BatchSpanProcessor(span_exporter)
-                tracer_provider.add_span_processor(span_processor)
-            
-            _tracer = trace.get_tracer(service_name)
-            
-            # Setup metrics
+        trace.set_tracer_provider(tracer_provider)
+
+        if endpoint:
+            span_exporter = OTLPSpanExporter(endpoint=endpoint)
+            span_processor = BatchSpanProcessor(span_exporter)
+            tracer_provider.add_span_processor(span_processor)
+
+        _tracer = trace.get_tracer(service_name)
+
+        if not meter_provider:
             meter_provider = MeterProvider(resource=resource)
-            metrics.set_meter_provider(meter_provider)
-            _meter = metrics.get_meter(service_name)
-            
-            _telemetry_initialized = True
-            logger.info(f"Telemetry initialized for {service_name}")
-            return True
-            
-        except ImportError:
-            # OpenTelemetry not available, use mock implementation
-            logger.warning("OpenTelemetry not available, using mock telemetry")
-            _telemetry_initialized = True
-            return True
-            
+        metrics.set_meter_provider(meter_provider)
+        _meter = metrics.get_meter(service_name)
+
+        _telemetry_initialized = True
+        logger.info(f"Telemetry initialized for {service_name}")
+        return True
+
+    except ImportError:
+        logger.warning("OpenTelemetry not available, using mock telemetry")
+        _telemetry_initialized = True
+        return True
+
     except Exception as e:
         logger.error(f"Failed to initialize telemetry: {e}")
         return False
 
-def get_tracer():
-    """Get the current tracer instance"""
+def get_tracer() -> Optional[Tracer]:
+    """Returns the global tracer instance."""
     return _tracer
 
-def get_meter():
-    """Get the current meter instance"""
+def get_meter() -> Optional[Meter]:
+    """Returns the global meter instance."""
     return _meter
 
 def trace_async(operation_name: str):
@@ -112,10 +111,18 @@ def trace_async(operation_name: str):
                         })
                         
                         result = await func(*args, **kwargs)
-                        span.set_status(trace.Status(trace.StatusCode.OK))
+                        try:
+                            from opentelemetry import trace
+                            span.set_status(trace.Status(trace.StatusCode.OK))
+                        except ImportError:
+                            pass
                         return result
                     except Exception as e:
-                        span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
+                        try:
+                            from opentelemetry import trace
+                            span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
+                        except ImportError:
+                            pass
                         span.record_exception(e)
                         raise
             else:
@@ -145,10 +152,18 @@ def trace_sync(operation_name: str):
                         })
                         
                         result = func(*args, **kwargs)
-                        span.set_status(trace.Status(trace.StatusCode.OK))
+                        try:
+                            from opentelemetry import trace
+                            span.set_status(trace.Status(trace.StatusCode.OK))
+                        except ImportError:
+                            pass
                         return result
                     except Exception as e:
-                        span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
+                        try:
+                            from opentelemetry import trace
+                            span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
+                        except ImportError:
+                            pass
                         span.record_exception(e)
                         raise
             else:

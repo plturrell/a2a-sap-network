@@ -33,7 +33,8 @@ class ReinforcementLearningEngine extends BaseService {
         // SAP Compliance
         this.auditTrail = [];
         this.complianceCheckpoints = new Set();
-    \n        this.intervals = new Map(); // Track intervals for cleanup}
+    
+        this.intervals = new Map(); // Track intervals for cleanup
 
     /**
      * Initialize RL engine with state and action spaces
@@ -665,13 +666,14 @@ class ReinforcementLearningEngine extends BaseService {
      * @private
      */
     _startPerformanceMonitoring() {
-        this.intervals.set('interval_668', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(async () => {
+        const monitoringInterval = setInterval(async () => {
             try {
                 await this._collectPerformanceMetrics();
             } catch (error) {
-                this.logger.error('Performance monitoring failed:', error));
+                this.logger.error('Performance monitoring failed:', error);
             }
         }, 300000); // Every 5 minutes
+        this.intervals.set('performance_monitoring', monitoringInterval);
     }
 
     /**

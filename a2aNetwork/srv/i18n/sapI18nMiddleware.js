@@ -19,7 +19,8 @@ class I18nMiddleware {
     constructor() {
         this.cache = new Map();
         this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
-    \n        this.intervals = new Map(); // Track intervals for cleanup}
+        this.intervals = new Map(); // Track intervals for cleanup
+    }
 
     /**
      * Initialize i18n middleware for CDS services
@@ -380,8 +381,12 @@ class I18nMiddleware {
 const i18nMiddleware = new I18nMiddleware();
 
 // Auto-clean cache every hour
-this.intervals.set('interval_383', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => {
+const cacheCleanInterval = setInterval(() => {
     i18nMiddleware.cleanCache();
-}, 60 * 60 * 1000));
+}, 60 * 60 * 1000);
+
+// Track interval for cleanup
+const activeIntervals = new Map();
+activeIntervals.set('cache_clean', cacheCleanInterval);
 
 module.exports = i18nMiddleware;

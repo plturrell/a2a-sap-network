@@ -1,14 +1,12 @@
 const cds = require('@sap/cds');
-const { BaseApplicationService } = require('../utils/BaseApplicationService');
 const GraphAlgorithms = require('../algorithms/graphAlgorithms');
 const TreeAlgorithms = require('../algorithms/treeAlgorithms');
-const GleanService = require('./gleanService');
 
 /**
  * Enhanced Glean Service with CLRS algorithms and Tree operations
  * Extends the existing Glean service with advanced code analysis capabilities
  */
-class EnhancedGleanService extends GleanService {
+class EnhancedGleanService extends cds.ApplicationService {
     constructor(...args) {
         super(...args);
         this.graphAlgorithms = new GraphAlgorithms();
@@ -30,6 +28,24 @@ class EnhancedGleanService extends GleanService {
         
         // Register enhanced actions
         this._registerEnhancedActions();
+    }
+
+    /**
+     * Error handling wrapper for service methods
+     * @private
+     */
+    async _withErrorHandling(methodName, operation) {
+        try {
+            return await operation();
+        } catch (error) {
+            this.logger.error(`${methodName} failed:`, error);
+            return {
+                success: false,
+                error: error.message,
+                methodName,
+                timestamp: new Date().toISOString()
+            };
+        }
     }
 
     /**

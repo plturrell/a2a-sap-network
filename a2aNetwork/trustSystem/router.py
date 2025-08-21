@@ -14,7 +14,7 @@ from .models import (
     SystemHealth, TrustMetrics
 )
 from .service import TrustSystemService
-from app.a2a_registry.service import A2ARegistryService
+from ..registry.service import A2ARegistryService
 
 import logging
 

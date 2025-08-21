@@ -326,7 +326,7 @@ class A2ABlockchainClient:
             
             # Sign and send transaction
             signed_txn = self.agent_identity.account.sign_transaction(transaction)
-            tx_hash = self.web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            tx_hash = self.web3.eth.send_raw_transaction(signed_txn.raw_transaction)
             
             # Wait for confirmation
             receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
@@ -436,7 +436,7 @@ class A2ABlockchainClient:
             
             # Sign and send transaction
             signed_txn = self.agent_identity.account.sign_transaction(transaction)
-            tx_hash = self.web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            tx_hash = self.web3.eth.send_raw_transaction(signed_txn.raw_transaction)
             
             # Wait for confirmation
             receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)

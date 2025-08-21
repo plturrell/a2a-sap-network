@@ -1,7 +1,157 @@
 using a2a.network as db from '../db/schema';
 
 @requires: ['authenticated-user', {kind: 'any', grant: 'READ'}]
-service A2AService @(path: '/api/v1/network') {
+service A2AService @(path: '/api/v1') {
+    
+    // SAP Fiori Launchpad Tile Data Endpoints - 100% Real Data
+    // These replace the Express.js endpoints with proper CAP actions
+    
+    // Individual Agent Status (16 endpoints: /agents/0/status through /agents/15/status)
+    @Common.Label: 'Agent Status'
+    action getAgentStatus(agentId: Integer) returns {
+        d: {
+            title: String;
+            number: String;
+            numberUnit: String;
+            numberState: String;
+            subtitle: String;
+            stateArrow: String;
+            info: String;
+            status: String;
+            agent_id: String;
+            version: String;
+            port: Integer;
+            capabilities: {
+                skills: Integer;
+                handlers: Integer;
+                mcp_tools: Integer;
+                mcp_resources: Integer;
+            };
+            performance: {
+                cpu_usage: Decimal;
+                memory_usage: Decimal;
+                uptime_seconds: Decimal;
+                success_rate: Decimal;
+                avg_response_time_ms: Decimal;
+                processed_today: Integer;
+                error_rate: Decimal;
+                queue_depth: Integer;
+            };
+            timestamp: String;
+        };
+    };
+    
+    // Network Overview Dashboard
+    @Common.Label: 'Network Statistics'
+    action getNetworkStats(id: String) returns {
+        d: {
+            title: String;
+            number: String;
+            numberUnit: String;
+            numberState: String;
+            subtitle: String;
+            stateArrow: String;
+            info: String;
+            real_metrics: {
+                healthy_agents: Integer;
+                total_agents: Integer;
+                agent_health_score: Integer;
+                total_active_tasks: Integer;
+                total_skills: Integer;
+                total_mcp_tools: Integer;
+                blockchain_status: String;
+                blockchain_score: Integer;
+                mcp_status: String;
+                mcp_score: Integer;
+                overall_system_health: Integer;
+            };
+            timestamp: String;
+        };
+    };
+    
+    // Blockchain Monitor
+    @Common.Label: 'Blockchain Statistics'
+    action getBlockchainStats(id: String) returns {
+        d: {
+            title: String;
+            number: String;
+            numberUnit: String;
+            numberState: String;
+            subtitle: String;
+            stateArrow: String;
+            info: String;
+            blockchain_metrics: {
+                network: String;
+                contracts: {
+                    registry: String;
+                    message_router: String;
+                };
+                registered_agents_count: Integer;
+                contract_count: Integer;
+                trust_integration: Boolean;
+                avg_trust_score: Decimal;
+            };
+            timestamp: String;
+        };
+    };
+    
+    // Service Marketplace
+    @Common.Label: 'Service Count'
+    action getServicesCount() returns {
+        d: {
+            title: String;
+            number: String;
+            numberUnit: String;
+            numberState: String;
+            subtitle: String;
+            stateArrow: String;
+            info: String;
+            service_breakdown: {
+                agent_skills: Integer;
+                agent_handlers: Integer;
+                mcp_tools: Integer;
+                database_services: Integer;
+                total_services: Integer;
+            };
+            provider_health: {
+                active_providers: Integer;
+                total_providers: Integer;
+                provider_health_percentage: Integer;
+            };
+            timestamp: String;
+        };
+    };
+    
+    // System Health Summary
+    @Common.Label: 'Health Summary'
+    action getHealthSummary() returns {
+        d: {
+            title: String;
+            number: String;
+            numberUnit: String;
+            numberState: String;
+            subtitle: String;
+            stateArrow: String;
+            info: String;
+            component_health: {
+                agents_health: Integer;
+                blockchain_health: Integer;
+                mcp_health: Integer;
+                api_health: Integer;
+            };
+            system_performance: {
+                avg_cpu_usage: Decimal;
+                avg_memory_usage: Decimal;
+                network_latency: Integer;
+            };
+            error_tracking: {
+                agent_error_rate: Decimal;
+                blockchain_tx_failure_rate: Decimal;
+                api_error_rate: Decimal;
+            };
+            timestamp: String;
+        };
+    };
     
     // Network Statistics for UI tiles - using projection from database
     

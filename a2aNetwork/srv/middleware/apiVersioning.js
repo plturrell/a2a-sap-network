@@ -129,9 +129,11 @@ class APIVersionManager {
         // Initialize metrics tracking
         this.initializeMetrics();
         
+        this.intervals = new Map(); // Track intervals for cleanup
+        
         // Start cleanup and reporting intervals
         this.startMaintenanceTasks();
-    \n        this.intervals = new Map(); // Track intervals for cleanup}
+    }
 
     /**
      * Initialize version usage metrics
@@ -602,19 +604,21 @@ class APIVersionManager {
      */
     startMaintenanceTasks() {
         // Clean up deprecation warnings cache every hour
-        this.intervals.set('interval_605', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => {
+        const cleanupInterval = setInterval(() => {
             const oneHourAgo = Date.now() - (60 * 60 * 1000);
-            for (const [key, timestamp] of this.deprecationWarnings.entries())) {
+            for (const [key, timestamp] of this.deprecationWarnings.entries()) {
                 if (timestamp < oneHourAgo) {
                     this.deprecationWarnings.delete(key);
                 }
             }
         }, 60 * 60 * 1000);
+        this.intervals.set('deprecation_cleanup', cleanupInterval);
         
         // Generate daily analytics report
-        this.intervals.set('interval_615', (function(intervalId) { this.intervals.add(intervalId); return intervalId; }).call(this, setInterval(() => {
+        const reportInterval = setInterval(() => {
             this.generateDailyReport();
-        }, 24 * 60 * 60 * 1000));
+        }, 24 * 60 * 60 * 1000);
+        this.intervals.set('daily_report', reportInterval);
     }
 
     /**

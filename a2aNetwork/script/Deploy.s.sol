@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "../src/AgentRegistry.sol";
 import "../src/MessageRouter.sol";
 import "../contracts/AgentServiceMarketplace.sol";
-import "../contracts/CapabilityMatcher.sol";
+import "../contracts/CapabilityMatcherOptimized.sol";
 import "../contracts/PerformanceReputationSystem.sol";
 
 contract DeployScript is Script {
@@ -28,7 +28,7 @@ contract DeployScript is Script {
         // Deploy new contracts with UUPS proxy pattern
         // Deploy implementations
         AgentServiceMarketplace marketplaceImpl = new AgentServiceMarketplace();
-        CapabilityMatcher matcherImpl = new CapabilityMatcher();
+        CapabilityMatcherOptimized matcherImpl = new CapabilityMatcherOptimized();
         PerformanceReputationSystem reputationImpl = new PerformanceReputationSystem();
         
         // Deploy proxies and initialize
@@ -37,7 +37,7 @@ contract DeployScript is Script {
             address(registry)
         );
         bytes memory matcherInit = abi.encodeWithSelector(
-            CapabilityMatcher.initialize.selector,
+            CapabilityMatcherOptimized.initialize.selector,
             address(registry)
         );
         bytes memory reputationInit = abi.encodeWithSelector(
@@ -58,7 +58,7 @@ contract DeployScript is Script {
             address(matcherImpl),
             matcherInit
         );
-        CapabilityMatcher matcher = CapabilityMatcher(address(matcherProxy));
+        CapabilityMatcherOptimized matcher = CapabilityMatcherOptimized(address(matcherProxy));
         console.log("CapabilityMatcher proxy deployed to:", address(matcher));
         console.log("CapabilityMatcher implementation at:", address(matcherImpl));
         

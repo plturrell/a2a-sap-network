@@ -301,10 +301,10 @@ contract A2ASmartAgent {
         
         A2AMessagePart memory part = A2AMessagePart({
             partType: partType,
-            text: partType.equals("text") ? content : "",
-            functionName: partType.equals("function-call") ? functionName : "",
-            functionArgs: partType.equals("function-call") ? functionArgs : "",
-            functionId: partType.equals("function-call") ? _generateId() : "",
+            text: keccak256(abi.encodePacked(partType)) == keccak256(abi.encodePacked("text")) ? content : "",
+            functionName: keccak256(abi.encodePacked(partType)) == keccak256(abi.encodePacked("function-call")) ? functionName : "",
+            functionArgs: keccak256(abi.encodePacked(partType)) == keccak256(abi.encodePacked("function-call")) ? functionArgs : "",
+            functionId: keccak256(abi.encodePacked(partType)) == keccak256(abi.encodePacked("function-call")) ? _generateId() : "",
             mediaType: "",
             mediaUrl: "",
             mediaData: ""
@@ -331,7 +331,7 @@ contract A2ASmartAgent {
         for (uint i = 0; i < message.parts.length; i++) {
             A2AMessagePart memory part = message.parts[i];
             
-            if (part.partType.equals("function-call")) {
+            if (keccak256(abi.encodePacked(part.partType)) == keccak256(abi.encodePacked("function-call"))) {
                 // Execute the requested skill
                 bool success = _executeSkillFunction(agentId, part.functionName, part.functionArgs, taskId);
                 
@@ -363,17 +363,17 @@ contract A2ASmartAgent {
     ) internal returns (bool) {
         
         // Financial Analysis Skills
-        if (skillId.equals("portfolio-analysis")) {
+        if (keccak256(abi.encodePacked(skillId)) == keccak256(abi.encodePacked("portfolio-analysis"))) {
             return _executePortfolioAnalysis(agentId, args, taskId);
         }
-        else if (skillId.equals("risk-assessment")) {
+        else if (keccak256(abi.encodePacked(skillId)) == keccak256(abi.encodePacked("risk-assessment"))) {
             return _executeRiskAssessment(agentId, args, taskId);
         }
         // Message Routing Skills
-        else if (skillId.equals("message-routing")) {
+        else if (keccak256(abi.encodePacked(skillId)) == keccak256(abi.encodePacked("message-routing"))) {
             return _executeMessageRouting(agentId, args, taskId);
         }
-        else if (skillId.equals("data-transformation")) {
+        else if (keccak256(abi.encodePacked(skillId)) == keccak256(abi.encodePacked("data-transformation"))) {
             return _executeDataTransformation(agentId, args, taskId);
         }
         

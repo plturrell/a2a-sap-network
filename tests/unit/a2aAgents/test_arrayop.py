@@ -147,9 +147,9 @@ def test_array_permutedims():
         assert m1.tomatrix().C == m1.conjugate().tomatrix()
         assert m1.tomatrix().H == m1.adjoint().tomatrix()
 
-        raises(ValueError, lambda: permutedims(m1, (0,)))
-        raises(ValueError, lambda: permutedims(m1, (0, 0)))
-        raises(ValueError, lambda: permutedims(m1, (1, 2, 0)))
+        raises(ValueError, lambda m=m1: permutedims(m, (0,)))
+        raises(ValueError, lambda m=m1: permutedims(m, (0, 0)))
+        raises(ValueError, lambda m=m1: permutedims(m, (1, 2, 0)))
 
         # Some tests with random arrays:
         dims = 6
@@ -172,9 +172,9 @@ def test_array_permutedims():
 
         po = ArrayType(sa, [2, 2, 3, 3, 2, 2])
 
-        raises(ValueError, lambda: permutedims(po, (1, 1)))
-        raises(ValueError, lambda: po.transpose())
-        raises(ValueError, lambda: po.adjoint())
+        raises(ValueError, lambda p=po: permutedims(p, (1, 1)))
+        raises(ValueError, lambda p=po: p.transpose())
+        raises(ValueError, lambda p=po: p.adjoint())
 
         assert permutedims(po, reversed(range(po.rank()))) == ArrayType(
             [[[[[[sa[0], sa[72]], [sa[36], sa[108]]], [[sa[12], sa[84]], [sa[48], sa[120]]], [[sa[24],

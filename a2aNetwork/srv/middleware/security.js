@@ -26,13 +26,9 @@ const corsOptions = {
         ? ['https://a2a-network.cfapps.eu10.hana.ondemand.com']
         : (process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:4004').split(',');
     
-    // Only allow requests with no origin in development mode
+    // Allow requests with no origin (e.g., curl, mobile apps, same-origin requests)
     if (!origin) {
-      if (process.env.NODE_ENV === 'development') {
-        return callback(null, true);
-      } else {
-        return callback(new Error('Origin header required in production'));
-      }
+      return callback(null, true);
     }
     
     if (allowedOrigins.indexOf(origin) !== -1) {

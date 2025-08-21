@@ -1,0 +1,207 @@
+{
+  "timestamp": "2025-08-20T01:42:23.231887",
+  "agents": {
+    "Registry Server (:8000)": {
+      "status": "unreachable",
+      "error": "Cannot connect to host localhost:8000 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8000, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8000)]"
+    },
+    "Data Agent (:8001)": {
+      "status": "unreachable",
+      "error": "Cannot connect to host localhost:8001 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8001, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8001)]"
+    },
+    "Catalog Agent (:8002)": {
+      "status": "unreachable",
+      "error": "Cannot connect to host localhost:8002 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8002, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8002)]"
+    },
+    "Processing Agent (:8003)": {
+      "status": "unreachable",
+      "error": "Cannot connect to host localhost:8003 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8003, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8003)]"
+    },
+    "Validation Agent (:8004)": {
+      "status": "unreachable",
+      "error": "Cannot connect to host localhost:8004 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8004, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8004)]"
+    },
+    "QA Agent (:8005)": {
+      "status": "unreachable",
+      "error": "Cannot connect to host localhost:8005 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8005, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8005)]"
+    },
+    "Quality Control (:8006)": {
+      "status": "unreachable",
+      "error": "Cannot connect to host localhost:8006 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8006, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8006)]"
+    },
+    "Processing Agent (:8007)": {
+      "status": "unreachable",
+      "error": "Cannot connect to host localhost:8007 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8007, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8007)]"
+    },
+    "Reasoning Agent (:8008)": {
+      "status": "unreachable",
+      "error": "Cannot connect to host localhost:8008 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8008, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8008)]"
+    },
+    "Analysis Agent (:8009)": {
+      "status": "unreachable",
+      "error": "Cannot connect to host localhost:8009 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8009, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8009)]"
+    },
+    "Agent Manager (:8010)": {
+      "status": "unreachable",
+      "error": "Cannot connect to host localhost:8010 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8010, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8010)]"
+    },
+    "Data Manager (:8011)": {
+      "status": "unreachable",
+      "error": "Cannot connect to host localhost:8011 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8011, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8011)]"
+    },
+    "Catalog Manager (:8012)": {
+      "status": "unreachable",
+      "error": "Cannot connect to host localhost:8012 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8012, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8012)]"
+    },
+    "Calculation Agent (:8013)": {
+      "status": "unreachable",
+      "error": "Cannot connect to host localhost:8013 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8013, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8013)]"
+    },
+    "Agent Builder (:8014)": {
+      "status": "unreachable",
+      "error": "Cannot connect to host localhost:8014 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8014, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8014)]"
+    },
+    "Embedding Fine-Tuner (:8015)": {
+      "status": "unreachable",
+      "error": "Cannot connect to host localhost:8015 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8015, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8015)]"
+    }
+  },
+  "mcp_servers": {
+    "Enhanced Test Suite (:8100)": {
+      "status": "unreachable",
+      "error": "Cannot connect to host localhost:8100 ssl:default [Multiple exceptions: [Errno 61] Connect call failed ('::1', 8100, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 8100)]"
+    },
+    "Data Standardization (:8101)": {
+      "status": "healthy",
+      "response_time": "N/A",
+      "details": {
+        "status": "healthy",
+        "service": "mcp_data_standardization_server",
+        "port": 8101,
+        "tools": 12,
+        "agent_type": "MockAgent"
+      }
+    },
+    "Vector Similarity (:8102)": {
+      "status": "healthy",
+      "response_time": "N/A",
+      "details": {
+        "status": "healthy",
+        "service": "mcp_vector_similarity_server",
+        "port": 8102,
+        "tools": 5,
+        "agent_type": "MockAgent"
+      }
+    },
+    "Vector Ranking (:8103)": {
+      "status": "healthy",
+      "response_time": "N/A",
+      "details": {
+        "status": "healthy",
+        "service": "mcp_vector_ranking_server",
+        "port": 8103,
+        "tools": 5,
+        "agent_type": "MockAgent"
+      }
+    },
+    "Transport Layer (:8104)": {
+      "status": "healthy",
+      "response_time": "N/A",
+      "details": {
+        "status": "healthy",
+        "service": "mcp_transport_layer_server",
+        "port": 8104,
+        "tools": 2,
+        "agent_type": "MockAgent"
+      }
+    },
+    "Reasoning Agent (:8105)": {
+      "status": "healthy",
+      "response_time": "N/A",
+      "details": {
+        "status": "healthy",
+        "service": "mcp_reasoning_agent_server",
+        "port": 8105,
+        "tools": 9,
+        "agent_type": "MockAgent"
+      }
+    },
+    "Session Management (:8106)": {
+      "status": "healthy",
+      "response_time": "N/A",
+      "details": {
+        "status": "healthy",
+        "service": "mcp_session_management_server",
+        "port": 8106,
+        "tools": 3,
+        "agent_type": "MockAgent"
+      }
+    },
+    "Resource Streaming (:8107)": {
+      "status": "healthy",
+      "response_time": "N/A",
+      "details": {
+        "status": "healthy",
+        "service": "mcp_resource_streaming_server",
+        "port": 8107,
+        "tools": 2,
+        "agent_type": "MockAgent"
+      }
+    },
+    "Confidence Calculator (:8108)": {
+      "status": "healthy",
+      "response_time": "N/A",
+      "details": {
+        "status": "healthy",
+        "service": "mcp_confidence_calculator_server",
+        "port": 8108,
+        "tools": 6,
+        "agent_type": "MockAgent"
+      }
+    },
+    "Semantic Similarity (:8109)": {
+      "status": "healthy",
+      "response_time": "N/A",
+      "details": {
+        "status": "healthy",
+        "service": "mcp_semantic_similarity_server",
+        "port": 8109,
+        "tools": 7,
+        "agent_type": "MockAgent"
+      }
+    }
+  },
+  "infrastructure": {
+    "Redis Cache": {
+      "status": "running",
+      "port": 6379
+    },
+    "Grafana": {
+      "status": "not_running",
+      "port": 3000
+    },
+    "Prometheus": {
+      "status": "running",
+      "port": 9090
+    }
+  },
+  "blockchain": {
+    "Anvil Blockchain": {
+      "status": "healthy",
+      "error": "HTTP 404",
+      "details": {
+        "block_number": 3921,
+        "rpc_healthy": true
+      }
+    }
+  },
+  "summary": {
+    "total_services": 30,
+    "healthy_services": 12,
+    "health_percentage": 40.0,
+    "agents": "0/16",
+    "mcp_servers": "9/10",
+    "blockchain": "1/1",
+    "infrastructure": "2/3"
+  }
+}

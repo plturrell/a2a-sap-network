@@ -62,7 +62,9 @@ class WebSocketSecurityManager {
         this.connectionLimiter = new RateLimiterMemory({
             points: 5, // 5 connections
             duration: 60 // per minute
-        \n        this.intervals = new Map(); // Track intervals for cleanup});
+        });
+        
+        this.intervals = new Map(); // Track intervals for cleanup
         
         this.messageLimiter = new RateLimiterMemory({
             points: WS_SECURITY_CONFIG.MAX_MESSAGES_PER_MINUTE,
