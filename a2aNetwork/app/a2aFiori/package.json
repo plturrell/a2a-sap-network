@@ -13,7 +13,9 @@
   },
   "dependencies": {
     "ws": "^8.14.2",
-    "web-push": "^3.6.6"
+    "web-push": "^3.6.6",
+    "axios": "^1.6.0",
+    "@sap/cds": "^7.0.0"
   },
   "devDependencies": {
     "@ui5/cli": "^3.9.1",

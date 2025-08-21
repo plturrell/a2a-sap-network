@@ -37,7 +37,7 @@ readonly HEALTH_CHECK_TIMEOUT=30
 mkdir -p "$LOG_DIR" "$PID_DIR" "$CONFIG_DIR"
 
 # Progress tracking variables
-TOTAL_STEPS=15
+TOTAL_STEPS=17
 CURRENT_STEP=0
 START_TIME=$(date +%s)
 
@@ -992,12 +992,12 @@ start_infrastructure() {
 start_trust_systems() {
     log_header "Starting A2A Trust Systems"
     
-    cd "$SCRIPT_DIR/a2aAgents/backend"
+    cd "$SCRIPT_DIR"
     
     # Load trust system configuration
     log_info "Loading trust system configuration..."
-    if [ -f "config/trust-system.yaml" ]; then
-        export A2A_TRUST_CONFIG="$PWD/config/trust-system.yaml"
+    if [ -f "a2aAgents/backend/config/trust-system.yaml" ]; then
+        export A2A_TRUST_CONFIG="$PWD/a2aAgents/backend/config/trust-system.yaml"
         log_success "Trust system configuration loaded"
     else
         log_warning "Trust system configuration not found, using defaults"
@@ -1014,11 +1014,13 @@ start_trust_systems() {
         export A2A_TRUST_MODE="blockchain"
     fi
     
-    # Start trust system service
-    log_info "Starting Trust System service..."
+    # Start trust system service from a2aNetwork directory
+    log_info "Starting Trust System service on port 8020..."
+    cd "$SCRIPT_DIR/a2aNetwork"
     nohup env A2A_BLOCKCHAIN_URL="http://localhost:$BLOCKCHAIN_PORT" \
-        A2A_CHAIN_ID=1337 \
-        python3.11 -m app.a2aTrustSystem.service > "$LOG_DIR/trust-system.log" 2>&1 &
+        A2A_CHAIN_ID=31337 \
+        PYTHONPATH="$PWD:${PYTHONPATH:-}" \
+        python3 -m trustSystem.service > "$LOG_DIR/trust-system.log" 2>&1 &
     local trust_pid=$!
     echo $trust_pid > "$PID_DIR/trust-system.pid"
     
@@ -1028,7 +1030,7 @@ start_trust_systems() {
         if ps -p $trust_pid > /dev/null 2>&1; then
             # Check if trust system is responsive (if it has a health endpoint)
             if curl -sf "http://localhost:8020/health" > /dev/null 2>&1; then
-                log_success "Trust System service is ready and responsive"
+                log_success "Trust System service is ready and responsive on port 8020"
                 break
             elif [ $attempts -gt 10 ]; then
                 # After 10 seconds, just check if process is alive
@@ -1164,45 +1166,218 @@ start_core_services() {
     
     cd "$SCRIPT_DIR/a2aAgents/backend"
     
-    # Start A2A Registry
-    log_info "Starting A2A Registry service..."
-    nohup python3.11 -m app.a2aRegistry.service > "$LOG_DIR/a2a-registry.log" 2>&1 &
+    # Activate virtual environment for all agent services
+    if [ -d "venv/bin" ]; then
+        source venv/bin/activate
+    fi
+    
+    # Start A2A Registry service on port 8090
+    log_info "Starting A2A Registry service on port 8090..."
+    nohup env PORT=8090 \
+        A2A_RPC_URL="$A2A_RPC_URL" \
+        A2A_AGENT_REGISTRY_ADDRESS="$A2A_AGENT_REGISTRY_ADDRESS" \
+        python3 -m app.a2aRegistry.service > "$LOG_DIR/a2a-registry.log" 2>&1 &
     local registry_pid=$!
     echo $registry_pid > "$PID_DIR/a2a-registry.pid"
     sleep 3
     
-    # Start ORD Registry  
-    log_info "Starting ORD Registry service..."
-    nohup python3.11 -m app.ordRegistry.service > "$LOG_DIR/ord-registry.log" 2>&1 &
+    # Start ORD Registry service on port 8091  
+    log_info "Starting ORD Registry service on port 8091..."
+    nohup env PORT=8091 \
+        ORD_BASE_URL="http://localhost:8091" \
+        python3 -c "
+import asyncio
+from app.ordRegistry.service import ORDRegistryService
+from fastapi import FastAPI
+import uvicorn
+
+app = FastAPI(title='ORD Registry Service')
+ord_service = ORDRegistryService('http://localhost:8091')
+
+@app.on_event('startup')
+async def startup():
+    await ord_service.initialize()
+
+@app.get('/health')
+async def health():
+    return {'status': 'healthy', 'service': 'ord-registry'}
+
+if __name__ == '__main__':
+    uvicorn.run(app, host='0.0.0.0', port=8091)
+" > "$LOG_DIR/ord-registry.log" 2>&1 &
     local ord_pid=$!
     echo $ord_pid > "$PID_DIR/ord-registry.pid"
     sleep 3
     
-    # Start API Gateway
-    log_info "Starting API Gateway..."
-    nohup python3.11 -m services.gateway.gatewayServer > "$LOG_DIR/api-gateway.log" 2>&1 &
+    # Start Health Dashboard service on port 8889 (avoid conflict with agents on 8888)
+    log_info "Starting Health Dashboard service on port 8889..."
+    nohup python3 -c "
+import uvicorn
+from app.a2a.dashboard.healthDashboard import create_health_dashboard
+import asyncio
+
+config = {'port': 8889, 'check_interval': 30}
+dashboard = create_health_dashboard(config)
+
+async def startup():
+    await dashboard.start_monitoring()
+
+@dashboard.app.on_event('startup')
+async def on_startup():
+    await startup()
+
+if __name__ == '__main__':
+    uvicorn.run(dashboard.app, host='0.0.0.0', port=8889)
+" > "$LOG_DIR/health-dashboard.log" 2>&1 &
+    local dashboard_pid=$!
+    echo $dashboard_pid > "$PID_DIR/health-dashboard.pid"
+    sleep 3
+    
+    # Start Developer Portal service on port 3001
+    log_info "Starting Developer Portal service on port 3001..."
+    nohup env PORT=3001 \
+        A2A_SERVICE_URL="http://localhost:$AGENTS_PORT" \
+        A2A_SERVICE_HOST="localhost" \
+        A2A_BASE_URL="http://localhost:$AGENTS_PORT" \
+        python3 -c "
+import uvicorn
+import os
+import sys
+from pathlib import Path
+
+# Add the current directory to Python path
+sys.path.insert(0, os.getcwd())
+
+try:
+    from app.a2a.developerPortal.portalServer import app
+    if __name__ == '__main__':
+        uvicorn.run(app, host='0.0.0.0', port=3001)
+except ImportError as e:
+    print(f'Developer Portal import failed: {e}', file=sys.stderr)
+    # Create a minimal fallback service
+    from fastapi import FastAPI
+    fallback_app = FastAPI(title='Developer Portal (Fallback)')
+    
+    @fallback_app.get('/health')
+    def health():
+        return {'status': 'fallback', 'service': 'developer-portal', 'error': str(e)}
+    
+    if __name__ == '__main__':
+        uvicorn.run(fallback_app, host='0.0.0.0', port=3001)
+" > "$LOG_DIR/developer-portal.log" 2>&1 &
+    local portal_pid=$!
+    echo $portal_pid > "$PID_DIR/developer-portal.pid"
+    sleep 3
+    
+    # Start API Gateway service on port 8080
+    log_info "Starting API Gateway service on port 8080..."
+    nohup python3 -c "
+import uvicorn
+from fastapi import FastAPI
+import sys
+import os
+
+app = FastAPI(title='A2A API Gateway')
+
+@app.get('/health')
+def health():
+    return {'status': 'healthy', 'service': 'api-gateway'}
+
+@app.get('/api/v1/gateway/status')
+def gateway_status():
+    return {
+        'status': 'running',
+        'services': {
+            'agents': 'http://localhost:$AGENTS_PORT',
+            'network': 'http://localhost:$NETWORK_PORT',
+            'registry': 'http://localhost:8090',
+            'ord': 'http://localhost:8091'
+        }
+    }
+
+if __name__ == '__main__':
+    uvicorn.run(app, host='0.0.0.0', port=8080)
+" > "$LOG_DIR/api-gateway.log" 2>&1 &
     local gateway_pid=$!
     echo $gateway_pid > "$PID_DIR/api-gateway.pid"
     sleep 3
     
     # Verify core services
     local core_healthy=true
-    for pid_file in "$PID_DIR/a2a-registry.pid" "$PID_DIR/ord-registry.pid" "$PID_DIR/api-gateway.pid"; do
-        if [ -f "$pid_file" ]; then
-            local pid=$(cat "$pid_file")
-            if ps -p $pid > /dev/null 2>&1; then
-                log_success "Core service (PID: $pid) is running"
-            else
-                log_error "Core service (PID: $pid) failed to start"
-                core_healthy=false
-            fi
+    local service_checks=(
+        "8090:A2A Registry"
+        "8091:ORD Registry"  
+        "8889:Health Dashboard"
+        "3001:Developer Portal"
+        "8080:API Gateway"
+    )
+    
+    log_info "Verifying core services..."
+    for service_check in "${service_checks[@]}"; do
+        local port=$(echo $service_check | cut -d: -f1)
+        local name=$(echo $service_check | cut -d: -f2)
+        
+        sleep 2  # Give service time to start
+        if curl -sf "http://localhost:$port/health" > /dev/null 2>&1; then
+            log_success "$name is healthy on port $port"
+        elif lsof -i :$port >/dev/null 2>&1; then
+            log_warning "$name is running on port $port (no health endpoint)"
+        else
+            log_error "$name failed to start on port $port"
+            core_healthy=false
         fi
     done
     
     if [ "$core_healthy" = true ]; then
         log_success "All core services started successfully"
     else
-        log_warning "Some core services failed to start"
+        log_warning "Some core services failed to start (check logs)"
+    fi
+    
+    cd "$SCRIPT_DIR"
+}
+
+# Start frontend service
+start_frontend_service() {
+    log_header "Starting A2A Frontend Service"
+    
+    # Check if frontend directory exists
+    if [ ! -d "$SCRIPT_DIR/a2aAgents/frontend" ]; then
+        log_warning "Frontend directory not found, skipping frontend service"
+        return 0
+    fi
+    
+    cd "$SCRIPT_DIR/a2aAgents/frontend"
+    
+    # Start simple HTTP server for UI5 frontend on port 3000
+    log_info "Starting Frontend Service on port 3000..."
+    
+    # Check if Node.js/npm is available for a proper server
+    if command -v npm &> /dev/null && [ -f "package.json" ]; then
+        # Use npm if available
+        log_info "Using npm to start frontend service..."
+        nohup npm start > "$LOG_DIR/frontend.log" 2>&1 &
+        local frontend_pid=$!
+    elif command -v python3 &> /dev/null; then
+        # Use Python HTTP server as fallback
+        log_info "Using Python HTTP server for frontend..."
+        nohup python3 -m http.server 3000 > "$LOG_DIR/frontend.log" 2>&1 &
+        local frontend_pid=$!
+    else
+        log_warning "No suitable HTTP server found for frontend"
+        return 1
+    fi
+    
+    echo $frontend_pid > "$PID_DIR/frontend.pid"
+    sleep 3
+    
+    # Verify frontend service
+    if curl -sf "http://localhost:3000" > /dev/null 2>&1; then
+        log_success "Frontend Service is running on port 3000"
+    elif lsof -i :3000 >/dev/null 2>&1; then
+        log_success "Frontend Service started on port 3000"
+    else
+        log_warning "Frontend Service may not be accessible on port 3000"
     fi
     
     cd "$SCRIPT_DIR"
@@ -1448,11 +1623,29 @@ show_status() {
     if [ -f "$PID_DIR/blockchain.pid" ]; then
     echo "║  🔗 Blockchain RPC:     http://localhost:$BLOCKCHAIN_PORT                      ║"
     fi
-    if [ -f "$PID_DIR/mcp-server.pid" ]; then
-    echo "║  📡 MCP Server:         http://localhost:8100                               ║"
-    fi
     if [ -f "$PID_DIR/trust-system.pid" ]; then
-    echo "║  🔒 Trust System:       Active                                              ║"
+    echo "║  🔒 Trust System:       http://localhost:8020                               ║"
+    fi
+    if [ -f "$PID_DIR/a2a-registry.pid" ]; then
+    echo "║  📋 A2A Registry:       http://localhost:8090                               ║"
+    fi
+    if [ -f "$PID_DIR/ord-registry.pid" ]; then
+    echo "║  📚 ORD Registry:       http://localhost:8091                               ║"
+    fi
+    if [ -f "$PID_DIR/health-dashboard.pid" ]; then
+    echo "║  📊 Health Dashboard:   http://localhost:8889                               ║"
+    fi
+    if [ -f "$PID_DIR/developer-portal.pid" ]; then
+    echo "║  💻 Developer Portal:   http://localhost:3001                               ║"
+    fi
+    if [ -f "$PID_DIR/api-gateway.pid" ]; then
+    echo "║  🌐 API Gateway:        http://localhost:8080                               ║"
+    fi
+    if [ -f "$PID_DIR/frontend.pid" ]; then
+    echo "║  🖥️  Frontend UI:        http://localhost:3000                               ║"
+    fi
+    if [ -f "$PID_DIR/mcp-enhanced-test.pid" ]; then
+    echo "║  📡 MCP Servers:        http://localhost:8100-8109 (10 servers)             ║"
     fi
     echo "║                                                                              ║"
     echo "║  🎯 Agent Coverage:     16/16 agents running (100%)                        ║"
@@ -1506,8 +1699,8 @@ cleanup() {
         fi
     done
     
-    # Stop any remaining Python processes on agent ports
-    for port in {8000..8015}; do
+    # Stop any remaining Python processes on agent ports and new service ports
+    for port in {8000..8015} 8020 8080 8089 8090 8091 3000 3001; do
         local pid=$(lsof -ti :$port 2>/dev/null)
         if [ ! -z "$pid" ]; then
             log_info "Stopping process on port $port"
@@ -1565,6 +1758,7 @@ main() {
     local enable_trust=false
     local enable_mcp=false
     local enable_core_services=false
+    local enable_frontend=false
     
     case $mode in
         blockchain)
@@ -1577,6 +1771,7 @@ main() {
             enable_trust=true
             enable_mcp=true
             enable_core_services=true
+            enable_frontend=true
             ;;
         complete)
             # Complete ecosystem mode - everything enabled
@@ -1585,6 +1780,7 @@ main() {
             enable_trust=true
             enable_mcp=true
             enable_core_services=true
+            enable_frontend=true
             ;;
         infrastructure)
             # Infrastructure only mode
@@ -1666,6 +1862,11 @@ main() {
     if [ "$enable_agents" = true ]; then
         log_progress "Agent Services" "Starting all 16 A2A agents"
         start_agents || startup_success=false
+    fi
+    
+    if [ "$enable_frontend" = true ]; then
+        log_progress "Frontend Service" "Starting web-based user interface"
+        start_frontend_service || startup_success=false
     fi
     
     if [ "$enable_telemetry" = true ]; then

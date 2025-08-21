@@ -13,7 +13,7 @@ const PORT = process.env.STATIC_SERVER_PORT || 4005;
 
 // Enable CORS for development
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:4004', 'http://localhost:8080'],
+  origin: ['http://localhost:4004', 'http://localhost:8080'],
   credentials: true
 }));
 

@@ -21,6 +21,7 @@ class EventBusService extends EventEmitter {
         this.logger = cds.log('event-bus');
         this.systemMonitor = null;
         this.intervals = new Map();
+        this.realSystemConnector = null;
         
         this.initialize().catch(error => {
             this.logger.error('Failed to initialize event bus service:', error);
@@ -32,13 +33,20 @@ class EventBusService extends EventEmitter {
             // Initialize WebSocket server for event distribution
             await this.initializeWebSocketServer();
             
-            // Start system monitoring
-            this.startSystemMonitoring();
+            // Initialize real system connector (NO MOCKS)
+            this.realSystemConnector = new RealSystemEventConnector();
+            await this.realSystemConnector.initialize();
             
-            // Set up event handlers
+            // Set up event handlers to forward real system events
+            this.setupRealSystemEventForwarding();
+            
+            // Set up other event handlers
             this.setupEventHandlers();
             
-            this.logger.info('Event bus service initialized successfully');
+            // Start system monitoring with real data
+            this.startSystemMonitoring();
+            
+            this.logger.info('Event bus service initialized with REAL system connections');
         } catch (error) {
             this.logger.error('Event bus initialization error:', error);
             throw error;
@@ -498,8 +506,61 @@ class EventBusService extends EventEmitter {
         return [];
     }
 
+    setupRealSystemEventForwarding() {
+        // Forward all real system events from the connector to our event bus
+        this.realSystemConnector.on('agent.connected', (data) => {
+            this.publishEvent({ type: 'agent.connected', data });
+        });
+
+        this.realSystemConnector.on('agent.disconnected', (data) => {
+            this.publishEvent({ type: 'agent.disconnected', data });
+        });
+
+        this.realSystemConnector.on('agent.status_changed', (data) => {
+            this.publishEvent({ type: 'agent.status_changed', data });
+        });
+
+        this.realSystemConnector.on('agent.trust_updated', (data) => {
+            this.publishEvent({ type: 'agent.trust_updated', data });
+        });
+
+        this.realSystemConnector.on('transaction.pending', (data) => {
+            this.publishEvent({ type: 'transaction.pending', data });
+        });
+
+        this.realSystemConnector.on('transaction.completed', (data) => {
+            this.publishEvent({ type: 'transaction.completed', data });
+        });
+
+        this.realSystemConnector.on('transaction.failed', (data) => {
+            this.publishEvent({ type: 'transaction.failed', data });
+        });
+
+        this.realSystemConnector.on('system.performance.update', (data) => {
+            this.publishEvent({ type: 'system.performance.update', data });
+        });
+
+        this.realSystemConnector.on('system.alert.high_resource_usage', (data) => {
+            this.publishEvent({ type: 'system.alert.high_resource_usage', data });
+        });
+
+        this.realSystemConnector.on('system.alert.agent_down', (data) => {
+            this.publishEvent({ type: 'system.alert.agent_down', data });
+        });
+
+        this.realSystemConnector.on('system.alert', (data) => {
+            this.publishEvent({ type: 'system.alert', data });
+        });
+
+        this.realSystemConnector.on('security.alert', (data) => {
+            this.publishEvent({ type: 'security.alert', data });
+        });
+
+        this.logger.info('✅ Real system event forwarding configured');
+    }
+
     setupEventHandlers() {
-        // Handle events from other services
+        // Handle events from other services (keep existing handlers)
         this.on('agent.registered', (agentData) => {
             this.publishEvent({
                 type: 'agent.registered',
@@ -659,6 +720,11 @@ class EventBusService extends EventEmitter {
             clearInterval(intervalId);
         }
         this.intervals.clear();
+
+        // Shutdown real system connector
+        if (this.realSystemConnector) {
+            this.realSystemConnector.shutdown();
+        }
 
         // Close all client connections
         for (const [id, client] of this.clients) {

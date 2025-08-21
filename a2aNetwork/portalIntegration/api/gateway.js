@@ -21,7 +21,7 @@ class PortalAPIGateway {
         this.config = {
             port: config.port || 3001,
             wsPort: config.wsPort || 3002,
-            corsOrigin: config.corsOrigin || ['http://localhost:3000'],
+            corsOrigin: config.corsOrigin || ['http://localhost:4004', 'http://localhost:8080'],
             rateLimit: config.rateLimit || 100, // requests per minute
             network: config.network || 'mainnet',
             privateKey: config.privateKey,
