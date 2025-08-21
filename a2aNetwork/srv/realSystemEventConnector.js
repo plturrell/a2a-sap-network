@@ -18,6 +18,11 @@ class RealSystemEventConnector extends EventEmitter {
         this.maxRetries = 5;
         this.retryDelay = 5000;
         
+        // Agent health monitoring
+        this.previousAgentStatuses = null;
+        this.lastSystemEvents = [];
+        this.healthMonitorInterval = null;
+        
         // Real service endpoints
         this.services = {
             registry: {
@@ -32,8 +37,12 @@ class RealSystemEventConnector extends EventEmitter {
                 ws: process.env.METRICS_WS || 'ws://localhost:3000/ws/metrics'
             },
             security: {
-                http: process.env.SECURITY_API_URL || 'http://localhost:8001/security',
-                events: process.env.SECURITY_EVENTS_URL || 'http://localhost:8001/security/events'
+                http: process.env.SECURITY_API_URL || 'http://localhost:8001',
+                events: process.env.SECURITY_EVENTS_URL || 'http://localhost:8001'
+            },
+            monitoring: {
+                http: process.env.MONITORING_SERVICE_URL || 'http://localhost:4004/monitoring',
+                systemHealth: process.env.SYSTEM_HEALTH_URL || 'http://localhost:8001/health'
             }
         };
     }
@@ -53,6 +62,9 @@ class RealSystemEventConnector extends EventEmitter {
             
             // Connect to metrics service
             await this.connectToMetricsService();
+
+            // Start continuous agent health monitoring
+            await this.startAgentHealthMonitoring();
 
             this.isInitialized = true;
             this.logger.info('✅ Real system event connector initialized');
@@ -348,7 +360,7 @@ class RealSystemEventConnector extends EventEmitter {
 
         const poll = async () => {
             try {
-                const response = await axios.get(`${this.services.security.events}/recent`, {
+                const response = await axios.get(`${this.services.security.events}/events/recent`, {
                     timeout: 5000,
                     params: { since: new Date(Date.now() - pollInterval - 5000).toISOString() }
                 });
@@ -357,6 +369,8 @@ class RealSystemEventConnector extends EventEmitter {
                     response.data.events.forEach(event => {
                         this.handleSecurityEvent(event);
                     });
+                    
+                    this.logger.debug(`📡 Polled ${response.data.events.length} security events`);
                 }
             } catch (error) {
                 this.logger.error('Failed to poll security events:', error);
@@ -410,23 +424,285 @@ class RealSystemEventConnector extends EventEmitter {
         }, delay);
     }
 
-    // Real-time data fetchers (replacing stubs)
+    // Real agent health monitoring using existing monitoring services
+    async startAgentHealthMonitoring() {
+        this.logger.info('🔍 Starting continuous agent health monitoring...');
+        
+        // Monitor every 30 seconds
+        this.healthMonitorInterval = setInterval(async () => {
+            await this.checkAgentHealth();
+        }, 30000);
+        
+        // Initial check
+        await this.checkAgentHealth();
+    }
+
+    async checkAgentHealth() {
+        try {
+            // Get statuses from both monitoring services
+            const [monitoringData, systemHealthData] = await Promise.allSettled([
+                this.getAgentStatusesFromMonitoringService(),
+                this.getAgentStatusesFromSystemHealth()
+            ]);
+            
+            let currentStatuses = [];
+            
+            // Use monitoring service data if available, fallback to system health
+            if (monitoringData.status === 'fulfilled' && monitoringData.value.length > 0) {
+                currentStatuses = monitoringData.value;
+                this.logger.debug('📊 Using monitoring service data');
+            } else if (systemHealthData.status === 'fulfilled' && systemHealthData.value.length > 0) {
+                currentStatuses = systemHealthData.value;
+                this.logger.debug('🏥 Using system health data');
+            } else {
+                this.logger.warn('⚠️ No agent health data available from either service');
+                return;
+            }
+            
+            // Detect crashes and recoveries
+            await this.detectAgentStateChanges(currentStatuses);
+            
+            // Store for next comparison
+            this.previousAgentStatuses = JSON.parse(JSON.stringify(currentStatuses));
+            
+        } catch (error) {
+            this.logger.error('❌ Failed to check agent health:', error);
+        }
+    }
+
+    async getAgentStatusesFromMonitoringService() {
+        try {
+            const response = await axios.get(`${this.services.monitoring.http}/agents`, {
+                timeout: 10000,
+                headers: { 'Accept': 'application/json' }
+            });
+            
+            if (response.data && response.data.agents) {
+                return response.data.agents.map(agent => ({
+                    agentId: agent.id,
+                    name: agent.name,
+                    status: agent.status, // 'running', 'degraded', 'down', 'unknown'
+                    uptime: agent.uptime,
+                    lastActivity: agent.lastActivity,
+                    healthScore: agent.healthScore,
+                    performanceMetrics: agent.performanceMetrics,
+                    environment: agent.environment,
+                    type: agent.type,
+                    source: 'monitoring_service'
+                }));
+            }
+            return [];
+        } catch (error) {
+            this.logger.debug('Monitoring service unavailable:', error.message);
+            return [];
+        }
+    }
+
+    async getAgentStatusesFromSystemHealth() {
+        try {
+            const response = await axios.get(`${this.services.monitoring.systemHealth}`, {
+                timeout: 10000,
+                headers: { 'Accept': 'application/json' }
+            });
+            
+            if (response.data && response.data.services) {
+                const agentStatuses = [];
+                
+                // Process agent services from system health
+                if (response.data.services.agent) {
+                    Object.entries(response.data.services.agent).forEach(([name, service]) => {
+                        agentStatuses.push({
+                            agentId: this.extractAgentId(name),
+                            name: name,
+                            status: this.mapSystemHealthStatus(service.status),
+                            lastActivity: new Date().toISOString(),
+                            healthScore: service.status === 'healthy' ? 100 : 
+                                       service.status === 'degraded' ? 50 : 0,
+                            responseTime: service.response_time_ms,
+                            error: service.error,
+                            environment: 'production',
+                            type: 'agent',
+                            source: 'system_health'
+                        });
+                    });
+                }
+                
+                return agentStatuses;
+            }
+            return [];
+        } catch (error) {
+            this.logger.debug('System health service unavailable:', error.message);
+            return [];
+        }
+    }
+
+    extractAgentId(serviceName) {
+        // Extract agent ID from service name
+        const match = serviceName.match(/(\w+)\s*(Agent|Server|Manager)/);
+        return match ? match[1].toLowerCase().replace(/\s+/g, '_') : serviceName.toLowerCase().replace(/\s+/g, '_');
+    }
+
+    mapSystemHealthStatus(healthStatus) {
+        // Map system health statuses to our expected statuses
+        switch (healthStatus) {
+            case 'healthy': return 'running';
+            case 'degraded': return 'degraded';
+            case 'unhealthy': return 'down';
+            default: return 'unknown';
+        }
+    }
+
+    async detectAgentStateChanges(currentStatuses) {
+        if (!this.previousAgentStatuses) return;
+        
+        for (const current of currentStatuses) {
+            const previous = this.previousAgentStatuses.find(p => p.agentId === current.agentId);
+            
+            if (previous && previous.status !== current.status) {
+                // Agent status changed!
+                
+                if (previous.status === 'running' && 
+                    (current.status === 'down' || current.status === 'unknown')) {
+                    
+                    // AGENT CRASH DETECTED
+                    const crashEvent = {
+                        type: 'agent_crash',
+                        agentId: current.agentId,
+                        agentName: current.name,
+                        previousStatus: previous.status,
+                        currentStatus: current.status,
+                        lastActivity: current.lastActivity,
+                        healthScore: current.healthScore,
+                        timestamp: new Date().toISOString(),
+                        severity: 'high',
+                        source: current.source,
+                        details: {
+                            type: current.type,
+                            environment: current.environment,
+                            uptime: previous.uptime,
+                            performanceMetrics: current.performanceMetrics,
+                            responseTime: current.responseTime,
+                            error: current.error
+                        }
+                    };
+                    
+                    this.logger.error(`🚨 AGENT CRASH DETECTED: ${current.name} (${current.agentId}) - ${previous.status} → ${current.status}`);
+                    
+                    // Emit crash event
+                    this.emit('agent.crashed', crashEvent);
+                    this.lastSystemEvents.push(crashEvent);
+                    
+                } else if ((previous.status === 'down' || previous.status === 'unknown') && 
+                          current.status === 'running') {
+                    
+                    // AGENT RECOVERY DETECTED
+                    const recoveryEvent = {
+                        type: 'agent_recovery',
+                        agentId: current.agentId,
+                        agentName: current.name,
+                        previousStatus: previous.status,
+                        currentStatus: current.status,
+                        healthScore: current.healthScore,
+                        timestamp: new Date().toISOString(),
+                        severity: 'info',
+                        source: current.source,
+                        details: {
+                            type: current.type,
+                            environment: current.environment,
+                            downtime: this.calculateDowntime(previous.lastActivity),
+                            responseTime: current.responseTime
+                        }
+                    };
+                    
+                    this.logger.info(`✅ AGENT RECOVERY: ${current.name} (${current.agentId}) - ${previous.status} → ${current.status}`);
+                    
+                    // Emit recovery event
+                    this.emit('agent.recovered', recoveryEvent);
+                    this.lastSystemEvents.push(recoveryEvent);
+                    
+                } else if (previous.status === 'running' && current.status === 'degraded') {
+                    
+                    // AGENT DEGRADATION DETECTED
+                    const degradationEvent = {
+                        type: 'agent_degraded',
+                        agentId: current.agentId,
+                        agentName: current.name,
+                        previousStatus: previous.status,
+                        currentStatus: current.status,
+                        healthScore: current.healthScore,
+                        timestamp: new Date().toISOString(),
+                        severity: 'medium',
+                        source: current.source,
+                        details: {
+                            type: current.type,
+                            environment: current.environment,
+                            performanceMetrics: current.performanceMetrics,
+                            responseTime: current.responseTime
+                        }
+                    };
+                    
+                    this.logger.warn(`⚠️ AGENT DEGRADED: ${current.name} (${current.agentId}) - Health score: ${current.healthScore}`);
+                    
+                    // Emit degradation event
+                    this.emit('agent.degraded', degradationEvent);
+                    this.lastSystemEvents.push(degradationEvent);
+                }
+            }
+        }
+        
+        // Keep only last 100 events to prevent memory growth
+        if (this.lastSystemEvents.length > 100) {
+            this.lastSystemEvents = this.lastSystemEvents.slice(-100);
+        }
+    }
+
+    calculateDowntime(lastActivity) {
+        if (!lastActivity) return 'unknown';
+        
+        const now = new Date();
+        const lastSeen = new Date(lastActivity);
+        const downtime = Math.floor((now - lastSeen) / 1000); // seconds
+        
+        if (downtime < 60) return `${downtime}s`;
+        if (downtime < 3600) return `${Math.floor(downtime / 60)}m`;
+        return `${Math.floor(downtime / 3600)}h`;
+    }
+
+    // Public method for the event bus service to get current agent statuses
     async getRealAgentStatuses() {
         try {
-            const response = await axios.get(`${this.services.registry.http}/agents`, {
-                timeout: 5000
-            });
-
-            return response.data.agents.map(agent => ({
-                id: agent.agent_id,
-                name: agent.name,
-                status: agent.status,
-                ownerId: agent.registered_by,
-                capabilities: agent.capabilities,
-                lastSeen: agent.last_seen,
-                statusChanged: agent.status !== agent.previous_status,
-                connected: agent.status === 'active'
-            }));
+            // Return the most recent agent statuses from our monitoring
+            if (this.previousAgentStatuses && this.previousAgentStatuses.length > 0) {
+                return this.previousAgentStatuses.map(agent => ({
+                    id: agent.agentId,
+                    name: agent.name,
+                    status: agent.status,
+                    lastSeen: agent.lastActivity,
+                    healthScore: agent.healthScore,
+                    connected: agent.status === 'running',
+                    uptime: agent.uptime,
+                    environment: agent.environment,
+                    type: agent.type
+                }));
+            }
+            
+            // Fallback to immediate check
+            const currentStatuses = await this.getAgentStatusesFromMonitoringService();
+            if (currentStatuses.length > 0) {
+                return currentStatuses.map(agent => ({
+                    id: agent.agentId,
+                    name: agent.name,
+                    status: agent.status,
+                    lastSeen: agent.lastActivity,
+                    healthScore: agent.healthScore,
+                    connected: agent.status === 'running',
+                    uptime: agent.uptime,
+                    environment: agent.environment,
+                    type: agent.type
+                }));
+            }
+            
+            return [];
         } catch (error) {
             this.logger.error('Failed to get real agent statuses:', error);
             return [];
@@ -461,7 +737,7 @@ class RealSystemEventConnector extends EventEmitter {
 
     async getRealSecurityEvents() {
         try {
-            const response = await axios.get(`${this.services.security.events}/recent`, {
+            const response = await axios.get(`${this.services.security.events}/events/recent`, {
                 timeout: 5000,
                 params: { limit: 50 }
             });
@@ -474,10 +750,14 @@ class RealSystemEventConnector extends EventEmitter {
                 source: event.source_ip,
                 threat: event.event_type,
                 timestamp: event.timestamp,
+                title: event.title,
                 metadata: {
                     eventId: event.event_id,
                     affectedResources: event.affected_resources,
-                    indicators: event.indicators_of_compromise
+                    indicators: event.indicators_of_compromise,
+                    responseActions: event.response_actions,
+                    resolved: event.resolved,
+                    falsePositive: event.false_positive
                 }
             }));
         } catch (error) {
@@ -533,6 +813,13 @@ class RealSystemEventConnector extends EventEmitter {
     shutdown() {
         this.logger.info('Shutting down real system event connector...');
 
+        // Stop health monitoring
+        if (this.healthMonitorInterval) {
+            clearInterval(this.healthMonitorInterval);
+            this.healthMonitorInterval = null;
+            this.logger.info('Stopped agent health monitoring');
+        }
+
         // Close all WebSocket connections
         for (const [name, connection] of this.connections) {
             if (connection && connection.readyState === WebSocket.OPEN) {
@@ -543,6 +830,8 @@ class RealSystemEventConnector extends EventEmitter {
 
         this.connections.clear();
         this.retryAttempts.clear();
+        this.previousAgentStatuses = null;
+        this.lastSystemEvents = [];
         this.isInitialized = false;
 
         this.logger.info('Real system event connector shutdown complete');

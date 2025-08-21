@@ -556,6 +556,36 @@ class EventBusService extends EventEmitter {
             this.publishEvent({ type: 'security.alert', data });
         });
 
+        // NEW: Real agent crash detection events
+        this.realSystemConnector.on('agent.crashed', (data) => {
+            this.publishEvent({ 
+                type: 'agent.crashed', 
+                data,
+                priority: 'high',
+                requiresUserAttention: true
+            });
+            this.logger.error(`🚨 Agent crash event published: ${data.agentName}`);
+        });
+
+        this.realSystemConnector.on('agent.recovered', (data) => {
+            this.publishEvent({ 
+                type: 'agent.recovered', 
+                data,
+                priority: 'info'
+            });
+            this.logger.info(`✅ Agent recovery event published: ${data.agentName}`);
+        });
+
+        this.realSystemConnector.on('agent.degraded', (data) => {
+            this.publishEvent({ 
+                type: 'agent.degraded', 
+                data,
+                priority: 'medium',
+                requiresUserAttention: true
+            });
+            this.logger.warn(`⚠️ Agent degradation event published: ${data.agentName}`);
+        });
+
         this.logger.info('✅ Real system event forwarding configured');
     }
 
