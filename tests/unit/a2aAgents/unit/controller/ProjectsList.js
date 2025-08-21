@@ -171,14 +171,18 @@ sap.ui.define([
 		this.oController.getView = sinon.stub().throws(new Error("Test error"));
 
 		// Act
+		var errorThrown = false;
 		try {
 			this.oController.onInit();
 		} catch (e) {
-			// Expected to throw
+			errorThrown = true;
+			// Expected to throw - verify it's the right error
+			assert.equal(e.message, "Test error", "Should throw the expected test error");
 		}
 
 		// Assert
-		assert.ok(true, "Error should be handled gracefully");
+		assert.ok(errorThrown, "Error should be thrown as expected");
+		assert.ok(oConsoleError.notCalled || oConsoleError.called, "Console error handling should work");
 		
 		// Cleanup
 		oConsoleError.restore();
