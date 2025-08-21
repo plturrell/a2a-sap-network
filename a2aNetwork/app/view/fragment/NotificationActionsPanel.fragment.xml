@@ -1,0 +1,78 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    
+    <!-- Interactive Action Panel for Notifications -->
+    <Panel class="actionPanel" headerText="Quick Actions" expandable="false">
+        <content>
+            <HBox wrap="Wrap" class="actionButtons">
+                
+                <!-- Primary Actions based on notification type -->
+                <Button 
+                    text="{path: 'notificationModel>type', formatter: '.getPrimaryActionText'}"
+                    icon="{path: 'notificationModel>type', formatter: '.getPrimaryActionIcon'}"
+                    type="{path: 'notificationModel>priority', formatter: '.getButtonType'}"
+                    press="onPrimaryAction"
+                    class="sapUiTinyMarginEnd primaryActionButton"/>
+                
+                <!-- Chat Action - Always Available -->
+                <Button 
+                    text="💬 Start Chat"
+                    icon="sap-icon://conversation"
+                    type="Emphasized"
+                    press="onOpenContextualChat"
+                    class="sapUiTinyMarginEnd chatActionButton"/>
+                
+                <!-- Context-specific actions -->
+                <Button 
+                    text="📊 View Details"
+                    icon="sap-icon://detail-view"
+                    type="Default"
+                    press="onViewNotificationDetails"
+                    class="sapUiTinyMarginEnd"/>
+                
+                <!-- Mark as resolved -->
+                <Button 
+                    text="✅ Resolve"
+                    icon="sap-icon://accept"
+                    type="Accept"
+                    press="onMarkAsResolved"
+                    visible="{= ${notificationModel>status} !== 'resolved'}"
+                    class="sapUiTinyMarginEnd"/>
+                
+                <!-- Dismiss notification -->
+                <Button 
+                    text="❌ Dismiss"
+                    icon="sap-icon://decline"
+                    type="Reject"
+                    press="onDismissNotification"
+                    class="sapUiTinyMarginEnd"/>
+                
+            </HBox>
+            
+            <!-- Quick Response Section for urgent notifications -->
+            <VBox visible="{= ${notificationModel>priority} === 'critical' || ${notificationModel>priority} === 'high'}" class="sapUiMediumMarginTop">
+                <Label text="Quick Response:" class="quickResponseLabel"/>
+                <TextArea 
+                    value=""
+                    placeholder="Type a quick response or question for the chat agent..."
+                    rows="2"
+                    width="100%"
+                    class="quickResponseInput"/>
+                <HBox class="sapUiTinyMarginTop">
+                    <Button 
+                        text="🚀 Send &amp; Start Chat"
+                        type="Emphasized"
+                        press="onSendQuickResponseAndChat"
+                        class="sapUiTinyMarginEnd"/>
+                    <Button 
+                        text="💾 Save Response"
+                        type="Default"
+                        press="onSaveQuickResponse"/>
+                </HBox>
+            </VBox>
+            
+        </content>
+    </Panel>
+    
+</core:FragmentDefinition>

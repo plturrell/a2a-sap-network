@@ -37,7 +37,7 @@ readonly HEALTH_CHECK_TIMEOUT=30
 mkdir -p "$LOG_DIR" "$PID_DIR" "$CONFIG_DIR"
 
 # Progress tracking variables
-TOTAL_STEPS=17
+TOTAL_STEPS=18
 CURRENT_STEP=0
 START_TIME=$(date +%s)
 
@@ -1383,6 +1383,81 @@ start_frontend_service() {
     cd "$SCRIPT_DIR"
 }
 
+# Start notification system
+start_notification_system() {
+    log_header "Starting A2A Notification System"
+    
+    cd "$SCRIPT_DIR/a2aNetwork"
+    
+    # Check if notification services exist
+    if [ ! -f "srv/integratedNotificationService.js" ]; then
+        log_warning "Notification service not found, skipping notification system"
+        return 1
+    fi
+    
+    log_info "Starting Integrated Notification System..."
+    
+    # Set required environment variables for notifications
+    export NOTIFICATION_PORT=${NOTIFICATION_PORT:-8022}
+    export A2A_NOTIFICATION_URL="http://localhost:$NOTIFICATION_PORT"
+    
+    # Start the notification system with proper environment
+    log_substep "Initializing notification persistence"
+    log_substep "Starting push notification service"
+    log_substep "Connecting to event bus system"
+    log_substep "Enabling real-time notifications"
+    
+    # Start notification system
+    nohup env A2A_SERVICE_URL="$A2A_SERVICE_URL" \
+        A2A_SERVICE_HOST="$A2A_SERVICE_HOST" \
+        A2A_BASE_URL="$A2A_BASE_URL" \
+        A2A_NOTIFICATION_URL="$A2A_NOTIFICATION_URL" \
+        NOTIFICATION_PORT="$NOTIFICATION_PORT" \
+        node srv/startRealNotificationSystem.js > "$LOG_DIR/notification-system.log" 2>&1 &
+    
+    local notification_pid=$!
+    echo $notification_pid > "$PID_DIR/notification.pid"
+    
+    # Wait for notification system to initialize
+    log_info "Waiting for notification system to initialize..."
+    sleep 5
+    
+    # Verify notification system is running
+    local max_attempts=12
+    local attempt=1
+    local notification_healthy=false
+    
+    while [ $attempt -le $max_attempts ]; do
+        log_debug "Checking notification system health (attempt $attempt/$max_attempts)"
+        
+        # Check if process is running
+        if kill -0 $notification_pid 2>/dev/null; then
+            # Check if service is responding (if it exposes a health endpoint)
+            if lsof -i :$NOTIFICATION_PORT >/dev/null 2>&1; then
+                notification_healthy=true
+                break
+            fi
+        fi
+        
+        sleep 2
+        attempt=$((attempt + 1))
+    done
+    
+    if [ "$notification_healthy" = true ]; then
+        log_success "Notification System is running on port $NOTIFICATION_PORT"
+        log_info "📧 Real-time notifications enabled"
+        log_info "🔔 Push notifications configured"
+        log_info "📱 Event-driven alerts active"
+        log_info "💾 Notification persistence enabled"
+    else
+        log_error "Notification System failed to start properly"
+        log_info "Check $LOG_DIR/notification-system.log for details"
+        return 1
+    fi
+    
+    cd "$SCRIPT_DIR"
+}
+
 # Verify all agents are running (100% coverage check)
 verify_all_agents() {
     log_header "Verifying All 16 Agents Are Running (100% Coverage Check)"
@@ -1868,6 +1943,10 @@ main() {
         log_progress "Frontend Service" "Starting web-based user interface"
         start_frontend_service || startup_success=false
     fi
+    
+    # Always start notification system for production readiness
+    log_progress "Notification System" "Starting real-time notifications and alerts"
+    start_notification_system || startup_success=false
     
     if [ "$enable_telemetry" = true ]; then
         start_telemetry

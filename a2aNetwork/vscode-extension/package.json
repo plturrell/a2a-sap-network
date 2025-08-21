@@ -152,7 +152,7 @@
         },
         "a2a.registryUrl": {
           "type": "string",
-          "default": "http://localhost:3000",
+          "default": "http://localhost:4004",
           "description": "Default registry URL"
         },
         "a2a.enableLivePreview": {

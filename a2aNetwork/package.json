@@ -146,7 +146,8 @@
     "winston": "^3.11.0",
     "winston-daily-rotate-file": "^4.7.1",
     "ws": "^8.14.2",
-    "yaml": "^2.3.4"
+    "yaml": "^2.3.4",
+    "axios": "^1.11.0"
   },
   "devDependencies": {
     "@cap-js/sqlite": "^1.4.0",
@@ -156,7 +157,6 @@
     "@sap/ux-ui5-tooling": "^1.11.0",
     "@sapui5/ts-types": "^1.120.0",
     "@types/node": "^20.10.0",
-    "axios": "^1.11.0",
     "chai": "^4.5.0",
     "chai-as-promised": "^7.1.1",
     "chai-subset": "^1.6.0",
