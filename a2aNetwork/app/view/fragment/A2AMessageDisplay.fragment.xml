@@ -1,0 +1,220 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.ui.layout.form">
+    
+    <VBox class="a2aMessageDisplay">
+        
+        <!-- A2A Protocol Information -->
+        <Panel 
+            headerText="A2A Protocol Details" 
+            expandable="true" 
+            expanded="false"
+            class="a2aProtocolPanel">
+            <content>
+                <f:SimpleForm 
+                    editable="false" 
+                    layout="ResponsiveGridLayout"
+                    labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12"
+                    emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0"
+                    columnsXL="2" columnsL="2" columnsM="1"
+                    class="a2aProtocolDetails">
+                    
+                    <Label text="Protocol Version:"/>
+                    <Text text="{notificationModel>a2aMessage/originalProtocol}" class="protocolVersion"/>
+                    
+                    <Label text="Message ID:"/>
+                    <Text text="{notificationModel>metadata/messageId}" class="messageId"/>
+                    
+                    <Label text="Intent Classification:"/>
+                    <ObjectStatus 
+                        text="{notificationModel>a2aMessage/intentClassification}"
+                        state="{path: 'notificationModel>a2aMessage/intentClassification', formatter: '.formatIntentState'}"
+                        class="intentStatus"/>
+                    
+                    <Label text="Urgency Level:"/>
+                    <ObjectStatus 
+                        text="{notificationModel>a2aMessage/urgencyLevel}"
+                        state="{path: 'notificationModel>a2aMessage/urgencyLevel', formatter: '.formatUrgencyState'}"
+                        class="urgencyStatus"/>
+                    
+                    <Label text="Expected Response Time:"/>
+                    <Text text="{notificationModel>a2aMessage/expectedResponseTime}" class="responseTime"/>
+                    
+                    <Label text="Conversation ID:"/>
+                    <Link 
+                        text="{notificationModel>metadata/conversationId}"
+                        press="onViewConversation"
+                        class="conversationLink"/>
+                    
+                </f:SimpleForm>
+            </content>
+        </Panel>
+        
+        <!-- Human-Readable Message Translation -->
+        <Panel 
+            headerText="Human Translation" 
+            class="humanTranslationPanel">
+            <content>
+                <VBox class="translationContent">
+                    
+                    <!-- Main translated message -->
+                    <FormattedText 
+                        htmlText="{notificationModel>metadata/translatedMessage}"
+                        class="translatedMessage"/>
+                    
+                    <!-- Context explanation -->
+                    <HBox alignItems="Center" class="contextInfo sapUiSmallMarginTop">
+                        <core:Icon src="sap-icon://info" color="Neutral" class="sapUiTinyMarginEnd"/>
+                        <Text text="Translation Context:" class="contextLabel"/>
+                        <Text text="{notificationModel>a2aMessage/semanticContext}" class="contextValue"/>
+                    </HBox>
+                    
+                    <!-- Action Items (if any) -->
+                    <VBox 
+                        visible="{= ${notificationModel>metadata/requiresResponse} === true}"
+                        class="actionItems sapUiSmallMarginTop">
+                        <Label text="Agent is requesting:"/>
+                        <HBox wrap="Wrap" class="requestItems">
+                            <core:Fragment fragmentName="a2a.network.view.fragment.A2ARequestItems" type="XML"/>
+                        </HBox>
+                    </VBox>
+                    
+                </VBox>
+            </content>
+        </Panel>
+        
+        <!-- Raw A2A Message (for technical users) -->
+        <Panel 
+            headerText="Raw A2A Message Structure" 
+            expandable="true" 
+            expanded="false"
+            class="rawMessagePanel">
+            <content>
+                <core:HTML 
+                    content="{path: 'notificationModel>metadata/originalA2AMessage', formatter: '.formatA2AMessageHTML'}"
+                    class="rawA2AMessage"/>
+            </content>
+        </Panel>
+        
+        <!-- Response Template (if this is a request) -->
+        <Panel 
+            visible="{= ${notificationModel>messageType} === 'request'}"
+            headerText="Quick Response Templates"
+            expandable="true" 
+            expanded="true"
+            class="responseTemplatesPanel">
+            <content>
+                <VBox class="responseTemplates">
+                    
+                    <Label text="Select a quick response or use the Reply button for custom message:" class="templatesLabel"/>
+                    
+                    <HBox wrap="Wrap" class="templateButtons sapUiSmallMarginTop">
+                        
+                        <!-- Approval Templates -->
+                        <Button 
+                            text="Approve"
+                            icon="sap-icon://accept" 
+                            type="Accept"
+                            press="onQuickResponse"
+                            class="templateButton sapUiTinyMarginEnd sapUiTinyMarginBottom"
+                            customData:responseTemplate="approval_granted"
+                            visible="{= ${notificationModel>a2aMessage/intentClassification} === 'approval_request'}"/>
+                        
+                        <Button 
+                            text="Deny"
+                            icon="sap-icon://decline" 
+                            type="Reject"
+                            press="onQuickResponse"
+                            class="templateButton sapUiTinyMarginEnd sapUiTinyMarginBottom"
+                            customData:responseTemplate="approval_denied"
+                            visible="{= ${notificationModel>a2aMessage/intentClassification} === 'approval_request'}"/>
+                        
+                        <!-- Data Request Templates -->
+                        <Button 
+                            text="Data Approved"
+                            icon="sap-icon://database"
+                            type="Accept"
+                            press="onQuickResponse"
+                            class="templateButton sapUiTinyMarginEnd sapUiTinyMarginBottom"
+                            customData:responseTemplate="data_access_granted"
+                            visible="{= ${notificationModel>a2aMessage/intentClassification} === 'data_request'}"/>
+                        
+                        <Button 
+                            text="Data Denied"
+                            icon="sap-icon://locked"
+                            type="Reject"
+                            press="onQuickResponse"
+                            class="templateButton sapUiTinyMarginEnd sapUiTinyMarginBottom"
+                            customData:responseTemplate="data_access_denied"
+                            visible="{= ${notificationModel>a2aMessage/intentClassification} === 'data_request'}"/>
+                        
+                        <!-- Generic Templates -->
+                        <Button 
+                            text="Proceed"
+                            icon="sap-icon://play"
+                            type="Emphasized"
+                            press="onQuickResponse"
+                            class="templateButton sapUiTinyMarginEnd sapUiTinyMarginBottom"
+                            customData:responseTemplate="proceed_instruction"/>
+                        
+                        <Button 
+                            text="Wait"
+                            icon="sap-icon://pause"
+                            type="Neutral"
+                            press="onQuickResponse"
+                            class="templateButton sapUiTinyMarginEnd sapUiTinyMarginBottom"
+                            customData:responseTemplate="wait_instruction"/>
+                        
+                        <Button 
+                            text="Need More Info"
+                            icon="sap-icon://question-mark"
+                            type="Default"
+                            press="onQuickResponse"
+                            class="templateButton sapUiTinyMarginEnd sapUiTinyMarginBottom"
+                            customData:responseTemplate="information_request"/>
+                        
+                        <Button 
+                            text="Escalate to Admin"
+                            icon="sap-icon://account"
+                            type="Attention"
+                            press="onQuickResponse"
+                            class="templateButton sapUiTinyMarginEnd sapUiTinyMarginBottom"
+                            customData:responseTemplate="escalate_to_admin"/>
+                        
+                    </HBox>
+                    
+                    <!-- Template Preview -->
+                    <Panel 
+                        visible="{= ${viewModel>/selectedTemplate} !== null}"
+                        headerText="Response Preview"
+                        class="responsePreviewPanel sapUiSmallMarginTop">
+                        <content>
+                            <VBox>
+                                <Text 
+                                    text="This will be sent to the agent:"
+                                    class="previewLabel"/>
+                                <FormattedText 
+                                    htmlText="{viewModel>/templatePreview}"
+                                    class="templatePreview"/>
+                            </VBox>
+                        </content>
+                        <actions>
+                            <Button 
+                                text="Send Response"
+                                type="Emphasized"
+                                press="onSendTemplateResponse"/>
+                            <Button 
+                                text="Cancel"
+                                press="onCancelTemplate"/>
+                        </actions>
+                    </Panel>
+                    
+                </VBox>
+            </content>
+        </Panel>
+        
+    </VBox>
+    
+</core:FragmentDefinition>

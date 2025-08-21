@@ -303,8 +303,6 @@ run();
         'axios', 
         '@a2a/sdk', 
         '@a2a/ui',
-        'react',
-        'react-dom',
         'web3'
       ],
       optional: [
@@ -322,35 +320,6 @@ run();
       ]
     },
     files: {
-      'frontend/src/App.js': `import React, { useState, useEffect } from 'react';
-import { A2AClient } from '@a2a/ui';
-
-function App() {
-  const [agents, setAgents] = useState([]);
-  const client = new A2AClient();
-  
-  useEffect(() => {
-    client.getAgents().then(setAgents);
-  }, []);
-  
-  return (
-    <div className="app">
-      <h1>A2A Network Dashboard</h1>
-      <div className="agents">
-        {agents.map(agent => (
-          <div key={agent.id} className="agent-card">
-            <h3>{agent.name}</h3>
-            <p>Type: {agent.type}</p>
-            <p>Status: {agent.status}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export default App;
-`,
       'backend/src/server.js': `const express = require('express');
 const { Registry, Blockchain } = require('@a2a/sdk');
 
