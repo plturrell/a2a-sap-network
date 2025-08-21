@@ -1,0 +1,160 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:l="sap.ui.layout">
+
+    <Dialog
+        title="Notification Settings"
+        contentWidth="600px"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Delivery Channels -->
+                <f:SimpleForm
+                    editable="true"
+                    layout="ResponsiveGridLayout"
+                    title="Delivery Channels"
+                    labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12"
+                    adjustLabelSpan="false"
+                    emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0"
+                    columnsXL="1" columnsL="1" columnsM="1"
+                    singleContainerFullSize="false">
+                    
+                    <Label text="In-App Notifications:"/>
+                    <Switch state="{settingsModel>/inAppEnabled}"/>
+                    
+                    <Label text="Email Notifications:"/>
+                    <Switch state="{settingsModel>/emailEnabled}"/>
+                    
+                    <Label text="Email Address:"/>
+                    <Input 
+                        value="{settingsModel>/emailAddress}" 
+                        enabled="{settingsModel>/emailEnabled}"
+                        placeholder="your.email@example.com"
+                        type="Email"/>
+                    
+                    <Label text="Push Notifications:"/>
+                    <Switch state="{settingsModel>/pushEnabled}"/>
+                    
+                </f:SimpleForm>
+
+                <!-- Notification Types -->
+                <f:SimpleForm
+                    editable="true"
+                    layout="ResponsiveGridLayout"
+                    title="Notification Types"
+                    labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12"
+                    adjustLabelSpan="false"
+                    emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0"
+                    columnsXL="1" columnsL="1" columnsM="1"
+                    singleContainerFullSize="false">
+                    
+                    <Label text="Information:"/>
+                    <Switch state="{settingsModel>/infoEnabled}"/>
+                    
+                    <Label text="Warnings:"/>
+                    <Switch state="{settingsModel>/warningEnabled}"/>
+                    
+                    <Label text="Errors:"/>
+                    <Switch state="{settingsModel>/errorEnabled}"/>
+                    
+                    <Label text="Success:"/>
+                    <Switch state="{settingsModel>/successEnabled}"/>
+                    
+                    <Label text="System:"/>
+                    <Switch state="{settingsModel>/systemEnabled}"/>
+                    
+                </f:SimpleForm>
+
+                <!-- Quiet Hours -->
+                <f:SimpleForm
+                    editable="true"
+                    layout="ResponsiveGridLayout"
+                    title="Quiet Hours"
+                    labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12"
+                    adjustLabelSpan="false"
+                    emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0"
+                    columnsXL="1" columnsL="1" columnsM="1"
+                    singleContainerFullSize="false">
+                    
+                    <Label text="Start Time:"/>
+                    <TimePicker 
+                        value="{settingsModel>/quietHoursStart}"
+                        valueFormat="HH:mm"
+                        displayFormat="HH:mm"/>
+                    
+                    <Label text="End Time:"/>
+                    <TimePicker 
+                        value="{settingsModel>/quietHoursEnd}"
+                        valueFormat="HH:mm"
+                        displayFormat="HH:mm"/>
+                    
+                    <Label text="Timezone:"/>
+                    <ComboBox selectedKey="{settingsModel>/timezone}">
+                        <core:Item key="UTC" text="UTC"/>
+                        <core:Item key="America/New_York" text="Eastern Time"/>
+                        <core:Item key="America/Chicago" text="Central Time"/>
+                        <core:Item key="America/Denver" text="Mountain Time"/>
+                        <core:Item key="America/Los_Angeles" text="Pacific Time"/>
+                        <core:Item key="Europe/London" text="London"/>
+                        <core:Item key="Europe/Paris" text="Paris"/>
+                        <core:Item key="Asia/Tokyo" text="Tokyo"/>
+                        <core:Item key="Asia/Shanghai" text="Shanghai"/>
+                    </ComboBox>
+                    
+                </f:SimpleForm>
+
+                <!-- Push Notification Setup -->
+                <Panel 
+                    headerText="Push Notification Setup" 
+                    visible="{settingsModel>/pushEnabled}"
+                    class="sapUiResponsiveMargin">
+                    <content>
+                        <VBox class="sapUiContentPadding">
+                            <MessageStrip
+                                text="To enable push notifications, click 'Enable Push' and allow notifications in your browser."
+                                type="Information"
+                                class="sapUiMediumMarginBottom"/>
+                            
+                            <HBox alignItems="Center">
+                                <Button 
+                                    id="enablePushButton"
+                                    text="Enable Push Notifications"
+                                    type="Emphasized"
+                                    press="onEnablePush"
+                                    visible="{= !${settingsModel>/pushToken}}"/>
+                                
+                                <Text 
+                                    text="Push notifications are enabled"
+                                    visible="{= !!${settingsModel>/pushToken}}"
+                                    class="sapUiSuccessText"/>
+                                
+                                <Button 
+                                    text="Disable"
+                                    type="Transparent"
+                                    press="onDisablePush"
+                                    visible="{= !!${settingsModel>/pushToken}}"
+                                    class="sapUiSmallMarginBegin"/>
+                            </HBox>
+                        </VBox>
+                    </content>
+                </Panel>
+
+            </VBox>
+        </content>
+
+        <beginButton>
+            <Button text="Save" type="Emphasized" press="onSaveSettings"/>
+        </beginButton>
+        
+        <endButton>
+            <Button text="Cancel" press="onCancelSettings"/>
+        </endButton>
+
+    </Dialog>
+
+</core:FragmentDefinition>

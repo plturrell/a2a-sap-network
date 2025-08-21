@@ -1,0 +1,21 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    
+    <HBox 
+        items="{notificationModel>actions}"
+        visible="{= ${notificationModel>actions}.length > 0}">
+        
+        <Button 
+            text="{notificationModel>label}"
+            type="{
+                path: 'notificationModel>style',
+                formatter: '.formatActionButtonType'
+            }"
+            press="onActionPress"
+            class="sapUiTinyMarginEnd"
+            customData:actionType="{notificationModel>actionType}"
+            customData:target="{notificationModel>target}"/>
+    </HBox>
+    
+</core:FragmentDefinition>

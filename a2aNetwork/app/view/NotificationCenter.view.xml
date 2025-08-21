@@ -1,0 +1,255 @@
+<mvc:View
+    controllerName="a2a.network.controller.NotificationCenter"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.ui.layout.form">
+    
+    <Page title="Notification Center" showNavButton="true" navButtonPress="onNavBack">
+        <customHeader>
+            <Bar>
+                <contentLeft>
+                    <Button icon="sap-icon://nav-back" press="onNavBack"/>
+                </contentLeft>
+                <contentMiddle>
+                    <Title text="Notification Center"/>
+                </contentMiddle>
+                <contentRight>
+                    <Button 
+                        id="settingsButton"
+                        icon="sap-icon://action-settings" 
+                        press="onOpenSettings"
+                        tooltip="Notification Settings"/>
+                    <Button 
+                        id="refreshButton"
+                        icon="sap-icon://refresh" 
+                        press="onRefresh"
+                        tooltip="Refresh Notifications"/>
+                </contentRight>
+            </Bar>
+        </customHeader>
+
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Statistics Panel -->
+                <Panel headerText="Statistics" expandable="true" expanded="true" class="sapUiResponsiveMargin">
+                    <content>
+                        <l:HorizontalLayout class="sapUiContentPadding">
+                            <ObjectNumber 
+                                number="{notificationModel>/stats/total}" 
+                                unit="Total"
+                                emphasized="false"/>
+                            <ObjectNumber 
+                                number="{notificationModel>/stats/unread}" 
+                                unit="Unread"
+                                emphasized="true"
+                                state="{= ${notificationModel>/stats/unread} > 0 ? 'Warning' : 'Success'}"/>
+                        </l:HorizontalLayout>
+                    </content>
+                </Panel>
+
+                <!-- Filter Panel -->
+                <Panel headerText="Filters" expandable="true" expanded="false" class="sapUiResponsiveMargin">
+                    <content>
+                        <f:SimpleForm 
+                            editable="true" 
+                            layout="ResponsiveGridLayout"
+                            labelSpanXL="3" labelSpanL="3" labelSpanM="3" labelSpanS="12"
+                            adjustLabelSpan="false"
+                            emptySpanXL="4" emptySpanL="4" emptySpanM="4" emptySpanS="0"
+                            columnsXL="1" columnsL="1" columnsM="1"
+                            singleContainerFullSize="false">
+                            
+                            <Label text="Status:"/>
+                            <ComboBox id="statusFilter" selectedKey="{filterModel>/status}" selectionChange="onFilterChange">
+                                <core:Item key="" text="All"/>
+                                <core:Item key="unread" text="Unread"/>
+                                <core:Item key="read" text="Read"/>
+                                <core:Item key="dismissed" text="Dismissed"/>
+                            </ComboBox>
+                            
+                            <Label text="Type:"/>
+                            <ComboBox id="typeFilter" selectedKey="{filterModel>/type}" selectionChange="onFilterChange">
+                                <core:Item key="" text="All"/>
+                                <core:Item key="info" text="Information"/>
+                                <core:Item key="warning" text="Warning"/>
+                                <core:Item key="error" text="Error"/>
+                                <core:Item key="success" text="Success"/>
+                                <core:Item key="system" text="System"/>
+                            </ComboBox>
+                            
+                            <Label text="Priority:"/>
+                            <ComboBox id="priorityFilter" selectedKey="{filterModel>/priority}" selectionChange="onFilterChange">
+                                <core:Item key="" text="All"/>
+                                <core:Item key="low" text="Low"/>
+                                <core:Item key="medium" text="Medium"/>
+                                <core:Item key="high" text="High"/>
+                                <core:Item key="critical" text="Critical"/>
+                            </ComboBox>
+                            
+                            <Label text="Category:"/>
+                            <ComboBox id="categoryFilter" selectedKey="{filterModel>/category}" selectionChange="onFilterChange">
+                                <core:Item key="" text="All"/>
+                                <core:Item key="agent" text="Agent"/>
+                                <core:Item key="transaction" text="Transaction"/>
+                                <core:Item key="system" text="System"/>
+                                <core:Item key="security" text="Security"/>
+                            </ComboBox>
+                            
+                        </f:SimpleForm>
+                    </content>
+                    <actions>
+                        <Button text="Clear Filters" press="onClearFilters"/>
+                        <Button text="Mark All Read" press="onMarkAllRead" type="Emphasized"/>
+                    </actions>
+                </Panel>
+
+                <!-- Notifications List -->
+                <Panel headerText="Notifications" class="sapUiResponsiveMargin">
+                    <content>
+                        <List 
+                            id="notificationList"
+                            items="{
+                                path: 'notificationModel>/notifications',
+                                sorter: [{
+                                    path: 'priority',
+                                    descending: true,
+                                    group: false
+                                }, {
+                                    path: 'createdAt',
+                                    descending: true
+                                }]
+                            }"
+                            mode="SingleSelect"
+                            selectionChange="onNotificationSelect"
+                            noDataText="No notifications found"
+                            showSeparators="All">
+                            
+                            <CustomListItem press="onNotificationPress">
+                                <content>
+                                    <VBox class="sapUiSmallMargin">
+                                        
+                                        <!-- Header Row -->
+                                        <HBox justifyContent="SpaceBetween" alignItems="Center">
+                                            <HBox alignItems="Center" class="sapUiTinyMarginEnd">
+                                                <!-- Priority/Type Icon -->
+                                                <core:Icon 
+                                                    src="{
+                                                        parts: ['notificationModel>type', 'notificationModel>priority'],
+                                                        formatter: '.formatNotificationIcon'
+                                                    }" 
+                                                    color="{
+                                                        parts: ['notificationModel>type', 'notificationModel>priority'],
+                                                        formatter: '.formatNotificationColor'
+                                                    }"
+                                                    class="sapUiTinyMarginEnd"/>
+                                                
+                                                <!-- Title -->
+                                                <Text text="{notificationModel>title}" 
+                                                      class="sapUiMediumMarginEnd notificationTitle"
+                                                      maxLines="1"/>
+                                                
+                                                <!-- Unread Indicator -->
+                                                <core:Icon 
+                                                    src="sap-icon://circle-task-2" 
+                                                    color="Accent6"
+                                                    visible="{= ${notificationModel>status} === 'unread'}"
+                                                    class="sapUiTinyMarginEnd"/>
+                                                
+                                                <!-- Priority Badge -->
+                                                <ObjectStatus 
+                                                    text="{notificationModel>priority}"
+                                                    state="{
+                                                        path: 'notificationModel>priority',
+                                                        formatter: '.formatPriorityState'
+                                                    }"
+                                                    class="sapUiTinyMarginEnd"/>
+                                            </HBox>
+                                            
+                                            <!-- Actions -->
+                                            <HBox>
+                                                <Button 
+                                                    icon="sap-icon://accept"
+                                                    type="Transparent"
+                                                    tooltip="Mark as Read"
+                                                    press="onMarkRead"
+                                                    visible="{= ${notificationModel>status} === 'unread'}"/>
+                                                <Button 
+                                                    icon="sap-icon://decline"
+                                                    type="Transparent"
+                                                    tooltip="Dismiss"
+                                                    press="onDismiss"/>
+                                                <Button 
+                                                    icon="sap-icon://delete"
+                                                    type="Transparent"
+                                                    tooltip="Delete"
+                                                    press="onDelete"/>
+                                            </HBox>
+                                        </HBox>
+                                        
+                                        <!-- Message -->
+                                        <Text text="{notificationModel>message}" 
+                                              class="sapUiSmallMarginTop"
+                                              maxLines="3"/>
+                                        
+                                        <!-- Metadata Row -->
+                                        <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginTop">
+                                            <HBox alignItems="Center">
+                                                <Label text="Source:" class="sapUiTinyMarginEnd"/>
+                                                <Text text="{notificationModel>source}" class="sapUiTinyMarginEnd"/>
+                                                <Label text="Category:" class="sapUiTinyMarginEnd"/>
+                                                <Text text="{notificationModel>category}"/>
+                                            </HBox>
+                                            
+                                            <Text text="{
+                                                path: 'notificationModel>createdAt',
+                                                type: 'sap.ui.model.odata.type.DateTimeOffset',
+                                                formatOptions: {
+                                                    pattern: 'MMM dd, yyyy HH:mm'
+                                                }
+                                            }" class="sapUiContentLabelColor"/>
+                                        </HBox>
+                                        
+                                        <!-- Actions (if any) -->
+                                        <HBox 
+                                            visible="{= ${notificationModel>actions}.length > 0}"
+                                            class="sapUiSmallMarginTop">
+                                            <core:Fragment fragmentName="a2a.network.view.fragment.NotificationActions" type="XML"/>
+                                        </HBox>
+                                        
+                                    </VBox>
+                                </content>
+                            </CustomListItem>
+                        </List>
+                    </content>
+                </Panel>
+
+                <!-- Pagination -->
+                <Panel class="sapUiResponsiveMargin">
+                    <content>
+                        <Toolbar>
+                            <ToolbarSpacer/>
+                            <Button 
+                                text="Previous" 
+                                icon="sap-icon://navigation-left-arrow"
+                                press="onPreviousPage"
+                                enabled="{= ${paginationModel>/offset} > 0}"/>
+                            <Text text="{paginationModel>/currentPage} of {paginationModel>/totalPages}" 
+                                  class="sapUiMediumMarginBeginEnd"/>
+                            <Button 
+                                text="Next" 
+                                icon="sap-icon://navigation-right-arrow"
+                                iconFirst="false"
+                                press="onNextPage"
+                                enabled="{= ${paginationModel>/currentPage} < ${paginationModel>/totalPages}}"/>
+                            <ToolbarSpacer/>
+                        </Toolbar>
+                    </content>
+                </Panel>
+
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>
