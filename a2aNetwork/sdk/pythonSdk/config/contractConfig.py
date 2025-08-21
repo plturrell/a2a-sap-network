@@ -194,9 +194,16 @@ class ContractConfigManager:
         if not ord_address:
             raise ValueError("A2A_ORD_REGISTRY_ADDRESS environment variable is required for production deployment")
             
+        # In development, use AgentRegistry ABI as fallback for ORDRegistry
+        try:
+            ord_abi = self._load_contract_abi('ORDRegistry')
+        except FileNotFoundError:
+            logger.warning("ORDRegistry ABI not found, using AgentRegistry ABI as fallback")
+            ord_abi = self._load_contract_abi('AgentRegistry')
+            
         self.contracts['ORDRegistry'] = ContractInfo(
             address=ord_address,
-            abi=self._load_contract_abi('ORDRegistry'),
+            abi=ord_abi,
             name='ORDRegistry',
             network=self.network
         )

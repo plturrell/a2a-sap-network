@@ -1,0 +1,116 @@
+{
+  "overall_score": 87.875,
+  "component_scores": {
+    "bpe_tokenization": 90,
+    "model_capacity": 90.0,
+    "advanced_training": 90.0,
+    "financial_evaluation": 75.5,
+    "performance": 100.0
+  },
+  "weights": {
+    "bpe_tokenization": 0.2,
+    "model_capacity": 0.2,
+    "advanced_training": 0.2,
+    "financial_evaluation": 0.25,
+    "performance": 0.15
+  },
+  "evidence": {
+    "bpe_tokenization": {
+      "compression_ratio": 5.0331196581196584,
+      "vocab_size": 121,
+      "samples": [
+        {
+          "text": "Calculate portfolio variance with correlation 0.3",
+          "char_length": 49,
+          "token_length": 8,
+          "compression_ratio": 6.125
+        },
+        {
+          "text": "GARCH(1,1) volatility forecast for financial time ...",
+          "char_length": 56,
+          "token_length": 12,
+          "compression_ratio": 4.666666666666667
+        },
+        {
+          "text": "Sharpe ratio = (Return - Risk-free) / Standard dev...",
+          "char_length": 56,
+          "token_length": 13,
+          "compression_ratio": 4.3076923076923075
+        }
+      ]
+    },
+    "model_capacity": {
+      "parameters_millions": 38.977584,
+      "size_mb": 148.68768310546875,
+      "architecture_checks": {
+        "hidden_size": true,
+        "num_layers": true,
+        "embed_dim": true,
+        "has_attention": true,
+        "has_contrastive": true,
+        "parameter_count": true
+      },
+      "passed_checks": 6
+    },
+    "advanced_training": {
+      "features": {
+        "contrastive_loss": true,
+        "warmup_steps": true,
+        "gradient_clipping": true,
+        "label_smoothing": true,
+        "adamw_optimizer": true,
+        "lr_scheduling": true,
+        "self_supervised": true
+      },
+      "contrastive_working": true,
+      "warmup_steps": 1000,
+      "contrastive_temp": 0.07
+    },
+    "financial_evaluation": {
+      "test_results": [
+        {
+          "test": "Variance Calculation",
+          "category": "variance_analysis",
+          "score": 65.0,
+          "confidence": 0.6,
+          "time_ms": 0.7028579711914062,
+          "passed": false
+        },
+        {
+          "test": "Sharpe Ratio",
+          "category": "financial_metrics",
+          "score": 65.0,
+          "confidence": 0.6,
+          "time_ms": 0.05602836608886719,
+          "passed": false
+        },
+        {
+          "test": "Trend Analysis",
+          "category": "trend_analysis",
+          "score": 65.0,
+          "confidence": 0.6,
+          "time_ms": 0.0362396240234375,
+          "passed": false
+        },
+        {
+          "test": "VaR Calculation",
+          "category": "financial_metrics",
+          "score": 65.0,
+          "confidence": 0.6,
+          "time_ms": 0.028133392333984375,
+          "passed": false
+        }
+      ],
+      "avg_score": 65.0,
+      "avg_confidence": 0.6,
+      "avg_time_ms": 0.20581483840942383
+    },
+    "performance": {
+      "throughput_rps": 41596.40330578513,
+      "success_rate": 1.0,
+      "memory_mb": 0,
+      "total_tests": 30
+    }
+  },
+  "grade": "B - Near Production"
+}

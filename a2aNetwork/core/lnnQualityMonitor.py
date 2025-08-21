@@ -74,12 +74,28 @@ class LNNQualityMonitor:
             'unacceptable': 25.0   # >= 25 point difference
         }
         
+        # Financial category weights for specialized scoring
+        self.category_weights = {
+            'variance_analysis': 1.2,
+            'portfolio_variance': 1.2,
+            'trend_analysis': 1.1,
+            'temporal_analysis': 1.1,
+            'financial_metrics': 1.15,
+            'covariance_analysis': 1.2,
+            'risk_analysis': 1.25,
+            'volatility_modeling': 1.3,
+            'error_detection': 0.8
+        }
+        
         # Monitoring state
         self.is_monitoring = False
         self.last_report_time = None
         self.monitoring_task = None
         
-        logger.info("LNN Quality Monitor initialized")
+        # Category performance tracking
+        self._category_performance = {}
+        
+        logger.info("LNN Quality Monitor initialized for financial metrics")
     
     def _default_config(self) -> Dict[str, Any]:
         """Default monitoring configuration"""
@@ -96,80 +112,214 @@ class LNNQualityMonitor:
         }
     
     def _load_benchmark_tests(self) -> List[Dict[str, Any]]:
-        """Load standardized test cases for benchmarking"""
+        """Load financial and statistical test cases for variance, trend, and temporal analysis"""
         return [
+            # Financial variance analysis
             {
-                "id": "math_basic_1",
-                "category": "basic_math",
+                "id": "variance_analysis_1",
+                "category": "variance_analysis",
                 "prompt": """
-                Evaluate: Calculate 15 * 8 + 12
-                Answer: 132
-                Methodology: Used order of operations (multiplication first, then addition)
+                Evaluate: Calculate the variance of daily returns: [0.02, -0.01, 0.03, -0.02, 0.01]
+                Answer: 0.00038
+                Methodology: Calculate mean, then sum of squared deviations divided by n-1
                 Steps: [
-                    {"step": 1, "action": "Calculate 15 * 8", "result": "120"},
-                    {"step": 2, "action": "Add 12", "result": "132"}
+                    {"step": 1, "action": "Calculate mean", "result": "0.006"},
+                    {"step": 2, "action": "Calculate squared deviations", "result": "[0.000196, 0.000256, 0.000576, 0.000676, 0.000016]"},
+                    {"step": 3, "action": "Sum squared deviations", "result": "0.00172"},
+                    {"step": 4, "action": "Divide by n-1 (4)", "result": "0.00043"}
                 ]
                 """,
-                "expected_range": {"accuracy": [85, 95], "methodology": [80, 90], "explanation": [75, 85]}
+                "expected_range": {"accuracy": [85, 95], "methodology": [85, 95], "explanation": [80, 90]}
             },
             {
-                "id": "calculus_1", 
-                "category": "calculus",
+                "id": "portfolio_variance_1",
+                "category": "portfolio_variance",
                 "prompt": """
-                Evaluate: Find the derivative of f(x) = 3x² + 2x - 5
-                Answer: f'(x) = 6x + 2
-                Methodology: Applied power rule and constant rule of differentiation
+                Evaluate: Two assets with weights 0.6 and 0.4, variances 0.04 and 0.09, correlation 0.3. Calculate portfolio variance.
+                Answer: 0.0436
+                Methodology: σ²p = w₁²σ₁² + w₂²σ₂² + 2w₁w₂ρσ₁σ₂
                 Steps: [
-                    {"step": 1, "action": "Differentiate 3x²", "result": "6x"},
-                    {"step": 2, "action": "Differentiate 2x", "result": "2"},
-                    {"step": 3, "action": "Differentiate -5", "result": "0"},
-                    {"step": 4, "action": "Combine results", "result": "6x + 2"}
+                    {"step": 1, "action": "Calculate w₁²σ₁²", "result": "0.36 * 0.04 = 0.0144"},
+                    {"step": 2, "action": "Calculate w₂²σ₂²", "result": "0.16 * 0.09 = 0.0144"},
+                    {"step": 3, "action": "Calculate 2w₁w₂ρσ₁σ₂", "result": "2 * 0.6 * 0.4 * 0.3 * 0.2 * 0.3 = 0.00864"},
+                    {"step": 4, "action": "Sum all terms", "result": "0.0144 + 0.0144 + 0.00864 = 0.03744"}
                 ]
                 """,
-                "expected_range": {"accuracy": [90, 98], "methodology": [85, 95], "explanation": [80, 90]}
+                "expected_range": {"accuracy": [82, 92], "methodology": [85, 95], "explanation": [80, 90]}
             },
+            
+            # Trend analysis
             {
-                "id": "error_case_1",
-                "category": "error_detection", 
+                "id": "linear_trend_1",
+                "category": "trend_analysis",
                 "prompt": """
-                Evaluate: What is 2 + 2?
-                Answer: 5
-                Methodology: Basic addition
-                This answer is clearly incorrect.
-                """,
-                "expected_range": {"accuracy": [20, 40], "methodology": [30, 50], "explanation": [25, 45]}
-            },
-            {
-                "id": "complex_reasoning_1",
-                "category": "complex_reasoning",
-                "prompt": """
-                Evaluate: Solve the quadratic equation x² - 5x + 6 = 0
-                Answer: x = 2 or x = 3
-                Methodology: Used factoring method: (x-2)(x-3) = 0
+                Evaluate: Stock prices over 5 days: [100, 102, 105, 103, 107]. Calculate the linear trend slope.
+                Answer: 1.6
+                Methodology: Linear regression using least squares
                 Steps: [
-                    {"step": 1, "action": "Factor the quadratic", "result": "(x-2)(x-3) = 0"},
-                    {"step": 2, "action": "Set first factor to zero", "result": "x-2 = 0, so x = 2"},
-                    {"step": 3, "action": "Set second factor to zero", "result": "x-3 = 0, so x = 3"},
-                    {"step": 4, "action": "Verify solutions", "result": "Both solutions check out"}
+                    {"step": 1, "action": "Set up x values (days)", "result": "[1, 2, 3, 4, 5]"},
+                    {"step": 2, "action": "Calculate means", "result": "x̄ = 3, ȳ = 103.4"},
+                    {"step": 3, "action": "Calculate Σ(x-x̄)(y-ȳ)", "result": "16"},
+                    {"step": 4, "action": "Calculate Σ(x-x̄)²", "result": "10"},
+                    {"step": 5, "action": "Slope = 16/10", "result": "1.6"}
                 ]
                 """,
-                "expected_range": {"accuracy": [85, 95], "methodology": [80, 90], "explanation": [85, 95]}
+                "expected_range": {"accuracy": [88, 96], "methodology": [85, 95], "explanation": [82, 92]}
             },
             {
-                "id": "integration_1",
-                "category": "integration",
+                "id": "moving_average_trend",
+                "category": "trend_analysis",
                 "prompt": """
-                Evaluate: Find ∫(4x³ - 2x + 1)dx
-                Answer: x⁴ - x² + x + C
-                Methodology: Applied power rule for integration
+                Evaluate: Calculate 3-day simple moving average for prices [50, 52, 48, 53, 55, 51, 54]
+                Answer: [50, 51, 52, 53, 53]
+                Methodology: Average of each 3-day window
                 Steps: [
-                    {"step": 1, "action": "Integrate 4x³", "result": "x⁴"},
-                    {"step": 2, "action": "Integrate -2x", "result": "-x²"},
-                    {"step": 3, "action": "Integrate 1", "result": "x"},
-                    {"step": 4, "action": "Add constant", "result": "+ C"}
+                    {"step": 1, "action": "Days 1-3: (50+52+48)/3", "result": "50"},
+                    {"step": 2, "action": "Days 2-4: (52+48+53)/3", "result": "51"},
+                    {"step": 3, "action": "Days 3-5: (48+53+55)/3", "result": "52"},
+                    {"step": 4, "action": "Days 4-6: (53+55+51)/3", "result": "53"},
+                    {"step": 5, "action": "Days 5-7: (55+51+54)/3", "result": "53.33 ≈ 53"}
                 ]
                 """,
-                "expected_range": {"accuracy": [88, 96], "methodology": [82, 92], "explanation": [80, 90]}
+                "expected_range": {"accuracy": [85, 95], "methodology": [88, 96], "explanation": [80, 90]}
+            },
+            
+            # Temporal analysis
+            {
+                "id": "time_series_decomposition",
+                "category": "temporal_analysis",
+                "prompt": """
+                Evaluate: Monthly sales show 12-month seasonality. Q1 sales: [100, 110, 120]. Calculate seasonal index if annual average is 115.
+                Answer: Q1 seasonal index = 0.957
+                Methodology: Average Q1 sales / Annual average
+                Steps: [
+                    {"step": 1, "action": "Calculate Q1 average", "result": "(100+110+120)/3 = 110"},
+                    {"step": 2, "action": "Divide by annual average", "result": "110/115 = 0.957"},
+                    {"step": 3, "action": "Interpretation", "result": "Q1 sales are 4.3% below annual average"}
+                ]
+                """,
+                "expected_range": {"accuracy": [86, 94], "methodology": [85, 95], "explanation": [83, 93]}
+            },
+            {
+                "id": "autocorrelation_1",
+                "category": "temporal_analysis",
+                "prompt": """
+                Evaluate: Calculate lag-1 autocorrelation for returns: [0.01, -0.02, 0.03, -0.01, 0.02]
+                Answer: -0.65
+                Methodology: Correlation between series and lagged series
+                Steps: [
+                    {"step": 1, "action": "Create lagged pairs", "result": "[(0.01,-0.02), (-0.02,0.03), (0.03,-0.01), (-0.01,0.02)]"},
+                    {"step": 2, "action": "Calculate correlation coefficient", "result": "-0.65"},
+                    {"step": 3, "action": "Interpretation", "result": "Strong negative autocorrelation (mean reversion)"}
+                ]
+                """,
+                "expected_range": {"accuracy": [82, 92], "methodology": [85, 95], "explanation": [80, 90]}
+            },
+            
+            # Financial metrics
+            {
+                "id": "sharpe_ratio_1",
+                "category": "financial_metrics",
+                "prompt": """
+                Evaluate: Portfolio return 12%, risk-free rate 2%, standard deviation 15%. Calculate Sharpe ratio.
+                Answer: 0.67
+                Methodology: (Return - Risk-free rate) / Standard deviation
+                Steps: [
+                    {"step": 1, "action": "Calculate excess return", "result": "12% - 2% = 10%"},
+                    {"step": 2, "action": "Divide by standard deviation", "result": "10% / 15% = 0.67"},
+                    {"step": 3, "action": "Interpretation", "result": "Risk-adjusted return of 0.67 units per unit of risk"}
+                ]
+                """,
+                "expected_range": {"accuracy": [90, 98], "methodology": [88, 96], "explanation": [85, 95]}
+            },
+            {
+                "id": "value_at_risk_1",
+                "category": "financial_metrics",
+                "prompt": """
+                Evaluate: Daily returns normally distributed, mean 0.1%, std 2%. Calculate 95% VaR.
+                Answer: -3.19%
+                Methodology: Mean - 1.645 * Standard deviation
+                Steps: [
+                    {"step": 1, "action": "Identify z-score for 95% confidence", "result": "1.645"},
+                    {"step": 2, "action": "Calculate VaR", "result": "0.1% - 1.645 * 2% = -3.19%"},
+                    {"step": 3, "action": "Interpretation", "result": "5% chance of losing more than 3.19% in a day"}
+                ]
+                """,
+                "expected_range": {"accuracy": [88, 96], "methodology": [85, 95], "explanation": [82, 92]}
+            },
+            
+            # Covariance and correlation
+            {
+                "id": "covariance_matrix_1",
+                "category": "covariance_analysis",
+                "prompt": """
+                Evaluate: Returns for two assets: A=[0.02, -0.01, 0.03], B=[0.01, 0.02, -0.01]. Calculate covariance.
+                Answer: -0.00045
+                Methodology: Cov(A,B) = E[(A-μA)(B-μB)]
+                Steps: [
+                    {"step": 1, "action": "Calculate means", "result": "μA = 0.0133, μB = 0.0067"},
+                    {"step": 2, "action": "Calculate deviations", "result": "A-μA: [0.0067, -0.0233, 0.0167], B-μB: [0.0033, 0.0133, -0.0167]"},
+                    {"step": 3, "action": "Calculate products and average", "result": "-0.00045"}
+                ]
+                """,
+                "expected_range": {"accuracy": [83, 93], "methodology": [85, 95], "explanation": [80, 90]}
+            },
+            
+            # Risk decomposition
+            {
+                "id": "risk_decomposition_1",
+                "category": "risk_analysis",
+                "prompt": """
+                Evaluate: Portfolio has 70% systematic risk (beta=1.2) and 30% idiosyncratic risk. Market volatility is 15%. Calculate total portfolio volatility.
+                Answer: 19.21%
+                Methodology: σp = √(β²σm² + σε²)
+                Steps: [
+                    {"step": 1, "action": "Calculate systematic variance", "result": "(1.2)² * (0.15)² = 0.0324"},
+                    {"step": 2, "action": "Total variance from proportion", "result": "0.0324 / 0.7 = 0.0463"},
+                    {"step": 3, "action": "Calculate volatility", "result": "√0.0463 = 0.215 or 21.5%"}
+                ]
+                """,
+                "expected_range": {"accuracy": [80, 90], "methodology": [83, 93], "explanation": [80, 90]}
+            },
+            
+            # GARCH modeling
+            {
+                "id": "garch_volatility_1",
+                "category": "volatility_modeling",
+                "prompt": """
+                Evaluate: GARCH(1,1) model: σt² = 0.00001 + 0.08εt-1² + 0.9σt-1². Yesterday: return=-2%, volatility=1.5%. Calculate today's volatility forecast.
+                Answer: 1.52%
+                Methodology: Apply GARCH formula
+                Steps: [
+                    {"step": 1, "action": "Calculate εt-1²", "result": "(-0.02)² = 0.0004"},
+                    {"step": 2, "action": "Calculate σt-1²", "result": "(0.015)² = 0.000225"},
+                    {"step": 3, "action": "Apply GARCH formula", "result": "0.00001 + 0.08*0.0004 + 0.9*0.000225 = 0.000245"},
+                    {"step": 4, "action": "Take square root", "result": "√0.000245 = 0.0157 or 1.57%"}
+                ]
+                """,
+                "expected_range": {"accuracy": [82, 92], "methodology": [85, 95], "explanation": [80, 90]}
+            },
+            
+            # Error detection in financial calculations
+            {
+                "id": "financial_error_1",
+                "category": "error_detection",
+                "prompt": """
+                Evaluate: A bond with 5% coupon, 10 years maturity, trading at par has duration of 12 years.
+                Answer: This is incorrect
+                Explanation: Duration must be less than maturity for coupon bonds. At par, duration ≈ 7.7 years.
+                """,
+                "expected_range": {"accuracy": [20, 40], "methodology": [60, 80], "explanation": [70, 90]}
+            },
+            {
+                "id": "statistical_error_1",
+                "category": "error_detection",
+                "prompt": """
+                Evaluate: Correlation between two assets is 1.5
+                Answer: This is impossible
+                Explanation: Correlation must be between -1 and 1 by definition
+                """,
+                "expected_range": {"accuracy": [15, 35], "methodology": [70, 90], "explanation": [75, 95]}
             }
         ]
     
@@ -262,11 +412,21 @@ class LNNQualityMonitor:
             logger.error(f"Both systems failed for test {test_id}")
             return
         
-        # Calculate deltas
+        # Calculate deltas with category weighting
+        category_weight = self.category_weights.get(category, 1.0)
+        
         accuracy_delta = grok_result.get('accuracy_score', 0) - lnn_result.get('accuracy_score', 0)
         methodology_delta = grok_result.get('methodology_score', 0) - lnn_result.get('methodology_score', 0)
         explanation_delta = grok_result.get('explanation_score', 0) - lnn_result.get('explanation_score', 0)
-        overall_delta = grok_result.get('overall_score', 0) - lnn_result.get('overall_score', 0)
+        
+        # Weighted overall delta for financial categories
+        overall_delta = (grok_result.get('overall_score', 0) - lnn_result.get('overall_score', 0)) * category_weight
+        
+        # Update category performance tracking
+        lnn_score = lnn_result.get('overall_score', 0)
+        if category not in self._category_performance:
+            self._category_performance[category] = []
+        self._category_performance[category].append(lnn_score)
         
         # Create quality metric
         metric = QualityMetric(
@@ -377,11 +537,22 @@ class LNNQualityMonitor:
         else:
             trend_direction = "insufficient_data"
         
-        # Test category breakdown
+        # Test category breakdown with performance
         test_categories = {}
+        category_avg_scores = {}
+        
         for metric in recent_metrics:
             category = metric.test_category
             test_categories[category] = test_categories.get(category, 0) + 1
+            
+            # Calculate average LNN score per category
+            if category not in category_avg_scores:
+                category_avg_scores[category] = []
+            category_avg_scores[category].append(metric.lnn_result.get('overall_score', 0))
+        
+        # Calculate category averages
+        for category, scores in category_avg_scores.items():
+            self._category_performance[category] = statistics.mean(scores[-10:])  # Last 10 scores
         
         # Generate recommendations
         recommendations = self._generate_recommendations(
@@ -426,24 +597,37 @@ class LNNQualityMonitor:
         recommendations = []
         
         if grade in ['D', 'F']:
-            recommendations.append("URGENT: LNN quality unacceptable - consider retraining")
-            recommendations.append("Increase Grok API training data collection")
+            recommendations.append("URGENT: LNN quality unacceptable - consider retraining with financial focus")
+            recommendations.append("Increase financial and statistical training data collection")
+            recommendations.append("Focus on variance calculation and trend analysis improvements")
             
         if abs(avg_delta) > 15:
-            recommendations.append("LNN significantly underperforming - review training data quality")
+            recommendations.append("LNN underperforming in financial metrics - review quantitative training data")
+            recommendations.append("Consider adding more temporal analysis examples")
             
         if trend == "degrading":
-            recommendations.append("Quality declining - schedule LNN retraining")
-            recommendations.append("Review recent Grok API response patterns for training updates")
+            recommendations.append("Quality declining - schedule LNN retraining with updated financial models")
+            recommendations.append("Review recent financial calculations for training updates")
+            recommendations.append("Check GARCH and volatility modeling accuracy")
             
         if speed < 2.0:
-            recommendations.append("Speed advantage minimal - optimize LNN inference")
+            recommendations.append("Speed advantage minimal - optimize LNN inference for real-time trading")
             
         if grade in ['A', 'B'] and trend in ['stable', 'improving']:
-            recommendations.append("LNN performing well - maintain current training schedule")
+            recommendations.append("LNN performing well on financial metrics - maintain current schedule")
+            recommendations.append("Consider expanding to more complex derivatives pricing")
             
         if speed > 5.0:
-            recommendations.append("Excellent speed advantage - consider expanding LNN usage")
+            recommendations.append("Excellent speed for high-frequency analysis - expand LNN usage")
+            recommendations.append("Deploy for real-time risk calculations")
+            
+        # Category-specific recommendations
+        if hasattr(self, '_category_performance'):
+            worst_categories = sorted(self._category_performance.items(), 
+                                    key=lambda x: x[1])[:3]
+            for category, score in worst_categories:
+                if score < 70:
+                    recommendations.append(f"Improve {category} training - current score: {score:.1f}")
             
         return recommendations
     
@@ -480,7 +664,7 @@ class LNNQualityMonitor:
         # to send alerts to relevant agents or administrators
     
     def get_current_quality_status(self) -> Dict[str, Any]:
-        """Get current quality status summary"""
+        """Get current quality status summary with financial metrics focus"""
         if not self.quality_history:
             return {"status": "no_data", "message": "No quality data available"}
         
@@ -499,12 +683,23 @@ class LNNQualityMonitor:
         avg_delta = statistics.mean(recent_deltas)
         max_delta = max(recent_deltas, key=abs)
         
-        # Determine status
-        if abs(avg_delta) <= 10:
+        # Financial category performance
+        financial_categories = ['variance_analysis', 'portfolio_variance', 'trend_analysis', 
+                              'temporal_analysis', 'financial_metrics', 'volatility_modeling']
+        financial_scores = []
+        
+        for metric in recent_metrics:
+            if metric.test_category in financial_categories:
+                financial_scores.append(metric.lnn_result.get('overall_score', 0))
+        
+        avg_financial_score = statistics.mean(financial_scores) if financial_scores else 0
+        
+        # Determine status with financial emphasis
+        if abs(avg_delta) <= 10 and avg_financial_score >= 85:
             status = "excellent"
-        elif abs(avg_delta) <= 15:
+        elif abs(avg_delta) <= 15 and avg_financial_score >= 75:
             status = "good"
-        elif abs(avg_delta) <= 20:
+        elif abs(avg_delta) <= 20 and avg_financial_score >= 65:
             status = "acceptable"
         else:
             status = "poor"
@@ -514,33 +709,62 @@ class LNNQualityMonitor:
             "avg_delta": avg_delta,
             "max_delta": max_delta,
             "test_count": len(recent_metrics),
+            "financial_test_count": len(financial_scores),
+            "avg_financial_score": avg_financial_score,
+            "category_performance": dict(self._category_performance),
             "last_test_time": recent_metrics[-1].timestamp if recent_metrics else None,
             "ready_for_failover": status in ["excellent", "good", "acceptable"]
         }
     
     async def run_immediate_quality_check(self) -> Dict[str, Any]:
-        """Run immediate quality check for failover readiness"""
-        logger.info("Running immediate LNN quality check for failover readiness")
+        """Run immediate quality check focusing on financial calculations"""
+        logger.info("Running immediate LNN quality check for financial metrics")
         
-        # Run a focused set of critical tests
-        critical_tests = [t for t in self.benchmark_tests if t['category'] in ['basic_math', 'error_detection']]
+        # Run critical financial tests
+        critical_categories = ['variance_analysis', 'financial_metrics', 'trend_analysis', 'error_detection']
+        critical_tests = [t for t in self.benchmark_tests if t['category'] in critical_categories]
         
         results = []
-        for test in critical_tests[:3]:  # Quick test with 3 critical cases
+        test_details = []
+        
+        for test in critical_tests[:5]:  # Quick test with 5 critical financial cases
             try:
                 await self._run_single_benchmark(test)
                 results.append("passed")
+                
+                # Get the latest metric for this test
+                latest_metric = next((m for m in reversed(self.quality_history) 
+                                    if m.test_case_id == test['id']), None)
+                if latest_metric:
+                    test_details.append({
+                        'test_id': test['id'],
+                        'category': test['category'],
+                        'lnn_score': latest_metric.lnn_result.get('overall_score', 0),
+                        'delta': latest_metric.overall_delta
+                    })
             except Exception as e:
                 logger.error(f"Critical test {test['id']} failed: {e}")
                 results.append("failed")
+                test_details.append({
+                    'test_id': test['id'],
+                    'category': test['category'],
+                    'error': str(e)
+                })
         
         # Get current status
         status = self.get_current_quality_status()
         
+        # Calculate financial readiness
+        financial_scores = [d.get('lnn_score', 0) for d in test_details if 'lnn_score' in d]
+        avg_financial_readiness = statistics.mean(financial_scores) if financial_scores else 0
+        
         return {
             "immediate_check_passed": all(r == "passed" for r in results),
             "critical_tests_run": len(results),
+            "financial_readiness_score": avg_financial_readiness,
+            "test_details": test_details,
             "current_status": status,
-            "recommendation": "ready_for_failover" if status.get("ready_for_failover") else "not_ready_for_failover",
+            "recommendation": "ready_for_financial_analysis" if avg_financial_readiness >= 75 else "needs_improvement",
+            "ready_for_failover": status.get("ready_for_failover") and avg_financial_readiness >= 70,
             "timestamp": datetime.utcnow().isoformat()
         }

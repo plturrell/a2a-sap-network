@@ -114,7 +114,7 @@ cds.on('bootstrap', async (app) => {
         origin: function (origin, callback) {
             const allowedOrigins = process.env.ALLOWED_ORIGINS 
                 ? process.env.ALLOWED_ORIGINS.split(',') 
-                : ['http://localhost:3000', 'http://localhost:4004', 'http://localhost:8080'];
+                : ['http://localhost:4004', 'http://localhost:8080'];
             
             // SECURITY FIX: Only allow requests with no origin in development mode
             if (!origin) {
@@ -396,8 +396,7 @@ cds.on('bootstrap', async (app) => {
         res.status(200).json(logs);
     });
     
-    // User API endpoints for BTP integration
-    app.use('/user-api', require('./sapUserService'));
+    // User API endpoints are now handled by CAP UserManagementService at /api/v1/user
     
     // Serve UI5 app (duplicate removed - now served earlier before blocking middleware)
     // app.use('/app/a2a-fiori', express.static(path.join(__dirname, '../app/a2aFiori/webapp')));

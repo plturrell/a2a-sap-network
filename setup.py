@@ -3,8 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="a2a-project",
     version="0.1.0",
-    package_dir={'': 'src'},
-    packages=find_packages(where='src'),
+    packages=find_packages(exclude=['tests', 'tests.*']),
     author="A2A Team",
     description="A2A Agent and Network Infrastructure",
     classifiers=[

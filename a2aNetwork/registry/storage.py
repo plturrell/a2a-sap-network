@@ -10,9 +10,10 @@ from datetime import datetime
 from uuid import uuid4
 import asyncio
 
-from ..clients.hanaClient import get_hana_client
-from ..clients.sqliteClient import get_sqlite_client
-from .models import (
+# Use absolute imports when module is in sys.path
+from clients.hanaClient import get_hana_client
+from clients.sqliteClient import get_sqlite_client
+from registry.models import (
     ORDRegistration, ResourceIndexEntry, ORDDocument,
     RegistrationMetadata, ValidationResult, RegistrationStatus
 )

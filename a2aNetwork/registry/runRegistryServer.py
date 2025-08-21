@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
     
     # Initialize trust system
     try:
-        from ..trustSystem.smartContractTrust import SmartContractTrust
+        from trustSystem.smartContractTrust import SmartContractTrust
         trust_system = SmartContractTrust()
         print("✅ Trust system initialized")
     except Exception as e:

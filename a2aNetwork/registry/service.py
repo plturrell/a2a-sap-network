@@ -5,7 +5,8 @@ from datetime import datetime
 from uuid import uuid4
 import logging
 
-from .models import (
+# Use absolute imports when module is in sys.path
+from registry.models import (
     ORDDocument, ORDRegistration, ResourceIndexEntry,
     ValidationResult, RegistrationMetadata, RegistrationStatus,
     ResourceType, SearchRequest, SearchResult, SearchFacet,
@@ -13,11 +14,11 @@ from .models import (
     DublinCoreValidationRequest, DublinCoreValidationResponse,
     AnalyticsInfo
 )
-from .storage import get_ord_storage
-from ..clients.grokClient import get_grok_client
-from ..clients.perplexityClient import get_perplexity_client
-from .aiEnhancer import create_ai_enhancer
-from .searchService import get_search_service
+from registry.storage import get_ord_storage
+from clients.grokClient import get_grok_client
+from clients.perplexityClient import get_perplexity_client
+from registry.aiEnhancer import create_ai_enhancer
+from registry.searchService import get_search_service
 
 logger = logging.getLogger(__name__)
 

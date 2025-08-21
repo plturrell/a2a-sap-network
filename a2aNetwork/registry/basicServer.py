@@ -27,7 +27,7 @@ def initialize_trust_system():
     """Initialize the trust system"""
     global trust_system
     try:
-        from ..trustSystem.smartContractTrust import SmartContractTrust
+        from trustSystem.smartContractTrust import SmartContractTrust
         trust_system = SmartContractTrust()
         
         # Register your blockchain agents

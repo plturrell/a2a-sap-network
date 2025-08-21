@@ -1,0 +1,133 @@
+_schema-version: "3.2"
+ID: a2a-system
+version: 1.0.0
+description: A2A Unified System (CAP Network + Python Agents)
+
+modules:
+  - name: a2a-network
+    type: nodejs
+    path: a2aNetwork
+    parameters:
+      memory: 512M
+      disk-quota: 512M
+    build-parameters:
+      builder: custom
+      commands:
+        - npm install
+        - cds build --production
+      buildpack: nodejs_buildpack
+    properties:
+      CDS_ENV: production
+      DATABASE_URL: ~{db/credentials/url}
+      REDIS_URL: ~{redis/credentials/uri}
+      A2A_RPC_URL: <external-blockchain-rpc>
+      BLOCKCHAIN_ENABLED: false
+    provides:
+      - name: network-api
+        properties:
+          url: ${default-url}
+    requires:
+      - name: a2a-db
+      - name: a2a-redis
+      - name: a2a-uaa
+
+  - name: a2a-agents
+    type: python
+    path: a2aAgents
+    parameters:
+      memory: 1G
+      disk-quota: 1G
+    build-parameters:
+      buildpack: python_buildpack
+      commands:
+        - pip install -r requirements.txt
+    properties:
+      PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
+      A2A_RPC_URL: <external-blockchain-rpc>
+      A2A_AGENT_BASE_URL: ${default-url}
+      REDIS_URL: ~{redis/credentials/uri}
+    provides:
+      - name: agents-api
+        properties:
+          url: ${default-url}
+    requires:
+      - name: a2a-db
+      - name: a2a-redis
+      - name: network-api
+
+  - name: a2a-ui5
+    type: html5
+    path: a2aAgents/frontend
+    parameters:
+      memory: 256M
+      disk-quota: 256M
+    build-parameters:
+      builder: custom
+      commands:
+        - npm install
+        - npm run build
+      build-result: dist
+      supported-platforms: []
+    requires:
+      - name: a2a-uaa
+      - name: network-api
+        group: destinations
+        properties:
+          name: network-api
+          url: ~{url}
+          forwardAuthToken: true
+      - name: agents-api
+        group: destinations
+        properties:
+          name: agents-api
+          url: ~{url}
+          forwardAuthToken: true
+
+  - name: a2a-ui5-deployer
+    type: com.sap.application.content
+    path: .
+    requires:
+      - name: a2a-html5-repo-host
+        parameters:
+          content-target: true
+    build-parameters:
+      build-result: resources
+      requires:
+        - artifacts:
+            - comsapa2aportal.zip
+          name: a2a-ui5
+          target-path: resources/
+
+resources:
+  - name: a2a-db
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: hana-cloud
+      service-plan: standard
+
+  - name: a2a-redis
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: redis-hyperscaler
+      service-plan: cache-standard
+
+  - name: a2a-uaa
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      config:
+        xsappname: a2a-${space}
+        tenant-mode: dedicated
+
+  - name: a2a-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+
+  - name: a2a-destination-service
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite

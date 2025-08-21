@@ -9,12 +9,13 @@ from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime
 from dataclasses import dataclass
 
-from .models import (
+# Use absolute imports when module is in sys.path
+from registry.models import (
     ORDDocument, ORDRegistration, DublinCoreMetadata, 
     SearchRequest, SearchResult, SearchFacet
 )
-from ..clients.grokClient import GrokClient
-from ..clients.perplexityClient import PerplexityClient
+from clients.grokClient import GrokClient
+from clients.perplexityClient import PerplexityClient
 
 logger = logging.getLogger(__name__)
 

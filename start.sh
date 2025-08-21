@@ -26,7 +26,7 @@ readonly CONFIG_DIR="$SCRIPT_DIR/config"
 
 # Default ports
 readonly NETWORK_PORT=4004
-readonly AGENTS_PORT=8000
+readonly AGENTS_PORT=8888
 readonly BLOCKCHAIN_PORT=8545
 
 # Service timeouts
@@ -708,6 +708,8 @@ EOF
                 # Use default addresses if not found in config
                 export A2A_AGENT_REGISTRY_ADDRESS=${A2A_AGENT_REGISTRY_ADDRESS:-"0x5FbDB2315678afecb367f032d93F642f64180aa3"}
                 export A2A_MESSAGE_ROUTER_ADDRESS=${A2A_MESSAGE_ROUTER_ADDRESS:-"0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"}
+                # Use AgentRegistry address as fallback for ORDRegistry in development
+                export A2A_ORD_REGISTRY_ADDRESS=${A2A_ORD_REGISTRY_ADDRESS:-"0x5FbDB2315678afecb367f032d93F642f64180aa3"}
                 export A2A_RPC_URL="http://localhost:$BLOCKCHAIN_PORT"
                 export NODE_ENV="development"
                 
@@ -853,10 +855,10 @@ start_agents() {
     
     # Install missing dependencies before starting
     # Install torch first with CPU-only version for faster installation
-    execute_with_trace "Install PyTorch" "pip3 install torch==2.0.1 torchvision==0.15.2 --index-url https://download.pytorch.org/whl/cpu" "$LOG_DIR/torch-install.log" "true"
+    execute_with_trace "Install PyTorch" "pip3 install torch==2.1.0 torchvision==0.16.0 --index-url https://download.pytorch.org/whl/cpu" "$LOG_DIR/torch-install.log" "true"
     
     # Then install all other dependencies including sentence-transformers
-    execute_with_trace "Install additional dependencies" "pip3 install fastapi uvicorn httpx aiofiles networkx sentence-transformers transformers scikit-learn scipy huggingface-hub pillow tqdm nltk sentencepiece web3 eth-account pydantic aioetcd3 apscheduler asyncpg pydantic-settings cryptography pandas aiosqlite redis tenacity PyJWT bcrypt requests sqlalchemy email-validator pyotp qrcode[pil] aiomysql aioredis" "$LOG_DIR/agents-deps-install.log" "true"
+    execute_with_trace "Install additional dependencies" "pip3 install fastapi uvicorn httpx aiofiles networkx sentence-transformers transformers scikit-learn scipy huggingface-hub pillow tqdm nltk sentencepiece web3 eth-account pydantic aioetcd3 apscheduler asyncpg pydantic-settings cryptography pandas aiosqlite redis tenacity PyJWT bcrypt requests sqlalchemy email-validator pyotp qrcode[pil] aiomysql aioredis prometheus_client faiss-cpu psutil opentelemetry-api opentelemetry-sdk opentelemetry-instrumentation-fastapi opentelemetry-instrumentation-httpx opentelemetry-instrumentation-redis opentelemetry-exporter-otlp-proto-grpc opentelemetry-exporter-jaeger opentelemetry-exporter-prometheus jsonschema" "$LOG_DIR/agents-deps-install.log" "true"
     
     # Fix protobuf compatibility issue - use version that works with all dependencies
     execute_with_trace "Fix protobuf compatibility" "pip3 install 'protobuf==4.21.12'" "$LOG_DIR/protobuf-fix.log" "true"
@@ -867,11 +869,20 @@ start_agents() {
     export A2A_SERVICE_HOST="localhost"
     export A2A_BASE_URL="http://localhost:$AGENTS_PORT"
     
+    # Set database URL for development (proper SQLite URL format)
+    export DATABASE_URL="sqlite+aiosqlite:///./db.sqlite"
+    
+    # Set agent private key for persistent identity (using test account #10 from Anvil)
+    export A2A_AGENT_PRIVATE_KEY="0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
+    
     nohup env PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python \
         A2A_RPC_URL="$A2A_RPC_URL" \
         A2A_AGENT_REGISTRY_ADDRESS="$A2A_AGENT_REGISTRY_ADDRESS" \
         A2A_MESSAGE_ROUTER_ADDRESS="$A2A_MESSAGE_ROUTER_ADDRESS" \
+        A2A_ORD_REGISTRY_ADDRESS="$A2A_ORD_REGISTRY_ADDRESS" \
         A2A_AGENT_BASE_URL="$A2A_AGENT_BASE_URL" \
+        A2A_AGENT_PRIVATE_KEY="$A2A_AGENT_PRIVATE_KEY" \
+        DATABASE_URL="$DATABASE_URL" \
         NODE_ENV="$NODE_ENV" \
         "$PYTHON_CMD" -m uvicorn main:app --host 0.0.0.0 --port $AGENTS_PORT > "$LOG_DIR/agents-service.log" 2>&1 &
     local agents_pid=$!
