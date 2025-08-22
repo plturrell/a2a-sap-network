@@ -1,0 +1,261 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="trustVerificationResultsDialog"
+        title="Trust Verification Results"
+        contentWidth="75%"
+        contentHeight="70%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Overall Trust Score -->
+                <Panel headerText="Trust Assessment Summary" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin" alignItems="Center">
+                        <Title text="Overall Trust Score" level="H2"/>
+                        <mc:RadialMicroChart
+                            size="XL"
+                            percentage="{trust>/overallScore}"
+                            valueColor="{= ${trust>/overallScore} >= 80 ? 'Good' : ${trust>/overallScore} >= 60 ? 'Critical' : 'Error'}"/>
+                        <Text 
+                            text="{trust>/overallScore}%"
+                            class="sapUiLargeMarginTop"/>
+                        
+                        <MessageStrip 
+                            text="{trust>/trustMessage}"
+                            type="{= ${trust>/overallScore} >= 80 ? 'Success' : ${trust>/overallScore} >= 60 ? 'Warning' : 'Error'}"
+                            showIcon="true"
+                            class="sapUiMediumMarginTop"/>
+                    </VBox>
+                </Panel>
+                
+                <!-- Trust Factors Breakdown -->
+                <Panel headerText="Trust Factors Analysis" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <core:HTML 
+                            id="trustFactorsChart"
+                            content='<div id="trustFactorsChartDiv" style="width: 100%; height: 350px;"></div>'
+                            preferDOM="true"/>
+                        
+                        <Table 
+                            items="{trust>/factors}"
+                            class="sapUiMediumMarginTop">
+                            <columns>
+                                <Column>
+                                    <Text text="Factor"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Score"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Weight"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Weighted Score"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Status"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Details"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{name}"/>
+                                        <ProgressIndicator 
+                                            percentValue="{score}"
+                                            displayValue="{score}%"
+                                            state="{= ${score} >= 80 ? 'Success' : ${score} >= 60 ? 'Warning' : 'Error'}"
+                                            width="120px"/>
+                                        <Text text="{weight}%"/>
+                                        <Text text="{= Math.round(${score} * ${weight} / 100)}"/>
+                                        <ObjectStatus 
+                                            text="{status}"
+                                            state="{= ${status} === 'VERIFIED' ? 'Success' : ${status} === 'SUSPICIOUS' ? 'Warning' : 'Error'}"/>
+                                        <Text 
+                                            text="{details}"
+                                            maxLines="2"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </Panel>
+                
+                <!-- Verification Details -->
+                <Panel 
+                    headerText="Verification Details"
+                    expandable="true"
+                    expanded="{= ${trust>/anomaliesDetected} || ${trust>/overallScore} < 80}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Blockchain Verification -->
+                        <VBox 
+                            visible="{trust>/blockchainVerification/performed}"
+                            class="sapUiMediumMarginBottom">
+                            <Title text="Blockchain Verification" level="H4"/>
+                            <HBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Text text="Hash:" class="sapUiContentLabelColor"/>
+                                    <Text text="{trust>/blockchainVerification/hash}"/>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Text text="Block Number:" class="sapUiContentLabelColor"/>
+                                    <Text text="{trust>/blockchainVerification/blockNumber}"/>
+                                </VBox>
+                                <VBox>
+                                    <Text text="Timestamp:" class="sapUiContentLabelColor"/>
+                                    <Text text="{trust>/blockchainVerification/timestamp}"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                        
+                        <!-- Consensus Results -->
+                        <VBox 
+                            visible="{trust>/consensusVerification/performed}"
+                            class="sapUiMediumMarginBottom">
+                            <Title text="Consensus Verification" level="H4"/>
+                            <HBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Text text="Participants:" class="sapUiContentLabelColor"/>
+                                    <Text text="{trust>/consensusVerification/participants}"/>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Text text="Agreement:" class="sapUiContentLabelColor"/>
+                                    <ProgressIndicator 
+                                        percentValue="{trust>/consensusVerification/agreement}"
+                                        displayValue="{trust>/consensusVerification/agreement}%"
+                                        state="{= ${trust>/consensusVerification/agreement} >= 80 ? 'Success' : 'Warning'}"
+                                        width="120px"/>
+                                </VBox>
+                                <VBox>
+                                    <Text text="Quorum Met:" class="sapUiContentLabelColor"/>
+                                    <ObjectStatus 
+                                        text="{= ${trust>/consensusVerification/quorumMet} ? 'YES' : 'NO'}"
+                                        state="{= ${trust>/consensusVerification/quorumMet} ? 'Success' : 'Error'}"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                        
+                        <!-- Anomalies -->
+                        <VBox 
+                            visible="{trust>/anomaliesDetected}"
+                            class="sapUiMediumMarginBottom">
+                            <Title text="Detected Anomalies" level="H4"/>
+                            <MessageStrip 
+                                text="Anomalies detected during trust verification"
+                                type="Warning"
+                                showIcon="true"
+                                class="sapUiMediumMarginBottom"/>
+                            <List items="{trust>/anomalies}">
+                                <StandardListItem
+                                    title="{type}"
+                                    description="{description}"
+                                    info="{severity}"
+                                    infoState="{= ${severity} === 'HIGH' ? 'Error' : ${severity} === 'MEDIUM' ? 'Warning' : 'Information'}"
+                                    icon="sap-icon://alert"/>
+                            </List>
+                        </VBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Risk Assessment -->
+                <Panel 
+                    headerText="Risk Assessment"
+                    visible="{= ${trust>/overallScore} < 80}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Risk Level:" class="sapUiContentLabelColor"/>
+                                <ObjectStatus 
+                                    text="{trust>/riskLevel}"
+                                    state="{= ${trust>/riskLevel} === 'LOW' ? 'Success' : ${trust>/riskLevel} === 'MEDIUM' ? 'Warning' : 'Error'}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Risk Score:" class="sapUiContentLabelColor"/>
+                                <Text text="{trust>/riskScore}/100"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Mitigation Required:" class="sapUiContentLabelColor"/>
+                                <ObjectStatus 
+                                    text="{= ${trust>/mitigationRequired} ? 'YES' : 'NO'}"
+                                    state="{= ${trust>/mitigationRequired} ? 'Error' : 'Success'}"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <List 
+                            items="{trust>/riskFactors}"
+                            visible="{= ${trust>/riskFactors}.length > 0}"
+                            class="sapUiMediumMarginTop">
+                            <headerToolbar>
+                                <Toolbar>
+                                    <Title text="Risk Factors"/>
+                                </Toolbar>
+                            </headerToolbar>
+                            <StandardListItem
+                                title="{factor}"
+                                description="{description}"
+                                info="{impact}"
+                                infoState="{= ${impact} === 'HIGH' ? 'Error' : ${impact} === 'MEDIUM' ? 'Warning' : 'Success'}"
+                                icon="sap-icon://risk"/>
+                        </List>
+                    </VBox>
+                </Panel>
+                
+                <!-- Recommendations -->
+                <Panel 
+                    headerText="Recommendations"
+                    visible="{= ${trust>/recommendations}.length > 0}"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <List items="{trust>/recommendations}">
+                        <StandardListItem
+                            title="{title}"
+                            description="{description}"
+                            info="{priority}"
+                            infoState="{= ${priority} === 'HIGH' ? 'Error' : ${priority} === 'MEDIUM' ? 'Warning' : 'Success'}"
+                            icon="sap-icon://lightbulb"/>
+                    </List>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Export Report"
+                icon="sap-icon://download"
+                press=".onExportTrustReport"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Override Trust Score"
+                    icon="sap-icon://edit"
+                    press=".onOverrideTrustScore"
+                    visible="{= ${trust>/overallScore} < 60}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Request Re-verification"
+                    icon="sap-icon://refresh"
+                    press=".onRequestReverification"
+                    visible="{= ${trust>/anomaliesDetected} || ${trust>/overallScore} < 80}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseTrustResults"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

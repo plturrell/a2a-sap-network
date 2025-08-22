@@ -2206,10 +2206,11 @@ entity TrustVerifications : cuid {
     task               : Association to QualityControlTasks not null;
     
     @Common.Label: 'Verification Type'
+    @mandatory
     verificationType   : String(50) enum {
         BLOCKCHAIN; REPUTATION; INTEGRITY; CONSENSUS; 
         SIGNATURE; HISTORICAL; PEER_REVIEW;
-    } @mandatory;
+    };
     
     @Common.Label: 'Verification Status'
     status             : String(20) enum {

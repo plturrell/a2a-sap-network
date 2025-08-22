@@ -1,0 +1,246 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="assessmentResultsDialog"
+        title="Quality Assessment Results"
+        contentWidth="85%"
+        contentHeight="80%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Overall Results Summary -->
+                <Panel headerText="Assessment Summary" class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Overall Score" level="H3"/>
+                            <ObjectNumber 
+                                number="{results>/overallScore}"
+                                unit="%"
+                                state="{= ${results>/overallScore} >= 90 ? 'Success' : ${results>/overallScore} >= 70 ? 'Warning' : 'Error'}"
+                                emphasized="true"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Issues Found" level="H3"/>
+                            <ObjectNumber 
+                                number="{results>/totalIssues}"
+                                state="{= ${results>/totalIssues} === 0 ? 'Success' : ${results>/totalIssues} <= 5 ? 'Warning' : 'Error'}"
+                                emphasized="true"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Critical Issues" level="H3"/>
+                            <ObjectNumber 
+                                number="{results>/criticalIssues}"
+                                state="{= ${results>/criticalIssues} === 0 ? 'Success' : 'Error'}"
+                                emphasized="true"/>
+                        </VBox>
+                        <VBox>
+                            <Title text="Assessment Time" level="H3"/>
+                            <Text text="{results>/assessmentTime} ms"/>
+                        </VBox>
+                    </HBox>
+                    
+                    <MessageStrip 
+                        text="{results>/summaryMessage}"
+                        type="{= ${results>/overallScore} >= 90 ? 'Success' : ${results>/overallScore} >= 70 ? 'Warning' : 'Error'}"
+                        showIcon="true"
+                        class="sapUiMediumMargin"/>
+                </Panel>
+                
+                <!-- Quality Score Radar Chart -->
+                <Panel headerText="Quality Components Analysis" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <core:HTML 
+                            id="qualityRadarChart"
+                            content='<div id="qualityRadarChartDiv" style="width: 100%; height: 400px;"></div>'
+                            preferDOM="true"/>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Compliance:" class="sapUiContentLabelColor"/>
+                                <ProgressIndicator 
+                                    percentValue="{results>/scores/compliance}"
+                                    displayValue="{results>/scores/compliance}%"
+                                    state="{= ${results>/scores/compliance} >= 90 ? 'Success' : 'Warning'}"
+                                    width="150px"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Performance:" class="sapUiContentLabelColor"/>
+                                <ProgressIndicator 
+                                    percentValue="{results>/scores/performance}"
+                                    displayValue="{results>/scores/performance}%"
+                                    state="{= ${results>/scores/performance} >= 80 ? 'Success' : 'Warning'}"
+                                    width="150px"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Security:" class="sapUiContentLabelColor"/>
+                                <ProgressIndicator 
+                                    percentValue="{results>/scores/security}"
+                                    displayValue="{results>/scores/security}%"
+                                    state="{= ${results>/scores/security} >= 95 ? 'Success' : 'Error'}"
+                                    width="150px"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Reliability:" class="sapUiContentLabelColor"/>
+                                <ProgressIndicator 
+                                    percentValue="{results>/scores/reliability}"
+                                    displayValue="{results>/scores/reliability}%"
+                                    state="{= ${results>/scores/reliability} >= 85 ? 'Success' : 'Warning'}"
+                                    width="150px"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Issues Breakdown -->
+                <Panel 
+                    headerText="Issues Breakdown"
+                    expandable="true"
+                    expanded="{= ${results>/totalIssues} > 0}"
+                    class="sapUiResponsiveMargin">
+                    <Table 
+                        items="{results>/issues}"
+                        growing="true"
+                        growingThreshold="20">
+                        <columns>
+                            <Column>
+                                <Text text="Component"/>
+                            </Column>
+                            <Column>
+                                <Text text="Issue Type"/>
+                            </Column>
+                            <Column>
+                                <Text text="Severity"/>
+                            </Column>
+                            <Column>
+                                <Text text="Description"/>
+                            </Column>
+                            <Column>
+                                <Text text="Recommendation"/>
+                            </Column>
+                            <Column>
+                                <Text text="Impact"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <Text text="{component}"/>
+                                    <Text text="{issueType}"/>
+                                    <ObjectStatus 
+                                        text="{severity}"
+                                        state="{= ${severity} === 'CRITICAL' ? 'Error' : ${severity} === 'HIGH' ? 'Warning' : 'Information'}"/>
+                                    <Text 
+                                        text="{description}"
+                                        maxLines="2"/>
+                                    <Text 
+                                        text="{recommendation}"
+                                        maxLines="2"/>
+                                    <ObjectStatus 
+                                        text="{impact}"
+                                        state="{= ${impact} === 'HIGH' ? 'Error' : ${impact} === 'MEDIUM' ? 'Warning' : 'Success'}"/>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Recommendations -->
+                <Panel 
+                    headerText="Recommendations"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <List items="{results>/recommendations}">
+                            <StandardListItem
+                                title="{title}"
+                                description="{description}"
+                                info="{priority}"
+                                infoState="{= ${priority} === 'HIGH' ? 'Error' : ${priority} === 'MEDIUM' ? 'Warning' : 'Success'}"
+                                icon="{= ${type} === 'improvement' ? 'sap-icon://lightbulb' : ${type} === 'warning' ? 'sap-icon://warning' : 'sap-icon://hint'}"/>
+                        </List>
+                    </VBox>
+                </Panel>
+                
+                <!-- Detailed Metrics -->
+                <Panel 
+                    headerText="Detailed Metrics"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <Table items="{results>/detailedMetrics}">
+                        <columns>
+                            <Column>
+                                <Text text="Metric"/>
+                            </Column>
+                            <Column>
+                                <Text text="Value"/>
+                            </Column>
+                            <Column>
+                                <Text text="Threshold"/>
+                            </Column>
+                            <Column>
+                                <Text text="Status"/>
+                            </Column>
+                            <Column>
+                                <Text text="Trend"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <Text text="{metricName}"/>
+                                    <Text text="{value}"/>
+                                    <Text text="{threshold}"/>
+                                    <ObjectStatus 
+                                        text="{= ${passed} ? 'PASSED' : 'FAILED'}"
+                                        state="{= ${passed} ? 'Success' : 'Error'}"/>
+                                    <HBox>
+                                        <core:Icon 
+                                            src="{= ${trend} === 'UP' ? 'sap-icon://trend-up' : ${trend} === 'DOWN' ? 'sap-icon://trend-down' : 'sap-icon://trend-stable'}"
+                                            color="{= ${trend} === 'UP' ? 'green' : ${trend} === 'DOWN' ? 'red' : 'orange'}"/>
+                                        <Text text=" {trendValue}%"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Export Report"
+                icon="sap-icon://download"
+                press=".onExportAssessmentReport"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Make Routing Decision"
+                    type="Emphasized"
+                    icon="sap-icon://navigation-right-arrow"
+                    press=".onMakeRoutingDecision"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Rerun Assessment"
+                    icon="sap-icon://refresh"
+                    press=".onRerunAssessment"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseAssessmentResults"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

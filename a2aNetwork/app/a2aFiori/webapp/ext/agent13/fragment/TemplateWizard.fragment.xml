@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:wizard="sap.m"
+    xmlns:codeeditor="sap.ui.codeeditor">
+    
+    <Dialog
+        title="{i18n>dialog.templateWizard.title}"
+        class="sapUiMediumMargin"
+        contentWidth="90vw"
+        contentHeight="90vh"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <Page showHeader="false">
+                <content>
+                    
+                    <wizard:Wizard
+                        id="templateCreationWizard"
+                        finishButtonText="{i18n>btn.createTemplate}"
+                        showNextButton="true">
+                        
+                        <!-- Step 1: Basic Information -->
+                        <wizard:WizardStep
+                            id="basicInfoStep"
+                            title="{i18n>wizard.step.basicInfo}"
+                            icon="sap-icon://detail-view">
+                            
+                            <f:SimpleForm
+                                editable="true"
+                                layout="ResponsiveGridLayout"
+                                class="sapUiMediumMargin">
+                                
+                                <f:content>
+                                    
+                                    <!-- Template Name -->
+                                    <Label text="{i18n>field.templateName}" required="true"/>
+                                    <Input id="templateNameInput" value="" placeholder="{i18n>placeholder.templateName}" required="true"/>
+                                    
+                                    <!-- Description -->
+                                    <Label text="{i18n>field.description}"/>
+                                    <TextArea id="descriptionInput" value="" rows="3" placeholder="{i18n>placeholder.description}"/>
+                                    
+                                    <!-- Template Type -->
+                                    <Label text="{i18n>field.templateType}" required="true"/>
+                                    <ComboBox
+                                        id="templateTypeCombo"
+                                        selectedKey=""
+                                        placeholder="{i18n>placeholder.templateType}"
+                                        required="true">
+                                        <core:Item key="basic" text="{i18n>template.basic}"/>
+                                        <core:Item key="reactive" text="{i18n>template.reactive}"/>
+                                        <core:Item key="cognitive" text="{i18n>template.cognitive}"/>
+                                        <core:Item key="autonomous" text="{i18n>template.autonomous}"/>
+                                        <core:Item key="collaborative" text="{i18n>template.collaborative}"/>
+                                        <core:Item key="specialized" text="{i18n>template.specialized}"/>
+                                        <core:Item key="microservice" text="{i18n>template.microservice}"/>
+                                        <core:Item key="batch" text="{i18n>template.batch}"/>
+                                        <core:Item key="realtime" text="{i18n>template.realtime}"/>
+                                        <core:Item key="analytical" text="{i18n>template.analytical}"/>
+                                    </ComboBox>
+                                    
+                                    <!-- Agent Category -->
+                                    <Label text="{i18n>field.agentCategory}" required="true"/>
+                                    <ComboBox
+                                        id="agentCategoryCombo"
+                                        selectedKey=""
+                                        placeholder="{i18n>placeholder.agentCategory}"
+                                        required="true">
+                                        <core:Item key="data_processing" text="{i18n>category.data_processing}"/>
+                                        <core:Item key="api_integration" text="{i18n>category.api_integration}"/>
+                                        <core:Item key="workflow_automation" text="{i18n>category.workflow_automation}"/>
+                                        <core:Item key="monitoring" text="{i18n>category.monitoring}"/>
+                                        <core:Item key="security" text="{i18n>category.security}"/>
+                                        <core:Item key="analytics" text="{i18n>category.analytics}"/>
+                                        <core:Item key="communication" text="{i18n>category.communication}"/>
+                                        <core:Item key="infrastructure" text="{i18n>category.infrastructure}"/>
+                                        <core:Item key="ml_ai" text="{i18n>category.ml_ai}"/>
+                                        <core:Item key="testing" text="{i18n>category.testing}"/>
+                                    </ComboBox>
+                                    
+                                    <!-- Complexity -->
+                                    <Label text="{i18n>field.complexity}"/>
+                                    <SegmentedButton id="complexitySegmented" selectedKey="moderate">
+                                        <items>
+                                            <SegmentedButtonItem key="simple" text="{i18n>complexity.simple}"/>
+                                            <SegmentedButtonItem key="moderate" text="{i18n>complexity.moderate}"/>
+                                            <SegmentedButtonItem key="complex" text="{i18n>complexity.complex}"/>
+                                            <SegmentedButtonItem key="advanced" text="{i18n>complexity.advanced}"/>
+                                            <SegmentedButtonItem key="expert" text="{i18n>complexity.expert}"/>
+                                        </items>
+                                    </SegmentedButton>
+                                    
+                                </f:content>
+                            </f:SimpleForm>
+                            
+                        </wizard:WizardStep>
+                        
+                        <!-- Step 2: Template Configuration -->
+                        <wizard:WizardStep
+                            id="templateConfigStep"
+                            title="{i18n>wizard.step.templateConfig}"
+                            icon="sap-icon://settings">
+                            
+                            <f:SimpleForm
+                                editable="true"
+                                layout="ResponsiveGridLayout"
+                                class="sapUiMediumMargin">
+                                
+                                <f:content>
+                                    
+                                    <!-- Base Template -->
+                                    <Label text="{i18n>field.baseTemplate}"/>
+                                    <ComboBox
+                                        id="baseTemplateCombo"
+                                        selectedKey=""
+                                        placeholder="{i18n>placeholder.baseTemplate}">
+                                        <!-- Base templates will be loaded dynamically -->
+                                    </ComboBox>
+                                    
+                                    <!-- Template Language -->
+                                    <Label text="{i18n>field.templateLanguage}"/>
+                                    <ComboBox id="templateLanguageCombo" selectedKey="handlebars">
+                                        <core:Item key="handlebars" text="Handlebars"/>
+                                        <core:Item key="ejs" text="EJS"/>
+                                        <core:Item key="pug" text="Pug"/>
+                                        <core:Item key="mustache" text="Mustache"/>
+                                        <core:Item key="liquid" text="Liquid"/>
+                                    </ComboBox>
+                                    
+                                    <!-- Framework Version -->
+                                    <Label text="{i18n>field.frameworkVersion}"/>
+                                    <Input id="frameworkVersionInput" value="" placeholder="{i18n>placeholder.frameworkVersion}"/>
+                                    
+                                    <!-- Dependencies -->
+                                    <Label text="{i18n>field.dependencies}"/>
+                                    <TextArea id="dependenciesInput" value="" rows="4" placeholder="{i18n>placeholder.dependencies}"/>
+                                    
+                                    <!-- Prerequisites -->
+                                    <Label text="{i18n>field.prerequisites}"/>
+                                    <TextArea id="prerequisitesInput" value="" rows="3" placeholder="{i18n>placeholder.prerequisites}"/>
+                                    
+                                    <!-- Customizable -->
+                                    <Label text="{i18n>field.customizable}"/>
+                                    <Switch id="customizableSwitch" state="true"/>
+                                    
+                                </f:content>
+                            </f:SimpleForm>
+                            
+                        </wizard:WizardStep>
+                        
+                        <!-- Step 3: Code Generation Settings -->
+                        <wizard:WizardStep
+                            id="codeGenerationStep"
+                            title="{i18n>wizard.step.codeGeneration}"
+                            icon="sap-icon://source-code">
+                            
+                            <VBox class="sapUiMediumMargin">
+                                
+                                <HBox class="sapUiSmallMarginBottom">
+                                    <VBox class="sapUiMediumMarginEnd" width="50%">
+                                        
+                                        <!-- Code Language -->
+                                        <Label text="{i18n>field.codeLanguage}" class="sapUiSmallMarginBottom"/>
+                                        <ComboBox id="codeLanguageCombo" selectedKey="python">
+                                            <core:Item key="python" text="{i18n>code.python}"/>
+                                            <core:Item key="javascript" text="{i18n>code.javascript}"/>
+                                            <core:Item key="typescript" text="{i18n>code.typescript}"/>
+                                            <core:Item key="java" text="{i18n>code.java}"/>
+                                            <core:Item key="csharp" text="{i18n>code.csharp}"/>
+                                            <core:Item key="go" text="{i18n>code.go}"/>
+                                            <core:Item key="rust" text="{i18n>code.rust}"/>
+                                            <core:Item key="ruby" text="{i18n>code.ruby}"/>
+                                            <core:Item key="kotlin" text="{i18n>code.kotlin}"/>
+                                            <core:Item key="scala" text="{i18n>code.scala}"/>
+                                        </ComboBox>
+                                        
+                                        <!-- Code Style -->
+                                        <Label text="{i18n>field.codeStyle}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                        <ComboBox id="codeStyleCombo" selectedKey="standard">
+                                            <core:Item key="standard" text="{i18n>style.standard}"/>
+                                            <core:Item key="google" text="{i18n>style.google}"/>
+                                            <core:Item key="airbnb" text="{i18n>style.airbnb}"/>
+                                            <core:Item key="microsoft" text="{i18n>style.microsoft}"/>
+                                            <core:Item key="custom" text="{i18n>style.custom}"/>
+                                        </ComboBox>
+                                        
+                                        <!-- Test Framework -->
+                                        <Label text="{i18n>field.testFramework}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                        <ComboBox id="testFrameworkCombo" selectedKey="pytest">
+                                            <core:Item key="junit" text="{i18n>test.junit}"/>
+                                            <core:Item key="pytest" text="{i18n>test.pytest}"/>
+                                            <core:Item key="jest" text="{i18n>test.jest}"/>
+                                            <core:Item key="mocha" text="{i18n>test.mocha}"/>
+                                            <core:Item key="jasmine" text="{i18n>test.jasmine}"/>
+                                            <core:Item key="nunit" text="{i18n>test.nunit}"/>
+                                            <core:Item key="xunit" text="{i18n>test.xunit}"/>
+                                            <core:Item key="rspec" text="{i18n>test.rspec}"/>
+                                            <core:Item key="gotest" text="{i18n>test.gotest}"/>
+                                            <core:Item key="cargo" text="{i18n>test.cargo}"/>
+                                        </ComboBox>
+                                        
+                                    </VBox>
+                                    
+                                    <VBox width="50%">
+                                        
+                                        <!-- Documentation Style -->
+                                        <Label text="{i18n>field.documentationStyle}" class="sapUiSmallMarginBottom"/>
+                                        <ComboBox id="documentationStyleCombo" selectedKey="sphinx">
+                                            <core:Item key="sphinx" text="{i18n>docs.sphinx}"/>
+                                            <core:Item key="mkdocs" text="{i18n>docs.mkdocs}"/>
+                                            <core:Item key="jsdoc" text="{i18n>docs.jsdoc}"/>
+                                            <core:Item key="javadoc" text="{i18n>docs.javadoc}"/>
+                                            <core:Item key="doxygen" text="{i18n>docs.doxygen}"/>
+                                            <core:Item key="swagger" text="{i18n>docs.swagger}"/>
+                                            <core:Item key="custom" text="{i18n>docs.custom}"/>
+                                        </ComboBox>
+                                        
+                                        <!-- Code Quality Target -->
+                                        <Label text="{i18n>field.codeQualityTarget}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                        <Slider id="codeQualityTargetSlider" value="85" min="0" max="100" step="5" enableTickmarks="true"/>
+                                        
+                                        <!-- Auto Generate Tests -->
+                                        <Label text="{i18n>field.autoGenerateTests}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                        <Switch id="autoGenerateTestsSwitch" state="true"/>
+                                        
+                                        <!-- Auto Generate Docs -->
+                                        <Label text="{i18n>field.autoGenerateDocs}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                        <Switch id="autoGenerateDocsSwitch" state="true"/>
+                                        
+                                    </VBox>
+                                </HBox>
+                                
+                                <!-- Template Code Preview -->
+                                <Label text="{i18n>section.templatePreview}" class="sapUiMediumMarginTop sapUiSmallMarginBottom"/>
+                                <codeeditor:CodeEditor
+                                    id="templateCodePreview"
+                                    type="javascript"
+                                    height="200px"
+                                    width="100%"
+                                    value=""
+                                    editable="false"
+                                    class="sapUiSmallMarginBottom"/>
+                                
+                            </VBox>
+                            
+                        </wizard:WizardStep>
+                        
+                        <!-- Step 4: Deployment Configuration -->
+                        <wizard:WizardStep
+                            id="deploymentConfigStep"
+                            title="{i18n>wizard.step.deployment}"
+                            icon="sap-icon://cloud">
+                            
+                            <f:SimpleForm
+                                editable="true"
+                                layout="ResponsiveGridLayout"
+                                class="sapUiMediumMargin">
+                                
+                                <f:content>
+                                    
+                                    <!-- Deployment Target -->
+                                    <Label text="{i18n>field.deploymentTarget}"/>
+                                    <ComboBox id="deploymentTargetCombo" selectedKey="kubernetes">
+                                        <core:Item key="kubernetes" text="{i18n>target.kubernetes}"/>
+                                        <core:Item key="docker" text="{i18n>target.docker}"/>
+                                        <core:Item key="serverless" text="{i18n>target.serverless}"/>
+                                        <core:Item key="vm" text="{i18n>target.vm}"/>
+                                        <core:Item key="edge" text="{i18n>target.edge}"/>
+                                        <core:Item key="cloud" text="{i18n>target.cloud}"/>
+                                        <core:Item key="onpremise" text="{i18n>target.onpremise}"/>
+                                        <core:Item key="hybrid" text="{i18n>target.hybrid}"/>
+                                    </ComboBox>
+                                    
+                                    <!-- Container Image -->
+                                    <Label text="{i18n>field.containerImage}"/>
+                                    <Input id="containerImageInput" value="" placeholder="{i18n>placeholder.containerImage}"/>
+                                    
+                                    <!-- Resource Requirements -->
+                                    <Label text="{i18n>field.resourceRequirements}"/>
+                                    <TextArea id="resourceRequirementsInput" value="" rows="3" placeholder="{i18n>placeholder.resourceRequirements}"/>
+                                    
+                                    <!-- Scaling Policy -->
+                                    <Label text="{i18n>field.scalingPolicy}"/>
+                                    <ComboBox id="scalingPolicyCombo" selectedKey="horizontal">
+                                        <core:Item key="manual" text="{i18n>scaling.manual}"/>
+                                        <core:Item key="horizontal" text="{i18n>scaling.horizontal}"/>
+                                        <core:Item key="vertical" text="{i18n>scaling.vertical}"/>
+                                        <core:Item key="predictive" text="{i18n>scaling.predictive}"/>
+                                        <core:Item key="scheduled" text="{i18n>scaling.scheduled}"/>
+                                    </ComboBox>
+                                    
+                                    <!-- Environment Variables -->
+                                    <Label text="{i18n>field.environmentVariables}"/>
+                                    <TextArea id="environmentVariablesInput" value="" rows="4" placeholder="{i18n>placeholder.environmentVariables}"/>
+                                    
+                                    <!-- Health Check Config -->
+                                    <Label text="{i18n>field.healthCheckConfig}"/>
+                                    <Input id="healthCheckConfigInput" value="" placeholder="{i18n>placeholder.healthCheckConfig}"/>
+                                    
+                                    <!-- Monitoring Enabled -->
+                                    <Label text="{i18n>field.monitoringEnabled}"/>
+                                    <Switch id="monitoringEnabledSwitch" state="true"/>
+                                    
+                                </f:content>
+                            </f:SimpleForm>
+                            
+                        </wizard:WizardStep>
+                        
+                        <!-- Step 5: Agent Capabilities -->
+                        <wizard:WizardStep
+                            id="capabilitiesStep"
+                            title="{i18n>wizard.step.capabilities}"
+                            icon="sap-icon://puzzle">
+                            
+                            <VBox class="sapUiMediumMargin">
+                                
+                                <!-- Supported Protocols -->
+                                <Label text="{i18n>field.supportedProtocols}" class="sapUiSmallMarginBottom"/>
+                                <MultiComboBox id="supportedProtocolsMultiCombo">
+                                    <core:Item key="http" text="HTTP/HTTPS"/>
+                                    <core:Item key="websocket" text="WebSocket"/>
+                                    <core:Item key="grpc" text="gRPC"/>
+                                    <core:Item key="mqtt" text="MQTT"/>
+                                    <core:Item key="amqp" text="AMQP"/>
+                                    <core:Item key="kafka" text="Kafka"/>
+                                    <core:Item key="redis" text="Redis Pub/Sub"/>
+                                </MultiComboBox>
+                                
+                                <!-- Communication Mode -->
+                                <Label text="{i18n>field.communicationMode}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                <ComboBox id="communicationModeCombo" selectedKey="asynchronous">
+                                    <core:Item key="synchronous" text="{i18n>comm.synchronous}"/>
+                                    <core:Item key="asynchronous" text="{i18n>comm.asynchronous}"/>
+                                    <core:Item key="streaming" text="{i18n>comm.streaming}"/>
+                                    <core:Item key="batch" text="{i18n>comm.batch}"/>
+                                    <core:Item key="event_driven" text="{i18n>comm.event_driven}"/>
+                                    <core:Item key="pubsub" text="{i18n>comm.pubsub}"/>
+                                    <core:Item key="request_response" text="{i18n>comm.request_response}"/>
+                                </ComboBox>
+                                
+                                <!-- Authentication Methods -->
+                                <Label text="{i18n>field.authenticationMethods}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                <MultiComboBox id="authenticationMethodsMultiCombo">
+                                    <core:Item key="none" text="None"/>
+                                    <core:Item key="basic" text="Basic Auth"/>
+                                    <core:Item key="bearer" text="Bearer Token"/>
+                                    <core:Item key="oauth2" text="OAuth 2.0"/>
+                                    <core:Item key="api_key" text="API Key"/>
+                                    <core:Item key="certificate" text="Certificate"/>
+                                    <core:Item key="jwt" text="JWT"/>
+                                    <core:Item key="saml" text="SAML"/>
+                                </MultiComboBox>
+                                
+                                <!-- Data Processing Capabilities -->
+                                <Label text="{i18n>field.dataProcessingCapabilities}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                <TextArea id="dataProcessingCapabilitiesInput" value="" rows="3" placeholder="{i18n>placeholder.dataProcessingCapabilities}"/>
+                                
+                                <!-- Integration Points -->
+                                <Label text="{i18n>field.integrationPoints}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                <TextArea id="integrationPointsInput" value="" rows="3" placeholder="{i18n>placeholder.integrationPoints}"/>
+                                
+                                <!-- Logging Level -->
+                                <Label text="{i18n>field.loggingLevel}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                <ComboBox id="loggingLevelCombo" selectedKey="info">
+                                    <core:Item key="trace" text="{i18n>log.trace}"/>
+                                    <core:Item key="debug" text="{i18n>log.debug}"/>
+                                    <core:Item key="info" text="{i18n>log.info}"/>
+                                    <core:Item key="warning" text="{i18n>log.warning}"/>
+                                    <core:Item key="error" text="{i18n>log.error}"/>
+                                    <core:Item key="fatal" text="{i18n>log.fatal}"/>
+                                </ComboBox>
+                                
+                            </VBox>
+                            
+                        </wizard:WizardStep>
+                        
+                    </wizard:Wizard>
+                    
+                </content>
+            </Page>
+        </content>
+        
+        <beginButton>
+            <Button text="{i18n>btn.previous}" press="onWizardPrevious" enabled="{= ${/currentStep} > 0}"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>btn.cancel}" press="onCancelWizard"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

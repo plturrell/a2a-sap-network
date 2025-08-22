@@ -256,7 +256,8 @@ cds.on('bootstrap', async (app) => {
             '/a2a/agent2/v1',
             '/a2a/agent3/v1',
             '/a2a/agent4/v1',
-            '/a2a/agent5/v1'
+            '/a2a/agent5/v1',
+            '/a2a/agent6/v1'
         ];
         
         const shouldBypass = bypassPaths.some(path => req.path.startsWith(path));
@@ -985,6 +986,187 @@ cds.on('bootstrap', async (app) => {
     });
     
     log.info('Agent 5 API proxy routes initialized');
+
+    // ================================
+    // AGENT 6 - QUALITY CONTROL & WORKFLOW ROUTING PROXY ROUTES
+    // ================================
+    
+    const AGENT6_BASE_URL = process.env.AGENT6_BASE_URL || 'http://localhost:8005';
+    
+    // Helper function to proxy Agent 6 requests
+    async function proxyAgent6Request(req, res, endpoint, method = 'GET') {
+        try {
+            const config = {
+                method,
+                url: `${AGENT6_BASE_URL}/a2a/agent6/v1${endpoint}`,
+                timeout: 60000, // Longer timeout for quality assessments
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': req.headers.authorization || '',
+                    'X-Forwarded-For': req.ip,
+                    'X-User-Agent': req.headers['user-agent'] || 'SAP-CAP-Proxy'
+                }
+            };
+            
+            if (method !== 'GET' && req.body) {
+                config.data = req.body;
+            }
+            
+            if (req.query && Object.keys(req.query).length > 0) {
+                config.params = req.query;
+            }
+            
+            const response = await axios(config);
+            res.status(response.status).json(response.data);
+        } catch (error) {
+            log.error(`Agent 6 Proxy Error (${endpoint}):`, error.message);
+            if (error.response) {
+                res.status(error.response.status).json({
+                    error: error.response.data?.error || error.response.statusText,
+                    message: `Agent 6 Backend: ${error.response.status}`,
+                    details: error.response.data?.details || null
+                });
+            } else {
+                res.status(503).json({
+                    error: 'Agent 6 Backend Connection Failed',
+                    message: error.message,
+                    service: 'Quality Control Service'
+                });
+            }
+        }
+    }
+    
+    // Agent 6 Quality Control Tasks
+    app.get('/a2a/agent6/v1/tasks', (req, res) => proxyAgent6Request(req, res, '/tasks'));
+    app.post('/a2a/agent6/v1/tasks', (req, res) => proxyAgent6Request(req, res, '/tasks', 'POST'));
+    app.get('/a2a/agent6/v1/tasks/:taskId', (req, res) => 
+        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}`));
+    app.put('/a2a/agent6/v1/tasks/:taskId', (req, res) => 
+        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}`, 'PUT'));
+    app.delete('/a2a/agent6/v1/tasks/:taskId', (req, res) => 
+        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}`, 'DELETE'));
+    
+    // Agent 6 Task Operations
+    app.post('/a2a/agent6/v1/tasks/:taskId/assess', (req, res) => 
+        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/assess`, 'POST'));
+    app.get('/a2a/agent6/v1/tasks/:taskId/stream', (req, res) => {
+        // Special handling for Server-Sent Events
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        
+        const eventSourceUrl = `${AGENT6_BASE_URL}/a2a/agent6/v1/tasks/${req.params.taskId}/stream`;
+        // Proxy SSE stream - implementation would forward events
+        res.write(':ok\n\n');
+    });
+    app.post('/a2a/agent6/v1/tasks/:taskId/route', (req, res) => 
+        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/route`, 'POST'));
+    app.post('/a2a/agent6/v1/tasks/:taskId/verify-trust', (req, res) => 
+        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/verify-trust`, 'POST'));
+    app.post('/a2a/agent6/v1/tasks/:taskId/optimize', (req, res) => 
+        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/optimize`, 'POST'));
+    app.post('/a2a/agent6/v1/tasks/:taskId/apply-optimizations', (req, res) => 
+        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/apply-optimizations`, 'POST'));
+    app.post('/a2a/agent6/v1/tasks/:taskId/escalate', (req, res) => 
+        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/escalate`, 'POST'));
+    app.post('/a2a/agent6/v1/tasks/:taskId/report', (req, res) => 
+        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/report`, 'POST'));
+    app.get('/a2a/agent6/v1/tasks/:taskId/metrics', (req, res) => 
+        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/metrics`));
+    app.get('/a2a/agent6/v1/tasks/:taskId/routing-options', (req, res) => 
+        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/routing-options`));
+    
+    // Agent 6 Dashboard and Analytics
+    app.get('/a2a/agent6/v1/dashboard', (req, res) => proxyAgent6Request(req, res, '/dashboard'));
+    app.get('/a2a/agent6/v1/trust-metrics', (req, res) => proxyAgent6Request(req, res, '/trust-metrics'));
+    app.get('/a2a/agent6/v1/workflow-analysis', (req, res) => proxyAgent6Request(req, res, '/workflow-analysis'));
+    
+    // Agent 6 Routing Rules
+    app.get('/a2a/agent6/v1/routing-rules', (req, res) => proxyAgent6Request(req, res, '/routing-rules'));
+    app.post('/a2a/agent6/v1/routing-rules', (req, res) => proxyAgent6Request(req, res, '/routing-rules', 'POST'));
+    app.get('/a2a/agent6/v1/routing-rules/:ruleId', (req, res) => 
+        proxyAgent6Request(req, res, `/routing-rules/${req.params.ruleId}`));
+    app.put('/a2a/agent6/v1/routing-rules/:ruleId', (req, res) => 
+        proxyAgent6Request(req, res, `/routing-rules/${req.params.ruleId}`, 'PUT'));
+    app.delete('/a2a/agent6/v1/routing-rules/:ruleId', (req, res) => 
+        proxyAgent6Request(req, res, `/routing-rules/${req.params.ruleId}`, 'DELETE'));
+    app.post('/a2a/agent6/v1/routing-rules/:ruleId/test', (req, res) => 
+        proxyAgent6Request(req, res, `/routing-rules/${req.params.ruleId}/test`, 'POST'));
+    
+    // Agent 6 Quality Gates
+    app.get('/a2a/agent6/v1/quality-gates', (req, res) => proxyAgent6Request(req, res, '/quality-gates'));
+    app.post('/a2a/agent6/v1/quality-gates', (req, res) => proxyAgent6Request(req, res, '/quality-gates', 'POST'));
+    app.get('/a2a/agent6/v1/quality-gates/:gateId', (req, res) => 
+        proxyAgent6Request(req, res, `/quality-gates/${req.params.gateId}`));
+    app.put('/a2a/agent6/v1/quality-gates/:gateId', (req, res) => 
+        proxyAgent6Request(req, res, `/quality-gates/${req.params.gateId}`, 'PUT'));
+    app.delete('/a2a/agent6/v1/quality-gates/:gateId', (req, res) => 
+        proxyAgent6Request(req, res, `/quality-gates/${req.params.gateId}`, 'DELETE'));
+    
+    // Agent 6 Batch Operations
+    app.post('/a2a/agent6/v1/batch-assessment', (req, res) => 
+        proxyAgent6Request(req, res, '/batch-assessment', 'POST'));
+    app.get('/a2a/agent6/v1/batch/:batchId', (req, res) => 
+        proxyAgent6Request(req, res, `/batch/${req.params.batchId}`));
+    
+    // Agent 6 Reports and Exports
+    app.post('/a2a/agent6/v1/reports/generate', (req, res) => 
+        proxyAgent6Request(req, res, '/reports/generate', 'POST'));
+    app.get('/a2a/agent6/v1/reports/:reportId', (req, res) => 
+        proxyAgent6Request(req, res, `/reports/${req.params.reportId}`));
+    app.get('/a2a/agent6/v1/reports/:reportId/download', (req, res) => 
+        proxyAgent6Request(req, res, `/reports/${req.params.reportId}/download`));
+    
+    // Agent 6 Health Check
+    app.get('/a2a/agent6/v1/health', (req, res) => proxyAgent6Request(req, res, '/health'));
+    
+    // Agent 6 OData Service Proxy - Convert REST to OData format
+    app.get('/a2a/agent6/v1/odata/QualityControlTasks', async (req, res) => {
+        try {
+            const response = await axios.get(`${AGENT6_BASE_URL}/a2a/agent6/v1/tasks`);
+            
+            const odataResponse = {
+                "@odata.context": "$metadata#QualityControlTasks",
+                "value": response.data.map(task => ({
+                    ID: task.id,
+                    taskName: task.task_name,
+                    description: task.description,
+                    qualityGate: task.quality_gate,
+                    dataSource: task.data_source,
+                    processingPipeline: task.processing_pipeline,
+                    status: task.status?.toUpperCase() || 'DRAFT',
+                    priority: task.priority?.toUpperCase() || 'NORMAL',
+                    overallQuality: task.overall_quality,
+                    trustScore: task.trust_score,
+                    issuesFound: task.issues_found || 0,
+                    routingDecision: task.routing_decision?.toUpperCase(),
+                    targetAgent: task.target_agent,
+                    routingConfidence: task.routing_confidence,
+                    assessmentDuration: task.assessment_duration,
+                    workflowOptimized: task.workflow_optimized || false,
+                    autoRouted: task.auto_routed || false,
+                    qualityComponents: JSON.stringify(task.quality_components || {}),
+                    assessmentResults: JSON.stringify(task.assessment_results || {}),
+                    errorDetails: task.error_details,
+                    startedAt: task.started_at,
+                    completedAt: task.completed_at,
+                    createdAt: task.created_at,
+                    modifiedAt: task.modified_at
+                }))
+            };
+            
+            res.json(odataResponse);
+        } catch (error) {
+            res.status(503).json({
+                error: {
+                    code: "SERVICE_UNAVAILABLE",
+                    message: "Agent 6 backend not available"
+                }
+            });
+        }
+    });
+    
+    log.info('Agent 6 API proxy routes initialized');
     
     // Agent 3 OData Service Proxy - Convert REST to OData format
     app.get('/a2a/agent3/v1/odata/VectorProcessingTasks', async (req, res) => {

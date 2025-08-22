@@ -9,7 +9,8 @@
         title="Vector Similarity Search"
         contentWidth="80%"
         contentHeight="85%"
-        resizable="true">
+        resizable="true"
+        ariaLabel="Vector similarity search dialog">
         
         <content>
             <l:Splitter height="100%" orientation="Vertical">
@@ -22,54 +23,68 @@
                             columnsM="2"
                             columnsL="3">
                             <form:content>
-                                <Label text="Collection"/>
+                                <Label text="Collection" labelFor="collectionSelect"/>
                                 <Select 
+                                    id="collectionSelect"
                                     selectedKey="{search>/collection}"
-                                    items="{search>/collections}">
+                                    items="{search>/collections}"
+                                    ariaLabel="Vector collection selection">
                                     <core:ListItem 
                                         key="{search>name}"
-                                        text="{search>name} ({search>vectorCount} vectors)"/>
+                                        text="{path: 'search>name', formatter: '.formatSecureText'} ({search>vectorCount} vectors)"/>
                                 </Select>
                                 
-                                <Label text="Query Type"/>
+                                <Label text="Query Type" labelFor="queryTypeGroup"/>
                                 <RadioButtonGroup 
+                                    id="queryTypeGroup"
                                     selectedIndex="{= ${search>/queryType} === 'TEXT' ? 0 : 1 }"
-                                    select=".onQueryTypeChange">
+                                    select=".onQueryTypeChange"
+                                    ariaLabel="Select query type">
                                     <RadioButton text="Text Query"/>
                                     <RadioButton text="Vector Query"/>
                                 </RadioButtonGroup>
                                 
-                                <Label text="Search Query" visible="{= ${search>/queryType} === 'TEXT' }"/>
+                                <Label text="Search Query" visible="{= ${search>/queryType} === 'TEXT' }" labelFor="searchQueryInput"/>
                                 <TextArea 
+                                    id="searchQueryInput"
                                     value="{search>/query}"
                                     rows="3"
                                     placeholder="Enter your search query..."
-                                    visible="{= ${search>/queryType} === 'TEXT' }"/>
+                                    visible="{= ${search>/queryType} === 'TEXT' }"
+                                    maxLength="1000"
+                                    ariaLabel="Text search query"/>
                                 
-                                <Label text="Vector Input" visible="{= ${search>/queryType} === 'VECTOR' }"/>
+                                <Label text="Vector Input" visible="{= ${search>/queryType} === 'VECTOR' }" labelFor="vectorInput"/>
                                 <TextArea 
+                                    id="vectorInput"
                                     value="{search>/vectorInput}"
                                     rows="3"
                                     placeholder="[0.1, -0.2, 0.3, ...]"
-                                    visible="{= ${search>/queryType} === 'VECTOR' }"/>
+                                    visible="{= ${search>/queryType} === 'VECTOR' }"
+                                    maxLength="10000"
+                                    ariaLabel="Vector coordinates input"/>
                                 
-                                <Label text="Top K Results"/>
+                                <Label text="Top K Results" labelFor="topKSlider"/>
                                 <Slider 
+                                    id="topKSlider"
                                     value="{search>/topK}"
                                     min="1"
                                     max="100"
                                     step="1"
                                     enableTickmarks="true"
-                                    inputsAsTooltips="true"/>
+                                    inputsAsTooltips="true"
+                                    ariaLabel="Number of results to return"/>
                                 
-                                <Label text="Similarity Threshold"/>
+                                <Label text="Similarity Threshold" labelFor="thresholdSlider"/>
                                 <Slider 
+                                    id="thresholdSlider"
                                     value="{search>/similarityThreshold}"
                                     min="0"
                                     max="1"
                                     step="0.01"
                                     enableTickmarks="true"
-                                    inputsAsTooltips="true"/>
+                                    inputsAsTooltips="true"
+                                    ariaLabel="Minimum similarity score"/>
                                 
                                 <Label text=""/>
                                 <HBox>
@@ -77,10 +92,12 @@
                                         text="Search"
                                         type="Emphasized"
                                         press=".onExecuteVectorSearch"
-                                        enabled="{= ${search>/query} || ${search>/vectorInput} }"/>
+                                        enabled="{= ${search>/query} || ${search>/vectorInput} }"
+                                        ariaLabel="Execute vector search"/>
                                     <Button 
                                         text="Clear"
-                                        press=".onClearSearch"/>
+                                        press=".onClearSearch"
+                                        ariaLabel="Clear search criteria"/>
                                 </HBox>
                             </form:content>
                         </form:SimpleForm>
@@ -94,21 +111,26 @@
                                 editable="true"
                                 layout="ResponsiveGridLayout">
                                 <form:content>
-                                    <Label text="Metadata Filters"/>
+                                    <Label text="Metadata Filters" labelFor="metadataFilters"/>
                                     <TextArea
+                                        id="metadataFilters"
                                         value="{search>/metadataFilters}"
                                         rows="3"
-                                        placeholder='{"category": "technology", "date": {"$gte": "2023-01-01"}}'/>
+                                        placeholder='{"category": "technology", "date": {"$gte": "2023-01-01"}}'
+                                        maxLength="2000"
+                                        ariaLabel="JSON metadata filters"/>
                                     
                                     <Label text="Hybrid Search"/>
                                     <CheckBox 
                                         text="Enable keyword + vector search"
-                                        selected="{search>/hybridSearch}"/>
+                                        selected="{search>/hybridSearch}"
+                                        ariaLabel="Enable hybrid search mode"/>
                                     
                                     <Label text="Reranking"/>
                                     <CheckBox 
                                         text="Apply reranking to results"
-                                        selected="{search>/reranking}"/>
+                                        selected="{search>/reranking}"
+                                        ariaLabel="Enable result reranking"/>
                                 </form:content>
                             </form:SimpleForm>
                         </Panel>
@@ -140,20 +162,22 @@
                                         <Text text="{search>rank}"/>
                                         <ProgressIndicator
                                             percentValue="{= ${search>similarity} * 100 }"
-                                            displayValue="{search>similarity}"
+                                            displayValue="{path: 'search>similarity', formatter: '.formatSimilarityScore'}"
                                             state="{= ${search>similarity} > 0.8 ? 'Success' : ${search>similarity} > 0.6 ? 'Warning' : 'Error' }"/>
                                         <VBox>
                                             <Text 
-                                                text="{search>content}"
-                                                maxLines="3"/>
+                                                text="{path: 'search>content', formatter: '.formatSecureText'}"
+                                                maxLines="3"
+                                                tooltip="{path: 'search>content', formatter: '.formatSecureText'}"/>
                                             <Link 
                                                 text="View full content"
-                                                press=".onViewFullContent"/>
+                                                press=".onViewFullContent"
+                                                ariaLabel="View full content for result {search>rank}"/>
                                         </VBox>
                                         <VBox>
-                                            <Text text="ID: {search>id}"/>
-                                            <Text text="Source: {search>source}"/>
-                                            <Text text="Type: {search>type}"/>
+                                            <Text text="ID: {path: 'search>id', formatter: '.formatSecureText'}"/>
+                                            <Text text="Source: {path: 'search>source', formatter: '.formatSecureText'}"/>
+                                            <Text text="Type: {path: 'search>type', formatter: '.formatSecureText'}"/>
                                         </VBox>
                                     </cells>
                                 </ColumnListItem>
@@ -167,11 +191,13 @@
                             <Button 
                                 text="Export Results"
                                 icon="sap-icon://excel-attachment"
-                                press=".onExportSearchResults"/>
+                                press=".onExportSearchResults"
+                                ariaLabel="Export search results to file"/>
                             <Button 
                                 text="Save Search"
                                 icon="sap-icon://save"
-                                press=".onSaveSearch"/>
+                                press=".onSaveSearch"
+                                ariaLabel="Save search configuration"/>
                         </Toolbar>
                     </Panel>
                 </l:contentAreas>
@@ -179,14 +205,15 @@
         </content>
         
         <beginButton>
-            <Button text="Close" press=".onCloseVectorSearch"/>
+            <Button text="Close" press=".onCloseVectorSearch" ariaLabel="Close search dialog"/>
         </beginButton>
         
         <endButton>
             <Button 
                 text="New Search"
                 type="Emphasized"
-                press=".onNewSearch"/>
+                press=".onNewSearch"
+                ariaLabel="Start new search"/>
         </endButton>
         
     </Dialog>

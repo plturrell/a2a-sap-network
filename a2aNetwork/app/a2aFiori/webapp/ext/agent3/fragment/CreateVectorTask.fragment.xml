@@ -20,23 +20,34 @@
                             editable="true"
                             layout="ResponsiveGridLayout">
                             <form:content>
-                                <Label text="Task Name" required="true"/>
+                                <Label text="Task Name" required="true" labelFor="taskNameInput"/>
                                 <Input 
+                                    id="taskNameInput"
                                     value="{create>/taskName}"
-                                    placeholder="Enter task name"/>
+                                    placeholder="Enter task name"
+                                    maxLength="100"
+                                    change=".onTaskNameChange"
+                                    ariaLabel="Task name input"/>
                                 
-                                <Label text="Description"/>
+                                <Label text="Description" labelFor="descriptionInput"/>
                                 <TextArea 
+                                    id="descriptionInput"
                                     value="{create>/description}"
                                     rows="2"
-                                    placeholder="Describe the vector processing task"/>
+                                    placeholder="Describe the vector processing task"
+                                    maxLength="500"
+                                    ariaLabel="Task description"/>
                                 
-                                <Label text="Data Source" required="true"/>
+                                <Label text="Data Source" required="true" labelFor="dataSourceInput"/>
                                 <Input 
+                                    id="dataSourceInput"
                                     value="{create>/dataSource}"
                                     placeholder="Path to data source"
                                     showValueHelp="true"
-                                    valueHelpRequest=".onSelectDataSource"/>
+                                    valueHelpRequest=".onSelectDataSource"
+                                    maxLength="500"
+                                    change=".onDataSourceChange"
+                                    ariaLabel="Data source path"/>
                                 
                                 <Label text="Data Type"/>
                                 <Select selectedKey="{create>/dataType}">
@@ -157,10 +168,14 @@
                                     </items>
                                 </Select>
                                 
-                                <Label text="Collection Name"/>
+                                <Label text="Collection Name" labelFor="collectionNameInput"/>
                                 <Input 
+                                    id="collectionNameInput"
                                     value="{create>/collectionName}"
-                                    placeholder="Enter collection name"/>
+                                    placeholder="Enter collection name"
+                                    maxLength="50"
+                                    change=".onCollectionNameChange"
+                                    ariaLabel="Vector collection name"/>
                                 
                                 <Label text="Metadata Schema"/>
                                 <TextArea

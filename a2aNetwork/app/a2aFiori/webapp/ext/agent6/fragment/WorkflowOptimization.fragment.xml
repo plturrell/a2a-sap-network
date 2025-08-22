@@ -1,0 +1,310 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="workflowOptimizationDialog"
+        title="Workflow Optimization Analysis"
+        contentWidth="90%"
+        contentHeight="85%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Bottlenecks Analysis -->
+                <Panel headerText="Identified Bottlenecks" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <MessageStrip 
+                            text="{= ${workflow>/bottlenecks}.length > 0 ? ${workflow>/bottlenecks}.length + ' bottlenecks identified in the workflow' : 'No significant bottlenecks detected'}"
+                            type="{= ${workflow>/bottlenecks}.length > 0 ? 'Warning' : 'Success'}"
+                            showIcon="true"
+                            class="sapUiMediumMarginBottom"/>
+                        
+                        <Table 
+                            items="{workflow>/bottlenecks}"
+                            visible="{= ${workflow>/bottlenecks}.length > 0}">
+                            <columns>
+                                <Column>
+                                    <Text text="Stage"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Type"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Current Duration"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Impact"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Root Cause"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Suggested Fix"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{stage}"/>
+                                        <ObjectStatus 
+                                            text="{type}"
+                                            state="Warning"/>
+                                        <Text text="{duration} ms"/>
+                                        <ObjectStatus 
+                                            text="{impact}"
+                                            state="{= ${impact} === 'HIGH' ? 'Error' : ${impact} === 'MEDIUM' ? 'Warning' : 'Success'}"/>
+                                        <Text 
+                                            text="{rootCause}"
+                                            maxLines="2"/>
+                                        <Text 
+                                            text="{suggestedFix}"
+                                            maxLines="2"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </Panel>
+                
+                <!-- Optimization Recommendations -->
+                <Panel headerText="Optimization Recommendations" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <List 
+                            items="{workflow>/optimizations}"
+                            mode="MultiSelect"
+                            selectionChange=".onOptimizationSelectionChange">
+                            <CustomListItem>
+                                <VBox class="sapUiMediumMargin">
+                                    <HBox>
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Title text="{name}" level="H4"/>
+                                            <Text text="{description}"/>
+                                        </VBox>
+                                        <VBox>
+                                            <Text text="Expected Improvement:" class="sapUiContentLabelColor"/>
+                                            <ObjectNumber 
+                                                number="{expectedImprovement}"
+                                                unit="%"
+                                                state="Success"
+                                                emphasized="true"/>
+                                        </VBox>
+                                    </HBox>
+                                    
+                                    <HBox class="sapUiMediumMarginTop">
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Text text="Type:" class="sapUiContentLabelColor"/>
+                                            <Text text="{type}"/>
+                                        </VBox>
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Text text="Risk:" class="sapUiContentLabelColor"/>
+                                            <ObjectStatus 
+                                                text="{risk}"
+                                                state="{= ${risk} === 'LOW' ? 'Success' : ${risk} === 'MEDIUM' ? 'Warning' : 'Error'}"/>
+                                        </VBox>
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Text text="Effort:" class="sapUiContentLabelColor"/>
+                                            <RatingIndicator 
+                                                value="{effort}"
+                                                maxValue="5"
+                                                displayOnly="true"/>
+                                        </VBox>
+                                        <VBox>
+                                            <Text text="Priority:" class="sapUiContentLabelColor"/>
+                                            <ObjectStatus 
+                                                text="{priority}"
+                                                state="{= ${priority} === 'HIGH' ? 'Error' : ${priority} === 'MEDIUM' ? 'Warning' : 'Success'}"/>
+                                        </VBox>
+                                    </HBox>
+                                    
+                                    <Text 
+                                        text="Implementation Details: {implementationDetails}"
+                                        class="sapUiMediumMarginTop sapUiContentLabelColor"/>
+                                </VBox>
+                            </CustomListItem>
+                        </List>
+                    </VBox>
+                </Panel>
+                
+                <!-- Performance Metrics -->
+                <Panel headerText="Performance Analysis" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <core:HTML 
+                            id="workflowChart"
+                            content='<div id="workflowChartDiv" style="width: 100%; height: 400px;"></div>'
+                            preferDOM="true"/>
+                        
+                        <Table 
+                            items="{workflow>/performance}"
+                            class="sapUiMediumMarginTop">
+                            <columns>
+                                <Column>
+                                    <Text text="Stage"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Avg Duration"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Min Duration"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Max Duration"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Efficiency"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Throughput"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{stage}"/>
+                                        <Text text="{averageDuration} ms"/>
+                                        <Text text="{minDuration} ms"/>
+                                        <Text text="{maxDuration} ms"/>
+                                        <ProgressIndicator 
+                                            percentValue="{efficiency}"
+                                            displayValue="{efficiency}%"
+                                            state="{= ${efficiency} >= 90 ? 'Success' : ${efficiency} >= 70 ? 'Warning' : 'Error'}"
+                                            width="120px"/>
+                                        <Text text="{throughput} tasks/hr"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </Panel>
+                
+                <!-- Resource Utilization -->
+                <Panel 
+                    headerText="Resource Utilization"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="CPU Usage" level="H5"/>
+                                <mc:RadialMicroChart
+                                    size="M"
+                                    percentage="{workflow>/resourceUtilization/cpu}"
+                                    valueColor="{= ${workflow>/resourceUtilization/cpu} > 80 ? 'Error' : 'Good'}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Memory Usage" level="H5"/>
+                                <mc:RadialMicroChart
+                                    size="M"
+                                    percentage="{workflow>/resourceUtilization/memory}"
+                                    valueColor="{= ${workflow>/resourceUtilization/memory} > 80 ? 'Error' : 'Good'}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Network I/O" level="H5"/>
+                                <mc:RadialMicroChart
+                                    size="M"
+                                    percentage="{workflow>/resourceUtilization/network}"
+                                    valueColor="{= ${workflow>/resourceUtilization/network} > 80 ? 'Error' : 'Good'}"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="Queue Depth" level="H5"/>
+                                <mc:BulletMicroChart
+                                    targetValue="{workflow>/resourceUtilization/queueTarget}"
+                                    actualValue="{workflow>/resourceUtilization/queueDepth}"
+                                    minValue="0"
+                                    maxValue="100"
+                                    showActualValue="true"
+                                    showTargetValue="true"
+                                    size="M"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <Text 
+                            text="Resource optimization can improve performance by up to {workflow>/resourceUtilization/potentialImprovement}%"
+                            class="sapUiMediumMarginTop sapThemeHighlight-AsTextColor"/>
+                    </VBox>
+                </Panel>
+                
+                <!-- Implementation Plan -->
+                <Panel 
+                    headerText="Implementation Plan"
+                    visible="{= ${workflow>/selectedOptimizations}.length > 0}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <Text 
+                            text="{workflow>/selectedOptimizations}.length optimizations selected for implementation"
+                            class="sapUiMediumMarginBottom"/>
+                        
+                        <Timeline
+                            enableDoubleSided="true"
+                            groupBy="Quarter"
+                            growingThreshold="10"
+                            content="{workflow>/implementationPlan}">
+                            <TimelineItem
+                                dateTime="{scheduledDate}"
+                                title="{optimizationName}"
+                                userNameClickable="false"
+                                userPicture="sap-icon://tools"
+                                text="{description}"
+                                userName="{assignedTo}"/>
+                        </Timeline>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Total Expected Improvement:" class="sapUiContentLabelColor"/>
+                                <ObjectNumber 
+                                    number="{workflow>/totalExpectedImprovement}"
+                                    unit="%"
+                                    state="Success"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Implementation Time:" class="sapUiContentLabelColor"/>
+                                <Text text="{workflow>/totalImplementationTime} days"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Total Risk Score:" class="sapUiContentLabelColor"/>
+                                <ObjectStatus 
+                                    text="{workflow>/totalRiskScore}"
+                                    state="{= ${workflow>/totalRiskScore} === 'LOW' ? 'Success' : ${workflow>/totalRiskScore} === 'MEDIUM' ? 'Warning' : 'Error'}"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Export Analysis"
+                icon="sap-icon://download"
+                press=".onExportWorkflowAnalysis"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Apply Selected Optimizations"
+                    type="Emphasized"
+                    icon="sap-icon://activate"
+                    press=".onApplyOptimizations"
+                    enabled="{= ${workflow>/selectedOptimizations}.length > 0}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Schedule Implementation"
+                    icon="sap-icon://calendar"
+                    press=".onScheduleImplementation"
+                    enabled="{= ${workflow>/selectedOptimizations}.length > 0}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseWorkflowOptimization"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

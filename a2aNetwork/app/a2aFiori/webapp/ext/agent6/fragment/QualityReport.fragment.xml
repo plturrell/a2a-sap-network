@@ -1,0 +1,189 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="qualityReportDialog"
+        title="Generate Quality Report"
+        contentWidth="60%"
+        contentHeight="60%"
+        resizable="true">
+        
+        <content>
+            <VBox>
+                <!-- Report Configuration -->
+                <Panel headerText="Report Configuration" class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="1"
+                        columnsL="1"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Task Information"/>
+                            <VBox>
+                                <Text text="Task ID: {report>/taskId}"/>
+                                <Text text="Task Name: {report>/taskName}"/>
+                            </VBox>
+                            
+                            <Label text="Report Type" required="true"/>
+                            <Select selectedKey="{report>/reportType}">
+                                <items>
+                                    <core:Item key="COMPREHENSIVE" text="Comprehensive Report"/>
+                                    <core:Item key="EXECUTIVE_SUMMARY" text="Executive Summary"/>
+                                    <core:Item key="TECHNICAL_DETAILS" text="Technical Details"/>
+                                    <core:Item key="COMPLIANCE_REPORT" text="Compliance Report"/>
+                                    <core:Item key="ISSUE_ANALYSIS" text="Issue Analysis"/>
+                                    <core:Item key="ROUTING_HISTORY" text="Routing History"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Report Format" required="true"/>
+                            <RadioButtonGroup selectedIndex="{= ${report>/format} === 'PDF' ? 0 : ${report>/format} === 'EXCEL' ? 1 : ${report>/format} === 'WORD' ? 2 : 3}">
+                                <RadioButton text="PDF"/>
+                                <RadioButton text="Excel"/>
+                                <RadioButton text="Word"/>
+                                <RadioButton text="HTML"/>
+                            </RadioButtonGroup>
+                            
+                            <Label text="Include Sections"/>
+                            <VBox>
+                                <CheckBox 
+                                    text="Include quality assessment charts"
+                                    selected="{report>/includeCharts}"/>
+                                <CheckBox 
+                                    text="Include detailed recommendations"
+                                    selected="{report>/includeRecommendations}"/>
+                                <CheckBox 
+                                    text="Include trust verification results"
+                                    selected="{report>/includeTrustResults}"/>
+                                <CheckBox 
+                                    text="Include workflow optimization analysis"
+                                    selected="{report>/includeWorkflowAnalysis}"/>
+                                <CheckBox 
+                                    text="Include routing decisions history"
+                                    selected="{report>/includeRoutingHistory}"/>
+                                <CheckBox 
+                                    text="Include issue breakdown"
+                                    selected="{report>/includeIssueBreakdown}"/>
+                            </VBox>
+                            
+                            <Label text="Time Range"/>
+                            <Select selectedKey="{report>/timeRange}">
+                                <items>
+                                    <core:Item key="CURRENT" text="Current Assessment Only"/>
+                                    <core:Item key="LAST_7_DAYS" text="Last 7 Days"/>
+                                    <core:Item key="LAST_30_DAYS" text="Last 30 Days"/>
+                                    <core:Item key="LAST_90_DAYS" text="Last 90 Days"/>
+                                    <core:Item key="CUSTOM" text="Custom Range"/>
+                                </items>
+                            </Select>
+                            
+                            <VBox visible="{= ${report>/timeRange} === 'CUSTOM'}">
+                                <Label text="Date Range"/>
+                                <DateRangeSelection
+                                    dateValue="{report>/startDate}"
+                                    secondDateValue="{report>/endDate}"/>
+                            </VBox>
+                            
+                            <Label text="Report Language"/>
+                            <Select selectedKey="{report>/language}">
+                                <items>
+                                    <core:Item key="EN" text="English"/>
+                                    <core:Item key="DE" text="German"/>
+                                    <core:Item key="FR" text="French"/>
+                                    <core:Item key="ES" text="Spanish"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Additional Options"/>
+                            <VBox>
+                                <CheckBox 
+                                    text="Include executive summary page"
+                                    selected="{report>/includeExecutiveSummary}"/>
+                                <CheckBox 
+                                    text="Include table of contents"
+                                    selected="{report>/includeTableOfContents}"/>
+                                <CheckBox 
+                                    text="Include glossary of terms"
+                                    selected="{report>/includeGlossary}"/>
+                                <CheckBox 
+                                    text="Watermark as confidential"
+                                    selected="{report>/watermarkConfidential}"/>
+                            </VBox>
+                            
+                            <Label text="Distribution List"/>
+                            <TextArea 
+                                value="{report>/distributionList}"
+                                placeholder="Enter email addresses separated by commas"
+                                rows="3"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Report Preview -->
+                <Panel 
+                    headerText="Report Preview"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <Text text="Report Structure:"/>
+                        <List>
+                            <StandardListItem
+                                title="1. Executive Summary"
+                                description="High-level overview of quality assessment results"
+                                icon="sap-icon://header"
+                                visible="{report>/includeExecutiveSummary}"/>
+                            <StandardListItem
+                                title="2. Quality Assessment Results"
+                                description="Detailed quality scores and metrics"
+                                icon="sap-icon://quality-issue"/>
+                            <StandardListItem
+                                title="3. Charts and Visualizations"
+                                description="Visual representation of quality data"
+                                icon="sap-icon://business-objects-experience"
+                                visible="{report>/includeCharts}"/>
+                            <StandardListItem
+                                title="4. Trust Verification"
+                                description="Trust scores and verification details"
+                                icon="sap-icon://key"
+                                visible="{report>/includeTrustResults}"/>
+                            <StandardListItem
+                                title="5. Recommendations"
+                                description="Actionable improvement suggestions"
+                                icon="sap-icon://lightbulb"
+                                visible="{report>/includeRecommendations}"/>
+                            <StandardListItem
+                                title="6. Appendices"
+                                description="Additional technical details and references"
+                                icon="sap-icon://attachment"/>
+                        </List>
+                    </VBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelReportGeneration"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Generate Report"
+                type="Emphasized"
+                icon="sap-icon://pdf-attachment"
+                press=".onExecuteReportGeneration"
+                enabled="{= !!${report>/reportType} && !!${report>/format}}"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

@@ -1,0 +1,181 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="routingDecisionDialog"
+        title="Routing Decision"
+        contentWidth="70%"
+        contentHeight="70%"
+        resizable="true">
+        
+        <content>
+            <VBox>
+                <!-- Task Information -->
+                <Panel headerText="Task Information" class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Text text="Task ID:" class="sapUiContentLabelColor"/>
+                            <Text text="{routing>/taskId}"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Text text="Current Quality Score:" class="sapUiContentLabelColor"/>
+                            <ObjectNumber 
+                                number="{routing>/currentQuality}"
+                                unit="%"
+                                state="{= ${routing>/currentQuality} >= 90 ? 'Success' : ${routing>/currentQuality} >= 70 ? 'Warning' : 'Error'}"/>
+                        </VBox>
+                        <VBox>
+                            <Text text="Processing Time:" class="sapUiContentLabelColor"/>
+                            <Text text="{routing>/processingTime} ms"/>
+                        </VBox>
+                    </HBox>
+                </Panel>
+                
+                <!-- Routing Decision -->
+                <Panel headerText="Make Routing Decision" class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="1"
+                        columnsL="1"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Decision" required="true"/>
+                            <Select 
+                                selectedKey="{routing>/decision}"
+                                change=".onRoutingDecisionChange">
+                                <items>
+                                    <core:Item key="" text="Select decision..."/>
+                                    <core:Item key="PROCEED" text="Proceed to Next Agent"/>
+                                    <core:Item key="REROUTE" text="Reroute to Different Agent"/>
+                                    <core:Item key="HOLD" text="Hold for Review"/>
+                                    <core:Item key="ESCALATE" text="Escalate to Higher Level"/>
+                                    <core:Item key="REJECT" text="Reject Task"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Target Agent" required="{= ${routing>/decision} === 'PROCEED' || ${routing>/decision} === 'REROUTE'}"/>
+                            <Select 
+                                selectedKey="{routing>/targetAgent}"
+                                enabled="{= ${routing>/decision} === 'PROCEED' || ${routing>/decision} === 'REROUTE'}">
+                                <items>
+                                    <core:Item key="" text="Select agent..."/>
+                                    <core:Item 
+                                        key="{agentId}" 
+                                        text="{agentName} - {capability}"
+                                        items="{routing>/availableAgents}"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Routing Confidence"/>
+                            <HBox>
+                                <Slider 
+                                    value="{routing>/confidence}"
+                                    min="0"
+                                    max="100"
+                                    step="5"
+                                    width="300px"
+                                    enableTickmarks="true"
+                                    inputsAsTooltips="true"/>
+                                <Text text=" {routing>/confidence}%"/>
+                            </HBox>
+                            
+                            <Label text="Priority"/>
+                            <RadioButtonGroup selectedIndex="{= ${routing>/priority} === 'LOW' ? 0 : ${routing>/priority} === 'NORMAL' ? 1 : ${routing>/priority} === 'HIGH' ? 2 : 3}">
+                                <RadioButton text="Low"/>
+                                <RadioButton text="Normal"/>
+                                <RadioButton text="High"/>
+                                <RadioButton text="Critical"/>
+                            </RadioButtonGroup>
+                            
+                            <Label text="Reason / Comments" required="true"/>
+                            <TextArea 
+                                value="{routing>/reason}"
+                                placeholder="Explain the routing decision..."
+                                rows="4"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Recommendations -->
+                <Panel 
+                    headerText="System Recommendations"
+                    visible="{= ${routing>/recommendations}.length > 0}"
+                    class="sapUiResponsiveMargin">
+                    <List items="{routing>/recommendations}">
+                        <StandardListItem
+                            title="{agent} - {confidence}% confidence"
+                            description="{reasoning}"
+                            info="{score}/100"
+                            infoState="{= ${score} >= 90 ? 'Success' : ${score} >= 70 ? 'Warning' : 'Error'}"
+                            icon="sap-icon://navigation-right-arrow"
+                            press=".onSelectRecommendation"/>
+                    </List>
+                </Panel>
+                
+                <!-- Routing History -->
+                <Panel 
+                    headerText="Previous Routing History"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <Table items="{routing>/routingHistory}">
+                        <columns>
+                            <Column>
+                                <Text text="Date"/>
+                            </Column>
+                            <Column>
+                                <Text text="Decision"/>
+                            </Column>
+                            <Column>
+                                <Text text="Target Agent"/>
+                            </Column>
+                            <Column>
+                                <Text text="Result"/>
+                            </Column>
+                            <Column>
+                                <Text text="Processing Time"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <Text text="{date}"/>
+                                    <Text text="{decision}"/>
+                                    <Text text="{targetAgent}"/>
+                                    <ObjectStatus 
+                                        text="{result}"
+                                        state="{= ${result} === 'SUCCESS' ? 'Success' : ${result} === 'PARTIAL' ? 'Warning' : 'Error'}"/>
+                                    <Text text="{processingTime} ms"/>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelRoutingDecision"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Confirm Decision"
+                type="Emphasized"
+                icon="sap-icon://accept"
+                press=".onConfirmRoutingDecision"
+                enabled="{= !!${routing>/decision} && !!${routing>/reason} && (${routing>/decision} === 'HOLD' || ${routing>/decision} === 'ESCALATE' || ${routing>/decision} === 'REJECT' || !!${routing>/targetAgent})}"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

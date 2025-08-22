@@ -1,0 +1,313 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="trustVerificationDialog"
+        title="Trust Verification Center"
+        contentWidth="80%"
+        contentHeight="75%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Verification Queue -->
+                <Panel headerText="Verification Queue" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Pending Verifications:" class="sapUiContentLabelColor"/>
+                                <Text text="{trust>/verificationQueue}.length"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Average Trust Score:" class="sapUiContentLabelColor"/>
+                                <Text text="{trust>/avgTrustScore}%"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Blockchain Status:" class="sapUiContentLabelColor"/>
+                                <ObjectStatus 
+                                    text="{trust>/blockchainStatus/status}"
+                                    state="{= ${trust>/blockchainStatus/status} === 'CONNECTED' ? 'Success' : 'Error'}"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <Table 
+                            items="{trust>/verificationQueue}"
+                            mode="MultiSelect"
+                            selectionChange=".onVerificationSelectionChange">
+                            <columns>
+                                <Column>
+                                    <Text text="Task ID"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Verification Type"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Priority"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Current Trust Score"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Age"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Actions"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{taskId}"/>
+                                        <Text text="{verificationType}"/>
+                                        <ObjectStatus 
+                                            text="{priority}"
+                                            state="{= ${priority} === 'HIGH' ? 'Error' : ${priority} === 'MEDIUM' ? 'Warning' : 'Success'}"/>
+                                        <ProgressIndicator 
+                                            percentValue="{currentTrustScore}"
+                                            displayValue="{currentTrustScore}%"
+                                            state="{= ${currentTrustScore} >= 80 ? 'Success' : ${currentTrustScore} >= 60 ? 'Warning' : 'Error'}"
+                                            width="120px"/>
+                                        <Text text="{age}"/>
+                                        <HBox>
+                                            <Button 
+                                                text="Verify"
+                                                type="Transparent"
+                                                icon="sap-icon://accept"
+                                                press=".onVerifyTask"/>
+                                            <Button 
+                                                text="Details"
+                                                type="Transparent"
+                                                icon="sap-icon://detail-view"
+                                                press=".onViewVerificationDetails"/>
+                                        </HBox>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </Panel>
+                
+                <!-- Trust Factors Configuration -->
+                <Panel headerText="Trust Factors" class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="2"
+                        columnsL="2"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Blockchain Verification"/>
+                            <HBox>
+                                <Switch 
+                                    state="{trust>/trustFactors/blockchain/enabled}"
+                                    change=".onTrustFactorToggle"
+                                    class="sapUiMediumMarginEnd"/>
+                                <Slider 
+                                    value="{trust>/trustFactors/blockchain/weight}"
+                                    min="0"
+                                    max="100"
+                                    step="5"
+                                    width="200px"
+                                    enabled="{trust>/trustFactors/blockchain/enabled}"/>
+                                <Text text=" {trust>/trustFactors/blockchain/weight}%"/>
+                            </HBox>
+                            
+                            <Label text="Reputation Check"/>
+                            <HBox>
+                                <Switch 
+                                    state="{trust>/trustFactors/reputation/enabled}"
+                                    change=".onTrustFactorToggle"
+                                    class="sapUiMediumMarginEnd"/>
+                                <Slider 
+                                    value="{trust>/trustFactors/reputation/weight}"
+                                    min="0"
+                                    max="100"
+                                    step="5"
+                                    width="200px"
+                                    enabled="{trust>/trustFactors/reputation/enabled}"/>
+                                <Text text=" {trust>/trustFactors/reputation/weight}%"/>
+                            </HBox>
+                            
+                            <Label text="Integrity Validation"/>
+                            <HBox>
+                                <Switch 
+                                    state="{trust>/trustFactors/integrity/enabled}"
+                                    change=".onTrustFactorToggle"
+                                    class="sapUiMediumMarginEnd"/>
+                                <Slider 
+                                    value="{trust>/trustFactors/integrity/weight}"
+                                    min="0"
+                                    max="100"
+                                    step="5"
+                                    width="200px"
+                                    enabled="{trust>/trustFactors/integrity/enabled}"/>
+                                <Text text=" {trust>/trustFactors/integrity/weight}%"/>
+                            </HBox>
+                            
+                            <Label text="Consensus Mechanism"/>
+                            <HBox>
+                                <Switch 
+                                    state="{trust>/trustFactors/consensus/enabled}"
+                                    change=".onTrustFactorToggle"
+                                    class="sapUiMediumMarginEnd"/>
+                                <Slider 
+                                    value="{trust>/trustFactors/consensus/weight}"
+                                    min="0"
+                                    max="100"
+                                    step="5"
+                                    width="200px"
+                                    enabled="{trust>/trustFactors/consensus/enabled}"/>
+                                <Text text=" {trust>/trustFactors/consensus/weight}%"/>
+                            </HBox>
+                            
+                            <Label text="Historical Performance"/>
+                            <HBox>
+                                <Switch 
+                                    state="{trust>/trustFactors/historical/enabled}"
+                                    change=".onTrustFactorToggle"
+                                    class="sapUiMediumMarginEnd"/>
+                                <Slider 
+                                    value="{trust>/trustFactors/historical/weight}"
+                                    min="0"
+                                    max="100"
+                                    step="5"
+                                    width="200px"
+                                    enabled="{trust>/trustFactors/historical/enabled}"/>
+                                <Text text=" {trust>/trustFactors/historical/weight}%"/>
+                            </HBox>
+                            
+                            <Label text="Total Weight"/>
+                            <Text 
+                                text="{trust>/totalWeight}%"
+                                class="{= ${trust>/totalWeight} === 100 ? 'sapThemePositiveText' : 'sapThemeNegativeText'}"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Reputation Scores -->
+                <Panel 
+                    headerText="Agent Reputation Scores"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <Table items="{trust>/reputationScores}">
+                        <columns>
+                            <Column>
+                                <Text text="Agent"/>
+                            </Column>
+                            <Column>
+                                <Text text="Current Score"/>
+                            </Column>
+                            <Column>
+                                <Text text="30-Day Average"/>
+                            </Column>
+                            <Column>
+                                <Text text="Trend"/>
+                            </Column>
+                            <Column>
+                                <Text text="Risk Level"/>
+                            </Column>
+                            <Column>
+                                <Text text="Last Verified"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <Text text="{agentName}"/>
+                                    <ObjectNumber 
+                                        number="{currentScore}"
+                                        unit="pts"
+                                        state="{= ${currentScore} >= 90 ? 'Success' : ${currentScore} >= 70 ? 'Warning' : 'Error'}"/>
+                                    <Text text="{avgScore}"/>
+                                    <HBox>
+                                        <core:Icon 
+                                            src="{= ${trend} === 'UP' ? 'sap-icon://trend-up' : ${trend} === 'DOWN' ? 'sap-icon://trend-down' : 'sap-icon://trend-stable'}"
+                                            color="{= ${trend} === 'UP' ? 'green' : ${trend} === 'DOWN' ? 'red' : 'orange'}"/>
+                                        <Text text=" {trendValue}%"/>
+                                    </HBox>
+                                    <ObjectStatus 
+                                        text="{riskLevel}"
+                                        state="{= ${riskLevel} === 'LOW' ? 'Success' : ${riskLevel} === 'MEDIUM' ? 'Warning' : 'Error'}"/>
+                                    <Text text="{lastVerified}"/>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Blockchain Status -->
+                <Panel 
+                    headerText="Blockchain Network Status"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Network:" class="sapUiContentLabelColor"/>
+                                <Text text="{trust>/blockchainStatus/network}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Block Height:" class="sapUiContentLabelColor"/>
+                                <Text text="{trust>/blockchainStatus/blockHeight}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Peers Connected:" class="sapUiContentLabelColor"/>
+                                <Text text="{trust>/blockchainStatus/peersConnected}"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Sync Status:" class="sapUiContentLabelColor"/>
+                                <ObjectStatus 
+                                    text="{trust>/blockchainStatus/syncStatus}"
+                                    state="{= ${trust>/blockchainStatus/syncStatus} === 'SYNCED' ? 'Success' : 'Warning'}"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <MessageStrip 
+                            text="{trust>/blockchainStatus/message}"
+                            type="{trust>/blockchainStatus/messageType}"
+                            showIcon="true"
+                            visible="{= !!${trust>/blockchainStatus/message}}"/>
+                    </VBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Refresh"
+                icon="sap-icon://refresh"
+                press=".onRefreshTrustData"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Batch Verify"
+                    type="Emphasized"
+                    icon="sap-icon://batch-processing"
+                    press=".onBatchVerify"
+                    enabled="{= ${trust>/selectedItems}.length > 0}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Configure Thresholds"
+                    icon="sap-icon://settings"
+                    press=".onConfigureTrustThresholds"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseTrustVerification"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>
