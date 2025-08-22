@@ -23,20 +23,23 @@
                             <form:content>
                                 <Label text="Task Name" required="true"/>
                                 <Input 
-                                    value="{create>/taskName}"
+                                    value="{path: 'create>/taskName', formatter: '.formatSecureText'}"
                                     placeholder="Enter task name"
-                                    liveChange=".onTaskDetailsChange"/>
+                                    maxLength="100"
+                                    liveChange=".onTaskNameChange"/>
                                 
                                 <Label text="Description"/>
                                 <TextArea 
-                                    value="{create>/description}"
+                                    value="{path: 'create>/description', formatter: '.formatSecureText'}"
+                                    maxLength="1000"
                                     rows="2"
                                     placeholder="Describe the AI preparation task"/>
                                 
                                 <Label text="Dataset Name" required="true"/>
                                 <Input 
-                                    value="{create>/datasetName}"
+                                    value="{path: 'create>/datasetName', formatter: '.formatSecureText'}"
                                     placeholder="Select or enter dataset name"
+                                    maxLength="200"
                                     showValueHelp="true"
                                     valueHelpRequest=".onSelectDataset"/>
                                 

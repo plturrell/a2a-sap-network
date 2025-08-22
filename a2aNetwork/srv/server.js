@@ -252,9 +252,11 @@ cds.on('bootstrap', async (app) => {
             '/api/v1/health',
             '/api/v1/notifications',
             '/api/v1/NetworkStats',
-            '/a2a/agent2/v1',
             '/a2a/agent1/v1',
-            '/a2a/agent3/v1'
+            '/a2a/agent2/v1',
+            '/a2a/agent3/v1',
+            '/a2a/agent4/v1',
+            '/a2a/agent5/v1'
         ];
         
         const shouldBypass = bypassPaths.some(path => req.path.startsWith(path));
@@ -782,6 +784,207 @@ cds.on('bootstrap', async (app) => {
     
     // Agent 4 Health Check
     app.get('/a2a/agent4/v1/health', (req, res) => proxyAgent4Request(req, res, '/health'));
+    
+    log.info('Agent 4 API proxy routes initialized');
+
+    // ================================
+    // AGENT 5 - QA VALIDATION PROXY ROUTES
+    // ================================
+    
+    const AGENT5_BASE_URL = process.env.AGENT5_BASE_URL || 'http://localhost:8004';
+    
+    // Helper function to proxy Agent 5 requests
+    async function proxyAgent5Request(req, res, endpoint, method = 'GET') {
+        try {
+            const config = {
+                method,
+                url: `${AGENT5_BASE_URL}/a2a/agent5/v1${endpoint}`,
+                timeout: 60000, // Longer timeout for QA operations
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': req.headers.authorization || '',
+                    'X-Forwarded-For': req.ip,
+                    'X-User-Agent': req.headers['user-agent'] || 'SAP-CAP-Proxy'
+                }
+            };
+            
+            if (method !== 'GET' && req.body) {
+                config.data = req.body;
+            }
+            
+            if (req.query && Object.keys(req.query).length > 0) {
+                config.params = req.query;
+            }
+            
+            const response = await axios(config);
+            res.status(response.status).json(response.data);
+        } catch (error) {
+            log.error(`Agent 5 Proxy Error (${endpoint}):`, error.message);
+            if (error.response) {
+                res.status(error.response.status).json({
+                    error: error.response.data?.error || error.response.statusText,
+                    message: `Agent 5 Backend: ${error.response.status}`,
+                    details: error.response.data?.details || null
+                });
+            } else {
+                res.status(503).json({
+                    error: 'Agent 5 Backend Connection Failed',
+                    message: error.message,
+                    service: 'QA Validation Service'
+                });
+            }
+        }
+    }
+    
+    // Agent 5 QA Validation Tasks
+    app.get('/a2a/agent5/v1/tasks', (req, res) => proxyAgent5Request(req, res, '/tasks'));
+    app.post('/a2a/agent5/v1/tasks', (req, res) => proxyAgent5Request(req, res, '/tasks', 'POST'));
+    app.get('/a2a/agent5/v1/tasks/:taskId', (req, res) => 
+        proxyAgent5Request(req, res, `/tasks/${req.params.taskId}`));
+    app.put('/a2a/agent5/v1/tasks/:taskId', (req, res) => 
+        proxyAgent5Request(req, res, `/tasks/${req.params.taskId}`, 'PUT'));
+    app.delete('/a2a/agent5/v1/tasks/:taskId', (req, res) => 
+        proxyAgent5Request(req, res, `/tasks/${req.params.taskId}`, 'DELETE'));
+    
+    // Agent 5 Task Operations
+    app.post('/a2a/agent5/v1/tasks/:taskId/validate', (req, res) => 
+        proxyAgent5Request(req, res, `/tasks/${req.params.taskId}/validate`, 'POST'));
+    app.post('/a2a/agent5/v1/tasks/:taskId/pause', (req, res) => 
+        proxyAgent5Request(req, res, `/tasks/${req.params.taskId}/pause`, 'POST'));
+    app.post('/a2a/agent5/v1/tasks/:taskId/resume', (req, res) => 
+        proxyAgent5Request(req, res, `/tasks/${req.params.taskId}/resume`, 'POST'));
+    app.post('/a2a/agent5/v1/tasks/:taskId/cancel', (req, res) => 
+        proxyAgent5Request(req, res, `/tasks/${req.params.taskId}/cancel`, 'POST'));
+    
+    // Agent 5 Test Generation
+    app.post('/a2a/agent5/v1/tests/generate', (req, res) => 
+        proxyAgent5Request(req, res, '/tests/generate', 'POST'));
+    app.post('/a2a/agent5/v1/tests/simpleqa', (req, res) => 
+        proxyAgent5Request(req, res, '/tests/simpleqa', 'POST'));
+    app.post('/a2a/agent5/v1/tests/execute', (req, res) => 
+        proxyAgent5Request(req, res, '/tests/execute', 'POST'));
+    app.get('/a2a/agent5/v1/tests/:testId/results', (req, res) => 
+        proxyAgent5Request(req, res, `/tests/${req.params.testId}/results`));
+    
+    // Agent 5 ORD Discovery
+    app.post('/a2a/agent5/v1/ord/discover', (req, res) => 
+        proxyAgent5Request(req, res, '/ord/discover', 'POST'));
+    app.get('/a2a/agent5/v1/ord/registries', (req, res) => 
+        proxyAgent5Request(req, res, '/ord/registries'));
+    app.get('/a2a/agent5/v1/ord/data-products', (req, res) => 
+        proxyAgent5Request(req, res, '/ord/data-products'));
+    
+    // Agent 5 Validation Rules
+    app.get('/a2a/agent5/v1/rules', (req, res) => proxyAgent5Request(req, res, '/rules'));
+    app.post('/a2a/agent5/v1/rules', (req, res) => proxyAgent5Request(req, res, '/rules', 'POST'));
+    app.get('/a2a/agent5/v1/rules/:ruleId', (req, res) => 
+        proxyAgent5Request(req, res, `/rules/${req.params.ruleId}`));
+    app.put('/a2a/agent5/v1/rules/:ruleId', (req, res) => 
+        proxyAgent5Request(req, res, `/rules/${req.params.ruleId}`, 'PUT'));
+    app.delete('/a2a/agent5/v1/rules/:ruleId', (req, res) => 
+        proxyAgent5Request(req, res, `/rules/${req.params.ruleId}`, 'DELETE'));
+    app.post('/a2a/agent5/v1/rules/:ruleId/test', (req, res) => 
+        proxyAgent5Request(req, res, `/rules/${req.params.ruleId}/test`, 'POST'));
+    
+    // Agent 5 Approval Workflow
+    app.get('/a2a/agent5/v1/approvals', (req, res) => proxyAgent5Request(req, res, '/approvals'));
+    app.post('/a2a/agent5/v1/approvals', (req, res) => proxyAgent5Request(req, res, '/approvals', 'POST'));
+    app.get('/a2a/agent5/v1/approvals/:approvalId', (req, res) => 
+        proxyAgent5Request(req, res, `/approvals/${req.params.approvalId}`));
+    app.post('/a2a/agent5/v1/approvals/:approvalId/approve', (req, res) => 
+        proxyAgent5Request(req, res, `/approvals/${req.params.approvalId}/approve`, 'POST'));
+    app.post('/a2a/agent5/v1/approvals/:approvalId/reject', (req, res) => 
+        proxyAgent5Request(req, res, `/approvals/${req.params.approvalId}/reject`, 'POST'));
+    app.post('/a2a/agent5/v1/approvals/:approvalId/escalate', (req, res) => 
+        proxyAgent5Request(req, res, `/approvals/${req.params.approvalId}/escalate`, 'POST'));
+    
+    // Agent 5 Configuration
+    app.get('/a2a/agent5/v1/config', (req, res) => proxyAgent5Request(req, res, '/config'));
+    app.post('/a2a/agent5/v1/config', (req, res) => proxyAgent5Request(req, res, '/config', 'POST'));
+    app.put('/a2a/agent5/v1/config', (req, res) => proxyAgent5Request(req, res, '/config', 'PUT'));
+    
+    // Agent 5 Batch Operations
+    app.post('/a2a/agent5/v1/batch/validate', (req, res) => 
+        proxyAgent5Request(req, res, '/batch/validate', 'POST'));
+    app.get('/a2a/agent5/v1/batch/:batchId', (req, res) => 
+        proxyAgent5Request(req, res, `/batch/${req.params.batchId}`));
+    app.post('/a2a/agent5/v1/batch/:batchId/pause', (req, res) => 
+        proxyAgent5Request(req, res, `/batch/${req.params.batchId}/pause`, 'POST'));
+    app.post('/a2a/agent5/v1/batch/:batchId/resume', (req, res) => 
+        proxyAgent5Request(req, res, `/batch/${req.params.batchId}/resume`, 'POST'));
+    
+    // Agent 5 Reports and Analytics
+    app.get('/a2a/agent5/v1/reports', (req, res) => proxyAgent5Request(req, res, '/reports'));
+    app.post('/a2a/agent5/v1/reports/generate', (req, res) => 
+        proxyAgent5Request(req, res, '/reports/generate', 'POST'));
+    app.get('/a2a/agent5/v1/analytics/metrics', (req, res) => 
+        proxyAgent5Request(req, res, '/analytics/metrics'));
+    app.get('/a2a/agent5/v1/analytics/trends', (req, res) => 
+        proxyAgent5Request(req, res, '/analytics/trends'));
+    
+    // Agent 5 Health Check
+    app.get('/a2a/agent5/v1/health', (req, res) => proxyAgent5Request(req, res, '/health'));
+    
+    // Agent 5 OData Service Proxy - Convert REST to OData format
+    app.get('/a2a/agent5/v1/odata/QaValidationTasks', async (req, res) => {
+        try {
+            const response = await axios.get(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks`);
+            
+            const odataResponse = {
+                "@odata.context": "$metadata#QaValidationTasks",
+                "value": response.data.map(task => ({
+                    ID: task.id,
+                    taskName: task.task_name,
+                    description: task.description,
+                    dataProductId: task.data_product_id,
+                    ordRegistryUrl: task.ord_registry_url,
+                    validationType: task.validation_type?.toUpperCase() || 'QUALITY_ASSURANCE',
+                    qaScope: task.qa_scope?.toUpperCase() || 'DATA_INTEGRITY',
+                    testGenerationMethod: task.test_generation_method?.toUpperCase() || 'DYNAMIC_SIMPLEQA',
+                    simpleQaTestCount: task.simple_qa_test_count || 10,
+                    qualityThreshold: task.quality_threshold || 0.8,
+                    factualityThreshold: task.factuality_threshold || 0.85,
+                    complianceThreshold: task.compliance_threshold || 0.95,
+                    vectorSimilarityThreshold: task.vector_similarity_threshold || 0.7,
+                    enableFactualityTesting: task.enable_factuality_testing !== false,
+                    enableComplianceCheck: task.enable_compliance_check !== false,
+                    enableVectorSimilarity: task.enable_vector_similarity !== false,
+                    enableRegressionTesting: task.enable_regression_testing || false,
+                    requireApproval: task.require_approval !== false,
+                    status: task.status?.toUpperCase() || 'DRAFT',
+                    priority: task.priority?.toUpperCase() || 'MEDIUM',
+                    progressPercent: task.progress || 0,
+                    currentStage: task.current_stage,
+                    overallScore: task.overall_score,
+                    qualityScore: task.quality_score,
+                    factualityScore: task.factuality_score,
+                    complianceScore: task.compliance_score,
+                    testsGenerated: task.tests_generated || 0,
+                    testsPassed: task.tests_passed || 0,
+                    testsFailed: task.tests_failed || 0,
+                    validationTime: task.validation_time,
+                    approvalStatus: task.approval_status?.toUpperCase() || 'PENDING',
+                    approvedBy: task.approved_by,
+                    approvedAt: task.approved_at,
+                    rejectionReason: task.rejection_reason,
+                    createdBy: task.created_by,
+                    createdAt: task.created_at,
+                    modifiedAt: task.modified_at
+                }))
+            };
+            
+            res.json(odataResponse);
+        } catch (error) {
+            res.status(503).json({
+                error: {
+                    code: "SERVICE_UNAVAILABLE",
+                    message: "Agent 5 backend not available"
+                }
+            });
+        }
+    });
+    
+    log.info('Agent 5 API proxy routes initialized');
     
     // Agent 3 OData Service Proxy - Convert REST to OData format
     app.get('/a2a/agent3/v1/odata/VectorProcessingTasks', async (req, res) => {

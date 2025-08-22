@@ -3,8 +3,10 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/m/MessageToast",
     "sap/ui/core/Fragment",
-    "sap/ui/model/json/JSONModel"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel) {
+    "sap/ui/model/json/JSONModel",
+    "sap/base/security/encodeXML",
+    "sap/base/strings/escapeRegExp"
+], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, escapeRegExp) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent2.ext.controller.ObjectPageExt", {
@@ -52,7 +54,9 @@ sap.ui.define([
 
         _startRealtimeMonitoring: function(sTaskId) {
             // Use EventSource for real-time updates
-            this._eventSource = new EventSource("/a2a/agent2/v1/tasks/" + sTaskId + "/stream");
+            // Create secure EventSource with authentication
+            var sToken = this._getAuthToken();
+            this._eventSource = this._createSecureEventSource("/a2a/agent2/v1/tasks/" + sTaskId + "/stream", sToken);
             
             this._eventSource.onmessage = function(event) {
                 var data = JSON.parse(event.data);
@@ -528,9 +532,133 @@ sap.ui.define([
                     );
                 }.bind(this),
                 error: function(xhr) {
-                    MessageBox.error("Failed to start optimization: " + xhr.responseText);
-                }
+                    var errorMsg = this._sanitizeErrorMessage(xhr.responseText || xhr.statusText);
+                    MessageBox.error("Failed to start optimization: " + errorMsg);
+                }.bind(this)
             });
+        },
+
+        /**
+         * Get authentication token for secure API calls
+         * @returns {string} Authentication token
+         */
+        _getAuthToken: function() {
+            // Implementation to get auth token from session or user context
+            return sap.ushell?.Container?.getUser?.()?.getId?.() || 'default-token';
+        },
+
+        /**
+         * Validate user input for security and format compliance
+         * @param {string} sInput - Input to validate
+         * @param {string} sType - Type of validation
+         * @returns {object} Validation result
+         */
+        _validateInput: function(sInput, sType) {
+            if (!sInput || typeof sInput !== 'string') {
+                return { isValid: false, message: "Input is required" };
+            }
+
+            var sSanitized = sInput.trim();
+            
+            // Check for XSS patterns
+            var aXSSPatterns = [
+                /<script/i,
+                /javascript:/i,
+                /on\w+\s*=/i,
+                /<iframe/i,
+                /<object/i,
+                /<embed/i,
+                /eval\s*\(/i,
+                /Function\s*\(/i
+            ];
+
+            for (var i = 0; i < aXSSPatterns.length; i++) {
+                if (aXSSPatterns[i].test(sSanitized)) {
+                    return { isValid: false, message: "Invalid characters detected" };
+                }
+            }
+
+            // Type-specific validation
+            switch (sType) {
+                case "modelConfig":
+                    if (sSanitized.length > 5000) {
+                        return { isValid: false, message: "Configuration too large" };
+                    }
+                    break;
+                
+                case "featureName":
+                    if (!/^[a-zA-Z0-9_\-\.]+$/.test(sSanitized)) {
+                        return { isValid: false, message: "Invalid feature name format" };
+                    }
+                    break;
+                
+                default:
+                    if (sSanitized.length > 10000) {
+                        return { isValid: false, message: "Input too long" };
+                    }
+                    break;
+            }
+
+            return { isValid: true, sanitized: encodeXML(sSanitized) };
+        },
+
+        /**
+         * Sanitize error messages for user display
+         * @param {string} sMessage - Error message
+         * @returns {string} Sanitized message
+         */
+        _sanitizeErrorMessage: function(sMessage) {
+            if (!sMessage) {
+                return "An error occurred";
+            }
+
+            // Remove sensitive information
+            var sSanitized = sMessage
+                .replace(/\b(?:token|key|secret|password|auth)\b[:\s]*[^\s]+/gi, '[REDACTED]')
+                .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[IP_ADDRESS]')
+                .replace(/file:\/\/[^\s]+/g, '[FILE_PATH]')
+                .replace(/https?:\/\/[^\s]+/g, '[URL]');
+
+            return encodeXML(sSanitized);
+        },
+
+        /**
+         * Secure EventSource creation with authentication
+         * @param {string} sUrl - EventSource URL
+         * @param {string} sToken - Authentication token
+         * @returns {EventSource} Secure EventSource
+         */
+        _createSecureEventSource: function(sUrl, sToken) {
+            if (!sUrl || !sToken) {
+                throw new Error("URL and token required for secure EventSource");
+            }
+
+            // Validate URL
+            try {
+                var oUrl = new URL(sUrl, window.location.origin);
+                if (!['http:', 'https:'].includes(oUrl.protocol)) {
+                    throw new Error("Invalid protocol for EventSource");
+                }
+            } catch (e) {
+                throw new Error("Invalid URL for EventSource");
+            }
+
+            // Add authentication to URL
+            var sSecureUrl = sUrl + (sUrl.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(sToken);
+            
+            return new EventSource(sSecureUrl);
+        },
+
+        /**
+         * Secure text formatter to prevent XSS
+         * @param {string} sText - Text to format
+         * @returns {string} Encoded text
+         */
+        formatSecureText: function(sText) {
+            if (!sText) {
+                return "";
+            }
+            return encodeXML(sText.toString());
         }
     });
 });

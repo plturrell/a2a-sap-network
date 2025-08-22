@@ -1,0 +1,495 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="qaConfigurationDialog"
+        title="QA Configuration Settings"
+        contentWidth="75%"
+        contentHeight="75%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Configuration Profile ---->
+                <Panel headerText="Configuration Profile" class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="2"
+                        columnsL="2"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Configuration Name" required="true"/>
+                            <Input 
+                                value="{config>/configName}"
+                                placeholder="Enter configuration name"/>
+                            
+                            <Label text="Description"/>
+                            <TextArea 
+                                value="{config>/description}"
+                                placeholder="Describe this configuration"
+                                rows="3"/>
+                            
+                            <Label text="Environment"/>
+                            <Select selectedKey="{config>/environment}">
+                                <items>
+                                    <core:Item key="DEVELOPMENT" text="Development"/>
+                                    <core:Item key="TESTING" text="Testing"/>
+                                    <core:Item key="STAGING" text="Staging"/>
+                                    <core:Item key="PRODUCTION" text="Production"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Configuration Type"/>
+                            <Select selectedKey="{config>/configType}">
+                                <items>
+                                    <core:Item key="GLOBAL" text="Global (All Data Products)"/>
+                                    <core:Item key="CATEGORY" text="Category-Specific"/>
+                                    <core:Item key="INDIVIDUAL" text="Individual Data Product"/>
+                                </items>
+                            </Select>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- QA Engine Settings -->
+                <Panel headerText="QA Engine Settings" class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="2"
+                        columnsL="2"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Default Test Generation Method"/>
+                            <Select selectedKey="{config>/defaultTestMethod}">
+                                <items>
+                                    <core:Item key="DYNAMIC_SIMPLEQA" text="Dynamic SimpleQA"/>
+                                    <core:Item key="STATIC_RULES" text="Static Rules"/>
+                                    <core:Item key="HYBRID" text="Hybrid Approach"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Default Test Count"/>
+                            <Input 
+                                value="{config>/defaultTestCount}"
+                                type="Number"
+                                placeholder="10"/>
+                            
+                            <Label text="Quality Threshold"/>
+                            <Slider 
+                                value="{config>/qualityThreshold}"
+                                min="0.0"
+                                max="1.0"
+                                step="0.05"
+                                width="250px"/>
+                            <Text text="Threshold: {= (${config>/qualityThreshold} * 100).toFixed(0)}%"/>
+                            
+                            <Label text="Factuality Threshold"/>
+                            <Slider 
+                                value="{config>/factualityThreshold}"
+                                min="0.0"
+                                max="1.0"
+                                step="0.05"
+                                width="250px"/>
+                            <Text text="Threshold: {= (${config>/factualityThreshold} * 100).toFixed(0)}%"/>
+                            
+                            <Label text="Compliance Threshold"/>
+                            <Slider 
+                                value="{config>/complianceThreshold}"
+                                min="0.0"
+                                max="1.0"
+                                step="0.05"
+                                width="250px"/>
+                            <Text text="Threshold: {= (${config>/complianceThreshold} * 100).toFixed(0)}%"/>
+                            
+                            <Label text="Vector Similarity Threshold"/>
+                            <Slider 
+                                value="{config>/vectorSimilarityThreshold}"
+                                min="0.0"
+                                max="1.0"
+                                step="0.01"
+                                width="250px"/>
+                            <Text text="Similarity: {= (${config>/vectorSimilarityThreshold} * 100).toFixed(1)}%"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Validation Settings -->
+                <Panel headerText="Validation Settings" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginBottom">
+                            <Label text="Default Validation Features"/>
+                            <VBox>
+                                <CheckBox 
+                                    text="Enable factuality testing"
+                                    selected="{config>/enableFactualityTesting}"/>
+                                <CheckBox 
+                                    text="Enable compliance checking"
+                                    selected="{config>/enableComplianceCheck}"/>
+                                <CheckBox 
+                                    text="Enable vector similarity check"
+                                    selected="{config>/enableVectorSimilarity}"/>
+                                <CheckBox 
+                                    text="Enable regression testing"
+                                    selected="{config>/enableRegressionTesting}"/>
+                                <CheckBox 
+                                    text="Auto-generate SimpleQA tests"
+                                    selected="{config>/autoGenerateTests}"/>
+                            </VBox>
+                        </VBox>
+                        
+                        <VBox class="sapUiMediumMarginBottom">
+                            <Label text="Default Timeouts (seconds)"/>
+                            <form:SimpleForm
+                                editable="true"
+                                layout="ResponsiveGridLayout"
+                                labelSpanXL="4"
+                                labelSpanL="4"
+                                labelSpanM="12"
+                                labelSpanS="12"
+                                columnsXL="2"
+                                columnsL="2"
+                                columnsM="1">
+                                <form:content>
+                                    <Label text="Test Generation Timeout"/>
+                                    <Input 
+                                        value="{config>/testGenerationTimeout}"
+                                        type="Number"
+                                        placeholder="120"/>
+                                    
+                                    <Label text="Validation Timeout"/>
+                                    <Input 
+                                        value="{config>/validationTimeout}"
+                                        type="Number"
+                                        placeholder="300"/>
+                                    
+                                    <Label text="Individual Test Timeout"/>
+                                    <Input 
+                                        value="{config>/individualTestTimeout}"
+                                        type="Number"
+                                        placeholder="30"/>
+                                    
+                                    <Label text="API Call Timeout"/>
+                                    <Input 
+                                        value="{config>/apiCallTimeout}"
+                                        type="Number"
+                                        placeholder="60"/>
+                                </form:content>
+                            </form:SimpleForm>
+                        </VBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Approval Workflow Settings -->
+                <Panel headerText="Approval Workflow Settings" class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="1"
+                        columnsL="1"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Default Approval Settings"/>
+                            <VBox>
+                                <CheckBox 
+                                    text="Require approval for validation tasks"
+                                    selected="{config>/requireApproval}"/>
+                                <CheckBox 
+                                    text="Auto-approve high confidence results"
+                                    selected="{config>/autoApproveHighConfidence}"/>
+                                <CheckBox 
+                                    text="Enable escalation workflow"
+                                    selected="{config>/enableEscalation}"/>
+                            </VBox>
+                            
+                            <Label text="Auto-Approval Threshold"/>
+                            <Slider 
+                                value="{config>/autoApprovalThreshold}"
+                                min="0.0"
+                                max="1.0"
+                                step="0.05"
+                                width="250px"
+                                enabled="{config>/autoApproveHighConfidence}"/>
+                            <Text text="Auto-approve above: {= (${config>/autoApprovalThreshold} * 100).toFixed(0)}%"/>
+                            
+                            <Label text="Default Approvers"/>
+                            <MultiComboBox
+                                selectedKeys="{config>/defaultApprovers}"
+                                placeholder="Select default approvers">
+                                <items>
+                                    <core:Item key="QA_MANAGER" text="QA Manager"/>
+                                    <core:Item key="DATA_OWNER" text="Data Owner"/>
+                                    <core:Item key="COMPLIANCE_OFFICER" text="Compliance Officer"/>
+                                    <core:Item key="BUSINESS_ANALYST" text="Business Analyst"/>
+                                    <core:Item key="DEVELOPMENT_LEAD" text="Development Lead"/>
+                                </items>
+                            </MultiComboBox>
+                            
+                            <Label text="Escalation Recipients"/>
+                            <MultiComboBox
+                                selectedKeys="{config>/escalationRecipients}"
+                                placeholder="Select escalation recipients"
+                                enabled="{config>/enableEscalation}">
+                                <items>
+                                    <core:Item key="SENIOR_QA" text="Senior QA Manager"/>
+                                    <core:Item key="COMPLIANCE_OFFICER" text="Compliance Officer"/>
+                                    <core:Item key="DATA_GOVERNANCE" text="Data Governance Board"/>
+                                    <core:Item key="EXECUTIVE" text="Executive Team"/>
+                                </items>
+                            </MultiComboBox>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Notification Settings -->
+                <Panel headerText="Notification Settings" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginBottom">
+                            <Label text="Email Notifications"/>
+                            <VBox>
+                                <CheckBox 
+                                    text="Send notifications on validation completion"
+                                    selected="{config>/notifyOnCompletion}"/>
+                                <CheckBox 
+                                    text="Send notifications on validation failure"
+                                    selected="{config>/notifyOnFailure}"/>
+                                <CheckBox 
+                                    text="Send notifications for pending approvals"
+                                    selected="{config>/notifyOnPendingApproval}"/>
+                                <CheckBox 
+                                    text="Send weekly summary reports"
+                                    selected="{config>/sendWeeklySummary}"/>
+                            </VBox>
+                        </VBox>
+                        
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout"
+                            labelSpanXL="3"
+                            labelSpanL="3"
+                            labelSpanM="12"
+                            labelSpanS="12"
+                            columnsXL="1"
+                            columnsL="1"
+                            columnsM="1">
+                            <form:content>
+                                <Label text="Default Recipients"/>
+                                <Input 
+                                    value="{config>/defaultEmailRecipients}"
+                                    placeholder="email1@company.com, email2@company.com"/>
+                                
+                                <Label text="SMTP Server"/>
+                                <Input 
+                                    value="{config>/smtpServer}"
+                                    placeholder="smtp.company.com"/>
+                                
+                                <Label text="SMTP Port"/>
+                                <Input 
+                                    value="{config>/smtpPort}"
+                                    type="Number"
+                                    placeholder="587"/>
+                            </form:content>
+                        </form:SimpleForm>
+                    </VBox>
+                </Panel>
+                
+                <!-- Logging and Monitoring -->
+                <Panel headerText="Logging and Monitoring" class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="2"
+                        columnsL="2"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Log Level"/>
+                            <Select selectedKey="{config>/logLevel}">
+                                <items>
+                                    <core:Item key="ERROR" text="Error"/>
+                                    <core:Item key="WARN" text="Warning"/>
+                                    <core:Item key="INFO" text="Info"/>
+                                    <core:Item key="DEBUG" text="Debug"/>
+                                    <core:Item key="TRACE" text="Trace"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Log Retention (days)"/>
+                            <Input 
+                                value="{config>/logRetentionDays}"
+                                type="Number"
+                                placeholder="30"/>
+                            
+                            <Label text="Performance Monitoring"/>
+                            <VBox>
+                                <CheckBox 
+                                    text="Enable performance metrics"
+                                    selected="{config>/enablePerformanceMetrics}"/>
+                                <CheckBox 
+                                    text="Enable detailed tracing"
+                                    selected="{config>/enableDetailedTracing}"/>
+                                <CheckBox 
+                                    text="Monitor resource usage"
+                                    selected="{config>/monitorResourceUsage}"/>
+                            </VBox>
+                            
+                            <Label text="Metrics Export URL"/>
+                            <Input 
+                                value="{config>/metricsExportUrl}"
+                                placeholder="http://monitoring.company.com/metrics"
+                                enabled="{config>/enablePerformanceMetrics}"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Data Retention Settings -->
+                <Panel headerText="Data Retention Settings" class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="2"
+                        columnsL="2"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Validation Results Retention (days)"/>
+                            <Input 
+                                value="{config>/validationResultsRetention}"
+                                type="Number"
+                                placeholder="90"/>
+                            
+                            <Label text="Test Data Retention (days)"/>
+                            <Input 
+                                value="{config>/testDataRetention}"
+                                type="Number"
+                                placeholder="30"/>
+                            
+                            <Label text="Approval History Retention (days)"/>
+                            <Input 
+                                value="{config>/approvalHistoryRetention}"
+                                type="Number"
+                                placeholder="365"/>
+                            
+                            <Label text="Cleanup Options"/>
+                            <VBox>
+                                <CheckBox 
+                                    text="Auto-cleanup expired data"
+                                    selected="{config>/autoCleanupExpiredData}"/>
+                                <CheckBox 
+                                    text="Archive before deletion"
+                                    selected="{config>/archiveBeforeDeletion}"/>
+                                <CheckBox 
+                                    text="Compress archived data"
+                                    selected="{config>/compressArchivedData}"/>
+                            </VBox>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Security Settings -->
+                <Panel headerText="Security Settings" class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="1"
+                        columnsL="1"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Data Encryption"/>
+                            <VBox>
+                                <CheckBox 
+                                    text="Encrypt data at rest"
+                                    selected="{config>/encryptDataAtRest}"/>
+                                <CheckBox 
+                                    text="Encrypt data in transit"
+                                    selected="{config>/encryptDataInTransit}"/>
+                                <CheckBox 
+                                    text="Enable audit logging"
+                                    selected="{config>/enableAuditLogging}"/>
+                            </VBox>
+                            
+                            <Label text="Access Control"/>
+                            <VBox>
+                                <CheckBox 
+                                    text="Require role-based access"
+                                    selected="{config>/requireRoleBasedAccess}"/>
+                                <CheckBox 
+                                    text="Enable data masking for sensitive fields"
+                                    selected="{config>/enableDataMasking}"/>
+                                <CheckBox 
+                                    text="Log all data access"
+                                    selected="{config>/logAllDataAccess}"/>
+                            </VBox>
+                            
+                            <Label text="Encryption Key Rotation (days)"/>
+                            <Input 
+                                value="{config>/keyRotationDays}"
+                                type="Number"
+                                placeholder="90"
+                                enabled="{config>/encryptDataAtRest}"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Reset to Defaults"
+                press=".onResetToDefaults"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Save Configuration"
+                    type="Emphasized"
+                    icon="sap-icon://save"
+                    press=".onSaveConfiguration"
+                    enabled="{= !!${config>/configName}}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Test Configuration"
+                    icon="sap-icon://test"
+                    press=".onTestConfiguration"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Export Configuration"
+                    icon="sap-icon://download"
+                    press=".onExportConfiguration"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseConfiguration"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

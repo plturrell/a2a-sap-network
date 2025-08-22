@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:suite="sap.suite.ui.commons"
+    xmlns:viz="sap.viz"
+    xmlns:tnt="sap.tnt">
+    
+    <Dialog
+        title="{i18n>dialog.catalogDashboard.title}"
+        class="sapUiMediumMargin"
+        contentWidth="95vw"
+        contentHeight="90vh"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <Page showHeader="false">
+                <content>
+                    
+                    <!-- Key Performance Indicators -->
+                    <Panel headerText="{i18n>section.keyMetrics}" class="sapUiMediumMargin">
+                        <content>
+                            <FlexBox wrap="Wrap" class="sapUiSmallMargin">
+                                
+                                <!-- Total Catalog Entries -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.totalEntries}"
+                                    subheaderText="{i18n>kpi.allCatalogs}"
+                                    valueColor="Good"
+                                    indicator="Up"
+                                    value="8,547"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <!-- Active Resources -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.activeResources}"
+                                    subheaderText="{i18n>kpi.currentlyActive}"
+                                    valueColor="Good"
+                                    indicator="Up"
+                                    value="7,923"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <!-- Discovery Success Rate -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.discoverySuccessRate}"
+                                    subheaderText="{i18n>kpi.last24Hours}"
+                                    valueColor="Good"
+                                    indicator="Up"
+                                    value="94.7%"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <!-- Search Performance -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.searchPerformance}"
+                                    subheaderText="{i18n>kpi.averageResponseTime}"
+                                    valueColor="Good"
+                                    indicator="Down"
+                                    value="85ms"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <!-- Registry Health -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.registryHealth}"
+                                    subheaderText="{i18n>kpi.connectedRegistries}"
+                                    valueColor="Good"
+                                    indicator="None"
+                                    value="12/13"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <!-- Metadata Quality -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.metadataQuality}"
+                                    subheaderText="{i18n>kpi.completenessScore}"
+                                    valueColor="Good"
+                                    indicator="Up"
+                                    value="91.2%"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                            </FlexBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Catalog Overview Charts -->
+                    <Panel headerText="{i18n>section.catalogOverview}" class="sapUiMediumMargin">
+                        <content>
+                            <HBox class="sapUiMediumMargin">
+                                
+                                <!-- Catalog Growth Chart -->
+                                <VBox class="sapUiMediumMarginEnd" width="50%">
+                                    <Title text="{i18n>chart.catalogGrowth}" level="H4" class="sapUiSmallMarginBottom"/>
+                                    <viz:Popover id="catalogGrowthPopover"/>
+                                    <viz:VizFrame
+                                        id="catalogGrowthChart"
+                                        vizType="line"
+                                        width="100%"
+                                        height="300px">
+                                        <viz:dataset>
+                                            <viz:FlattenedDataset data="{/catalogGrowth}">
+                                                <viz:dimensions>
+                                                    <viz:DimensionDefinition name="Time" value="{timestamp}"/>
+                                                </viz:dimensions>
+                                                <viz:measures>
+                                                    <viz:MeasureDefinition name="New Entries" value="{newEntries}"/>
+                                                    <viz:MeasureDefinition name="Updated Entries" value="{updatedEntries}"/>
+                                                    <viz:MeasureDefinition name="Total Entries" value="{totalEntries}"/>
+                                                </viz:measures>
+                                            </viz:FlattenedDataset>
+                                        </viz:dataset>
+                                        <viz:feeds>
+                                            <viz:FeedItem uid="categoryAxis" type="Dimension" values="Time"/>
+                                            <viz:FeedItem uid="valueAxis" type="Measure" values="New Entries,Updated Entries,Total Entries"/>
+                                        </viz:feeds>
+                                    </viz:VizFrame>
+                                </VBox>
+                                
+                                <!-- Resource Type Distribution -->
+                                <VBox width="50%">
+                                    <Title text="{i18n>chart.resourceTypes}" level="H4" class="sapUiSmallMarginBottom"/>
+                                    <viz:Popover id="resourceTypesPopover"/>
+                                    <viz:VizFrame
+                                        id="resourceTypesChart"
+                                        vizType="donut"
+                                        width="100%"
+                                        height="300px">
+                                        <viz:dataset>
+                                            <viz:FlattenedDataset data="{/resourceTypes}">
+                                                <viz:dimensions>
+                                                    <viz:DimensionDefinition name="ResourceType" value="{resourceType}"/>
+                                                </viz:dimensions>
+                                                <viz:measures>
+                                                    <viz:MeasureDefinition name="Count" value="{count}"/>
+                                                </viz:measures>
+                                            </viz:FlattenedDataset>
+                                        </viz:dataset>
+                                        <viz:feeds>
+                                            <viz:FeedItem uid="color" type="Dimension" values="ResourceType"/>
+                                            <viz:FeedItem uid="size" type="Measure" values="Count"/>
+                                        </viz:feeds>
+                                    </viz:VizFrame>
+                                </VBox>
+                                
+                            </HBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Category Tree and Registry Status -->
+                    <Panel headerText="{i18n>section.categoryAndRegistry}" class="sapUiMediumMargin">
+                        <content>
+                            <HBox class="sapUiMediumMargin">
+                                
+                                <!-- Category Tree -->
+                                <VBox class="sapUiMediumMarginEnd" width="50%">
+                                    <Title text="{i18n>section.categories}" level="H4" class="sapUiSmallMarginBottom"/>
+                                    <tnt:NavigationList
+                                        id="categoryTree"
+                                        items="{/serviceCategories}"
+                                        expanded="true">
+                                        <tnt:NavigationListItem
+                                            text="{categoryName}"
+                                            icon="{icon}"
+                                            hasExpander="{hasSubcategories}"
+                                            expanded="false"
+                                            items="{subcategories}">
+                                            <tnt:NavigationListItem
+                                                text="{categoryName}"
+                                                icon="{icon}"/>
+                                        </tnt:NavigationListItem>
+                                    </tnt:NavigationList>
+                                </VBox>
+                                
+                                <!-- Registry Status -->
+                                <VBox width="50%">
+                                    <Title text="{i18n>section.registryStatus}" level="H4" class="sapUiSmallMarginBottom"/>
+                                    
+                                    <Table
+                                        id="registryStatusTable"
+                                        items="{/registryStatus}"
+                                        mode="None"
+                                        class="sapUiSmallMarginTop">
+                                        
+                                        <columns>
+                                            <Column>
+                                                <Text text="{i18n>field.registryName}"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>field.registryType}"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>field.entryCount}"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>field.lastSync}"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>field.status}"/>
+                                            </Column>
+                                        </columns>
+                                        
+                                        <items>
+                                            <ColumnListItem>
+                                                <cells>
+                                                    <Text text="{registryName}"/>
+                                                    <Text text="{registryType}"/>
+                                                    <Text text="{entryCount}"/>
+                                                    <Text text="{lastSync}"/>
+                                                    <ObjectStatus
+                                                        text="{status}"
+                                                        state="{
+                                                            path: 'status',
+                                                            formatter: '.formatRegistryStatusState'
+                                                        }"/>
+                                                </cells>
+                                            </ColumnListItem>
+                                        </items>
+                                    </Table>
+                                </VBox>
+                                
+                            </HBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Search and Discovery Analytics -->
+                    <Panel headerText="{i18n>section.discoveryStats}" class="sapUiMediumMargin">
+                        <content>
+                            <HBox class="sapUiMediumMargin">
+                                
+                                <!-- Discovery Methods Chart -->
+                                <VBox class="sapUiMediumMarginEnd" width="50%">
+                                    <Title text="{i18n>chart.discoveryMethods}" level="H4" class="sapUiSmallMarginBottom"/>
+                                    <viz:Popover id="discoveryMethodsPopover"/>
+                                    <viz:VizFrame
+                                        id="discoveryMethodsChart"
+                                        vizType="column"
+                                        width="100%"
+                                        height="250px">
+                                        <viz:dataset>
+                                            <viz:FlattenedDataset data="{/discoveryMethods}">
+                                                <viz:dimensions>
+                                                    <viz:DimensionDefinition name="Method" value="{method}"/>
+                                                </viz:dimensions>
+                                                <viz:measures>
+                                                    <viz:MeasureDefinition name="Discovered" value="{discoveredCount}"/>
+                                                    <viz:MeasureDefinition name="Success Rate" value="{successRate}"/>
+                                                </viz:measures>
+                                            </viz:FlattenedDataset>
+                                        </viz:dataset>
+                                        <viz:feeds>
+                                            <viz:FeedItem uid="categoryAxis" type="Dimension" values="Method"/>
+                                            <viz:FeedItem uid="valueAxis" type="Measure" values="Discovered,Success Rate"/>
+                                        </viz:feeds>
+                                    </viz:VizFrame>
+                                </VBox>
+                                
+                                <!-- Search Performance Metrics -->
+                                <VBox width="50%">
+                                    <Title text="{i18n>section.searchMetrics}" level="H4" class="sapUiSmallMarginBottom"/>
+                                    
+                                    <HBox class="sapUiMediumMargin">
+                                        
+                                        <!-- Average Search Time -->
+                                        <VBox class="sapUiMediumMarginEnd" width="33%">
+                                            <Title text="{i18n>metric.avgSearchTime}" level="H5" class="sapUiSmallMarginBottom"/>
+                                            <suite:RadialMicroChart
+                                                size="M"
+                                                percentage="15"
+                                                valueColor="Good"
+                                                class="sapUiSmallMargin"/>
+                                            <Text text="85ms" class="sapUiSmallMarginTop"/>
+                                        </VBox>
+                                        
+                                        <!-- Search Success Rate -->
+                                        <VBox class="sapUiMediumMarginEnd" width="33%">
+                                            <Title text="{i18n>metric.searchSuccessRate}" level="H5" class="sapUiSmallMarginBottom"/>
+                                            <suite:RadialMicroChart
+                                                size="M"
+                                                percentage="96"
+                                                valueColor="Good"
+                                                class="sapUiSmallMargin"/>
+                                            <Text text="96%" class="sapUiSmallMarginTop"/>
+                                        </VBox>
+                                        
+                                        <!-- Index Freshness -->
+                                        <VBox width="33%">
+                                            <Title text="{i18n>metric.indexFreshness}" level="H5" class="sapUiSmallMarginBottom"/>
+                                            <suite:RadialMicroChart
+                                                size="M"
+                                                percentage="88"
+                                                valueColor="Good"
+                                                class="sapUiSmallMargin"/>
+                                            <Text text="88%" class="sapUiSmallMarginTop"/>
+                                        </VBox>
+                                        
+                                    </HBox>
+                                    
+                                    <!-- Popular Search Terms -->
+                                    <Title text="{i18n>section.popularSearchTerms}" level="H5" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                    <List items="{/popularSearchTerms}" class="sapUiSmallMarginTop">
+                                        <StandardListItem
+                                            title="{searchTerm}"
+                                            description="{category}"
+                                            info="{searchCount}"
+                                            infoState="None"/>
+                                    </List>
+                                </VBox>
+                                
+                            </HBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Recent Activity -->
+                    <Panel headerText="{i18n>section.recentActivity}" class="sapUiMediumMargin">
+                        <content>
+                            <Table
+                                id="recentActivityTable"
+                                items="{/recentActivity}"
+                                mode="None"
+                                class="sapUiSmallMarginTop">
+                                
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>field.timestamp}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.activity}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.resourceName}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.user}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.status}"/>
+                                    </Column>
+                                </columns>
+                                
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{timestamp}"/>
+                                            <Text text="{activity}"/>
+                                            <Link text="{resourceName}" press="onNavigateToResource"/>
+                                            <Text text="{user}"/>
+                                            <ObjectStatus
+                                                text="{status}"
+                                                state="{
+                                                    path: 'status',
+                                                    formatter: '.formatActivityStatusState'
+                                                }"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </content>
+                    </Panel>
+                    
+                </content>
+            </Page>
+        </content>
+        
+        <beginButton>
+            <Button text="{i18n>btn.refresh}" press="onRefreshDashboard" type="Emphasized"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>btn.close}" press="onCloseDashboard"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

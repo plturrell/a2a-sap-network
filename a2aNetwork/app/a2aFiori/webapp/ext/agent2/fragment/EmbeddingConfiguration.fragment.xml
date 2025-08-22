@@ -22,7 +22,7 @@
                             layout="ResponsiveGridLayout">
                             <form:content>
                                 <Label text="Embedding Model" required="true"/>
-                                <Select selectedKey="{embedding>/embeddingModel}">
+                                <Select selectedKey="{embedding>/embeddingModel}" change=".onEmbeddingModelValidation">
                                     <items>
                                         <core:Item key="text-embedding-ada-002" text="OpenAI Ada-002 (1536 dims)"/>
                                         <core:Item key="text-embedding-3-small" text="OpenAI Text-3-Small (1536 dims)"/>

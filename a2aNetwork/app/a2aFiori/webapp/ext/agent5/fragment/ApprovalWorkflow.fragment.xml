@@ -1,0 +1,487 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="approvalWorkflowDialog"
+        title="QA Approval Workflow"
+        contentWidth="85%"
+        contentHeight="80%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Workflow Overview -->
+                <Panel headerText="Approval Workflow Overview" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Workflow Name:" class="sapUiContentLabelColor"/>
+                                <Text text="{workflow>/workflowName}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Status:" class="sapUiContentLabelColor"/>
+                                <ObjectStatus 
+                                    text="{workflow>/status}"
+                                    state="{= ${workflow>/status} === 'ACTIVE' ? 'Success' : 'None'}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Current Step:" class="sapUiContentLabelColor"/>
+                                <Text text="{workflow>/currentStep}"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Progress:" class="sapUiContentLabelColor"/>
+                                <ProgressIndicator 
+                                    percentValue="{workflow>/progress}"
+                                    displayValue="{workflow>/currentStepIndex}/{workflow>/totalSteps}"
+                                    state="Information"
+                                    width="150px"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <Text text="{workflow>/description}" class="sapUiMediumMarginBottom"/>
+                        
+                        <!-- Quick Actions -->
+                        <HBox>
+                            <Button 
+                                text="Approve"
+                                type="Accept"
+                                icon="sap-icon://accept"
+                                press=".onQuickApprove"
+                                enabled="{workflow>/canApprove}"
+                                class="sapUiMediumMarginEnd"/>
+                            <Button 
+                                text="Reject"
+                                type="Reject"
+                                icon="sap-icon://decline"
+                                press=".onQuickReject"
+                                enabled="{workflow>/canReject}"
+                                class="sapUiMediumMarginEnd"/>
+                            <Button 
+                                text="Request Information"
+                                icon="sap-icon://message-information"
+                                press=".onRequestInformation"
+                                enabled="{workflow>/canRequestInfo}"
+                                class="sapUiMediumMarginEnd"/>
+                            <Button 
+                                text="Escalate"
+                                icon="sap-icon://upload"
+                                press=".onEscalate"
+                                enabled="{workflow>/canEscalate}"/>
+                        </HBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Validation Task Details -->
+                <Panel headerText="Validation Task Details" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Task ID:" class="sapUiContentLabelColor"/>
+                                <Text text="{workflow>/taskDetails/taskId}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Data Product:" class="sapUiContentLabelColor"/>
+                                <Text text="{workflow>/taskDetails/dataProductId}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Overall Score:" class="sapUiContentLabelColor"/>
+                                <ObjectNumber 
+                                    number="{workflow>/taskDetails/overallScore}"
+                                    unit="%"
+                                    state="{= ${workflow>/taskDetails/overallScore} >= 90 ? 'Success' : ${workflow>/taskDetails/overallScore} >= 75 ? 'Warning' : 'Error'}"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Validation Type:" class="sapUiContentLabelColor"/>
+                                <Text text="{workflow>/taskDetails/validationType}"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <!-- Quality Metrics -->
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Quality Score:" class="sapUiContentLabelColor"/>
+                                <ProgressIndicator 
+                                    percentValue="{workflow>/taskDetails/qualityScore}"
+                                    displayValue="{workflow>/taskDetails/qualityScore}%"
+                                    state="{= ${workflow>/taskDetails/qualityScore} >= 90 ? 'Success' : 'Warning'}"
+                                    width="120px"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Factuality Score:" class="sapUiContentLabelColor"/>
+                                <ProgressIndicator 
+                                    percentValue="{workflow>/taskDetails/factualityScore}"
+                                    displayValue="{workflow>/taskDetails/factualityScore}%"
+                                    state="{= ${workflow>/taskDetails/factualityScore} >= 85 ? 'Success' : 'Warning'}"
+                                    width="120px"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Compliance Score:" class="sapUiContentLabelColor"/>
+                                <ProgressIndicator 
+                                    percentValue="{workflow>/taskDetails/complianceScore}"
+                                    displayValue="{workflow>/taskDetails/complianceScore}%"
+                                    state="{= ${workflow>/taskDetails/complianceScore} >= 95 ? 'Success' : 'Warning'}"
+                                    width="120px"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Workflow Steps -->
+                <Panel headerText="Workflow Steps" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <List items="{workflow>/workflowSteps}">
+                            <CustomListItem>
+                                <VBox class="sapUiMediumMargin">
+                                    <HBox>
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Text text="Step {stepNumber}: {stepName}" class="{= ${isActive} ? 'sapThemeHighlight-AsTextColor' : ''}"/>
+                                            <Text text="{description}" class="sapUiContentLabelColor"/>
+                                        </VBox>
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Text text="Assignee:" class="sapUiContentLabelColor"/>
+                                            <Text text="{assignee}"/>
+                                        </VBox>
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Text text="Status:" class="sapUiContentLabelColor"/>
+                                            <ObjectStatus 
+                                                text="{status}"
+                                                state="{= ${status} === 'COMPLETED' ? 'Success' : ${status} === 'IN_PROGRESS' ? 'Warning' : 'None'}"/>
+                                        </VBox>
+                                        <VBox>
+                                            <Text text="Due Date:" class="sapUiContentLabelColor"/>
+                                            <Text text="{dueDate}"/>
+                                        </VBox>
+                                    </HBox>
+                                    
+                                    <!-- Step Actions -->
+                                    <HBox visible="{isActive}" class="sapUiMediumMarginTop">
+                                        <Button 
+                                            text="Complete Step"
+                                            type="Emphasized"
+                                            icon="sap-icon://accept"
+                                            press=".onCompleteStep"
+                                            class="sapUiMediumMarginEnd"/>
+                                        <Button 
+                                            text="Add Comment"
+                                            icon="sap-icon://comment"
+                                            press=".onAddStepComment"
+                                            class="sapUiMediumMarginEnd"/>
+                                        <Button 
+                                            text="Request Clarification"
+                                            icon="sap-icon://question-mark"
+                                            press=".onRequestClarification"/>
+                                    </HBox>
+                                    
+                                    <!-- Step Comments -->
+                                    <VBox visible="{= ${comments}.length > 0}" class="sapUiMediumMarginTop">
+                                        <Text text="Comments:" class="sapUiContentLabelColor"/>
+                                        <List items="{comments}">
+                                            <StandardListItem
+                                                title="{author} - {timestamp}"
+                                                description="{comment}"
+                                                icon="sap-icon://comment"/>
+                                        </List>
+                                    </VBox>
+                                </VBox>
+                            </CustomListItem>
+                        </List>
+                    </VBox>
+                </Panel>
+                
+                <!-- Approval Criteria -->
+                <Panel headerText="Approval Criteria" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <Table items="{workflow>/approvalCriteria}">
+                            <columns>
+                                <Column>
+                                    <Text text="Criteria"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Required Value"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Current Value"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Status"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Weight"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{criteriaName}"/>
+                                        <Text text="{requiredValue}"/>
+                                        <Text text="{currentValue}"/>
+                                        <ObjectStatus 
+                                            text="{= ${isMet} ? 'MET' : 'NOT MET'}"
+                                            state="{= ${isMet} ? 'Success' : 'Error'}"/>
+                                        <Text text="{weight}%"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                        
+                        <!-- Overall Criteria Score -->
+                        <HBox class="sapUiMediumMarginTop">
+                            <Text text="Overall Criteria Score:" class="sapUiContentLabelColor sapUiMediumMarginEnd"/>
+                            <ProgressIndicator 
+                                percentValue="{workflow>/criteriaScore}"
+                                displayValue="{workflow>/criteriaScore}%"
+                                state="{= ${workflow>/criteriaScore} >= 90 ? 'Success' : ${workflow>/criteriaScore} >= 75 ? 'Warning' : 'Error'}"
+                                width="200px"/>
+                        </HBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Auto-Approval Rules -->
+                <Panel 
+                    headerText="Auto-Approval Rules"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <Table items="{workflow>/autoApprovalRules}">
+                            <columns>
+                                <Column>
+                                    <Text text="Rule"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Condition"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Action"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Status"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{ruleName}"/>
+                                        <Text text="{condition}"/>
+                                        <Text text="{action}"/>
+                                        <ObjectStatus 
+                                            text="{= ${isApplicable} ? 'APPLICABLE' : 'NOT APPLICABLE'}"
+                                            state="{= ${isApplicable} ? 'Success' : 'None'}"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                        
+                        <MessageStrip 
+                            text="{workflow>/autoApprovalMessage}"
+                            type="{workflow>/autoApprovalType}"
+                            visible="{= !!${workflow>/autoApprovalMessage}}"
+                            showIcon="true"
+                            class="sapUiMediumMarginTop"/>
+                    </VBox>
+                </Panel>
+                
+                <!-- Decision Panel -->
+                <Panel headerText="Approval Decision" class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="1"
+                        columnsL="1"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Decision"/>
+                            <RadioButtonGroup selectedIndex="{workflow>/decision}">
+                                <RadioButton text="Approve"/>
+                                <RadioButton text="Conditional Approval"/>
+                                <RadioButton text="Request Changes"/>
+                                <RadioButton text="Reject"/>
+                                <RadioButton text="Escalate"/>
+                            </RadioButtonGroup>
+                            
+                            <VBox visible="{= ${workflow>/decision} === 1}">
+                                <Label text="Conditions for Approval"/>
+                                <TextArea 
+                                    value="{workflow>/approvalConditions}"
+                                    placeholder="Specify conditions that must be met..."
+                                    rows="3"/>
+                            </VBox>
+                            
+                            <VBox visible="{= ${workflow>/decision} === 2}">
+                                <Label text="Required Changes"/>
+                                <TextArea 
+                                    value="{workflow>/requiredChanges}"
+                                    placeholder="Describe changes that must be made..."
+                                    rows="4"/>
+                            </VBox>
+                            
+                            <VBox visible="{= ${workflow>/decision} === 3}">
+                                <Label text="Rejection Reason"/>
+                                <TextArea 
+                                    value="{workflow>/rejectionReason}"
+                                    placeholder="Explain why this validation is being rejected..."
+                                    rows="4"/>
+                            </VBox>
+                            
+                            <VBox visible="{= ${workflow>/decision} === 4}">
+                                <Label text="Escalation Reason"/>
+                                <TextArea 
+                                    value="{workflow>/escalationReason}"
+                                    placeholder="Explain why this requires escalation..."
+                                    rows="3"/>
+                                <Label text="Escalate To"/>
+                                <Select selectedKey="{workflow>/escalateTo}">
+                                    <items>
+                                        <core:Item key="SENIOR_QA" text="Senior QA Manager"/>
+                                        <core:Item key="COMPLIANCE_OFFICER" text="Compliance Officer"/>
+                                        <core:Item key="DATA_GOVERNANCE" text="Data Governance Board"/>
+                                        <core:Item key="EXECUTIVE" text="Executive Team"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                            
+                            <Label text="Comments"/>
+                            <TextArea 
+                                value="{workflow>/comments}"
+                                placeholder="Add any additional comments..."
+                                rows="4"/>
+                            
+                            <Label text="Priority"/>
+                            <Select selectedKey="{workflow>/priority}">
+                                <items>
+                                    <core:Item key="LOW" text="Low"/>
+                                    <core:Item key="MEDIUM" text="Medium"/>
+                                    <core:Item key="HIGH" text="High"/>
+                                    <core:Item key="URGENT" text="Urgent"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Notify Stakeholders"/>
+                            <MultiComboBox 
+                                selectedKeys="{workflow>/notifyStakeholders}"
+                                placeholder="Select stakeholders to notify">
+                                <items>
+                                    <core:Item key="DATA_OWNER" text="Data Owner"/>
+                                    <core:Item key="BUSINESS_ANALYST" text="Business Analyst"/>
+                                    <core:Item key="COMPLIANCE_TEAM" text="Compliance Team"/>
+                                    <core:Item key="DEVELOPMENT_TEAM" text="Development Team"/>
+                                    <core:Item key="PROJECT_MANAGER" text="Project Manager"/>
+                                </items>
+                            </MultiComboBox>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Approval History -->
+                <Panel 
+                    headerText="Approval History"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <Table items="{workflow>/approvalHistory}">
+                            <columns>
+                                <Column>
+                                    <Text text="Date/Time"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Approver"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Action"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Comments"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Next Action"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{timestamp}"/>
+                                        <Text text="{approver}"/>
+                                        <ObjectStatus 
+                                            text="{action}"
+                                            state="{= ${action} === 'APPROVED' ? 'Success' : ${action} === 'REJECTED' ? 'Error' : 'Warning'}"/>
+                                        <Text 
+                                            text="{comments}"
+                                            maxLines="2"/>
+                                        <Text text="{nextAction}"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </Panel>
+                
+                <!-- Related Documents -->
+                <Panel 
+                    headerText="Related Documents"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <List items="{workflow>/relatedDocuments}">
+                            <StandardListItem
+                                title="{documentName}"
+                                description="{documentType}"
+                                info="{fileSize}"
+                                icon="sap-icon://document"
+                                press=".onViewDocument"/>
+                        </List>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <Button 
+                                text="Upload Document"
+                                icon="sap-icon://upload"
+                                press=".onUploadDocument"
+                                class="sapUiMediumMarginEnd"/>
+                            <Button 
+                                text="Generate Report"
+                                icon="sap-icon://create"
+                                press=".onGenerateReport"/>
+                        </HBox>
+                    </VBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Save Draft"
+                icon="sap-icon://save"
+                press=".onSaveDraft"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Submit Decision"
+                    type="Emphasized"
+                    icon="sap-icon://send"
+                    press=".onSubmitDecision"
+                    enabled="{= ${workflow>/decision} !== undefined}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="View Full Report"
+                    icon="sap-icon://detail-view"
+                    press=".onViewFullReport"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseWorkflow"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

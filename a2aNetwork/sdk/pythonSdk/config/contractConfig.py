@@ -140,8 +140,11 @@ class ContractConfigManager:
             
             # Fallback paths
             abi_paths.extend([
-                f"../a2aNetwork/out/{contract_name}.sol/{contract_name}.json",
+                f"/Users/apple/projects/a2a/a2aNetwork/out/{contract_name}.sol/{contract_name}.json",
+                f"../../../../a2aNetwork/out/{contract_name}.sol/{contract_name}.json",
+                f"../../../a2aNetwork/out/{contract_name}.sol/{contract_name}.json",
                 f"../../a2aNetwork/out/{contract_name}.sol/{contract_name}.json",
+                f"../a2aNetwork/out/{contract_name}.sol/{contract_name}.json",
                 f"../a2a_network/out/{contract_name}.sol/{contract_name}.json",
                 f"../../a2a_network/out/{contract_name}.sol/{contract_name}.json",
                 f"../a2a_network/out/{contract_name}Upgradeable.sol/{contract_name}Upgradeable.json",

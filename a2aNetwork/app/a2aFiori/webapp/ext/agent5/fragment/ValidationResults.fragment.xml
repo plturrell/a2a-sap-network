@@ -1,0 +1,520 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz">
+    
+    <Dialog
+        id="qaValidationResultsDialog"
+        title="QA Validation Results"
+        contentWidth="95%"
+        contentHeight="90%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Results Summary -->
+                <Panel headerText="Validation Summary" class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Overall Score" level="H3"/>
+                            <ObjectNumber 
+                                number="{qaResults>/overallScore}"
+                                unit="%"
+                                state="{= ${qaResults>/overallScore} >= 95 ? 'Success' : ${qaResults>/overallScore} >= 80 ? 'Warning' : 'Error'}"
+                                emphasized="true"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Quality Score" level="H3"/>
+                            <ObjectNumber 
+                                number="{qaResults>/qualityScore}"
+                                unit="%"
+                                state="{= ${qaResults>/qualityScore} >= 90 ? 'Success' : ${qaResults>/qualityScore} >= 75 ? 'Warning' : 'Error'}"
+                                emphasized="true"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Factuality Score" level="H3"/>
+                            <ObjectNumber 
+                                number="{qaResults>/factualityScore}"
+                                unit="%"
+                                state="{= ${qaResults>/factualityScore} >= 90 ? 'Success' : ${qaResults>/factualityScore} >= 75 ? 'Warning' : 'Error'}"
+                                emphasized="true"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Compliance Score" level="H3"/>
+                            <ObjectNumber 
+                                number="{qaResults>/complianceScore}"
+                                unit="%"
+                                state="{= ${qaResults>/complianceScore} >= 95 ? 'Success' : ${qaResults>/complianceScore} >= 80 ? 'Warning' : 'Error'}"
+                                emphasized="true"/>
+                        </VBox>
+                        <VBox>
+                            <Title text="Status" level="H3"/>
+                            <ObjectStatus 
+                                text="{qaResults>/status}"
+                                state="{= ${qaResults>/status} === 'COMPLETED' ? 'Success' : ${qaResults>/status} === 'FAILED' ? 'Error' : 'Warning'}"/>
+                        </VBox>
+                    </HBox>
+                    
+                    <!-- Test Results Summary -->
+                    <HBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Text text="Tests Generated:" class="sapUiContentLabelColor"/>
+                            <Text text="{qaResults>/testsGenerated}"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Text text="Tests Passed:" class="sapUiContentLabelColor"/>
+                            <Text text="{qaResults>/testsPassed}"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Text text="Tests Failed:" class="sapUiContentLabelColor"/>
+                            <Text text="{qaResults>/testsFailed}"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Text text="Pass Rate:" class="sapUiContentLabelColor"/>
+                            <Text text="{= Math.round((${qaResults>/testsPassed} / ${qaResults>/testsGenerated}) * 100)}%"/>
+                        </VBox>
+                        <VBox>
+                            <Text text="Validation Time:" class="sapUiContentLabelColor"/>
+                            <Text text="{qaResults>/validationTime} ms"/>
+                        </VBox>
+                    </HBox>
+                </Panel>
+                
+                <!-- Data Product Information -->
+                <Panel headerText="Data Product Information" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Data Product ID:" class="sapUiContentLabelColor"/>
+                                <Text text="{qaResults>/dataProductId}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="ORD Registry:" class="sapUiContentLabelColor"/>
+                                <Link 
+                                    text="{qaResults>/ordRegistryUrl}"
+                                    href="{qaResults>/ordRegistryUrl}"
+                                    target="_blank"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Validation Type:" class="sapUiContentLabelColor"/>
+                                <Text text="{qaResults>/validationType}"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="QA Scope:" class="sapUiContentLabelColor"/>
+                                <Text text="{qaResults>/qaScope}"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Test Results Detail -->
+                <Panel headerText="Individual Test Results" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Filter Controls -->
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Filter by Result:"/>
+                                <Select selectedKey="{qaResults>/resultFilter}">
+                                    <items>
+                                        <core:Item key="ALL" text="All Tests"/>
+                                        <core:Item key="PASSED" text="Passed Only"/>
+                                        <core:Item key="FAILED" text="Failed Only"/>
+                                        <core:Item key="HIGH_CONFIDENCE" text="High Confidence"/>
+                                        <core:Item key="LOW_CONFIDENCE" text="Low Confidence"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Filter by Type:"/>
+                                <Select selectedKey="{qaResults>/typeFilter}">
+                                    <items>
+                                        <core:Item key="ALL" text="All Types"/>
+                                        <core:Item key="SIMPLE_QA" text="SimpleQA"/>
+                                        <core:Item key="FACTUAL" text="Factual"/>
+                                        <core:Item key="COMPUTATIONAL" text="Computational"/>
+                                        <core:Item key="RELATIONAL" text="Relational"/>
+                                        <core:Item key="COMPLIANCE" text="Compliance"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                            <VBox>
+                                <Label text="Search:"/>
+                                <SearchField 
+                                    value="{qaResults>/searchQuery}"
+                                    placeholder="Search in questions or answers"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <!-- Test Results Table -->
+                        <Table 
+                            items="{qaResults>/testResults}"
+                            growing="true"
+                            growingThreshold="25"
+                            sticky="ColumnHeaders">
+                            <columns>
+                                <Column>
+                                    <Text text="Test ID"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Type"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Question"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Expected Answer"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Actual Answer"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Result"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Confidence"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Time (ms)"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Actions"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem press=".onShowTestDetails">
+                                    <cells>
+                                        <Text text="{testId}"/>
+                                        <ObjectStatus 
+                                            text="{testType}"
+                                            state="{= ${testType} === 'SIMPLE_QA' ? 'Success' : ${testType} === 'COMPLIANCE' ? 'Warning' : 'Information'}"/>
+                                        <VBox>
+                                            <Text 
+                                                text="{testQuestion}"
+                                                maxLines="3"
+                                                wrapping="true"/>
+                                            <Text 
+                                                text="Focus: {testName}"
+                                                class="sapUiContentLabelColor"/>
+                                        </VBox>
+                                        <Text 
+                                            text="{expectedAnswer}"
+                                            maxLines="2"/>
+                                        <Text 
+                                            text="{actualAnswer}"
+                                            maxLines="2"
+                                            class="{= ${isPassed} ? 'sapThemeHighlight-AsColor' : 'sapNegativeColor'}"/>
+                                        <ObjectStatus 
+                                            text="{= ${isPassed} ? 'PASSED' : 'FAILED'}"
+                                            state="{= ${isPassed} ? 'Success' : 'Error'}"/>
+                                        <ProgressIndicator 
+                                            percentValue="{= ${confidenceScore} * 100}"
+                                            displayValue="{= (${confidenceScore} * 100).toFixed(1)}%"
+                                            state="{= ${confidenceScore} >= 0.9 ? 'Success' : ${confidenceScore} >= 0.7 ? 'Warning' : 'Error'}"/>
+                                        <Text text="{processingTime}"/>
+                                        <HBox>
+                                            <Button 
+                                                text="Details"
+                                                type="Transparent"
+                                                icon="sap-icon://detail-view"
+                                                press=".onViewTestDetails"
+                                                class="sapUiTinyMarginEnd"/>
+                                            <Button 
+                                                text="Rerun"
+                                                type="Transparent"
+                                                icon="sap-icon://refresh"
+                                                press=".onRerunTest"
+                                                visible="{= !${isPassed}}"/>
+                                        </HBox>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </Panel>
+                
+                <!-- Quality Analysis Charts -->
+                <Panel 
+                    headerText="Quality Analysis"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Score Distribution Chart -->
+                        <VBox class="sapUiMediumMarginBottom">
+                            <Title text="Score Distribution" level="H4"/>
+                            <core:HTML 
+                                content='<div id="scoreDistributionChart" style="width: 100%; height: 300px;"></div>'
+                                preferDOM="true"/>
+                        </VBox>
+                        
+                        <!-- Test Type Performance -->
+                        <VBox class="sapUiMediumMarginBottom">
+                            <Title text="Performance by Test Type" level="H4"/>
+                            <core:HTML 
+                                content='<div id="testTypePerformanceChart" style="width: 100%; height: 300px;"></div>'
+                                preferDOM="true"/>
+                        </VBox>
+                        
+                        <!-- Confidence vs Accuracy -->
+                        <VBox>
+                            <Title text="Confidence vs Accuracy Analysis" level="H4"/>
+                            <core:HTML 
+                                content='<div id="confidenceAccuracyChart" style="width: 100%; height: 300px;"></div>'
+                                preferDOM="true"/>
+                        </VBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Factuality Testing Results -->
+                <Panel 
+                    headerText="Factuality Testing Results"
+                    visible="{qaResults>/enableFactualityTesting}"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Factual Accuracy:" class="sapUiContentLabelColor"/>
+                                <ProgressIndicator 
+                                    percentValue="{qaResults>/factualityResults/accuracy}"
+                                    displayValue="{qaResults>/factualityResults/accuracy}%"
+                                    state="{= ${qaResults>/factualityResults/accuracy} >= 90 ? 'Success' : 'Warning'}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Consistency Score:" class="sapUiContentLabelColor"/>
+                                <ProgressIndicator 
+                                    percentValue="{qaResults>/factualityResults/consistency}"
+                                    displayValue="{qaResults>/factualityResults/consistency}%"
+                                    state="{= ${qaResults>/factualityResults/consistency} >= 85 ? 'Success' : 'Warning'}"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Verifiability:" class="sapUiContentLabelColor"/>
+                                <ProgressIndicator 
+                                    percentValue="{qaResults>/factualityResults/verifiability}"
+                                    displayValue="{qaResults>/factualityResults/verifiability}%"
+                                    state="{= ${qaResults>/factualityResults/verifiability} >= 80 ? 'Success' : 'Warning'}"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <List items="{qaResults>/factualityIssues}">
+                            <StandardListItem
+                                title="{issue}"
+                                description="{suggestion}"
+                                info="{severity}"
+                                infoState="{= ${severity} === 'High' ? 'Error' : ${severity} === 'Medium' ? 'Warning' : 'Information'}"
+                                icon="sap-icon://alert"/>
+                        </List>
+                    </VBox>
+                </Panel>
+                
+                <!-- Compliance Check Results -->
+                <Panel 
+                    headerText="Compliance Check Results"
+                    visible="{qaResults>/enableComplianceCheck}"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <Table items="{qaResults>/complianceResults}">
+                            <columns>
+                                <Column>
+                                    <Text text="Rule"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Category"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Result"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Severity"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Details"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{ruleName}"/>
+                                        <Text text="{ruleCategory}"/>
+                                        <ObjectStatus 
+                                            text="{= ${isPassed} ? 'COMPLIANT' : 'NON-COMPLIANT'}"
+                                            state="{= ${isPassed} ? 'Success' : 'Error'}"/>
+                                        <ObjectStatus 
+                                            text="{severityLevel}"
+                                            state="{= ${severityLevel} === 'CRITICAL' ? 'Error' : ${severityLevel} === 'HIGH' ? 'Warning' : 'Information'}"/>
+                                        <Text 
+                                            text="{details}"
+                                            maxLines="2"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </Panel>
+                
+                <!-- Vector Similarity Results -->
+                <Panel 
+                    headerText="Vector Similarity Results"
+                    visible="{qaResults>/enableVectorSimilarity}"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Similarity Threshold:" class="sapUiContentLabelColor"/>
+                                <Text text="{qaResults>/vectorSimilarityThreshold}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Vectors Compared:" class="sapUiContentLabelColor"/>
+                                <Text text="{qaResults>/vectorSimilarityResults/vectorsCompared}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Above Threshold:" class="sapUiContentLabelColor"/>
+                                <Text text="{qaResults>/vectorSimilarityResults/aboveThreshold}"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Avg Similarity:" class="sapUiContentLabelColor"/>
+                                <Text text="{qaResults>/vectorSimilarityResults/avgSimilarity}"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <Table items="{qaResults>/vectorSimilarityResults/results}">
+                            <columns>
+                                <Column>
+                                    <Text text="Vector ID"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Content"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Similarity Score"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Status"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{vectorId}"/>
+                                        <Text 
+                                            text="{content}"
+                                            maxLines="2"/>
+                                        <ProgressIndicator 
+                                            percentValue="{= ${similarityScore} * 100}"
+                                            displayValue="{= (${similarityScore} * 100).toFixed(2)}%"
+                                            state="{= ${similarityScore} >= ${/qaResults/vectorSimilarityThreshold} ? 'Success' : 'Warning'}"/>
+                                        <ObjectStatus 
+                                            text="{= ${similarityScore} >= ${/qaResults/vectorSimilarityThreshold} ? 'SIMILAR' : 'DIFFERENT'}"
+                                            state="{= ${similarityScore} >= ${/qaResults/vectorSimilarityThreshold} ? 'Success' : 'Warning'}"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </Panel>
+                
+                <!-- Recommendations -->
+                <Panel 
+                    headerText="Recommendations"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <List items="{qaResults>/recommendations}">
+                            <StandardListItem
+                                title="{recommendation}"
+                                description="{rationale}"
+                                info="{priority}"
+                                infoState="{= ${priority} === 'High' ? 'Error' : ${priority} === 'Medium' ? 'Warning' : 'Success'}"
+                                icon="{= ${type} === 'improvement' ? 'sap-icon://lightbulb' : ${type} === 'warning' ? 'sap-icon://warning' : 'sap-icon://information'}"/>
+                        </List>
+                    </VBox>
+                </Panel>
+                
+                <!-- Approval Section -->
+                <Panel 
+                    headerText="Approval Process"
+                    visible="{qaResults>/approvalRequired}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Approval Status:" class="sapUiContentLabelColor"/>
+                                <ObjectStatus 
+                                    text="{qaResults>/approvalStatus}"
+                                    state="{= ${qaResults>/approvalStatus} === 'APPROVED' ? 'Success' : ${qaResults>/approvalStatus} === 'REJECTED' ? 'Error' : 'Warning'}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd" visible="{= !!${qaResults>/approvedBy}}">
+                                <Text text="Approved By:" class="sapUiContentLabelColor"/>
+                                <Text text="{qaResults>/approvedBy}"/>
+                            </VBox>
+                            <VBox visible="{= !!${qaResults>/approvedAt}}">
+                                <Text text="Approved At:" class="sapUiContentLabelColor"/>
+                                <Text text="{qaResults>/approvedAt}"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <VBox visible="{= ${qaResults>/approvalStatus} === 'PENDING'}">
+                            <TextArea 
+                                value="{qaResults>/approvalComments}"
+                                placeholder="Enter approval comments..."
+                                rows="3"
+                                class="sapUiMediumMarginBottom"/>
+                            <HBox>
+                                <Button 
+                                    text="Approve"
+                                    type="Accept"
+                                    icon="sap-icon://accept"
+                                    press=".onApproveValidation"
+                                    class="sapUiMediumMarginEnd"/>
+                                <Button 
+                                    text="Conditional Approval"
+                                    type="Emphasized"
+                                    icon="sap-icon://warning"
+                                    press=".onConditionalApproval"
+                                    class="sapUiMediumMarginEnd"/>
+                                <Button 
+                                    text="Reject"
+                                    type="Reject"
+                                    icon="sap-icon://decline"
+                                    press=".onRejectValidation"/>
+                            </HBox>
+                        </VBox>
+                        
+                        <VBox visible="{= !!${qaResults>/rejectionReason}}">
+                            <Text text="Rejection Reason:" class="sapUiContentLabelColor"/>
+                            <Text text="{qaResults>/rejectionReason}"/>
+                        </VBox>
+                    </VBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button 
+                text="Export Report"
+                icon="sap-icon://download"
+                press=".onExportValidationReport"/>
+            <Button 
+                text="Rerun Validation"
+                icon="sap-icon://refresh"
+                press=".onRerunValidation"/>
+            <Button 
+                text="Create Regression Test"
+                icon="sap-icon://add-activity"
+                press=".onCreateRegressionTest"
+                visible="{= ${qaResults>/status} === 'COMPLETED'}"/>
+            <Button 
+                text="Close"
+                press=".onCloseResults"/>
+        </buttons>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

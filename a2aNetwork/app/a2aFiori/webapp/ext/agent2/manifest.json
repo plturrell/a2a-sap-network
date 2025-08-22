@@ -188,6 +188,6 @@
         "archeType": "transactional"
     },
     "sap.fe": {
-        "type": "default"
+        "template": "sap.fe.templates.ListReport.ObjectPage"
     }
 }

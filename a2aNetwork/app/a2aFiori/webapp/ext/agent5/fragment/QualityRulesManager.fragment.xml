@@ -1,0 +1,508 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="qualityRulesManagerDialog"
+        title="QA Validation Rules Manager"
+        contentWidth="85%"
+        contentHeight="80%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Rules Overview -->
+                <Panel headerText="Rules Overview" class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Text text="Total Rules:" class="sapUiContentLabelColor"/>
+                            <Text text="{rules>/totalRules}"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Text text="Active Rules:" class="sapUiContentLabelColor"/>
+                            <Text text="{rules>/activeRules}"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Text text="Critical Rules:" class="sapUiContentLabelColor"/>
+                            <Text text="{rules>/criticalRules}"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Text text="Avg Success Rate:" class="sapUiContentLabelColor"/>
+                            <Text text="{rules>/avgSuccessRate}%"/>
+                        </VBox>
+                        <VBox>
+                            <Button 
+                                text="Create New Rule"
+                                type="Emphasized"
+                                icon="sap-icon://add"
+                                press=".onCreateNewRule"/>
+                        </VBox>
+                    </HBox>
+                </Panel>
+                
+                <!-- Rule Categories -->
+                <Panel headerText="Rule Categories" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox wrap="Wrap">
+                            <core:Item 
+                                class="sapUiMediumMarginEnd sapUiMediumMarginBottom" 
+                                items="{rules>/categories}">
+                                <VBox 
+                                    class="sapUiMediumMargin"
+                                    press=".onSelectCategory">
+                                    <Title text="{categoryName}" level="H5"/>
+                                    <HBox>
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Text text="Rules: {ruleCount}"/>
+                                        </VBox>
+                                        <VBox>
+                                            <ProgressIndicator 
+                                                percentValue="{successRate}"
+                                                displayValue="{successRate}%"
+                                                state="{= ${successRate} >= 90 ? 'Success' : ${successRate} >= 75 ? 'Warning' : 'Error'}"
+                                                width="100px"/>
+                                        </VBox>
+                                    </HBox>
+                                </VBox>
+                            </core:Item>
+                        </HBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Rules List -->
+                <Panel headerText="Validation Rules" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Filter and Search -->
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Category Filter:"/>
+                                <Select selectedKey="{rules>/categoryFilter}">
+                                    <items>
+                                        <core:Item key="ALL" text="All Categories"/>
+                                        <core:Item key="DATA_QUALITY" text="Data Quality"/>
+                                        <core:Item key="BUSINESS_LOGIC" text="Business Logic"/>
+                                        <core:Item key="REGULATORY" text="Regulatory"/>
+                                        <core:Item key="SECURITY" text="Security"/>
+                                        <core:Item key="PERFORMANCE" text="Performance"/>
+                                        <core:Item key="COMPLETENESS" text="Completeness"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Type Filter:"/>
+                                <Select selectedKey="{rules>/typeFilter}">
+                                    <items>
+                                        <core:Item key="ALL" text="All Types"/>
+                                        <core:Item key="SIMPLE_QA" text="SimpleQA"/>
+                                        <core:Item key="SQL_QUERY" text="SQL Query"/>
+                                        <core:Item key="PYTHON_SCRIPT" text="Python Script"/>
+                                        <core:Item key="REST_API_CHECK" text="REST API Check"/>
+                                        <core:Item key="REGEX_PATTERN" text="Regex Pattern"/>
+                                        <core:Item key="THRESHOLD_CHECK" text="Threshold Check"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Status Filter:"/>
+                                <Select selectedKey="{rules>/statusFilter}">
+                                    <items>
+                                        <core:Item key="ALL" text="All Rules"/>
+                                        <core:Item key="ACTIVE" text="Active Only"/>
+                                        <core:Item key="INACTIVE" text="Inactive Only"/>
+                                        <core:Item key="BLOCKING" text="Blocking Rules"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                            <VBox>
+                                <Label text="Search:"/>
+                                <SearchField 
+                                    value="{rules>/searchQuery}"
+                                    placeholder="Search rules by name or expression"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <!-- Rules Table -->
+                        <Table 
+                            items="{rules>/validationRules}"
+                            mode="MultiSelect"
+                            selectionChange=".onRuleSelectionChange"
+                            growing="true"
+                            growingThreshold="20">
+                            <columns>
+                                <Column>
+                                    <Text text="Rule Name"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Category"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Type"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Severity"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Success Rate"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Usage Count"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Status"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Actions"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem press=".onEditRule">
+                                    <cells>
+                                        <VBox>
+                                            <Text text="{ruleName}"/>
+                                            <Text 
+                                                text="{description}"
+                                                maxLines="2"
+                                                class="sapUiContentLabelColor"/>
+                                        </VBox>
+                                        <ObjectStatus 
+                                            text="{ruleCategory}"
+                                            state="{= ${ruleCategory} === 'REGULATORY' ? 'Error' : ${ruleCategory} === 'SECURITY' ? 'Warning' : 'Information'}"/>
+                                        <Text text="{ruleType}"/>
+                                        <ObjectStatus 
+                                            text="{severityLevel}"
+                                            state="{= ${severityLevel} === 'CRITICAL' ? 'Error' : ${severityLevel} === 'HIGH' ? 'Warning' : 'Success'}"/>
+                                        <VBox>
+                                            <ProgressIndicator 
+                                                percentValue="{= ${successRate} * 100}"
+                                                displayValue="{= (${successRate} * 100).toFixed(1)}%"
+                                                state="{= ${successRate} >= 0.9 ? 'Success' : ${successRate} >= 0.75 ? 'Warning' : 'Error'}"
+                                                width="120px"/>
+                                            <Text 
+                                                text="Last run: {lastRunDate}"
+                                                class="sapUiContentLabelColor"/>
+                                        </VBox>
+                                        <Text text="{usageCount}"/>
+                                        <HBox>
+                                            <Switch 
+                                                state="{isActive}"
+                                                change=".onToggleRuleStatus"
+                                                class="sapUiMediumMarginEnd"/>
+                                            <core:Icon 
+                                                src="sap-icon://locked"
+                                                size="1rem"
+                                                color="{= ${isBlocking} ? 'red' : 'lightgray'}"
+                                                visible="{isBlocking}"/>
+                                        </HBox>
+                                        <HBox>
+                                            <Button 
+                                                text="Test"
+                                                type="Transparent"
+                                                icon="sap-icon://play"
+                                                press=".onTestRule"
+                                                class="sapUiTinyMarginEnd"/>
+                                            <Button 
+                                                text="Edit"
+                                                type="Transparent"
+                                                icon="sap-icon://edit"
+                                                press=".onEditRule"
+                                                class="sapUiTinyMarginEnd"/>
+                                            <Button 
+                                                text="Clone"
+                                                type="Transparent"
+                                                icon="sap-icon://copy"
+                                                press=".onCloneRule"/>
+                                        </HBox>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </Panel>
+                
+                <!-- Rule Editor -->
+                <Panel 
+                    headerText="{= ${rules>/editingRule} ? 'Edit Rule: ' + ${rules>/currentRule/ruleName} : 'Create New Rule'}"
+                    visible="{rules>/showRuleEditor}"
+                    class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="2"
+                        columnsL="2"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Rule Name" required="true"/>
+                            <Input 
+                                value="{rules>/currentRule/ruleName}"
+                                placeholder="Enter a descriptive rule name"/>
+                            
+                            <Label text="Description"/>
+                            <TextArea 
+                                value="{rules>/currentRule/description}"
+                                placeholder="Describe what this rule validates"
+                                rows="3"/>
+                            
+                            <Label text="Category"/>
+                            <Select selectedKey="{rules>/currentRule/ruleCategory}">
+                                <items>
+                                    <core:Item key="DATA_QUALITY" text="Data Quality"/>
+                                    <core:Item key="BUSINESS_LOGIC" text="Business Logic"/>
+                                    <core:Item key="REGULATORY" text="Regulatory"/>
+                                    <core:Item key="SECURITY" text="Security"/>
+                                    <core:Item key="PERFORMANCE" text="Performance"/>
+                                    <core:Item key="COMPLETENESS" text="Completeness"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Rule Type"/>
+                            <Select selectedKey="{rules>/currentRule/ruleType}" change=".onRuleTypeChange">
+                                <items>
+                                    <core:Item key="SIMPLE_QA" text="SimpleQA Question"/>
+                                    <core:Item key="SQL_QUERY" text="SQL Query"/>
+                                    <core:Item key="PYTHON_SCRIPT" text="Python Script"/>
+                                    <core:Item key="REST_API_CHECK" text="REST API Check"/>
+                                    <core:Item key="REGEX_PATTERN" text="Regex Pattern"/>
+                                    <core:Item key="THRESHOLD_CHECK" text="Threshold Check"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Severity Level"/>
+                            <Select selectedKey="{rules>/currentRule/severityLevel}">
+                                <items>
+                                    <core:Item key="LOW" text="Low"/>
+                                    <core:Item key="MEDIUM" text="Medium"/>
+                                    <core:Item key="HIGH" text="High"/>
+                                    <core:Item key="CRITICAL" text="Critical"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Expected Result"/>
+                            <Input 
+                                value="{rules>/currentRule/expectedResult}"
+                                placeholder="Expected result or output"/>
+                            
+                            <Label text="Execution Order"/>
+                            <Input 
+                                value="{rules>/currentRule/executionOrder}"
+                                type="Number"
+                                placeholder="100"/>
+                            
+                            <Label text="Timeout (seconds)"/>
+                            <Input 
+                                value="{rules>/currentRule/timeoutSeconds}"
+                                type="Number"
+                                placeholder="30"/>
+                            
+                            <Label text="Options"/>
+                            <VBox>
+                                <CheckBox 
+                                    text="Is Active"
+                                    selected="{rules>/currentRule/isActive}"/>
+                                <CheckBox 
+                                    text="Is Blocking (fails validation if rule fails)"
+                                    selected="{rules>/currentRule/isBlocking}"/>
+                            </VBox>
+                            
+                            <Label text="Tags"/>
+                            <Input 
+                                value="{rules>/currentRule/tags}"
+                                placeholder="Comma-separated tags"/>
+                        </form:content>
+                    </form:SimpleForm>
+                    
+                    <!-- Rule Expression Editor -->
+                    <VBox class="sapUiMediumMargin">
+                        <Title text="Rule Expression" level="H4"/>
+                        
+                        <!-- SimpleQA Expression -->
+                        <VBox visible="{= ${rules>/currentRule/ruleType} === 'SIMPLE_QA'}">
+                            <Label text="SimpleQA Question:"/>
+                            <TextArea 
+                                value="{rules>/currentRule/ruleExpression}"
+                                placeholder="Enter the question that should be asked about the data"
+                                rows="4"/>
+                            <Text text="Example: 'What is the total sales amount for Q1 2024?'" class="sapUiContentLabelColor"/>
+                        </VBox>
+                        
+                        <!-- SQL Query Expression -->
+                        <VBox visible="{= ${rules>/currentRule/ruleType} === 'SQL_QUERY'}">
+                            <Label text="SQL Query:"/>
+                            <TextArea 
+                                value="{rules>/currentRule/ruleExpression}"
+                                placeholder="Enter SQL query to validate data"
+                                rows="6"/>
+                            <Text text="Example: 'SELECT COUNT(*) FROM orders WHERE amount < 0'" class="sapUiContentLabelColor"/>
+                        </VBox>
+                        
+                        <!-- Python Script Expression -->
+                        <VBox visible="{= ${rules>/currentRule/ruleType} === 'PYTHON_SCRIPT'}">
+                            <Label text="Python Script:"/>
+                            <TextArea 
+                                value="{rules>/currentRule/ruleExpression}"
+                                placeholder="Enter Python code to validate data"
+                                rows="8"/>
+                            <Text text="Available variables: data, metadata, config" class="sapUiContentLabelColor"/>
+                        </VBox>
+                        
+                        <!-- REST API Check Expression -->
+                        <VBox visible="{= ${rules>/currentRule/ruleType} === 'REST_API_CHECK'}">
+                            <Label text="API Endpoint Configuration:"/>
+                            <TextArea 
+                                value="{rules>/currentRule/ruleExpression}"
+                                placeholder='{"url": "https://api.example.com/validate", "method": "POST", "headers": {...}, "body": {...}}'
+                                rows="6"/>
+                            <Text text="JSON configuration for API call" class="sapUiContentLabelColor"/>
+                        </VBox>
+                        
+                        <!-- Regex Pattern Expression -->
+                        <VBox visible="{= ${rules>/currentRule/ruleType} === 'REGEX_PATTERN'}">
+                            <Label text="Regex Pattern:"/>
+                            <Input 
+                                value="{rules>/currentRule/ruleExpression}"
+                                placeholder="^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$"/>
+                            <Text text="Regular expression to match against data" class="sapUiContentLabelColor"/>
+                        </VBox>
+                        
+                        <!-- Threshold Check Expression -->
+                        <VBox visible="{= ${rules>/currentRule/ruleType} === 'THRESHOLD_CHECK'}">
+                            <Label text="Threshold Configuration:"/>
+                            <TextArea 
+                                value="{rules>/currentRule/ruleExpression}"
+                                placeholder='{"metric": "response_time", "operator": "<=", "threshold": 1000, "unit": "ms"}'
+                                rows="4"/>
+                            <Text text="JSON configuration for threshold validation" class="sapUiContentLabelColor"/>
+                        </VBox>
+                        
+                        <!-- Test Rule Button -->
+                        <HBox class="sapUiMediumMarginTop">
+                            <Button 
+                                text="Test Rule"
+                                icon="sap-icon://play"
+                                press=".onTestCurrentRule"
+                                class="sapUiMediumMarginEnd"/>
+                            <Button 
+                                text="Validate Expression"
+                                icon="sap-icon://syntax"
+                                press=".onValidateExpression"/>
+                        </HBox>
+                    </VBox>
+                    
+                    <!-- Rule Editor Actions -->
+                    <HBox class="sapUiMediumMargin">
+                        <Button 
+                            text="Save Rule"
+                            type="Emphasized"
+                            icon="sap-icon://save"
+                            press=".onSaveRule"
+                            class="sapUiMediumMarginEnd"/>
+                        <Button 
+                            text="Cancel"
+                            press=".onCancelRuleEdit"/>
+                    </HBox>
+                </Panel>
+                
+                <!-- Rule Test Results -->
+                <Panel 
+                    headerText="Rule Test Results"
+                    visible="{= !!${rules>/testResults}}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Test Status:" class="sapUiContentLabelColor"/>
+                                <ObjectStatus 
+                                    text="{rules>/testResults/status}"
+                                    state="{= ${rules>/testResults/status} === 'PASSED' ? 'Success' : 'Error'}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Execution Time:" class="sapUiContentLabelColor"/>
+                                <Text text="{rules>/testResults/executionTime} ms"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Result:" class="sapUiContentLabelColor"/>
+                                <Text text="{rules>/testResults/result}"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <VBox visible="{= !!${rules>/testResults/errorMessage}}">
+                            <MessageStrip 
+                                text="{rules>/testResults/errorMessage}"
+                                type="Error"
+                                showIcon="true"/>
+                        </VBox>
+                        
+                        <VBox visible="{= !!${rules>/testResults/output}}">
+                            <Text text="Output:" class="sapUiContentLabelColor"/>
+                            <TextArea 
+                                value="{rules>/testResults/output}"
+                                editable="false"
+                                rows="6"/>
+                        </VBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Bulk Operations -->
+                <Panel 
+                    headerText="Bulk Operations"
+                    visible="{= ${rules>/selectedRules}.length > 0}"
+                    class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin">
+                        <Text text="{rules>/selectedRules}.length rules selected" class="sapUiMediumMarginEnd"/>
+                        <Button 
+                            text="Activate Selected"
+                            icon="sap-icon://activate"
+                            press=".onBulkActivate"
+                            class="sapUiMediumMarginEnd"/>
+                        <Button 
+                            text="Deactivate Selected"
+                            icon="sap-icon://deactivate"
+                            press=".onBulkDeactivate"
+                            class="sapUiMediumMarginEnd"/>
+                        <Button 
+                            text="Test Selected"
+                            icon="sap-icon://play"
+                            press=".onBulkTest"
+                            class="sapUiMediumMarginEnd"/>
+                        <Button 
+                            text="Export Selected"
+                            icon="sap-icon://download"
+                            press=".onBulkExport"/>
+                    </HBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Import Rules"
+                icon="sap-icon://upload"
+                press=".onImportRules"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Export All Rules"
+                    icon="sap-icon://download"
+                    press=".onExportAllRules"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Run All Active Rules"
+                    icon="sap-icon://play"
+                    press=".onRunAllActiveRules"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseRulesManager"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

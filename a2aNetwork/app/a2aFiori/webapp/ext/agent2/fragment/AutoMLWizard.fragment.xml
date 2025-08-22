@@ -9,7 +9,8 @@
         title="AutoML Wizard - Automated Machine Learning"
         contentWidth="80%"
         contentHeight="85%"
-        resizable="true">
+        resizable="true"
+        ariaLabel="AutoML Wizard Dialog for automated machine learning setup">
         
         <content>
             <Wizard id="autoMLWizard" complete=".onAutoMLComplete">
@@ -44,13 +45,15 @@
                         singleContainerFullSize="false">
                         
                         <form:content>
-                            <Label text="Dataset" required="true"/>
+                            <Label text="Dataset" required="true" labelFor="datasetComboBox"/>
                             <ComboBox
                                 id="datasetComboBox"
                                 value="{automl>/dataset}"
                                 placeholder="Select or enter dataset name"
                                 showValueHelp="true"
-                                valueHelpRequest=".onDatasetValueHelp">
+                                valueHelpRequest=".onDatasetValueHelp"
+                                ariaLabel="Dataset selection for AutoML"
+                                tooltip="Select the dataset to use for automated machine learning">
                                 <items>
                                     <core:Item key="customer_data.csv" text="Customer Data (10,000 rows)"/>
                                     <core:Item key="sales_data.csv" text="Sales Data (25,000 rows)"/>

@@ -3,8 +3,11 @@ sap.ui.define([
     "sap/ui/core/Fragment",
     "sap/m/MessageBox",
     "sap/m/MessageToast",
-    "sap/ui/model/json/JSONModel"
-], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel) {
+    "sap/ui/model/json/JSONModel",
+    "sap/base/security/encodeXML",
+    "sap/base/strings/escapeRegExp",
+    "sap/base/security/sanitizeHTML"
+], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, encodeXML, escapeRegExp, sanitizeHTML) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent2.ext.controller.ListReportExt", {
@@ -320,26 +323,297 @@ sap.ui.define([
             
             this._oCreateDialog.setBusy(true);
             
+            // Validate data before sending
+            var oValidation = this._validateTaskData(oData);
+            if (!oValidation.isValid) {
+                this._oCreateDialog.setBusy(false);
+                MessageBox.error("Validation Error: " + oValidation.message);
+                return;
+            }
+
             jQuery.ajax({
                 url: "/a2a/agent2/v1/tasks",
                 type: "POST",
                 contentType: "application/json",
-                data: JSON.stringify(oData),
+                headers: {
+                    "X-CSRF-Token": "Fetch",
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                data: JSON.stringify(oValidation.sanitizedData),
                 success: function(data) {
-                    this._oCreateDialog.setBusy(false);
-                    this._oCreateDialog.close();
-                    MessageToast.show("AI preparation task created successfully");
-                    this._extensionAPI.refresh();
+                    if (this._validateApiResponse(data)) {
+                        this._oCreateDialog.setBusy(false);
+                        this._oCreateDialog.close();
+                        MessageToast.show("AI preparation task created successfully");
+                        this._extensionAPI.refresh();
+                    } else {
+                        this._oCreateDialog.setBusy(false);
+                        MessageBox.error("Invalid response from server");
+                    }
                 }.bind(this),
                 error: function(xhr) {
                     this._oCreateDialog.setBusy(false);
-                    MessageBox.error("Failed to create task: " + xhr.responseText);
+                    var errorMsg = this._sanitizeErrorMessage(xhr.responseText || xhr.statusText);
+                    MessageBox.error("Failed to create task: " + errorMsg);
                 }.bind(this)
             });
         },
 
         onCancelCreateTask: function() {
             this._oCreateDialog.close();
+        },
+
+        /**
+         * Validate AI task data for security and correctness
+         * @param {object} oData - Task data to validate
+         * @returns {object} Validation result with sanitized data
+         */
+        _validateTaskData: function(oData) {
+            if (!oData || typeof oData !== 'object') {
+                return { isValid: false, message: "Invalid task data" };
+            }
+
+            var oSanitized = {};
+            
+            // Validate task name
+            var sTaskName = oData.taskName;
+            if (!sTaskName || typeof sTaskName !== 'string') {
+                return { isValid: false, message: "Task name is required" };
+            }
+            
+            var oNameValidation = this._validateInput(sTaskName, "taskName");
+            if (!oNameValidation.isValid) {
+                return { isValid: false, message: "Task name: " + oNameValidation.message };
+            }
+            oSanitized.taskName = oNameValidation.sanitized;
+
+            // Validate dataset path
+            if (oData.datasetPath) {
+                var oPathValidation = this._validateInput(oData.datasetPath, "path");
+                if (!oPathValidation.isValid) {
+                    return { isValid: false, message: "Dataset path: " + oPathValidation.message };
+                }
+                oSanitized.datasetPath = oPathValidation.sanitized;
+            }
+
+            // Validate model type
+            var aValidModelTypes = ['Classification', 'Regression', 'Clustering', 'NLP', 'Computer Vision', 'Time Series'];
+            if (oData.modelType && !aValidModelTypes.includes(oData.modelType)) {
+                return { isValid: false, message: "Invalid model type" };
+            }
+            oSanitized.modelType = oData.modelType;
+
+            // Validate data type
+            var aValidDataTypes = ['Tabular', 'Text', 'Image', 'Audio', 'Time Series', 'Graph'];
+            if (oData.dataType && !aValidDataTypes.includes(oData.dataType)) {
+                return { isValid: false, message: "Invalid data type" };
+            }
+            oSanitized.dataType = oData.dataType;
+
+            // Validate numeric fields
+            if (oData.trainSplit !== undefined) {
+                var nTrainSplit = parseFloat(oData.trainSplit);
+                if (isNaN(nTrainSplit) || nTrainSplit < 0.1 || nTrainSplit > 0.9) {
+                    return { isValid: false, message: "Train split must be between 0.1 and 0.9" };
+                }
+                oSanitized.trainSplit = nTrainSplit;
+            }
+
+            if (oData.validationSplit !== undefined) {
+                var nValidationSplit = parseFloat(oData.validationSplit);
+                if (isNaN(nValidationSplit) || nValidationSplit < 0.05 || nValidationSplit > 0.5) {
+                    return { isValid: false, message: "Validation split must be between 0.05 and 0.5" };
+                }
+                oSanitized.validationSplit = nValidationSplit;
+            }
+
+            // Copy other safe fields
+            var aSafeFields = ['description', 'targetColumn', 'featureColumns', 'validationStrategy', 'optimizationMetric'];
+            aSafeFields.forEach(function(sField) {
+                if (oData[sField] !== undefined) {
+                    if (typeof oData[sField] === 'string') {
+                        var oFieldValidation = this._validateInput(oData[sField], "text");
+                        if (oFieldValidation.isValid) {
+                            oSanitized[sField] = oFieldValidation.sanitized;
+                        }
+                    } else {
+                        oSanitized[sField] = oData[sField];
+                    }
+                }
+            }.bind(this));
+
+            return { isValid: true, sanitizedData: oSanitized };
+        },
+
+        /**
+         * Validate user input for security and format compliance
+         * @param {string} sInput - Input to validate
+         * @param {string} sType - Type of validation
+         * @returns {object} Validation result
+         */
+        _validateInput: function(sInput, sType) {
+            if (!sInput || typeof sInput !== 'string') {
+                return { isValid: false, message: "Input is required" };
+            }
+
+            var sSanitized = sInput.trim();
+            
+            // Check for XSS patterns
+            var aXSSPatterns = [
+                /<script/i,
+                /javascript:/i,
+                /on\w+\s*=/i,
+                /<iframe/i,
+                /<object/i,
+                /<embed/i,
+                /eval\s*\(/i,
+                /Function\s*\(/i
+            ];
+
+            for (var i = 0; i < aXSSPatterns.length; i++) {
+                if (aXSSPatterns[i].test(sSanitized)) {
+                    return { isValid: false, message: "Invalid characters detected" };
+                }
+            }
+
+            // Type-specific validation
+            switch (sType) {
+                case "taskName":
+                    if (sSanitized.length < 3 || sSanitized.length > 100) {
+                        return { isValid: false, message: "Must be 3-100 characters" };
+                    }
+                    if (!/^[a-zA-Z0-9\s\-_\.]+$/.test(sSanitized)) {
+                        return { isValid: false, message: "Contains invalid characters" };
+                    }
+                    break;
+                
+                case "path":
+                    if (sSanitized.length > 500) {
+                        return { isValid: false, message: "Path too long" };
+                    }
+                    // Basic path validation
+                    if (/[<>:"|?*]/.test(sSanitized)) {
+                        return { isValid: false, message: "Contains invalid path characters" };
+                    }
+                    break;
+                
+                case "url":
+                    try {
+                        var oUrl = new URL(sSanitized);
+                        if (!['http:', 'https:'].includes(oUrl.protocol)) {
+                            return { isValid: false, message: "Only HTTP/HTTPS URLs allowed" };
+                        }
+                    } catch (e) {
+                        return { isValid: false, message: "Invalid URL format" };
+                    }
+                    break;
+                
+                case "text":
+                default:
+                    if (sSanitized.length > 10000) {
+                        return { isValid: false, message: "Text too long" };
+                    }
+                    break;
+            }
+
+            return { isValid: true, sanitized: encodeXML(sSanitized) };
+        },
+
+        /**
+         * Validate API response data
+         * @param {object} oData - Response data
+         * @returns {boolean} Whether data is valid
+         */
+        _validateApiResponse: function(oData) {
+            if (!oData || typeof oData !== 'object') {
+                return false;
+            }
+
+            // Check for prototype pollution
+            var aSuspiciousKeys = ['__proto__', 'constructor', 'prototype'];
+            for (var sKey in oData) {
+                if (aSuspiciousKeys.indexOf(sKey) !== -1) {
+                    return false;
+                }
+            }
+
+            return true;
+        },
+
+        /**
+         * Sanitize error messages for user display
+         * @param {string} sMessage - Error message
+         * @returns {string} Sanitized message
+         */
+        _sanitizeErrorMessage: function(sMessage) {
+            if (!sMessage) {
+                return "An error occurred";
+            }
+
+            // Remove sensitive information
+            var sSanitized = sMessage
+                .replace(/\b(?:token|key|secret|password|auth)\b[:\s]*[^\s]+/gi, '[REDACTED]')
+                .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[IP_ADDRESS]')
+                .replace(/file:\/\/[^\s]+/g, '[FILE_PATH]')
+                .replace(/https?:\/\/[^\s]+/g, '[URL]');
+
+            return encodeXML(sSanitized);
+        },
+
+        /**
+         * Secure text formatter to prevent XSS
+         * @param {string} sText - Text to format
+         * @returns {string} Encoded text
+         */
+        formatSecureText: function(sText) {
+            if (!sText) {
+                return "";
+            }
+            return encodeXML(sText.toString());
+        },
+
+        /**
+         * Secure EventSource creation with authentication
+         * @param {string} sUrl - EventSource URL
+         * @param {string} sToken - Authentication token
+         * @returns {EventSource} Secure EventSource
+         */
+        _createSecureEventSource: function(sUrl, sToken) {
+            if (!sUrl || !sToken) {
+                throw new Error("URL and token required for secure EventSource");
+            }
+
+            // Validate URL
+            try {
+                var oUrl = new URL(sUrl, window.location.origin);
+                if (!['http:', 'https:'].includes(oUrl.protocol)) {
+                    throw new Error("Invalid protocol for EventSource");
+                }
+            } catch (e) {
+                throw new Error("Invalid URL for EventSource");
+            }
+
+            // Add authentication to URL (since EventSource doesn't support headers)
+            var sSecureUrl = sUrl + (sUrl.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(sToken);
+            
+            return new EventSource(sSecureUrl);
+        },
+
+        /**
+         * Event handler for input changes with validation
+         */
+        onTaskNameChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oInput = oEvent.getSource();
+            var oValidation = this._validateInput(sValue, "taskName");
+            
+            if (!oValidation.isValid) {
+                oInput.setValueState("Error");
+                oInput.setValueStateText(oValidation.message);
+            } else {
+                oInput.setValueState("None");
+                oInput.setValueStateText("");
+            }
         }
     });
 });
