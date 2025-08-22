@@ -1,0 +1,408 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="cacheManagerDialog"
+        title="Cache Management System"
+        contentWidth="90%"
+        contentHeight="85%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Cache Overview -->
+                <Panel headerText="Cache Performance Overview" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Overall Hit Rate" level="H4"/>
+                                <mc:RadialMicroChart
+                                    size="L"
+                                    percentage="{cache>/overallHitRate}"
+                                    valueColor="{= ${cache>/overallHitRate} >= 80 ? 'Good' : ${cache>/overallHitRate} >= 60 ? 'Critical' : 'Error'}"/>
+                                <Text text="{cache>/overallHitRate}%" class="sapUiLargeMarginTop"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Operations/sec" level="H4"/>
+                                <ObjectNumber 
+                                    number="{cache>/operationsPerSecond}"
+                                    state="Success"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Avg Response Time" level="H4"/>
+                                <ObjectNumber 
+                                    number="{cache>/averageResponseTime}"
+                                    unit="ms"
+                                    state="{= ${cache>/averageResponseTime} < 1 ? 'Success' : ${cache>/averageResponseTime} < 5 ? 'Warning' : 'Error'}"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="Active Caches" level="H4"/>
+                                <ObjectNumber 
+                                    number="{cache>/activeCaches}"
+                                    unit="of {cache>/totalCaches}"
+                                    state="Information"
+                                    emphasized="true"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <MessageStrip 
+                            text="{cache>/performanceMessage}"
+                            type="{cache>/performanceMessageType}"
+                            showIcon="true"
+                            class="sapUiMediumMarginTop"/>
+                    </VBox>
+                </Panel>
+                
+                <!-- Cache Configurations -->
+                <Panel headerText="Cache Configurations" class="sapUiResponsiveMargin">
+                    <Table 
+                        items="{cache>/configurations}"
+                        mode="SingleSelect"
+                        selectionChange=".onCacheConfigSelectionChange">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Cache Management"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Create Cache"
+                                    icon="sap-icon://add"
+                                    press=".onCreateCache"/>
+                                <Button 
+                                    text="Optimize All"
+                                    icon="sap-icon://settings"
+                                    press=".onOptimizeAllCaches"/>
+                                <Button 
+                                    text="Clear All"
+                                    icon="sap-icon://delete"
+                                    press=".onClearAllCaches"/>
+                            </Toolbar>
+                        </headerToolbar>
+                        <columns>
+                            <Column>
+                                <Text text="Cache"/>
+                            </Column>
+                            <Column>
+                                <Text text="Type"/>
+                            </Column>
+                            <Column>
+                                <Text text="Status"/>
+                            </Column>
+                            <Column>
+                                <Text text="Hit Rate"/>
+                            </Column>
+                            <Column>
+                                <Text text="Size Usage"/>
+                            </Column>
+                            <Column>
+                                <Text text="Operations"/>
+                            </Column>
+                            <Column>
+                                <Text text="Strategy"/>
+                            </Column>
+                            <Column>
+                                <Text text="Actions"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <VBox>
+                                        <Text text="{cacheName}"/>
+                                        <Text text="TTL: {ttl}s" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <ObjectStatus 
+                                        text="{cacheType}"
+                                        state="Information"
+                                        icon="{= ${cacheType} === 'MEMORY' ? 'sap-icon://memory' : ${cacheType} === 'REDIS' ? 'sap-icon://database' : 'sap-icon://cloud'}"/>
+                                    <ObjectStatus 
+                                        text="{status}"
+                                        state="{= ${status} === 'ACTIVE' ? 'Success' : ${status} === 'MAINTENANCE' ? 'Warning' : 'Error'}"
+                                        icon="{= ${status} === 'ACTIVE' ? 'sap-icon://status-positive' : ${status} === 'MAINTENANCE' ? 'sap-icon://status-critical' : 'sap-icon://status-negative'}"/>
+                                    <VBox>
+                                        <ProgressIndicator 
+                                            percentValue="{hitRate}"
+                                            displayValue="{hitRate}%"
+                                            state="{= ${hitRate} >= 80 ? 'Success' : ${hitRate} >= 60 ? 'Warning' : 'Error'}"
+                                            width="100px"/>
+                                        <Text text="Miss: {missRate}%" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <VBox>
+                                        <ProgressIndicator 
+                                            percentValue="{= Math.round(${currentSize} / ${maxSize} * 100)}"
+                                            displayValue="{currentSize} / {maxSize} MB"
+                                            state="{= ${currentSize} / ${maxSize} > 0.8 ? 'Error' : ${currentSize} / ${maxSize} > 0.6 ? 'Warning' : 'Success'}"
+                                            width="120px"/>
+                                        <Text text="Eviction: {evictionPolicy}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <ObjectNumber 
+                                        number="{operationsPerSecond}"
+                                        unit="ops/s"
+                                        state="Success"/>
+                                    <ObjectStatus 
+                                        text="{cacheStrategy}"
+                                        state="Information"/>
+                                    <HBox>
+                                        <Button 
+                                            icon="sap-icon://refresh"
+                                            tooltip="Warmup"
+                                            press=".onWarmupCache"/>
+                                        <Button 
+                                            icon="sap-icon://delete"
+                                            tooltip="Clear"
+                                            press=".onClearCache"/>
+                                        <Button 
+                                            icon="sap-icon://settings"
+                                            tooltip="Configure"
+                                            press=".onConfigureCache"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Cache Analytics -->
+                <Panel 
+                    headerText="Cache Analytics"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <core:HTML 
+                            id="cacheAnalyticsChart"
+                            content='<div id="cacheAnalyticsChartDiv" style="width: 100%; height: 350px;"></div>'
+                            preferDOM="true"/>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Memory Cache" level="H5"/>
+                                <mc:ColumnMicroChart
+                                    size="M"
+                                    columns="{cache>/memoryCache/history}">
+                                    <mc:columns>
+                                        <mc:ColumnMicroChartData 
+                                            value="{hitRate}"
+                                            color="{= ${hitRate} >= 80 ? 'Good' : ${hitRate} >= 60 ? 'Critical' : 'Error'}"/>
+                                    </mc:columns>
+                                </mc:ColumnMicroChart>
+                                <Text text="Hit Rate: {cache>/memoryCache/currentHitRate}%"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Redis Cache" level="H5"/>
+                                <mc:ColumnMicroChart
+                                    size="M"
+                                    columns="{cache>/redisCache/history}">
+                                    <mc:columns>
+                                        <mc:ColumnMicroChartData 
+                                            value="{hitRate}"
+                                            color="{= ${hitRate} >= 80 ? 'Good' : ${hitRate} >= 60 ? 'Critical' : 'Error'}"/>
+                                    </mc:columns>
+                                </mc:ColumnMicroChart>
+                                <Text text="Hit Rate: {cache>/redisCache/currentHitRate}%"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="Performance Stats" level="H5"/>
+                                <Text text="Total Hits: {cache>/stats/totalHits}"/>
+                                <Text text="Total Misses: {cache>/stats/totalMisses}"/>
+                                <Text text="Total Operations: {cache>/stats/totalOperations}"/>
+                                <Text text="Evictions: {cache>/stats/totalEvictions}"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Cache Operations -->
+                <Panel 
+                    headerText="Recent Cache Operations"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <Table 
+                        items="{cache>/recentOperations}"
+                        growing="true"
+                        growingThreshold="20">
+                        <columns>
+                            <Column>
+                                <Text text="Timestamp"/>
+                            </Column>
+                            <Column>
+                                <Text text="Cache"/>
+                            </Column>
+                            <Column>
+                                <Text text="Operation"/>
+                            </Column>
+                            <Column>
+                                <Text text="Key"/>
+                            </Column>
+                            <Column>
+                                <Text text="Result"/>
+                            </Column>
+                            <Column>
+                                <Text text="Response Time"/>
+                            </Column>
+                            <Column>
+                                <Text text="Data Size"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <Text text="{timestamp}"/>
+                                    <Text text="{cacheName}"/>
+                                    <ObjectStatus 
+                                        text="{operationType}"
+                                        state="Information"/>
+                                    <Text text="{cacheKey}" maxLines="1"/>
+                                    <ObjectStatus 
+                                        text="{hitMiss}"
+                                        state="{= ${hitMiss} === 'HIT' ? 'Success' : ${hitMiss} === 'MISS' ? 'Warning' : 'Error'}"
+                                        icon="{= ${hitMiss} === 'HIT' ? 'sap-icon://accept' : ${hitMiss} === 'MISS' ? 'sap-icon://decline' : 'sap-icon://error'}"/>
+                                    <ObjectNumber 
+                                        number="{responseTime}"
+                                        unit="ms"
+                                        state="{= ${responseTime} < 1 ? 'Success' : ${responseTime} < 5 ? 'Warning' : 'Error'}"/>
+                                    <Text text="{dataSize} bytes"/>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Cache Configuration -->
+                <Panel 
+                    headerText="Global Cache Settings"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="2"
+                        columnsL="2"
+                        columnsM="1"
+                        class="sapUiMediumMargin">
+                        <form:content>
+                            <Label text="Default Cache Type"/>
+                            <Select selectedKey="{cache>/config/defaultCacheType}">
+                                <items>
+                                    <core:Item key="MEMORY" text="Memory Cache"/>
+                                    <core:Item key="REDIS" text="Redis Cache"/>
+                                    <core:Item key="HYBRID" text="Hybrid (Memory + Redis)"/>
+                                    <core:Item key="DISTRIBUTED" text="Distributed Cache"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Default TTL (seconds)"/>
+                            <Input 
+                                value="{cache>/config/defaultTTL}"
+                                type="Number"/>
+                            
+                            <Label text="Default Eviction Policy"/>
+                            <Select selectedKey="{cache>/config/defaultEvictionPolicy}">
+                                <items>
+                                    <core:Item key="LRU" text="Least Recently Used"/>
+                                    <core:Item key="LFU" text="Least Frequently Used"/>
+                                    <core:Item key="FIFO" text="First In, First Out"/>
+                                    <core:Item key="TTL" text="Time To Live"/>
+                                    <core:Item key="CUSTOM" text="Custom Policy"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Auto-Optimization"/>
+                            <CheckBox selected="{cache>/config/autoOptimization}"/>
+                            
+                            <Label text="Compression"/>
+                            <CheckBox selected="{cache>/config/compressionEnabled}"/>
+                            
+                            <Label text="Persistence"/>
+                            <CheckBox selected="{cache>/config/persistenceEnabled}"/>
+                            
+                            <Label text="Hit Rate Threshold (%)"/>
+                            <Slider 
+                                value="{cache>/config/hitRateThreshold}"
+                                min="50"
+                                max="95"
+                                step="5"
+                                width="200px"
+                                enableTickmarks="true"/>
+                            
+                            <Label text="Memory Alert Threshold (%)"/>
+                            <Slider 
+                                value="{cache>/config/memoryAlertThreshold}"
+                                min="70"
+                                max="95"
+                                step="5"
+                                width="200px"
+                                enableTickmarks="true"/>
+                        </form:content>
+                    </form:SimpleForm>
+                    
+                    <HBox class="sapUiMediumMargin">
+                        <Button 
+                            text="Save Configuration"
+                            icon="sap-icon://save"
+                            press=".onSaveCacheConfig"/>
+                        <Button 
+                            text="Reset to Defaults"
+                            press=".onResetCacheConfig"
+                            class="sapUiMediumMarginBegin"/>
+                        <Button 
+                            text="Test Configuration"
+                            icon="sap-icon://test"
+                            press=".onTestCacheConfig"
+                            class="sapUiMediumMarginBegin"/>
+                    </HBox>
+                </Panel>
+                
+                <!-- Cache Recommendations -->
+                <Panel 
+                    headerText="Performance Recommendations"
+                    visible="{= ${cache>/recommendations}.length > 0}"
+                    class="sapUiResponsiveMargin">
+                    <List items="{cache>/recommendations}">
+                        <StandardListItem
+                            title="{title}"
+                            description="{description}"
+                            info="{expectedImprovement}% improvement"
+                            infoState="{= ${priority} === 'HIGH' ? 'Error' : ${priority} === 'MEDIUM' ? 'Warning' : 'Success'}"
+                            icon="sap-icon://lightbulb"
+                            press=".onApplyCacheRecommendation"/>
+                    </List>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Export Metrics"
+                icon="sap-icon://download"
+                press=".onExportCacheMetrics"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Real-time Monitor"
+                    icon="{= ${cache>/realtimeMonitor} ? 'sap-icon://pause' : 'sap-icon://play'}"
+                    press=".onToggleCacheRealtimeMonitor"
+                    type="{= ${cache>/realtimeMonitor} ? 'Emphasized' : 'Default'}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseCacheManager"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

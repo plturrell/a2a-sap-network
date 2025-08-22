@@ -1600,3 +1600,433 @@ service Agent7Service {
         timestamp: DateTime;
     };
 }
+
+// Agent 8 Service - Data Management Agent
+service Agent8Service {
+    // Main entity for data management tasks with comprehensive operations
+    entity DataTasks as projection on db.DataTasks actions {
+        action executeTask() returns String;
+        
+        action pauseTask() returns String;
+        
+        action resumeTask() returns String;
+        
+        action cancelTask(
+            @title: 'Reason'
+            reason: String;
+        ) returns String;
+        
+        action retryTask() returns String;
+        
+        action optimizeTask(
+            @title: 'Optimization Type'
+            optimizationType: String;
+        ) returns String;
+        
+        action createCheckpoint() returns String;
+        
+        action restoreFromCheckpoint(
+            @title: 'Checkpoint ID'
+            checkpointId: String;
+        ) returns String;
+        
+        action validateData() returns String;
+        
+        action compressData(
+            @title: 'Compression Type'
+            compressionType: String;
+        ) returns String;
+        
+        action encryptData(
+            @title: 'Encryption Algorithm'
+            encryptionAlgorithm: String;
+        ) returns String;
+        
+        action migrateData(
+            @title: 'Target Backend'
+            targetBackend: String;
+            @title: 'Migration Strategy'
+            migrationStrategy: String;
+        ) returns String;
+    };
+    
+    // Storage backend management
+    entity StorageBackends as projection on db.StorageBackends actions {
+        action testConnection() returns String;
+        
+        action performHealthCheck() returns String;
+        
+        action optimizeStorage() returns String;
+        
+        action performMaintenance() returns String;
+        
+        action createBackup() returns String;
+        
+        action restoreFromBackup(
+            @title: 'Backup ID'
+            backupId: String;
+        ) returns String;
+        
+        action updateConfiguration(
+            @title: 'Configuration'
+            configuration: String;
+        ) returns String;
+        
+        action scaleCapacity(
+            @title: 'Target Capacity (GB)'
+            targetCapacity: Decimal;
+        ) returns String;
+    };
+    
+    // Cache configuration and management
+    entity CacheConfigurations as projection on db.CacheConfigurations actions {
+        action warmupCache() returns String;
+        
+        action clearCache() returns String;
+        
+        action flushCache() returns String;
+        
+        action invalidateKeys(
+            @title: 'Key Pattern'
+            keyPattern: String;
+        ) returns String;
+        
+        action preloadData(
+            @title: 'Data Source'
+            dataSource: String;
+        ) returns String;
+        
+        action optimizeCache() returns String;
+        
+        action adjustSize(
+            @title: 'New Size (MB)'
+            newSize: Integer;
+        ) returns String;
+    };
+    
+    // Data version management
+    entity DataVersions as projection on db.DataVersions actions {
+        action createVersion(
+            @title: 'Version Data'
+            versionData: {
+                versionNumber: String;
+                versionType: String;
+                description: String;
+                tags: String;
+            }
+        ) returns String;
+        
+        action tagVersion(
+            @title: 'Tags'
+            tags: String;
+        ) returns String;
+        
+        action promoteVersion() returns String;
+        
+        action rollbackToVersion() returns String;
+        
+        action deleteVersion() returns String;
+        
+        action compareVersions(
+            @title: 'Target Version ID'
+            targetVersionId: String;
+        ) returns String;
+    };
+    
+    // Backup management
+    entity DataBackups as projection on db.DataBackups actions {
+        action executeBackup() returns String;
+        
+        action restoreBackup() returns String;
+        
+        action verifyBackup() returns String;
+        
+        action scheduleBackup(
+            @title: 'Schedule Data'
+            scheduleData: {
+                scheduleType: String;
+                scheduleExpression: String;
+                retentionPeriod: Integer;
+            }
+        ) returns String;
+        
+        action cancelBackup() returns String;
+        
+        action cloneBackup(
+            @title: 'Target Location'
+            targetLocation: String;
+        ) returns String;
+    };
+    
+    // Storage utilization and cache operations (read-only)
+    entity StorageUtilizations as projection on db.StorageUtilizations;
+    entity CacheOperations as projection on db.CacheOperations;
+    entity DataPerformanceMetrics as projection on db.DataPerformanceMetrics;
+    
+    // Data Management Functions
+    function getStorageOptions() returns array of {
+        backendType: String;
+        name: String;
+        description: String;
+        capabilities: String;
+        performanceProfile: String;
+        costProfile: String;
+    };
+    
+    function getDashboardData() returns {
+        totalTasks: Integer;
+        activeTasks: Integer;
+        completedTasks: Integer;
+        failedTasks: Integer;
+        totalStorageUsed: Decimal;
+        totalCacheHitRate: Decimal;
+        averageProcessingSpeed: Decimal;
+        storageBackends: array of {
+            name: String;
+            type: String;
+            status: String;
+            usedCapacity: Decimal;
+            totalCapacity: Decimal;
+            healthScore: Decimal;
+        };
+        cacheMetrics: {
+            memoryHitRate: Decimal;
+            redisHitRate: Decimal;
+            totalOperations: Integer;
+            averageResponseTime: Decimal;
+        };
+        performanceTrends: array of {
+            timestamp: DateTime;
+            throughput: Decimal;
+            latency: Decimal;
+            errorRate: Decimal;
+        };
+        alerts: array of String;
+    };
+    
+    function getStorageBackendDetails(
+        @title: 'Backend ID'
+        backendId: String
+    ) returns {
+        backendId: String;
+        name: String;
+        type: String;
+        status: String;
+        healthScore: Decimal;
+        capacity: {
+            total: Decimal;
+            used: Decimal;
+            available: Decimal;
+            utilizationPercent: Decimal;
+        };
+        performance: {
+            readIOPS: Integer;
+            writeIOPS: Integer;
+            latency: Decimal;
+            throughput: Decimal;
+        };
+        configuration: String;
+        lastHealthCheck: DateTime;
+        metrics: array of {
+            metricType: String;
+            value: Decimal;
+            unit: String;
+            trend: String;
+        };
+    };
+    
+    function getCacheStatus() returns {
+        memoryCache: {
+            status: String;
+            hitRate: Decimal;
+            missRate: Decimal;
+            currentSize: Decimal;
+            maxSize: Decimal;
+            operationsPerSecond: Integer;
+        };
+        redisCache: {
+            status: String;
+            hitRate: Decimal;
+            missRate: Decimal;
+            currentSize: Decimal;
+            maxSize: Decimal;
+            operationsPerSecond: Integer;
+        };
+        overall: {
+            totalHitRate: Decimal;
+            totalOperations: Integer;
+            averageResponseTime: Decimal;
+        };
+    };
+    
+    function getVersionHistory(
+        @title: 'Task ID'
+        taskId: String
+    ) returns array of {
+        versionId: String;
+        versionNumber: String;
+        versionType: String;
+        dataSize: Integer64;
+        compressedSize: Integer64;
+        description: String;
+        tags: String;
+        isCurrent: Boolean;
+        createdAt: DateTime;
+        createdBy: String;
+    };
+    
+    function getExportOptions() returns array of {
+        format: String;
+        description: String;
+        supportedBackends: array of String;
+        compressionOptions: array of String;
+        encryptionOptions: array of String;
+    };
+    
+    function getBackupStatus() returns {
+        totalBackups: Integer;
+        activeBackups: Integer;
+        completedBackups: Integer;
+        failedBackups: Integer;
+        totalBackupSize: Decimal;
+        nextScheduledBackup: DateTime;
+        backupRetentionPolicy: String;
+        storageUtilization: Decimal;
+        recentBackups: array of {
+            backupId: String;
+            name: String;
+            type: String;
+            status: String;
+            dataSize: Decimal;
+            compressionRatio: Decimal;
+            startedAt: DateTime;
+            duration: Integer;
+        };
+    };
+    
+    function analyzePerformance(
+        @title: 'Time Range'
+        timeRange: String;
+        @title: 'Metric Types'
+        metricTypes: array of String
+    ) returns {
+        timeRange: String;
+        summary: {
+            averageThroughput: Decimal;
+            averageLatency: Decimal;
+            totalOperations: Integer;
+            errorRate: Decimal;
+        };
+        trends: array of {
+            timestamp: DateTime;
+            throughput: Decimal;
+            latency: Decimal;
+            errorRate: Decimal;
+            queueDepth: Integer;
+        };
+        bottlenecks: array of {
+            component: String;
+            severity: String;
+            description: String;
+            recommendation: String;
+        };
+        recommendations: array of {
+            category: String;
+            recommendation: String;
+            expectedImprovement: Decimal;
+            priority: String;
+        };
+    };
+    
+    function optimizeConfiguration(
+        @title: 'Optimization Target'
+        optimizationTarget: String
+    ) returns {
+        currentConfiguration: String;
+        optimizedConfiguration: String;
+        expectedImprovements: array of {
+            metric: String;
+            currentValue: Decimal;
+            expectedValue: Decimal;
+            improvementPercent: Decimal;
+        };
+        risks: array of String;
+        implementationSteps: array of String;
+    };
+    
+    // Event definitions for data management
+    event DataTaskCreated : {
+        taskId: String;
+        taskName: String;
+        taskType: String;
+        storageBackend: String;
+        priority: String;
+        timestamp: DateTime;
+    };
+    
+    event DataTaskCompleted : {
+        taskId: String;
+        taskType: String;
+        status: String;
+        processingTime: Integer;
+        dataSize: Integer64;
+        processedSize: Integer64;
+        timestamp: DateTime;
+    };
+    
+    event DataTaskFailed : {
+        taskId: String;
+        taskType: String;
+        errorMessage: String;
+        retryCount: Integer;
+        timestamp: DateTime;
+    };
+    
+    event StorageBackendAlert : {
+        backendId: String;
+        backendName: String;
+        alertType: String;
+        severity: String;
+        message: String;
+        currentValue: Decimal;
+        threshold: Decimal;
+        timestamp: DateTime;
+    };
+    
+    event CachePerformanceAlert : {
+        cacheId: String;
+        cacheName: String;
+        alertType: String;
+        hitRate: Decimal;
+        threshold: Decimal;
+        timestamp: DateTime;
+    };
+    
+    event BackupCompleted : {
+        backupId: String;
+        backupName: String;
+        backupType: String;
+        dataSize: Integer64;
+        compressionRatio: Decimal;
+        duration: Integer;
+        timestamp: DateTime;
+    };
+    
+    event VersionCreated : {
+        versionId: String;
+        taskId: String;
+        versionNumber: String;
+        versionType: String;
+        dataSize: Integer64;
+        timestamp: DateTime;
+    };
+    
+    event PerformanceThresholdExceeded : {
+        metricType: String;
+        component: String;
+        currentValue: Decimal;
+        threshold: Decimal;
+        severity: String;
+        timestamp: DateTime;
+    };
+}

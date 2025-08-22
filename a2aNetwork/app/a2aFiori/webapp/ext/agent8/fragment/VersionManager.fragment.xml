@@ -1,0 +1,381 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="versionManagerDialog"
+        title="Data Version Manager"
+        contentWidth="90%"
+        contentHeight="85%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Version Overview -->
+                <Panel headerText="Version Overview" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Total Versions" level="H4"/>
+                                <ObjectNumber 
+                                    number="{version>/summary/totalVersions}"
+                                    state="Information"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Active Datasets" level="H4"/>
+                                <ObjectNumber 
+                                    number="{version>/summary/activeDatasets}"
+                                    state="Success"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Today's Changes" level="H4"/>
+                                <ObjectNumber 
+                                    number="{version>/summary/todayChanges}"
+                                    state="Warning"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="Storage Used" level="H4"/>
+                                <ObjectNumber 
+                                    number="{version>/summary/storageUsed}"
+                                    unit="GB"
+                                    state="{= ${version>/summary/storageUsedPercent} > 80 ? 'Error' : ${version>/summary/storageUsedPercent} > 60 ? 'Warning' : 'Success'}"
+                                    emphasized="true"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <MessageStrip 
+                            text="{version>/statusMessage}"
+                            type="{version>/statusMessageType}"
+                            showIcon="true"
+                            class="sapUiMediumMarginTop"/>
+                    </VBox>
+                </Panel>
+                
+                <!-- Dataset Versions -->
+                <Panel headerText="Dataset Versions" class="sapUiResponsiveMargin">
+                    <Table 
+                        items="{version>/datasets}"
+                        mode="SingleSelect"
+                        selectionChange=".onDatasetSelectionChange">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Version Management"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Create Version"
+                                    icon="sap-icon://add"
+                                    press=".onCreateVersion"/>
+                                <Button 
+                                    text="Compare Versions"
+                                    icon="sap-icon://compare"
+                                    press=".onCompareVersions"/>
+                                <Button 
+                                    text="Cleanup Old"
+                                    icon="sap-icon://delete"
+                                    press=".onCleanupOldVersions"/>
+                            </Toolbar>
+                        </headerToolbar>
+                        <columns>
+                            <Column>
+                                <Text text="Dataset"/>
+                            </Column>
+                            <Column>
+                                <Text text="Current Version"/>
+                            </Column>
+                            <Column>
+                                <Text text="Total Versions"/>
+                            </Column>
+                            <Column>
+                                <Text text="Last Modified"/>
+                            </Column>
+                            <Column>
+                                <Text text="Size"/>
+                            </Column>
+                            <Column>
+                                <Text text="Status"/>
+                            </Column>
+                            <Column>
+                                <Text text="Actions"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <VBox>
+                                        <Text text="{datasetName}"/>
+                                        <Text text="{description}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <VBox>
+                                        <Text text="v{currentVersion}"/>
+                                        <Text text="{currentVersionHash}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <ObjectNumber 
+                                        number="{totalVersions}"
+                                        state="Information"/>
+                                    <Text text="{lastModified}"/>
+                                    <Text text="{currentSize} MB"/>
+                                    <ObjectStatus 
+                                        text="{status}"
+                                        state="{= ${status} === 'ACTIVE' ? 'Success' : ${status} === 'ARCHIVING' ? 'Warning' : 'Error'}"
+                                        icon="{= ${status} === 'ACTIVE' ? 'sap-icon://status-positive' : ${status} === 'ARCHIVING' ? 'sap-icon://status-critical' : 'sap-icon://status-negative'}"/>
+                                    <HBox>
+                                        <Button 
+                                            icon="sap-icon://history"
+                                            tooltip="View History"
+                                            press=".onViewVersionHistory"/>
+                                        <Button 
+                                            icon="sap-icon://repost"
+                                            tooltip="Rollback"
+                                            press=".onRollbackVersion"/>
+                                        <Button 
+                                            icon="sap-icon://branch"
+                                            tooltip="Branch"
+                                            press=".onBranchVersion"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Version History -->
+                <Panel 
+                    headerText="Version History"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <Table 
+                        items="{version>/versionHistory}"
+                        growing="true"
+                        growingThreshold="20">
+                        <columns>
+                            <Column>
+                                <Text text="Version"/>
+                            </Column>
+                            <Column>
+                                <Text text="Dataset"/>
+                            </Column>
+                            <Column>
+                                <Text text="Created"/>
+                            </Column>
+                            <Column>
+                                <Text text="Author"/>
+                            </Column>
+                            <Column>
+                                <Text text="Changes"/>
+                            </Column>
+                            <Column>
+                                <Text text="Size Change"/>
+                            </Column>
+                            <Column>
+                                <Text text="Comments"/>
+                            </Column>
+                            <Column>
+                                <Text text="Actions"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <VBox>
+                                        <Text text="v{versionNumber}"/>
+                                        <Text text="{versionHash}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <Text text="{datasetName}"/>
+                                    <Text text="{createdAt}"/>
+                                    <Text text="{author}"/>
+                                    <VBox>
+                                        <Text text="Added: {changes/added}"/>
+                                        <Text text="Modified: {changes/modified}"/>
+                                        <Text text="Deleted: {changes/deleted}"/>
+                                    </VBox>
+                                    <ObjectNumber 
+                                        number="{sizeChange}"
+                                        unit="MB"
+                                        state="{= ${sizeChange} > 0 ? 'Warning' : ${sizeChange} < 0 ? 'Success' : 'None'}"
+                                        sign="{= ${sizeChange} > 0 ? '+' : ''}"/>
+                                    <Text text="{comments}" maxLines="2"/>
+                                    <HBox>
+                                        <Button 
+                                            icon="sap-icon://detail-view"
+                                            tooltip="View Details"
+                                            press=".onViewVersionDetails"/>
+                                        <Button 
+                                            icon="sap-icon://download"
+                                            tooltip="Download"
+                                            press=".onDownloadVersion"/>
+                                        <Button 
+                                            icon="sap-icon://compare"
+                                            tooltip="Compare"
+                                            press=".onCompareVersion"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Version Configuration -->
+                <Panel 
+                    headerText="Version Management Settings"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="2"
+                        columnsL="2"
+                        columnsM="1"
+                        class="sapUiMediumMargin">
+                        <form:content>
+                            <Label text="Auto-versioning"/>
+                            <CheckBox selected="{version>/config/autoVersioning}"/>
+                            
+                            <Label text="Version Retention Policy"/>
+                            <Select selectedKey="{version>/config/retentionPolicy}">
+                                <items>
+                                    <core:Item key="KEEP_ALL" text="Keep All Versions"/>
+                                    <core:Item key="KEEP_LAST_10" text="Keep Last 10 Versions"/>
+                                    <core:Item key="KEEP_LAST_30_DAYS" text="Keep Last 30 Days"/>
+                                    <core:Item key="KEEP_MAJOR_ONLY" text="Keep Major Versions Only"/>
+                                    <core:Item key="CUSTOM" text="Custom Policy"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Compression"/>
+                            <CheckBox selected="{version>/config/compressionEnabled}"/>
+                            
+                            <Label text="Delta Storage"/>
+                            <CheckBox selected="{version>/config/deltaStorage}"/>
+                            
+                            <Label text="Verification"/>
+                            <CheckBox selected="{version>/config/verificationEnabled}"/>
+                            
+                            <Label text="Auto-cleanup Threshold (days)"/>
+                            <Input 
+                                value="{version>/config/autoCleanupDays}"
+                                type="Number"/>
+                            
+                            <Label text="Max Versions per Dataset"/>
+                            <Slider 
+                                value="{version>/config/maxVersionsPerDataset}"
+                                min="10"
+                                max="100"
+                                step="5"
+                                width="200px"
+                                enableTickmarks="true"/>
+                            
+                            <Label text="Storage Alert Threshold (%)"/>
+                            <Slider 
+                                value="{version>/config/storageAlertThreshold}"
+                                min="70"
+                                max="95"
+                                step="5"
+                                width="200px"
+                                enableTickmarks="true"/>
+                        </form:content>
+                    </form:SimpleForm>
+                    
+                    <HBox class="sapUiMediumMargin">
+                        <Button 
+                            text="Save Configuration"
+                            icon="sap-icon://save"
+                            press=".onSaveVersionConfig"/>
+                        <Button 
+                            text="Reset to Defaults"
+                            press=".onResetVersionConfig"
+                            class="sapUiMediumMarginBegin"/>
+                        <Button 
+                            text="Test Configuration"
+                            icon="sap-icon://test"
+                            press=".onTestVersionConfig"
+                            class="sapUiMediumMarginBegin"/>
+                    </HBox>
+                </Panel>
+                
+                <!-- Version Analytics -->
+                <Panel 
+                    headerText="Version Analytics"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <core:HTML 
+                            id="versionAnalyticsChart"
+                            content='<div id="versionAnalyticsChartDiv" style="width: 100%; height: 350px;"></div>'
+                            preferDOM="true"/>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Storage Trends" level="H5"/>
+                                <mc:LineMicroChart
+                                    size="M"
+                                    points="{version>/analytics/storageTrends}">
+                                    <mc:points>
+                                        <mc:LineMicroChartPoint 
+                                            x="{timestamp}"
+                                            y="{storageUsed}"/>
+                                    </mc:points>
+                                </mc:LineMicroChart>
+                                <Text text="Current: {version>/analytics/currentStorage} GB"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Version Creation Rate" level="H5"/>
+                                <mc:ColumnMicroChart
+                                    size="M"
+                                    columns="{version>/analytics/creationRate}">
+                                    <mc:columns>
+                                        <mc:ColumnMicroChartData 
+                                            value="{count}"
+                                            color="Good"/>
+                                    </mc:columns>
+                                </mc:ColumnMicroChart>
+                                <Text text="Today: {version>/analytics/todayVersions}"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="Top Datasets by Versions" level="H5"/>
+                                <Text text="1. {version>/analytics/topDatasets/0/name} ({version>/analytics/topDatasets/0/versions})"/>
+                                <Text text="2. {version>/analytics/topDatasets/1/name} ({version>/analytics/topDatasets/1/versions})"/>
+                                <Text text="3. {version>/analytics/topDatasets/2/name} ({version>/analytics/topDatasets/2/versions})"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Export Report"
+                icon="sap-icon://download"
+                press=".onExportVersionReport"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Auto-Refresh"
+                    icon="{= ${version>/autoRefresh} ? 'sap-icon://pause' : 'sap-icon://play'}"
+                    press=".onToggleVersionAutoRefresh"
+                    type="{= ${version>/autoRefresh} ? 'Emphasized' : 'Default'}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseVersionManager"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

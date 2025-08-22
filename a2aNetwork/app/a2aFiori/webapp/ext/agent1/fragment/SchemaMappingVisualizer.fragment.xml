@@ -10,7 +10,12 @@
         title="Schema Mapping Visualizer"
         contentWidth="80%"
         contentHeight="80%"
-        resizable="true">
+        resizable="true"
+        ariaLabelledBy="mappingDialogTitle"
+        ariaDescribedBy="mappingDialogHelp">
+        
+        <core:InvisibleText id="mappingDialogTitle" text="Schema Mapping Visualizer Dialog"/>
+        <core:InvisibleText id="mappingDialogHelp" text="Configure field mappings between source and target schemas with transformation rules. Use tab key to navigate between source fields, mapping rules, and target fields."/>
         
         <content>
             <l:Splitter height="100%" width="100%">
@@ -18,13 +23,37 @@
                 <l:contentAreas>
                     <Panel headerText="Source Schema ({mapping>/sourceFormat})">
                         <content>
-                            <Tree
-                                id="sourceSchemaTree"
-                                items="{mapping>/sourceFields}">
-                                <StandardTreeItem
-                                    title="{mapping>fieldName}"
-                                    tooltip="{mapping>dataType}"/>
-                            </Tree>
+                            <!-- Virtualized tree for large datasets -->
+                            <VBox height="100%">
+                                <Toolbar>
+                                    <Title text="Fields: {mapping>/sourceFieldCount}"/>
+                                    <ToolbarSpacer/>
+                                    <SearchField
+                                        id="sourceFieldSearch"
+                                        placeholder="Search fields..."
+                                        search=".onSearchSourceFields"
+                                        width="200px"/>
+                                </Toolbar>
+                                <Tree
+                                    id="sourceSchemaTree"
+                                    items="{
+                                        path: 'mapping>/sourceFields',
+                                        template: 'sourceFieldTemplate',
+                                        growing: true,
+                                        growingThreshold: 100,
+                                        growingScrollToLoad: true
+                                    }"
+                                    ariaLabelledBy="sourceSchemaLabel"
+                                    selectionChange=".onSourceFieldSelect">
+                                    <StandardTreeItem
+                                        id="sourceFieldTemplate"
+                                        title="{mapping>fieldName}"
+                                        tooltip="Type: {mapping>dataType}, Sample: {mapping>sampleValue}"
+                                        icon="{path: 'mapping>dataType', formatter: '.getDataTypeIcon'}"
+                                        selected="{mapping>isSelected}"/>
+                                </Tree>
+                            </VBox>
+                            <core:InvisibleText id="sourceSchemaLabel" text="Source schema fields tree"/>
                         </content>
                     </Panel>
                     
@@ -33,59 +62,84 @@
                         <content>
                             <VBox>
                                 <Toolbar>
-                                    <Title text="Field Mappings"/>
+                                    <Title id="mappingTableLabel" text="Field Mappings"/>
                                     <ToolbarSpacer/>
                                     <Button 
                                         icon="sap-icon://add"
-                                        tooltip="Add mapping"
-                                        press=".onAddMapping"/>
+                                        tooltip="Add new field mapping rule"
+                                        text="Add Mapping"
+                                        press=".onAddMapping"
+                                        ariaDescribedBy="addMappingHelp"/>
+                                    <core:InvisibleText id="addMappingHelp" text="Creates a new mapping rule between source and target fields"/>
                                     <Button 
                                         icon="sap-icon://synchronize"
-                                        tooltip="Auto-map fields"
-                                        press=".onAutoMap"/>
+                                        tooltip="Automatically map fields with similar names"
+                                        text="Auto-map"
+                                        press=".onAutoMap"
+                                        ariaDescribedBy="autoMapHelp"/>
+                                    <core:InvisibleText id="autoMapHelp" text="Automatically creates mapping rules for fields with matching or similar names"/>
                                 </Toolbar>
                                 
                                 <Table
                                     items="{mapping>/mappingRules}"
-                                    mode="Delete">
+                                    mode="Delete"
+                                    ariaLabelledBy="mappingTableLabel"
+                                    itemPress=".onMappingRulePress">
                                     <columns>
                                         <Column width="40%">
                                             <Text text="Source Field"/>
+                                            <core:InvisibleText text="Column for selecting source data fields"/>
                                         </Column>
                                         <Column width="20%">
                                             <Text text="Transform"/>
+                                            <core:InvisibleText text="Column for selecting data transformation method"/>
                                         </Column>
                                         <Column width="40%">
                                             <Text text="Target Field"/>
+                                            <core:InvisibleText text="Column for selecting target schema fields"/>
                                         </Column>
                                     </columns>
                                     <items>
                                         <ColumnListItem>
                                             <cells>
-                                                <Select selectedKey="{mapping>sourceField}">
+                                                <Select 
+                                                    selectedKey="{mapping>sourceField}"
+                                                    ariaLabelledBy="sourceFieldLabel"
+                                                    change=".onSourceFieldChange">
                                                     <items>
                                                         <core:ListItem 
                                                             key="{sourceFields>fieldName}"
-                                                            text="{sourceFields>fieldName}"/>
+                                                            text="{sourceFields>fieldName}"
+                                                            additionalText="{sourceFields>dataType}"/>
                                                     </items>
                                                 </Select>
-                                                <Select selectedKey="{mapping>transformation}">
+                                                <core:InvisibleText id="sourceFieldLabel" text="Select source field for mapping"/>
+                                                <Select 
+                                                    selectedKey="{mapping>transformation}"
+                                                    ariaLabelledBy="transformLabel"
+                                                    change=".onTransformationChange">
                                                     <items>
-                                                        <core:Item key="DIRECT" text="Direct"/>
-                                                        <core:Item key="UPPERCASE" text="Uppercase"/>
-                                                        <core:Item key="LOWERCASE" text="Lowercase"/>
-                                                        <core:Item key="TRIM" text="Trim"/>
-                                                        <core:Item key="DATE_FORMAT" text="Date Format"/>
-                                                        <core:Item key="CUSTOM" text="Custom"/>
+                                                        <core:Item key="DIRECT" text="Direct" additionalText="No transformation"/>
+                                                        <core:Item key="UPPERCASE" text="Uppercase" additionalText="Convert to uppercase"/>
+                                                        <core:Item key="LOWERCASE" text="Lowercase" additionalText="Convert to lowercase"/>
+                                                        <core:Item key="TRIM" text="Trim" additionalText="Remove whitespace"/>
+                                                        <core:Item key="DATE_FORMAT" text="Date Format" additionalText="Format date values"/>
+                                                        <core:Item key="CUSTOM" text="Custom" additionalText="Use custom script"/>
                                                     </items>
                                                 </Select>
-                                                <Select selectedKey="{mapping>targetField}">
+                                                <core:InvisibleText id="transformLabel" text="Select transformation method for data conversion"/>
+                                                <Select 
+                                                    selectedKey="{mapping>targetField}"
+                                                    ariaLabelledBy="targetFieldLabel"
+                                                    change=".onTargetFieldChange">
                                                     <items>
                                                         <core:ListItem 
                                                             key="{targetFields>fieldName}"
-                                                            text="{targetFields>fieldName}"/>
+                                                            text="{targetFields>fieldName}"
+                                                            additionalText="{targetFields>dataType}"/>
                                                     </items>
                                                 </Select>
+                                                <core:InvisibleText id="targetFieldLabel" text="Select target field for mapping"/>
                                             </cells>
                                         </ColumnListItem>
                                     </items>
@@ -93,15 +147,41 @@
                                 
                                 <!-- Transformation Script Editor -->
                                 <Panel 
+                                    id="scriptPanel"
                                     headerText="Custom Transformation Script"
                                     expandable="true"
-                                    expanded="false">
+                                    expanded="false"
+                                    ariaLabelledBy="scriptPanelLabel">
                                     <content>
-                                        <TextArea
-                                            value="{mapping>/transformationScript}"
-                                            rows="10"
-                                            width="100%"
-                                            placeholder="// JavaScript transformation function&#10;function transform(value, row) {&#10;    return value;&#10;}"/>
+                                        <VBox>
+                                            <core:InvisibleText id="scriptPanelLabel" text="Custom transformation script editor panel"/>
+                                            <Text text="Write JavaScript code to transform data values. Function signature: transform(value, row, context)" class="sapUiSmallMarginBottom"/>
+                                            <TextArea
+                                                id="transformationScript"
+                                                value="{mapping>/transformationScript}"
+                                                rows="10"
+                                                width="100%"
+                                                placeholder="// JavaScript transformation function&#10;function transform(value, row, context) {&#10;    // Transform the input value&#10;    return value;&#10;}"
+                                                ariaLabel="Custom transformation script editor"
+                                                ariaDescribedBy="scriptHelp"
+                                                liveChange=".onScriptChange"/>
+                                            <core:InvisibleText id="scriptHelp" text="JavaScript editor for custom data transformation logic. Use parameters: value for current field value, row for complete record, context for additional metadata"/>
+                                            <HBox class="sapUiTinyMarginTop">
+                                                <Button 
+                                                    text="Validate Script"
+                                                    icon="sap-icon://validate"
+                                                    press=".onValidateScript"
+                                                    ariaDescribedBy="validateHelp"/>
+                                                <core:InvisibleText id="validateHelp" text="Check script syntax and validate transformation logic"/>
+                                                <Button 
+                                                    text="Test Script"
+                                                    icon="sap-icon://simulate"
+                                                    press=".onTestScript"
+                                                    ariaDescribedBy="testHelp"
+                                                    class="sapUiTinyMarginBegin"/>
+                                                <core:InvisibleText id="testHelp" text="Test script with sample data to preview transformation results"/>
+                                            </HBox>
+                                        </VBox>
                                     </content>
                                 </Panel>
                             </VBox>
@@ -111,13 +191,37 @@
                     <!-- Target Schema Panel -->
                     <Panel headerText="Target Schema ({mapping>/targetFormat})">
                         <content>
-                            <Tree
-                                id="targetSchemaTree"
-                                items="{mapping>/targetFields}">
-                                <StandardTreeItem
-                                    title="{mapping>fieldName}"
-                                    tooltip="{mapping>dataType}"/>
-                            </Tree>
+                            <!-- Virtualized tree for large datasets -->
+                            <VBox height="100%">
+                                <Toolbar>
+                                    <Title text="Fields: {mapping>/targetFieldCount}"/>
+                                    <ToolbarSpacer/>
+                                    <SearchField
+                                        id="targetFieldSearch"
+                                        placeholder="Search fields..."
+                                        search=".onSearchTargetFields"
+                                        width="200px"/>
+                                </Toolbar>
+                                <Tree
+                                    id="targetSchemaTree"
+                                    items="{
+                                        path: 'mapping>/targetFields',
+                                        template: 'targetFieldTemplate',
+                                        growing: true,
+                                        growingThreshold: 100,
+                                        growingScrollToLoad: true
+                                    }"
+                                    ariaLabelledBy="targetSchemaLabel"
+                                    selectionChange=".onTargetFieldSelect">
+                                    <StandardTreeItem
+                                        id="targetFieldTemplate"
+                                        title="{mapping>fieldName}"
+                                        tooltip="Type: {mapping>dataType}, Required: {mapping>isRequired}"
+                                        icon="{path: 'mapping>dataType', formatter: '.getDataTypeIcon'}"
+                                        selected="{mapping>isSelected}"/>
+                                </Tree>
+                            </VBox>
+                            <core:InvisibleText id="targetSchemaLabel" text="Target schema fields tree"/>
                         </content>
                     </Panel>
                 </l:contentAreas>

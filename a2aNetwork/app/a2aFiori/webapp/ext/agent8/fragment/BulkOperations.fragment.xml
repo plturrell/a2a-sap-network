@@ -1,0 +1,436 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="bulkOperationsDialog"
+        title="Bulk Data Operations Center"
+        contentWidth="95%"
+        contentHeight="90%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Operation Status Overview -->
+                <Panel headerText="Bulk Operations Overview" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Active Operations" level="H4"/>
+                                <ObjectNumber 
+                                    number="{bulk>/summary/activeOperations}"
+                                    state="Warning"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Queued Operations" level="H4"/>
+                                <ObjectNumber 
+                                    number="{bulk>/summary/queuedOperations}"
+                                    state="Information"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Completed Today" level="H4"/>
+                                <ObjectNumber 
+                                    number="{bulk>/summary/completedToday}"
+                                    state="Success"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="Failed Operations" level="H4"/>
+                                <ObjectNumber 
+                                    number="{bulk>/summary/failedOperations}"
+                                    state="Error"
+                                    emphasized="true"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <MessageStrip 
+                            text="{bulk>/statusMessage}"
+                            type="{bulk>/statusMessageType}"
+                            showIcon="true"
+                            class="sapUiMediumMarginTop"/>
+                    </VBox>
+                </Panel>
+                
+                <!-- Quick Actions -->
+                <Panel headerText="Quick Actions" class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin" wrap="Wrap">
+                        <Button 
+                            text="Bulk Import"
+                            icon="sap-icon://upload"
+                            press=".onBulkImport"
+                            type="Emphasized"
+                            class="sapUiMediumMarginEnd sapUiMediumMarginBottom"/>
+                        <Button 
+                            text="Bulk Export"
+                            icon="sap-icon://download"
+                            press=".onBulkExport"
+                            type="Emphasized"
+                            class="sapUiMediumMarginEnd sapUiMediumMarginBottom"/>
+                        <Button 
+                            text="Mass Delete"
+                            icon="sap-icon://delete"
+                            press=".onMassDelete"
+                            type="Reject"
+                            class="sapUiMediumMarginEnd sapUiMediumMarginBottom"/>
+                        <Button 
+                            text="Batch Transform"
+                            icon="sap-icon://transform"
+                            press=".onBatchTransform"
+                            class="sapUiMediumMarginEnd sapUiMediumMarginBottom"/>
+                        <Button 
+                            text="Data Migration"
+                            icon="sap-icon://journey-change"
+                            press=".onDataMigration"
+                            class="sapUiMediumMarginEnd sapUiMediumMarginBottom"/>
+                        <Button 
+                            text="Bulk Validation"
+                            icon="sap-icon://validate"
+                            press=".onBulkValidation"
+                            class="sapUiMediumMarginEnd sapUiMediumMarginBottom"/>
+                    </HBox>
+                </Panel>
+                
+                <!-- Active Operations -->
+                <Panel headerText="Active Bulk Operations" class="sapUiResponsiveMargin">
+                    <Table 
+                        items="{bulk>/activeOperations}"
+                        mode="MultiSelect">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Operation Management"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Pause Selected"
+                                    icon="sap-icon://pause"
+                                    press=".onPauseOperations"/>
+                                <Button 
+                                    text="Cancel Selected"
+                                    icon="sap-icon://stop"
+                                    press=".onCancelOperations"/>
+                                <Button 
+                                    text="Prioritize"
+                                    icon="sap-icon://priority"
+                                    press=".onPrioritizeOperations"/>
+                            </Toolbar>
+                        </headerToolbar>
+                        <columns>
+                            <Column>
+                                <Text text="Operation"/>
+                            </Column>
+                            <Column>
+                                <Text text="Type"/>
+                            </Column>
+                            <Column>
+                                <Text text="Progress"/>
+                            </Column>
+                            <Column>
+                                <Text text="Status"/>
+                            </Column>
+                            <Column>
+                                <Text text="ETA"/>
+                            </Column>
+                            <Column>
+                                <Text text="Data Size"/>
+                            </Column>
+                            <Column>
+                                <Text text="Throughput"/>
+                            </Column>
+                            <Column>
+                                <Text text="Actions"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <VBox>
+                                        <Text text="{operationName}"/>
+                                        <Text text="ID: {operationId}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <ObjectStatus 
+                                        text="{operationType}"
+                                        state="Information"
+                                        icon="{= ${operationType} === 'IMPORT' ? 'sap-icon://upload' : ${operationType} === 'EXPORT' ? 'sap-icon://download' : 'sap-icon://process'}"/>
+                                    <VBox>
+                                        <ProgressIndicator 
+                                            percentValue="{progressPercent}"
+                                            displayValue="{progressPercent}%"
+                                            state="{= ${status} === 'RUNNING' ? 'Success' : ${status} === 'PAUSED' ? 'Warning' : 'Error'}"
+                                            width="150px"/>
+                                        <Text text="{processedRecords} / {totalRecords} records" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <ObjectStatus 
+                                        text="{status}"
+                                        state="{= ${status} === 'RUNNING' ? 'Success' : ${status} === 'PAUSED' ? 'Warning' : ${status} === 'QUEUED' ? 'Information' : 'Error'}"
+                                        icon="{= ${status} === 'RUNNING' ? 'sap-icon://play' : ${status} === 'PAUSED' ? 'sap-icon://pause' : ${status} === 'QUEUED' ? 'sap-icon://pending' : 'sap-icon://error'}"/>
+                                    <Text text="{estimatedTimeRemaining}"/>
+                                    <VBox>
+                                        <Text text="{dataSize} GB"/>
+                                        <Text text="Files: {fileCount}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <VBox>
+                                        <Text text="{throughput} MB/s"/>
+                                        <Text text="Rate: {recordsPerSecond} rec/s" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <HBox>
+                                        <Button 
+                                            icon="{= ${status} === 'RUNNING' ? 'sap-icon://pause' : 'sap-icon://play'}"
+                                            tooltip="{= ${status} === 'RUNNING' ? 'Pause' : 'Resume'}"
+                                            press=".onToggleOperation"/>
+                                        <Button 
+                                            icon="sap-icon://detail-view"
+                                            tooltip="Details"
+                                            press=".onViewOperationDetails"/>
+                                        <Button 
+                                            icon="sap-icon://log"
+                                            tooltip="View Logs"
+                                            press=".onViewOperationLogs"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Operation Queue -->
+                <Panel 
+                    headerText="Operation Queue"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <Table 
+                        items="{bulk>/queuedOperations}">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Queued Operations"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Reorder Queue"
+                                    icon="sap-icon://sort"
+                                    press=".onReorderQueue"/>
+                                <Button 
+                                    text="Clear Queue"
+                                    icon="sap-icon://clear-all"
+                                    press=".onClearQueue"/>
+                            </Toolbar>
+                        </headerToolbar>
+                        <columns>
+                            <Column>
+                                <Text text="Position"/>
+                            </Column>
+                            <Column>
+                                <Text text="Operation"/>
+                            </Column>
+                            <Column>
+                                <Text text="Type"/>
+                            </Column>
+                            <Column>
+                                <Text text="Priority"/>
+                            </Column>
+                            <Column>
+                                <Text text="Scheduled"/>
+                            </Column>
+                            <Column>
+                                <Text text="Estimated Duration"/>
+                            </Column>
+                            <Column>
+                                <Text text="Dependencies"/>
+                            </Column>
+                            <Column>
+                                <Text text="Actions"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <Text text="{queuePosition}"/>
+                                    <VBox>
+                                        <Text text="{operationName}"/>
+                                        <Text text="ID: {operationId}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <ObjectStatus 
+                                        text="{operationType}"
+                                        state="Information"/>
+                                    <ObjectStatus 
+                                        text="{priority}"
+                                        state="{= ${priority} === 'HIGH' ? 'Error' : ${priority} === 'MEDIUM' ? 'Warning' : 'Success'}"
+                                        icon="{= ${priority} === 'HIGH' ? 'sap-icon://warning' : ${priority} === 'MEDIUM' ? 'sap-icon://information' : 'sap-icon://sys-help'}"/>
+                                    <Text text="{scheduledTime}"/>
+                                    <Text text="{estimatedDuration}"/>
+                                    <VBox>
+                                        <Text text="Depends on: {dependencies/count}" visible="{= ${dependencies/count} > 0}"/>
+                                        <Text text="No dependencies" visible="{= ${dependencies/count} === 0}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <HBox>
+                                        <Button 
+                                            icon="sap-icon://arrow-top"
+                                            tooltip="Move Up"
+                                            press=".onMoveOperationUp"/>
+                                        <Button 
+                                            icon="sap-icon://arrow-bottom"
+                                            tooltip="Move Down"
+                                            press=".onMoveOperationDown"/>
+                                        <Button 
+                                            icon="sap-icon://delete"
+                                            tooltip="Remove"
+                                            press=".onRemoveFromQueue"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Operation History -->
+                <Panel 
+                    headerText="Recent Operation History"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <Table 
+                        items="{bulk>/operationHistory}"
+                        growing="true"
+                        growingThreshold="20">
+                        <columns>
+                            <Column>
+                                <Text text="Operation"/>
+                            </Column>
+                            <Column>
+                                <Text text="Type"/>
+                            </Column>
+                            <Column>
+                                <Text text="Status"/>
+                            </Column>
+                            <Column>
+                                <Text text="Duration"/>
+                            </Column>
+                            <Column>
+                                <Text text="Records Processed"/>
+                            </Column>
+                            <Column>
+                                <Text text="Completed"/>
+                            </Column>
+                            <Column>
+                                <Text text="Actions"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <VBox>
+                                        <Text text="{operationName}"/>
+                                        <Text text="ID: {operationId}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <ObjectStatus 
+                                        text="{operationType}"
+                                        state="Information"/>
+                                    <ObjectStatus 
+                                        text="{finalStatus}"
+                                        state="{= ${finalStatus} === 'COMPLETED' ? 'Success' : ${finalStatus} === 'FAILED' ? 'Error' : ${finalStatus} === 'CANCELLED' ? 'Warning' : 'Information'}"
+                                        icon="{= ${finalStatus} === 'COMPLETED' ? 'sap-icon://accept' : ${finalStatus} === 'FAILED' ? 'sap-icon://error' : ${finalStatus} === 'CANCELLED' ? 'sap-icon://stop' : 'sap-icon://information'}"/>
+                                    <Text text="{actualDuration}"/>
+                                    <VBox>
+                                        <Text text="{processedRecords} / {totalRecords}"/>
+                                        <Text text="Success Rate: {successRate}%" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <Text text="{completedAt}"/>
+                                    <HBox>
+                                        <Button 
+                                            icon="sap-icon://detail-view"
+                                            tooltip="View Details"
+                                            press=".onViewHistoryDetails"/>
+                                        <Button 
+                                            icon="sap-icon://log"
+                                            tooltip="View Logs"
+                                            press=".onViewHistoryLogs"/>
+                                        <Button 
+                                            icon="sap-icon://restart"
+                                            tooltip="Retry"
+                                            press=".onRetryOperation"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Performance Metrics -->
+                <Panel 
+                    headerText="Performance Metrics"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <core:HTML 
+                            id="bulkOperationsChart"
+                            content='<div id="bulkOperationsChartDiv" style="width: 100%; height: 350px;"></div>'
+                            preferDOM="true"/>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Throughput Today" level="H5"/>
+                                <mc:ColumnMicroChart
+                                    size="M"
+                                    columns="{bulk>/metrics/hourlyThroughput}">
+                                    <mc:columns>
+                                        <mc:ColumnMicroChartData 
+                                            value="{throughput}"
+                                            color="Good"/>
+                                    </mc:columns>
+                                </mc:ColumnMicroChart>
+                                <Text text="Avg: {bulk>/metrics/avgThroughput} MB/s"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Success Rate" level="H5"/>
+                                <mc:RadialMicroChart
+                                    size="M"
+                                    percentage="{bulk>/metrics/successRate}"
+                                    valueColor="Good"/>
+                                <Text text="{bulk>/metrics/successRate}%"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="Resource Usage" level="H5"/>
+                                <Text text="CPU: {bulk>/metrics/cpuUsage}%"/>
+                                <Text text="Memory: {bulk>/metrics/memoryUsage}%"/>
+                                <Text text="Disk I/O: {bulk>/metrics/diskUsage}%"/>
+                                <Text text="Network: {bulk>/metrics/networkUsage}%"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Export Report"
+                icon="sap-icon://download"
+                press=".onExportBulkReport"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Settings"
+                    icon="sap-icon://settings"
+                    press=".onBulkOperationsSettings"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Auto-Refresh"
+                    icon="{= ${bulk>/autoRefresh} ? 'sap-icon://pause' : 'sap-icon://play'}"
+                    press=".onToggleBulkAutoRefresh"
+                    type="{= ${bulk>/autoRefresh} ? 'Emphasized' : 'Default'}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseBulkOperations"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

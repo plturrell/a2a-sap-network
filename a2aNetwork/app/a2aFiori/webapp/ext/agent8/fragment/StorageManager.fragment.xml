@@ -1,0 +1,386 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="storageManagerDialog"
+        title="Storage Backend Manager"
+        contentWidth="90%"
+        contentHeight="85%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Storage Overview -->
+                <Panel headerText="Storage Overview" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Total Storage" level="H4"/>
+                                <ObjectNumber 
+                                    number="{storage>/totalCapacity}"
+                                    unit="GB"
+                                    state="Information"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Used Storage" level="H4"/>
+                                <ObjectNumber 
+                                    number="{storage>/usedCapacity}"
+                                    unit="GB"
+                                    state="{= ${storage>/utilizationPercent} > 80 ? 'Error' : ${storage>/utilizationPercent} > 60 ? 'Warning' : 'Success'}"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Utilization" level="H4"/>
+                                <mc:RadialMicroChart
+                                    size="L"
+                                    percentage="{storage>/utilizationPercent}"
+                                    valueColor="{= ${storage>/utilizationPercent} > 80 ? 'Error' : ${storage>/utilizationPercent} > 60 ? 'Critical' : 'Good'}"/>
+                                <Text text="{storage>/utilizationPercent}%" class="sapUiLargeMarginTop"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="Active Backends" level="H4"/>
+                                <ObjectNumber 
+                                    number="{storage>/activeBackends}"
+                                    unit="of {storage>/totalBackends}"
+                                    state="Success"
+                                    emphasized="true"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <MessageStrip 
+                            text="{storage>/systemMessage}"
+                            type="{storage>/systemMessageType}"
+                            showIcon="true"
+                            class="sapUiMediumMarginTop"/>
+                    </VBox>
+                </Panel>
+                
+                <!-- Storage Backends List -->
+                <Panel headerText="Storage Backends" class="sapUiResponsiveMargin">
+                    <Table 
+                        items="{storage>/backends}"
+                        mode="MultiSelect"
+                        selectionChange=".onBackendSelectionChange">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Backend Management"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Add Backend"
+                                    icon="sap-icon://add"
+                                    press=".onAddStorageBackend"/>
+                                <Button 
+                                    text="Health Check All"
+                                    icon="sap-icon://stethoscope"
+                                    press=".onHealthCheckAll"/>
+                                <Button 
+                                    text="Optimize"
+                                    icon="sap-icon://settings"
+                                    press=".onOptimizeStorage"/>
+                            </Toolbar>
+                        </headerToolbar>
+                        <columns>
+                            <Column>
+                                <Text text="Backend"/>
+                            </Column>
+                            <Column>
+                                <Text text="Type"/>
+                            </Column>
+                            <Column>
+                                <Text text="Status"/>
+                            </Column>
+                            <Column>
+                                <Text text="Health"/>
+                            </Column>
+                            <Column>
+                                <Text text="Capacity"/>
+                            </Column>
+                            <Column>
+                                <Text text="Performance"/>
+                            </Column>
+                            <Column>
+                                <Text text="Last Check"/>
+                            </Column>
+                            <Column>
+                                <Text text="Actions"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <VBox>
+                                        <Text text="{backendName}"/>
+                                        <Text text="{connectionString}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <ObjectStatus 
+                                        text="{backendType}"
+                                        state="Information"
+                                        icon="{= ${backendType} === 'HANA' ? 'sap-icon://database' : ${backendType} === 'S3' ? 'sap-icon://cloud' : 'sap-icon://repository'}"/>
+                                    <ObjectStatus 
+                                        text="{status}"
+                                        state="{= ${status} === 'ACTIVE' ? 'Success' : ${status} === 'DEGRADED' ? 'Warning' : 'Error'}"
+                                        icon="{= ${status} === 'ACTIVE' ? 'sap-icon://status-positive' : ${status} === 'DEGRADED' ? 'sap-icon://status-critical' : 'sap-icon://status-negative'}"/>
+                                    <VBox>
+                                        <mc:RadialMicroChart
+                                            size="S"
+                                            percentage="{healthScore}"
+                                            valueColor="{= ${healthScore} >= 90 ? 'Good' : ${healthScore} >= 70 ? 'Critical' : 'Error'}"/>
+                                        <Text text="{healthScore}%" class="sapUiTinyMarginTop"/>
+                                    </VBox>
+                                    <VBox>
+                                        <ProgressIndicator 
+                                            percentValue="{= Math.round(${usedCapacity} / ${totalCapacity} * 100)}"
+                                            displayValue="{usedCapacity} / {totalCapacity} GB"
+                                            state="{= ${usedCapacity} / ${totalCapacity} > 0.8 ? 'Error' : ${usedCapacity} / ${totalCapacity} > 0.6 ? 'Warning' : 'Success'}"
+                                            width="150px"/>
+                                        <Text text="Available: {availableCapacity} GB" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <VBox>
+                                        <HBox>
+                                            <VBox class="sapUiTinyMarginEnd">
+                                                <Text text="R: {readPerformance}" class="sapThemeTextSecondary"/>
+                                                <Text text="W: {writePerformance}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <VBox>
+                                                <Text text="{latency}ms" class="sapThemeTextSecondary"/>
+                                                <Text text="{throughput}MB/s" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                        </HBox>
+                                    </VBox>
+                                    <Text text="{lastHealthCheck}"/>
+                                    <HBox>
+                                        <Button 
+                                            icon="sap-icon://stethoscope"
+                                            tooltip="Health Check"
+                                            press=".onPerformHealthCheck"/>
+                                        <Button 
+                                            icon="sap-icon://settings"
+                                            tooltip="Configure"
+                                            press=".onConfigureBackend"/>
+                                        <Button 
+                                            icon="sap-icon://detail-view"
+                                            tooltip="Details"
+                                            press=".onViewBackendDetails"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Performance Metrics -->
+                <Panel 
+                    headerText="Performance Metrics"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <core:HTML 
+                            id="storagePerformanceChart"
+                            content='<div id="storagePerformanceChartDiv" style="width: 100%; height: 350px;"></div>'
+                            preferDOM="true"/>
+                        
+                        <Table 
+                            items="{storage>/performanceMetrics}"
+                            class="sapUiMediumMarginTop">
+                            <columns>
+                                <Column>
+                                    <Text text="Backend"/>
+                                </Column>
+                                <Column>
+                                    <Text text="IOPS"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Throughput"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Latency"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Error Rate"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Trend"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{backendName}"/>
+                                        <VBox>
+                                            <Text text="R: {readIOPS}"/>
+                                            <Text text="W: {writeIOPS}"/>
+                                        </VBox>
+                                        <Text text="{throughput} MB/s"/>
+                                        <ObjectNumber 
+                                            number="{latency}"
+                                            unit="ms"
+                                            state="{= ${latency} < 10 ? 'Success' : ${latency} < 50 ? 'Warning' : 'Error'}"/>
+                                        <ProgressIndicator 
+                                            percentValue="{errorRate}"
+                                            displayValue="{errorRate}%"
+                                            state="{= ${errorRate} < 1 ? 'Success' : ${errorRate} < 5 ? 'Warning' : 'Error'}"
+                                            width="80px"/>
+                                        <ObjectStatus 
+                                            text="{trend}"
+                                            state="{= ${trend} === 'IMPROVING' ? 'Success' : ${trend} === 'STABLE' ? 'Warning' : 'Error'}"
+                                            icon="{= ${trend} === 'IMPROVING' ? 'sap-icon://trend-up' : ${trend} === 'STABLE' ? 'sap-icon://horizontal-bar-chart' : 'sap-icon://trend-down'}"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </Panel>
+                
+                <!-- Storage Configuration -->
+                <Panel 
+                    headerText="Storage Configuration"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="2"
+                        columnsL="2"
+                        columnsM="1"
+                        class="sapUiMediumMargin">
+                        <form:content>
+                            <Label text="Default Storage Backend"/>
+                            <Select selectedKey="{storage>/config/defaultBackend}">
+                                <items>
+                                    <core:Item key="{backendId}" text="{backendName} ({backendType})" items="{storage>/availableBackends}"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Auto-Optimization"/>
+                            <CheckBox selected="{storage>/config/autoOptimization}"/>
+                            
+                            <Label text="Replication Strategy"/>
+                            <Select selectedKey="{storage>/config/replicationStrategy}">
+                                <items>
+                                    <core:Item key="NONE" text="No Replication"/>
+                                    <core:Item key="SYNC" text="Synchronous"/>
+                                    <core:Item key="ASYNC" text="Asynchronous"/>
+                                    <core:Item key="MULTI_MASTER" text="Multi-Master"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Compression Default"/>
+                            <CheckBox selected="{storage>/config/compressionDefault}"/>
+                            
+                            <Label text="Encryption Default"/>
+                            <CheckBox selected="{storage>/config/encryptionDefault}"/>
+                            
+                            <Label text="Backup Schedule"/>
+                            <Select selectedKey="{storage>/config/backupSchedule}">
+                                <items>
+                                    <core:Item key="HOURLY" text="Hourly"/>
+                                    <core:Item key="DAILY" text="Daily"/>
+                                    <core:Item key="WEEKLY" text="Weekly"/>
+                                    <core:Item key="MONTHLY" text="Monthly"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Health Check Interval (minutes)"/>
+                            <Input 
+                                value="{storage>/config/healthCheckInterval}"
+                                type="Number"/>
+                            
+                            <Label text="Alert Threshold (% usage)"/>
+                            <Slider 
+                                value="{storage>/config/alertThreshold}"
+                                min="50"
+                                max="95"
+                                step="5"
+                                width="200px"
+                                enableTickmarks="true"/>
+                        </form:content>
+                    </form:SimpleForm>
+                    
+                    <HBox class="sapUiMediumMargin">
+                        <Button 
+                            text="Save Configuration"
+                            icon="sap-icon://save"
+                            press=".onSaveStorageConfig"/>
+                        <Button 
+                            text="Reset to Defaults"
+                            press=".onResetStorageConfig"
+                            class="sapUiMediumMarginBegin"/>
+                        <Button 
+                            text="Test Configuration"
+                            icon="sap-icon://test"
+                            press=".onTestStorageConfig"
+                            class="sapUiMediumMarginBegin"/>
+                    </HBox>
+                </Panel>
+                
+                <!-- Backend Alerts -->
+                <Panel 
+                    headerText="Storage Alerts"
+                    visible="{= ${storage>/alerts}.length > 0}"
+                    class="sapUiResponsiveMargin">
+                    <List items="{storage>/alerts}">
+                        <CustomListItem>
+                            <VBox class="sapUiMediumMargin">
+                                <HBox>
+                                    <ObjectStatus 
+                                        text="{severity}"
+                                        state="{= ${severity} === 'HIGH' ? 'Error' : ${severity} === 'MEDIUM' ? 'Warning' : 'Information'}"
+                                        icon="sap-icon://alert"
+                                        class="sapUiMediumMarginEnd"/>
+                                    <VBox>
+                                        <Title text="{backend}: {alertType}" level="H5"/>
+                                        <Text text="{message}"/>
+                                        <Text text="Triggered: {timestamp}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                </HBox>
+                                <HBox class="sapUiMediumMarginTop">
+                                    <Button 
+                                        text="Acknowledge"
+                                        press=".onAcknowledgeAlert"/>
+                                    <Button 
+                                        text="View Details"
+                                        press=".onViewAlertDetails"
+                                        class="sapUiMediumMarginBegin"/>
+                                </HBox>
+                            </VBox>
+                        </CustomListItem>
+                    </List>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Export Report"
+                icon="sap-icon://download"
+                press=".onExportStorageReport"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Auto-Refresh"
+                    icon="{= ${storage>/autoRefresh} ? 'sap-icon://pause' : 'sap-icon://play'}"
+                    press=".onToggleStorageAutoRefresh"
+                    type="{= ${storage>/autoRefresh} ? 'Emphasized' : 'Default'}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseStorageManager"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

@@ -1,0 +1,478 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:u="sap.ui.unified">
+    
+    <Dialog
+        id="dataImportDialog"
+        title="Data Import Wizard"
+        contentWidth="90%"
+        contentHeight="85%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <Wizard
+                id="dataImportWizard"
+                complete=".onImportWizardComplete">
+                
+                <!-- Step 1: Source Selection -->
+                <WizardStep
+                    id="sourceSelectionStep"
+                    title="Select Data Source"
+                    validated="true">
+                    <content>
+                        <VBox class="sapUiMediumMargin">
+                            <Title text="Choose Import Source" level="H3"/>
+                            <Text text="Select the type of data source and configure connection details." class="sapUiMediumMarginBottom"/>
+                            
+                            <form:SimpleForm
+                                editable="true"
+                                layout="ResponsiveGridLayout"
+                                labelSpanXL="3"
+                                labelSpanL="3">
+                                <form:content>
+                                    <Label text="Source Type"/>
+                                    <Select 
+                                        selectedKey="{import>/source/type}"
+                                        selectionChange=".onSourceTypeChange">
+                                        <items>
+                                            <core:Item key="FILE" text="File Upload"/>
+                                            <core:Item key="DATABASE" text="Database Connection"/>
+                                            <core:Item key="API" text="REST API"/>
+                                            <core:Item key="FTP" text="FTP/SFTP Server"/>
+                                            <core:Item key="CLOUD" text="Cloud Storage"/>
+                                            <core:Item key="STREAM" text="Data Stream"/>
+                                        </items>
+                                    </Select>
+                                    
+                                    <!-- File Upload Section -->
+                                    <Label text="Upload Files" visible="{= ${import>/source/type} === 'FILE'}"/>
+                                    <VBox visible="{= ${import>/source/type} === 'FILE'}">
+                                        <u:FileUploader
+                                            id="fileUploader"
+                                            name="dataFiles"
+                                            uploadUrl="/upload"
+                                            tooltip="Select files to import"
+                                            typeMissmatch=".onFileTypeMismatch"
+                                            change=".onFileChange"
+                                            multiple="true"
+                                            fileType="csv,json,xml,xlsx,parquet"
+                                            maximumFileSize="500"
+                                            class="sapUiMediumMarginBottom"/>
+                                        <Text text="Supported formats: CSV, JSON, XML, Excel, Parquet" class="sapThemeTextSecondary"/>
+                                        <CheckBox text="Auto-detect format" selected="{import>/source/autoDetectFormat}"/>
+                                    </VBox>
+                                    
+                                    <!-- Database Connection Section -->
+                                    <Label text="Database Type" visible="{= ${import>/source/type} === 'DATABASE'}"/>
+                                    <Select 
+                                        selectedKey="{import>/source/dbType}"
+                                        visible="{= ${import>/source/type} === 'DATABASE'}">
+                                        <items>
+                                            <core:Item key="HANA" text="SAP HANA"/>
+                                            <core:Item key="POSTGRES" text="PostgreSQL"/>
+                                            <core:Item key="MYSQL" text="MySQL"/>
+                                            <core:Item key="ORACLE" text="Oracle"/>
+                                            <core:Item key="MSSQL" text="SQL Server"/>
+                                            <core:Item key="MONGODB" text="MongoDB"/>
+                                        </items>
+                                    </Select>
+                                    
+                                    <Label text="Connection String" visible="{= ${import>/source/type} === 'DATABASE'}"/>
+                                    <Input 
+                                        value="{import>/source/connectionString}"
+                                        placeholder="Enter database connection string"
+                                        visible="{= ${import>/source/type} === 'DATABASE'}"/>
+                                    
+                                    <Label text="Query/Table" visible="{= ${import>/source/type} === 'DATABASE'}"/>
+                                    <TextArea 
+                                        value="{import>/source/query}"
+                                        placeholder="SELECT * FROM table_name OR enter table name"
+                                        rows="3"
+                                        visible="{= ${import>/source/type} === 'DATABASE'}"/>
+                                    
+                                    <!-- API Section -->
+                                    <Label text="API Endpoint" visible="{= ${import>/source/type} === 'API'}"/>
+                                    <Input 
+                                        value="{import>/source/apiEndpoint}"
+                                        placeholder="https://api.example.com/data"
+                                        visible="{= ${import>/source/type} === 'API'}"/>
+                                    
+                                    <Label text="Authentication" visible="{= ${import>/source/type} === 'API'}"/>
+                                    <Select 
+                                        selectedKey="{import>/source/authType}"
+                                        visible="{= ${import>/source/type} === 'API'}">
+                                        <items>
+                                            <core:Item key="NONE" text="No Authentication"/>
+                                            <core:Item key="API_KEY" text="API Key"/>
+                                            <core:Item key="BEARER" text="Bearer Token"/>
+                                            <core:Item key="BASIC" text="Basic Auth"/>
+                                            <core:Item key="OAUTH" text="OAuth 2.0"/>
+                                        </items>
+                                    </Select>
+                                    
+                                    <!-- FTP Section -->
+                                    <Label text="FTP Server" visible="{= ${import>/source/type} === 'FTP'}"/>
+                                    <Input 
+                                        value="{import>/source/ftpServer}"
+                                        placeholder="ftp.example.com"
+                                        visible="{= ${import>/source/type} === 'FTP'}"/>
+                                    
+                                    <Label text="Directory Path" visible="{= ${import>/source/type} === 'FTP'}"/>
+                                    <Input 
+                                        value="{import>/source/ftpPath}"
+                                        placeholder="/data/exports/"
+                                        visible="{= ${import>/source/type} === 'FTP'}"/>
+                                </form:content>
+                            </form:SimpleForm>
+                            
+                            <Button 
+                                text="Test Connection"
+                                icon="sap-icon://test"
+                                press=".onTestConnection"
+                                type="Emphasized"
+                                class="sapUiMediumMarginTop"/>
+                        </VBox>
+                    </content>
+                </WizardStep>
+                
+                <!-- Step 2: Data Preview -->
+                <WizardStep
+                    id="dataPreviewStep"
+                    title="Preview & Configure"
+                    validated="false">
+                    <content>
+                        <VBox class="sapUiMediumMargin">
+                            <Title text="Data Preview" level="H3"/>
+                            <Text text="Review the detected data structure and configure import settings." class="sapUiMediumMarginBottom"/>
+                            
+                            <HBox class="sapUiMediumMarginBottom">
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Label text="Detected Records:"/>
+                                    <Text text="{import>/preview/totalRecords}" class="sapUiLargeText"/>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Label text="Detected Columns:"/>
+                                    <Text text="{import>/preview/totalColumns}" class="sapUiLargeText"/>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Label text="Data Format:"/>
+                                    <Text text="{import>/preview/detectedFormat}" class="sapUiLargeText"/>
+                                </VBox>
+                                <VBox>
+                                    <Label text="Estimated Size:"/>
+                                    <Text text="{import>/preview/estimatedSize} MB" class="sapUiLargeText"/>
+                                </VBox>
+                            </HBox>
+                            
+                            <!-- Data Sample Table -->
+                            <Panel headerText="Data Sample (First 10 Rows)" class="sapUiMediumMarginBottom">
+                                <Table 
+                                    items="{import>/preview/sampleData}"
+                                    mode="None">
+                                    <headerToolbar>
+                                        <Toolbar>
+                                            <ToolbarSpacer/>
+                                            <Button 
+                                                text="Refresh Preview"
+                                                icon="sap-icon://refresh"
+                                                press=".onRefreshPreview"/>
+                                        </Toolbar>
+                                    </headerToolbar>
+                                    <columns>
+                                        <Column>
+                                            <Text text="Row #"/>
+                                        </Column>
+                                        <!-- Dynamic columns based on detected fields -->
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <!-- Dynamic cells based on data -->
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                            
+                            <!-- Column Mapping -->
+                            <Panel headerText="Column Mapping & Data Types">
+                                <Table 
+                                    items="{import>/preview/columns}"
+                                    mode="None">
+                                    <columns>
+                                        <Column>
+                                            <Text text="Source Column"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Target Field"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Data Type"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Required"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Default Value"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Transform"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="{sourceColumn}"/>
+                                                <Input value="{targetField}"/>
+                                                <Select selectedKey="{dataType}">
+                                                    <items>
+                                                        <core:Item key="String" text="String"/>
+                                                        <core:Item key="Integer" text="Integer"/>
+                                                        <core:Item key="Decimal" text="Decimal"/>
+                                                        <core:Item key="Boolean" text="Boolean"/>
+                                                        <core:Item key="Date" text="Date"/>
+                                                        <core:Item key="DateTime" text="DateTime"/>
+                                                        <core:Item key="JSON" text="JSON"/>
+                                                    </items>
+                                                </Select>
+                                                <CheckBox selected="{required}"/>
+                                                <Input value="{defaultValue}"/>
+                                                <Select selectedKey="{transform}">
+                                                    <items>
+                                                        <core:Item key="NONE" text="None"/>
+                                                        <core:Item key="UPPERCASE" text="Uppercase"/>
+                                                        <core:Item key="LOWERCASE" text="Lowercase"/>
+                                                        <core:Item key="TRIM" text="Trim Spaces"/>
+                                                        <core:Item key="DATE_FORMAT" text="Format Date"/>
+                                                        <core:Item key="CUSTOM" text="Custom Function"/>
+                                                    </items>
+                                                </Select>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </content>
+                </WizardStep>
+                
+                <!-- Step 3: Import Options -->
+                <WizardStep
+                    id="importOptionsStep"
+                    title="Import Options"
+                    validated="true">
+                    <content>
+                        <VBox class="sapUiMediumMargin">
+                            <Title text="Import Configuration" level="H3"/>
+                            <Text text="Configure how the data should be imported and processed." class="sapUiMediumMarginBottom"/>
+                            
+                            <form:SimpleForm
+                                editable="true"
+                                layout="ResponsiveGridLayout"
+                                labelSpanXL="4"
+                                labelSpanL="4"
+                                columnsXL="2"
+                                columnsL="2">
+                                <form:content>
+                                    <Label text="Target Dataset"/>
+                                    <Input 
+                                        value="{import>/options/targetDataset}"
+                                        placeholder="Enter dataset name"/>
+                                    
+                                    <Label text="Import Mode"/>
+                                    <Select selectedKey="{import>/options/importMode}">
+                                        <items>
+                                            <core:Item key="INSERT" text="Insert Only"/>
+                                            <core:Item key="UPSERT" text="Insert or Update"/>
+                                            <core:Item key="REPLACE" text="Replace Existing"/>
+                                            <core:Item key="APPEND" text="Append to Existing"/>
+                                        </items>
+                                    </Select>
+                                    
+                                    <Label text="Batch Size"/>
+                                    <Input 
+                                        value="{import>/options/batchSize}"
+                                        type="Number"
+                                        description="Records per batch"/>
+                                    
+                                    <Label text="Parallel Workers"/>
+                                    <Slider 
+                                        value="{import>/options/parallelWorkers}"
+                                        min="1"
+                                        max="10"
+                                        step="1"
+                                        width="200px"
+                                        enableTickmarks="true"/>
+                                    
+                                    <Label text="Error Handling"/>
+                                    <Select selectedKey="{import>/options/errorHandling}">
+                                        <items>
+                                            <core:Item key="STOP_ON_ERROR" text="Stop on First Error"/>
+                                            <core:Item key="SKIP_ERRORS" text="Skip Invalid Records"/>
+                                            <core:Item key="LOG_AND_CONTINUE" text="Log Errors and Continue"/>
+                                        </items>
+                                    </Select>
+                                    
+                                    <Label text="Max Error Threshold"/>
+                                    <Input 
+                                        value="{import>/options/maxErrors}"
+                                        type="Number"
+                                        description="Maximum allowed errors"/>
+                                    
+                                    <Label text="Data Validation"/>
+                                    <CheckBox 
+                                        selected="{import>/options/validateData}"
+                                        text="Validate data before import"/>
+                                    
+                                    <Label text="Create Backup"/>
+                                    <CheckBox 
+                                        selected="{import>/options/createBackup}"
+                                        text="Create backup before import"/>
+                                    
+                                    <Label text="Compress Data"/>
+                                    <CheckBox 
+                                        selected="{import>/options/compressData}"
+                                        text="Compress imported data"/>
+                                    
+                                    <Label text="Index Creation"/>
+                                    <CheckBox 
+                                        selected="{import>/options/createIndexes}"
+                                        text="Create indexes after import"/>
+                                    
+                                    <Label text="Progress Notifications"/>
+                                    <CheckBox 
+                                        selected="{import>/options/sendNotifications}"
+                                        text="Send progress notifications"/>
+                                    
+                                    <Label text="Schedule Import"/>
+                                    <CheckBox 
+                                        selected="{import>/options/scheduleImport}"
+                                        text="Schedule for later execution"/>
+                                </form:content>
+                            </form:SimpleForm>
+                            
+                            <!-- Schedule Options (if enabled) -->
+                            <Panel 
+                                headerText="Schedule Options"
+                                visible="{import>/options/scheduleImport}"
+                                class="sapUiMediumMarginTop">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout">
+                                    <form:content>
+                                        <Label text="Execution Date"/>
+                                        <DatePicker value="{import>/options/scheduledDate}"/>
+                                        
+                                        <Label text="Execution Time"/>
+                                        <TimePicker value="{import>/options/scheduledTime}"/>
+                                        
+                                        <Label text="Priority"/>
+                                        <Select selectedKey="{import>/options/priority}">
+                                            <items>
+                                                <core:Item key="LOW" text="Low"/>
+                                                <core:Item key="NORMAL" text="Normal"/>
+                                                <core:Item key="HIGH" text="High"/>
+                                                <core:Item key="URGENT" text="Urgent"/>
+                                            </items>
+                                        </Select>
+                                    </form:content>
+                                </form:SimpleForm>
+                            </Panel>
+                        </VBox>
+                    </content>
+                </WizardStep>
+                
+                <!-- Step 4: Summary -->
+                <WizardStep
+                    id="summaryStep"
+                    title="Review & Execute"
+                    validated="true">
+                    <content>
+                        <VBox class="sapUiMediumMargin">
+                            <Title text="Import Summary" level="H3"/>
+                            <Text text="Review your import configuration before execution." class="sapUiMediumMarginBottom"/>
+                            
+                            <Panel headerText="Import Details" class="sapUiMediumMarginBottom">
+                                <VBox class="sapUiMediumMargin">
+                                    <HBox justifyContent="SpaceBetween">
+                                        <Label text="Source Type:"/>
+                                        <Text text="{import>/source/type}"/>
+                                    </HBox>
+                                    <HBox justifyContent="SpaceBetween">
+                                        <Label text="Target Dataset:"/>
+                                        <Text text="{import>/options/targetDataset}"/>
+                                    </HBox>
+                                    <HBox justifyContent="SpaceBetween">
+                                        <Label text="Records to Import:"/>
+                                        <Text text="{import>/preview/totalRecords}"/>
+                                    </HBox>
+                                    <HBox justifyContent="SpaceBetween">
+                                        <Label text="Estimated Duration:"/>
+                                        <Text text="{import>/summary/estimatedDuration}"/>
+                                    </HBox>
+                                    <HBox justifyContent="SpaceBetween">
+                                        <Label text="Import Mode:"/>
+                                        <Text text="{import>/options/importMode}"/>
+                                    </HBox>
+                                    <HBox justifyContent="SpaceBetween">
+                                        <Label text="Batch Size:"/>
+                                        <Text text="{import>/options/batchSize}"/>
+                                    </HBox>
+                                </VBox>
+                            </Panel>
+                            
+                            <!-- Validation Results -->
+                            <Panel 
+                                headerText="Validation Results"
+                                visible="{= ${import>/validation/completed} === true}">
+                                <List items="{import>/validation/results}">
+                                    <StandardListItem
+                                        title="{title}"
+                                        description="{description}"
+                                        info="{status}"
+                                        infoState="{= ${status} === 'PASSED' ? 'Success' : ${status} === 'WARNING' ? 'Warning' : 'Error'}"
+                                        icon="{= ${status} === 'PASSED' ? 'sap-icon://accept' : ${status} === 'WARNING' ? 'sap-icon://warning' : 'sap-icon://error'}"/>
+                                </List>
+                            </Panel>
+                            
+                            <!-- Execute Import -->
+                            <HBox class="sapUiMediumMarginTop" justifyContent="Center">
+                                <Button 
+                                    text="Start Import"
+                                    icon="sap-icon://play"
+                                    press=".onStartImport"
+                                    type="Emphasized"
+                                    class="sapUiMediumMarginEnd"/>
+                                <Button 
+                                    text="Save Configuration"
+                                    icon="sap-icon://save"
+                                    press=".onSaveImportConfig"/>
+                            </HBox>
+                        </VBox>
+                    </content>
+                </WizardStep>
+            </Wizard>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Previous"
+                press=".onWizardPrevious"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Save & Close"
+                    press=".onSaveAndCloseImport"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Cancel"
+                    press=".onCancelImport"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

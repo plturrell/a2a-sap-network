@@ -258,7 +258,8 @@ cds.on('bootstrap', async (app) => {
             '/a2a/agent4/v1',
             '/a2a/agent5/v1',
             '/a2a/agent6/v1',
-            '/a2a/agent7/v1'
+            '/a2a/agent7/v1',
+            '/a2a/agent8/v1'
         ];
         
         const shouldBypass = bypassPaths.some(path => req.path.startsWith(path));
@@ -1419,6 +1420,275 @@ cds.on('bootstrap', async (app) => {
     });
     
     log.info('Agent 7 API proxy routes initialized');
+    
+    // ===== AGENT 8 PROXY ROUTES =====
+    const AGENT8_BASE_URL = process.env.AGENT8_BASE_URL || 'http://localhost:8007';
+    
+    // Agent 8 proxy function
+    const proxyAgent8Request = async (req, res, endpoint, method = 'GET') => {
+        try {
+            const response = await axios({
+                method,
+                url: `${AGENT8_BASE_URL}/api/v1${endpoint}`,
+                data: req.body,
+                headers: { 'Content-Type': 'application/json' },
+                timeout: 30000
+            });
+            res.json(response.data);
+        } catch (error) {
+            log.error(`Agent 8 proxy error for ${endpoint}:`, error.message);
+            res.status(503).json({
+                error: {
+                    code: "SERVICE_UNAVAILABLE",
+                    message: "Agent 8 Data Management service temporarily unavailable",
+                    endpoint: endpoint
+                }
+            });
+        }
+    };
+    
+    // Agent 8 Data Management Core Operations
+    app.get('/a2a/agent8/v1/tasks', (req, res) => proxyAgent8Request(req, res, '/data-tasks'));
+    app.post('/a2a/agent8/v1/tasks', (req, res) => proxyAgent8Request(req, res, '/data-tasks', 'POST'));
+    app.get('/a2a/agent8/v1/tasks/:taskId', (req, res) => 
+        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}`));
+    app.put('/a2a/agent8/v1/tasks/:taskId', (req, res) => 
+        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}`, 'PUT'));
+    app.delete('/a2a/agent8/v1/tasks/:taskId', (req, res) => 
+        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}`, 'DELETE'));
+    
+    // Agent 8 Data Task Operations
+    app.post('/a2a/agent8/v1/tasks/:taskId/execute', (req, res) => 
+        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}/execute`, 'POST'));
+    app.post('/a2a/agent8/v1/tasks/:taskId/validate', (req, res) => 
+        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}/validate`, 'POST'));
+    app.post('/a2a/agent8/v1/tasks/:taskId/pause', (req, res) => 
+        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}/pause`, 'POST'));
+    app.post('/a2a/agent8/v1/tasks/:taskId/resume', (req, res) => 
+        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}/resume`, 'POST'));
+    app.post('/a2a/agent8/v1/tasks/:taskId/cancel', (req, res) => 
+        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}/cancel`, 'POST'));
+    app.get('/a2a/agent8/v1/tasks/:taskId/status', (req, res) => 
+        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}/status`));
+    app.get('/a2a/agent8/v1/tasks/:taskId/progress', (req, res) => 
+        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}/progress`));
+    app.get('/a2a/agent8/v1/tasks/:taskId/logs', (req, res) => 
+        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}/logs`));
+    app.get('/a2a/agent8/v1/tasks/:taskId/stream', (req, res) => {
+        // Special handling for Server-Sent Events
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        
+        const eventSourceUrl = `${AGENT8_BASE_URL}/api/v1/data-tasks/${req.params.taskId}/stream`;
+        // Proxy SSE stream - implementation would forward events
+        res.write(':ok\n\n');
+    });
+    
+    // Agent 8 Storage Backend Management
+    app.get('/a2a/agent8/v1/storage-backends', (req, res) => proxyAgent8Request(req, res, '/storage-backends'));
+    app.post('/a2a/agent8/v1/storage-backends', (req, res) => proxyAgent8Request(req, res, '/storage-backends', 'POST'));
+    app.get('/a2a/agent8/v1/storage-backends/:backendId', (req, res) => 
+        proxyAgent8Request(req, res, `/storage-backends/${req.params.backendId}`));
+    app.put('/a2a/agent8/v1/storage-backends/:backendId', (req, res) => 
+        proxyAgent8Request(req, res, `/storage-backends/${req.params.backendId}`, 'PUT'));
+    app.delete('/a2a/agent8/v1/storage-backends/:backendId', (req, res) => 
+        proxyAgent8Request(req, res, `/storage-backends/${req.params.backendId}`, 'DELETE'));
+    app.post('/a2a/agent8/v1/storage-backends/:backendId/health-check', (req, res) => 
+        proxyAgent8Request(req, res, `/storage-backends/${req.params.backendId}/health-check`, 'POST'));
+    app.get('/a2a/agent8/v1/storage-backends/:backendId/utilization', (req, res) => 
+        proxyAgent8Request(req, res, `/storage-backends/${req.params.backendId}/utilization`));
+    app.post('/a2a/agent8/v1/storage-backends/:backendId/optimize', (req, res) => 
+        proxyAgent8Request(req, res, `/storage-backends/${req.params.backendId}/optimize`, 'POST'));
+    
+    // Agent 8 Cache Management
+    app.get('/a2a/agent8/v1/cache/configurations', (req, res) => proxyAgent8Request(req, res, '/cache/configurations'));
+    app.post('/a2a/agent8/v1/cache/configurations', (req, res) => proxyAgent8Request(req, res, '/cache/configurations', 'POST'));
+    app.get('/a2a/agent8/v1/cache/configurations/:configId', (req, res) => 
+        proxyAgent8Request(req, res, `/cache/configurations/${req.params.configId}`));
+    app.put('/a2a/agent8/v1/cache/configurations/:configId', (req, res) => 
+        proxyAgent8Request(req, res, `/cache/configurations/${req.params.configId}`, 'PUT'));
+    app.delete('/a2a/agent8/v1/cache/configurations/:configId', (req, res) => 
+        proxyAgent8Request(req, res, `/cache/configurations/${req.params.configId}`, 'DELETE'));
+    app.post('/a2a/agent8/v1/cache/:cacheId/clear', (req, res) => 
+        proxyAgent8Request(req, res, `/cache/${req.params.cacheId}/clear`, 'POST'));
+    app.post('/a2a/agent8/v1/cache/:cacheId/warmup', (req, res) => 
+        proxyAgent8Request(req, res, `/cache/${req.params.cacheId}/warmup`, 'POST'));
+    app.get('/a2a/agent8/v1/cache/:cacheId/stats', (req, res) => 
+        proxyAgent8Request(req, res, `/cache/${req.params.cacheId}/stats`));
+    app.get('/a2a/agent8/v1/cache/operations', (req, res) => proxyAgent8Request(req, res, '/cache/operations'));
+    app.get('/a2a/agent8/v1/cache/analytics', (req, res) => proxyAgent8Request(req, res, '/cache/analytics'));
+    
+    // Agent 8 Data Versioning
+    app.get('/a2a/agent8/v1/versions', (req, res) => proxyAgent8Request(req, res, '/data-versions'));
+    app.post('/a2a/agent8/v1/versions', (req, res) => proxyAgent8Request(req, res, '/data-versions', 'POST'));
+    app.get('/a2a/agent8/v1/versions/:versionId', (req, res) => 
+        proxyAgent8Request(req, res, `/data-versions/${req.params.versionId}`));
+    app.delete('/a2a/agent8/v1/versions/:versionId', (req, res) => 
+        proxyAgent8Request(req, res, `/data-versions/${req.params.versionId}`, 'DELETE'));
+    app.post('/a2a/agent8/v1/versions/:versionId/restore', (req, res) => 
+        proxyAgent8Request(req, res, `/data-versions/${req.params.versionId}/restore`, 'POST'));
+    app.get('/a2a/agent8/v1/versions/:versionId/compare/:compareVersionId', (req, res) => 
+        proxyAgent8Request(req, res, `/data-versions/${req.params.versionId}/compare/${req.params.compareVersionId}`));
+    app.get('/a2a/agent8/v1/datasets/:datasetId/versions', (req, res) => 
+        proxyAgent8Request(req, res, `/datasets/${req.params.datasetId}/versions`));
+    app.post('/a2a/agent8/v1/datasets/:datasetId/create-version', (req, res) => 
+        proxyAgent8Request(req, res, `/datasets/${req.params.datasetId}/create-version`, 'POST'));
+    
+    // Agent 8 Data Backup Management
+    app.get('/a2a/agent8/v1/backups', (req, res) => proxyAgent8Request(req, res, '/data-backups'));
+    app.post('/a2a/agent8/v1/backups', (req, res) => proxyAgent8Request(req, res, '/data-backups', 'POST'));
+    app.get('/a2a/agent8/v1/backups/:backupId', (req, res) => 
+        proxyAgent8Request(req, res, `/data-backups/${req.params.backupId}`));
+    app.delete('/a2a/agent8/v1/backups/:backupId', (req, res) => 
+        proxyAgent8Request(req, res, `/data-backups/${req.params.backupId}`, 'DELETE'));
+    app.post('/a2a/agent8/v1/backups/:backupId/restore', (req, res) => 
+        proxyAgent8Request(req, res, `/data-backups/${req.params.backupId}/restore`, 'POST'));
+    app.post('/a2a/agent8/v1/backups/:backupId/verify', (req, res) => 
+        proxyAgent8Request(req, res, `/data-backups/${req.params.backupId}/verify`, 'POST'));
+    app.get('/a2a/agent8/v1/backup-schedules', (req, res) => proxyAgent8Request(req, res, '/backup-schedules'));
+    app.post('/a2a/agent8/v1/backup-schedules', (req, res) => proxyAgent8Request(req, res, '/backup-schedules', 'POST'));
+    app.put('/a2a/agent8/v1/backup-schedules/:scheduleId', (req, res) => 
+        proxyAgent8Request(req, res, `/backup-schedules/${req.params.scheduleId}`, 'PUT'));
+    app.delete('/a2a/agent8/v1/backup-schedules/:scheduleId', (req, res) => 
+        proxyAgent8Request(req, res, `/backup-schedules/${req.params.scheduleId}`, 'DELETE'));
+    
+    // Agent 8 Data Import/Export
+    app.post('/a2a/agent8/v1/import', (req, res) => proxyAgent8Request(req, res, '/data-import', 'POST'));
+    app.get('/a2a/agent8/v1/import/:importId', (req, res) => 
+        proxyAgent8Request(req, res, `/data-import/${req.params.importId}`));
+    app.post('/a2a/agent8/v1/import/:importId/cancel', (req, res) => 
+        proxyAgent8Request(req, res, `/data-import/${req.params.importId}/cancel`, 'POST'));
+    app.post('/a2a/agent8/v1/export', (req, res) => proxyAgent8Request(req, res, '/data-export', 'POST'));
+    app.get('/a2a/agent8/v1/export/:exportId', (req, res) => 
+        proxyAgent8Request(req, res, `/data-export/${req.params.exportId}`));
+    app.get('/a2a/agent8/v1/export/:exportId/download', (req, res) => 
+        proxyAgent8Request(req, res, `/data-export/${req.params.exportId}/download`));
+    app.post('/a2a/agent8/v1/export/:exportId/cancel', (req, res) => 
+        proxyAgent8Request(req, res, `/data-export/${req.params.exportId}/cancel`, 'POST'));
+    
+    // Agent 8 Bulk Operations
+    app.get('/a2a/agent8/v1/bulk-operations', (req, res) => proxyAgent8Request(req, res, '/bulk-operations'));
+    app.post('/a2a/agent8/v1/bulk-operations', (req, res) => proxyAgent8Request(req, res, '/bulk-operations', 'POST'));
+    app.get('/a2a/agent8/v1/bulk-operations/:operationId', (req, res) => 
+        proxyAgent8Request(req, res, `/bulk-operations/${req.params.operationId}`));
+    app.post('/a2a/agent8/v1/bulk-operations/:operationId/pause', (req, res) => 
+        proxyAgent8Request(req, res, `/bulk-operations/${req.params.operationId}/pause`, 'POST'));
+    app.post('/a2a/agent8/v1/bulk-operations/:operationId/resume', (req, res) => 
+        proxyAgent8Request(req, res, `/bulk-operations/${req.params.operationId}/resume`, 'POST'));
+    app.post('/a2a/agent8/v1/bulk-operations/:operationId/cancel', (req, res) => 
+        proxyAgent8Request(req, res, `/bulk-operations/${req.params.operationId}/cancel`, 'POST'));
+    app.get('/a2a/agent8/v1/bulk-operations/:operationId/progress', (req, res) => 
+        proxyAgent8Request(req, res, `/bulk-operations/${req.params.operationId}/progress`));
+    
+    // Agent 8 Performance Metrics
+    app.get('/a2a/agent8/v1/performance/storage', (req, res) => proxyAgent8Request(req, res, '/performance/storage'));
+    app.get('/a2a/agent8/v1/performance/cache', (req, res) => proxyAgent8Request(req, res, '/performance/cache'));
+    app.get('/a2a/agent8/v1/performance/throughput', (req, res) => proxyAgent8Request(req, res, '/performance/throughput'));
+    app.get('/a2a/agent8/v1/performance/operations', (req, res) => proxyAgent8Request(req, res, '/performance/operations'));
+    
+    // Agent 8 Dashboard and Analytics
+    app.get('/a2a/agent8/v1/dashboard', (req, res) => proxyAgent8Request(req, res, '/dashboard'));
+    app.get('/a2a/agent8/v1/analytics/storage-trends', (req, res) => proxyAgent8Request(req, res, '/analytics/storage-trends'));
+    app.get('/a2a/agent8/v1/analytics/cache-performance', (req, res) => proxyAgent8Request(req, res, '/analytics/cache-performance'));
+    app.get('/a2a/agent8/v1/analytics/operation-patterns', (req, res) => proxyAgent8Request(req, res, '/analytics/operation-patterns'));
+    
+    // Agent 8 Configuration Management
+    app.get('/a2a/agent8/v1/config', (req, res) => proxyAgent8Request(req, res, '/config'));
+    app.put('/a2a/agent8/v1/config', (req, res) => proxyAgent8Request(req, res, '/config', 'PUT'));
+    app.post('/a2a/agent8/v1/config/test', (req, res) => proxyAgent8Request(req, res, '/config/test', 'POST'));
+    app.post('/a2a/agent8/v1/config/reset', (req, res) => proxyAgent8Request(req, res, '/config/reset', 'POST'));
+    
+    // Agent 8 Health Check
+    app.get('/a2a/agent8/v1/health', (req, res) => proxyAgent8Request(req, res, '/health'));
+    
+    // Agent 8 OData Service Proxy - Convert REST to OData format
+    app.get('/a2a/agent8/v1/odata/DataTasks', async (req, res) => {
+        try {
+            const response = await axios.get(`${AGENT8_BASE_URL}/api/v1/data-tasks`);
+            
+            const odataResponse = {
+                "@odata.context": "$metadata#DataTasks",
+                "value": response.data.map(task => ({
+                    ID: task.id,
+                    taskName: task.task_name,
+                    description: task.description,
+                    taskType: task.task_type?.toUpperCase() || 'PROCESSING',
+                    status: task.status?.toUpperCase() || 'PENDING',
+                    priority: task.priority?.toUpperCase() || 'NORMAL',
+                    dataSource: task.data_source,
+                    targetDestination: task.target_destination,
+                    dataSize: task.data_size || 0,
+                    processedSize: task.processed_size || 0,
+                    progressPercent: task.progress_percent || 0,
+                    estimatedDuration: task.estimated_duration,
+                    actualDuration: task.actual_duration,
+                    startTime: task.start_time,
+                    endTime: task.end_time,
+                    errorMessage: task.error_message,
+                    retryCount: task.retry_count || 0,
+                    maxRetries: task.max_retries || 3,
+                    configuration: JSON.stringify(task.configuration || {}),
+                    metadata: JSON.stringify(task.metadata || {}),
+                    createdAt: task.created_at,
+                    createdBy: task.created_by,
+                    modifiedAt: task.modified_at,
+                    modifiedBy: task.modified_by
+                }))
+            };
+            
+            res.json(odataResponse);
+        } catch (error) {
+            res.status(503).json({
+                error: {
+                    code: "SERVICE_UNAVAILABLE",
+                    message: "Agent 8 backend not available"
+                }
+            });
+        }
+    });
+    
+    app.get('/a2a/agent8/v1/odata/StorageBackends', async (req, res) => {
+        try {
+            const response = await axios.get(`${AGENT8_BASE_URL}/api/v1/storage-backends`);
+            
+            const odataResponse = {
+                "@odata.context": "$metadata#StorageBackends",
+                "value": response.data.map(backend => ({
+                    ID: backend.id,
+                    backendName: backend.backend_name,
+                    backendType: backend.backend_type?.toUpperCase() || 'HANA',
+                    connectionString: backend.connection_string,
+                    status: backend.status?.toUpperCase() || 'ACTIVE',
+                    healthScore: backend.health_score || 100,
+                    totalCapacity: backend.total_capacity || 0,
+                    usedCapacity: backend.used_capacity || 0,
+                    availableCapacity: backend.available_capacity || 0,
+                    compressionEnabled: backend.compression_enabled !== false,
+                    encryptionEnabled: backend.encryption_enabled !== false,
+                    replicationFactor: backend.replication_factor || 1,
+                    lastHealthCheck: backend.last_health_check,
+                    configuration: JSON.stringify(backend.configuration || {}),
+                    credentials: JSON.stringify(backend.credentials || {}),
+                    createdAt: backend.created_at,
+                    createdBy: backend.created_by,
+                    modifiedAt: backend.modified_at,
+                    modifiedBy: backend.modified_by
+                }))
+            };
+            
+            res.json(odataResponse);
+        } catch (error) {
+            res.status(503).json({
+                error: {
+                    code: "SERVICE_UNAVAILABLE",
+                    message: "Agent 8 backend not available"
+                }
+            });
+        }
+    });
+    
+    log.info('Agent 8 API proxy routes initialized');
     
     // Agent 3 OData Service Proxy - Convert REST to OData format
     app.get('/a2a/agent3/v1/odata/VectorProcessingTasks', async (req, res) => {

@@ -1,0 +1,535 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:u="sap.ui.unified">
+    
+    <Dialog
+        id="dataExportDialog"
+        title="Data Export Center"
+        contentWidth="90%"
+        contentHeight="85%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Quick Export Tab -->
+                    <IconTabFilter text="Quick Export" icon="sap-icon://download">
+                        <VBox class="sapUiMediumMargin">
+                            <Title text="Quick Data Export" level="H3"/>
+                            <Text text="Export data quickly with predefined settings." class="sapUiMediumMarginBottom"/>
+                            
+                            <form:SimpleForm
+                                editable="true"
+                                layout="ResponsiveGridLayout"
+                                labelSpanXL="3"
+                                labelSpanL="3"
+                                columnsXL="2"
+                                columnsL="2">
+                                <form:content>
+                                    <Label text="Export Dataset"/>
+                                    <Select 
+                                        selectedKey="{export>/quick/selectedDataset}"
+                                        items="{export>/availableDatasets}">
+                                        <items>
+                                            <core:Item key="{datasetId}" text="{datasetName} ({recordCount} records)"/>
+                                        </items>
+                                    </Select>
+                                    
+                                    <Label text="Export Format"/>
+                                    <Select selectedKey="{export>/quick/format}">
+                                        <items>
+                                            <core:Item key="CSV" text="CSV (Comma Separated)"/>
+                                            <core:Item key="JSON" text="JSON"/>
+                                            <core:Item key="XML" text="XML"/>
+                                            <core:Item key="XLSX" text="Excel (XLSX)"/>
+                                            <core:Item key="PARQUET" text="Parquet"/>
+                                            <core:Item key="SQL" text="SQL Insert Statements"/>
+                                        </items>
+                                    </Select>
+                                    
+                                    <Label text="Date Range"/>
+                                    <HBox>
+                                        <DateRangeSelection 
+                                            value="{export>/quick/dateRange}"
+                                            class="sapUiMediumMarginEnd"/>
+                                        <CheckBox 
+                                            text="All data" 
+                                            selected="{export>/quick/exportAll}"/>
+                                    </HBox>
+                                    
+                                    <Label text="Compression"/>
+                                    <Select selectedKey="{export>/quick/compression}">
+                                        <items>
+                                            <core:Item key="NONE" text="No Compression"/>
+                                            <core:Item key="ZIP" text="ZIP"/>
+                                            <core:Item key="GZIP" text="GZIP"/>
+                                            <core:Item key="BZIP2" text="BZIP2"/>
+                                        </items>
+                                    </Select>
+                                    
+                                    <Label text="Include Metadata"/>
+                                    <CheckBox selected="{export>/quick/includeMetadata}"/>
+                                    
+                                    <Label text="Email Results"/>
+                                    <HBox>
+                                        <CheckBox 
+                                            selected="{export>/quick/emailResults}"
+                                            class="sapUiMediumMarginEnd"/>
+                                        <Input 
+                                            value="{export>/quick/emailAddress}"
+                                            placeholder="Enter email address"
+                                            enabled="{export>/quick/emailResults}"/>
+                                    </HBox>
+                                </form:content>
+                            </form:SimpleForm>
+                            
+                            <HBox class="sapUiMediumMarginTop" justifyContent="Center">
+                                <Button 
+                                    text="Start Export"
+                                    icon="sap-icon://download"
+                                    press=".onStartQuickExport"
+                                    type="Emphasized"/>
+                            </HBox>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Advanced Export Tab -->
+                    <IconTabFilter text="Advanced Export" icon="sap-icon://settings">
+                        <VBox class="sapUiMediumMargin">
+                            <Title text="Advanced Export Configuration" level="H3"/>
+                            <Text text="Configure detailed export settings with custom queries and transformations." class="sapUiMediumMarginBottom"/>
+                            
+                            <!-- Data Selection -->
+                            <Panel headerText="Data Selection" class="sapUiMediumMarginBottom">
+                                <VBox class="sapUiMediumMargin">
+                                    <Label text="Select Datasets"/>
+                                    <MultiComboBox 
+                                        selectedKeys="{export>/advanced/selectedDatasets}"
+                                        items="{export>/availableDatasets}">
+                                        <items>
+                                            <core:Item key="{datasetId}" text="{datasetName}"/>
+                                        </items>
+                                    </MultiComboBox>
+                                    
+                                    <Label text="Custom Query (Optional)" class="sapUiMediumMarginTop"/>
+                                    <TextArea 
+                                        value="{export>/advanced/customQuery}"
+                                        placeholder="SELECT * FROM dataset WHERE condition..."
+                                        rows="4"/>
+                                    
+                                    <HBox class="sapUiMediumMarginTop">
+                                        <Button 
+                                            text="Validate Query"
+                                            icon="sap-icon://validate"
+                                            press=".onValidateQuery"
+                                            class="sapUiMediumMarginEnd"/>
+                                        <Button 
+                                            text="Preview Results"
+                                            icon="sap-icon://detail-view"
+                                            press=".onPreviewQuery"/>
+                                    </HBox>
+                                </VBox>
+                            </Panel>
+                            
+                            <!-- Field Selection -->
+                            <Panel headerText="Field Selection" class="sapUiMediumMarginBottom">
+                                <Table 
+                                    items="{export>/advanced/availableFields}"
+                                    mode="MultiSelect">
+                                    <headerToolbar>
+                                        <Toolbar>
+                                            <Title text="Select Fields to Export"/>
+                                            <ToolbarSpacer/>
+                                            <Button 
+                                                text="Select All"
+                                                press=".onSelectAllFields"/>
+                                            <Button 
+                                                text="Deselect All"
+                                                press=".onDeselectAllFields"/>
+                                        </Toolbar>
+                                    </headerToolbar>
+                                    <columns>
+                                        <Column>
+                                            <Text text="Field Name"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Data Type"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Export Name"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Transform"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="{fieldName}"/>
+                                                <Text text="{dataType}"/>
+                                                <Input value="{exportName}"/>
+                                                <Select selectedKey="{transform}">
+                                                    <items>
+                                                        <core:Item key="NONE" text="None"/>
+                                                        <core:Item key="UPPERCASE" text="Uppercase"/>
+                                                        <core:Item key="LOWERCASE" text="Lowercase"/>
+                                                        <core:Item key="DATE_FORMAT" text="Format Date"/>
+                                                        <core:Item key="ENCRYPT" text="Encrypt"/>
+                                                        <core:Item key="MASK" text="Mask Sensitive"/>
+                                                    </items>
+                                                </Select>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                            
+                            <!-- Export Configuration -->
+                            <Panel headerText="Export Configuration" class="sapUiMediumMarginBottom">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    labelSpanXL="4"
+                                    labelSpanL="4"
+                                    columnsXL="2"
+                                    columnsL="2"
+                                    class="sapUiMediumMargin">
+                                    <form:content>
+                                        <Label text="Output Format"/>
+                                        <Select selectedKey="{export>/advanced/format}">
+                                            <items>
+                                                <core:Item key="CSV" text="CSV (Comma Separated)"/>
+                                                <core:Item key="TSV" text="TSV (Tab Separated)"/>
+                                                <core:Item key="JSON" text="JSON"/>
+                                                <core:Item key="JSONL" text="JSON Lines"/>
+                                                <core:Item key="XML" text="XML"/>
+                                                <core:Item key="XLSX" text="Excel (XLSX)"/>
+                                                <core:Item key="PARQUET" text="Parquet"/>
+                                                <core:Item key="AVRO" text="Apache Avro"/>
+                                                <core:Item key="ORC" text="ORC"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="File Split Strategy"/>
+                                        <Select selectedKey="{export>/advanced/splitStrategy}">
+                                            <items>
+                                                <core:Item key="SINGLE_FILE" text="Single File"/>
+                                                <core:Item key="BY_SIZE" text="Split by File Size"/>
+                                                <core:Item key="BY_RECORDS" text="Split by Record Count"/>
+                                                <core:Item key="BY_DATE" text="Split by Date"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Max File Size (MB)"/>
+                                        <Input 
+                                            value="{export>/advanced/maxFileSize}"
+                                            type="Number"
+                                            enabled="{= ${export>/advanced/splitStrategy} === 'BY_SIZE'}"/>
+                                        
+                                        <Label text="Records per File"/>
+                                        <Input 
+                                            value="{export>/advanced/recordsPerFile}"
+                                            type="Number"
+                                            enabled="{= ${export>/advanced/splitStrategy} === 'BY_RECORDS'}"/>
+                                        
+                                        <Label text="Character Encoding"/>
+                                        <Select selectedKey="{export>/advanced/encoding}">
+                                            <items>
+                                                <core:Item key="UTF-8" text="UTF-8"/>
+                                                <core:Item key="UTF-16" text="UTF-16"/>
+                                                <core:Item key="ISO-8859-1" text="ISO-8859-1"/>
+                                                <core:Item key="ASCII" text="ASCII"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Date Format"/>
+                                        <Select selectedKey="{export>/advanced/dateFormat}">
+                                            <items>
+                                                <core:Item key="ISO8601" text="ISO 8601 (2024-01-01T00:00:00Z)"/>
+                                                <core:Item key="YYYY-MM-DD" text="YYYY-MM-DD"/>
+                                                <core:Item key="DD/MM/YYYY" text="DD/MM/YYYY"/>
+                                                <core:Item key="MM/DD/YYYY" text="MM/DD/YYYY"/>
+                                                <core:Item key="TIMESTAMP" text="Unix Timestamp"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Null Value Representation"/>
+                                        <Input value="{export>/advanced/nullValue}" placeholder="NULL"/>
+                                        
+                                        <Label text="Include Headers"/>
+                                        <CheckBox selected="{export>/advanced/includeHeaders}"/>
+                                        
+                                        <Label text="Quote All Fields"/>
+                                        <CheckBox selected="{export>/advanced/quoteAll}"/>
+                                        
+                                        <Label text="Escape Special Characters"/>
+                                        <CheckBox selected="{export>/advanced/escapeSpecial}"/>
+                                        
+                                        <Label text="Generate Checksums"/>
+                                        <CheckBox selected="{export>/advanced/generateChecksums}"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                            </Panel>
+                            
+                            <!-- Destination Configuration -->
+                            <Panel headerText="Export Destination" class="sapUiMediumMarginBottom">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    class="sapUiMediumMargin">
+                                    <form:content>
+                                        <Label text="Destination Type"/>
+                                        <Select 
+                                            selectedKey="{export>/advanced/destination/type}"
+                                            selectionChange=".onDestinationTypeChange">
+                                            <items>
+                                                <core:Item key="DOWNLOAD" text="Direct Download"/>
+                                                <core:Item key="FTP" text="FTP/SFTP Server"/>
+                                                <core:Item key="CLOUD" text="Cloud Storage"/>
+                                                <core:Item key="EMAIL" text="Email Attachment"/>
+                                                <core:Item key="DATABASE" text="Database"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <!-- FTP Configuration -->
+                                        <Label text="FTP Server" visible="{= ${export>/advanced/destination/type} === 'FTP'}"/>
+                                        <Input 
+                                            value="{export>/advanced/destination/ftpServer}"
+                                            placeholder="ftp.example.com"
+                                            visible="{= ${export>/advanced/destination/type} === 'FTP'}"/>
+                                        
+                                        <Label text="Remote Path" visible="{= ${export>/advanced/destination/type} === 'FTP'}"/>
+                                        <Input 
+                                            value="{export>/advanced/destination/remotePath}"
+                                            placeholder="/exports/"
+                                            visible="{= ${export>/advanced/destination/type} === 'FTP'}"/>
+                                        
+                                        <!-- Cloud Storage Configuration -->
+                                        <Label text="Storage Provider" visible="{= ${export>/advanced/destination/type} === 'CLOUD'}"/>
+                                        <Select 
+                                            selectedKey="{export>/advanced/destination/cloudProvider}"
+                                            visible="{= ${export>/advanced/destination/type} === 'CLOUD'}">
+                                            <items>
+                                                <core:Item key="AWS_S3" text="Amazon S3"/>
+                                                <core:Item key="AZURE_BLOB" text="Azure Blob Storage"/>
+                                                <core:Item key="GCP_STORAGE" text="Google Cloud Storage"/>
+                                                <core:Item key="SAP_OBJECTSTORE" text="SAP Object Store"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <!-- Email Configuration -->
+                                        <Label text="Email Recipients" visible="{= ${export>/advanced/destination/type} === 'EMAIL'}"/>
+                                        <Input 
+                                            value="{export>/advanced/destination/emailRecipients}"
+                                            placeholder="user@example.com, user2@example.com"
+                                            visible="{= ${export>/advanced/destination/type} === 'EMAIL'}"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                            </Panel>
+                            
+                            <HBox class="sapUiMediumMarginTop" justifyContent="Center">
+                                <Button 
+                                    text="Start Advanced Export"
+                                    icon="sap-icon://download"
+                                    press=".onStartAdvancedExport"
+                                    type="Emphasized"
+                                    class="sapUiMediumMarginEnd"/>
+                                <Button 
+                                    text="Save Template"
+                                    icon="sap-icon://save"
+                                    press=".onSaveExportTemplate"/>
+                            </HBox>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Export History Tab -->
+                    <IconTabFilter text="Export History" icon="sap-icon://history">
+                        <VBox class="sapUiMediumMargin">
+                            <Title text="Export History" level="H3"/>
+                            <Text text="View and manage previous export operations." class="sapUiMediumMarginBottom"/>
+                            
+                            <Table 
+                                items="{export>/history}"
+                                growing="true"
+                                growingThreshold="20">
+                                <headerToolbar>
+                                    <Toolbar>
+                                        <Title text="Recent Exports"/>
+                                        <ToolbarSpacer/>
+                                        <Button 
+                                            text="Cleanup Old Exports"
+                                            icon="sap-icon://delete"
+                                            press=".onCleanupOldExports"/>
+                                    </Toolbar>
+                                </headerToolbar>
+                                <columns>
+                                    <Column>
+                                        <Text text="Export Name"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Dataset"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Format"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Records"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Status"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Duration"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Created"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Actions"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <VBox>
+                                                <Text text="{exportName}"/>
+                                                <Text text="Size: {fileSize}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <Text text="{datasetName}"/>
+                                            <ObjectStatus 
+                                                text="{format}"
+                                                state="Information"/>
+                                            <Text text="{recordCount}"/>
+                                            <ObjectStatus 
+                                                text="{status}"
+                                                state="{= ${status} === 'COMPLETED' ? 'Success' : ${status} === 'FAILED' ? 'Error' : ${status} === 'RUNNING' ? 'Warning' : 'Information'}"
+                                                icon="{= ${status} === 'COMPLETED' ? 'sap-icon://accept' : ${status} === 'FAILED' ? 'sap-icon://error' : ${status} === 'RUNNING' ? 'sap-icon://in-progress' : 'sap-icon://pending'}"/>
+                                            <Text text="{duration}"/>
+                                            <Text text="{createdAt}"/>
+                                            <HBox>
+                                                <Button 
+                                                    icon="sap-icon://download"
+                                                    tooltip="Download"
+                                                    press=".onDownloadExport"
+                                                    enabled="{= ${status} === 'COMPLETED'}"/>
+                                                <Button 
+                                                    icon="sap-icon://detail-view"
+                                                    tooltip="View Details"
+                                                    press=".onViewExportDetails"/>
+                                                <Button 
+                                                    icon="sap-icon://restart"
+                                                    tooltip="Re-run Export"
+                                                    press=".onRerunExport"/>
+                                                <Button 
+                                                    icon="sap-icon://delete"
+                                                    tooltip="Delete"
+                                                    press=".onDeleteExport"/>
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Templates Tab -->
+                    <IconTabFilter text="Templates" icon="sap-icon://template">
+                        <VBox class="sapUiMediumMargin">
+                            <Title text="Export Templates" level="H3"/>
+                            <Text text="Manage and reuse export configurations." class="sapUiMediumMarginBottom"/>
+                            
+                            <Table 
+                                items="{export>/templates}"
+                                mode="SingleSelect">
+                                <headerToolbar>
+                                    <Toolbar>
+                                        <Title text="Saved Templates"/>
+                                        <ToolbarSpacer/>
+                                        <Button 
+                                            text="Create Template"
+                                            icon="sap-icon://add"
+                                            press=".onCreateTemplate"/>
+                                    </Toolbar>
+                                </headerToolbar>
+                                <columns>
+                                    <Column>
+                                        <Text text="Template Name"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Description"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Format"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Created"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Last Used"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Actions"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{templateName}"/>
+                                            <Text text="{description}"/>
+                                            <Text text="{format}"/>
+                                            <Text text="{createdAt}"/>
+                                            <Text text="{lastUsed}"/>
+                                            <HBox>
+                                                <Button 
+                                                    icon="sap-icon://play"
+                                                    tooltip="Use Template"
+                                                    press=".onUseTemplate"/>
+                                                <Button 
+                                                    icon="sap-icon://edit"
+                                                    tooltip="Edit Template"
+                                                    press=".onEditTemplate"/>
+                                                <Button 
+                                                    icon="sap-icon://copy"
+                                                    tooltip="Clone Template"
+                                                    press=".onCloneTemplate"/>
+                                                <Button 
+                                                    icon="sap-icon://delete"
+                                                    tooltip="Delete Template"
+                                                    press=".onDeleteTemplate"/>
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Export Scheduler"
+                icon="sap-icon://appointment-2"
+                press=".onOpenExportScheduler"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Settings"
+                    icon="sap-icon://settings"
+                    press=".onExportSettings"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseDataExport"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

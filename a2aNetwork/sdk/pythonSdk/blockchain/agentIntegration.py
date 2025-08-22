@@ -47,6 +47,9 @@ class BlockchainAgentIntegration:
         # Agent address
         self.agent_address = self.blockchain_client.agent_identity.address
         
+        # Router address from blockchain client
+        self.router_address = self.blockchain_client.message_router_contract.address
+        
         logger.info(f"Initialized blockchain integration for {agent_name} at {self.agent_address}")
     
     async def initialize(self) -> bool:

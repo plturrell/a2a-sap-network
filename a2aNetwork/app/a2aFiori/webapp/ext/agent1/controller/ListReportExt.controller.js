@@ -13,45 +13,41 @@ sap.ui.define([
         override: {
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
+                // Initialize dialog cache for better performance
+                this._dialogCache = {};
             }
         },
 
+        /**
+         * Opens the create standardization task dialog.
+         * Creates and caches the dialog fragment on first use for better performance.
+         * @public
+         * @memberof a2a.network.agent1.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
         onCreateStandardizationTask: function() {
-            var oView = this.base.getView();
-            
-            if (!this._oCreateDialog) {
-                Fragment.load({
-                    id: oView.getId(),
-                    name: "a2a.network.agent1.ext.fragment.CreateStandardizationTask",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._oCreateDialog = oDialog;
-                    oView.addDependent(this._oCreateDialog);
-                    this._oCreateDialog.open();
-                }.bind(this));
-            } else {
-                this._oCreateDialog.open();
-            }
+            this._openCachedDialog("CreateStandardizationTask", "a2a.network.agent1.ext.fragment.CreateStandardizationTask");
         },
 
+        /**
+         * Opens the import schema dialog for template management.
+         * Allows users to import predefined or custom schema templates.
+         * @public
+         * @memberof a2a.network.agent1.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
         onImportSchema: function() {
-            var oView = this.base.getView();
-            
-            if (!this._oImportSchemaDialog) {
-                Fragment.load({
-                    id: oView.getId(),
-                    name: "a2a.network.agent1.ext.fragment.ImportSchema",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._oImportSchemaDialog = oDialog;
-                    oView.addDependent(this._oImportSchemaDialog);
-                    this._oImportSchemaDialog.open();
-                }.bind(this));
-            } else {
-                this._oImportSchemaDialog.open();
-            }
+            this._openCachedDialog("ImportSchema", "a2a.network.agent1.ext.fragment.ImportSchema");
         },
 
+        /**
+         * Initiates batch processing for selected standardization tasks.
+         * Validates selection and confirms operation before execution.
+         * @public
+         * @memberof a2a.network.agent1.ext.controller.ListReportExt
+         * @since 1.0.0
+         * @throws {Error} When no tasks are selected or batch processing fails
+         */
         onBatchProcess: function() {
             var oTable = this._extensionAPI.getTable();
             var aSelectedContexts = oTable.getSelectedContexts();
@@ -78,6 +74,14 @@ sap.ui.define([
             );
         },
 
+        /**
+         * Executes batch processing for the provided task contexts.
+         * Sends parallel processing request to backend service with high priority.
+         * @private
+         * @memberof a2a.network.agent1.ext.controller.ListReportExt
+         * @param {Array<sap.ui.model.Context>} aContexts - Array of selected task contexts
+         * @since 1.0.0
+         */
         _startBatchProcessing: function(aContexts) {
             var aTaskIds = aContexts.map(function(oContext) {
                 return oContext.getProperty("ID");
@@ -117,26 +121,26 @@ sap.ui.define([
             oRouter.navTo("SchemaTemplates");
         },
 
+        /**
+         * Opens the format analyzer dialog and loads current format statistics.
+         * Provides insights into data format distribution and usage patterns.
+         * @public
+         * @memberof a2a.network.agent1.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
         onAnalyzeFormats: function() {
-            var oView = this.base.getView();
-            
-            if (!this._oFormatAnalyzer) {
-                Fragment.load({
-                    id: oView.getId(),
-                    name: "a2a.network.agent1.ext.fragment.FormatAnalyzer",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._oFormatAnalyzer = oDialog;
-                    oView.addDependent(this._oFormatAnalyzer);
-                    this._oFormatAnalyzer.open();
-                    this._loadFormatStatistics();
-                }.bind(this));
-            } else {
-                this._oFormatAnalyzer.open();
+            this._openCachedDialog("FormatAnalyzer", "a2a.network.agent1.ext.fragment.FormatAnalyzer", function() {
                 this._loadFormatStatistics();
-            }
+            }.bind(this));
         },
 
+        /**
+         * Loads format statistics from the backend service.
+         * Includes CSRF protection and response validation for security.
+         * @private
+         * @memberof a2a.network.agent1.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
         _loadFormatStatistics: function() {
             jQuery.ajax({
                 url: "/a2a/agent1/v1/format-statistics",
@@ -155,6 +159,40 @@ sap.ui.define([
                     MessageBox.error("Failed to load format statistics");
                 }
             });
+        },
+
+        /**
+         * Opens a cached dialog fragment with optimized loading.
+         * Creates and caches dialogs on first use to improve performance.
+         * @private
+         * @memberof a2a.network.agent1.ext.controller.ListReportExt
+         * @param {string} sDialogKey - Unique key for caching the dialog
+         * @param {string} sFragmentName - Fragment name to load
+         * @param {function} [fnCallback] - Optional callback after dialog opens
+         * @since 1.0.0
+         */
+        _openCachedDialog: function(sDialogKey, sFragmentName, fnCallback) {
+            var oView = this.base.getView();
+            
+            if (!this._dialogCache[sDialogKey]) {
+                Fragment.load({
+                    id: oView.getId(),
+                    name: sFragmentName,
+                    controller: this
+                }).then(function(oDialog) {
+                    this._dialogCache[sDialogKey] = oDialog;
+                    oView.addDependent(oDialog);
+                    oDialog.open();
+                    if (fnCallback) {
+                        fnCallback();
+                    }
+                }.bind(this));
+            } else {
+                this._dialogCache[sDialogKey].open();
+                if (fnCallback) {
+                    fnCallback();
+                }
+            }
         },
 
         /**

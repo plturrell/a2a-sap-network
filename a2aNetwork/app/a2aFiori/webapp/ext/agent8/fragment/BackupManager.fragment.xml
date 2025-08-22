@@ -1,0 +1,573 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="backupManagerDialog"
+        title="Backup Management System"
+        contentWidth="95%"
+        contentHeight="90%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Backup Overview -->
+                <Panel headerText="Backup System Overview" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Total Backups" level="H4"/>
+                                <ObjectNumber 
+                                    number="{backup>/summary/totalBackups}"
+                                    state="Information"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Storage Used" level="H4"/>
+                                <ObjectNumber 
+                                    number="{backup>/summary/storageUsed}"
+                                    unit="GB"
+                                    state="{= ${backup>/summary/storageUsedPercent} > 80 ? 'Error' : ${backup>/summary/storageUsedPercent} > 60 ? 'Warning' : 'Success'}"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Last Backup" level="H4"/>
+                                <ObjectNumber 
+                                    number="{backup>/summary/lastBackupHours}"
+                                    unit="hrs ago"
+                                    state="{= ${backup>/summary/lastBackupHours} > 48 ? 'Error' : ${backup>/summary/lastBackupHours} > 24 ? 'Warning' : 'Success'}"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="Success Rate" level="H4"/>
+                                <mc:RadialMicroChart
+                                    size="L"
+                                    percentage="{backup>/summary/successRate}"
+                                    valueColor="{= ${backup>/summary/successRate} >= 95 ? 'Good' : ${backup>/summary/successRate} >= 80 ? 'Critical' : 'Error'}"/>
+                                <Text text="{backup>/summary/successRate}%" class="sapUiLargeMarginTop"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <MessageStrip 
+                            text="{backup>/statusMessage}"
+                            type="{backup>/statusMessageType}"
+                            showIcon="true"
+                            class="sapUiMediumMarginTop"/>
+                    </VBox>
+                </Panel>
+                
+                <!-- Quick Actions -->
+                <Panel headerText="Backup Actions" class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin" wrap="Wrap">
+                        <Button 
+                            text="Full Backup"
+                            icon="sap-icon://save"
+                            press=".onCreateFullBackup"
+                            type="Emphasized"
+                            class="sapUiMediumMarginEnd sapUiMediumMarginBottom"/>
+                        <Button 
+                            text="Incremental Backup"
+                            icon="sap-icon://add"
+                            press=".onCreateIncrementalBackup"
+                            class="sapUiMediumMarginEnd sapUiMediumMarginBottom"/>
+                        <Button 
+                            text="Differential Backup"
+                            icon="sap-icon://compare"
+                            press=".onCreateDifferentialBackup"
+                            class="sapUiMediumMarginEnd sapUiMediumMarginBottom"/>
+                        <Button 
+                            text="Restore Data"
+                            icon="sap-icon://restart"
+                            press=".onRestoreData"
+                            type="Accept"
+                            class="sapUiMediumMarginEnd sapUiMediumMarginBottom"/>
+                        <Button 
+                            text="Verify Backups"
+                            icon="sap-icon://validate"
+                            press=".onVerifyBackups"
+                            class="sapUiMediumMarginEnd sapUiMediumMarginBottom"/>
+                        <Button 
+                            text="Cleanup Old"
+                            icon="sap-icon://delete"
+                            press=".onCleanupOldBackups"
+                            type="Reject"
+                            class="sapUiMediumMarginEnd sapUiMediumMarginBottom"/>
+                    </HBox>
+                </Panel>
+                
+                <!-- Backup Jobs -->
+                <Panel headerText="Active Backup Jobs" class="sapUiResponsiveMargin">
+                    <Table 
+                        items="{backup>/activeJobs}"
+                        mode="MultiSelect">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Running Backup Operations"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Pause Selected"
+                                    icon="sap-icon://pause"
+                                    press=".onPauseJobs"/>
+                                <Button 
+                                    text="Cancel Selected"
+                                    icon="sap-icon://stop"
+                                    press=".onCancelJobs"/>
+                            </Toolbar>
+                        </headerToolbar>
+                        <columns>
+                            <Column>
+                                <Text text="Job"/>
+                            </Column>
+                            <Column>
+                                <Text text="Type"/>
+                            </Column>
+                            <Column>
+                                <Text text="Progress"/>
+                            </Column>
+                            <Column>
+                                <Text text="Status"/>
+                            </Column>
+                            <Column>
+                                <Text text="ETA"/>
+                            </Column>
+                            <Column>
+                                <Text text="Size"/>
+                            </Column>
+                            <Column>
+                                <Text text="Speed"/>
+                            </Column>
+                            <Column>
+                                <Text text="Actions"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <VBox>
+                                        <Text text="{jobName}"/>
+                                        <Text text="ID: {jobId}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <ObjectStatus 
+                                        text="{backupType}"
+                                        state="Information"
+                                        icon="{= ${backupType} === 'FULL' ? 'sap-icon://save' : ${backupType} === 'INCREMENTAL' ? 'sap-icon://add' : 'sap-icon://compare'}"/>
+                                    <VBox>
+                                        <ProgressIndicator 
+                                            percentValue="{progressPercent}"
+                                            displayValue="{progressPercent}%"
+                                            state="{= ${status} === 'RUNNING' ? 'Success' : ${status} === 'PAUSED' ? 'Warning' : 'Error'}"
+                                            width="150px"/>
+                                        <Text text="{processedSize} / {totalSize} GB" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <ObjectStatus 
+                                        text="{status}"
+                                        state="{= ${status} === 'RUNNING' ? 'Success' : ${status} === 'PAUSED' ? 'Warning' : ${status} === 'QUEUED' ? 'Information' : 'Error'}"
+                                        icon="{= ${status} === 'RUNNING' ? 'sap-icon://play' : ${status} === 'PAUSED' ? 'sap-icon://pause' : ${status} === 'QUEUED' ? 'sap-icon://pending' : 'sap-icon://error'}"/>
+                                    <Text text="{estimatedTimeRemaining}"/>
+                                    <VBox>
+                                        <Text text="{currentSize} GB"/>
+                                        <Text text="Files: {fileCount}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <VBox>
+                                        <Text text="{speed} MB/s"/>
+                                        <Text text="Compression: {compressionRatio}%" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <HBox>
+                                        <Button 
+                                            icon="{= ${status} === 'RUNNING' ? 'sap-icon://pause' : 'sap-icon://play'}"
+                                            tooltip="{= ${status} === 'RUNNING' ? 'Pause' : 'Resume'}"
+                                            press=".onToggleJob"/>
+                                        <Button 
+                                            icon="sap-icon://detail-view"
+                                            tooltip="Details"
+                                            press=".onViewJobDetails"/>
+                                        <Button 
+                                            icon="sap-icon://log"
+                                            tooltip="View Logs"
+                                            press=".onViewJobLogs"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Backup History -->
+                <Panel headerText="Backup History" class="sapUiResponsiveMargin">
+                    <Table 
+                        items="{backup>/backupHistory}"
+                        growing="true"
+                        growingThreshold="20"
+                        mode="MultiSelect">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Backup Archives"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Restore Selected"
+                                    icon="sap-icon://restart"
+                                    press=".onRestoreSelected"/>
+                                <Button 
+                                    text="Delete Selected"
+                                    icon="sap-icon://delete"
+                                    press=".onDeleteSelected"/>
+                                <Button 
+                                    text="Download Selected"
+                                    icon="sap-icon://download"
+                                    press=".onDownloadSelected"/>
+                            </Toolbar>
+                        </headerToolbar>
+                        <columns>
+                            <Column>
+                                <Text text="Backup Name"/>
+                            </Column>
+                            <Column>
+                                <Text text="Type"/>
+                            </Column>
+                            <Column>
+                                <Text text="Dataset"/>
+                            </Column>
+                            <Column>
+                                <Text text="Size"/>
+                            </Column>
+                            <Column>
+                                <Text text="Compression"/>
+                            </Column>
+                            <Column>
+                                <Text text="Created"/>
+                            </Column>
+                            <Column>
+                                <Text text="Retention"/>
+                            </Column>
+                            <Column>
+                                <Text text="Verification"/>
+                            </Column>
+                            <Column>
+                                <Text text="Actions"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <VBox>
+                                        <Text text="{backupName}"/>
+                                        <Text text="ID: {backupId}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <ObjectStatus 
+                                        text="{backupType}"
+                                        state="Information"
+                                        icon="{= ${backupType} === 'FULL' ? 'sap-icon://save' : ${backupType} === 'INCREMENTAL' ? 'sap-icon://add' : 'sap-icon://compare'}"/>
+                                    <Text text="{datasetName}"/>
+                                    <VBox>
+                                        <Text text="{originalSize} GB"/>
+                                        <Text text="Compressed: {compressedSize} GB" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <VBox>
+                                        <Text text="{compressionRatio}%"/>
+                                        <Text text="Algorithm: {compressionAlgorithm}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <Text text="{createdAt}"/>
+                                    <VBox>
+                                        <Text text="Until: {retentionUntil}"/>
+                                        <Text text="Policy: {retentionPolicy}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <ObjectStatus 
+                                        text="{verificationStatus}"
+                                        state="{= ${verificationStatus} === 'VERIFIED' ? 'Success' : ${verificationStatus} === 'PENDING' ? 'Warning' : ${verificationStatus} === 'FAILED' ? 'Error' : 'Information'}"
+                                        icon="{= ${verificationStatus} === 'VERIFIED' ? 'sap-icon://accept' : ${verificationStatus} === 'PENDING' ? 'sap-icon://pending' : ${verificationStatus} === 'FAILED' ? 'sap-icon://error' : 'sap-icon://question-mark'}"/>
+                                    <HBox>
+                                        <Button 
+                                            icon="sap-icon://restart"
+                                            tooltip="Restore"
+                                            press=".onRestoreBackup"/>
+                                        <Button 
+                                            icon="sap-icon://detail-view"
+                                            tooltip="View Details"
+                                            press=".onViewBackupDetails"/>
+                                        <Button 
+                                            icon="sap-icon://download"
+                                            tooltip="Download"
+                                            press=".onDownloadBackup"/>
+                                        <Button 
+                                            icon="sap-icon://validate"
+                                            tooltip="Verify"
+                                            press=".onVerifyBackup"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Backup Schedules -->
+                <Panel 
+                    headerText="Backup Schedules"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <Table 
+                        items="{backup>/schedules}"
+                        mode="SingleSelect">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Automated Backup Schedules"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Create Schedule"
+                                    icon="sap-icon://add"
+                                    press=".onCreateSchedule"/>
+                            </Toolbar>
+                        </headerToolbar>
+                        <columns>
+                            <Column>
+                                <Text text="Schedule Name"/>
+                            </Column>
+                            <Column>
+                                <Text text="Dataset"/>
+                            </Column>
+                            <Column>
+                                <Text text="Type"/>
+                            </Column>
+                            <Column>
+                                <Text text="Frequency"/>
+                            </Column>
+                            <Column>
+                                <Text text="Next Run"/>
+                            </Column>
+                            <Column>
+                                <Text text="Status"/>
+                            </Column>
+                            <Column>
+                                <Text text="Last Run"/>
+                            </Column>
+                            <Column>
+                                <Text text="Actions"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <VBox>
+                                        <Text text="{scheduleName}"/>
+                                        <Text text="Retention: {retentionPeriod}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <Text text="{datasetName}"/>
+                                    <ObjectStatus 
+                                        text="{backupType}"
+                                        state="Information"/>
+                                    <Text text="{frequency}"/>
+                                    <Text text="{nextRun}"/>
+                                    <ObjectStatus 
+                                        text="{scheduleStatus}"
+                                        state="{= ${scheduleStatus} === 'ACTIVE' ? 'Success' : ${scheduleStatus} === 'PAUSED' ? 'Warning' : 'Error'}"
+                                        icon="{= ${scheduleStatus} === 'ACTIVE' ? 'sap-icon://play' : ${scheduleStatus} === 'PAUSED' ? 'sap-icon://pause' : 'sap-icon://stop'}"/>
+                                    <VBox>
+                                        <Text text="{lastRun}"/>
+                                        <Text text="Result: {lastResult}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <HBox>
+                                        <Button 
+                                            icon="{= ${scheduleStatus} === 'ACTIVE' ? 'sap-icon://pause' : 'sap-icon://play'}"
+                                            tooltip="{= ${scheduleStatus} === 'ACTIVE' ? 'Pause' : 'Activate'}"
+                                            press=".onToggleSchedule"/>
+                                        <Button 
+                                            icon="sap-icon://edit"
+                                            tooltip="Edit Schedule"
+                                            press=".onEditSchedule"/>
+                                        <Button 
+                                            icon="sap-icon://delete"
+                                            tooltip="Delete Schedule"
+                                            press=".onDeleteSchedule"/>
+                                        <Button 
+                                            icon="sap-icon://play"
+                                            tooltip="Run Now"
+                                            press=".onRunScheduleNow"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Backup Configuration -->
+                <Panel 
+                    headerText="Backup Configuration"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="2"
+                        columnsL="2"
+                        columnsM="1"
+                        class="sapUiMediumMargin">
+                        <form:content>
+                            <Label text="Default Backup Location"/>
+                            <Select selectedKey="{backup>/config/defaultLocation}">
+                                <items>
+                                    <core:Item key="LOCAL" text="Local Storage"/>
+                                    <core:Item key="CLOUD" text="Cloud Storage"/>
+                                    <core:Item key="NETWORK" text="Network Storage"/>
+                                    <core:Item key="TAPE" text="Tape Archive"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Default Compression"/>
+                            <Select selectedKey="{backup>/config/defaultCompression}">
+                                <items>
+                                    <core:Item key="NONE" text="No Compression"/>
+                                    <core:Item key="GZIP" text="GZIP"/>
+                                    <core:Item key="BZIP2" text="BZIP2"/>
+                                    <core:Item key="LZ4" text="LZ4 (Fast)"/>
+                                    <core:Item key="ZSTD" text="ZSTD (Balanced)"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Encryption"/>
+                            <CheckBox selected="{backup>/config/encryptionEnabled}"/>
+                            
+                            <Label text="Verification"/>
+                            <CheckBox selected="{backup>/config/autoVerification}"/>
+                            
+                            <Label text="Default Retention (days)"/>
+                            <Input 
+                                value="{backup>/config/defaultRetentionDays}"
+                                type="Number"/>
+                            
+                            <Label text="Parallel Backup Jobs"/>
+                            <Slider 
+                                value="{backup>/config/maxParallelJobs}"
+                                min="1"
+                                max="8"
+                                step="1"
+                                width="200px"
+                                enableTickmarks="true"/>
+                            
+                            <Label text="Notification on Failure"/>
+                            <CheckBox selected="{backup>/config/notifyOnFailure}"/>
+                            
+                            <Label text="Auto-cleanup Old Backups"/>
+                            <CheckBox selected="{backup>/config/autoCleanup}"/>
+                            
+                            <Label text="Bandwidth Limit (MB/s)"/>
+                            <Input 
+                                value="{backup>/config/bandwidthLimit}"
+                                type="Number"/>
+                            
+                            <Label text="Storage Threshold (%)"/>
+                            <Slider 
+                                value="{backup>/config/storageThreshold}"
+                                min="70"
+                                max="95"
+                                step="5"
+                                width="200px"
+                                enableTickmarks="true"/>
+                        </form:content>
+                    </form:SimpleForm>
+                    
+                    <HBox class="sapUiMediumMargin">
+                        <Button 
+                            text="Save Configuration"
+                            icon="sap-icon://save"
+                            press=".onSaveBackupConfig"/>
+                        <Button 
+                            text="Reset to Defaults"
+                            press=".onResetBackupConfig"
+                            class="sapUiMediumMarginBegin"/>
+                        <Button 
+                            text="Test Configuration"
+                            icon="sap-icon://test"
+                            press=".onTestBackupConfig"
+                            class="sapUiMediumMarginBegin"/>
+                    </HBox>
+                </Panel>
+                
+                <!-- Performance Metrics -->
+                <Panel 
+                    headerText="Backup Performance Metrics"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <core:HTML 
+                            id="backupPerformanceChart"
+                            content='<div id="backupPerformanceChartDiv" style="width: 100%; height: 350px;"></div>'
+                            preferDOM="true"/>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Backup Speed Trends" level="H5"/>
+                                <mc:LineMicroChart
+                                    size="M"
+                                    points="{backup>/metrics/speedTrends}">
+                                    <mc:points>
+                                        <mc:LineMicroChartPoint 
+                                            x="{timestamp}"
+                                            y="{speed}"/>
+                                    </mc:points>
+                                </mc:LineMicroChart>
+                                <Text text="Avg: {backup>/metrics/avgSpeed} MB/s"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Storage Growth" level="H5"/>
+                                <mc:AreaMicroChart
+                                    size="M"
+                                    points="{backup>/metrics/storageGrowth}">
+                                    <mc:chart>
+                                        <mc:AreaMicroChartPoint 
+                                            x="{timestamp}"
+                                            y="{storageUsed}"/>
+                                    </mc:chart>
+                                </mc:AreaMicroChart>
+                                <Text text="Current: {backup>/metrics/currentStorage} GB"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="Backup Statistics" level="H5"/>
+                                <Text text="This Week: {backup>/metrics/thisWeekBackups}"/>
+                                <Text text="This Month: {backup>/metrics/thisMonthBackups}"/>
+                                <Text text="Avg Duration: {backup>/metrics/avgDuration}"/>
+                                <Text text="Success Rate: {backup>/metrics/successRate}%"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Export Report"
+                icon="sap-icon://download"
+                press=".onExportBackupReport"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Monitor"
+                    icon="sap-icon://monitor-payments"
+                    press=".onOpenBackupMonitor"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Auto-Refresh"
+                    icon="{= ${backup>/autoRefresh} ? 'sap-icon://pause' : 'sap-icon://play'}"
+                    press=".onToggleBackupAutoRefresh"
+                    type="{= ${backup>/autoRefresh} ? 'Emphasized' : 'Default'}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseBackupManager"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

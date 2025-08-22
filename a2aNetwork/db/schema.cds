@@ -2748,3 +2748,560 @@ entity BulkOperations : cuid, managed {
     @Common.Label: 'Approval Time'
     approvalTime       : DateTime;
 }
+
+// Agent 8 Entities - Data Management Agent
+// Comprehensive data storage, caching, and management system
+entity DataTasks : cuid, managed {
+    @Common.Label: 'Task Name'
+    @Search.defaultSearchElement: true
+    @mandatory
+    taskName           : String(100);
+    
+    @Common.Label: 'Task Type'
+    @mandatory
+    taskType           : String(50) enum {
+        STORE; RETRIEVE; UPDATE; DELETE; BACKUP; RESTORE;
+        MIGRATE; COMPRESS; CACHE; VALIDATE; OPTIMIZE; ARCHIVE;
+    };
+    
+    @Common.Label: 'Data Source'
+    dataSource         : String(500);
+    
+    @Common.Label: 'Data Target'
+    dataTarget         : String(500);
+    
+    @Common.Label: 'Data Format'
+    dataFormat         : String(50) enum {
+        JSON; XML; CSV; PARQUET; AVRO; BINARY; TEXT; IMAGE; DOCUMENT;
+    };
+    
+    @Common.Label: 'Storage Backend'
+    @mandatory
+    storageBackend     : String(50) enum {
+        HANA; SQLITE; S3; REDIS; MEMORY; FILE_SYSTEM; DISTRIBUTED; HYBRID;
+    };
+    
+    @Common.Label: 'Cache Strategy'
+    cacheStrategy      : String(50) enum {
+        NONE; MEMORY_ONLY; REDIS_ONLY; MULTI_TIER; WRITE_THROUGH; WRITE_BACK;
+    };
+    
+    @Common.Label: 'Compression'
+    compressionEnabled : Boolean default false;
+    
+    @Common.Label: 'Compression Type'
+    compressionType    : String(30) enum {
+        GZIP; LZ4; SNAPPY; BROTLI; ZSTD;
+    };
+    
+    @Common.Label: 'Encryption Enabled'
+    encryptionEnabled  : Boolean default false;
+    
+    @Common.Label: 'Encryption Algorithm'
+    encryptionAlgorithm : String(30) enum {
+        AES_256; AES_128; RSA; CHACHA20;
+    };
+    
+    @Common.Label: 'Versioning Enabled'
+    versioningEnabled  : Boolean default false;
+    
+    @Common.Label: 'Version Retention'
+    versionRetention   : Integer default 10;
+    
+    @Common.Label: 'Partition Strategy'
+    partitionStrategy  : String(50) enum {
+        NONE; DATE_BASED; SIZE_BASED; HASH_BASED; RANGE_BASED;
+    };
+    
+    @Common.Label: 'Status'
+    status             : String(20) enum {
+        DRAFT; QUEUED; PROCESSING; COMPLETED; FAILED; CANCELLED; PAUSED;
+    } default 'DRAFT';
+    
+    @Common.Label: 'Priority'
+    priority           : String(10) enum {
+        LOW; NORMAL; HIGH; CRITICAL;
+    } default 'NORMAL';
+    
+    @Common.Label: 'Progress Percentage'
+    @assert.range: [0, 100]
+    progressPercent    : Integer default 0;
+    
+    @Common.Label: 'Data Size (bytes)'
+    dataSize           : Integer64;
+    
+    @Common.Label: 'Processed Size (bytes)'
+    processedSize      : Integer64 default 0;
+    
+    @Common.Label: 'Processing Speed (MB/s)'
+    processingSpeed    : Decimal(10, 2);
+    
+    @Common.Label: 'Error Count'
+    errorCount         : Integer default 0;
+    
+    @Common.Label: 'Warning Count'
+    warningCount       : Integer default 0;
+    
+    @Common.Label: 'Configuration'
+    @Core.MediaType: 'application/json'
+    configuration      : LargeString;
+    
+    @Common.Label: 'Performance Metrics'
+    @Core.MediaType: 'application/json'
+    performanceMetrics : LargeString;
+    
+    @Common.Label: 'Error Log'
+    @Core.MediaType: 'application/json'
+    errorLog           : LargeString;
+    
+    @Common.Label: 'Scheduled Time'
+    scheduledTime      : DateTime;
+    
+    @Common.Label: 'Started At'
+    startedAt          : DateTime;
+    
+    @Common.Label: 'Completed At'
+    completedAt        : DateTime;
+    
+    @Common.Label: 'Estimated Completion'
+    estimatedCompletion : DateTime;
+    
+    @Common.Label: 'Retry Count'
+    retryCount         : Integer default 0;
+    
+    @Common.Label: 'Max Retries'
+    maxRetries         : Integer default 3;
+    
+    @Common.Label: 'Checkpoint Data'
+    @Core.MediaType: 'application/json'
+    checkpointData     : LargeString;
+    
+    @Common.Label: 'Storage Utilization'
+    storageUtilizations : Composition of many StorageUtilizations on storageUtilizations.task = $self;
+    
+    @Common.Label: 'Cache Operations'
+    cacheOperations    : Composition of many CacheOperations on cacheOperations.task = $self;
+    
+    @Common.Label: 'Data Versions'
+    dataVersions       : Composition of many DataVersions on dataVersions.task = $self;
+}
+
+// Storage Backend Management
+entity StorageBackends : cuid, managed {
+    @Common.Label: 'Backend Name'
+    @Search.defaultSearchElement: true
+    @mandatory
+    backendName        : String(100);
+    
+    @Common.Label: 'Backend Type'
+    @mandatory
+    backendType        : String(50) enum {
+        HANA; SQLITE; S3; REDIS; MEMORY; FILE_SYSTEM; DISTRIBUTED; HYBRID;
+    };
+    
+    @Common.Label: 'Connection String'
+    connectionString   : String(500);
+    
+    @Common.Label: 'Status'
+    status             : String(20) enum {
+        ACTIVE; INACTIVE; MAINTENANCE; ERROR; DEGRADED;
+    } default 'ACTIVE';
+    
+    @Common.Label: 'Health Score'
+    @assert.range: [0, 100]
+    healthScore        : Decimal(5, 2) default 100;
+    
+    @Common.Label: 'Total Capacity (GB)'
+    totalCapacity      : Decimal(15, 2);
+    
+    @Common.Label: 'Used Capacity (GB)'
+    usedCapacity       : Decimal(15, 2) default 0;
+    
+    @Common.Label: 'Available Capacity (GB)'
+    availableCapacity  : Decimal(15, 2);
+    
+    @Common.Label: 'Read Performance (IOPS)'
+    readPerformance    : Integer;
+    
+    @Common.Label: 'Write Performance (IOPS)'
+    writePerformance   : Integer;
+    
+    @Common.Label: 'Latency (ms)'
+    latency            : Decimal(10, 3);
+    
+    @Common.Label: 'Throughput (MB/s)'
+    throughput         : Decimal(10, 2);
+    
+    @Common.Label: 'Compression Ratio'
+    compressionRatio   : Decimal(5, 2);
+    
+    @Common.Label: 'Encryption Enabled'
+    encryptionEnabled  : Boolean default false;
+    
+    @Common.Label: 'Backup Enabled'
+    backupEnabled      : Boolean default true;
+    
+    @Common.Label: 'Replication Factor'
+    replicationFactor  : Integer default 1;
+    
+    @Common.Label: 'Configuration'
+    @Core.MediaType: 'application/json'
+    configuration      : LargeString;
+    
+    @Common.Label: 'Connection Pool Size'
+    connectionPoolSize : Integer default 10;
+    
+    @Common.Label: 'Last Health Check'
+    lastHealthCheck    : DateTime;
+    
+    @Common.Label: 'Last Backup'
+    lastBackup         : DateTime;
+    
+    @Common.Label: 'Maintenance Window'
+    maintenanceWindow  : String(100);
+    
+    @Common.Label: 'Storage Utilizations'
+    storageUtilizations : Composition of many StorageUtilizations on storageUtilizations.backend = $self;
+}
+
+// Storage Utilization Tracking
+entity StorageUtilizations : cuid {
+    @Common.Label: 'Task'
+    task               : Association to DataTasks;
+    
+    @Common.Label: 'Backend'
+    backend            : Association to StorageBackends not null;
+    
+    @Common.Label: 'Operation Type'
+    operationType      : String(20) enum {
+        READ; WRITE; DELETE; UPDATE; BACKUP; RESTORE;
+    };
+    
+    @Common.Label: 'Data Size (bytes)'
+    dataSize           : Integer64;
+    
+    @Common.Label: 'Storage Used (bytes)'
+    storageUsed        : Integer64;
+    
+    @Common.Label: 'Storage Saved (bytes)'
+    storageSaved       : Integer64 default 0;
+    
+    @Common.Label: 'Duration (ms)'
+    duration           : Integer;
+    
+    @Common.Label: 'Timestamp'
+    timestamp          : DateTime;
+    
+    @Common.Label: 'Performance Metrics'
+    @Core.MediaType: 'application/json'
+    performanceMetrics : String(2000);
+    
+    @Common.Label: 'Success'
+    success            : Boolean default true;
+    
+    @Common.Label: 'Error Message'
+    errorMessage       : String(1000);
+}
+
+// Cache Management
+entity CacheConfigurations : cuid, managed {
+    @Common.Label: 'Cache Name'
+    @Search.defaultSearchElement: true
+    @mandatory
+    cacheName          : String(100);
+    
+    @Common.Label: 'Cache Type'
+    @mandatory
+    cacheType          : String(30) enum {
+        MEMORY; REDIS; HYBRID; DISTRIBUTED;
+    };
+    
+    @Common.Label: 'Cache Strategy'
+    cacheStrategy      : String(50) enum {
+        LRU; LFU; FIFO; TTL; CUSTOM;
+    };
+    
+    @Common.Label: 'Max Size (MB)'
+    maxSize            : Integer;
+    
+    @Common.Label: 'TTL (seconds)'
+    ttl                : Integer default 3600;
+    
+    @Common.Label: 'Eviction Policy'
+    evictionPolicy     : String(50);
+    
+    @Common.Label: 'Compression Enabled'
+    compressionEnabled : Boolean default false;
+    
+    @Common.Label: 'Persistence Enabled'
+    persistenceEnabled : Boolean default false;
+    
+    @Common.Label: 'Status'
+    status             : String(20) enum {
+        ACTIVE; INACTIVE; MAINTENANCE; ERROR;
+    } default 'ACTIVE';
+    
+    @Common.Label: 'Current Size (MB)'
+    currentSize        : Decimal(10, 2) default 0;
+    
+    @Common.Label: 'Hit Rate (%)'
+    @assert.range: [0, 100]
+    hitRate            : Decimal(5, 2) default 0;
+    
+    @Common.Label: 'Miss Rate (%)'
+    @assert.range: [0, 100]
+    missRate           : Decimal(5, 2) default 0;
+    
+    @Common.Label: 'Operations Per Second'
+    operationsPerSecond : Integer default 0;
+    
+    @Common.Label: 'Configuration'
+    @Core.MediaType: 'application/json'
+    configuration      : LargeString;
+    
+    @Common.Label: 'Cache Operations'
+    cacheOperations    : Composition of many CacheOperations on cacheOperations.cacheConfig = $self;
+}
+
+// Cache Operations Tracking
+entity CacheOperations : cuid {
+    @Common.Label: 'Task'
+    task               : Association to DataTasks;
+    
+    @Common.Label: 'Cache Configuration'
+    cacheConfig        : Association to CacheConfigurations not null;
+    
+    @Common.Label: 'Operation Type'
+    operationType      : String(20) enum {
+        GET; PUT; DELETE; EVICT; FLUSH; INVALIDATE;
+    };
+    
+    @Common.Label: 'Cache Key'
+    cacheKey           : String(500);
+    
+    @Common.Label: 'Data Size (bytes)'
+    dataSize           : Integer;
+    
+    @Common.Label: 'Hit/Miss'
+    hitMiss            : String(10) enum {
+        HIT; MISS; ERROR;
+    };
+    
+    @Common.Label: 'Response Time (ms)'
+    responseTime       : Decimal(10, 3);
+    
+    @Common.Label: 'Timestamp'
+    timestamp          : DateTime;
+    
+    @Common.Label: 'Success'
+    success            : Boolean default true;
+    
+    @Common.Label: 'Error Message'
+    errorMessage       : String(1000);
+    
+    @Common.Label: 'Metadata'
+    @Core.MediaType: 'application/json'
+    metadata           : String(2000);
+}
+
+// Data Version Management
+entity DataVersions : cuid, managed {
+    @Common.Label: 'Task'
+    task               : Association to DataTasks not null;
+    
+    @Common.Label: 'Version Number'
+    @mandatory
+    versionNumber      : String(50);
+    
+    @Common.Label: 'Version Type'
+    versionType        : String(20) enum {
+        MAJOR; MINOR; PATCH; SNAPSHOT; BACKUP;
+    } default 'MINOR';
+    
+    @Common.Label: 'Data Checksum'
+    dataChecksum       : String(128);
+    
+    @Common.Label: 'Data Size (bytes)'
+    dataSize           : Integer64;
+    
+    @Common.Label: 'Compressed Size (bytes)'
+    compressedSize     : Integer64;
+    
+    @Common.Label: 'Storage Location'
+    storageLocation    : String(500);
+    
+    @Common.Label: 'Description'
+    @UI.MultiLineText: true
+    description        : String(1000);
+    
+    @Common.Label: 'Tags'
+    @Core.MediaType: 'application/json'
+    tags               : String(500);
+    
+    @Common.Label: 'Metadata'
+    @Core.MediaType: 'application/json'
+    metadata           : LargeString;
+    
+    @Common.Label: 'Parent Version'
+    parentVersion      : Association to DataVersions;
+    
+    @Common.Label: 'Is Current'
+    isCurrent          : Boolean default false;
+    
+    @Common.Label: 'Is Deleted'
+    isDeleted          : Boolean default false;
+    
+    @Common.Label: 'Retention Until'
+    retentionUntil     : DateTime;
+    
+    @Common.Label: 'Access Count'
+    accessCount        : Integer default 0;
+    
+    @Common.Label: 'Last Accessed'
+    lastAccessed       : DateTime;
+}
+
+// Data Backup Management
+entity DataBackups : cuid, managed {
+    @Common.Label: 'Backup Name'
+    @Search.defaultSearchElement: true
+    @mandatory
+    backupName         : String(100);
+    
+    @Common.Label: 'Source Data'
+    sourceData         : String(500);
+    
+    @Common.Label: 'Backup Type'
+    backupType         : String(30) enum {
+        FULL; INCREMENTAL; DIFFERENTIAL; SNAPSHOT;
+    };
+    
+    @Common.Label: 'Storage Backend'
+    storageBackend     : Association to StorageBackends;
+    
+    @Common.Label: 'Status'
+    status             : String(20) enum {
+        SCHEDULED; RUNNING; COMPLETED; FAILED; CANCELLED;
+    } default 'SCHEDULED';
+    
+    @Common.Label: 'Schedule Type'
+    scheduleType       : String(20) enum {
+        MANUAL; HOURLY; DAILY; WEEKLY; MONTHLY;
+    } default 'MANUAL';
+    
+    @Common.Label: 'Schedule Expression'
+    scheduleExpression : String(100);
+    
+    @Common.Label: 'Data Size (bytes)'
+    dataSize           : Integer64;
+    
+    @Common.Label: 'Compressed Size (bytes)'
+    compressedSize     : Integer64;
+    
+    @Common.Label: 'Compression Ratio'
+    compressionRatio   : Decimal(5, 2);
+    
+    @Common.Label: 'Encryption Enabled'
+    encryptionEnabled  : Boolean default true;
+    
+    @Common.Label: 'Verification Status'
+    verificationStatus : String(20) enum {
+        PENDING; VERIFIED; FAILED; SKIPPED;
+    } default 'PENDING';
+    
+    @Common.Label: 'Retention Period (days)'
+    retentionPeriod    : Integer default 90;
+    
+    @Common.Label: 'Started At'
+    startedAt          : DateTime;
+    
+    @Common.Label: 'Completed At'
+    completedAt        : DateTime;
+    
+    @Common.Label: 'Duration (seconds)'
+    duration           : Integer;
+    
+    @Common.Label: 'Progress Percentage'
+    @assert.range: [0, 100]
+    progressPercent    : Integer default 0;
+    
+    @Common.Label: 'Storage Location'
+    storageLocation    : String(500);
+    
+    @Common.Label: 'Checksum'
+    checksum           : String(128);
+    
+    @Common.Label: 'Next Scheduled'
+    nextScheduled      : DateTime;
+    
+    @Common.Label: 'Error Log'
+    @Core.MediaType: 'application/json'
+    errorLog           : LargeString;
+    
+    @Common.Label: 'Configuration'
+    @Core.MediaType: 'application/json'
+    configuration      : LargeString;
+}
+
+// Data Performance Metrics
+entity DataPerformanceMetrics : cuid {
+    @Common.Label: 'Metric Name'
+    @mandatory
+    metricName         : String(100);
+    
+    @Common.Label: 'Metric Type'
+    metricType         : String(50) enum {
+        THROUGHPUT; LATENCY; IOPS; CPU_USAGE; MEMORY_USAGE;
+        STORAGE_USAGE; CACHE_HIT_RATE; ERROR_RATE; QUEUE_DEPTH;
+    };
+    
+    @Common.Label: 'Storage Backend'
+    storageBackend     : Association to StorageBackends;
+    
+    @Common.Label: 'Cache Configuration'
+    cacheConfig        : Association to CacheConfigurations;
+    
+    @Common.Label: 'Value'
+    value              : Decimal(20, 5);
+    
+    @Common.Label: 'Unit'
+    unit               : String(20);
+    
+    @Common.Label: 'Timestamp'
+    timestamp          : DateTime;
+    
+    @Common.Label: 'Time Window'
+    timeWindow         : String(20) enum {
+        MINUTE; HOUR; DAY; WEEK; MONTH;
+    } default 'MINUTE';
+    
+    @Common.Label: 'Min Value'
+    minValue           : Decimal(20, 5);
+    
+    @Common.Label: 'Max Value'
+    maxValue           : Decimal(20, 5);
+    
+    @Common.Label: 'Average Value'
+    averageValue       : Decimal(20, 5);
+    
+    @Common.Label: 'Percentile 95'
+    percentile95       : Decimal(20, 5);
+    
+    @Common.Label: 'Percentile 99'
+    percentile99       : Decimal(20, 5);
+    
+    @Common.Label: 'Trend'
+    trend              : String(20) enum {
+        IMPROVING; STABLE; DEGRADING;
+    };
+    
+    @Common.Label: 'Threshold'
+    threshold          : Decimal(20, 5);
+    
+    @Common.Label: 'Alert Triggered'
+    alertTriggered     : Boolean default false;
+    
+    @Common.Label: 'Metadata'
+    @Core.MediaType: 'application/json'
+    metadata           : String(2000);
+}
