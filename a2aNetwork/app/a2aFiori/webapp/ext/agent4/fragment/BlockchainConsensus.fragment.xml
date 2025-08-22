@@ -1,0 +1,508 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="blockchainConsensusDialog"
+        title="Blockchain Consensus Validation"
+        contentWidth="80%"
+        contentHeight="75%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Consensus Configuration -->
+                <Panel headerText="Consensus Configuration" class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="2"
+                        columnsL="2"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Blockchain Network"/>
+                            <Select selectedKey="{blockchain>/network}">
+                                <items>
+                                    <core:Item key="ETHEREUM" text="Ethereum Mainnet"/>
+                                    <core:Item key="POLYGON" text="Polygon Network"/>
+                                    <core:Item key="BSC" text="Binance Smart Chain"/>
+                                    <core:Item key="AVALANCHE" text="Avalanche"/>
+                                    <core:Item key="PRIVATE" text="Private Network"/>
+                                    <core:Item key="TESTNET" text="Test Network"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Number of Validators"/>
+                            <Input 
+                                value="{blockchain>/validatorCount}"
+                                type="Number"
+                                placeholder="5"/>
+                            
+                            <Label text="Consensus Threshold"/>
+                            <VBox>
+                                <Slider 
+                                    value="{blockchain>/consensusThreshold}"
+                                    min="0.5"
+                                    max="1.0"
+                                    step="0.05"
+                                    width="250px"
+                                    liveChange=".onThresholdChange"/>
+                                <Text text="Threshold: {blockchain>/consensusThreshold} ({= Math.round(${blockchain>/consensusThreshold} * 100)}%)"/>
+                                <Text text="Required validators: {= Math.ceil(${blockchain>/validatorCount} * ${blockchain>/consensusThreshold})}" class="sapUiContentLabelColor"/>
+                            </VBox>
+                            
+                            <Label text="Validation Timeout"/>
+                            <Select selectedKey="{blockchain>/timeout}">
+                                <items>
+                                    <core:Item key="60" text="1 minute"/>
+                                    <core:Item key="180" text="3 minutes"/>
+                                    <core:Item key="300" text="5 minutes"/>
+                                    <core:Item key="600" text="10 minutes"/>
+                                    <core:Item key="1800" text="30 minutes"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Validator Selection"/>
+                            <RadioButtonGroup selectedIndex="{blockchain>/selectionMethod}">
+                                <RadioButton text="Random selection"/>
+                                <RadioButton text="Reputation-based"/>
+                                <RadioButton text="Stake-weighted"/>
+                                <RadioButton text="Manual selection"/>
+                            </RadioButtonGroup>
+                            
+                            <Label text="Incentive Model"/>
+                            <Select selectedKey="{blockchain>/incentiveModel}">
+                                <items>
+                                    <core:Item key="FIXED" text="Fixed reward"/>
+                                    <core:Item key="DYNAMIC" text="Dynamic based on accuracy"/>
+                                    <core:Item key="STAKE" text="Stake-based rewards"/>
+                                    <core:Item key="NONE" text="No rewards"/>
+                                </items>
+                            </Select>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Available Validators -->
+                <Panel headerText="Available Validators" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox class="sapUiMediumMarginBottom">
+                            <Text text="Select validators for consensus:" class="sapUiMediumMarginEnd"/>
+                            <Button 
+                                text="Auto Select Best"
+                                press=".onAutoSelectValidators"
+                                class="sapUiMediumMarginEnd"/>
+                            <Button 
+                                text="Refresh List"
+                                icon="sap-icon://refresh"
+                                press=".onRefreshValidators"/>
+                        </HBox>
+                        
+                        <Table 
+                            items="{blockchain>/availableValidators}"
+                            mode="MultiSelect"
+                            selectionChange=".onValidatorSelectionChange">
+                            <columns>
+                                <Column>
+                                    <Text text="Validator"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Reputation"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Math Accuracy"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Stake"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Response Time"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Status"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem selected="{selected}">
+                                    <cells>
+                                        <VBox>
+                                            <Text text="{name}"/>
+                                            <Text 
+                                                text="{address}"
+                                                class="sapUiContentLabelColor"/>
+                                        </VBox>
+                                        <ProgressIndicator 
+                                            percentValue="{reputation}"
+                                            displayValue="{reputation}"
+                                            state="{= ${reputation} >= 90 ? 'Success' : ${reputation} >= 75 ? 'Warning' : 'Error'}"/>
+                                        <ProgressIndicator 
+                                            percentValue="{mathAccuracy}"
+                                            displayValue="{mathAccuracy}%"
+                                            state="{= ${mathAccuracy} >= 95 ? 'Success' : ${mathAccuracy} >= 85 ? 'Warning' : 'Error'}"/>
+                                        <ObjectNumber 
+                                            number="{stake}"
+                                            unit="ETH"
+                                            state="{= ${stake} >= 10 ? 'Success' : ${stake} >= 5 ? 'Warning' : 'None'}"/>
+                                        <Text text="{avgResponseTime}ms"/>
+                                        <ObjectStatus 
+                                            text="{status}"
+                                            state="{= ${status} === 'Online' ? 'Success' : ${status} === 'Busy' ? 'Warning' : 'Error'}"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </Panel>
+                
+                <!-- Consensus Process -->
+                <Panel 
+                    headerText="Consensus Process"
+                    visible="{blockchain>/consensusInProgress}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Progress Overview -->
+                        <VBox class="sapUiMediumMarginBottom">
+                            <HBox class="sapUiMediumMarginBottom">
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Text text="Transaction Hash:"/>
+                                    <Text 
+                                        text="{blockchain>/transactionHash}"
+                                        class="sapUiContentLabelColor"/>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Text text="Block Number:"/>
+                                    <Text text="{blockchain>/blockNumber}"/>
+                                </VBox>
+                                <VBox>
+                                    <Text text="Gas Used:"/>
+                                    <Text text="{blockchain>/gasUsed}"/>
+                                </VBox>
+                            </HBox>
+                            
+                            <ProgressIndicator 
+                                percentValue="{blockchain>/consensusProgress}"
+                                displayValue="Consensus Progress: {blockchain>/consensusProgress}%"
+                                state="{= ${blockchain>/consensusProgress} === 100 ? 'Success' : 'Information'}"
+                                class="sapUiMediumMarginBottom"/>
+                            
+                            <HBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Text text="Responses Received:"/>
+                                    <Text text="{blockchain>/responsesReceived}/{blockchain>/validatorsInvolved}"/>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Text text="Consensus Reached:"/>
+                                    <ObjectStatus 
+                                        text="{= ${blockchain>/consensusReached} ? 'Yes' : 'Pending'}"
+                                        state="{= ${blockchain>/consensusReached} ? 'Success' : 'Warning'}"/>
+                                </VBox>
+                                <VBox>
+                                    <Text text="Time Remaining:"/>
+                                    <Text text="{blockchain>/timeRemaining}s"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                        
+                        <!-- Validator Responses -->
+                        <VBox>
+                            <Title text="Validator Responses" level="H4"/>
+                            <Table items="{blockchain>/validatorResponses}">
+                                <columns>
+                                    <Column>
+                                        <Text text="Validator"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Response"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Confidence"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Response Time"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Status"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Hash"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{validatorName}"/>
+                                            <Text 
+                                                text="{result}"
+                                                class="{= ${isConsensusResult} ? 'sapThemeHighlight-AsColor' : 'sapUiContentLabelColor'}"/>
+                                            <ProgressIndicator 
+                                                percentValue="{= ${confidence} * 100}"
+                                                displayValue="{= (${confidence} * 100).toFixed(1)}%"
+                                                state="{= ${confidence} >= 0.9 ? 'Success' : ${confidence} >= 0.7 ? 'Warning' : 'Error'}"/>
+                                            <Text text="{responseTime}ms"/>
+                                            <ObjectStatus 
+                                                text="{status}"
+                                                state="{= ${status} === 'Validated' ? 'Success' : ${status} === 'Pending' ? 'Warning' : 'Error'}"/>
+                                            <Text 
+                                                text="{responseHash}"
+                                                class="sapUiContentLabelColor"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Consensus Results -->
+                <Panel 
+                    headerText="Consensus Results"
+                    visible="{blockchain>/consensusComplete}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Final Result -->
+                        <VBox class="sapUiMediumMarginBottom">
+                            <Title text="Final Consensus Result" level="H4"/>
+                            <HBox class="sapUiMediumMarginTop">
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Text text="Agreed Result:"/>
+                                    <ObjectNumber 
+                                        number="{blockchain>/consensusResult}"
+                                        emphasized="true"
+                                        state="Success"/>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Text text="Consensus Level:"/>
+                                    <ProgressIndicator 
+                                        percentValue="{= ${blockchain>/agreeingValidators} / ${blockchain>/validatorsInvolved} * 100}"
+                                        displayValue="{blockchain>/agreeingValidators}/{blockchain>/validatorsInvolved} ({= Math.round(${blockchain>/agreeingValidators} / ${blockchain>/validatorsInvolved} * 100)}%)"
+                                        state="Success"/>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Text text="Average Confidence:"/>
+                                    <Text text="{= (${blockchain>/averageConfidence} * 100).toFixed(1)}%"/>
+                                </VBox>
+                                <VBox>
+                                    <Text text="Total Time:"/>
+                                    <Text text="{blockchain>/totalValidationTime}s"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                        
+                        <!-- Consensus Statistics -->
+                        <VBox class="sapUiMediumMarginBottom">
+                            <Title text="Consensus Statistics" level="H4"/>
+                            <HBox class="sapUiMediumMarginTop">
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Text text="Unique Results:" class="sapUiContentLabelColor"/>
+                                    <Text text="{blockchain>/uniqueResults}"/>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Text text="Standard Deviation:" class="sapUiContentLabelColor"/>
+                                    <Text text="{blockchain>/standardDeviation}"/>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Text text="Outliers Detected:" class="sapUiContentLabelColor"/>
+                                    <Text text="{blockchain>/outliersCount}"/>
+                                </VBox>
+                                <VBox>
+                                    <Text text="Gas Cost:" class="sapUiContentLabelColor"/>
+                                    <Text text="{blockchain>/totalGasCost} ETH"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                        
+                        <!-- Result Distribution -->
+                        <VBox class="sapUiMediumMarginBottom">
+                            <Title text="Result Distribution" level="H4"/>
+                            <Table items="{blockchain>/resultDistribution}">
+                                <columns>
+                                    <Column>
+                                        <Text text="Result"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Count"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Percentage"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Validators"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Avg Confidence"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text 
+                                                text="{result}"
+                                                class="{= ${isConsensus} ? 'sapThemeHighlight-AsColor' : 'sapUiContentLabelColor'}"/>
+                                            <Text text="{count}"/>
+                                            <ProgressIndicator 
+                                                percentValue="{percentage}"
+                                                displayValue="{percentage}%"
+                                                state="{= ${isConsensus} ? 'Success' : 'None'}"/>
+                                            <Text text="{validators}"/>
+                                            <Text text="{= (${avgConfidence} * 100).toFixed(1)}%"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                        
+                        <!-- Blockchain Verification -->
+                        <VBox>
+                            <Title text="Blockchain Verification" level="H4"/>
+                            <VBox class="sapUiMediumMarginTop">
+                                <HBox class="sapUiMediumMarginBottom">
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Text text="Smart Contract:" class="sapUiContentLabelColor"/>
+                                        <Link 
+                                            text="{blockchain>/contractAddress}"
+                                            href="{blockchain>/contractUrl}"
+                                            target="_blank"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Text text="Transaction:" class="sapUiContentLabelColor"/>
+                                        <Link 
+                                            text="{blockchain>/finalTransactionHash}"
+                                            href="{blockchain>/transactionUrl}"
+                                            target="_blank"/>
+                                    </VBox>
+                                    <VBox>
+                                        <Text text="Block Explorer:" class="sapUiContentLabelColor"/>
+                                        <Link 
+                                            text="View on Explorer"
+                                            href="{blockchain>/blockExplorerUrl}"
+                                            target="_blank"/>
+                                    </VBox>
+                                </HBox>
+                                
+                                <MessageStrip 
+                                    text="{blockchain>/verificationMessage}"
+                                    type="Success"
+                                    showIcon="true"/>
+                            </VBox>
+                        </VBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Reputation Updates -->
+                <Panel 
+                    headerText="Validator Reputation Updates"
+                    visible="{blockchain>/consensusComplete}"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <Table items="{blockchain>/reputationUpdates}">
+                        <columns>
+                            <Column>
+                                <Text text="Validator"/>
+                            </Column>
+                            <Column>
+                                <Text text="Previous Reputation"/>
+                            </Column>
+                            <Column>
+                                <Text text="New Reputation"/>
+                            </Column>
+                            <Column>
+                                <Text text="Change"/>
+                            </Column>
+                            <Column>
+                                <Text text="Reason"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <Text text="{validatorName}"/>
+                                    <Text text="{previousReputation}"/>
+                                    <Text text="{newReputation}"/>
+                                    <ObjectNumber 
+                                        number="{change}"
+                                        state="{= ${change} > 0 ? 'Success' : ${change} < 0 ? 'Error' : 'None'}"/>
+                                    <Text text="{reason}"/>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Cost Analysis -->
+                <Panel 
+                    headerText="Cost Analysis"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Gas Costs:" class="sapUiContentLabelColor"/>
+                                <Text text="Deploy: {blockchain>/costs/deploy} ETH"/>
+                                <Text text="Validation: {blockchain>/costs/validation} ETH"/>
+                                <Text text="Consensus: {blockchain>/costs/consensus} ETH"/>
+                                <Text text="Total: {blockchain>/costs/total} ETH"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Validator Rewards:" class="sapUiContentLabelColor"/>
+                                <Text text="Per Validator: {blockchain>/rewards/perValidator} ETH"/>
+                                <Text text="Total Rewards: {blockchain>/rewards/total} ETH"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Net Cost:" class="sapUiContentLabelColor"/>
+                                <ObjectNumber 
+                                    number="{blockchain>/costs/net}"
+                                    unit="ETH"
+                                    state="{= ${blockchain>/costs/net} < 0.01 ? 'Success' : ${blockchain>/costs/net} < 0.1 ? 'Warning' : 'Error'}"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel Consensus"
+                type="Transparent"
+                press=".onCancelConsensus"
+                visible="{blockchain>/consensusInProgress}"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Start Consensus"
+                    type="Emphasized"
+                    icon="sap-icon://play"
+                    press=".onStartConsensus"
+                    enabled="{= !${blockchain>/consensusInProgress} && ${blockchain>/selectedValidators}.length >= ${blockchain>/validatorCount}}"
+                    visible="{= !${blockchain>/consensusComplete}}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Export Proof"
+                    icon="sap-icon://download"
+                    press=".onExportConsensusProof"
+                    visible="{blockchain>/consensusComplete}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="New Consensus"
+                    press=".onNewConsensus"
+                    visible="{blockchain>/consensusComplete}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseConsensus"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

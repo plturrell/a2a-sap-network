@@ -1,0 +1,421 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="aiModelComparisonDialog"
+        title="AI Model Comparison for Mathematical Validation"
+        contentWidth="85%"
+        contentHeight="80%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Model Selection -->
+                <Panel headerText="AI Model Selection" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <Text text="Select AI models to compare for mathematical validation accuracy:"/>
+                        <Table 
+                            items="{aiComparison>/availableModels}"
+                            mode="MultiSelect"
+                            class="sapUiMediumMarginTop">
+                            <columns>
+                                <Column>
+                                    <Text text="Model"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Provider"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Math Accuracy"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Speed"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Cost"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Features"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem selected="{selected}">
+                                    <cells>
+                                        <VBox>
+                                            <Text text="{name}"/>
+                                            <Text 
+                                                text="{version}"
+                                                class="sapUiContentLabelColor"/>
+                                        </VBox>
+                                        <Text text="{provider}"/>
+                                        <ProgressIndicator 
+                                            percentValue="{mathAccuracy}"
+                                            displayValue="{mathAccuracy}%"
+                                            state="{= ${mathAccuracy} >= 90 ? 'Success' : ${mathAccuracy} >= 75 ? 'Warning' : 'Error'}"/>
+                                        <RatingIndicator 
+                                            value="{speedRating}"
+                                            maxValue="5"
+                                            displayOnly="true"/>
+                                        <ObjectStatus 
+                                            text="{costLevel}"
+                                            state="{= ${costLevel} === 'Low' ? 'Success' : ${costLevel} === 'Medium' ? 'Warning' : 'Error'}"/>
+                                        <VBox>
+                                            <Text text="{= ${symbollic} ? '• Symbolic Math' : ''}" visible="{symbollic}"/>
+                                            <Text text="{= ${stepByStep} ? '• Step-by-step' : ''}" visible="{stepByStep}"/>
+                                            <Text text="{= ${codeGeneration} ? '• Code Generation' : ''}" visible="{codeGeneration}"/>
+                                            <Text text="{= ${visualization} ? '• Visualization' : ''}" visible="{visualization}"/>
+                                        </VBox>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </Panel>
+                
+                <!-- Test Configuration -->
+                <Panel headerText="Comparison Test Configuration" class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="2"
+                        columnsL="2"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Test Expression"/>
+                            <TextArea 
+                                value="{aiComparison>/testExpression}"
+                                placeholder="Enter mathematical expression to test"
+                                rows="3"/>
+                            
+                            <Label text="Expected Result"/>
+                            <Input 
+                                value="{aiComparison>/expectedResult}"
+                                placeholder="Known correct answer (optional)"/>
+                            
+                            <Label text="Test Category"/>
+                            <Select selectedKey="{aiComparison>/testCategory}">
+                                <items>
+                                    <core:Item key="ALGEBRA" text="Algebraic Equations"/>
+                                    <core:Item key="CALCULUS" text="Calculus Problems"/>
+                                    <core:Item key="GEOMETRY" text="Geometric Calculations"/>
+                                    <core:Item key="STATISTICS" text="Statistical Analysis"/>
+                                    <core:Item key="PHYSICS" text="Physics Formulas"/>
+                                    <core:Item key="ENGINEERING" text="Engineering Problems"/>
+                                    <core:Item key="FINANCE" text="Financial Calculations"/>
+                                    <core:Item key="MIXED" text="Mixed Categories"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Complexity Level"/>
+                            <Select selectedKey="{aiComparison>/complexityLevel}">
+                                <items>
+                                    <core:Item key="BASIC" text="Basic (High School)"/>
+                                    <core:Item key="INTERMEDIATE" text="Intermediate (Undergraduate)"/>
+                                    <core:Item key="ADVANCED" text="Advanced (Graduate)"/>
+                                    <core:Item key="RESEARCH" text="Research Level"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Evaluation Criteria"/>
+                            <VBox>
+                                <CheckBox 
+                                    text="Accuracy of final result"
+                                    selected="{aiComparison>/evaluateAccuracy}"/>
+                                <CheckBox 
+                                    text="Quality of step-by-step solution"
+                                    selected="{aiComparison>/evaluateSteps}"/>
+                                <CheckBox 
+                                    text="Mathematical reasoning"
+                                    selected="{aiComparison>/evaluateReasoning}"/>
+                                <CheckBox 
+                                    text="Alternative solution methods"
+                                    selected="{aiComparison>/evaluateAlternatives}"/>
+                                <CheckBox 
+                                    text="Error detection and correction"
+                                    selected="{aiComparison>/evaluateErrorDetection}"/>
+                                <CheckBox 
+                                    text="Response time"
+                                    selected="{aiComparison>/evaluateSpeed}"/>
+                            </VBox>
+                            
+                            <Label text="Test Iterations"/>
+                            <Input 
+                                value="{aiComparison>/iterations}"
+                                type="Number"
+                                placeholder="3"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Comparison Results -->
+                <Panel 
+                    headerText="Comparison Results"
+                    visible="{= ${aiComparison>/results}.length > 0}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Summary Scores -->
+                        <VBox class="sapUiMediumMarginBottom">
+                            <Title text="Overall Ranking" level="H4"/>
+                            <Table items="{aiComparison>/results}">
+                                <columns>
+                                    <Column>
+                                        <Text text="Rank"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Model"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Overall Score"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Accuracy"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Reasoning"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Speed"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Reliability"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <ObjectNumber 
+                                                number="{rank}"
+                                                state="{= ${rank} === 1 ? 'Success' : ${rank} <= 3 ? 'Warning' : 'None'}"/>
+                                            <VBox>
+                                                <Text text="{modelName}"/>
+                                                <Text 
+                                                    text="{provider}"
+                                                    class="sapUiContentLabelColor"/>
+                                            </VBox>
+                                            <ObjectNumber 
+                                                number="{overallScore}"
+                                                unit="%"
+                                                state="{= ${overallScore} >= 90 ? 'Success' : ${overallScore} >= 75 ? 'Warning' : 'Error'}"/>
+                                            <ProgressIndicator 
+                                                percentValue="{accuracyScore}"
+                                                displayValue="{accuracyScore}%"
+                                                state="{= ${accuracyScore} >= 95 ? 'Success' : ${accuracyScore} >= 80 ? 'Warning' : 'Error'}"/>
+                                            <ProgressIndicator 
+                                                percentValue="{reasoningScore}"
+                                                displayValue="{reasoningScore}%"
+                                                state="{= ${reasoningScore} >= 90 ? 'Success' : ${reasoningScore} >= 75 ? 'Warning' : 'Error'}"/>
+                                            <ProgressIndicator 
+                                                percentValue="{speedScore}"
+                                                displayValue="{responseTime}ms"
+                                                state="{= ${speedScore} >= 80 ? 'Success' : ${speedScore} >= 60 ? 'Warning' : 'Error'}"/>
+                                            <ProgressIndicator 
+                                                percentValue="{reliabilityScore}"
+                                                displayValue="{reliabilityScore}%"
+                                                state="{= ${reliabilityScore} >= 95 ? 'Success' : ${reliabilityScore} >= 85 ? 'Warning' : 'Error'}"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                        
+                        <!-- Detailed Analysis -->
+                        <VBox class="sapUiMediumMarginBottom">
+                            <Title text="Detailed Model Analysis" level="H4"/>
+                            <List items="{aiComparison>/detailedResults}">
+                                <CustomListItem press=".onExpandModelDetails">
+                                    <VBox class="sapUiMediumMargin">
+                                        <HBox>
+                                            <VBox class="sapUiMediumMarginEnd">
+                                                <Title text="{modelName}" level="H5"/>
+                                                <Text text="{provider}" class="sapUiContentLabelColor"/>
+                                            </VBox>
+                                            <VBox class="sapUiMediumMarginEnd">
+                                                <Text text="Final Answer:"/>
+                                                <Text 
+                                                    text="{finalAnswer}"
+                                                    class="{= ${isCorrect} ? 'sapThemeHighlight-AsColor' : 'sapNegativeColor'}"/>
+                                            </VBox>
+                                            <VBox class="sapUiMediumMarginEnd">
+                                                <Text text="Confidence:"/>
+                                                <Text text="{confidence}%"/>
+                                            </VBox>
+                                            <VBox>
+                                                <Text text="Processing Time:"/>
+                                                <Text text="{processingTime}ms"/>
+                                            </VBox>
+                                        </HBox>
+                                        
+                                        <!-- Expandable detailed response -->
+                                        <VBox 
+                                            visible="{expanded}"
+                                            class="sapUiMediumMarginTop">
+                                            <Title text="Solution Steps" level="H6"/>
+                                            <Text 
+                                                text="{solutionSteps}"
+                                                wrapping="true"
+                                                class="sapUiMediumMarginBottom"/>
+                                            
+                                            <Title text="Mathematical Reasoning" level="H6"/>
+                                            <Text 
+                                                text="{reasoning}"
+                                                wrapping="true"
+                                                class="sapUiMediumMarginBottom"/>
+                                            
+                                            <Title text="Strengths & Weaknesses" level="H6"/>
+                                            <HBox>
+                                                <VBox class="sapUiMediumMarginEnd">
+                                                    <Text text="Strengths:" class="sapUiContentLabelColor"/>
+                                                    <List items="{strengths}">
+                                                        <StandardListItem 
+                                                            title="{.}"
+                                                            icon="sap-icon://accept"/>
+                                                    </List>
+                                                </VBox>
+                                                <VBox>
+                                                    <Text text="Weaknesses:" class="sapUiContentLabelColor"/>
+                                                    <List items="{weaknesses}">
+                                                        <StandardListItem 
+                                                            title="{.}"
+                                                            icon="sap-icon://decline"/>
+                                                    </List>
+                                                </VBox>
+                                            </HBox>
+                                        </VBox>
+                                    </VBox>
+                                </CustomListItem>
+                            </List>
+                        </VBox>
+                        
+                        <!-- Charts and Visualization -->
+                        <VBox>
+                            <Title text="Performance Visualization" level="H4"/>
+                            <core:HTML 
+                                content='<div id="modelComparisonChart" style="width: 100%; height: 400px;"></div>'
+                                preferDOM="true"/>
+                        </VBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Recommendations -->
+                <Panel 
+                    headerText="Model Recommendations"
+                    visible="{= ${aiComparison>/results}.length > 0}"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <List items="{aiComparison>/recommendations}">
+                            <StandardListItem
+                                title="{title}"
+                                description="{description}"
+                                info="{category}"
+                                infoState="{= ${category} === 'Best Overall' ? 'Success' : ${category} === 'Best Accuracy' ? 'Warning' : 'Information'}"
+                                icon="{= ${category} === 'Best Overall' ? 'sap-icon://winner' : ${category} === 'Best Speed' ? 'sap-icon://performance' : 'sap-icon://lightbulb'}"/>
+                        </List>
+                        
+                        <MessageStrip 
+                            text="{aiComparison>/overallRecommendation}"
+                            type="Information"
+                            showIcon="true"
+                            class="sapUiMediumMarginTop"/>
+                    </VBox>
+                </Panel>
+                
+                <!-- Test History -->
+                <Panel 
+                    headerText="Previous Comparisons"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <Table 
+                        items="{aiComparison>/testHistory}"
+                        growing="true"
+                        growingThreshold="10">
+                        <columns>
+                            <Column>
+                                <Text text="Date"/>
+                            </Column>
+                            <Column>
+                                <Text text="Test Expression"/>
+                            </Column>
+                            <Column>
+                                <Text text="Category"/>
+                            </Column>
+                            <Column>
+                                <Text text="Winner"/>
+                            </Column>
+                            <Column>
+                                <Text text="Models Tested"/>
+                            </Column>
+                            <Column>
+                                <Text text="Actions"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <Text text="{date}"/>
+                                    <Text 
+                                        text="{expression}"
+                                        wrapping="true"/>
+                                    <Text text="{category}"/>
+                                    <Text text="{winner}"/>
+                                    <Text text="{modelCount}"/>
+                                    <HBox>
+                                        <Button 
+                                            text="View"
+                                            type="Transparent"
+                                            icon="sap-icon://detail-view"
+                                            press=".onViewHistoryDetails"/>
+                                        <Button 
+                                            text="Repeat"
+                                            type="Transparent"
+                                            icon="sap-icon://refresh"
+                                            press=".onRepeatTest"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Load Test Cases"
+                icon="sap-icon://upload"
+                press=".onLoadTestCases"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Run Comparison"
+                    type="Emphasized"
+                    icon="sap-icon://play"
+                    press=".onRunComparison"
+                    enabled="{= ${aiComparison>/testExpression} && ${aiComparison>/availableModels}.filter(function(m) { return m.selected; }).length >= 2}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Export Results"
+                    icon="sap-icon://download"
+                    press=".onExportComparison"
+                    visible="{= ${aiComparison>/results}.length > 0}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseComparison"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

@@ -342,6 +342,66 @@ sap.ui.define([
         _changeViewMode: function(viewMode) {
             // Override in concrete controller
             Log.info("View mode changed", { viewMode: viewMode });
+        },
+
+        /**
+         * Standard error handling pattern
+         * @param {Error|Object} error - Error object or exception
+         * @param {string} context - Context where error occurred
+         * @param {boolean} showToUser - Whether to show error to user
+         */
+        _handleError: function(error, context = "Application", showToUser = true) {
+            const errorId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+            const errorMessage = error?.message || error?.statusText || "An unexpected error occurred";
+            
+            // Log error for debugging
+            Log.error(`[${context}] Error ${errorId}: ${errorMessage}`, error);
+            
+            if (showToUser) {
+                // Show user-friendly error
+                const userMessage = this._sanitizeErrorMessage(errorMessage, context);
+                this.showStatusMessage(userMessage, "Error");
+                
+                // Update page state to reflect error
+                this.updatePageState({
+                    hasError: true,
+                    errorMessage: userMessage,
+                    errorId: errorId,
+                    loading: false
+                });
+            }
+            
+            return errorId;
+        },
+
+        /**
+         * Sanitize error message for user display
+         * @param {string} message - Raw error message
+         * @param {string} context - Error context
+         * @returns {string} Sanitized message
+         */
+        _sanitizeErrorMessage: function(message, context) {
+            // Remove sensitive information patterns
+            let sanitized = message
+                .replace(/\b(?:token|key|secret|password|auth)\b[:\s]*[^\s]+/gi, '[REDACTED]')
+                .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[IP_ADDRESS]')
+                .replace(/file:\/\/[^\s]+/g, '[FILE_PATH]')
+                .replace(/https?:\/\/[^\s]+/g, '[URL]');
+
+            // Provide context-specific user-friendly messages
+            if (sanitized.includes('Network Error') || sanitized.includes('fetch')) {
+                return `${context}: Unable to connect to the server. Please check your connection.`;
+            } else if (sanitized.includes('401') || sanitized.includes('Unauthorized')) {
+                return `${context}: Authentication required. Please refresh and try again.`;
+            } else if (sanitized.includes('403') || sanitized.includes('Forbidden')) {
+                return `${context}: You don't have permission to perform this action.`;
+            } else if (sanitized.includes('404') || sanitized.includes('Not Found')) {
+                return `${context}: The requested resource was not found.`;
+            } else if (sanitized.includes('500') || sanitized.includes('Internal Server')) {
+                return `${context}: Server error occurred. Please try again later.`;
+            } else {
+                return `${context}: ${sanitized}`;
+            }
         }
     };
 });

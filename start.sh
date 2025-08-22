@@ -901,8 +901,9 @@ start_agents() {
     # Set database URL for development (proper SQLite URL format)
     export DATABASE_URL="sqlite+aiosqlite:///./db.sqlite"
     
-    # Set agent private key for persistent identity (using test account #10 from Anvil)
-    export A2A_AGENT_PRIVATE_KEY="0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
+    # Set agent private key for persistent identity (using test account #1 from Anvil)
+    export A2A_PRIVATE_KEY="0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
+    export A2A_AGENT_PRIVATE_KEY="$A2A_PRIVATE_KEY"
     
     nohup env PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python \
         A2A_RPC_URL="$A2A_RPC_URL" \
@@ -910,6 +911,7 @@ start_agents() {
         A2A_MESSAGE_ROUTER_ADDRESS="$A2A_MESSAGE_ROUTER_ADDRESS" \
         A2A_ORD_REGISTRY_ADDRESS="$A2A_ORD_REGISTRY_ADDRESS" \
         A2A_AGENT_BASE_URL="$A2A_AGENT_BASE_URL" \
+        A2A_PRIVATE_KEY="$A2A_PRIVATE_KEY" \
         A2A_AGENT_PRIVATE_KEY="$A2A_AGENT_PRIVATE_KEY" \
         DATABASE_URL="$DATABASE_URL" \
         NODE_ENV="$NODE_ENV" \

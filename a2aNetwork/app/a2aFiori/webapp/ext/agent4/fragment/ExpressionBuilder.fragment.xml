@@ -1,0 +1,256 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="expressionBuilderDialog"
+        title="Mathematical Expression Builder"
+        contentWidth="80%"
+        contentHeight="70%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <form:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                labelSpanXL="3"
+                labelSpanL="3"
+                labelSpanM="12"
+                labelSpanS="12"
+                adjustLabelSpan="false"
+                columnsXL="1"
+                columnsL="1"
+                columnsM="1">
+                
+                <form:content>
+                    <Label text="Expression Name" required="true"/>
+                    <Input 
+                        value="{expression>/taskName}"
+                        placeholder="Enter a descriptive name for the calculation"/>
+                    
+                    <Label text="Description"/>
+                    <TextArea 
+                        value="{expression>/description}"
+                        placeholder="Describe what this calculation validates"
+                        rows="3"/>
+                    
+                    <Label text="Mathematical Expression" required="true"/>
+                    <VBox>
+                        <TextArea 
+                            value="{expression>/expression}"
+                            placeholder="Enter your mathematical expression (e.g., 2*x + 3*y - z = 10)"
+                            rows="4"
+                            class="sapUiMediumMarginBottom"/>
+                        
+                        <!-- Mathematical Function Buttons -->
+                        <Panel headerText="Mathematical Functions" expandable="true" expanded="false">
+                            <HBox wrap="Wrap" class="sapUiMediumMargin">
+                                <Button text="sin()" press=".onInsertFunction" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="cos()" press=".onInsertFunction" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="tan()" press=".onInsertFunction" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="log()" press=".onInsertFunction" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="ln()" press=".onInsertFunction" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="exp()" press=".onInsertFunction" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="sqrt()" press=".onInsertFunction" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="abs()" press=".onInsertFunction" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="pow(,)" press=".onInsertFunction" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="factorial()" press=".onInsertFunction" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="derivative()" press=".onInsertFunction" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="integral()" press=".onInsertFunction" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="limit()" press=".onInsertFunction" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="matrix()" press=".onInsertFunction" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                            </HBox>
+                        </Panel>
+                        
+                        <!-- Constants -->
+                        <Panel headerText="Mathematical Constants" expandable="true" expanded="false">
+                            <HBox wrap="Wrap" class="sapUiMediumMargin">
+                                <Button text="π (pi)" press=".onInsertConstant" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="e" press=".onInsertConstant" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="φ (phi)" press=".onInsertConstant" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="γ (gamma)" press=".onInsertConstant" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                <Button text="∞ (infinity)" press=".onInsertConstant" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                            </HBox>
+                        </Panel>
+                    </VBox>
+                    
+                    <Label text="Input Variables"/>
+                    <VBox>
+                        <Table 
+                            items="{expression>/variables}"
+                            class="sapUiMediumMarginBottom">
+                            <columns>
+                                <Column>
+                                    <Text text="Variable"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Value"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Type"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Range"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Actions"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Input 
+                                            value="{name}"
+                                            placeholder="x"
+                                            width="60px"/>
+                                        <Input 
+                                            value="{value}"
+                                            placeholder="5.0"
+                                            type="Number"/>
+                                        <Select selectedKey="{type}">
+                                            <items>
+                                                <core:Item key="NUMBER" text="Number"/>
+                                                <core:Item key="INTEGER" text="Integer"/>
+                                                <core:Item key="COMPLEX" text="Complex"/>
+                                                <core:Item key="VECTOR" text="Vector"/>
+                                                <core:Item key="MATRIX" text="Matrix"/>
+                                            </items>
+                                        </Select>
+                                        <Input 
+                                            value="{range}"
+                                            placeholder="[-10, 10]"/>
+                                        <Button 
+                                            icon="sap-icon://delete"
+                                            type="Transparent"
+                                            press=".onDeleteVariable"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                        <Button 
+                            text="Add Variable"
+                            icon="sap-icon://add"
+                            press=".onAddVariable"/>
+                    </VBox>
+                    
+                    <Label text="Expected Result"/>
+                    <Input 
+                        value="{expression>/expectedResult}"
+                        placeholder="Enter the expected result (optional)"/>
+                    
+                    <Label text="Template Category"/>
+                    <Select selectedKey="{expression>/category}">
+                        <items>
+                            <core:Item key="ARITHMETIC" text="Arithmetic"/>
+                            <core:Item key="ALGEBRA" text="Algebra"/>
+                            <core:Item key="CALCULUS" text="Calculus"/>
+                            <core:Item key="STATISTICS" text="Statistics"/>
+                            <core:Item key="GEOMETRY" text="Geometry"/>
+                            <core:Item key="TRIGONOMETRY" text="Trigonometry"/>
+                            <core:Item key="LINEAR_ALGEBRA" text="Linear Algebra"/>
+                            <core:Item key="DIFFERENTIAL_EQUATIONS" text="Differential Equations"/>
+                            <core:Item key="FINANCIAL" text="Financial"/>
+                            <core:Item key="PHYSICS" text="Physics"/>
+                            <core:Item key="CHEMISTRY" text="Chemistry"/>
+                        </items>
+                    </Select>
+                    
+                    <Label text="Validation Method"/>
+                    <VBox>
+                        <CheckBox 
+                            text="Symbolic Mathematics"
+                            selected="{expression>/useSymbolicMath}"/>
+                        <CheckBox 
+                            text="Numerical Methods"
+                            selected="{expression>/useNumericalMethods}"/>
+                        <CheckBox 
+                            text="Statistical Analysis"
+                            selected="{expression>/useStatisticalAnalysis}"/>
+                        <CheckBox 
+                            text="AI-Powered Validation"
+                            selected="{expression>/useAIValidation}"/>
+                        <CheckBox 
+                            text="Blockchain Consensus"
+                            selected="{expression>/useBlockchainConsensus}"/>
+                    </VBox>
+                    
+                    <Label text="Precision Level"/>
+                    <Select selectedKey="{expression>/precisionLevel}">
+                        <items>
+                            <core:Item key="LOW" text="Low (10^-3)"/>
+                            <core:Item key="MEDIUM" text="Medium (10^-6)"/>
+                            <core:Item key="HIGH" text="High (10^-9)"/>
+                            <core:Item key="ULTRA_HIGH" text="Ultra High (10^-12)"/>
+                        </items>
+                    </Select>
+                    
+                    <Label text="Tolerance"/>
+                    <Input 
+                        value="{expression>/tolerance}"
+                        type="Number"
+                        placeholder="0.0001"/>
+                    
+                    <!-- Expression Validation -->
+                    <Panel headerText="Expression Validation" class="sapUiResponsiveMargin">
+                        <VBox class="sapUiMediumMargin">
+                            <HBox>
+                                <Button 
+                                    text="Validate Syntax"
+                                    press=".onValidateSyntax"
+                                    class="sapUiMediumMarginEnd"/>
+                                <Button 
+                                    text="Test with Sample Values"
+                                    press=".onTestExpression"
+                                    class="sapUiMediumMarginEnd"/>
+                                <Button 
+                                    text="Preview Result"
+                                    press=".onPreviewResult"/>
+                            </HBox>
+                            <MessageStrip 
+                                text="{expression>/validationMessage}"
+                                type="{expression>/validationType}"
+                                visible="{= !!${expression>/validationMessage}}"
+                                class="sapUiMediumMarginTop"/>
+                        </VBox>
+                    </Panel>
+                    
+                    <!-- Save as Template -->
+                    <Panel headerText="Save as Template" expandable="true" expanded="false">
+                        <VBox class="sapUiMediumMargin">
+                            <CheckBox 
+                                text="Save as reusable template"
+                                selected="{expression>/saveAsTemplate}"/>
+                            <Input 
+                                value="{expression>/templateName}"
+                                placeholder="Template name"
+                                visible="{expression>/saveAsTemplate}"/>
+                            <TextArea 
+                                value="{expression>/templateDescription}"
+                                placeholder="Template description and usage notes"
+                                visible="{expression>/saveAsTemplate}"
+                                rows="2"/>
+                        </VBox>
+                    </Panel>
+                </form:content>
+            </form:SimpleForm>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelExpression"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Create Validation Task"
+                type="Emphasized"
+                press=".onCreateValidationTask"
+                enabled="{= !!${expression>/expression} && !!${expression>/taskName}}"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

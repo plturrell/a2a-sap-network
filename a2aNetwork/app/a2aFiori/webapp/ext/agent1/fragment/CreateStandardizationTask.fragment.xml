@@ -27,14 +27,16 @@
                     <Label text="Task Name" required="true"/>
                     <Input 
                         id="taskNameInput"
-                        value="{create>/taskName}"
+                        value="{path: 'create>/taskName', formatter: '.formatSecureText'}"
+                        maxLength="100"
                         placeholder="Enter task name"
                         liveChange=".onTaskNameChange"/>
                     
                     <Label text="Description"/>
                     <TextArea 
-                        value="{create>/description}"
+                        value="{path: 'create>/description', formatter: '.formatSecureText'}"
                         rows="2"
+                        maxLength="1000"
                         placeholder="Describe the standardization task"/>
                     
                     <Label text="Source Format" required="true"/>

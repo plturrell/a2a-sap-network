@@ -821,6 +821,132 @@ service A2AService @(path: '/api/v1') {
     ) returns String;
     
     // ================================
+    // AGENT 4 - CALCULATION VALIDATION
+    // ================================
+    
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE', 'UPDATE'], to: 'DataManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity CalcValidationTasks as projection on db.CalcValidationTasks {
+        *,
+        agent : redirected to Agents,
+        validationResults : redirected to CalcValidationResults
+    } actions {
+        @requires: ['DataManager', 'Admin']
+        action startValidation() returns String;
+        @requires: ['DataManager', 'Admin']
+        action pauseValidation() returns String;
+        @requires: ['DataManager', 'Admin']
+        action resumeValidation() returns String;
+        @requires: ['DataManager', 'Admin']
+        action cancelValidation() returns String;
+        @requires: ['DataManager', 'Admin']
+        action runSymbolicValidation() returns String;
+        @requires: ['DataManager', 'Admin']
+        action runNumericalValidation() returns String;
+        @requires: ['DataManager', 'Admin']
+        action runStatisticalValidation() returns String;
+        @requires: ['DataManager', 'Admin']
+        action runAIValidation() returns String;
+        @requires: ['DataManager', 'Admin']
+        action runBlockchainConsensus() returns String;
+        @requires: ['DataManager', 'Admin']
+        action exportValidationReport(
+            format: String,
+            includeSteps: Boolean,
+            includeConfidence: Boolean
+        ) returns String;
+        @requires: ['DataManager', 'Admin']
+        action validateFromTemplate(
+            templateId: String,
+            variables: String
+        ) returns String;
+    };
+    
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE'], to: 'DataManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity CalcValidationResults as projection on db.CalcValidationResults;
+    
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE', 'UPDATE'], to: 'DataManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity CalcValidationTemplates as projection on db.CalcValidationTemplates {
+        *
+    } actions {
+        @requires: ['DataManager', 'Admin']
+        action createFromExpression(
+            expression: String,
+            variables: String
+        ) returns String;
+        @requires: ['Admin']
+        action updateSuccessRate() returns String;
+        @requires: ['Admin']
+        action deactivateTemplate() returns String;
+    };
+    
+    // Agent 4 specific actions for calculation validation
+    @requires: ['DataManager', 'Admin']
+    action batchValidateCalculations(
+        taskIds: array of String,
+        validationMethod: String,
+        parallel: Boolean,
+        priority: String
+    ) returns String;
+    
+    @requires: ['DataManager', 'Admin'] 
+    action validateExpression(
+        expression: String,
+        variables: String,
+        method: String,
+        precision: String
+    ) returns String;
+    
+    @requires: ['DataManager', 'Admin']
+    action getValidationMethods() returns String;
+    
+    @requires: ['DataManager', 'Admin']
+    action getCalculationTemplates() returns String;
+    
+    @requires: ['DataManager', 'Admin']
+    action createTemplate(
+        name: String,
+        category: String,
+        expression: String,
+        variables: String,
+        defaultMethod: String
+    ) returns String;
+    
+    @requires: ['DataManager', 'Admin']
+    action benchmarkMethods(
+        expression: String,
+        variables: String,
+        iterations: Integer
+    ) returns String;
+    
+    @requires: ['DataManager', 'Admin']
+    action configureAIModel(
+        model: String,
+        parameters: String
+    ) returns String;
+    
+    @requires: ['DataManager', 'Admin']
+    action configureBlockchainConsensus(
+        validators: Integer,
+        threshold: Decimal,
+        timeout: Integer
+    ) returns String;
+    
+    // ================================
     // REPUTATION SYSTEM EVENTS
     // ================================
     

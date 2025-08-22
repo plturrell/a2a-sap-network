@@ -1,0 +1,45 @@
+{
+  "transport": {
+    "system": {
+      "type": "ABAP",
+      "client": "100",
+      "language": "EN"
+    },
+    "target": {
+      "url": "${TARGET_SYSTEM_URL}",
+      "user": "${TRANSPORT_USER}",
+      "package": "$TMP"
+    },
+    "options": {
+      "createTransport": true,
+      "transportDescription": "A2A Network Fiori App",
+      "includeProject": true,
+      "includeChangedFilesOnly": false
+    }
+  },
+  "deploy": {
+    "bsp": {
+      "name": "ZA2A_FIORI",
+      "description": "A2A Network Fiori Launchpad Application",
+      "package": "ZA2A_APPS",
+      "transport": "${CTS_PROJECT_ID}"
+    },
+    "ui5": {
+      "componentId": "a2a.fiori",
+      "namespace": "a2a",
+      "version": "1.0.0"
+    }
+  },
+  "abap": {
+    "package": "ZA2A_APPS",
+    "bspContainer": "ZA2A_FIORI",
+    "bspContainerText": "A2A Network Fiori Application",
+    "transportRequest": "${TRANSPORT_REQUEST}",
+    "client": "100",
+    "language": "EN"
+  },
+  "credentials": {
+    "username": "${ABAP_USERNAME}",
+    "password": "${ABAP_PASSWORD}"
+  }
+}

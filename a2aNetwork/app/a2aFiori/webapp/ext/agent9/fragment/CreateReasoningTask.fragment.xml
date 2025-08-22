@@ -1,0 +1,440 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="createReasoningTaskDialog"
+        title="Create Reasoning Task"
+        contentWidth="70%"
+        contentHeight="80%"
+        resizable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Basic Information Tab -->
+                    <IconTabFilter text="Basic Info" icon="sap-icon://hint">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Task Name" required="true"/>
+                                <Input 
+                                    value="{create>/taskName}"
+                                    placeholder="Enter reasoning task name"/>
+                                
+                                <Label text="Description"/>
+                                <TextArea 
+                                    value="{create>/description}"
+                                    rows="3"
+                                    placeholder="Describe the reasoning problem"/>
+                                
+                                <Label text="Reasoning Type" required="true"/>
+                                <Select selectedKey="{create>/reasoningType}">
+                                    <items>
+                                        <core:Item key="DEDUCTIVE" text="Deductive Reasoning"/>
+                                        <core:Item key="INDUCTIVE" text="Inductive Reasoning"/>
+                                        <core:Item key="ABDUCTIVE" text="Abductive Reasoning"/>
+                                        <core:Item key="ANALOGICAL" text="Analogical Reasoning"/>
+                                        <core:Item key="PROBABILISTIC" text="Probabilistic Reasoning"/>
+                                        <core:Item key="CAUSAL" text="Causal Reasoning"/>
+                                        <core:Item key="TEMPORAL" text="Temporal Reasoning"/>
+                                        <core:Item key="MODAL" text="Modal Reasoning"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Problem Domain" required="true"/>
+                                <Select 
+                                    selectedKey="{create>/problemDomain}"
+                                    items="{create>/problemDomains}">
+                                    <core:ListItem 
+                                        key="{create>domainId}"
+                                        text="{create>domainName} ({create>complexity})"/>
+                                </Select>
+                                
+                                <Label text="Priority"/>
+                                <Select selectedKey="{create>/priority}">
+                                    <items>
+                                        <core:Item key="LOW" text="Low"/>
+                                        <core:Item key="MEDIUM" text="Medium"/>
+                                        <core:Item key="HIGH" text="High"/>
+                                        <core:Item key="CRITICAL" text="Critical"/>
+                                    </items>
+                                </Select>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Reasoning Configuration Tab -->
+                    <IconTabFilter text="Reasoning Config" icon="sap-icon://settings">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Reasoning Engine"/>
+                                <Select 
+                                    selectedKey="{create>/reasoningEngine}"
+                                    items="{create>/availableEngines}">
+                                    <core:ListItem 
+                                        key="{create>engineId}"
+                                        text="{create>engineName} ({create>engineType})"/>
+                                </Select>
+                                
+                                <Label text="Confidence Threshold"/>
+                                <Slider 
+                                    value="{create>/confidenceThreshold}"
+                                    min="0.5"
+                                    max="1.0"
+                                    step="0.05"
+                                    enableTickmarks="true"
+                                    inputsAsTooltips="true"/>
+                                
+                                <Label text="Max Inference Depth"/>
+                                <StepInput 
+                                    value="{create>/maxInferenceDepth}"
+                                    min="1"
+                                    max="50"
+                                    step="1"/>
+                                
+                                <Label text="Chaining Strategy"/>
+                                <Select selectedKey="{create>/chainingStrategy}">
+                                    <items>
+                                        <core:Item key="BREADTH_FIRST" text="Breadth-First"/>
+                                        <core:Item key="DEPTH_FIRST" text="Depth-First"/>
+                                        <core:Item key="BEST_FIRST" text="Best-First"/>
+                                        <core:Item key="HILL_CLIMBING" text="Hill Climbing"/>
+                                        <core:Item key="BEAM_SEARCH" text="Beam Search"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Uncertainty Handling"/>
+                                <Select selectedKey="{create>/uncertaintyHandling}">
+                                    <items>
+                                        <core:Item key="CRISP" text="Crisp Logic"/>
+                                        <core:Item key="FUZZY" text="Fuzzy Logic"/>
+                                        <core:Item key="PROBABILISTIC" text="Probabilistic"/>
+                                        <core:Item key="POSSIBILISTIC" text="Possibilistic"/>
+                                        <core:Item key="EVIDENTIAL" text="Evidential"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Processing Options"/>
+                                <VBox>
+                                    <CheckBox 
+                                        text="Enable parallel reasoning"
+                                        selected="{create>/parallelReasoning}"/>
+                                    <CheckBox 
+                                        text="Cache intermediate results"
+                                        selected="{create>/cacheResults}"/>
+                                    <CheckBox 
+                                        text="Generate explanations"
+                                        selected="{create>/generateExplanations}"/>
+                                    <CheckBox 
+                                        text="Validate consistency"
+                                        selected="{create>/validateConsistency}"/>
+                                </VBox>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Knowledge Configuration Tab -->
+                    <IconTabFilter text="Knowledge Config" icon="sap-icon://learning-assistant">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Knowledge Sources"/>
+                                <MultiComboBox 
+                                    selectedKeys="{create>/knowledgeSources}"
+                                    items="{create>/availableSources}">
+                                    <core:ListItem 
+                                        key="{create>sourceId}"
+                                        text="{create>sourceName} ({create>factCount} facts)"/>
+                                </MultiComboBox>
+                                
+                                <Label text="Ontology Selection"/>
+                                <Select selectedKey="{create>/ontology}">
+                                    <items>
+                                        <core:Item key="GENERAL" text="General Knowledge"/>
+                                        <core:Item key="DOMAIN_SPECIFIC" text="Domain Specific"/>
+                                        <core:Item key="CUSTOM" text="Custom Ontology"/>
+                                        <core:Item key="MIXED" text="Mixed Ontologies"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Fact Validation"/>
+                                <VBox>
+                                    <CheckBox 
+                                        text="Validate fact consistency"
+                                        selected="{create>/validateFacts}"/>
+                                    <CheckBox 
+                                        text="Check for contradictions"
+                                        selected="{create>/checkContradictions}"/>
+                                    <CheckBox 
+                                        text="Temporal consistency"
+                                        selected="{create>/temporalConsistency}"/>
+                                    <CheckBox 
+                                        text="Cross-reference facts"
+                                        selected="{create>/crossReference}"/>
+                                </VBox>
+                                
+                                <Label text="Rule Application"/>
+                                <VBox>
+                                    <HBox>
+                                        <Label text="Rule Priority Weight:"/>
+                                        <Slider 
+                                            value="{create>/rulePriorityWeight}"
+                                            min="0"
+                                            max="100"
+                                            step="10"
+                                            width="150px"/>
+                                    </HBox>
+                                    <HBox>
+                                        <Label text="Rule Confidence Weight:"/>
+                                        <Slider 
+                                            value="{create>/ruleConfidenceWeight}"
+                                            min="0"
+                                            max="100"
+                                            step="10"
+                                            width="150px"/>
+                                    </HBox>
+                                    <CheckBox 
+                                        text="Allow rule composition"
+                                        selected="{create>/allowRuleComposition}"/>
+                                    <CheckBox 
+                                        text="Enable meta-rules"
+                                        selected="{create>/enableMetaRules}"/>
+                                </VBox>
+                                
+                                <Label text="Knowledge Update"/>
+                                <VBox>
+                                    <CheckBox 
+                                        text="Learn from inferences"
+                                        selected="{create>/learnFromInferences}"/>
+                                    <CheckBox 
+                                        text="Update rule weights"
+                                        selected="{create>/updateRuleWeights}"/>
+                                    <CheckBox 
+                                        text="Generate new rules"
+                                        selected="{create>/generateNewRules}"/>
+                                </VBox>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Goals and Constraints Tab -->
+                    <IconTabFilter text="Goals & Constraints" icon="sap-icon://target-group">
+                        <VBox>
+                            <Panel headerText="Reasoning Goals" expandable="true" expanded="true">
+                                <VBox class="sapUiMediumMargin">
+                                    <Label text="Primary Goal"/>
+                                    <TextArea 
+                                        value="{create>/primaryGoal}"
+                                        rows="2"
+                                        placeholder="Define the main reasoning objective"/>
+                                    
+                                    <Label text="Secondary Goals"/>
+                                    <TextArea 
+                                        value="{create>/secondaryGoals}"
+                                        rows="3"
+                                        placeholder="List additional objectives (one per line)"/>
+                                    
+                                    <Label text="Success Criteria"/>
+                                    <VBox>
+                                        <HBox>
+                                            <Label text="Minimum Confidence Required:"/>
+                                            <StepInput 
+                                                value="{create>/minConfidenceRequired}"
+                                                min="50"
+                                                max="100"
+                                                step="5"
+                                                description="%"/>
+                                        </HBox>
+                                        <HBox>
+                                            <Label text="Max Processing Time:"/>
+                                            <StepInput 
+                                                value="{create>/maxProcessingTime}"
+                                                min="1"
+                                                max="3600"
+                                                step="10"
+                                                description="seconds"/>
+                                        </HBox>
+                                        <CheckBox 
+                                            text="Require explanation for conclusion"
+                                            selected="{create>/requireExplanation}"/>
+                                    </VBox>
+                                </VBox>
+                            </Panel>
+                            
+                            <Panel 
+                                headerText="Constraints" 
+                                expandable="true" 
+                                expanded="true"
+                                class="sapUiMediumMarginTop">
+                                <VBox class="sapUiMediumMargin">
+                                    <Label text="Resource Constraints"/>
+                                    <VBox>
+                                        <HBox>
+                                            <Label text="Max Memory Usage (MB):"/>
+                                            <StepInput 
+                                                value="{create>/maxMemoryUsage}"
+                                                min="100"
+                                                max="8192"
+                                                step="100"/>
+                                        </HBox>
+                                        <HBox>
+                                            <Label text="Max CPU Usage (%):"/>
+                                            <Slider 
+                                                value="{create>/maxCpuUsage}"
+                                                min="10"
+                                                max="100"
+                                                step="10"
+                                                width="150px"/>
+                                        </HBox>
+                                        <HBox>
+                                            <Label text="Max Inference Steps:"/>
+                                            <StepInput 
+                                                value="{create>/maxInferenceSteps}"
+                                                min="10"
+                                                max="10000"
+                                                step="10"/>
+                                        </HBox>
+                                    </VBox>
+                                    
+                                    <Label text="Logical Constraints"/>
+                                    <VBox>
+                                        <CheckBox 
+                                            text="Maintain consistency throughout"
+                                            selected="{create>/maintainConsistency}"/>
+                                        <CheckBox 
+                                            text="Avoid circular reasoning"
+                                            selected="{create>/avoidCircularReasoning}"/>
+                                        <CheckBox 
+                                            text="Require sound inferences only"
+                                            selected="{create>/requireSoundInferences}"/>
+                                        <CheckBox 
+                                            text="Allow incomplete information"
+                                            selected="{create>/allowIncompleteInfo}"/>
+                                    </VBox>
+                                    
+                                    <Label text="Temporal Constraints"/>
+                                    <VBox>
+                                        <HBox>
+                                            <Label text="Time Scope:"/>
+                                            <Select selectedKey="{create>/timeScope}">
+                                                <items>
+                                                    <core:Item key="PAST" text="Past Events Only"/>
+                                                    <core:Item key="PRESENT" text="Current State"/>
+                                                    <core:Item key="FUTURE" text="Future Predictions"/>
+                                                    <core:Item key="ALL" text="All Time Periods"/>
+                                                </items>
+                                            </Select>
+                                        </HBox>
+                                        <CheckBox 
+                                            text="Consider temporal ordering"
+                                            selected="{create>/considerTemporalOrdering}"/>
+                                        <CheckBox 
+                                            text="Handle temporal contradictions"
+                                            selected="{create>/handleTemporalContradictions}"/>
+                                    </VBox>
+                                </VBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Output Configuration Tab -->
+                    <IconTabFilter text="Output Config" icon="sap-icon://output">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Output Format"/>
+                                <Select selectedKey="{create>/outputFormat}">
+                                    <items>
+                                        <core:Item key="STRUCTURED" text="Structured Results"/>
+                                        <core:Item key="NARRATIVE" text="Narrative Explanation"/>
+                                        <core:Item key="FORMAL_LOGIC" text="Formal Logic Notation"/>
+                                        <core:Item key="DECISION_TREE" text="Decision Tree"/>
+                                        <core:Item key="PROOF_TREE" text="Proof Tree"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Detail Level"/>
+                                <Select selectedKey="{create>/detailLevel}">
+                                    <items>
+                                        <core:Item key="SUMMARY" text="Summary Only"/>
+                                        <core:Item key="DETAILED" text="Detailed Results"/>
+                                        <core:Item key="COMPREHENSIVE" text="Comprehensive Analysis"/>
+                                        <core:Item key="DEBUG" text="Debug Level (All Steps)"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Explanation Requirements"/>
+                                <VBox>
+                                    <CheckBox 
+                                        text="Include reasoning steps"
+                                        selected="{create>/includeReasoningSteps}"/>
+                                    <CheckBox 
+                                        text="Show confidence calculations"
+                                        selected="{create>/showConfidenceCalculations}"/>
+                                    <CheckBox 
+                                        text="List supporting facts"
+                                        selected="{create>/listSupportingFacts}"/>
+                                    <CheckBox 
+                                        text="Identify assumptions"
+                                        selected="{create>/identifyAssumptions}"/>
+                                    <CheckBox 
+                                        text="Highlight uncertainties"
+                                        selected="{create>/highlightUncertainties}"/>
+                                </VBox>
+                                
+                                <Label text="Visualization Options"/>
+                                <VBox>
+                                    <CheckBox 
+                                        text="Generate inference network"
+                                        selected="{create>/generateInferenceNetwork}"/>
+                                    <CheckBox 
+                                        text="Create decision flowchart"
+                                        selected="{create>/createDecisionFlowchart}"/>
+                                    <CheckBox 
+                                        text="Show confidence heatmap"
+                                        selected="{create>/showConfidenceHeatmap}"/>
+                                </VBox>
+                                
+                                <Label text="Export Options"/>
+                                <VBox>
+                                    <CheckBox 
+                                        text="Export to knowledge base"
+                                        selected="{create>/exportToKnowledgeBase}"/>
+                                    <CheckBox 
+                                        text="Generate formal proof"
+                                        selected="{create>/generateFormalProof}"/>
+                                    <CheckBox 
+                                        text="Create validation report"
+                                        selected="{create>/createValidationReport}"/>
+                                </VBox>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelCreateTask"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Create"
+                type="Emphasized"
+                press=".onConfirmCreateTask"
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/reasoningType} &amp;&amp; ${create>/problemDomain} }"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

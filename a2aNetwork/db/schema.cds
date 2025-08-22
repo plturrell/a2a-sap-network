@@ -772,16 +772,16 @@ entity AIPreparationTasks : cuid, managed {
     };
     
     @Common.Label: 'ML Framework'
-    framework       : String(50) default 'TENSORFLOW' enum { 
+    framework       : String(50) enum { 
         TENSORFLOW; PYTORCH; SCIKIT_LEARN; XGBOOST; HUGGINGFACE; AUTO; 
-    };
+    } default 'TENSORFLOW';
     
     @Common.Label: 'Train/Test Split Ratio'
     @assert.range: [50, 90]
     splitRatio      : Integer default 80;
     
     @Common.Label: 'Validation Strategy'
-    validationStrategy : String(20) default 'KFOLD' enum { KFOLD; HOLDOUT; };
+    validationStrategy : String(20) enum { KFOLD; HOLDOUT; } default 'KFOLD';
     
     @Common.Label: 'Random Seed'
     randomSeed      : Integer default 42;
@@ -793,9 +793,9 @@ entity AIPreparationTasks : cuid, managed {
     autoFeatureEngineering : Boolean default true;
     
     @Common.Label: 'Optimization Metric'
-    optimizationMetric : String(20) default 'AUTO' enum { 
+    optimizationMetric : String(20) enum { 
         AUTO; ACCURACY; AUC; F1; MSE; MAE; PERPLEXITY; 
-    };
+    } default 'AUTO';
     
     @Common.Label: 'Use GPU Acceleration'
     useGPU          : Boolean default false;
@@ -810,12 +810,12 @@ entity AIPreparationTasks : cuid, managed {
     cacheResults    : Boolean default true;
     
     @Common.Label: 'Task Status'
-    status          : String(20) default 'DRAFT' enum { 
+    status          : String(20) enum { 
         DRAFT; PENDING; RUNNING; COMPLETED; FAILED; PAUSED; 
-    };
+    } default 'DRAFT';
     
     @Common.Label: 'Priority'
-    priority        : String(10) default 'MEDIUM' enum { LOW; MEDIUM; HIGH; URGENT; };
+    priority        : String(10) enum { LOW; MEDIUM; HIGH; URGENT; } default 'MEDIUM';
     
     @Common.Label: 'Progress Percentage'
     @assert.range: [0, 100]
@@ -1179,18 +1179,18 @@ entity StandardizationTasks : cuid, managed {
     formatValidation   : Boolean default true;
     
     @Common.Label: 'Processing Mode'
-    processingMode     : String(20) default 'FULL' enum { FULL; BATCH; };
+    processingMode     : String(20) enum { FULL; BATCH; } default 'FULL';
     
     @Common.Label: 'Batch Size'
     batchSize          : Integer default 1000;
     
     @Common.Label: 'Task Status'
-    status             : String(20) default 'DRAFT' enum { 
+    status             : String(20) enum { 
         DRAFT; PENDING; RUNNING; COMPLETED; FAILED; PAUSED; 
-    };
+    } default 'DRAFT';
     
     @Common.Label: 'Priority'
-    priority           : String(10) default 'MEDIUM' enum { LOW; MEDIUM; HIGH; URGENT; };
+    priority           : String(10) enum { LOW; MEDIUM; HIGH; URGENT; } default 'MEDIUM';
     
     @Common.Label: 'Progress Percentage'
     @assert.range: [0, 100]
@@ -1298,24 +1298,24 @@ entity VectorProcessingTasks : cuid, managed {
     embeddingModel     : String(100) @mandatory;
     
     @Common.Label: 'Model Provider'
-    modelProvider      : String(50) default 'OPENAI' enum { 
+    modelProvider      : String(50) enum { 
         OPENAI; HUGGINGFACE; COHERE; ANTHROPIC; GOOGLE; CUSTOM; 
-    };
+    } default 'OPENAI';
     
     @Common.Label: 'Vector Database'
-    vectorDatabase     : String(50) default 'PINECONE' enum { 
+    vectorDatabase     : String(50) enum { 
         PINECONE; WEAVIATE; MILVUS; CHROMA; QDRANT; PGVECTOR; 
-    };
+    } default 'PINECONE';
     
     @Common.Label: 'Index Type'
-    indexType          : String(20) default 'HNSW' enum { 
+    indexType          : String(20) enum { 
         HNSW; IVF; FLAT; LSH; 
-    };
+    } default 'HNSW';
     
     @Common.Label: 'Distance Metric'
-    distanceMetric     : String(20) default 'COSINE' enum { 
+    distanceMetric     : String(20) enum { 
         COSINE; EUCLIDEAN; DOT_PRODUCT; MANHATTAN; 
-    };
+    } default 'COSINE';
     
     @Common.Label: 'Vector Dimensions'
     @assert.range: [128, 4096]
@@ -1339,12 +1339,12 @@ entity VectorProcessingTasks : cuid, managed {
     batchSize          : Integer default 100;
     
     @Common.Label: 'Task Status'
-    status             : String(20) default 'DRAFT' enum { 
+    status             : String(20) enum { 
         DRAFT; PENDING; RUNNING; COMPLETED; FAILED; PAUSED; 
-    };
+    } default 'DRAFT';
     
     @Common.Label: 'Priority'
-    priority           : String(10) default 'MEDIUM' enum { LOW; MEDIUM; HIGH; URGENT; };
+    priority           : String(10) enum { LOW; MEDIUM; HIGH; URGENT; } default 'MEDIUM';
     
     @Common.Label: 'Progress Percentage'
     @assert.range: [0, 100]
@@ -1486,9 +1486,9 @@ entity VectorProcessingJobs : cuid, managed {
     };
     
     @Common.Label: 'Status'
-    status             : String(20) default 'PENDING' enum { 
+    status             : String(20) enum { 
         PENDING; RUNNING; COMPLETED; FAILED; CANCELLED; 
-    };
+    } default 'PENDING';
     
     @Common.Label: 'Task IDs'
     @Core.MediaType: 'application/json'
@@ -1522,6 +1522,198 @@ entity VectorProcessingJobs : cuid, managed {
     @Common.Label: 'Result Data'
     @Core.MediaType: 'application/json'
     resultData         : LargeString;
+}
+
+// Agent 4 - Calculation Validation Tasks
+entity CalcValidationTasks : cuid, managed {
+    @Common.Label: 'Task Name'
+    @Search.defaultSearchElement: true
+    taskName           : String(100) @mandatory;
+    
+    @Common.Label: 'Description'
+    @UI.MultiLineText: true
+    description        : String(1000);
+    
+    @Common.Label: 'Calculation Expression'
+    @UI.MultiLineText: true
+    @mandatory
+    expression         : String(2000);
+    
+    @Common.Label: 'Input Variables'
+    @Core.MediaType: 'application/json'
+    inputVariables     : LargeString;
+    
+    @Common.Label: 'Expected Result'
+    expectedResult     : String(500);
+    
+    @Common.Label: 'Validation Method'
+    validationMethod   : String(50) @mandatory enum { 
+        SYMBOLIC; NUMERICAL; STATISTICAL; AI_POWERED; BLOCKCHAIN_CONSENSUS; HYBRID; 
+    };
+    
+    @Common.Label: 'Precision Level'
+    precisionLevel     : String(20) enum { 
+        LOW; MEDIUM; HIGH; ULTRA_HIGH; 
+    } default 'MEDIUM';
+    
+    @Common.Label: 'Tolerance'
+    tolerance          : Decimal(10,8) default 0.0001;
+    
+    @Common.Label: 'Use Symbolic Math'
+    useSymbolicMath    : Boolean default false;
+    
+    @Common.Label: 'Use Numerical Methods'
+    useNumericalMethods : Boolean default true;
+    
+    @Common.Label: 'Use Statistical Analysis'
+    useStatisticalAnalysis : Boolean default false;
+    
+    @Common.Label: 'Use AI Validation'
+    useAIValidation    : Boolean default false;
+    
+    @Common.Label: 'Use Blockchain Consensus'
+    useBlockchainConsensus : Boolean default false;
+    
+    @Common.Label: 'AI Model'
+    aiModel            : String(100) enum { 
+        GROK; GPT4; CLAUDE; GEMINI; CUSTOM; 
+    } default 'GROK';
+    
+    @Common.Label: 'Consensus Validators'
+    consensusValidators : Integer default 3;
+    
+    @Common.Label: 'Consensus Threshold'
+    @assert.range: [0.5, 1.0]
+    consensusThreshold : Decimal(3,2) default 0.67;
+    
+    @Common.Label: 'Status'
+    status             : String(20) enum { 
+        DRAFT; PENDING; VALIDATING; COMPLETED; FAILED; CANCELLED; 
+    } default 'DRAFT';
+    
+    @Common.Label: 'Priority'
+    priority           : String(10) enum { LOW; MEDIUM; HIGH; URGENT; } default 'MEDIUM';
+    
+    @Common.Label: 'Progress Percentage'
+    @assert.range: [0, 100]
+    progressPercent    : Integer default 0;
+    
+    @Common.Label: 'Current Stage'
+    currentStage       : String(100);
+    
+    @Common.Label: 'Validation Time (ms)'
+    validationTime     : Integer;
+    
+    @Common.Label: 'Computed Result'
+    computedResult     : String(500);
+    
+    @Common.Label: 'Validation Score'
+    @assert.range: [0.0, 1.0]
+    validationScore    : Decimal(5,4);
+    
+    @Common.Label: 'Confidence Level'
+    @assert.range: [0.0, 1.0]
+    confidenceLevel    : Decimal(5,4);
+    
+    @Common.Label: 'Error Details'
+    errorDetails       : String(1000);
+    
+    @Common.Label: 'Validation Methods Used'
+    @Core.MediaType: 'application/json'
+    methodsUsed        : LargeString;
+    
+    @Common.Label: 'Intermediate Steps'
+    @Core.MediaType: 'application/json'
+    intermediateSteps  : LargeString;
+    
+    @Common.Label: 'Started At'
+    startedAt          : DateTime;
+    
+    @Common.Label: 'Completed At'
+    completedAt        : DateTime;
+    
+    @Common.Label: 'Agent'
+    agent              : Association to Agents;
+    
+    @Common.Label: 'Validation Results'
+    validationResults  : Composition of many CalcValidationResults on validationResults.task = $self;
+}
+
+// Calculation Validation Results (for detailed breakdown)
+entity CalcValidationResults : cuid {
+    @Common.Label: 'Task'
+    task               : Association to CalcValidationTasks;
+    
+    @Common.Label: 'Method'
+    method             : String(50) @mandatory;
+    
+    @Common.Label: 'Result'
+    result             : String(500);
+    
+    @Common.Label: 'Is Correct'
+    isCorrect          : Boolean;
+    
+    @Common.Label: 'Confidence Score'
+    @assert.range: [0.0, 1.0]
+    confidenceScore    : Decimal(5,4);
+    
+    @Common.Label: 'Processing Time (ms)'
+    processingTime     : Integer;
+    
+    @Common.Label: 'Error Message'
+    errorMessage       : String(500);
+    
+    @Common.Label: 'Details'
+    @Core.MediaType: 'application/json'
+    details            : LargeString;
+    
+    @Common.Label: 'Validation Timestamp'
+    validatedAt        : DateTime;
+}
+
+// Calculation Templates (reusable validation patterns)
+entity CalcValidationTemplates : cuid, managed {
+    @Common.Label: 'Template Name'
+    @Search.defaultSearchElement: true
+    templateName       : String(100) @mandatory @assert.unique;
+    
+    @Common.Label: 'Description'
+    @UI.MultiLineText: true
+    description        : String(1000);
+    
+    @Common.Label: 'Category'
+    category           : String(50) enum { 
+        ARITHMETIC; ALGEBRA; CALCULUS; STATISTICS; GEOMETRY; TRIGONOMETRY; 
+        LINEAR_ALGEBRA; DIFFERENTIAL_EQUATIONS; FINANCIAL; PHYSICS; CHEMISTRY; 
+    };
+    
+    @Common.Label: 'Expression Template'
+    @UI.MultiLineText: true
+    expressionTemplate : String(2000) @mandatory;
+    
+    @Common.Label: 'Variable Definitions'
+    @Core.MediaType: 'application/json'
+    variableDefinitions : LargeString;
+    
+    @Common.Label: 'Default Validation Method'
+    defaultValidationMethod : String(50);
+    
+    @Common.Label: 'Recommended Precision'
+    recommendedPrecision : String(20);
+    
+    @Common.Label: 'Example Usage'
+    @UI.MultiLineText: true
+    exampleUsage       : String(1000);
+    
+    @Common.Label: 'Is Active'
+    isActive           : Boolean default true;
+    
+    @Common.Label: 'Usage Count'
+    usageCount         : Integer default 0;
+    
+    @Common.Label: 'Success Rate'
+    @assert.range: [0.0, 1.0]
+    successRate        : Decimal(5,4);
 }
 
 // Business Validations (implemented in service layer)

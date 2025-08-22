@@ -1,0 +1,351 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz">
+    
+    <Dialog
+        id="validationResultsDialog"
+        title="Calculation Validation Results"
+        contentWidth="90%"
+        contentHeight="85%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Results Summary -->
+                <Panel headerText="Validation Summary" class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Overall Score" level="H3"/>
+                            <ObjectNumber 
+                                number="{results>/overallScore}"
+                                unit="%"
+                                state="{= ${results>/overallScore} >= 95 ? 'Success' : ${results>/overallScore} >= 80 ? 'Warning' : 'Error'}"
+                                emphasized="true"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Confidence" level="H3"/>
+                            <ObjectNumber 
+                                number="{results>/confidenceLevel}"
+                                unit="%"
+                                state="{= ${results>/confidenceLevel} >= 90 ? 'Success' : ${results>/confidenceLevel} >= 70 ? 'Warning' : 'Error'}"
+                                emphasized="true"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Methods Used" level="H3"/>
+                            <Text text="{results>/methodsCount}"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Validation Time" level="H3"/>
+                            <Text text="{results>/totalTime} ms"/>
+                        </VBox>
+                        <VBox>
+                            <Title text="Status" level="H3"/>
+                            <ObjectStatus 
+                                text="{results>/status}"
+                                state="{= ${results>/status} === 'COMPLETED' ? 'Success' : ${results>/status} === 'FAILED' ? 'Error' : 'Warning'}"/>
+                        </VBox>
+                    </HBox>
+                </Panel>
+                
+                <!-- Expression and Result -->
+                <Panel headerText="Expression and Computed Result" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginBottom">
+                            <Title text="Original Expression" level="H4"/>
+                            <Text 
+                                text="{results>/originalExpression}"
+                                class="sapUiMediumMarginBottom"
+                                wrapping="true"/>
+                        </VBox>
+                        
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Expected Result" level="H4"/>
+                                <Text text="{results>/expectedResult}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Computed Result" level="H4"/>
+                                <Text 
+                                    text="{results>/computedResult}"
+                                    class="{= ${results>/isCorrect} ? 'sapThemeHighlight-AsColor' : 'sapNegativeColor'}"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="Match Status" level="H4"/>
+                                <ObjectStatus 
+                                    text="{= ${results>/isCorrect} ? 'Match' : 'Mismatch'}"
+                                    state="{= ${results>/isCorrect} ? 'Success' : 'Error'}"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Method Results Detail -->
+                <Panel headerText="Validation Method Results" class="sapUiResponsiveMargin">
+                    <Table 
+                        items="{results>/methodResults}"
+                        growing="true"
+                        growingThreshold="20">
+                        <columns>
+                            <Column>
+                                <Text text="Method"/>
+                            </Column>
+                            <Column>
+                                <Text text="Result"/>
+                            </Column>
+                            <Column>
+                                <Text text="Confidence"/>
+                            </Column>
+                            <Column>
+                                <Text text="Time (ms)"/>
+                            </Column>
+                            <Column>
+                                <Text text="Status"/>
+                            </Column>
+                            <Column>
+                                <Text text="Details"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem press=".onShowMethodDetails">
+                                <cells>
+                                    <VBox>
+                                        <Text text="{method}"/>
+                                        <Text 
+                                            text="{engine}"
+                                            class="sapUiContentLabelColor"/>
+                                    </VBox>
+                                    <Text 
+                                        text="{result}"
+                                        class="{= ${isCorrect} ? 'sapThemeHighlight-AsColor' : 'sapNegativeColor'}"/>
+                                    <ProgressIndicator 
+                                        percentValue="{= ${confidenceScore} * 100}"
+                                        displayValue="{= (${confidenceScore} * 100).toFixed(1) + '%'}"
+                                        state="{= ${confidenceScore} >= 0.9 ? 'Success' : ${confidenceScore} >= 0.7 ? 'Warning' : 'Error'}"/>
+                                    <Text text="{processingTime}"/>
+                                    <ObjectStatus 
+                                        text="{= ${isCorrect} ? 'Correct' : 'Incorrect'}"
+                                        state="{= ${isCorrect} ? 'Success' : 'Error'}"/>
+                                    <Button 
+                                        text="View"
+                                        type="Transparent"
+                                        icon="sap-icon://detail-view"
+                                        press=".onViewMethodDetails"/>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Intermediate Steps -->
+                <Panel 
+                    headerText="Step-by-Step Solution"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <List items="{results>/intermediateSteps}">
+                            <CustomListItem>
+                                <VBox class="sapUiMediumMarginBottom">
+                                    <HBox>
+                                        <Text 
+                                            text="Step {stepNumber}:"
+                                            class="sapUiContentLabelColor"
+                                            width="80px"/>
+                                        <Text text="{description}"/>
+                                    </HBox>
+                                    <HBox>
+                                        <Text 
+                                            text="Expression:"
+                                            class="sapUiContentLabelColor"
+                                            width="80px"/>
+                                        <Text 
+                                            text="{expression}"
+                                            wrapping="true"/>
+                                    </HBox>
+                                    <HBox visible="{= !!${explanation}}">
+                                        <Text 
+                                            text="Explanation:"
+                                            class="sapUiContentLabelColor"
+                                            width="80px"/>
+                                        <Text 
+                                            text="{explanation}"
+                                            wrapping="true"/>
+                                    </HBox>
+                                </VBox>
+                            </CustomListItem>
+                        </List>
+                    </VBox>
+                </Panel>
+                
+                <!-- Visualization Charts -->
+                <Panel 
+                    headerText="Validation Analysis"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Method Performance Chart -->
+                        <VBox class="sapUiMediumMarginBottom">
+                            <Title text="Method Performance Comparison" level="H4"/>
+                            <core:HTML 
+                                content='<div id="methodPerformanceChart" style="width: 100%; height: 300px;"></div>'
+                                preferDOM="true"/>
+                        </VBox>
+                        
+                        <!-- Confidence Scores Chart -->
+                        <VBox class="sapUiMediumMarginBottom">
+                            <Title text="Confidence Scores by Method" level="H4"/>
+                            <core:HTML 
+                                content='<div id="confidenceScoresChart" style="width: 100%; height: 300px;"></div>'
+                                preferDOM="true"/>
+                        </VBox>
+                        
+                        <!-- Processing Time Chart -->
+                        <VBox>
+                            <Title text="Processing Time Analysis" level="H4"/>
+                            <core:HTML 
+                                content='<div id="processingTimeChart" style="width: 100%; height: 300px;"></div>'
+                                preferDOM="true"/>
+                        </VBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Error Analysis -->
+                <Panel 
+                    headerText="Error Analysis"
+                    visible="{= !!${results>/errorDetails}}"
+                    expandable="true"
+                    expanded="true"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <MessageStrip 
+                            text="{results>/errorSummary}"
+                            type="Error"
+                            showIcon="true"
+                            class="sapUiMediumMarginBottom"/>
+                        
+                        <Table 
+                            items="{results>/errors}"
+                            visible="{= ${results>/errors}.length > 0}">
+                            <columns>
+                                <Column>
+                                    <Text text="Method"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Error Type"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Error Message"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Suggested Fix"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{method}"/>
+                                        <Text text="{errorType}"/>
+                                        <Text 
+                                            text="{errorMessage}"
+                                            wrapping="true"/>
+                                        <Text 
+                                            text="{suggestedFix}"
+                                            wrapping="true"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </Panel>
+                
+                <!-- Recommendations -->
+                <Panel 
+                    headerText="Recommendations"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <List items="{results>/recommendations}">
+                            <StandardListItem
+                                title="{title}"
+                                description="{description}"
+                                info="{priority}"
+                                infoState="{= ${priority} === 'High' ? 'Error' : ${priority} === 'Medium' ? 'Warning' : 'Success'}"
+                                icon="{= ${type} === 'improvement' ? 'sap-icon://lightbulb' : ${type} === 'warning' ? 'sap-icon://warning' : 'sap-icon://information'}"/>
+                        </List>
+                    </VBox>
+                </Panel>
+                
+                <!-- Export Options -->
+                <Panel 
+                    headerText="Export Results"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Label text="Export Format"/>
+                            <Select selectedKey="{results>/exportFormat}">
+                                <items>
+                                    <core:Item key="PDF" text="PDF Report"/>
+                                    <core:Item key="EXCEL" text="Excel Spreadsheet"/>
+                                    <core:Item key="JSON" text="JSON Data"/>
+                                    <core:Item key="LATEX" text="LaTeX Document"/>
+                                    <core:Item key="MATHML" text="MathML"/>
+                                </items>
+                            </Select>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Label text="Include Options"/>
+                            <VBox>
+                                <CheckBox 
+                                    text="Include step-by-step solution"
+                                    selected="{results>/includeSteps}"/>
+                                <CheckBox 
+                                    text="Include method details"
+                                    selected="{results>/includeMethodDetails}"/>
+                                <CheckBox 
+                                    text="Include charts"
+                                    selected="{results>/includeCharts}"/>
+                                <CheckBox 
+                                    text="Include recommendations"
+                                    selected="{results>/includeRecommendations}"/>
+                            </VBox>
+                        </VBox>
+                        <VBox>
+                            <Label text=" "/>
+                            <Button 
+                                text="Export Report"
+                                icon="sap-icon://download"
+                                press=".onExportResults"/>
+                        </VBox>
+                    </HBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button 
+                text="Validate Again"
+                icon="sap-icon://refresh"
+                press=".onValidateAgain"/>
+            <Button 
+                text="Save to Templates"
+                icon="sap-icon://save"
+                press=".onSaveAsTemplate"
+                visible="{= ${results>/isCorrect} && ${results>/overallScore} >= 90}"/>
+            <Button 
+                text="Share Results"
+                icon="sap-icon://share-2"
+                press=".onShareResults"/>
+            <Button 
+                text="Close"
+                press=".onCloseResults"/>
+        </buttons>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

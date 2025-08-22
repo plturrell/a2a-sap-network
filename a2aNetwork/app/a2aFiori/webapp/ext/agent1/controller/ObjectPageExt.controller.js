@@ -2,8 +2,10 @@ sap.ui.define([
     "sap/ui/core/mvc/ControllerExtension",
     "sap/m/MessageBox",
     "sap/m/MessageToast",
-    "sap/ui/core/Fragment"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment) {
+    "sap/ui/core/Fragment",
+    "sap/base/security/encodeXML",
+    "sap/base/strings/escapeRegExp"
+], function (ControllerExtension, MessageBox, MessageToast, Fragment, encodeXML, escapeRegExp) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent1.ext.controller.ObjectPageExt", {

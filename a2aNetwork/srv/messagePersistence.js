@@ -489,7 +489,7 @@ module.exports.shutdown = shutdown;
                 await pipeline.exec();
                 this.log.debug(`Cleaned up ${expiredKeys.length} expired Redis keys`);
             } catch (error) {
-                this.log.error('Redis cleanup failed:', error));
+                this.log.error('Redis cleanup failed:', error);
             }
         }, 3600000); // 1 hour
         
@@ -498,7 +498,7 @@ module.exports.shutdown = shutdown;
             try {
                 await this._archiveMessages({ data: {} });
             } catch (error) {
-                this.log.error('Automated archiving failed:', error));
+                this.log.error('Automated archiving failed:', error);
             }
         }, 24 * 3600000); // 24 hours
     }

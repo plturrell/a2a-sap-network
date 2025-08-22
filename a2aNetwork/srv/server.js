@@ -622,6 +622,167 @@ cds.on('bootstrap', async (app) => {
         });
     });
     
+    // ================================
+    // AGENT 4 - CALCULATION VALIDATION PROXY ROUTES
+    // ================================
+    
+    const AGENT4_BASE_URL = process.env.AGENT4_BASE_URL || 'http://localhost:8003';
+    
+    // Helper function to proxy Agent 4 requests
+    async function proxyAgent4Request(req, res, endpoint, method = 'GET') {
+        try {
+            const config = {
+                method,
+                url: `${AGENT4_BASE_URL}/a2a/agent4/v1${endpoint}`,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': req.headers.authorization || '',
+                    'X-Forwarded-For': req.ip,
+                    'X-User-Agent': req.headers['user-agent'] || 'SAP-CAP-Proxy'
+                },
+                timeout: method === 'POST' ? 120000 : 30000 // Longer timeout for validation operations
+            };
+            
+            if (method !== 'GET' && req.body) {
+                config.data = req.body;
+            }
+            
+            if (req.query && Object.keys(req.query).length > 0) {
+                config.params = req.query;
+            }
+            
+            const response = await axios(config);
+            res.status(response.status).json(response.data);
+        } catch (error) {
+            log.error(`Agent 4 Proxy Error (${endpoint}):`, error.message);
+            if (error.response) {
+                res.status(error.response.status).json({
+                    error: error.response.data?.error || error.response.statusText,
+                    message: `Agent 4 Backend: ${error.response.status}`
+                });
+            } else {
+                res.status(503).json({
+                    error: 'Agent 4 Backend Connection Failed',
+                    message: error.message
+                });
+            }
+        }
+    }
+    
+    // Agent 4 Calculation Validation Tasks
+    app.get('/a2a/agent4/v1/tasks', (req, res) => proxyAgent4Request(req, res, '/tasks'));
+    app.post('/a2a/agent4/v1/tasks', (req, res) => proxyAgent4Request(req, res, '/tasks', 'POST'));
+    app.get('/a2a/agent4/v1/tasks/:taskId', (req, res) => 
+        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}`));
+    app.put('/a2a/agent4/v1/tasks/:taskId', (req, res) => 
+        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}`, 'PUT'));
+    app.delete('/a2a/agent4/v1/tasks/:taskId', (req, res) => 
+        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}`, 'DELETE'));
+    
+    // Agent 4 Validation Operations
+    app.post('/a2a/agent4/v1/tasks/:taskId/validate', (req, res) => 
+        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/validate`, 'POST'));
+    app.post('/a2a/agent4/v1/tasks/:taskId/pause', (req, res) => 
+        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/pause`, 'POST'));
+    app.post('/a2a/agent4/v1/tasks/:taskId/resume', (req, res) => 
+        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/resume`, 'POST'));
+    app.post('/a2a/agent4/v1/tasks/:taskId/cancel', (req, res) => 
+        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/cancel`, 'POST'));
+    
+    // Agent 4 Method-Specific Validation
+    app.post('/a2a/agent4/v1/tasks/:taskId/symbolic', (req, res) => 
+        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/symbolic`, 'POST'));
+    app.post('/a2a/agent4/v1/tasks/:taskId/numerical', (req, res) => 
+        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/numerical`, 'POST'));
+    app.post('/a2a/agent4/v1/tasks/:taskId/statistical', (req, res) => 
+        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/statistical`, 'POST'));
+    app.post('/a2a/agent4/v1/tasks/:taskId/ai-validation', (req, res) => 
+        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/ai-validation`, 'POST'));
+    app.post('/a2a/agent4/v1/tasks/:taskId/blockchain-consensus', (req, res) => 
+        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/blockchain-consensus`, 'POST'));
+    
+    // Agent 4 Expression Operations
+    app.post('/a2a/agent4/v1/expression/validate-syntax', (req, res) => 
+        proxyAgent4Request(req, res, '/expression/validate-syntax', 'POST'));
+    app.post('/a2a/agent4/v1/expression/evaluate', (req, res) => 
+        proxyAgent4Request(req, res, '/expression/evaluate', 'POST'));
+    app.post('/a2a/agent4/v1/expression/simplify', (req, res) => 
+        proxyAgent4Request(req, res, '/expression/simplify', 'POST'));
+    app.post('/a2a/agent4/v1/expression/derivative', (req, res) => 
+        proxyAgent4Request(req, res, '/expression/derivative', 'POST'));
+    app.post('/a2a/agent4/v1/expression/integral', (req, res) => 
+        proxyAgent4Request(req, res, '/expression/integral', 'POST'));
+    
+    // Agent 4 Validation Methods
+    app.get('/a2a/agent4/v1/methods', (req, res) => proxyAgent4Request(req, res, '/methods'));
+    app.get('/a2a/agent4/v1/methods/symbolic/engines', (req, res) => 
+        proxyAgent4Request(req, res, '/methods/symbolic/engines'));
+    app.get('/a2a/agent4/v1/methods/ai/models', (req, res) => 
+        proxyAgent4Request(req, res, '/methods/ai/models'));
+    app.post('/a2a/agent4/v1/methods/benchmark', (req, res) => 
+        proxyAgent4Request(req, res, '/methods/benchmark', 'POST'));
+    
+    // Agent 4 Templates Management
+    app.get('/a2a/agent4/v1/templates', (req, res) => proxyAgent4Request(req, res, '/templates'));
+    app.post('/a2a/agent4/v1/templates', (req, res) => proxyAgent4Request(req, res, '/templates', 'POST'));
+    app.get('/a2a/agent4/v1/templates/:templateId', (req, res) => 
+        proxyAgent4Request(req, res, `/templates/${req.params.templateId}`));
+    app.put('/a2a/agent4/v1/templates/:templateId', (req, res) => 
+        proxyAgent4Request(req, res, `/templates/${req.params.templateId}`, 'PUT'));
+    app.delete('/a2a/agent4/v1/templates/:templateId', (req, res) => 
+        proxyAgent4Request(req, res, `/templates/${req.params.templateId}`, 'DELETE'));
+    app.post('/a2a/agent4/v1/templates/:templateId/apply', (req, res) => 
+        proxyAgent4Request(req, res, `/templates/${req.params.templateId}/apply`, 'POST'));
+    
+    // Agent 4 AI Model Comparison
+    app.get('/a2a/agent4/v1/ai/models', (req, res) => proxyAgent4Request(req, res, '/ai/models'));
+    app.post('/a2a/agent4/v1/ai/compare', (req, res) => proxyAgent4Request(req, res, '/ai/compare', 'POST'));
+    app.get('/a2a/agent4/v1/ai/compare/:comparisonId', (req, res) => 
+        proxyAgent4Request(req, res, `/ai/compare/${req.params.comparisonId}`));
+    app.post('/a2a/agent4/v1/ai/configure', (req, res) => 
+        proxyAgent4Request(req, res, '/ai/configure', 'POST'));
+    
+    // Agent 4 Blockchain Consensus
+    app.get('/a2a/agent4/v1/blockchain/validators', (req, res) => 
+        proxyAgent4Request(req, res, '/blockchain/validators'));
+    app.post('/a2a/agent4/v1/blockchain/consensus', (req, res) => 
+        proxyAgent4Request(req, res, '/blockchain/consensus', 'POST'));
+    app.get('/a2a/agent4/v1/blockchain/consensus/:consensusId', (req, res) => 
+        proxyAgent4Request(req, res, `/blockchain/consensus/${req.params.consensusId}`));
+    app.post('/a2a/agent4/v1/blockchain/validators/select', (req, res) => 
+        proxyAgent4Request(req, res, '/blockchain/validators/select', 'POST'));
+    app.post('/a2a/agent4/v1/blockchain/configure', (req, res) => 
+        proxyAgent4Request(req, res, '/blockchain/configure', 'POST'));
+    
+    // Agent 4 Batch Operations
+    app.post('/a2a/agent4/v1/batch/validate', (req, res) => 
+        proxyAgent4Request(req, res, '/batch/validate', 'POST'));
+    app.get('/a2a/agent4/v1/batch/:batchId', (req, res) => 
+        proxyAgent4Request(req, res, `/batch/${req.params.batchId}`));
+    app.post('/a2a/agent4/v1/batch/:batchId/pause', (req, res) => 
+        proxyAgent4Request(req, res, `/batch/${req.params.batchId}/pause`, 'POST'));
+    app.post('/a2a/agent4/v1/batch/:batchId/resume', (req, res) => 
+        proxyAgent4Request(req, res, `/batch/${req.params.batchId}/resume`, 'POST'));
+    
+    // Agent 4 Export and Reporting
+    app.post('/a2a/agent4/v1/tasks/:taskId/export', (req, res) => 
+        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/export`, 'POST'));
+    app.get('/a2a/agent4/v1/tasks/:taskId/report', (req, res) => 
+        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/report`));
+    app.post('/a2a/agent4/v1/reports/generate', (req, res) => 
+        proxyAgent4Request(req, res, '/reports/generate', 'POST'));
+    
+    // Agent 4 Statistics and Analytics
+    app.get('/a2a/agent4/v1/stats/accuracy', (req, res) => 
+        proxyAgent4Request(req, res, '/stats/accuracy'));
+    app.get('/a2a/agent4/v1/stats/performance', (req, res) => 
+        proxyAgent4Request(req, res, '/stats/performance'));
+    app.get('/a2a/agent4/v1/stats/usage', (req, res) => 
+        proxyAgent4Request(req, res, '/stats/usage'));
+    
+    // Agent 4 Health Check
+    app.get('/a2a/agent4/v1/health', (req, res) => proxyAgent4Request(req, res, '/health'));
+    
     // Agent 3 OData Service Proxy - Convert REST to OData format
     app.get('/a2a/agent3/v1/odata/VectorProcessingTasks', async (req, res) => {
         try {

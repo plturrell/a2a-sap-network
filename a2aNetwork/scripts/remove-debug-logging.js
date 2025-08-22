@@ -17,7 +17,7 @@ const excludePatterns = [
 ];
 
 const debugPatterns = [
-    /console\.log\s*\([^)]*['"](SECRET|KEY|PASSWORD|TOKEN|PRIVATE)[^)]*\)/gi,
+    /console\.log\s*\([^)]*['\"](SECRET|KEY|PASSWORD|TOKEN|PRIVATE)[^)]*\)/gi,
     /console\.log\s*\([^)]*process\.env[^)]*\)/gi,
     /console\.debug\s*\(/gi,
     /console\.trace\s*\(/gi
@@ -28,49 +28,63 @@ function shouldExclude(filePath) {
 }
 
 function removeDebugLogging(filePath) {
-    const content = fs.readFileSync(filePath, 'utf8');
-    let modified = false;
-    let newContent = content;
-    
-    debugPatterns.forEach(pattern => {
-        if (pattern.test(newContent)) {
-            newContent = newContent.replace(pattern, '// Debug logging removed for production');
-            modified = true;
+    try {
+        const content = fs.readFileSync(filePath, 'utf8');
+        let modified = false;
+        let newContent = content;
+        
+        debugPatterns.forEach(pattern => {
+            if (pattern.test(newContent)) {
+                newContent = newContent.replace(pattern, '// Debug logging removed for production');
+                modified = true;
+            }
+        });
+        
+        if (modified) {
+            fs.writeFileSync(filePath, newContent);
+            console.log(`✅ Cleaned debug logging in: ${filePath}`);
+            return true;
         }
-    });
-    
-    if (modified) {
-        fs.writeFileSync(filePath, newContent);
-        console.log(`✅ Cleaned debug logging in: ${filePath}`);
-        return true;
+        
+        return false;
+    } catch (error) {
+        console.log(`⚠️  Skipping ${filePath}: ${error.message}`);
+        return false;
     }
-    
-    return false;
 }
 
 function scanDirectory(dirPath) {
-    const files = fs.readdirSync(dirPath);
-    let totalCleaned = 0;
-    
-    files.forEach(file => {
-        const fullPath = path.join(dirPath, file);
+    try {
+        const files = fs.readdirSync(dirPath);
+        let totalCleaned = 0;
         
-        if (shouldExclude(fullPath)) {
-            return;
-        }
-        
-        const stat = fs.statSync(fullPath);
-        
-        if (stat.isDirectory()) {
-            totalCleaned += scanDirectory(fullPath);
-        } else if (file.match(/\.(js|ts|json)$/)) {
-            if (removeDebugLogging(fullPath)) {
-                totalCleaned++;
+        files.forEach(file => {
+            const fullPath = path.join(dirPath, file);
+            
+            if (shouldExclude(fullPath)) {
+                return;
             }
-        }
-    });
-    
-    return totalCleaned;
+            
+            try {
+                const stat = fs.statSync(fullPath);
+                
+                if (stat.isDirectory()) {
+                    totalCleaned += scanDirectory(fullPath);
+                } else if (file.match(/\.(js|ts|json)$/)) {
+                    if (removeDebugLogging(fullPath)) {
+                        totalCleaned++;
+                    }
+                }
+            } catch (error) {
+                // Skip files that can't be accessed
+            }
+        });
+        
+        return totalCleaned;
+    } catch (error) {
+        console.log(`⚠️  Cannot scan directory ${dirPath}: ${error.message}`);
+        return 0;
+    }
 }
 
 console.log('🧹 Removing debug logging from production code...\n');

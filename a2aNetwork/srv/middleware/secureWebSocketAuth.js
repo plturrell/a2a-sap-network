@@ -269,7 +269,7 @@ class WebSocketSecurityManager {
         // Start heartbeat interval
         const heartbeatInterval = this.intervals.set('interval_268', setInterval(() => {
             if (socket.connected) {
-                socket.emit('ping', { timestamp: Date.now()) });
+                socket.emit('ping', { timestamp: Date.now() });
             } else {
                 clearInterval(heartbeatInterval);
                 clearTimeout(heartbeatTimeout);

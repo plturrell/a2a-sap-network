@@ -1,0 +1,559 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:mc="sap.suite.ui.microchart"
+    xmlns:viz="sap.viz">
+    
+    <Dialog
+        id="reasoningDashboardDialog"
+        title="Reasoning Agent Dashboard"
+        contentWidth="95%"
+        contentHeight="90%"
+        resizable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Overview Tab -->
+                    <IconTabFilter text="Overview" icon="sap-icon://overview-chart">
+                        <l:Grid defaultSpan="L3 M6 S12">
+                            <l:content>
+                                <!-- Reasoning Metrics Cards -->
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Active Reasoning Tasks"
+                                    subheader="Currently processing"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <NumericContent
+                                                    value="{dashboard>/summary/activeTasks}"
+                                                    valueColor="Good"
+                                                    indicator="Up"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Average Confidence"
+                                    subheader="Reasoning accuracy"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <mc:RadialMicroChart
+                                                    size="L"
+                                                    percentage="{dashboard>/summary/averageConfidence}"
+                                                    valueColor="Good"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Inferences Generated"
+                                    subheader="Last 24 hours"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <NumericContent
+                                                    value="{dashboard>/summary/inferencesGenerated}"
+                                                    valueColor="Good"
+                                                    indicator="Up"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Decision Accuracy"
+                                    subheader="Validated decisions"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <mc:RadialMicroChart
+                                                    size="L"
+                                                    percentage="{dashboard>/summary/decisionAccuracy}"
+                                                    valueColor="Good"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Knowledge Base Size"
+                                    subheader="Facts and rules"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <NumericContent
+                                                    value="{dashboard>/summary/knowledgeBaseSize}"
+                                                    valueColor="Good"
+                                                    indicator="Up"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Engine Efficiency"
+                                    subheader="Processing speed"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <mc:RadialMicroChart
+                                                    size="L"
+                                                    percentage="{dashboard>/summary/engineEfficiency}"
+                                                    valueColor="Good"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Contradictions"
+                                    subheader="Detected and resolved"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <NumericContent
+                                                    value="{dashboard>/summary/contradictions}"
+                                                    valueColor="{= ${dashboard>/summary/contradictions} > 0 ? 'Error' : 'Good' }"
+                                                    indicator="{= ${dashboard>/summary/contradictions} > 0 ? 'Up' : 'Down' }"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Problem Domains"
+                                    subheader="Areas of expertise"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <NumericContent
+                                                    value="{dashboard>/summary/problemDomains}"
+                                                    valueColor="Good"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                            </l:content>
+                        </l:Grid>
+                    </IconTabFilter>
+                    
+                    <!-- Reasoning Metrics Tab -->
+                    <IconTabFilter text="Reasoning Metrics" icon="sap-icon://brain">
+                        <VBox>
+                            <Panel headerText="Confidence Trends Over Time">
+                                <viz:Popover id="confidenceTrendsPopover"/>
+                                <viz:ui5.controls.VizFrame
+                                    id="confidenceTrendsChart"
+                                    height="400px"
+                                    width="100%"
+                                    vizType="line">
+                                    <viz:dataset>
+                                        <viz:ui5.data.FlattenedDataset
+                                            data="{dashboard>/reasoningMetrics/trends}">
+                                            <viz:dimensions>
+                                                <viz:ui5.data.DimensionDefinition
+                                                    name="Time"
+                                                    value="{Time}"/>
+                                            </viz:dimensions>
+                                            <viz:measures>
+                                                <viz:ui5.data.MeasureDefinition
+                                                    name="Confidence"
+                                                    value="{Confidence}"/>
+                                                <viz:ui5.data.MeasureDefinition
+                                                    name="Accuracy"
+                                                    value="{Accuracy}"/>
+                                            </viz:measures>
+                                        </viz:ui5.data.FlattenedDataset>
+                                    </viz:dataset>
+                                </viz:ui5.controls.VizFrame>
+                            </Panel>
+                            
+                            <l:Grid 
+                                defaultSpan="L6 M12 S12"
+                                class="sapUiMediumMarginTop">
+                                <l:content>
+                                    <Panel headerText="Reasoning Types Distribution">
+                                        <mc:ColumnMicroChart height="250px">
+                                            <mc:columns>
+                                                <mc:ColumnMicroChartData
+                                                    value="{dashboard>/reasoningMetrics/types/deductive}"
+                                                    color="Good"
+                                                    label="Deductive"/>
+                                                <mc:ColumnMicroChartData
+                                                    value="{dashboard>/reasoningMetrics/types/inductive}"
+                                                    color="Critical"
+                                                    label="Inductive"/>
+                                                <mc:ColumnMicroChartData
+                                                    value="{dashboard>/reasoningMetrics/types/abductive}"
+                                                    color="Error"
+                                                    label="Abductive"/>
+                                                <mc:ColumnMicroChartData
+                                                    value="{dashboard>/reasoningMetrics/types/analogical}"
+                                                    color="Neutral"
+                                                    label="Analogical"/>
+                                                <mc:ColumnMicroChartData
+                                                    value="{dashboard>/reasoningMetrics/types/probabilistic}"
+                                                    color="Good"
+                                                    label="Probabilistic"/>
+                                            </mc:columns>
+                                        </mc:ColumnMicroChart>
+                                    </Panel>
+                                    
+                                    <Panel headerText="Performance Metrics">
+                                        <VBox class="sapUiMediumMargin">
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Avg Processing Time:"/>
+                                                <Text text="{dashboard>/reasoningMetrics/avgProcessingTime} ms"/>
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Inference Rate:"/>
+                                                <Text text="{dashboard>/reasoningMetrics/inferenceRate} per sec"/>
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Memory Usage:"/>
+                                                <Text text="{dashboard>/reasoningMetrics/memoryUsage} MB"/>
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="CPU Utilization:"/>
+                                                <Text text="{dashboard>/reasoningMetrics/cpuUtilization}%"/>
+                                            </HBox>
+                                        </VBox>
+                                    </Panel>
+                                </l:content>
+                            </l:Grid>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Knowledge Base Tab -->
+                    <IconTabFilter text="Knowledge Base" icon="sap-icon://learning-assistant">
+                        <VBox>
+                            <l:Grid defaultSpan="L4 M6 S12">
+                                <l:content>
+                                    <GenericTile
+                                        class="sapUiTinyMargin"
+                                        header="Logical Facts"
+                                        subheader="Total in knowledge base"
+                                        state="Loaded">
+                                        <tileContent>
+                                            <TileContent>
+                                                <content>
+                                                    <NumericContent
+                                                        value="{dashboard>/knowledgeBase/totalFacts}"
+                                                        valueColor="Good"
+                                                        indicator="Up"/>
+                                                </content>
+                                            </TileContent>
+                                        </tileContent>
+                                    </GenericTile>
+                                    
+                                    <GenericTile
+                                        class="sapUiTinyMargin"
+                                        header="Reasoning Rules"
+                                        subheader="Active rules"
+                                        state="Loaded">
+                                        <tileContent>
+                                            <TileContent>
+                                                <content>
+                                                    <NumericContent
+                                                        value="{dashboard>/knowledgeBase/totalRules}"
+                                                        valueColor="Good"
+                                                        indicator="Up"/>
+                                                </content>
+                                            </TileContent>
+                                        </tileContent>
+                                    </GenericTile>
+                                    
+                                    <GenericTile
+                                        class="sapUiTinyMargin"
+                                        header="Consistency Score"
+                                        subheader="Knowledge base integrity"
+                                        state="Loaded">
+                                        <tileContent>
+                                            <TileContent>
+                                                <content>
+                                                    <mc:RadialMicroChart
+                                                        size="L"
+                                                        percentage="{dashboard>/knowledgeBase/consistencyScore}"
+                                                        valueColor="Good"/>
+                                                </content>
+                                            </TileContent>
+                                        </tileContent>
+                                    </GenericTile>
+                                </l:content>
+                            </l:Grid>
+                            
+                            <Panel 
+                                headerText="Knowledge Growth Over Time"
+                                class="sapUiMediumMarginTop">
+                                <viz:ui5.controls.VizFrame
+                                    id="knowledgeGrowthChart"
+                                    height="300px"
+                                    width="100%"
+                                    vizType="combination">
+                                    <viz:dataset>
+                                        <viz:ui5.data.FlattenedDataset
+                                            data="{dashboard>/knowledgeBase/growthData}">
+                                            <viz:dimensions>
+                                                <viz:ui5.data.DimensionDefinition
+                                                    name="Date"
+                                                    value="{Date}"/>
+                                            </viz:dimensions>
+                                            <viz:measures>
+                                                <viz:ui5.data.MeasureDefinition
+                                                    name="Facts"
+                                                    value="{Facts}"/>
+                                                <viz:ui5.data.MeasureDefinition
+                                                    name="Rules"
+                                                    value="{Rules}"/>
+                                                <viz:ui5.data.MeasureDefinition
+                                                    name="Inferences"
+                                                    value="{Inferences}"/>
+                                            </viz:measures>
+                                        </viz:ui5.data.FlattenedDataset>
+                                    </viz:dataset>
+                                </viz:ui5.controls.VizFrame>
+                            </Panel>
+                            
+                            <Panel 
+                                headerText="Domain Expertise"
+                                class="sapUiMediumMarginTop">
+                                <Table
+                                    items="{dashboard>/knowledgeBase/domains}"
+                                    mode="None">
+                                    <columns>
+                                        <Column>
+                                            <Text text="Domain"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Facts"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Rules"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Expertise Level"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Last Updated"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="{dashboard>domainName}"/>
+                                                <Text text="{dashboard>factsCount}"/>
+                                                <Text text="{dashboard>rulesCount}"/>
+                                                <ProgressIndicator
+                                                    percentValue="{dashboard>expertiseLevel}"
+                                                    displayValue="{dashboard>expertiseLevel}%"
+                                                    state="{= ${dashboard>expertiseLevel} >= 80 ? 'Success' : ${dashboard>expertiseLevel} >= 60 ? 'Warning' : 'Error' }"/>
+                                                <Text text="{dashboard>lastUpdated}"/>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Engine Performance Tab -->
+                    <IconTabFilter text="Engine Performance" icon="sap-icon://settings">
+                        <VBox>
+                            <Panel headerText="Reasoning Engine Comparison">
+                                <viz:ui5.controls.VizFrame
+                                    id="enginePerformanceChart"
+                                    height="350px"
+                                    width="100%"
+                                    vizType="radar">
+                                    <viz:dataset>
+                                        <viz:ui5.data.FlattenedDataset
+                                            data="{dashboard>/enginePerformance/comparison}">
+                                            <viz:dimensions>
+                                                <viz:ui5.data.DimensionDefinition
+                                                    name="Engine"
+                                                    value="{Engine}"/>
+                                            </viz:dimensions>
+                                            <viz:measures>
+                                                <viz:ui5.data.MeasureDefinition
+                                                    name="Speed"
+                                                    value="{Speed}"/>
+                                                <viz:ui5.data.MeasureDefinition
+                                                    name="Accuracy"
+                                                    value="{Accuracy}"/>
+                                                <viz:ui5.data.MeasureDefinition
+                                                    name="Memory Efficiency"
+                                                    value="{MemoryEfficiency}"/>
+                                            </viz:measures>
+                                        </viz:ui5.data.FlattenedDataset>
+                                    </viz:dataset>
+                                </viz:ui5.controls.VizFrame>
+                            </Panel>
+                            
+                            <Panel 
+                                headerText="Engine Statistics"
+                                class="sapUiMediumMarginTop">
+                                <Table
+                                    items="{dashboard>/enginePerformance/engines}"
+                                    mode="None">
+                                    <columns>
+                                        <Column>
+                                            <Text text="Engine"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Type"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Tasks Completed"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Avg Processing Time"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Success Rate"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Memory Usage"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Status"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="{dashboard>engineName}"/>
+                                                <Text text="{dashboard>engineType}"/>
+                                                <Text text="{dashboard>tasksCompleted}"/>
+                                                <Text text="{dashboard>avgProcessingTime} ms"/>
+                                                <ProgressIndicator
+                                                    percentValue="{dashboard>successRate}"
+                                                    displayValue="{dashboard>successRate}%"
+                                                    state="{= ${dashboard>successRate} >= 90 ? 'Success' : ${dashboard>successRate} >= 75 ? 'Warning' : 'Error' }"/>
+                                                <Text text="{dashboard>memoryUsage} MB"/>
+                                                <ObjectStatus
+                                                    text="{dashboard>status}"
+                                                    state="{= ${dashboard>status} === 'ACTIVE' ? 'Success' : ${dashboard>status} === 'IDLE' ? 'None' : 'Error' }"/>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Decision Analytics Tab -->
+                    <IconTabFilter text="Decision Analytics" icon="sap-icon://decision">
+                        <VBox>
+                            <Panel headerText="Decision Accuracy Trends">
+                                <viz:ui5.controls.VizFrame
+                                    id="decisionAccuracyChart"
+                                    height="300px"
+                                    width="100%"
+                                    vizType="line">
+                                    <viz:dataset>
+                                        <viz:ui5.data.FlattenedDataset
+                                            data="{dashboard>/decisionAccuracy/trends}">
+                                            <viz:dimensions>
+                                                <viz:ui5.data.DimensionDefinition
+                                                    name="Time"
+                                                    value="{Time}"/>
+                                            </viz:dimensions>
+                                            <viz:measures>
+                                                <viz:ui5.data.MeasureDefinition
+                                                    name="Decision Accuracy"
+                                                    value="{DecisionAccuracy}"/>
+                                                <viz:ui5.data.MeasureDefinition
+                                                    name="Confidence Level"
+                                                    value="{ConfidenceLevel}"/>
+                                            </viz:measures>
+                                        </viz:ui5.data.FlattenedDataset>
+                                    </viz:dataset>
+                                </viz:ui5.controls.VizFrame>
+                            </Panel>
+                            
+                            <l:Grid 
+                                defaultSpan="L6 M12 S12"
+                                class="sapUiMediumMarginTop">
+                                <l:content>
+                                    <Panel headerText="Decision Categories">
+                                        <mc:ColumnMicroChart height="200px">
+                                            <mc:columns>
+                                                <mc:ColumnMicroChartData
+                                                    value="{dashboard>/decisionAccuracy/categories/strategic}"
+                                                    color="Good"
+                                                    label="Strategic"/>
+                                                <mc:ColumnMicroChartData
+                                                    value="{dashboard>/decisionAccuracy/categories/operational}"
+                                                    color="Critical"
+                                                    label="Operational"/>
+                                                <mc:ColumnMicroChartData
+                                                    value="{dashboard>/decisionAccuracy/categories/tactical}"
+                                                    color="Neutral"
+                                                    label="Tactical"/>
+                                            </mc:columns>
+                                        </mc:ColumnMicroChart>
+                                    </Panel>
+                                    
+                                    <Panel headerText="Decision Metrics">
+                                        <VBox class="sapUiMediumMargin">
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Total Decisions:"/>
+                                                <Text text="{dashboard>/decisionAccuracy/totalDecisions}"/>
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Correct Decisions:"/>
+                                                <Text text="{dashboard>/decisionAccuracy/correctDecisions}"/>
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Avg Decision Time:"/>
+                                                <Text text="{dashboard>/decisionAccuracy/avgDecisionTime} ms"/>
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Confidence Threshold:"/>
+                                                <Text text="{dashboard>/decisionAccuracy/confidenceThreshold}%"/>
+                                            </HBox>
+                                        </VBox>
+                                    </Panel>
+                                </l:content>
+                            </l:Grid>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button text="Close" press=".onCloseDashboard"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Refresh"
+                icon="sap-icon://refresh"
+                press=".onRefreshDashboard"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

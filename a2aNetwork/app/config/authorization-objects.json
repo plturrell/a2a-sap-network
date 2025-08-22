@@ -1,0 +1,76 @@
+{
+  "authorizationObjects": {
+    "S_SERVICE": {
+      "description": "Service Authorization",
+      "fields": {
+        "SRV_NAME": {
+          "description": "Service Name", 
+          "values": ["A2A_MESSAGING", "A2A_NETWORK", "A2A_BLOCKCHAIN"]
+        },
+        "SRV_TYPE": {
+          "description": "Service Type",
+          "values": ["REST", "WEBSOCKET", "ODATA"]
+        },
+        "ACTVT": {
+          "description": "Activity",
+          "values": ["01", "02", "03", "06", "16"]
+        }
+      }
+    },
+    "/UI2/CHIP": {
+      "description": "Fiori Launchpad Chip Authorization",
+      "fields": {
+        "CHIP_ID": {
+          "description": "Chip ID",
+          "values": ["AGENTS_TILE", "SERVICES_TILE", "BLOCKCHAIN_TILE", "NETWORK_TILE"]
+        },
+        "ACTVT": {
+          "description": "Activity", 
+          "values": ["01", "03", "16"]
+        }
+      }
+    }
+  },
+  "roleTemplates": {
+    "A2A_ADMIN": {
+      "description": "A2A Network Administrator",
+      "objects": [
+        {
+          "object": "S_SERVICE",
+          "fields": {
+            "SRV_NAME": "*",
+            "SRV_TYPE": "*", 
+            "ACTVT": "*"
+          }
+        },
+        {
+          "object": "/UI2/CHIP",
+          "fields": {
+            "CHIP_ID": "*",
+            "ACTVT": "*"
+          }
+        }
+      ]
+    },
+    "A2A_USER": {
+      "description": "A2A Network User",
+      "objects": [
+        {
+          "object": "S_SERVICE",
+          "fields": {
+            "SRV_NAME": ["A2A_MESSAGING", "A2A_NETWORK"],
+            "SRV_TYPE": ["REST", "WEBSOCKET"],
+            "ACTVT": ["03", "16"]
+          }
+        },
+        {
+          "object": "/UI2/CHIP", 
+          "fields": {
+            "CHIP_ID": ["AGENTS_TILE", "SERVICES_TILE"],
+            "ACTVT": ["03", "16"]
+          }
+        }
+      ]
+    }
+  }
+}

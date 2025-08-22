@@ -1,0 +1,421 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="validationMethodsDialog"
+        title="Validation Methods Configuration"
+        contentWidth="70%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Method Selection Overview -->
+                <Panel headerText="Available Validation Methods" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <Text text="Select one or more validation methods to ensure calculation accuracy:"/>
+                        <List items="{methods>/availableMethods}" class="sapUiMediumMarginTop">
+                            <StandardListItem
+                                title="{name}"
+                                description="{description}"
+                                info="{accuracy}"
+                                type="Active"
+                                selected="{selected}"
+                                press=".onMethodToggle"/>
+                        </List>
+                    </VBox>
+                </Panel>
+                
+                <!-- Symbolic Mathematics Configuration -->
+                <Panel 
+                    headerText="Symbolic Mathematics"
+                    visible="{methods>/symbolic/enabled}"
+                    expandable="true"
+                    expanded="{methods>/symbolic/expanded}"
+                    class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="4"
+                        labelSpanL="4"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="1"
+                        columnsL="1"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Symbolic Engine"/>
+                            <Select selectedKey="{methods>/symbolic/engine}">
+                                <items>
+                                    <core:Item key="SYMPY" text="SymPy (Python)"/>
+                                    <core:Item key="MATHEMATICA" text="Wolfram Mathematica"/>
+                                    <core:Item key="SAGE" text="SageMath"/>
+                                    <core:Item key="MAXIMA" text="Maxima"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Simplification Level"/>
+                            <RadioButtonGroup selectedIndex="{methods>/symbolic/simplificationLevel}">
+                                <RadioButton text="Basic"/>
+                                <RadioButton text="Extended"/>
+                                <RadioButton text="Full"/>
+                            </RadioButtonGroup>
+                            
+                            <Label text="Variable Assumptions"/>
+                            <TextArea 
+                                value="{methods>/symbolic/assumptions}"
+                                placeholder="e.g., x > 0, y is real, z is integer"
+                                rows="2"/>
+                            
+                            <CheckBox 
+                                text="Expand expressions"
+                                selected="{methods>/symbolic/expandExpressions}"/>
+                            <CheckBox 
+                                text="Factor results"
+                                selected="{methods>/symbolic/factorResults}"/>
+                            <CheckBox 
+                                text="Rationalize denominators"
+                                selected="{methods>/symbolic/rationalizeDenominators}"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Numerical Methods Configuration -->
+                <Panel 
+                    headerText="Numerical Methods"
+                    visible="{methods>/numerical/enabled}"
+                    expandable="true"
+                    expanded="{methods>/numerical/expanded}"
+                    class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="4"
+                        labelSpanL="4"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="1"
+                        columnsL="1"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Precision"/>
+                            <Select selectedKey="{methods>/numerical/precision}">
+                                <items>
+                                    <core:Item key="SINGLE" text="Single (32-bit)"/>
+                                    <core:Item key="DOUBLE" text="Double (64-bit)"/>
+                                    <core:Item key="EXTENDED" text="Extended (80-bit)"/>
+                                    <core:Item key="QUAD" text="Quadruple (128-bit)"/>
+                                    <core:Item key="ARBITRARY" text="Arbitrary precision"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Tolerance"/>
+                            <Input 
+                                value="{methods>/numerical/tolerance}"
+                                type="Number"
+                                placeholder="1e-10"/>
+                            
+                            <Label text="Maximum Iterations"/>
+                            <Input 
+                                value="{methods>/numerical/maxIterations}"
+                                type="Number"
+                                placeholder="1000"/>
+                            
+                            <Label text="Algorithm"/>
+                            <Select selectedKey="{methods>/numerical/algorithm}">
+                                <items>
+                                    <core:Item key="NEWTON_RAPHSON" text="Newton-Raphson"/>
+                                    <core:Item key="BISECTION" text="Bisection"/>
+                                    <core:Item key="SECANT" text="Secant Method"/>
+                                    <core:Item key="BRENT" text="Brent's Method"/>
+                                    <core:Item key="RUNGE_KUTTA" text="Runge-Kutta"/>
+                                </items>
+                            </Select>
+                            
+                            <CheckBox 
+                                text="Use adaptive step size"
+                                selected="{methods>/numerical/adaptiveStepSize}"/>
+                            <CheckBox 
+                                text="Check convergence"
+                                selected="{methods>/numerical/checkConvergence}"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Statistical Analysis Configuration -->
+                <Panel 
+                    headerText="Statistical Analysis"
+                    visible="{methods>/statistical/enabled}"
+                    expandable="true"
+                    expanded="{methods>/statistical/expanded}"
+                    class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="4"
+                        labelSpanL="4"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="1"
+                        columnsL="1"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Sample Size"/>
+                            <Input 
+                                value="{methods>/statistical/sampleSize}"
+                                type="Number"
+                                placeholder="1000"/>
+                            
+                            <Label text="Confidence Level"/>
+                            <Select selectedKey="{methods>/statistical/confidenceLevel}">
+                                <items>
+                                    <core:Item key="0.90" text="90%"/>
+                                    <core:Item key="0.95" text="95%"/>
+                                    <core:Item key="0.99" text="99%"/>
+                                    <core:Item key="0.999" text="99.9%"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Distribution"/>
+                            <Select selectedKey="{methods>/statistical/distribution}">
+                                <items>
+                                    <core:Item key="NORMAL" text="Normal"/>
+                                    <core:Item key="UNIFORM" text="Uniform"/>
+                                    <core:Item key="STUDENT_T" text="Student's t"/>
+                                    <core:Item key="CHI_SQUARE" text="Chi-Square"/>
+                                    <core:Item key="BOOTSTRAP" text="Bootstrap"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Statistical Tests"/>
+                            <VBox>
+                                <CheckBox 
+                                    text="Hypothesis testing"
+                                    selected="{methods>/statistical/hypothesisTesting}"/>
+                                <CheckBox 
+                                    text="Outlier detection"
+                                    selected="{methods>/statistical/outlierDetection}"/>
+                                <CheckBox 
+                                    text="Regression analysis"
+                                    selected="{methods>/statistical/regressionAnalysis}"/>
+                                <CheckBox 
+                                    text="Monte Carlo simulation"
+                                    selected="{methods>/statistical/monteCarloSimulation}"/>
+                            </VBox>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- AI-Powered Validation Configuration -->
+                <Panel 
+                    headerText="AI-Powered Validation"
+                    visible="{methods>/ai/enabled}"
+                    expandable="true"
+                    expanded="{methods>/ai/expanded}"
+                    class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="4"
+                        labelSpanL="4"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="1"
+                        columnsL="1"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="AI Model"/>
+                            <Select selectedKey="{methods>/ai/model}">
+                                <items>
+                                    <core:Item key="GROK" text="Grok (X.AI)"/>
+                                    <core:Item key="GPT4" text="GPT-4 (OpenAI)"/>
+                                    <core:Item key="CLAUDE" text="Claude (Anthropic)"/>
+                                    <core:Item key="GEMINI" text="Gemini (Google)"/>
+                                    <core:Item key="CUSTOM" text="Custom Model"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Validation Strategy"/>
+                            <RadioButtonGroup selectedIndex="{methods>/ai/strategy}">
+                                <RadioButton text="Step-by-step verification"/>
+                                <RadioButton text="Alternative method comparison"/>
+                                <RadioButton text="Error pattern recognition"/>
+                                <RadioButton text="Mathematical reasoning"/>
+                            </RadioButtonGroup>
+                            
+                            <Label text="Temperature"/>
+                            <Slider 
+                                value="{methods>/ai/temperature}"
+                                min="0.0"
+                                max="1.0"
+                                step="0.1"
+                                width="200px"/>
+                            <Text text="Temperature: {methods>/ai/temperature}"/>
+                            
+                            <Label text="Max Tokens"/>
+                            <Input 
+                                value="{methods>/ai/maxTokens}"
+                                type="Number"
+                                placeholder="2000"/>
+                            
+                            <CheckBox 
+                                text="Include step-by-step explanation"
+                                selected="{methods>/ai/includeExplanation}"/>
+                            <CheckBox 
+                                text="Verify against mathematical knowledge"
+                                selected="{methods>/ai/verifyKnowledge}"/>
+                            <CheckBox 
+                                text="Generate alternative solutions"
+                                selected="{methods>/ai/generateAlternatives}"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Blockchain Consensus Configuration -->
+                <Panel 
+                    headerText="Blockchain Consensus"
+                    visible="{methods>/blockchain/enabled}"
+                    expandable="true"
+                    expanded="{methods>/blockchain/expanded}"
+                    class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="4"
+                        labelSpanL="4"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="1"
+                        columnsL="1"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Number of Validators"/>
+                            <Input 
+                                value="{methods>/blockchain/validators}"
+                                type="Number"
+                                placeholder="5"/>
+                            
+                            <Label text="Consensus Threshold"/>
+                            <Slider 
+                                value="{methods>/blockchain/threshold}"
+                                min="0.5"
+                                max="1.0"
+                                step="0.05"
+                                width="200px"/>
+                            <Text text="Threshold: {methods>/blockchain/threshold} ({= ${methods>/blockchain/threshold} * 100}%)"/>
+                            
+                            <Label text="Timeout (seconds)"/>
+                            <Input 
+                                value="{methods>/blockchain/timeout}"
+                                type="Number"
+                                placeholder="300"/>
+                            
+                            <Label text="Blockchain Network"/>
+                            <Select selectedKey="{methods>/blockchain/network}">
+                                <items>
+                                    <core:Item key="ETHEREUM" text="Ethereum"/>
+                                    <core:Item key="POLYGON" text="Polygon"/>
+                                    <core:Item key="PRIVATE" text="Private Network"/>
+                                    <core:Item key="TESTNET" text="Test Network"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Validator Selection"/>
+                            <RadioButtonGroup selectedIndex="{methods>/blockchain/validatorSelection}">
+                                <RadioButton text="Random selection"/>
+                                <RadioButton text="Reputation-based"/>
+                                <RadioButton text="Stake-weighted"/>
+                                <RadioButton text="Manual selection"/>
+                            </RadioButtonGroup>
+                            
+                            <CheckBox 
+                                text="Include validation proof"
+                                selected="{methods>/blockchain/includeProof}"/>
+                            <CheckBox 
+                                text="Store results on-chain"
+                                selected="{methods>/blockchain/storeOnChain}"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Method Comparison and Benchmarking -->
+                <Panel 
+                    headerText="Method Comparison"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <CheckBox 
+                            text="Run all selected methods and compare results"
+                            selected="{methods>/compareResults}"/>
+                        <CheckBox 
+                            text="Benchmark performance of each method"
+                            selected="{methods>/benchmarkPerformance}"/>
+                        <CheckBox 
+                            text="Generate confidence score for each method"
+                            selected="{methods>/generateConfidenceScore}"/>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <Label text="Weight factors:" class="sapUiMediumMarginEnd"/>
+                            <VBox>
+                                <HBox>
+                                    <Label text="Accuracy:" width="100px"/>
+                                    <Slider 
+                                        value="{methods>/weights/accuracy}"
+                                        min="0"
+                                        max="1"
+                                        step="0.1"
+                                        width="150px"/>
+                                    <Text text="{methods>/weights/accuracy}"/>
+                                </HBox>
+                                <HBox>
+                                    <Label text="Speed:" width="100px"/>
+                                    <Slider 
+                                        value="{methods>/weights/speed}"
+                                        min="0"
+                                        max="1"
+                                        step="0.1"
+                                        width="150px"/>
+                                    <Text text="{methods>/weights/speed}"/>
+                                </HBox>
+                                <HBox>
+                                    <Label text="Reliability:" width="100px"/>
+                                    <Slider 
+                                        value="{methods>/weights/reliability}"
+                                        min="0"
+                                        max="1"
+                                        step="0.1"
+                                        width="150px"/>
+                                    <Text text="{methods>/weights/reliability}"/>
+                                </HBox>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Reset to Defaults"
+                press=".onResetMethods"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Preview Configuration"
+                    press=".onPreviewMethodsConfig"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Apply Configuration"
+                    type="Emphasized"
+                    press=".onApplyMethodsConfig"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>
