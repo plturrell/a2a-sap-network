@@ -2015,3 +2015,338 @@ entity QaApprovalWorkflows : cuid, managed {
 // 5. Agent.currentBadge = getReputationBadge(reputation)
 // 6. Agent.endorsementPower = getMaxEndorsementAmount(reputation)
 // 7. Agent.reputationTrend = calculateTrend(last30DaysTransactions)
+
+// ============================================
+// AGENT 6 - QUALITY CONTROL & WORKFLOW ROUTING
+// ============================================
+
+// Quality Control Tasks
+entity QualityControlTasks : cuid, managed {
+    @Common.Label: 'Task Name'
+    @Search.defaultSearchElement: true
+    taskName           : String(100) @mandatory;
+    
+    @Common.Label: 'Description'
+    @UI.MultiLineText: true
+    description        : String(1000);
+    
+    @Common.Label: 'Quality Gate'
+    qualityGate        : String(100) @mandatory;
+    
+    @Common.Label: 'Data Source'
+    dataSource         : String(200);
+    
+    @Common.Label: 'Processing Pipeline'
+    processingPipeline : String(200);
+    
+    @Common.Label: 'Status'
+    @assert.range
+    status             : String(20) enum {
+        DRAFT; PENDING; ASSESSING; ROUTING; COMPLETED; FAILED; CANCELLED;
+    } default 'DRAFT';
+    
+    @Common.Label: 'Priority'
+    @assert.range
+    priority           : String(20) enum {
+        LOW; NORMAL; HIGH; CRITICAL;
+    } default 'NORMAL';
+    
+    @Common.Label: 'Overall Quality Score'
+    @assert.range: [0, 100]
+    overallQuality     : Decimal(5, 2);
+    
+    @Common.Label: 'Trust Score'
+    @assert.range: [0, 100]
+    trustScore         : Decimal(5, 2);
+    
+    @Common.Label: 'Issues Found'
+    issuesFound        : Integer default 0;
+    
+    @Common.Label: 'Routing Decision'
+    routingDecision    : String(20) enum {
+        PROCEED; REROUTE; HOLD; ESCALATE; REJECT;
+    };
+    
+    @Common.Label: 'Target Agent'
+    targetAgent        : String(50);
+    
+    @Common.Label: 'Routing Confidence'
+    @assert.range: [0, 100]
+    routingConfidence  : Decimal(5, 2);
+    
+    @Common.Label: 'Assessment Duration'
+    assessmentDuration : Integer;
+    
+    @Common.Label: 'Workflow Optimization'
+    workflowOptimized  : Boolean default false;
+    
+    @Common.Label: 'Auto Routed'
+    autoRouted         : Boolean default false;
+    
+    @Common.Label: 'Started At'
+    startedAt          : DateTime;
+    
+    @Common.Label: 'Completed At'
+    completedAt        : DateTime;
+    
+    @Common.Label: 'Quality Components'
+    @Core.MediaType: 'application/json'
+    qualityComponents  : LargeString;
+    
+    @Common.Label: 'Assessment Results'
+    @Core.MediaType: 'application/json'
+    assessmentResults  : LargeString;
+    
+    @Common.Label: 'Error Details'
+    errorDetails       : String(1000);
+    
+    @Common.Label: 'Agent'
+    agent              : Association to Agents;
+    
+    @Common.Label: 'Quality Metrics'
+    qualityMetrics     : Composition of many QualityMetrics on qualityMetrics.task = $self;
+    
+    @Common.Label: 'Routing Rules'
+    routingRules       : Composition of many RoutingRules on routingRules.task = $self;
+    
+    @Common.Label: 'Trust Verifications'
+    trustVerifications : Composition of many TrustVerifications on trustVerifications.task = $self;
+}
+
+// Quality Metrics
+entity QualityMetrics : cuid {
+    @Common.Label: 'Task'
+    task               : Association to QualityControlTasks not null;
+    
+    @Common.Label: 'Component'
+    component          : String(50) @mandatory enum {
+        COMPLIANCE; PERFORMANCE; SECURITY; RELIABILITY; 
+        USABILITY; MAINTAINABILITY; DATA_QUALITY; COMPLETENESS;
+    };
+    
+    @Common.Label: 'Score'
+    @assert.range: [0, 100]
+    score              : Decimal(5, 2) @mandatory;
+    
+    @Common.Label: 'Weight'
+    @assert.range: [0, 100]
+    weight             : Decimal(5, 2) default 100;
+    
+    @Common.Label: 'Issues Count'
+    issuesCount        : Integer default 0;
+    
+    @Common.Label: 'Critical Issues'
+    criticalIssues     : Integer default 0;
+    
+    @Common.Label: 'Assessment Details'
+    @Core.MediaType: 'application/json'
+    assessmentDetails  : LargeString;
+    
+    @Common.Label: 'Recommendations'
+    @UI.MultiLineText: true
+    recommendations    : String(2000);
+    
+    @Common.Label: 'Timestamp'
+    timestamp          : DateTime @cds.on.insert: $now;
+}
+
+// Routing Rules
+entity RoutingRules : cuid, managed {
+    @Common.Label: 'Rule Name'
+    ruleName           : String(100) @mandatory;
+    
+    @Common.Label: 'Description'
+    @UI.MultiLineText: true
+    description        : String(500);
+    
+    @Common.Label: 'Rule Type'
+    ruleType           : String(50) enum {
+        QUALITY_BASED; LOAD_BASED; CAPABILITY_BASED; 
+        TRUST_BASED; COST_BASED; PRIORITY_BASED;
+    } default 'QUALITY_BASED';
+    
+    @Common.Label: 'Condition Expression'
+    @UI.MultiLineText: true
+    conditionExpression : String(1000) @mandatory;
+    
+    @Common.Label: 'Target Agent'
+    targetAgent        : String(50);
+    
+    @Common.Label: 'Priority'
+    priority           : Integer default 100;
+    
+    @Common.Label: 'Is Active'
+    isActive           : Boolean default true;
+    
+    @Common.Label: 'Quality Threshold'
+    @assert.range: [0, 100]
+    qualityThreshold   : Decimal(5, 2);
+    
+    @Common.Label: 'Trust Threshold'
+    @assert.range: [0, 100]
+    trustThreshold     : Decimal(5, 2);
+    
+    @Common.Label: 'Success Rate'
+    @assert.range: [0, 100]
+    successRate        : Decimal(5, 2) default 0;
+    
+    @Common.Label: 'Usage Count'
+    usageCount         : Integer default 0;
+    
+    @Common.Label: 'Last Applied'
+    lastApplied        : DateTime;
+    
+    @Common.Label: 'Task'
+    task               : Association to QualityControlTasks;
+}
+
+// Trust Verifications
+entity TrustVerifications : cuid {
+    @Common.Label: 'Task'
+    task               : Association to QualityControlTasks not null;
+    
+    @Common.Label: 'Verification Type'
+    verificationType   : String(50) enum {
+        BLOCKCHAIN; REPUTATION; INTEGRITY; CONSENSUS; 
+        SIGNATURE; HISTORICAL; PEER_REVIEW;
+    } @mandatory;
+    
+    @Common.Label: 'Verification Status'
+    status             : String(20) enum {
+        PENDING; VERIFIED; FAILED; SUSPICIOUS;
+    } default 'PENDING';
+    
+    @Common.Label: 'Trust Score'
+    @assert.range: [0, 100]
+    trustScore         : Decimal(5, 2);
+    
+    @Common.Label: 'Blockchain Hash'
+    blockchainHash     : String(100);
+    
+    @Common.Label: 'Consensus Participants'
+    consensusParticipants : Integer;
+    
+    @Common.Label: 'Consensus Agreement'
+    @assert.range: [0, 100]
+    consensusAgreement : Decimal(5, 2);
+    
+    @Common.Label: 'Verification Details'
+    @Core.MediaType: 'application/json'
+    verificationDetails : LargeString;
+    
+    @Common.Label: 'Anomalies Detected'
+    anomaliesDetected  : Boolean default false;
+    
+    @Common.Label: 'Risk Level'
+    riskLevel          : String(20) enum {
+        LOW; MEDIUM; HIGH; CRITICAL;
+    } default 'LOW';
+    
+    @Common.Label: 'Verified At'
+    verifiedAt         : DateTime;
+    
+    @Common.Label: 'Verified By'
+    verifiedBy         : String(100);
+}
+
+// Quality Gates Configuration
+entity QualityGates : cuid, managed {
+    @Common.Label: 'Gate Name'
+    @Search.defaultSearchElement: true
+    gateName           : String(100) @mandatory;
+    
+    @Common.Label: 'Description'
+    @UI.MultiLineText: true
+    description        : String(500);
+    
+    @Common.Label: 'Gate Type'
+    gateType           : String(50) enum {
+        ENTRY; EXIT; CHECKPOINT; MILESTONE;
+    } default 'CHECKPOINT';
+    
+    @Common.Label: 'Is Active'
+    isActive           : Boolean default true;
+    
+    @Common.Label: 'Min Quality Score'
+    @assert.range: [0, 100]
+    minQualityScore    : Decimal(5, 2) default 80;
+    
+    @Common.Label: 'Max Issues Allowed'
+    maxIssuesAllowed   : Integer default 5;
+    
+    @Common.Label: 'Min Trust Score'
+    @assert.range: [0, 100]
+    minTrustScore      : Decimal(5, 2) default 75;
+    
+    @Common.Label: 'Required Components'
+    @Core.MediaType: 'application/json'
+    requiredComponents : String(500);
+    
+    @Common.Label: 'Evaluation Criteria'
+    @Core.MediaType: 'application/json'
+    evaluationCriteria : LargeString;
+    
+    @Common.Label: 'Auto Escalate'
+    autoEscalate       : Boolean default false;
+    
+    @Common.Label: 'Escalation Threshold'
+    escalationThreshold : Integer default 3;
+    
+    @Common.Label: 'Usage Count'
+    usageCount         : Integer default 0;
+    
+    @Common.Label: 'Success Rate'
+    @assert.range: [0, 100]
+    successRate        : Decimal(5, 2) default 0;
+}
+
+// Workflow Optimizations
+entity WorkflowOptimizations : cuid, managed {
+    @Common.Label: 'Optimization Name'
+    optimizationName   : String(100) @mandatory;
+    
+    @Common.Label: 'Workflow Stage'
+    workflowStage      : String(100);
+    
+    @Common.Label: 'Optimization Type'
+    optimizationType   : String(50) enum {
+        BOTTLENECK_REMOVAL; PARALLEL_PROCESSING; RESOURCE_ALLOCATION;
+        ROUTE_OPTIMIZATION; CACHE_IMPLEMENTATION; BATCH_PROCESSING;
+    };
+    
+    @Common.Label: 'Current Performance'
+    currentPerformance : Decimal(10, 2);
+    
+    @Common.Label: 'Expected Improvement'
+    expectedImprovement : Decimal(5, 2);
+    
+    @Common.Label: 'Actual Improvement'
+    actualImprovement  : Decimal(5, 2);
+    
+    @Common.Label: 'Implementation Status'
+    status             : String(20) enum {
+        PROPOSED; APPROVED; IMPLEMENTING; COMPLETED; ROLLED_BACK;
+    } default 'PROPOSED';
+    
+    @Common.Label: 'Risk Assessment'
+    riskAssessment     : String(20) enum {
+        LOW; MEDIUM; HIGH;
+    } default 'MEDIUM';
+    
+    @Common.Label: 'Implementation Details'
+    @Core.MediaType: 'application/json'
+    implementationDetails : LargeString;
+    
+    @Common.Label: 'Impact Analysis'
+    @Core.MediaType: 'application/json'
+    impactAnalysis     : LargeString;
+    
+    @Common.Label: 'Applied At'
+    appliedAt          : DateTime;
+    
+    @Common.Label: 'Rolled Back At'
+    rolledBackAt       : DateTime;
+    
+    @Common.Label: 'Task'
+    task               : Association to QualityControlTasks;
+}

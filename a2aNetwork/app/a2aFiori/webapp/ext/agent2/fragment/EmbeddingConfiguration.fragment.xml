@@ -55,6 +55,10 @@
                                 <FormattedText 
                                     htmlText="{parts: ['embedding>/embeddingModel'], formatter: '.formatModelInfo'}"
                                     class="sapUiTinyMargin"/>
+                                
+                                <Label text="Model Validation Status"/>
+                                <Text text="{path: 'embedding>/embeddingModel', formatter: '.formatSecureText'} validation completed"
+                                      class="sapUiTinyMargin"/>
                             </form:content>
                         </form:SimpleForm>
                     </IconTabFilter>

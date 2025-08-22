@@ -30,7 +30,7 @@
                                             <CustomListItem>
                                                 <HBox alignItems="Center" justifyContent="SpaceBetween">
                                                     <VBox>
-                                                        <Title text="{profile>name}" level="H4"/>
+                                                        <Title text="{path: 'profile>name', formatter: '.formatSecureText'}" level="H4"/>
                                                         <Label text="Records: {profile>recordCount} | Features: {profile>featureCount}"/>
                                                     </VBox>
                                                     <mc:RadialMicroChart
@@ -120,8 +120,8 @@
                             <items>
                                 <ColumnListItem>
                                     <cells>
-                                        <Text text="{profile>name}"/>
-                                        <Text text="{profile>type}"/>
+                                        <Text text="{path: 'profile>name', formatter: '.formatSecureText'}"/>
+                                        <Text text="{path: 'profile>type', formatter: '.formatSecureText'}"/>
                                         <Text text="{profile>mean}"/>
                                         <Text text="{profile>stdDev}"/>
                                         <Text text="{profile>min}"/>

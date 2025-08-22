@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:suite="sap.suite.ui.commons"
+    xmlns:viz="sap.viz">
+    
+    <Dialog
+        title="{i18n>dialog.builderDashboard.title}"
+        class="sapUiMediumMargin"
+        contentWidth="95vw"
+        contentHeight="90vh"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <Page showHeader="false">
+                <content>
+                    
+                    <!-- Key Performance Indicators -->
+                    <Panel headerText="{i18n>section.keyMetrics}" class="sapUiMediumMargin">
+                        <content>
+                            <FlexBox wrap="Wrap" class="sapUiSmallMargin">
+                                
+                                <!-- Total Templates -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.totalTemplates}"
+                                    subheaderText="{i18n>kpi.allCategories}"
+                                    valueColor="Good"
+                                    indicator="Up"
+                                    value="186"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <!-- Active Agents -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.activeAgents}"
+                                    subheaderText="{i18n>kpi.currentlyRunning}"
+                                    valueColor="Good"
+                                    indicator="Up"
+                                    value="342"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <!-- Build Success Rate -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.buildSuccessRate}"
+                                    subheaderText="{i18n>kpi.last30Days}"
+                                    valueColor="Good"
+                                    indicator="Up"
+                                    value="96.4%"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <!-- Average Build Time -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.avgBuildTime}"
+                                    subheaderText="{i18n>kpi.minutes}"
+                                    valueColor="Good"
+                                    indicator="Down"
+                                    value="3.2"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <!-- Test Coverage -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.testCoverage}"
+                                    subheaderText="{i18n>kpi.averageCoverage}"
+                                    valueColor="Good"
+                                    indicator="Up"
+                                    value="87.5%"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <!-- Code Quality -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.codeQuality}"
+                                    subheaderText="{i18n>kpi.averageScore}"
+                                    valueColor="Good"
+                                    indicator="None"
+                                    value="A"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                            </FlexBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Build and Deployment Metrics -->
+                    <Panel headerText="{i18n>section.buildMetrics}" class="sapUiMediumMargin">
+                        <content>
+                            <HBox class="sapUiMediumMargin">
+                                
+                                <!-- Deployment Trends Chart -->
+                                <VBox class="sapUiMediumMarginEnd" width="50%">
+                                    <Title text="{i18n>chart.deploymentTrends}" level="H4" class="sapUiSmallMarginBottom"/>
+                                    <viz:Popover id="deploymentTrendsPopover"/>
+                                    <viz:VizFrame
+                                        id="deploymentTrendsChart"
+                                        vizType="line"
+                                        width="100%"
+                                        height="300px">
+                                        <viz:dataset>
+                                            <viz:FlattenedDataset data="{/deploymentTrends}">
+                                                <viz:dimensions>
+                                                    <viz:DimensionDefinition name="Time" value="{timestamp}"/>
+                                                </viz:dimensions>
+                                                <viz:measures>
+                                                    <viz:MeasureDefinition name="Successful" value="{successful}"/>
+                                                    <viz:MeasureDefinition name="Failed" value="{failed}"/>
+                                                    <viz:MeasureDefinition name="Rollback" value="{rollback}"/>
+                                                </viz:measures>
+                                            </viz:FlattenedDataset>
+                                        </viz:dataset>
+                                        <viz:feeds>
+                                            <viz:FeedItem uid="categoryAxis" type="Dimension" values="Time"/>
+                                            <viz:FeedItem uid="valueAxis" type="Measure" values="Successful,Failed,Rollback"/>
+                                        </viz:feeds>
+                                    </viz:VizFrame>
+                                </VBox>
+                                
+                                <!-- Agent Distribution Chart -->
+                                <VBox width="50%">
+                                    <Title text="{i18n>chart.agentDistribution}" level="H4" class="sapUiSmallMarginBottom"/>
+                                    <viz:Popover id="agentDistributionPopover"/>
+                                    <viz:VizFrame
+                                        id="agentDistributionChart"
+                                        vizType="donut"
+                                        width="100%"
+                                        height="300px">
+                                        <viz:dataset>
+                                            <viz:FlattenedDataset data="{/agentDistribution}">
+                                                <viz:dimensions>
+                                                    <viz:DimensionDefinition name="AgentType" value="{agentType}"/>
+                                                </viz:dimensions>
+                                                <viz:measures>
+                                                    <viz:MeasureDefinition name="Count" value="{count}"/>
+                                                </viz:measures>
+                                            </viz:FlattenedDataset>
+                                        </viz:dataset>
+                                        <viz:feeds>
+                                            <viz:FeedItem uid="color" type="Dimension" values="AgentType"/>
+                                            <viz:FeedItem uid="size" type="Measure" values="Count"/>
+                                        </viz:feeds>
+                                    </viz:VizFrame>
+                                </VBox>
+                                
+                            </HBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Pipeline Performance -->
+                    <Panel headerText="{i18n>section.pipelinePerformance}" class="sapUiMediumMargin">
+                        <content>
+                            <HBox class="sapUiMediumMargin">
+                                
+                                <!-- Active Builds Table -->
+                                <VBox class="sapUiMediumMarginEnd" width="60%">
+                                    <Title text="{i18n>section.activeBuilds}" level="H4" class="sapUiSmallMarginBottom"/>
+                                    
+                                    <Table
+                                        id="activeBuildsTable"
+                                        items="{/activeBuilds}"
+                                        mode="None"
+                                        class="sapUiSmallMarginTop">
+                                        
+                                        <columns>
+                                            <Column>
+                                                <Text text="{i18n>field.pipelineName}"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>field.templateName}"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>field.progress}"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>field.duration}"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>field.status}"/>
+                                            </Column>
+                                        </columns>
+                                        
+                                        <items>
+                                            <ColumnListItem>
+                                                <cells>
+                                                    <Text text="{pipelineName}"/>
+                                                    <Text text="{templateName}"/>
+                                                    <ProgressIndicator
+                                                        percentValue="{progress}"
+                                                        displayValue="{progress}%"
+                                                        state="Success"/>
+                                                    <Text text="{duration} {i18n>unit.minutes}"/>
+                                                    <ObjectStatus
+                                                        text="{status}"
+                                                        state="{
+                                                            path: 'status',
+                                                            formatter: '.formatBuildStatusState'
+                                                        }"/>
+                                                </cells>
+                                            </ColumnListItem>
+                                        </items>
+                                    </Table>
+                                </VBox>
+                                
+                                <!-- Code Quality Metrics -->
+                                <VBox width="40%">
+                                    <Title text="{i18n>section.codeQuality}" level="H4" class="sapUiSmallMarginBottom"/>
+                                    
+                                    <HBox class="sapUiMediumMargin">
+                                        
+                                        <!-- Code Coverage -->
+                                        <VBox class="sapUiMediumMarginEnd" width="50%">
+                                            <Title text="{i18n>metric.codeCoverage}" level="H5" class="sapUiSmallMarginBottom"/>
+                                            <suite:RadialMicroChart
+                                                size="M"
+                                                percentage="87"
+                                                valueColor="Good"
+                                                class="sapUiSmallMargin"/>
+                                            <Text text="87%" class="sapUiSmallMarginTop"/>
+                                        </VBox>
+                                        
+                                        <!-- Security Score -->
+                                        <VBox width="50%">
+                                            <Title text="{i18n>metric.securityScore}" level="H5" class="sapUiSmallMarginBottom"/>
+                                            <suite:RadialMicroChart
+                                                size="M"
+                                                percentage="92"
+                                                valueColor="Good"
+                                                class="sapUiSmallMargin"/>
+                                            <Text text="92%" class="sapUiSmallMarginTop"/>
+                                        </VBox>
+                                        
+                                    </HBox>
+                                    
+                                    <!-- Quality Indicators -->
+                                    <VBox class="sapUiSmallMarginTop">
+                                        <suite:MicroProcessFlow>
+                                            <suite:content>
+                                                <suite:MicroProcessFlowItem state="Success" title="Linting"/>
+                                                <suite:MicroProcessFlowItem state="Success" title="Type Check"/>
+                                                <suite:MicroProcessFlowItem state="Success" title="Unit Tests"/>
+                                                <suite:MicroProcessFlowItem state="Warning" title="Integration Tests"/>
+                                                <suite:MicroProcessFlowItem state="None" title="Deploy"/>
+                                            </suite:content>
+                                        </suite:MicroProcessFlow>
+                                    </VBox>
+                                </VBox>
+                                
+                            </HBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Template Usage Analytics -->
+                    <Panel headerText="{i18n>section.templateUsage}" class="sapUiMediumMargin">
+                        <content>
+                            <HBox class="sapUiMediumMargin">
+                                
+                                <!-- Popular Templates -->
+                                <VBox class="sapUiMediumMarginEnd" width="50%">
+                                    <Title text="{i18n>section.popularTemplates}" level="H4" class="sapUiSmallMarginBottom"/>
+                                    
+                                    <List items="{/popularTemplates}" class="sapUiSmallMarginTop">
+                                        <StandardListItem
+                                            title="{templateName}"
+                                            description="{category}"
+                                            info="{usageCount} uses"
+                                            infoState="None"
+                                            icon="sap-icon://favorite"
+                                            iconInset="false"/>
+                                    </List>
+                                </VBox>
+                                
+                                <!-- Template Categories -->
+                                <VBox width="50%">
+                                    <Title text="{i18n>chart.templateCategories}" level="H4" class="sapUiSmallMarginBottom"/>
+                                    <viz:Popover id="templateCategoriesPopover"/>
+                                    <viz:VizFrame
+                                        id="templateCategoriesChart"
+                                        vizType="bar"
+                                        width="100%"
+                                        height="250px">
+                                        <viz:dataset>
+                                            <viz:FlattenedDataset data="{/templateCategories}">
+                                                <viz:dimensions>
+                                                    <viz:DimensionDefinition name="Category" value="{category}"/>
+                                                </viz:dimensions>
+                                                <viz:measures>
+                                                    <viz:MeasureDefinition name="Templates" value="{templateCount}"/>
+                                                    <viz:MeasureDefinition name="Instances" value="{instanceCount}"/>
+                                                </viz:measures>
+                                            </viz:FlattenedDataset>
+                                        </viz:dataset>
+                                        <viz:feeds>
+                                            <viz:FeedItem uid="categoryAxis" type="Dimension" values="Category"/>
+                                            <viz:FeedItem uid="valueAxis" type="Measure" values="Templates,Instances"/>
+                                        </viz:feeds>
+                                    </viz:VizFrame>
+                                </VBox>
+                                
+                            </HBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Recent Deployments -->
+                    <Panel headerText="{i18n>section.recentDeployments}" class="sapUiMediumMargin">
+                        <content>
+                            <Table
+                                id="recentDeploymentsTable"
+                                items="{/recentDeployments}"
+                                mode="None"
+                                class="sapUiSmallMarginTop">
+                                
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>field.deploymentTime}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.agentName}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.version}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.deploymentTarget}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.deployedBy}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.status}"/>
+                                    </Column>
+                                </columns>
+                                
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{deploymentTime}"/>
+                                            <Link text="{agentName}" press="onNavigateToAgent"/>
+                                            <Text text="{version}"/>
+                                            <Text text="{deploymentTarget}"/>
+                                            <Text text="{deployedBy}"/>
+                                            <ObjectStatus
+                                                text="{deploymentStatus}"
+                                                state="{
+                                                    path: 'deploymentStatus',
+                                                    formatter: '.formatDeploymentStatusState'
+                                                }"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </content>
+                    </Panel>
+                    
+                </content>
+            </Page>
+        </content>
+        
+        <beginButton>
+            <Button text="{i18n>btn.refresh}" press="onRefreshDashboard" type="Emphasized"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>btn.close}" press="onCloseDashboard"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

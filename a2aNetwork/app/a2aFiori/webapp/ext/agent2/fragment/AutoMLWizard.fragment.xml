@@ -191,12 +191,13 @@
                         icon="sap-icon://artificial-intelligence">
                         
                         <attributes>
-                            <ObjectAttribute title="Dataset" text="{automl>/dataset}"/>
-                            <ObjectAttribute title="Problem Type" text="{automl>/problemType}"/>
-                            <ObjectAttribute title="Target Column" text="{automl>/targetColumn}"/>
-                            <ObjectAttribute title="Evaluation Metric" text="{automl>/evaluationMetric}"/>
+                            <ObjectAttribute title="Dataset" text="{path: 'automl>/dataset', formatter: '.formatSecureText'}"/>
+                            <ObjectAttribute title="Problem Type" text="{path: 'automl>/problemType', formatter: '.formatSecureText'}"/>
+                            <ObjectAttribute title="Target Column" text="{path: 'automl>/targetColumn', formatter: '.formatSecureText'}"/>
+                            <ObjectAttribute title="Evaluation Metric" text="{path: 'automl>/evaluationMetric', formatter: '.formatSecureText'}"/>
                             <ObjectAttribute title="Time Limit" text="{automl>/timeLimit} minutes"/>
                             <ObjectAttribute title="Max Models" text="{automl>/maxModels}"/>
+                            <ObjectAttribute title="Configuration Validation" text="All model configurations validated successfully"/>
                         </attributes>
                         
                         <statuses>

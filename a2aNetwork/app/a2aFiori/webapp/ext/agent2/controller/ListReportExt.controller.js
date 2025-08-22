@@ -594,7 +594,8 @@ sap.ui.define([
             }
 
             // Add authentication to URL (since EventSource doesn't support headers)
-            var sSecureUrl = sUrl + (sUrl.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(sToken);
+            var sAuthParam = 'auth_token';
+            var sSecureUrl = sUrl + (sUrl.includes('?') ? '&' : '?') + sAuthParam + '=' + encodeURIComponent(sToken);
             
             return new EventSource(sSecureUrl);
         },
@@ -613,6 +614,72 @@ sap.ui.define([
             } else {
                 oInput.setValueState("None");
                 oInput.setValueStateText("");
+            }
+        },
+
+        /**
+         * Format validation strategy for RadioButtonGroup index
+         * @param {string} sStrategy - Validation strategy
+         * @returns {number} Index for RadioButtonGroup
+         */
+        formatValidationStrategyIndex: function(sStrategy) {
+            return sStrategy === 'KFOLD' ? 0 : 1;
+        },
+
+        /**
+         * Event handler for embedding model validation
+         */
+        onEmbeddingModelValidation: function(oEvent) {
+            var sSelectedKey = oEvent.getParameter("selectedItem").getKey();
+            var oSelect = oEvent.getSource();
+            
+            // Validate model configuration
+            var aValidModels = [
+                'text-embedding-ada-002',
+                'text-embedding-3-small', 
+                'text-embedding-3-large',
+                'sentence-transformers/all-MiniLM-L6-v2'
+            ];
+            
+            if (!aValidModels.includes(sSelectedKey)) {
+                oSelect.setValueState("Error");
+                oSelect.setValueStateText("Invalid embedding model selected");
+            } else {
+                oSelect.setValueState("None");
+                oSelect.setValueStateText("Model validation passed successfully");
+            }
+        },
+
+        /**
+         * Get authentication token for secure API calls
+         * @returns {string} Authentication token
+         */
+        _getAuthToken: function() {
+            // Implementation to get auth token from session or user context
+            var sUserId = sap.ushell?.Container?.getUser?.()?.getId?.();
+            return sUserId || this._generateSessionToken();
+        },
+
+        /**
+         * Generate a session-based token
+         * @returns {string} Session token
+         */
+        _generateSessionToken: function() {
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        },
+
+        /**
+         * Format importance value to state
+         * @param {number} nImportance - Importance percentage
+         * @returns {string} State value
+         */
+        formatImportanceState: function(nImportance) {
+            if (nImportance > 70) {
+                return 'Success';
+            } else if (nImportance > 30) {
+                return 'Warning';
+            } else {
+                return 'Error';
             }
         }
     });

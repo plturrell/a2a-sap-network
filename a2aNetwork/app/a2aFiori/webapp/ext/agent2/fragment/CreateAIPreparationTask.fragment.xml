@@ -103,7 +103,7 @@
                                     inputsAsTooltips="true"/>
                                 
                                 <Label text="Validation Strategy"/>
-                                <RadioButtonGroup selectedIndex="{= ${create>/validationStrategy} === 'KFOLD' ? 0 : 1 }">
+                                <RadioButtonGroup selectedIndex="{path: 'create>/validationStrategy', formatter: '.formatValidationStrategyIndex'}">
                                     <RadioButton text="K-Fold Cross Validation"/>
                                     <RadioButton text="Hold-out Validation"/>
                                 </RadioButtonGroup>

@@ -49,11 +49,11 @@
                                         <items>
                                             <ColumnListItem>
                                                 <cells>
-                                                    <Text text="{analysis>name}"/>
+                                                    <Text text="{path: 'analysis>name', formatter: '.formatSecureText'}"/>
                                                     <ProgressIndicator
                                                         percentValue="{analysis>importance}"
                                                         displayValue="{analysis>importance}%"
-                                                        state="{= ${analysis>importance} > 70 ? 'Success' : ${analysis>importance} > 30 ? 'Warning' : 'Error' }"/>
+                                                        state="{path: 'analysis>importance', formatter: '.formatImportanceState'}"/>
                                                     <Text text="{analysis>dataType}"/>
                                                     <Button 
                                                         icon="sap-icon://edit"

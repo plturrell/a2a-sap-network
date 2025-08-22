@@ -1161,4 +1161,162 @@ service A2AService @(path: '/api/v1') {
         feedback: String;
         reputationChange: Integer;
     };
+    
+    // ============================================
+    // AGENT 6 - QUALITY CONTROL & WORKFLOW ROUTING
+    // ============================================
+    
+    @requires: ['authenticated-user']
+    entity QualityControlTasks as projection on db.QualityControlTasks actions {
+        @requires: ['QualityManager', 'Admin']
+        action startAssessment() returns String;
+        @requires: ['QualityManager', 'Admin']
+        action pauseAssessment() returns String;
+        @requires: ['QualityManager', 'Admin']
+        action resumeAssessment() returns String;
+        @requires: ['QualityManager', 'Admin']
+        action cancelAssessment() returns String;
+        @requires: ['QualityManager', 'Admin']
+        action makeRoutingDecision(
+            decision: String,
+            targetAgent: String,
+            confidence: Decimal,
+            reason: String,
+            priority: String
+        ) returns String;
+        @requires: ['QualityManager', 'Admin']
+        action verifyTrust() returns String;
+        @requires: ['QualityManager', 'Admin']
+        action optimizeWorkflow(
+            analysisDepth: String,
+            includeResourceOptimization: Boolean,
+            applyOptimizations: Boolean
+        ) returns String;
+        @requires: ['QualityManager', 'Admin']
+        action generateReport(
+            reportType: String,
+            includeCharts: Boolean,
+            includeRecommendations: Boolean,
+            format: String
+        ) returns String;
+        @requires: ['QualityManager', 'Admin']
+        action escalateIssues(
+            issues: array of String,
+            priority: String,
+            notifyStakeholders: Boolean
+        ) returns String;
+    };
+    
+    @requires: ['authenticated-user']
+    entity QualityMetrics as projection on db.QualityMetrics;
+    
+    @requires: ['authenticated-user']
+    entity RoutingRules as projection on db.RoutingRules actions {
+        @requires: ['QualityManager', 'Admin']
+        action testRule(
+            testData: String
+        ) returns String;
+        @requires: ['QualityManager', 'Admin']
+        action activateRule() returns String;
+        @requires: ['QualityManager', 'Admin']
+        action deactivateRule() returns String;
+    };
+    
+    @requires: ['authenticated-user']
+    entity TrustVerifications as projection on db.TrustVerifications;
+    
+    @requires: ['authenticated-user']
+    entity QualityGates as projection on db.QualityGates actions {
+        @requires: ['QualityManager', 'Admin']
+        action validateGate(
+            taskData: String
+        ) returns String;
+        @requires: ['QualityManager', 'Admin']
+        action updateCriteria(
+            criteria: String
+        ) returns String;
+    };
+    
+    @requires: ['authenticated-user']
+    entity WorkflowOptimizations as projection on db.WorkflowOptimizations actions {
+        @requires: ['QualityManager', 'Admin']
+        action applyOptimization() returns String;
+        @requires: ['QualityManager', 'Admin']
+        action rollbackOptimization() returns String;
+        @requires: ['QualityManager', 'Admin']
+        action measureImpact() returns String;
+    };
+    
+    // Agent 6 Utility Functions
+    @requires: ['authenticated-user']
+    function getQualityDashboard() returns String;
+    
+    @requires: ['authenticated-user']
+    function getRoutingOptions(taskId: String) returns String;
+    
+    @requires: ['authenticated-user']
+    function getTrustMetrics() returns String;
+    
+    @requires: ['authenticated-user']
+    function getWorkflowAnalysis(taskId: String) returns String;
+    
+    @requires: ['QualityManager', 'Admin']
+    function runBatchAssessment(
+        taskIds: array of String,
+        assessmentType: String,
+        parallel: Boolean
+    ) returns String;
+    
+    @requires: ['authenticated-user']
+    function getQualityMetrics(taskId: String) returns String;
+    
+    @requires: ['authenticated-user']
+    function getAvailableAgents() returns String;
+    
+    @requires: ['authenticated-user']
+    function getRoutingRecommendations(taskId: String) returns String;
+    
+    // Agent 6 Events
+    event QualityAssessmentStarted : {
+        taskId: String;
+        assessmentType: String;
+        timestamp: DateTime;
+    };
+    
+    event QualityAssessmentCompleted : {
+        taskId: String;
+        overallScore: Decimal;
+        issuesFound: Integer;
+        timestamp: DateTime;
+    };
+    
+    event RoutingDecisionMade : {
+        taskId: String;
+        decision: String;
+        targetAgent: String;
+        confidence: Decimal;
+        timestamp: DateTime;
+    };
+    
+    event TrustVerificationCompleted : {
+        taskId: String;
+        trustScore: Decimal;
+        anomaliesDetected: Boolean;
+        timestamp: DateTime;
+    };
+    
+    event WorkflowOptimized : {
+        taskId: String;
+        optimizationType: String;
+        expectedImprovement: Decimal;
+        timestamp: DateTime;
+    };
+    
+    event IssuesEscalated : {
+        taskId: String;
+        issueCount: Integer;
+        priority: String;
+        escalationId: String;
+        timestamp: DateTime;
+    };
 }

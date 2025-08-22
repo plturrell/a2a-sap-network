@@ -544,7 +544,16 @@ sap.ui.define([
          */
         _getAuthToken: function() {
             // Implementation to get auth token from session or user context
-            return sap.ushell?.Container?.getUser?.()?.getId?.() || 'default-token';
+            var sUserId = sap.ushell?.Container?.getUser?.()?.getId?.();
+            return sUserId || this._generateSessionToken();
+        },
+
+        /**
+         * Generate a session-based token
+         * @returns {string} Session token
+         */
+        _generateSessionToken: function() {
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         },
 
         /**
@@ -644,7 +653,8 @@ sap.ui.define([
             }
 
             // Add authentication to URL
-            var sSecureUrl = sUrl + (sUrl.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(sToken);
+            var sAuthParam = 'auth_token';
+            var sSecureUrl = sUrl + (sUrl.includes('?') ? '&' : '?') + sAuthParam + '=' + encodeURIComponent(sToken);
             
             return new EventSource(sSecureUrl);
         },

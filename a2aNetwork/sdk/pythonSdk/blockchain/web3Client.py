@@ -293,11 +293,28 @@ class A2ABlockchainClient:
             # Wait for confirmation with proper error handling
             receipt = await self.transaction_manager.wait_for_confirmation(tx_hash)
             
+            # Log receipt details for debugging
+            logger.info(f"Transaction receipt status: {receipt.status}")
+            logger.info(f"Transaction receipt: {receipt}")
+            
             if receipt.status == 1:
                 logger.info(f"Agent registered successfully: {tx_hash.hex()}")
                 return True
             else:
                 logger.error(f"Agent registration failed: {tx_hash.hex()}")
+                logger.error(f"Receipt status: {receipt.status}")
+                # Try to get revert reason
+                try:
+                    tx_receipt = self.web3.eth.get_transaction_receipt(tx_hash)
+                    if tx_receipt.status == 0:
+                        # Try to get revert reason
+                        try:
+                            tx = self.web3.eth.get_transaction(tx_hash)
+                            self.web3.eth.call(tx, tx_receipt.blockNumber - 1)
+                        except Exception as revert_error:
+                            logger.error(f"Revert reason: {revert_error}")
+                except Exception as e:
+                    logger.error(f"Could not get revert reason: {e}")
                 return False
                 
         except Exception as e:
