@@ -264,6 +264,37 @@ const applyAuthMiddleware = (app) => {
       return next();
     }
     
+    // Skip auth for launchpad tile endpoints in development
+    const launchpadEndpoints = [
+      '/api/v1/Agents',
+      '/api/v1/agents',
+      '/api/v1/Services', 
+      '/api/v1/services',
+      '/api/v1/blockchain',
+      '/api/v1/network',
+      '/api/v1/health',
+      '/api/v1/notifications',
+      '/api/v1/NetworkStats'
+    ];
+    
+    if (process.env.NODE_ENV === 'development' && launchpadEndpoints.some(path => req.originalUrl.startsWith(path))) {
+      log.info(`Development mode: Skipping auth for launchpad endpoint: ${req.originalUrl}`);
+      // Create a basic user for launchpad tile data access
+      req.user = {
+        id: 'launchpad-viewer',
+        email: 'launchpad@a2a.network',
+        givenName: 'Launchpad',
+        familyName: 'Viewer',
+        roles: ['authenticated-user'],
+        scopes: ['user.access'],
+        tenant: 'default',
+        zoneId: 'default',
+        sapRoles: ['User'],
+        isLaunchpadAccess: true
+      };
+      return next();
+    }
+    
     // SECURITY: All tile API endpoints must be authenticated in production
     // Only skip authentication for true health checks and public endpoints
     if (process.env.NODE_ENV === 'production') {

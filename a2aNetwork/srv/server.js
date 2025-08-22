@@ -251,7 +251,10 @@ cds.on('bootstrap', async (app) => {
             '/api/v1/network',
             '/api/v1/health',
             '/api/v1/notifications',
-            '/api/v1/NetworkStats'
+            '/api/v1/NetworkStats',
+            '/a2a/agent2/v1',
+            '/a2a/agent1/v1',
+            '/a2a/agent3/v1'
         ];
         
         const shouldBypass = bypassPaths.some(path => req.path.startsWith(path));
@@ -308,6 +311,407 @@ cds.on('bootstrap', async (app) => {
     const { expressErrorMiddleware } = require('./utils/errorHandler');
     app.use(expressErrorMiddleware);
     
+    // AGENT 2 API PROXY ROUTES - Bridge to Python FastAPI Backend
+    const axios = require('axios');
+    const AGENT2_BASE_URL = process.env.AGENT2_BASE_URL || 'http://localhost:8001';
+    
+    // Helper function to proxy Agent 2 requests
+    async function proxyAgent2Request(req, res, endpoint, method = 'GET') {
+        try {
+            const config = {
+                method,
+                url: `${AGENT2_BASE_URL}/a2a/agent2/v1${endpoint}`,
+                timeout: 30000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            if (method !== 'GET' && req.body) {
+                config.data = req.body;
+            }
+            
+            if (req.query && Object.keys(req.query).length > 0) {
+                config.params = req.query;
+            }
+            
+            const response = await axios(config);
+            res.status(response.status).json(response.data);
+        } catch (error) {
+            log.error(`Agent 2 Proxy Error (${endpoint}):`, error.message);
+            if (error.response) {
+                res.status(error.response.status).json({
+                    error: error.response.data?.error || error.response.statusText,
+                    message: `Agent 2 Backend: ${error.response.status}`
+                });
+            } else {
+                res.status(503).json({
+                    error: 'Agent 2 Backend Connection Failed',
+                    message: error.message
+                });
+            }
+        }
+    }
+    
+    // Agent 2 Data Profiler
+    app.get('/a2a/agent2/v1/data-profile', (req, res) => proxyAgent2Request(req, res, '/data-profile'));
+    
+    // Agent 2 Tasks Management
+    app.post('/a2a/agent2/v1/tasks', (req, res) => proxyAgent2Request(req, res, '/tasks', 'POST'));
+    app.get('/a2a/agent2/v1/tasks/:taskId', (req, res) => 
+        proxyAgent2Request(req, res, `/tasks/${req.params.taskId}`));
+    app.post('/a2a/agent2/v1/tasks/:taskId/prepare', (req, res) => 
+        proxyAgent2Request(req, res, `/tasks/${req.params.taskId}/prepare`, 'POST'));
+    app.post('/a2a/agent2/v1/tasks/:taskId/analyze-features', (req, res) => 
+        proxyAgent2Request(req, res, `/tasks/${req.params.taskId}/analyze-features`, 'POST'));
+    app.post('/a2a/agent2/v1/tasks/:taskId/generate-embeddings', (req, res) => 
+        proxyAgent2Request(req, res, `/tasks/${req.params.taskId}/generate-embeddings`, 'POST'));
+    app.post('/a2a/agent2/v1/tasks/:taskId/export', (req, res) => 
+        proxyAgent2Request(req, res, `/tasks/${req.params.taskId}/export`, 'POST'));
+    app.post('/a2a/agent2/v1/tasks/:taskId/optimize', (req, res) => 
+        proxyAgent2Request(req, res, `/tasks/${req.params.taskId}/optimize`, 'POST'));
+    
+    // Agent 2 Batch Processing
+    app.post('/a2a/agent2/v1/batch-prepare', (req, res) => proxyAgent2Request(req, res, '/batch-prepare', 'POST'));
+    
+    // Agent 2 AutoML
+    app.post('/a2a/agent2/v1/automl', (req, res) => proxyAgent2Request(req, res, '/automl', 'POST'));
+    
+    // Agent 2 Health Check
+    app.get('/a2a/agent2/v1/health', (req, res) => proxyAgent2Request(req, res, '/health'));
+    
+    // Agent 2 OData Service Proxy - Convert REST to OData format
+    app.get('/a2a/agent2/v1/odata/AIPreparationTasks', async (req, res) => {
+        try {
+            // This would be handled by the CAP service, but we provide a fallback
+            const response = await axios.get(`${AGENT2_BASE_URL}/a2a/agent2/v1/tasks`);
+            
+            // Convert to OData format
+            const odataResponse = {
+                "@odata.context": "$metadata#AIPreparationTasks",
+                "value": response.data.map(task => ({
+                    ID: task.id,
+                    taskName: task.task_name,
+                    description: task.description,
+                    datasetName: task.dataset_name,
+                    modelType: task.model_type,
+                    dataType: task.data_type,
+                    framework: task.framework,
+                    status: task.status?.toUpperCase() || 'DRAFT',
+                    progressPercent: task.progress || 0,
+                    currentStage: task.current_stage,
+                    createdAt: task.created_at,
+                    modifiedAt: task.modified_at
+                }))
+            };
+            
+            res.json(odataResponse);
+        } catch (error) {
+            res.status(503).json({
+                error: {
+                    code: "SERVICE_UNAVAILABLE",
+                    message: "Agent 2 backend not available"
+                }
+            });
+        }
+    });
+    
+    log.info('Agent 2 API proxy routes initialized');
+
+    // AGENT 1 API PROXY ROUTES - Bridge to Python FastAPI Backend
+    const AGENT1_BASE_URL = process.env.AGENT1_BASE_URL || 'http://localhost:8001';
+    
+    // Helper function to proxy Agent 1 requests
+    async function proxyAgent1Request(req, res, endpoint, method = 'GET') {
+        try {
+            const config = {
+                method,
+                url: `${AGENT1_BASE_URL}/a2a/agent1/v1${endpoint}`,
+                timeout: 30000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            if (method !== 'GET' && req.body) {
+                config.data = req.body;
+            }
+            
+            if (req.query && Object.keys(req.query).length > 0) {
+                config.params = req.query;
+            }
+            
+            const response = await axios(config);
+            res.status(response.status).json(response.data);
+        } catch (error) {
+            log.error(`Agent 1 Proxy Error (${endpoint}):`, error.message);
+            if (error.response) {
+                res.status(error.response.status).json({
+                    error: error.response.data?.error || error.response.statusText,
+                    message: `Agent 1 Backend: ${error.response.status}`
+                });
+            } else {
+                res.status(503).json({
+                    error: 'Agent 1 Backend Connection Failed',
+                    message: error.message
+                });
+            }
+        }
+    }
+    
+    // Agent 1 Format Statistics
+    app.get('/a2a/agent1/v1/format-statistics', (req, res) => proxyAgent1Request(req, res, '/format-statistics'));
+    
+    // Agent 1 Tasks Management
+    app.post('/a2a/agent1/v1/tasks', (req, res) => proxyAgent1Request(req, res, '/tasks', 'POST'));
+    app.get('/a2a/agent1/v1/tasks/:taskId', (req, res) => 
+        proxyAgent1Request(req, res, `/tasks/${req.params.taskId}`));
+    app.post('/a2a/agent1/v1/tasks/:taskId/standardize', (req, res) => 
+        proxyAgent1Request(req, res, `/tasks/${req.params.taskId}/standardize`, 'POST'));
+    app.post('/a2a/agent1/v1/tasks/:taskId/validate', (req, res) => 
+        proxyAgent1Request(req, res, `/tasks/${req.params.taskId}/validate`, 'POST'));
+    app.post('/a2a/agent1/v1/tasks/:taskId/export', (req, res) => 
+        proxyAgent1Request(req, res, `/tasks/${req.params.taskId}/export`, 'POST'));
+    app.post('/a2a/agent1/v1/tasks/:taskId/preview', (req, res) => 
+        proxyAgent1Request(req, res, `/tasks/${req.params.taskId}/preview`, 'POST'));
+    
+    // Agent 1 Batch Processing
+    app.post('/a2a/agent1/v1/batch-process', (req, res) => proxyAgent1Request(req, res, '/batch-process', 'POST'));
+    
+    // Agent 1 Schema Management
+    app.post('/a2a/agent1/v1/schema/import', (req, res) => proxyAgent1Request(req, res, '/schema/import', 'POST'));
+    app.get('/a2a/agent1/v1/schema/templates', (req, res) => proxyAgent1Request(req, res, '/schema/templates'));
+    app.post('/a2a/agent1/v1/schema/validate', (req, res) => proxyAgent1Request(req, res, '/schema/validate', 'POST'));
+    
+    // Agent 1 Rules Management
+    app.post('/a2a/agent1/v1/rules/generate', (req, res) => proxyAgent1Request(req, res, '/rules/generate', 'POST'));
+    app.post('/a2a/agent1/v1/rules/apply', (req, res) => proxyAgent1Request(req, res, '/rules/apply', 'POST'));
+    
+    // Agent 1 Health Check
+    app.get('/a2a/agent1/v1/health', (req, res) => proxyAgent1Request(req, res, '/health'));
+    
+    // Agent 1 OData Service Proxy - Convert REST to OData format
+    app.get('/a2a/agent1/v1/odata/StandardizationTasks', async (req, res) => {
+        try {
+            // This would be handled by the CAP service, but we provide a fallback
+            const response = await axios.get(`${AGENT1_BASE_URL}/a2a/agent1/v1/tasks`);
+            
+            // Convert to OData format
+            const odataResponse = {
+                "@odata.context": "$metadata#StandardizationTasks",
+                "value": response.data.map(task => ({
+                    ID: task.id,
+                    taskName: task.task_name,
+                    description: task.description,
+                    sourceFormat: task.source_format,
+                    targetFormat: task.target_format,
+                    schemaTemplateId: task.schema_template_id,
+                    schemaValidation: task.schema_validation || true,
+                    dataTypeValidation: task.data_type_validation || true,
+                    formatValidation: task.format_validation || true,
+                    processingMode: task.processing_mode || 'FULL',
+                    batchSize: task.batch_size || 1000,
+                    status: task.status?.toUpperCase() || 'DRAFT',
+                    progressPercent: task.progress || 0,
+                    currentStage: task.current_stage,
+                    recordsProcessed: task.records_processed || 0,
+                    recordsTotal: task.records_total || 0,
+                    errorCount: task.error_count || 0,
+                    createdAt: task.created_at,
+                    modifiedAt: task.modified_at
+                }))
+            };
+            
+            res.json(odataResponse);
+        } catch (error) {
+            res.status(503).json({
+                error: {
+                    code: "SERVICE_UNAVAILABLE",
+                    message: "Agent 1 backend not available"
+                }
+            });
+        }
+    });
+    
+    log.info('Agent 1 API proxy routes initialized');
+
+    // AGENT 3 API PROXY ROUTES - Bridge to Python FastAPI Backend
+    const AGENT3_BASE_URL = process.env.AGENT3_BASE_URL || 'http://localhost:8002';
+    
+    // Helper function to proxy Agent 3 requests
+    async function proxyAgent3Request(req, res, endpoint, method = 'GET') {
+        try {
+            const config = {
+                method,
+                url: `${AGENT3_BASE_URL}/a2a/agent3/v1${endpoint}`,
+                timeout: 30000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            if (method !== 'GET' && req.body) {
+                config.data = req.body;
+            }
+            
+            if (req.query && Object.keys(req.query).length > 0) {
+                config.params = req.query;
+            }
+            
+            const response = await axios(config);
+            res.status(response.status).json(response.data);
+        } catch (error) {
+            log.error(`Agent 3 Proxy Error (${endpoint}):`, error.message);
+            if (error.response) {
+                res.status(error.response.status).json({
+                    error: error.response.data?.error || error.response.statusText,
+                    message: `Agent 3 Backend: ${error.response.status}`
+                });
+            } else {
+                res.status(503).json({
+                    error: 'Agent 3 Backend Connection Failed',
+                    message: error.message
+                });
+            }
+        }
+    }
+    
+    // Agent 3 Collections Management
+    app.get('/a2a/agent3/v1/collections', (req, res) => proxyAgent3Request(req, res, '/collections'));
+    app.post('/a2a/agent3/v1/collections', (req, res) => proxyAgent3Request(req, res, '/collections', 'POST'));
+    
+    // Agent 3 Vector Search
+    app.post('/a2a/agent3/v1/search', (req, res) => proxyAgent3Request(req, res, '/search', 'POST'));
+    
+    // Agent 3 Tasks Management
+    app.post('/a2a/agent3/v1/tasks', (req, res) => proxyAgent3Request(req, res, '/tasks', 'POST'));
+    app.get('/a2a/agent3/v1/tasks/:taskId', (req, res) => 
+        proxyAgent3Request(req, res, `/tasks/${req.params.taskId}`));
+    app.post('/a2a/agent3/v1/tasks/:taskId/process', (req, res) => 
+        proxyAgent3Request(req, res, `/tasks/${req.params.taskId}/process`, 'POST'));
+    app.post('/a2a/agent3/v1/tasks/:taskId/similarity-search', (req, res) => 
+        proxyAgent3Request(req, res, `/tasks/${req.params.taskId}/similarity-search`, 'POST'));
+    app.post('/a2a/agent3/v1/tasks/:taskId/optimize-index', (req, res) => 
+        proxyAgent3Request(req, res, `/tasks/${req.params.taskId}/optimize-index`, 'POST'));
+    app.post('/a2a/agent3/v1/tasks/:taskId/export', (req, res) => 
+        proxyAgent3Request(req, res, `/tasks/${req.params.taskId}/export`, 'POST'));
+    app.get('/a2a/agent3/v1/tasks/:taskId/visualization-data', (req, res) => 
+        proxyAgent3Request(req, res, `/tasks/${req.params.taskId}/visualization-data`));
+    app.post('/a2a/agent3/v1/tasks/:taskId/cluster-analysis', (req, res) => 
+        proxyAgent3Request(req, res, `/tasks/${req.params.taskId}/cluster-analysis`, 'POST'));
+    
+    // Agent 3 Batch Processing
+    app.post('/a2a/agent3/v1/batch-process', (req, res) => proxyAgent3Request(req, res, '/batch-process', 'POST'));
+    
+    // Agent 3 Model Comparison
+    app.get('/a2a/agent3/v1/model-comparison', (req, res) => proxyAgent3Request(req, res, '/model-comparison'));
+    
+    // Agent 3 Vector Operations
+    app.post('/a2a/agent3/v1/embeddings/generate', (req, res) => proxyAgent3Request(req, res, '/embeddings/generate', 'POST'));
+    app.post('/a2a/agent3/v1/index/optimize', (req, res) => proxyAgent3Request(req, res, '/index/optimize', 'POST'));
+    
+    // Agent 3 Health Check
+    app.get('/a2a/agent3/v1/health', (req, res) => proxyAgent3Request(req, res, '/health'));
+    
+    // Agent 3 WebSocket endpoint for real-time updates
+    app.get('/a2a/agent3/v1/tasks/:taskId/ws', (req, res) => {
+        // WebSocket upgrade handling - would be implemented with socket.io
+        res.status(501).json({
+            error: 'WebSocket endpoint not implemented',
+            message: 'Real-time updates will be available when WebSocket server is configured'
+        });
+    });
+    
+    // Agent 3 OData Service Proxy - Convert REST to OData format
+    app.get('/a2a/agent3/v1/odata/VectorProcessingTasks', async (req, res) => {
+        try {
+            // This would be handled by the CAP service, but we provide a fallback
+            const response = await axios.get(`${AGENT3_BASE_URL}/a2a/agent3/v1/tasks`);
+            
+            // Convert to OData format
+            const odataResponse = {
+                "@odata.context": "$metadata#VectorProcessingTasks",
+                "value": response.data.map(task => ({
+                    ID: task.id,
+                    taskName: task.task_name,
+                    description: task.description,
+                    dataSource: task.data_source,
+                    dataType: task.data_type?.toUpperCase() || 'TEXT',
+                    embeddingModel: task.embedding_model,
+                    modelProvider: task.model_provider?.toUpperCase() || 'OPENAI',
+                    vectorDatabase: task.vector_database?.toUpperCase() || 'PINECONE',
+                    indexType: task.index_type?.toUpperCase() || 'HNSW',
+                    distanceMetric: task.distance_metric?.toUpperCase() || 'COSINE',
+                    dimensions: task.dimensions || 1536,
+                    chunkSize: task.chunk_size || 512,
+                    chunkOverlap: task.chunk_overlap || 50,
+                    normalization: task.normalization !== false,
+                    useGPU: task.use_gpu || false,
+                    batchSize: task.batch_size || 100,
+                    status: task.status?.toUpperCase() || 'DRAFT',
+                    priority: task.priority?.toUpperCase() || 'MEDIUM',
+                    progressPercent: task.progress || 0,
+                    currentStage: task.current_stage,
+                    processingTime: task.processing_time,
+                    vectorsGenerated: task.vectors_generated || 0,
+                    chunksProcessed: task.chunks_processed || 0,
+                    totalChunks: task.total_chunks || 0,
+                    collectionName: task.collection_name,
+                    indexSize: task.index_size || 0,
+                    createdAt: task.created_at,
+                    modifiedAt: task.modified_at
+                }))
+            };
+            
+            res.json(odataResponse);
+        } catch (error) {
+            res.status(503).json({
+                error: {
+                    code: "SERVICE_UNAVAILABLE",
+                    message: "Agent 3 backend not available"
+                }
+            });
+        }
+    });
+    
+    app.get('/a2a/agent3/v1/odata/VectorCollections', async (req, res) => {
+        try {
+            const response = await axios.get(`${AGENT3_BASE_URL}/a2a/agent3/v1/collections`);
+            
+            const odataResponse = {
+                "@odata.context": "$metadata#VectorCollections",
+                "value": response.data.map(collection => ({
+                    ID: collection.id,
+                    name: collection.name,
+                    description: collection.description,
+                    vectorDatabase: collection.vector_database,
+                    embeddingModel: collection.embedding_model,
+                    dimensions: collection.dimensions,
+                    distanceMetric: collection.distance_metric,
+                    indexType: collection.index_type,
+                    totalVectors: collection.total_vectors || 0,
+                    indexSize: collection.index_size || 0,
+                    isActive: collection.is_active !== false,
+                    isOptimized: collection.is_optimized || false,
+                    lastOptimized: collection.last_optimized,
+                    createdAt: collection.created_at,
+                    modifiedAt: collection.modified_at
+                }))
+            };
+            
+            res.json(odataResponse);
+        } catch (error) {
+            res.status(503).json({
+                error: {
+                    code: "SERVICE_UNAVAILABLE",
+                    message: "Agent 3 backend not available"
+                }
+            });
+        }
+    });
+    
+    log.info('Agent 3 API proxy routes initialized');
+
     // Health check endpoints
     app.get('/health', async (req, res) => {
         try {
@@ -324,6 +728,120 @@ cds.on('bootstrap', async (app) => {
             res.status(health.status === 'healthy' ? 200 : 503).json(health);
         } catch (error) {
             res.status(503).json({ status: 'unhealthy', error: error.message });
+        }
+    });
+
+    // Launchpad-specific health check endpoint
+    app.get('/api/v1/launchpad/health', async (req, res) => {
+        try {
+            const healthCheck = {
+                timestamp: new Date().toISOString(),
+                status: 'checking',
+                components: {
+                    ui5_resources: { status: 'unknown' },
+                    shell_config: { status: 'unknown' },
+                    api_endpoints: { status: 'unknown', details: {} },
+                    tile_data: { status: 'unknown', details: {} },
+                    websocket: { status: 'unknown' }
+                },
+                tiles_loaded: false,
+                real_data_available: false,
+                fallback_mode: true
+            };
+
+            // 1. Check UI5 resources availability
+            try {
+                const ui5Check = await fetch('https://ui5.sap.com/1.120.0/resources/sap-ui-core.js', { 
+                    method: 'HEAD',
+                    timeout: 5000 
+                });
+                healthCheck.components.ui5_resources.status = ui5Check.ok ? 'healthy' : 'error';
+            } catch (error) {
+                healthCheck.components.ui5_resources.status = 'error';
+                healthCheck.components.ui5_resources.error = error.message;
+            }
+
+            // 2. Check shell configuration
+            healthCheck.components.shell_config.status = 'healthy'; // Static config always available
+
+            // 3. Check API endpoints
+            const endpointChecks = await Promise.all([
+                fetch(`http://localhost:${req.app.get('port') || 4004}/api/v1/Agents?id=agent_visualization`)
+                    .then(r => ({ endpoint: 'agent_visualization', ok: r.ok, status: r.status }))
+                    .catch(e => ({ endpoint: 'agent_visualization', ok: false, error: e.message })),
+                fetch(`http://localhost:${req.app.get('port') || 4004}/api/v1/network/overview`)
+                    .then(r => ({ endpoint: 'network_overview', ok: r.ok, status: r.status }))
+                    .catch(e => ({ endpoint: 'network_overview', ok: false, error: e.message })),
+                fetch(`http://localhost:${req.app.get('port') || 4004}/api/v1/health/summary`)
+                    .then(r => ({ endpoint: 'health_summary', ok: r.ok, status: r.status }))
+                    .catch(e => ({ endpoint: 'health_summary', ok: false, error: e.message }))
+            ]);
+
+            const allEndpointsOk = endpointChecks.every(check => check.ok);
+            healthCheck.components.api_endpoints.status = allEndpointsOk ? 'healthy' : 'degraded';
+            healthCheck.components.api_endpoints.details = endpointChecks;
+
+            // 4. Check tile data quality
+            try {
+                const tileDataResponse = await fetch(`http://localhost:${req.app.get('port') || 4004}/api/v1/Agents?id=agent_visualization`);
+                const tileData = await tileDataResponse.json();
+                
+                // Check if we have real data (not all zeros)
+                const hasRealData = tileData.agentCount > 0 || 
+                                  tileData.services > 0 || 
+                                  tileData.workflows > 0;
+                
+                healthCheck.components.tile_data.status = hasRealData ? 'healthy' : 'warning';
+                healthCheck.components.tile_data.details = tileData;
+                healthCheck.real_data_available = hasRealData;
+                healthCheck.fallback_mode = !hasRealData;
+                
+                // Tiles are considered loaded if we get valid response structure
+                healthCheck.tiles_loaded = tileData.hasOwnProperty('agentCount') && 
+                                         tileData.hasOwnProperty('services') &&
+                                         tileData.hasOwnProperty('workflows');
+            } catch (error) {
+                healthCheck.components.tile_data.status = 'error';
+                healthCheck.components.tile_data.error = error.message;
+            }
+
+            // 5. Check WebSocket availability
+            healthCheck.components.websocket.status = io ? 'healthy' : 'unavailable';
+            healthCheck.components.websocket.connected_clients = io ? io.sockets.sockets.size : 0;
+
+            // Overall status determination
+            const criticalComponents = [
+                healthCheck.components.api_endpoints.status,
+                healthCheck.components.tile_data.status
+            ];
+            
+            if (criticalComponents.every(s => s === 'healthy')) {
+                healthCheck.status = 'healthy';
+            } else if (criticalComponents.some(s => s === 'error')) {
+                healthCheck.status = 'error';
+            } else if (healthCheck.tiles_loaded) {
+                healthCheck.status = 'degraded';
+            } else {
+                healthCheck.status = 'error';
+            }
+
+            // Add recommendations
+            healthCheck.recommendations = [];
+            if (!healthCheck.real_data_available) {
+                healthCheck.recommendations.push('Start agent services on ports 8000-8015 for real data');
+            }
+            if (healthCheck.components.websocket.status !== 'healthy') {
+                healthCheck.recommendations.push('WebSocket server not initialized');
+            }
+
+            res.json(healthCheck);
+        } catch (error) {
+            log.error('Launchpad health check failed:', error);
+            res.status(500).json({
+                status: 'error',
+                error: error.message,
+                timestamp: new Date().toISOString()
+            });
         }
     });
 
@@ -509,6 +1027,55 @@ cds.on('bootstrap', async (app) => {
 
     // LAUNCHPAD TILE REST ENDPOINTS - For real-time tile data
     const { checkAgentHealth, checkBlockchainHealth, checkMcpHealth, AGENT_METADATA } = require('./utils/launchpadHelpers');
+
+    // Agent visualization endpoint for launchpad controller
+    app.get('/api/v1/Agents', async (req, res) => {
+        if (req.query.id === 'agent_visualization') {
+            try {
+                // Check health of all agents and aggregate data
+                const healthChecks = await Promise.all(
+                    Object.entries(AGENT_METADATA).map(async ([id, agent]) => {
+                        const health = await checkAgentHealth(agent.port);
+                        return { id: parseInt(id), health };
+                    })
+                );
+                
+                const healthyAgents = healthChecks.filter(h => h.health.status === 'healthy');
+                const totalActiveTasks = healthyAgents.reduce((sum, agent) => sum + (agent.health.active_tasks || 0), 0);
+                const totalSkills = healthyAgents.reduce((sum, agent) => sum + (agent.health.skills || 0), 0);
+                const totalMcpTools = healthyAgents.reduce((sum, agent) => sum + (agent.health.mcp_tools || 0), 0);
+                
+                // Calculate performance metric
+                const validSuccessRates = healthyAgents
+                    .filter(a => a.health.success_rate !== null)
+                    .map(a => a.health.success_rate);
+                const avgSuccessRate = validSuccessRates.length > 0 ? 
+                    validSuccessRates.reduce((sum, rate) => sum + rate, 0) / validSuccessRates.length : 85;
+                
+                res.json({
+                    agentCount: healthyAgents.length,
+                    services: totalSkills + totalMcpTools,
+                    workflows: totalActiveTasks,
+                    performance: Math.round(avgSuccessRate),
+                    notifications: 3, // Default value
+                    security: 0 // Default value
+                });
+            } catch (error) {
+                log.error('Error in agent visualization endpoint:', error);
+                // Return fallback data
+                res.json({
+                    agentCount: 0,
+                    services: 0,
+                    workflows: 0,
+                    performance: 0,
+                    notifications: 0,
+                    security: 0
+                });
+            }
+        } else {
+            res.status(400).json({ error: 'Invalid request' });
+        }
+    });
 
     // Agent status endpoints for tiles
     for (let i = 0; i < 16; i++) {
@@ -1073,6 +1640,28 @@ cds.on('listening', async (info) => {
         log.info('Cloud ALM dashboard created');
     } catch (error) {
         log.error('Failed to create Cloud ALM dashboard:', error);
+    }
+    
+    // Perform launchpad health check before declaring server ready
+    log.info('🏥 Performing launchpad health check...');
+    try {
+        const StartupHealthCheck = require('../scripts/startup-health-check');
+        const healthChecker = new StartupHealthCheck(info.port);
+        
+        // Wait a bit for all endpoints to be ready
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const healthResult = await healthChecker.performHealthCheck();
+        
+        if (healthResult.success) {
+            log.info('✅ Launchpad health check passed - all systems operational');
+        } else {
+            log.warn('⚠️  Launchpad health check failed:', healthResult.message);
+            log.warn('Server will continue but launchpad may not function properly');
+        }
+    } catch (error) {
+        log.error('Failed to perform launchpad health check:', error);
+        log.warn('Server will continue but launchpad status is unknown');
     }
     
     log.info(`SAP CAP server listening on port ${info.port} - OpenTelemetry monitoring: ENABLED`);

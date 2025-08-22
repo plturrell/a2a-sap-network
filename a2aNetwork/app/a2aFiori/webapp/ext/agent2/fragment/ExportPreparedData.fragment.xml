@@ -1,0 +1,237 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        id="exportDataDialog"
+        title="Export Prepared Data"
+        contentWidth="70%"
+        contentHeight="80%"
+        resizable="true">
+        
+        <content>
+            <IconTabBar id="exportTabBar" expandable="false">
+                
+                <!-- Format Selection Tab -->
+                <items>
+                    <IconTabFilter text="Export Format" icon="sap-icon://download">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Export Format" required="true"/>
+                                <Select selectedKey="{export>/format}">
+                                    <items>
+                                        <core:Item key="TENSORFLOW" text="TensorFlow Dataset"/>
+                                        <core:Item key="PYTORCH" text="PyTorch Dataset"/>
+                                        <core:Item key="SCIKIT_LEARN" text="Scikit-learn (NumPy/Pandas)"/>
+                                        <core:Item key="XGBOOST" text="XGBoost DMatrix"/>
+                                        <core:Item key="HUGGINGFACE" text="Hugging Face Dataset"/>
+                                        <core:Item key="PARQUET" text="Parquet Files"/>
+                                        <core:Item key="CSV" text="CSV Files"/>
+                                        <core:Item key="JSON" text="JSON Format"/>
+                                        <core:Item key="ARROW" text="Apache Arrow"/>
+                                        <core:Item key="HDF5" text="HDF5 Format"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Format Description"/>
+                                <FormattedText 
+                                    htmlText="{parts: ['export>/format'], formatter: '.formatExportDescription'}"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <Label text="Data Split"/>
+                                <CheckBox 
+                                    text="Export training and testing sets separately"
+                                    selected="{export>/splitData}"/>
+                                
+                                <Label text="Include Validation Set" 
+                                       visible="{export>/splitData}"/>
+                                <CheckBox 
+                                    text="Include validation split"
+                                    selected="{export>/includeValidation}"
+                                    visible="{export>/splitData}"/>
+                                
+                                <Label text="Include Metadata"/>
+                                <CheckBox 
+                                    text="Include preprocessing metadata and column mappings"
+                                    selected="{export>/includeMetadata}"/>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Compression & Optimization Tab -->
+                    <IconTabFilter text="Compression" icon="sap-icon://compress">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Compression Algorithm"/>
+                                <Select selectedKey="{export>/compression}">
+                                    <items>
+                                        <core:Item key="NONE" text="No Compression"/>
+                                        <core:Item key="GZIP" text="GZIP (Standard)"/>
+                                        <core:Item key="BZIP2" text="BZIP2 (High Compression)"/>
+                                        <core:Item key="LZ4" text="LZ4 (Fast)"/>
+                                        <core:Item key="ZSTD" text="ZSTD (Balanced)"/>
+                                        <core:Item key="SNAPPY" text="Snappy (Fast)"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Compression Level" 
+                                       visible="{= ${export>/compression} !== 'NONE' &amp;&amp; ${export>/compression} !== 'LZ4' &amp;&amp; ${export>/compression} !== 'SNAPPY' }"/>
+                                <Slider
+                                    value="{export>/compressionLevel}"
+                                    min="1"
+                                    max="9"
+                                    step="1"
+                                    enableTickmarks="true"
+                                    inputsAsTooltips="true"
+                                    visible="{= ${export>/compression} !== 'NONE' &amp;&amp; ${export>/compression} !== 'LZ4' &amp;&amp; ${export>/compression} !== 'SNAPPY' }"/>
+                                
+                                <Label text="File Chunking"/>
+                                <CheckBox 
+                                    text="Split into multiple files for large datasets"
+                                    selected="{export>/enableChunking}"/>
+                                
+                                <Label text="Chunk Size (MB)" 
+                                       visible="{export>/enableChunking}"/>
+                                <Slider
+                                    value="{export>/chunkSizeMB}"
+                                    min="10"
+                                    max="1000"
+                                    step="10"
+                                    enableTickmarks="true"
+                                    inputsAsTooltips="true"
+                                    visible="{export>/enableChunking}"/>
+                                
+                                <Label text="Optimization"/>
+                                <CheckBox 
+                                    text="Optimize for memory usage"
+                                    selected="{export>/optimizeMemory}"/>
+                                
+                                <Label text=""/>
+                                <CheckBox 
+                                    text="Optimize for loading speed"
+                                    selected="{export>/optimizeSpeed}"/>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Advanced Options Tab -->
+                    <IconTabFilter text="Advanced" icon="sap-icon://settings">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Feature Selection"/>
+                                <CheckBox 
+                                    text="Export only selected features"
+                                    selected="{export>/onlySelectedFeatures}"/>
+                                
+                                <Label text="Data Types"/>
+                                <CheckBox 
+                                    text="Preserve original data types"
+                                    selected="{export>/preserveDataTypes}"/>
+                                
+                                <Label text="Index Options"/>
+                                <CheckBox 
+                                    text="Include row indices"
+                                    selected="{export>/includeIndices}"/>
+                                
+                                <Label text=""/>
+                                <CheckBox 
+                                    text="Reset indices"
+                                    selected="{export>/resetIndices}"/>
+                                
+                                <Label text="Encoding"/>
+                                <Select selectedKey="{export>/encoding}">
+                                    <items>
+                                        <core:Item key="UTF8" text="UTF-8"/>
+                                        <core:Item key="ASCII" text="ASCII"/>
+                                        <core:Item key="LATIN1" text="Latin-1"/>
+                                        <core:Item key="UTF16" text="UTF-16"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Missing Value Handling"/>
+                                <Select selectedKey="{export>/missingValueStrategy}">
+                                    <items>
+                                        <core:Item key="KEEP" text="Keep as Missing"/>
+                                        <core:Item key="FILL_MEAN" text="Fill with Mean"/>
+                                        <core:Item key="FILL_MEDIAN" text="Fill with Median"/>
+                                        <core:Item key="FILL_MODE" text="Fill with Mode"/>
+                                        <core:Item key="FILL_ZERO" text="Fill with Zero"/>
+                                        <core:Item key="DROP_ROWS" text="Drop Rows"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Custom Export Path"/>
+                                <Input 
+                                    value="{export>/customPath}"
+                                    placeholder="Leave empty for default path"/>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+            
+            <!-- Summary Panel -->
+            <Panel 
+                headerText="Export Summary"
+                class="sapUiMediumMarginTop">
+                <content>
+                    <l:Grid defaultSpan="L6 M12 S12">
+                        <l:content>
+                            <VBox class="sapUiMediumMargin">
+                                <Label text="Dataset Information"/>
+                                <ObjectAttribute title="Task" text="{export>/taskName}"/>
+                                <ObjectAttribute title="Records" text="{export>/recordCount}"/>
+                                <ObjectAttribute title="Features" text="{export>/featureCount}"/>
+                                <ObjectAttribute title="Target Column" text="{export>/targetColumn}"/>
+                            </VBox>
+                            
+                            <VBox class="sapUiMediumMargin">
+                                <Label text="Export Configuration"/>
+                                <ObjectAttribute title="Format" text="{export>/format}"/>
+                                <ObjectAttribute title="Compression" text="{export>/compression}"/>
+                                <ObjectStatus 
+                                    title="Split Data" 
+                                    text="{= ${export>/splitData} ? 'Yes' : 'No' }"
+                                    state="{= ${export>/splitData} ? 'Success' : 'Information' }"/>
+                                <ObjectStatus 
+                                    title="Include Metadata" 
+                                    text="{= ${export>/includeMetadata} ? 'Yes' : 'No' }"
+                                    state="{= ${export>/includeMetadata} ? 'Success' : 'Information' }"/>
+                            </VBox>
+                        </l:content>
+                    </l:Grid>
+                    
+                    <MessageStrip
+                        text="{parts: ['export>/format', 'export>/compression', 'export>/recordCount'], formatter: '.formatExportEstimate'}"
+                        type="Information"
+                        class="sapUiMediumMarginTop"/>
+                </content>
+            </Panel>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelExport"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Export Data"
+                type="Emphasized"
+                icon="sap-icon://download"
+                press=".onExecuteExport"
+                enabled="{= ${export>/format} }"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

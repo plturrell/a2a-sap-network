@@ -1,0 +1,134 @@
+{
+  "roles": {
+    "SAP_UI2_USER_700": {
+      "description": "SAP Fiori Launchpad User (NetWeaver 7.00)",
+      "authorizations": {
+        "S_SERVICE": {
+          "SRV_NAME": ["ZFIORI_LAUNCHPAD", "UI2_INTEROP", "PAGE_BUILDER_PERS"]
+        },
+        "/UI2/CHIP": {
+          "CHIP_ID": ["*"]
+        },
+        "S_RFCACL": {
+          "RFC_NAME": ["ZFIORI_*", "/UI2/*"]
+        }
+      },
+      "tiles": ["*"],
+      "catalogs": ["SAP_FIORI_FOUNDATION", "SAP_FIORI_EXTENSIBILITY"]
+    },
+    "SAP_UI2_USER_750": {
+      "description": "SAP Fiori Launchpad User (NetWeaver 7.50+)",
+      "inherits": ["SAP_UI2_USER_700"],
+      "additionalAuthorizations": {
+        "S_START": {
+          "TCODE": ["SAT_FLP"]
+        }
+      }
+    },
+    "SAP_UI2_ADMIN_700": {
+      "description": "SAP Fiori Launchpad Administrator",
+      "inherits": ["SAP_UI2_USER_700"],
+      "authorizations": {
+        "S_SERVICE": {
+          "SRV_NAME": ["ZFIORI_ADMIN", "PAGE_BUILDER_CONF", "UI2_TRANSPORT"]
+        },
+        "S_DEVELOP": {
+          "DEVCLASS": ["$TMP", "Z*"],
+          "OBJTYPE": ["CHIP", "PAGE", "CATA"]
+        },
+        "S_TRANSPRT": {
+          "TTYPE": ["*"],
+          "ACTVT": ["01", "02", "03"]
+        }
+      },
+      "adminTiles": true,
+      "contentManagement": true
+    },
+    "FLP_USER": {
+      "description": "Custom Fiori Launchpad User Role",
+      "authorizations": {
+        "CUSTOM_AUTH": {
+          "APP_ACCESS": ["A2A_NETWORK", "AGENT_MANAGEMENT"]
+        }
+      },
+      "tiles": ["agent*", "service*", "workflow*", "analytics*"],
+      "catalogs": ["A2A_CATALOG"]
+    },
+    "FLP_ADMIN": {
+      "description": "Custom Fiori Launchpad Administrator",
+      "inherits": ["FLP_USER"],
+      "authorizations": {
+        "CUSTOM_AUTH": {
+          "ADMIN_ACCESS": ["*"]
+        }
+      },
+      "adminTiles": true,
+      "contentManagement": true,
+      "userManagement": true
+    },
+    "A2A_AGENT_OPERATOR": {
+      "description": "Agent Operator Role",
+      "inherits": ["FLP_USER"],
+      "specificTiles": ["agent0", "agent1", "agent2", "agent3"],
+      "capabilities": ["view", "execute", "monitor"]
+    },
+    "A2A_WORKFLOW_DESIGNER": {
+      "description": "Workflow Designer Role",
+      "inherits": ["FLP_USER"],
+      "specificTiles": ["workflow*", "service*"],
+      "capabilities": ["view", "create", "edit", "delete", "execute"]
+    },
+    "A2A_SECURITY_AUDITOR": {
+      "description": "Security Auditor Role",
+      "inherits": ["FLP_USER"],
+      "specificTiles": ["security*", "audit*", "compliance*"],
+      "capabilities": ["view", "report", "audit"],
+      "readOnly": true
+    }
+  },
+  "roleAssignments": {
+    "defaultRole": "FLP_USER",
+    "autoAssignment": {
+      "rules": [
+        {
+          "condition": "userGroup === 'ADMINISTRATORS'",
+          "assignRole": "FLP_ADMIN"
+        },
+        {
+          "condition": "department === 'SECURITY'",
+          "assignRole": "A2A_SECURITY_AUDITOR"
+        },
+        {
+          "condition": "jobFunction === 'DEVELOPER'",
+          "assignRole": "A2A_WORKFLOW_DESIGNER"
+        }
+      ]
+    }
+  },
+  "authorizationObjects": {
+    "S_SERVICE": {
+      "description": "Service Authorization",
+      "fields": ["SRV_NAME", "ACTVT"]
+    },
+    "/UI2/CHIP": {
+      "description": "Fiori Tile Authorization",
+      "fields": ["CHIP_ID", "ACTVT"]
+    },
+    "S_RFCACL": {
+      "description": "RFC Access Control",
+      "fields": ["RFC_NAME", "ACTVT"]
+    },
+    "S_START": {
+      "description": "Transaction Start Authorization",
+      "fields": ["TCODE"]
+    },
+    "S_DEVELOP": {
+      "description": "Development Authorization",
+      "fields": ["DEVCLASS", "OBJTYPE", "OBJNAME", "ACTVT"]
+    },
+    "CUSTOM_AUTH": {
+      "description": "Custom Application Authorization",
+      "fields": ["APP_ACCESS", "ADMIN_ACCESS", "FEATURE"]
+    }
+  }
+}

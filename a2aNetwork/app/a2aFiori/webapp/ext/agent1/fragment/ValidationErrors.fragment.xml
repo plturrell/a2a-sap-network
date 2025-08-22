@@ -1,0 +1,257 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:table="sap.ui.table">
+    
+    <Dialog
+        id="validationErrorsDialog"
+        title="Validation Errors - {errors>/taskName}"
+        contentWidth="90%"
+        contentHeight="80%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Error Summary -->
+                <Panel headerText="Error Summary" class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Total Errors" level="H3"/>
+                            <ObjectNumber 
+                                number="{errors>/totalErrors}" 
+                                state="Error"
+                                emphasized="true"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Critical Errors" level="H3"/>
+                            <ObjectNumber 
+                                number="{errors>/criticalErrors}" 
+                                state="Error"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Warnings" level="H3"/>
+                            <ObjectNumber 
+                                number="{errors>/warnings}" 
+                                state="Warning"/>
+                        </VBox>
+                        <VBox>
+                            <Title text="Success Rate" level="H3"/>
+                            <ObjectNumber 
+                                number="{errors>/successRate}" 
+                                unit="%"
+                                state="{errors>/successState}"/>
+                        </VBox>
+                    </HBox>
+                </Panel>
+                
+                <!-- Filter Bar -->
+                <Panel headerText="Filters" expandable="true" expanded="false">
+                    <HBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Label text="Error Type"/>
+                            <Select selectedKey="{errors>/filterType}" change=".onFilterChange">
+                                <items>
+                                    <core:Item key="" text="All Types"/>
+                                    <core:Item key="SCHEMA" text="Schema Validation"/>
+                                    <core:Item key="FORMAT" text="Format Error"/>
+                                    <core:Item key="TYPE" text="Data Type"/>
+                                    <core:Item key="CONSTRAINT" text="Constraint Violation"/>
+                                    <core:Item key="MISSING" text="Missing Required Field"/>
+                                </items>
+                            </Select>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Label text="Severity"/>
+                            <Select selectedKey="{errors>/filterSeverity}" change=".onFilterChange">
+                                <items>
+                                    <core:Item key="" text="All Severities"/>
+                                    <core:Item key="CRITICAL" text="Critical"/>
+                                    <core:Item key="ERROR" text="Error"/>
+                                    <core:Item key="WARNING" text="Warning"/>
+                                    <core:Item key="INFO" text="Information"/>
+                                </items>
+                            </Select>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Label text="Record Range"/>
+                            <HBox>
+                                <Input 
+                                    value="{errors>/recordStart}"
+                                    placeholder="From"
+                                    width="80px"
+                                    type="Number"/>
+                                <Text text=" - " class="sapUiTinyMargin"/>
+                                <Input 
+                                    value="{errors>/recordEnd}"
+                                    placeholder="To" 
+                                    width="80px"
+                                    type="Number"/>
+                            </HBox>
+                        </VBox>
+                        <VBox>
+                            <Label text=" "/>
+                            <Button 
+                                text="Apply Filters"
+                                press=".onApplyFilters"
+                                type="Emphasized"/>
+                        </VBox>
+                    </HBox>
+                </Panel>
+                
+                <!-- Error Details Table -->
+                <table:Table
+                    rows="{path: 'errors>/errorDetails', filters: [{path: 'severity', operator: 'Contains', value1: '{errors>/filterSeverity}'}]}"
+                    selectionMode="MultiToggle"
+                    visibleRowCount="15"
+                    enableColumnReordering="true"
+                    enableColumnFreeze="true"
+                    class="sapUiResponsiveMargin">
+                    
+                    <table:extension>
+                        <Toolbar>
+                            <Title text="Validation Error Details"/>
+                            <ToolbarSpacer/>
+                            <Button 
+                                text="Export Errors"
+                                icon="sap-icon://download"
+                                press=".onExportErrors"/>
+                            <Button 
+                                text="Fix Selected"
+                                icon="sap-icon://wrench"
+                                press=".onFixSelectedErrors"
+                                enabled="{= ${errors>/selectedErrors} > 0}"/>
+                        </Toolbar>
+                    </table:extension>
+                    
+                    <table:columns>
+                        <table:Column width="80px" sortProperty="recordNumber">
+                            <Label text="Record #"/>
+                            <table:template>
+                                <Text text="{errors>recordNumber}"/>
+                            </table:template>
+                        </table:Column>
+                        
+                        <table:Column width="100px" sortProperty="severity">
+                            <Label text="Severity"/>
+                            <table:template>
+                                <ObjectStatus 
+                                    text="{errors>severity}"
+                                    state="{parts: ['errors>severity'], formatter: '.formatSeverityState'}"/>
+                            </table:template>
+                        </table:Column>
+                        
+                        <table:Column width="120px" sortProperty="errorType">
+                            <Label text="Error Type"/>
+                            <table:template>
+                                <Text text="{errors>errorType}"/>
+                            </table:template>
+                        </table:Column>
+                        
+                        <table:Column width="150px" sortProperty="fieldName">
+                            <Label text="Field"/>
+                            <table:template>
+                                <Text text="{errors>fieldName}"/>
+                            </table:template>
+                        </table:Column>
+                        
+                        <table:Column sortProperty="errorMessage">
+                            <Label text="Error Message"/>
+                            <table:template>
+                                <FormattedText htmlText="{errors>errorMessage}"/>
+                            </table:template>
+                        </table:Column>
+                        
+                        <table:Column width="120px" sortProperty="actualValue">
+                            <Label text="Actual Value"/>
+                            <table:template>
+                                <Text 
+                                    text="{errors>actualValue}"
+                                    maxLines="2"/>
+                            </table:template>
+                        </table:Column>
+                        
+                        <table:Column width="120px" sortProperty="expectedValue">
+                            <Label text="Expected"/>
+                            <table:template>
+                                <Text 
+                                    text="{errors>expectedValue}"
+                                    maxLines="2"/>
+                            </table:template>
+                        </table:Column>
+                        
+                        <table:Column width="150px" sortProperty="suggestion">
+                            <Label text="Suggestion"/>
+                            <table:template>
+                                <Text 
+                                    text="{errors>suggestion}"
+                                    maxLines="2"/>
+                            </table:template>
+                        </table:Column>
+                        
+                        <table:Column width="100px">
+                            <Label text="Actions"/>
+                            <table:template>
+                                <HBox>
+                                    <Button 
+                                        icon="sap-icon://detail-view"
+                                        tooltip="View Details"
+                                        press=".onViewErrorDetails"
+                                        type="Transparent"/>
+                                    <Button 
+                                        icon="sap-icon://wrench"
+                                        tooltip="Quick Fix"
+                                        press=".onQuickFix"
+                                        type="Transparent"
+                                        enabled="{errors>hasQuickFix}"/>
+                                </HBox>
+                            </table:template>
+                        </table:Column>
+                    </table:columns>
+                </table:Table>
+                
+                <!-- Quick Actions Panel -->
+                <Panel 
+                    headerText="Quick Actions"
+                    expandable="true" 
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin">
+                        <Button 
+                            text="Auto-Fix Data Types"
+                            icon="sap-icon://palette"
+                            press=".onAutoFixDataTypes"
+                            class="sapUiTinyMarginEnd"/>
+                        <Button 
+                            text="Apply Default Values"
+                            icon="sap-icon://add"
+                            press=".onApplyDefaults"
+                            class="sapUiTinyMarginEnd"/>
+                        <Button 
+                            text="Remove Invalid Records"
+                            icon="sap-icon://delete"
+                            press=".onRemoveInvalid"
+                            type="Reject"
+                            class="sapUiTinyMarginEnd"/>
+                        <Button 
+                            text="Generate Transformation Rules"
+                            icon="sap-icon://create-form"
+                            press=".onGenerateRules"/>
+                    </HBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button 
+                text="Retry Validation"
+                icon="sap-icon://refresh"
+                press=".onRetryValidation"/>
+            <Button 
+                text="Close"
+                press=".onCloseValidationErrors"/>
+        </buttons>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

@@ -1,20 +1,142 @@
 <core:FragmentDefinition
     xmlns="sap.m"
+    xmlns:f="sap.f"
     xmlns:core="sap.ui.core">
+    
+    <!-- SAP Standard Notification Popover Pattern -->
     <Popover
         id="notificationPopover"
-        title="Notifications"
+        title="{i18n>notifications}"
         placement="Bottom"
-        contentWidth="320px">
-        <List
-            id="notificationList"
-            items="{notifications>/items}"
-            noDataText="No new notifications">
-            <StandardListItem
-                title="{notifications>title}"
-                description="{notifications>description}"
-                icon="{notifications>icon}"
-                type="Active" />
-        </List>
+        contentWidth="20rem"
+        contentHeight="auto"
+        class="sapUiResponsiveMargin">
+        
+        <customHeader>
+            <Bar class="sapUiNoMargin">
+                <contentLeft>
+                    <Title text="{i18n>notifications}" level="H4"/>
+                </contentLeft>
+                <contentRight>
+                    <Button
+                        icon="sap-icon://settings"
+                        type="Transparent"
+                        press="onNotificationSettings"
+                        tooltip="{i18n>notificationSettings}"/>
+                    <Button
+                        icon="sap-icon://decline"
+                        type="Transparent"
+                        press="onCloseNotifications"
+                        tooltip="{i18n>close}"/>
+                </contentRight>
+            </Bar>
+        </customHeader>
+        
+        <content>
+            <VBox class="sapUiNoMargin">
+                
+                <!-- Filter/Action Bar -->
+                <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMargin">
+                    <HBox alignItems="Center">
+                        <Text text="{notifications>/itemsCount} {i18n>items}" class="sapUiContentLabelColor"/>
+                    </HBox>
+                    <HBox>
+                        <Button
+                            text="{i18n>markAllRead}"
+                            type="Transparent"
+                            press="onMarkAllRead"
+                            enabled="{notifications>/hasUnread}"
+                            class="sapUiTinyMarginEnd"/>
+                        <Button
+                            text="{i18n>clearAll}"
+                            type="Transparent"
+                            press="onClearAllNotifications"
+                            enabled="{= ${notifications>/itemsCount} > 0}"/>
+                    </HBox>
+                </HBox>
+                
+                <!-- Notifications List -->
+                <List
+                    id="notificationList"
+                    items="{path: 'notifications>/items', sorter: {path: 'timestamp', descending: true}}"
+                    noDataText="{i18n>noNotifications}"
+                    mode="Delete"
+                    delete="onDeleteNotification"
+                    class="sapUiNoMargin">
+                    
+                    <CustomListItem class="sapUiNoMargin" press="onNotificationPress">
+                        <HBox alignItems="Center" class="sapUiSmallMargin">
+                            
+                            <!-- Notification Icon -->
+                            <core:Icon
+                                src="{notifications>icon}"
+                                size="1.5rem"
+                                color="{notifications>iconColor}"
+                                class="sapUiMediumMarginEnd"/>
+                            
+                            <!-- Notification Content -->
+                            <VBox justifyContent="Center" class="sapUiNoMargin" width="100%">
+                                
+                                <!-- Title and Timestamp -->
+                                <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiNoMargin">
+                                    <Text 
+                                        text="{notifications>title}" 
+                                        class="{= ${notifications>read} ? 'sapUiContentLabelColor' : 'sapUiBaseText'}"
+                                        weight="{= ${notifications>read} ? 'Normal' : 'Bold'}"
+                                        maxLines="1"/>
+                                    <Text 
+                                        text="{path: 'notifications>timestamp', type: 'sap.ui.model.odata.type.DateTimeOffset'}"
+                                        class="sapUiContentLabelColor sapUiTinyMarginBegin"/>
+                                </HBox>
+                                
+                                <!-- Description -->
+                                <Text 
+                                    text="{notifications>description}"
+                                    class="sapUiContentLabelColor"
+                                    maxLines="2"
+                                    class="sapUiTinyMarginTop"/>
+                                
+                                <!-- Priority Indicator -->
+                                <HBox alignItems="Center" class="sapUiTinyMarginTop" visible="{= ${notifications>priority} !== 'normal'}">
+                                    <core:Icon
+                                        src="{= ${notifications>priority} === 'high' ? 'sap-icon://warning' : 'sap-icon://information'}"
+                                        size="0.75rem"
+                                        color="{= ${notifications>priority} === 'high' ? 'Critical' : 'Neutral'}"
+                                        class="sapUiTinyMarginEnd"/>
+                                    <Text 
+                                        text="{= ${notifications>priority} === 'high' ? 'High Priority' : 'Information'}"
+                                        class="sapUiContentLabelColor"/>
+                                </HBox>
+                                
+                            </VBox>
+                            
+                            <!-- Unread Indicator -->
+                            <core:Icon
+                                src="sap-icon://circle-task-2"
+                                size="0.5rem"
+                                color="Accent6"
+                                visible="{= !${notifications>read}}"
+                                class="sapUiSmallMarginBegin"/>
+                            
+                        </HBox>
+                    </CustomListItem>
+                    
+                </List>
+                
+            </VBox>
+        </content>
+        
+        <footer>
+            <Bar class="sapUiNoMargin">
+                <contentMiddle>
+                    <Button
+                        text="{i18n>viewAllNotifications}"
+                        type="Transparent"
+                        press="onViewAllNotifications"/>
+                </contentMiddle>
+            </Bar>
+        </footer>
+        
     </Popover>
+    
 </core:FragmentDefinition>

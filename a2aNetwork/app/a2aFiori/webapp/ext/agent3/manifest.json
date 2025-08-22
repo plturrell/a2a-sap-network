@@ -1,0 +1,206 @@
+{
+    "_version": "1.60.0",
+    "sap.app": {
+        "id": "a2a.network.agent3",
+        "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "title": "{{agent3Title}}",
+        "description": "{{agent3Description}}",
+        "applicationVersion": {
+            "version": "1.0.0"
+        },
+        "dataSources": {
+            "mainService": {
+                "uri": "/a2a/agent3/v1/odata/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
+            }
+        }
+    },
+    "sap.ui5": {
+        "dependencies": {
+            "minUI5Version": "1.120.0",
+            "libs": {
+                "sap.fe.templates": {},
+                "sap.f": {},
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.uxap": {},
+                "sap.viz": {},
+                "sap.suite.ui.commons": {},
+                "sap.ui.comp": {}
+            }
+        },
+        "models": {
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
+                "settings": {
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
+                }
+            },
+            "@i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "uri": "i18n/i18n.properties"
+            }
+        },
+        "routing": {
+            "routes": [
+                {
+                    "name": "VectorProcessingTasksList",
+                    "pattern": ":?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "VectorProcessingTasksList",
+                        "options": {
+                            "settings": {
+                                "entitySet": "VectorProcessingTasks",
+                                "variantManagement": "Page",
+                                "initialLoad": true,
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.LineItem": {
+                                        "tableSettings": {
+                                            "type": "ResponsiveTable",
+                                            "selectionMode": "Multi"
+                                        },
+                                        "actions": {
+                                            "CreateVectorTask": {
+                                                "press": ".extension.a2a.network.agent3.ext.controller.ListReportExt.onCreateVectorTask",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Create Vector Task"
+                                            },
+                                            "VectorSearch": {
+                                                "press": ".extension.a2a.network.agent3.ext.controller.ListReportExt.onVectorSearch",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Vector Search"
+                                            },
+                                            "ManageCollections": {
+                                                "press": ".extension.a2a.network.agent3.ext.controller.ListReportExt.onManageCollections",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Manage Collections"
+                                            },
+                                            "VectorVisualization": {
+                                                "press": ".extension.a2a.network.agent3.ext.controller.ListReportExt.onVectorVisualization",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "3D Visualization"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "VectorProcessingTaskDetails",
+                    "pattern": "VectorProcessingTasks({key}):?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "VectorProcessingTaskDetails",
+                        "options": {
+                            "settings": {
+                                "entitySet": "VectorProcessingTasks",
+                                "navigation": {
+                                    "SimilarityResults": {
+                                        "detail": {
+                                            "route": "SimilarityResultDetails"
+                                        }
+                                    }
+                                },
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.HeaderInfo": {
+                                        "actions": {
+                                            "StartProcessing": {
+                                                "press": ".extension.a2a.network.agent3.ext.controller.ObjectPageExt.onStartProcessing",
+                                                "visible": "{= ${status} === 'DRAFT' || ${status} === 'PAUSED' }",
+                                                "enabled": true,
+                                                "text": "Start Processing"
+                                            },
+                                            "RunSimilaritySearch": {
+                                                "press": ".extension.a2a.network.agent3.ext.controller.ObjectPageExt.onRunSimilaritySearch",
+                                                "visible": "{= ${status} === 'COMPLETED' }",
+                                                "enabled": true,
+                                                "text": "Similarity Search"
+                                            },
+                                            "OptimizeIndex": {
+                                                "press": ".extension.a2a.network.agent3.ext.controller.ObjectPageExt.onOptimizeIndex",
+                                                "visible": "{= ${status} === 'COMPLETED' }",
+                                                "enabled": true,
+                                                "text": "Optimize Index"
+                                            },
+                                            "ExportVectors": {
+                                                "press": ".extension.a2a.network.agent3.ext.controller.ObjectPageExt.onExportVectors",
+                                                "visible": "{= ${status} === 'COMPLETED' }",
+                                                "enabled": true,
+                                                "text": "Export Vectors"
+                                            },
+                                            "VisualizeEmbeddings": {
+                                                "press": ".extension.a2a.network.agent3.ext.controller.ObjectPageExt.onVisualizeEmbeddings",
+                                                "visible": "{= ${status} === 'COMPLETED' }",
+                                                "enabled": true,
+                                                "text": "Visualize"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "VectorCollections",
+                    "pattern": "vector-collections:?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "VectorCollectionsList",
+                        "options": {
+                            "settings": {
+                                "entitySet": "VectorCollections",
+                                "variantManagement": "Page"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "VectorSearch",
+                    "pattern": "vector-search",
+                    "target": {
+                        "type": "Component",
+                        "name": "VectorSearch"
+                    }
+                }
+            ]
+        },
+        "extends": {
+            "extensions": {
+                "sap.ui.controllerExtensions": {
+                    "sap.fe.templates.ListReport.ListReportController": {
+                        "controllerName": "a2a.network.agent3.ext.controller.ListReportExt"
+                    },
+                    "sap.fe.templates.ObjectPage.ObjectPageController": {
+                        "controllerName": "a2a.network.agent3.ext.controller.ObjectPageExt"
+                    }
+                }
+            }
+        }
+    },
+    "sap.fiori": {
+        "registrationIds": ["F0001A3"],
+        "archeType": "transactional"
+    },
+    "sap.fe": {
+        "type": "default"
+    }
+}

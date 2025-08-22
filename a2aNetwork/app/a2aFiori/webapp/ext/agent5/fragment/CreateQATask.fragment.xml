@@ -1,0 +1,327 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        id="createQATaskDialog"
+        title="Create QA Validation Task"
+        contentWidth="75%"
+        contentHeight="85%"
+        resizable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Basic Information Tab -->
+                    <IconTabFilter text="Basic Info" icon="sap-icon://hint">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Task Name" required="true"/>
+                                <Input 
+                                    value="{create>/taskName}"
+                                    placeholder="Enter QA task name"/>
+                                
+                                <Label text="Description"/>
+                                <TextArea 
+                                    value="{create>/description}"
+                                    rows="3"
+                                    placeholder="Describe the QA validation requirements"/>
+                                
+                                <Label text="Test Suite"/>
+                                <Input 
+                                    value="{create>/testSuite}"
+                                    placeholder="Name of the test suite"
+                                    showValueHelp="true"
+                                    valueHelpRequest=".onSelectTestSuite"/>
+                                
+                                <Label text="Test Type" required="true"/>
+                                <Select selectedKey="{create>/testType}">
+                                    <items>
+                                        <core:Item key="UNIT" text="Unit Testing"/>
+                                        <core:Item key="INTEGRATION" text="Integration Testing"/>
+                                        <core:Item key="SYSTEM" text="System Testing"/>
+                                        <core:Item key="ACCEPTANCE" text="User Acceptance Testing"/>
+                                        <core:Item key="PERFORMANCE" text="Performance Testing"/>
+                                        <core:Item key="SECURITY" text="Security Testing"/>
+                                        <core:Item key="ACCESSIBILITY" text="Accessibility Testing"/>
+                                        <core:Item key="USABILITY" text="Usability Testing"/>
+                                        <core:Item key="REGRESSION" text="Regression Testing"/>
+                                        <core:Item key="SMOKE" text="Smoke Testing"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Target Application" required="true"/>
+                                <Input 
+                                    value="{create>/targetApplication}"
+                                    placeholder="Application or system under test"/>
+                                
+                                <Label text="Severity"/>
+                                <Select selectedKey="{create>/severity}">
+                                    <items>
+                                        <core:Item key="LOW" text="Low"/>
+                                        <core:Item key="MEDIUM" text="Medium"/>
+                                        <core:Item key="HIGH" text="High"/>
+                                        <core:Item key="CRITICAL" text="Critical"/>
+                                        <core:Item key="BLOCKER" text="Blocker"/>
+                                    </items>
+                                </Select>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Test Configuration Tab -->
+                    <IconTabFilter text="Test Configuration" icon="sap-icon://settings">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Test Framework"/>
+                                <Select selectedKey="{create>/testFramework}">
+                                    <items>
+                                        <core:Item key="SELENIUM" text="Selenium WebDriver"/>
+                                        <core:Item key="CYPRESS" text="Cypress"/>
+                                        <core:Item key="JUNIT" text="JUnit"/>
+                                        <core:Item key="TESTNG" text="TestNG"/>
+                                        <core:Item key="PLAYWRIGHT" text="Playwright"/>
+                                        <core:Item key="JEST" text="Jest"/>
+                                        <core:Item key="JASMINE" text="Jasmine"/>
+                                        <core:Item key="MOCHA" text="Mocha"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Test Environment"/>
+                                <Select selectedKey="{create>/testEnvironment}">
+                                    <items>
+                                        <core:Item key="DEV" text="Development"/>
+                                        <core:Item key="TEST" text="Test"/>
+                                        <core:Item key="STAGING" text="Staging"/>
+                                        <core:Item key="PROD" text="Production"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Test Data Source"/>
+                                <Input 
+                                    value="{create>/testDataSource}"
+                                    placeholder="Path or connection to test data"
+                                    showValueHelp="true"/>
+                                
+                                <Label text="Automation Level (%)"/>
+                                <Slider 
+                                    value="{create>/automationLevel}"
+                                    min="0"
+                                    max="100"
+                                    step="10"
+                                    enableTickmarks="true"
+                                    inputsAsTooltips="true"/>
+                                
+                                <Label text="Execution Options"/>
+                                <VBox>
+                                    <CheckBox 
+                                        text="Enable parallel execution"
+                                        selected="{create>/parallelExecution}"/>
+                                    <CheckBox 
+                                        text="Retry on failure"
+                                        selected="{create>/retryOnFailure}"/>
+                                    <CheckBox 
+                                        text="Generate detailed logs"
+                                        selected="{create>/detailedLogs}"/>
+                                    <CheckBox 
+                                        text="Capture screenshots on failure"
+                                        selected="{create>/captureScreenshots}"/>
+                                </VBox>
+                                
+                                <Label text="Test Timeout (minutes)"/>
+                                <StepInput 
+                                    value="{create>/testTimeout}"
+                                    min="1"
+                                    max="480"
+                                    step="5"/>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Test Cases Tab -->
+                    <IconTabFilter text="Test Cases" icon="sap-icon://checklist">
+                        <VBox>
+                            <Toolbar>
+                                <Title text="Test Cases"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Add Test Case"
+                                    icon="sap-icon://add"
+                                    press=".onAddTestCase"/>
+                                <Button 
+                                    text="Import from File"
+                                    icon="sap-icon://upload"
+                                    press=".onImportTestCases"/>
+                                <Button 
+                                    text="Generate from Template"
+                                    icon="sap-icon://template"
+                                    press=".onGenerateFromTemplate"/>
+                            </Toolbar>
+                            
+                            <Table
+                                items="{create>/testCases}"
+                                mode="Delete">
+                                <columns>
+                                    <Column width="25%">
+                                        <Text text="Test Name"/>
+                                    </Column>
+                                    <Column width="30%">
+                                        <Text text="Description"/>
+                                    </Column>
+                                    <Column width="15%">
+                                        <Text text="Category"/>
+                                    </Column>
+                                    <Column width="10%">
+                                        <Text text="Priority"/>
+                                    </Column>
+                                    <Column width="15%">
+                                        <Text text="Automation"/>
+                                    </Column>
+                                    <Column width="5%">
+                                        <Text text="Actions"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Input 
+                                                value="{create>testName}"
+                                                placeholder="Test case name"/>
+                                            <TextArea 
+                                                value="{create>description}"
+                                                rows="2"
+                                                placeholder="Test description"/>
+                                            <Select selectedKey="{create>category}">
+                                                <items>
+                                                    <core:Item key="FUNCTIONAL" text="Functional"/>
+                                                    <core:Item key="NON_FUNCTIONAL" text="Non-Functional"/>
+                                                    <core:Item key="REGRESSION" text="Regression"/>
+                                                    <core:Item key="SMOKE" text="Smoke"/>
+                                                    <core:Item key="SANITY" text="Sanity"/>
+                                                </items>
+                                            </Select>
+                                            <Select selectedKey="{create>priority}">
+                                                <items>
+                                                    <core:Item key="P1" text="P1 - Critical"/>
+                                                    <core:Item key="P2" text="P2 - High"/>
+                                                    <core:Item key="P3" text="P3 - Medium"/>
+                                                    <core:Item key="P4" text="P4 - Low"/>
+                                                </items>
+                                            </Select>
+                                            <Select selectedKey="{create>automationLevel}">
+                                                <items>
+                                                    <core:Item key="MANUAL" text="Manual"/>
+                                                    <core:Item key="SEMI_AUTO" text="Semi-Automated"/>
+                                                    <core:Item key="AUTOMATED" text="Automated"/>
+                                                </items>
+                                            </Select>
+                                            <Button 
+                                                icon="sap-icon://edit"
+                                                tooltip="Edit test steps"
+                                                press=".onEditTestSteps"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Compliance Tab -->
+                    <IconTabFilter text="Compliance" icon="sap-icon://shield">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Compliance Standard"/>
+                                <Select selectedKey="{create>/complianceStandard}">
+                                    <items>
+                                        <core:Item key="" text="None"/>
+                                        <core:Item key="ISO27001" text="ISO 27001"/>
+                                        <core:Item key="SOX" text="Sarbanes-Oxley"/>
+                                        <core:Item key="GDPR" text="GDPR"/>
+                                        <core:Item key="HIPAA" text="HIPAA"/>
+                                        <core:Item key="PCI" text="PCI DSS"/>
+                                        <core:Item key="FISMA" text="FISMA"/>
+                                        <core:Item key="WCAG" text="WCAG 2.1"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Compliance Requirements"/>
+                                <VBox>
+                                    <CheckBox 
+                                        text="Requires approval workflow"
+                                        selected="{create>/requiresApproval}"/>
+                                    <CheckBox 
+                                        text="Maintain audit trail"
+                                        selected="{create>/auditTrail}"/>
+                                    <CheckBox 
+                                        text="Regulatory compliance validation"
+                                        selected="{create>/regulatoryCompliance}"/>
+                                    <CheckBox 
+                                        text="Security validation"
+                                        selected="{create>/securityValidation}"/>
+                                    <CheckBox 
+                                        text="Performance validation"
+                                        selected="{create>/performanceValidation}"/>
+                                    <CheckBox 
+                                        text="Accessibility testing"
+                                        selected="{create>/accessibilityTesting}"/>
+                                    <CheckBox 
+                                        text="Usability testing"
+                                        selected="{create>/usabilityTesting}"/>
+                                </VBox>
+                                
+                                <Label text="Quality Gates"/>
+                                <VBox>
+                                    <HBox>
+                                        <Label text="Minimum pass rate (%):" width="200px"/>
+                                        <Input 
+                                            value="{create>/minPassRate}"
+                                            type="Number"
+                                            width="100px"/>
+                                    </HBox>
+                                    <HBox>
+                                        <Label text="Max execution time (hours):" width="200px"/>
+                                        <Input 
+                                            value="{create>/maxExecutionTime}"
+                                            type="Number"
+                                            width="100px"/>
+                                    </HBox>
+                                    <HBox>
+                                        <Label text="Code coverage threshold (%):" width="200px"/>
+                                        <Input 
+                                            value="{create>/coverageThreshold}"
+                                            type="Number"
+                                            width="100px"/>
+                                    </HBox>
+                                </VBox>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelCreateTask"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Create"
+                type="Emphasized"
+                press=".onConfirmCreateTask"
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/testType} &amp;&amp; ${create>/targetApplication} }"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

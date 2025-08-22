@@ -427,7 +427,7 @@
                                             type: "application"
                                         }
                                     },
-                                    url: "./a2aAgent/webapp/",
+                                    url: "./a2aFiori/webapp/",
                                     applicationType: "URL",
                                     navigationMode: "embedded"
                                 }
@@ -466,7 +466,7 @@
                                             type: "application"
                                         }
                                     },
-                                    url: "./a2aAgent/webapp/",
+                                    url: "./a2aFiori/webapp/",
                                     applicationType: "URL"
                                 }
                             }
@@ -494,6 +494,11 @@
         window.A2A_PRODUCTION_MODE = true;
     </script>
 
+    <!-- Font Preloading for Performance -->
+    <link rel="preload" href="https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <link rel="preload" href="https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/base/fonts/72-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <link rel="preload" href="https://ui5.sap.com/1.120.0/resources/sap/ui/core/themes/sap_horizon/fonts/SAP-icons.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    
     <!-- UI5 Bootstrap -->
     <script
         id="sap-ui-bootstrap"
@@ -507,15 +512,31 @@
         data-sap-ui-xx-supportedLanguages="en,de,fr,es,it,pt,zh,ja,ko"
         data-sap-ui-resourceroots='{
             "a2a.network.fiori": "./a2aFiori/webapp",
-            "a2a.network.agent": "./a2aAgent/webapp"
+            "a2a.network.agent": "./a2aAgent/webapp",
+            "a2a.network.launchpad": "./"
         }'>
     </script>
 
-    <!-- Fiori Launchpad Bootstrap -->
-    <script id="sap-ushell-bootstrap" src="https://ui5.sap.com/1.120.0/test-resources/sap/ushell/bootstrap/sandbox.js"></script>
+    <!-- Deployment Validation -->
+    <script src="./config/deployment-validation.js"></script>
+    
+    <!-- Fiori Launchpad Enterprise Bootstrap -->
+    <script 
+        id="sap-ushell-bootstrap" 
+        src="./flp-bootstrap.js"
+        data-sap-ui-config='{"deployment-type": "enterprise"}'></script>
+    
+    <!-- Initialize Deployment Validation -->
+    <script>
+        // Initialize deployment validation
+        sap.ui.require(["a2a/network/launchpad/config/deployment-validation"], function(DeploymentValidation) {
+            DeploymentValidation.initializeValidation();
+        });
+    </script>
 
     <!-- SAP Compliance CSS -->
     <link rel="stylesheet" type="text/css" href="css/launchpad-sap-compliance.css">
+    <link rel="stylesheet" type="text/css" href="css/sap-standard-compliance.css">
     
     <!-- Production Styles -->
     <style>

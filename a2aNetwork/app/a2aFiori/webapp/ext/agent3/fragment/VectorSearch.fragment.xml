@@ -1,0 +1,194 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        id="vectorSearchDialog"
+        title="Vector Similarity Search"
+        contentWidth="80%"
+        contentHeight="85%"
+        resizable="true">
+        
+        <content>
+            <l:Splitter height="100%" orientation="Vertical">
+                <l:contentAreas>
+                    <!-- Search Configuration Panel -->
+                    <Panel headerText="Search Configuration" height="300px">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout"
+                            columnsM="2"
+                            columnsL="3">
+                            <form:content>
+                                <Label text="Collection"/>
+                                <Select 
+                                    selectedKey="{search>/collection}"
+                                    items="{search>/collections}">
+                                    <core:ListItem 
+                                        key="{search>name}"
+                                        text="{search>name} ({search>vectorCount} vectors)"/>
+                                </Select>
+                                
+                                <Label text="Query Type"/>
+                                <RadioButtonGroup 
+                                    selectedIndex="{= ${search>/queryType} === 'TEXT' ? 0 : 1 }"
+                                    select=".onQueryTypeChange">
+                                    <RadioButton text="Text Query"/>
+                                    <RadioButton text="Vector Query"/>
+                                </RadioButtonGroup>
+                                
+                                <Label text="Search Query" visible="{= ${search>/queryType} === 'TEXT' }"/>
+                                <TextArea 
+                                    value="{search>/query}"
+                                    rows="3"
+                                    placeholder="Enter your search query..."
+                                    visible="{= ${search>/queryType} === 'TEXT' }"/>
+                                
+                                <Label text="Vector Input" visible="{= ${search>/queryType} === 'VECTOR' }"/>
+                                <TextArea 
+                                    value="{search>/vectorInput}"
+                                    rows="3"
+                                    placeholder="[0.1, -0.2, 0.3, ...]"
+                                    visible="{= ${search>/queryType} === 'VECTOR' }"/>
+                                
+                                <Label text="Top K Results"/>
+                                <Slider 
+                                    value="{search>/topK}"
+                                    min="1"
+                                    max="100"
+                                    step="1"
+                                    enableTickmarks="true"
+                                    inputsAsTooltips="true"/>
+                                
+                                <Label text="Similarity Threshold"/>
+                                <Slider 
+                                    value="{search>/similarityThreshold}"
+                                    min="0"
+                                    max="1"
+                                    step="0.01"
+                                    enableTickmarks="true"
+                                    inputsAsTooltips="true"/>
+                                
+                                <Label text=""/>
+                                <HBox>
+                                    <Button 
+                                        text="Search"
+                                        type="Emphasized"
+                                        press=".onExecuteVectorSearch"
+                                        enabled="{= ${search>/query} || ${search>/vectorInput} }"/>
+                                    <Button 
+                                        text="Clear"
+                                        press=".onClearSearch"/>
+                                </HBox>
+                            </form:content>
+                        </form:SimpleForm>
+                        
+                        <!-- Advanced Filters -->
+                        <Panel 
+                            headerText="Advanced Filters"
+                            expandable="true"
+                            expanded="false">
+                            <form:SimpleForm
+                                editable="true"
+                                layout="ResponsiveGridLayout">
+                                <form:content>
+                                    <Label text="Metadata Filters"/>
+                                    <TextArea
+                                        value="{search>/metadataFilters}"
+                                        rows="3"
+                                        placeholder='{"category": "technology", "date": {"$gte": "2023-01-01"}}'/>
+                                    
+                                    <Label text="Hybrid Search"/>
+                                    <CheckBox 
+                                        text="Enable keyword + vector search"
+                                        selected="{search>/hybridSearch}"/>
+                                    
+                                    <Label text="Reranking"/>
+                                    <CheckBox 
+                                        text="Apply reranking to results"
+                                        selected="{search>/reranking}"/>
+                                </form:content>
+                            </form:SimpleForm>
+                        </Panel>
+                    </Panel>
+                    
+                    <!-- Search Results Panel -->
+                    <Panel headerText="Search Results">
+                        <Table
+                            items="{search>/searchResults}"
+                            mode="SingleSelectMaster"
+                            selectionChange=".onResultSelection">
+                            <columns>
+                                <Column width="10%">
+                                    <Text text="Rank"/>
+                                </Column>
+                                <Column width="15%">
+                                    <Text text="Similarity"/>
+                                </Column>
+                                <Column width="50%">
+                                    <Text text="Content"/>
+                                </Column>
+                                <Column width="25%">
+                                    <Text text="Metadata"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{search>rank}"/>
+                                        <ProgressIndicator
+                                            percentValue="{= ${search>similarity} * 100 }"
+                                            displayValue="{search>similarity}"
+                                            state="{= ${search>similarity} > 0.8 ? 'Success' : ${search>similarity} > 0.6 ? 'Warning' : 'Error' }"/>
+                                        <VBox>
+                                            <Text 
+                                                text="{search>content}"
+                                                maxLines="3"/>
+                                            <Link 
+                                                text="View full content"
+                                                press=".onViewFullContent"/>
+                                        </VBox>
+                                        <VBox>
+                                            <Text text="ID: {search>id}"/>
+                                            <Text text="Source: {search>source}"/>
+                                            <Text text="Type: {search>type}"/>
+                                        </VBox>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                        
+                        <!-- Result Actions -->
+                        <Toolbar>
+                            <Title text="{= ${search>/searchResults}.length } results found"/>
+                            <ToolbarSpacer/>
+                            <Button 
+                                text="Export Results"
+                                icon="sap-icon://excel-attachment"
+                                press=".onExportSearchResults"/>
+                            <Button 
+                                text="Save Search"
+                                icon="sap-icon://save"
+                                press=".onSaveSearch"/>
+                        </Toolbar>
+                    </Panel>
+                </l:contentAreas>
+            </l:Splitter>
+        </content>
+        
+        <beginButton>
+            <Button text="Close" press=".onCloseVectorSearch"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="New Search"
+                type="Emphasized"
+                press=".onNewSearch"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

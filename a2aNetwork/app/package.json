@@ -115,5 +115,31 @@
       "prefer-const": "error",
       "no-var": "error"
     }
+  },
+  "sap": {
+    "transport": {
+      "target": "ZA2A_FIORI",
+      "package": "$TMP",
+      "description": "A2A Network Fiori Launchpad Transport",
+      "layer": "CUSTOMER",
+      "type": "WORKBENCH"
+    },
+    "build": {
+      "sourceTemplate": "fiori-freestyle",
+      "platforms": ["ABAP", "CF"],
+      "destination": "a2a-btp-destination"
+    },
+    "deployment": {
+      "cf": {
+        "buildpack": "nodejs_buildpack",
+        "memory": "512M",
+        "instances": 2,
+        "services": ["a2a-xsuaa", "a2a-hana", "a2a-logs", "a2a-autoscaler"]
+      },
+      "abap": {
+        "package": "ZA2A_FIORI",
+        "transport": "ZA2AK900001"
+      }
+    }
   }
 }

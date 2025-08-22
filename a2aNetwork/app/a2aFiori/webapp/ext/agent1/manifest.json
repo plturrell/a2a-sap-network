@@ -1,0 +1,183 @@
+{
+    "_version": "1.60.0",
+    "sap.app": {
+        "id": "a2a.network.agent1",
+        "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "title": "{{agent1Title}}",
+        "description": "{{agent1Description}}",
+        "applicationVersion": {
+            "version": "1.0.0"
+        },
+        "dataSources": {
+            "mainService": {
+                "uri": "/a2a/agent1/v1/odata/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
+            }
+        }
+    },
+    "sap.ui5": {
+        "dependencies": {
+            "minUI5Version": "1.120.0",
+            "libs": {
+                "sap.fe.templates": {},
+                "sap.f": {},
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.uxap": {},
+                "sap.viz": {}
+            }
+        },
+        "models": {
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
+                "settings": {
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
+                }
+            },
+            "@i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "uri": "i18n/i18n.properties"
+            }
+        },
+        "routing": {
+            "routes": [
+                {
+                    "name": "StandardizationTasksList",
+                    "pattern": ":?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "StandardizationTasksList",
+                        "options": {
+                            "settings": {
+                                "entitySet": "StandardizationTasks",
+                                "variantManagement": "Page",
+                                "initialLoad": true,
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.LineItem": {
+                                        "tableSettings": {
+                                            "type": "ResponsiveTable",
+                                            "selectionMode": "Multi"
+                                        },
+                                        "actions": {
+                                            "NewStandardizationTask": {
+                                                "press": ".extension.a2a.network.agent1.ext.controller.ListReportExt.onCreateStandardizationTask",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "New Standardization Task"
+                                            },
+                                            "ImportSchema": {
+                                                "press": ".extension.a2a.network.agent1.ext.controller.ListReportExt.onImportSchema",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Import Schema"
+                                            },
+                                            "BatchProcess": {
+                                                "press": ".extension.a2a.network.agent1.ext.controller.ListReportExt.onBatchProcess",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": true,
+                                                "text": "Batch Process"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "StandardizationTaskDetails",
+                    "pattern": "StandardizationTasks({key}):?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "StandardizationTaskDetails",
+                        "options": {
+                            "settings": {
+                                "entitySet": "StandardizationTasks",
+                                "navigation": {
+                                    "ValidationErrors": {
+                                        "detail": {
+                                            "route": "ValidationErrorDetails"
+                                        }
+                                    }
+                                },
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.HeaderInfo": {
+                                        "actions": {
+                                            "StartStandardization": {
+                                                "press": ".extension.a2a.network.agent1.ext.controller.ObjectPageExt.onStartStandardization",
+                                                "visible": "{= ${status} === 'DRAFT' || ${status} === 'PAUSED' }",
+                                                "enabled": true,
+                                                "text": "Start Standardization"
+                                            },
+                                            "PauseStandardization": {
+                                                "press": ".extension.a2a.network.agent1.ext.controller.ObjectPageExt.onPauseStandardization",
+                                                "visible": "{= ${status} === 'RUNNING' }",
+                                                "enabled": true,
+                                                "text": "Pause"
+                                            },
+                                            "ValidateMapping": {
+                                                "press": ".extension.a2a.network.agent1.ext.controller.ObjectPageExt.onValidateMapping",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Validate Mapping"
+                                            },
+                                            "ExportResults": {
+                                                "press": ".extension.a2a.network.agent1.ext.controller.ObjectPageExt.onExportResults",
+                                                "visible": "{= ${status} === 'COMPLETED' }",
+                                                "enabled": true,
+                                                "text": "Export Results"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "SchemaTemplates",
+                    "pattern": "schema-templates:?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "SchemaTemplatesList",
+                        "options": {
+                            "settings": {
+                                "entitySet": "SchemaTemplates",
+                                "variantManagement": "Page"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "extends": {
+            "extensions": {
+                "sap.ui.controllerExtensions": {
+                    "sap.fe.templates.ListReport.ListReportController": {
+                        "controllerName": "a2a.network.agent1.ext.controller.ListReportExt"
+                    },
+                    "sap.fe.templates.ObjectPage.ObjectPageController": {
+                        "controllerName": "a2a.network.agent1.ext.controller.ObjectPageExt"
+                    }
+                }
+            }
+        }
+    },
+    "sap.fiori": {
+        "registrationIds": ["F0001A1"],
+        "archeType": "transactional"
+    },
+    "sap.fe": {
+        "type": "default"
+    }
+}

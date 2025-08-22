@@ -1,0 +1,188 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        id="createAITaskDialog"
+        title="Create AI Preparation Task"
+        contentWidth="60%"
+        contentHeight="70%"
+        resizable="true">
+        
+        <content>
+            <IconTabBar id="aiTaskTabBar" expandable="false">
+                
+                <!-- Basic Information Tab -->
+                <items>
+                    <IconTabFilter text="Basic Info" icon="sap-icon://hint">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Task Name" required="true"/>
+                                <Input 
+                                    value="{create>/taskName}"
+                                    placeholder="Enter task name"
+                                    liveChange=".onTaskDetailsChange"/>
+                                
+                                <Label text="Description"/>
+                                <TextArea 
+                                    value="{create>/description}"
+                                    rows="2"
+                                    placeholder="Describe the AI preparation task"/>
+                                
+                                <Label text="Dataset Name" required="true"/>
+                                <Input 
+                                    value="{create>/datasetName}"
+                                    placeholder="Select or enter dataset name"
+                                    showValueHelp="true"
+                                    valueHelpRequest=".onSelectDataset"/>
+                                
+                                <Label text="Model Type" required="true"/>
+                                <Select selectedKey="{create>/modelType}">
+                                    <items>
+                                        <core:Item key="" text="Select model type..."/>
+                                        <core:Item key="CLASSIFICATION" text="Classification"/>
+                                        <core:Item key="REGRESSION" text="Regression"/>
+                                        <core:Item key="CLUSTERING" text="Clustering"/>
+                                        <core:Item key="EMBEDDING" text="Embedding"/>
+                                        <core:Item key="LLM" text="Large Language Model"/>
+                                        <core:Item key="TIME_SERIES" text="Time Series"/>
+                                        <core:Item key="RECOMMENDATION" text="Recommendation"/>
+                                        <core:Item key="ANOMALY" text="Anomaly Detection"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Data Type" required="true"/>
+                                <Select selectedKey="{create>/dataType}">
+                                    <items>
+                                        <core:Item key="" text="Select data type..."/>
+                                        <core:Item key="TABULAR" text="Tabular"/>
+                                        <core:Item key="TEXT" text="Text"/>
+                                        <core:Item key="IMAGE" text="Image"/>
+                                        <core:Item key="AUDIO" text="Audio"/>
+                                        <core:Item key="VIDEO" text="Video"/>
+                                        <core:Item key="TIME_SERIES" text="Time Series"/>
+                                        <core:Item key="GRAPH" text="Graph"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="ML Framework"/>
+                                <Select selectedKey="{create>/framework}">
+                                    <items>
+                                        <core:Item key="TENSORFLOW" text="TensorFlow"/>
+                                        <core:Item key="PYTORCH" text="PyTorch"/>
+                                        <core:Item key="SCIKIT_LEARN" text="Scikit-learn"/>
+                                        <core:Item key="XGBOOST" text="XGBoost"/>
+                                        <core:Item key="HUGGINGFACE" text="Hugging Face"/>
+                                        <core:Item key="AUTO" text="Auto-select"/>
+                                    </items>
+                                </Select>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Data Preparation Tab -->
+                    <IconTabFilter text="Data Preparation" icon="sap-icon://chart-table-view">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Train/Test Split (%)"/>
+                                <Slider 
+                                    value="{create>/splitRatio}"
+                                    min="50"
+                                    max="90"
+                                    step="5"
+                                    enableTickmarks="true"
+                                    inputsAsTooltips="true"/>
+                                
+                                <Label text="Validation Strategy"/>
+                                <RadioButtonGroup selectedIndex="{= ${create>/validationStrategy} === 'KFOLD' ? 0 : 1 }">
+                                    <RadioButton text="K-Fold Cross Validation"/>
+                                    <RadioButton text="Hold-out Validation"/>
+                                </RadioButtonGroup>
+                                
+                                <Label text="Random Seed"/>
+                                <Input 
+                                    value="{create>/randomSeed}"
+                                    type="Number"
+                                    placeholder="42"/>
+                                
+                                <Label text="Feature Selection"/>
+                                <CheckBox 
+                                    text="Enable automatic feature selection"
+                                    selected="{create>/featureSelection}"/>
+                                
+                                <Label text="Auto Feature Engineering"/>
+                                <CheckBox 
+                                    text="Enable automated feature engineering"
+                                    selected="{create>/autoFeatureEngineering}"/>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Advanced Settings Tab -->
+                    <IconTabFilter text="Advanced" icon="sap-icon://settings">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Optimization Metric"/>
+                                <Select selectedKey="{create>/optimizationMetric}">
+                                    <items>
+                                        <core:Item key="AUTO" text="Auto-select"/>
+                                        <core:Item key="ACCURACY" text="Accuracy"/>
+                                        <core:Item key="AUC" text="AUC-ROC"/>
+                                        <core:Item key="F1" text="F1 Score"/>
+                                        <core:Item key="MSE" text="Mean Squared Error"/>
+                                        <core:Item key="MAE" text="Mean Absolute Error"/>
+                                        <core:Item key="PERPLEXITY" text="Perplexity"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Hardware Acceleration"/>
+                                <CheckBox 
+                                    text="Use GPU acceleration if available"
+                                    selected="{create>/useGPU}"/>
+                                
+                                <Label text="Distributed Processing"/>
+                                <CheckBox 
+                                    text="Enable distributed processing"
+                                    selected="{create>/distributed}"/>
+                                
+                                <Label text="Memory Optimization"/>
+                                <CheckBox 
+                                    text="Enable memory-efficient processing"
+                                    selected="{create>/memoryOptimized}"/>
+                                
+                                <Label text="Cache Intermediate Results"/>
+                                <CheckBox 
+                                    text="Cache intermediate processing steps"
+                                    selected="{create>/cacheResults}"/>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelCreateTask"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Create"
+                type="Emphasized"
+                press=".onConfirmCreateTask"
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/datasetName} &amp;&amp; ${create>/modelType} &amp;&amp; ${create>/dataType} }"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

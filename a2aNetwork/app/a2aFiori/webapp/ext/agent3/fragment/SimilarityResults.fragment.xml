@@ -1,0 +1,272 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:table="sap.ui.table">
+    
+    <Dialog
+        id="similarityResultsDialog"
+        title="Similarity Search Results"
+        contentWidth="95%"
+        contentHeight="85%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Search Summary -->
+                <Panel headerText="Search Summary" class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Results Found" level="H3"/>
+                            <ObjectNumber 
+                                number="{results>/totalResults}" 
+                                state="Success"
+                                emphasized="true"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Search Time" level="H3"/>
+                            <ObjectNumber 
+                                number="{results>/searchTime}" 
+                                unit="ms"
+                                state="None"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Best Score" level="H3"/>
+                            <ObjectNumber 
+                                number="{results>/bestScore}" 
+                                state="Success"/>
+                        </VBox>
+                        <VBox>
+                            <Title text="Collection" level="H3"/>
+                            <Text text="{results>/collection}"/>
+                        </VBox>
+                    </HBox>
+                </Panel>
+                
+                <!-- Filter and Sort Controls -->
+                <Panel headerText="Filter & Sort" expandable="true" expanded="false">
+                    <HBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Label text="Minimum Score"/>
+                            <Slider 
+                                value="{results>/minScore}"
+                                min="0"
+                                max="1"
+                                step="0.01"
+                                width="200px"
+                                liveChange=".onFilterResults"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Label text="Sort By"/>
+                            <Select selectedKey="{results>/sortBy}" change=".onSortResults">
+                                <items>
+                                    <core:Item key="score" text="Similarity Score"/>
+                                    <core:Item key="distance" text="Distance"/>
+                                    <core:Item key="content_length" text="Content Length"/>
+                                    <core:Item key="metadata.timestamp" text="Timestamp"/>
+                                </items>
+                            </Select>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Label text="Order"/>
+                            <RadioButtonGroup selectedIndex="{results>/sortOrder}">
+                                <RadioButton text="Descending"/>
+                                <RadioButton text="Ascending"/>
+                            </RadioButtonGroup>
+                        </VBox>
+                        <VBox>
+                            <Label text=" "/>
+                            <Button 
+                                text="Apply Filters"
+                                press=".onApplyResultFilters"/>
+                        </VBox>
+                    </HBox>
+                </Panel>
+                
+                <!-- Results Table -->
+                <table:Table
+                    rows="{results>/searchResults}"
+                    selectionMode="MultiToggle"
+                    visibleRowCount="15"
+                    enableColumnReordering="true"
+                    class="sapUiResponsiveMargin">
+                    
+                    <table:extension>
+                        <Toolbar>
+                            <Title text="Search Results ({results>/filteredCount} of {results>/totalResults})"/>
+                            <ToolbarSpacer/>
+                            <Button 
+                                text="Export Results"
+                                icon="sap-icon://download"
+                                press=".onExportResults"/>
+                            <Button 
+                                text="Create Collection"
+                                icon="sap-icon://create"
+                                press=".onCreateCollectionFromResults"
+                                enabled="{= ${results>/selectedResults} > 0}"/>
+                            <Button 
+                                text="View in 3D"
+                                icon="sap-icon://dimension"
+                                press=".onVisualize3D"/>
+                        </Toolbar>
+                    </table:extension>
+                    
+                    <table:columns>
+                        <table:Column width="60px" sortProperty="rank">
+                            <Label text="Rank"/>
+                            <table:template>
+                                <Text text="{results>rank}"/>
+                            </table:template>
+                        </table:Column>
+                        
+                        <table:Column width="100px" sortProperty="similarityScore">
+                            <Label text="Score"/>
+                            <table:template>
+                                <ObjectNumber 
+                                    number="{results>similarityScore}" 
+                                    state="{parts: ['results>similarityScore'], formatter: '.formatScoreState'}"
+                                    emphasized="true"/>
+                            </table:template>
+                        </table:Column>
+                        
+                        <table:Column width="80px" sortProperty="distance">
+                            <Label text="Distance"/>
+                            <table:template>
+                                <Text text="{path: 'results>distance', formatter: '.formatDistance'}"/>
+                            </table:template>
+                        </table:Column>
+                        
+                        <table:Column sortProperty="resultContent">
+                            <Label text="Content"/>
+                            <table:template>
+                                <VBox>
+                                    <FormattedText 
+                                        htmlText="{results>resultContent}"
+                                        class="sapUiTinyMarginBottom"/>
+                                    <Text 
+                                        text="ID: {results>resultVectorId}"
+                                        class="sapThemeTextSubtle"/>
+                                </VBox>
+                            </table:template>
+                        </table:Column>
+                        
+                        <table:Column width="150px" sortProperty="contentType">
+                            <Label text="Type"/>
+                            <table:template>
+                                <VBox>
+                                    <Text text="{results>contentType}"/>
+                                    <Text 
+                                        text="Source: {results>source}"
+                                        class="sapThemeTextSubtle"/>
+                                </VBox>
+                            </table:template>
+                        </table:Column>
+                        
+                        <table:Column width="200px">
+                            <Label text="Metadata"/>
+                            <table:template>
+                                <VBox>
+                                    <Text text="Created: {results>created}"/>
+                                    <Text text="Tags: {results>tags}"/>
+                                    <Text text="Category: {results>category}"/>
+                                </VBox>
+                            </table:template>
+                        </table:Column>
+                        
+                        <table:Column width="120px">
+                            <Label text="Actions"/>
+                            <table:template>
+                                <HBox>
+                                    <Button 
+                                        icon="sap-icon://detail-view"
+                                        tooltip="View Details"
+                                        press=".onViewResultDetails"
+                                        type="Transparent"/>
+                                    <Button 
+                                        icon="sap-icon://copy"
+                                        tooltip="Copy Content"
+                                        press=".onCopyContent"
+                                        type="Transparent"/>
+                                    <Button 
+                                        icon="sap-icon://share-2"
+                                        tooltip="Find Similar"
+                                        press=".onFindSimilar"
+                                        type="Transparent"/>
+                                </HBox>
+                            </table:template>
+                        </table:Column>
+                    </table:columns>
+                </table:Table>
+                
+                <!-- Result Analytics -->
+                <Panel 
+                    headerText="Result Analytics"
+                    expandable="true" 
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Score Distribution" level="H4"/>
+                            <Text text="Average: {results>/avgScore}"/>
+                            <Text text="Median: {results>/medianScore}"/>
+                            <Text text="Std Dev: {results>/scoreStdDev}"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Content Types" level="H4"/>
+                            <List items="{results>/contentTypeDistribution}">
+                                <StandardListItem 
+                                    title="{type}"
+                                    info="{count}"
+                                    infoState="None"/>
+                            </List>
+                        </VBox>
+                        <VBox>
+                            <Title text="Quality Metrics" level="H4"/>
+                            <Text text="Diversity Index: {results>/diversityIndex}"/>
+                            <Text text="Coverage: {results>/coverage}%"/>
+                            <Text text="Precision@5: {results>/precisionAt5}"/>
+                        </VBox>
+                    </HBox>
+                </Panel>
+                
+                <!-- Refinement Suggestions -->
+                <Panel 
+                    headerText="Search Refinement Suggestions"
+                    expandable="true" 
+                    expanded="false"
+                    class="sapUiResponsiveMargin"
+                    visible="{= ${results>/suggestions}.length > 0}">
+                    <List items="{results>/suggestions}">
+                        <ActionListItem 
+                            text="{suggestion}"
+                            press=".onApplySuggestion"
+                            type="Active">
+                            <firstAction>
+                                <Button 
+                                    icon="sap-icon://search"
+                                    tooltip="Apply this suggestion"
+                                    press=".onApplySuggestion"/>
+                            </firstAction>
+                        </ActionListItem>
+                    </List>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button 
+                text="New Search"
+                icon="sap-icon://search"
+                press=".onNewSearch"/>
+            <Button 
+                text="Save Results"
+                icon="sap-icon://save"
+                press=".onSaveResults"/>
+            <Button 
+                text="Close"
+                press=".onCloseResults"/>
+        </buttons>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

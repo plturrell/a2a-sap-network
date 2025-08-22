@@ -372,6 +372,87 @@ service A2AService @(path: '/api/v1') {
     entity NetworkStats as projection on db.NetworkStats;
     
     // ================================
+    // AGENT 2 - AI PREPARATION ENTITIES
+    // ================================
+    
+    @cds.redirection.target
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE', 'UPDATE'], to: 'AIManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity AIPreparationTasks as projection on db.AIPreparationTasks {
+        *,
+        agent : redirected to Agents,
+        features : redirected to AIPreparationFeatures
+    } actions {
+        @requires: ['AIManager', 'Admin']
+        action startPreparation() returns String;
+        @requires: ['AIManager', 'Admin']
+        action pausePreparation() returns Boolean;
+        @requires: ['AIManager', 'Admin']
+        action resumePreparation() returns Boolean;
+        @requires: ['AIManager', 'Admin']
+        action cancelPreparation() returns Boolean;
+        @requires: ['AIManager', 'Admin']
+        action analyzeFeatures() returns String;
+        @requires: ['AIManager', 'Admin']
+        action generateEmbeddings(
+            model: String,
+            dimensions: Integer,
+            normalization: Boolean,
+            batchSize: Integer,
+            useGPU: Boolean
+        ) returns String;
+        @requires: ['AIManager', 'Admin']
+        action exportPreparedData(
+            format: String,
+            includeMetadata: Boolean,
+            splitData: Boolean,
+            compression: String
+        ) returns String;
+        @requires: ['AIManager', 'Admin']
+        action optimizeHyperparameters(
+            method: String,
+            trials: Integer,
+            timeout: Integer,
+            earlyStop: Boolean
+        ) returns String;
+    };
+    
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE', 'UPDATE'], to: 'AIManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity AIPreparationFeatures as projection on db.AIPreparationFeatures;
+    
+    // Agent 2 specific actions for data profiling and AutoML
+    @requires: ['AIManager', 'Admin']
+    action getDataProfile() returns String;
+    
+    @requires: ['AIManager', 'Admin'] 
+    action batchPrepare(
+        taskIds: array of String,
+        parallel: Boolean,
+        gpuAcceleration: Boolean
+    ) returns String;
+    
+    @requires: ['AIManager', 'Admin']
+    action startAutoML(
+        dataset: String,
+        problemType: String,
+        targetColumn: String,
+        evaluationMetric: String,
+        timeLimit: Integer,
+        maxModels: Integer,
+        includeEnsemble: Boolean,
+        crossValidation: Integer
+    ) returns String;
+    
+    // ================================
     // REPUTATION SYSTEM ENTITIES
     // ================================
     
@@ -517,6 +598,227 @@ service A2AService @(path: '/api/v1') {
         status: String;
         gasUsed: Integer;
     };
+    
+    // ================================
+    // AGENT 1 - DATA STANDARDIZATION ENTITIES
+    // ================================
+    
+    @cds.redirection.target
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE', 'UPDATE'], to: 'DataManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity StandardizationTasks as projection on db.StandardizationTasks {
+        *,
+        agent : redirected to Agents,
+        rules : redirected to StandardizationRules
+    } actions {
+        @requires: ['DataManager', 'Admin']
+        action startStandardization() returns String;
+        @requires: ['DataManager', 'Admin']
+        action pauseStandardization() returns Boolean;
+        @requires: ['DataManager', 'Admin']
+        action resumeStandardization() returns Boolean;
+        @requires: ['DataManager', 'Admin']
+        action cancelStandardization() returns Boolean;
+        @requires: ['DataManager', 'Admin']
+        action validateFormat(
+            sampleData: String,
+            validationRules: String
+        ) returns String;
+        @requires: ['DataManager', 'Admin']
+        action analyzeDataQuality() returns String;
+        @requires: ['DataManager', 'Admin']
+        action exportResults(
+            format: String,
+            includeMetadata: Boolean,
+            compression: String
+        ) returns String;
+        @requires: ['DataManager', 'Admin']
+        action previewTransformation(
+            sampleSize: Integer,
+            rules: String
+        ) returns String;
+    };
+    
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE', 'UPDATE'], to: 'DataManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity StandardizationRules as projection on db.StandardizationRules;
+    
+    // Agent 1 specific actions for data standardization
+    @requires: ['DataManager', 'Admin']
+    action getFormatStatistics() returns String;
+    
+    @requires: ['DataManager', 'Admin'] 
+    action batchStandardize(
+        taskIds: array of String,
+        parallel: Boolean,
+        priority: String
+    ) returns String;
+    
+    @requires: ['DataManager', 'Admin']
+    action importSchema(
+        schemaData: String,
+        format: String,
+        templateName: String
+    ) returns String;
+    
+    @requires: ['DataManager', 'Admin']
+    action validateSchemaTemplate(
+        templateId: String,
+        sourceData: String
+    ) returns String;
+    
+    @requires: ['DataManager', 'Admin']
+    action generateStandardizationRules(
+        sourceFormat: String,
+        targetFormat: String,
+        sampleData: String
+    ) returns String;
+    
+    // ================================
+    // AGENT 3 - VECTOR PROCESSING ENTITIES
+    // ================================
+    
+    @cds.redirection.target
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE', 'UPDATE'], to: 'VectorManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity VectorProcessingTasks as projection on db.VectorProcessingTasks {
+        *,
+        agent : redirected to Agents,
+        collection : redirected to VectorCollections,
+        similarityResults : redirected to VectorSimilarityResults
+    } actions {
+        @requires: ['VectorManager', 'Admin']
+        action startProcessing() returns String;
+        @requires: ['VectorManager', 'Admin']
+        action pauseProcessing() returns Boolean;
+        @requires: ['VectorManager', 'Admin']
+        action resumeProcessing() returns Boolean;
+        @requires: ['VectorManager', 'Admin']
+        action cancelProcessing() returns Boolean;
+        @requires: ['VectorManager', 'Admin']
+        action runSimilaritySearch(
+            queryType: String,
+            query: String,
+            vectorQuery: String,
+            topK: Integer,
+            includeMetadata: Boolean,
+            includeDistance: Boolean,
+            filters: String
+        ) returns String;
+        @requires: ['VectorManager', 'Admin']
+        action optimizeIndex(
+            indexType: String,
+            parameters: String
+        ) returns String;
+        @requires: ['VectorManager', 'Admin']
+        action exportVectors(
+            format: String,
+            includeMetadata: Boolean,
+            compression: String,
+            chunkSize: Integer
+        ) returns String;
+        @requires: ['VectorManager', 'Admin']
+        action getVisualizationData(
+            method: String,
+            perplexity: Integer,
+            dimensions: Integer,
+            sampleSize: Integer
+        ) returns String;
+        @requires: ['VectorManager', 'Admin']
+        action runClusterAnalysis(
+            algorithm: String,
+            numClusters: String,
+            minClusterSize: Integer
+        ) returns String;
+    };
+    
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE', 'UPDATE'], to: 'VectorManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity VectorCollections as projection on db.VectorCollections {
+        *,
+        tasks : redirected to VectorProcessingTasks
+    } actions {
+        @requires: ['VectorManager', 'Admin']
+        action createIndex() returns String;
+        @requires: ['VectorManager', 'Admin']
+        action optimizeCollection() returns Boolean;
+        @requires: ['Admin']
+        action deleteCollection() returns Boolean;
+    };
+    
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE'], to: 'VectorManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity VectorSimilarityResults as projection on db.VectorSimilarityResults;
+    
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE', 'UPDATE'], to: 'VectorManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity VectorProcessingJobs as projection on db.VectorProcessingJobs;
+    
+    // Agent 3 specific actions for vector processing
+    @requires: ['VectorManager', 'Admin']
+    action batchVectorProcessing(
+        taskIds: array of String,
+        parallel: Boolean,
+        useGPU: Boolean,
+        priority: String
+    ) returns String;
+    
+    @requires: ['VectorManager', 'Admin'] 
+    action executeVectorSearch(
+        query: String,
+        collection: String,
+        topK: Integer,
+        threshold: Decimal,
+        filters: String
+    ) returns String;
+    
+    @requires: ['VectorManager', 'Admin']
+    action getModelComparison() returns String;
+    
+    @requires: ['VectorManager', 'Admin']
+    action getCollections() returns String;
+    
+    @requires: ['VectorManager', 'Admin']
+    action createCollection(
+        name: String,
+        description: String,
+        vectorDatabase: String,
+        embeddingModel: String,
+        dimensions: Integer,
+        distanceMetric: String,
+        indexType: String
+    ) returns String;
+    
+    @requires: ['VectorManager', 'Admin']
+    action generateEmbeddings(
+        texts: array of String,
+        model: String,
+        normalize: Boolean
+    ) returns String;
     
     // ================================
     // REPUTATION SYSTEM EVENTS

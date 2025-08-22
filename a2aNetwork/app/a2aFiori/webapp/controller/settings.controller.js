@@ -52,7 +52,7 @@ sap.ui.define([
                     auditLoggingEnabled: true
                 },
                 blockchain: {
-                    rpcUrl: process.env.BLOCKCHAIN_RPC_URL || "http://localhost:8545",
+                    rpcUrl: process.env.BLOCKCHAIN_RPC_URL || window.A2A_CONFIG?.blockchainRpcUrl || "https://mainnet.infura.io/v3/your-project-id",
                     networkId: 31337,
                     gasLimit: 500000,
                     gasPriceGwei: 20,
@@ -642,7 +642,7 @@ sap.ui.define([
                     auditLoggingEnabled: true
                 },
                 blockchain: {
-                    rpcUrl: process.env.BLOCKCHAIN_RPC_URL || "http://localhost:8545",
+                    rpcUrl: process.env.BLOCKCHAIN_RPC_URL || window.A2A_CONFIG?.blockchainRpcUrl || "https://mainnet.infura.io/v3/your-project-id",
                     networkId: 31337,
                     gasLimit: 500000,
                     gasPriceGwei: 20,

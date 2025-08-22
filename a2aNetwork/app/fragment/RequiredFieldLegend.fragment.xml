@@ -1,0 +1,11 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    
+    <!-- SAP Standard Required Field Legend -->
+    <HBox class="sapUiTinyMarginBottom" alignItems="Center">
+        <Text text="*" class="sapUiErrorColor sapUiTinyMarginEnd"/>
+        <Text text="{i18n>requiredFieldsNote}" class="sapUiContentLabelColor"/>
+    </HBox>
+    
+</core:FragmentDefinition>

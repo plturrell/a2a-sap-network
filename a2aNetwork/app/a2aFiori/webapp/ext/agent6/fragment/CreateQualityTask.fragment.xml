@@ -1,0 +1,282 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="createQualityTaskDialog"
+        title="Create Quality Control Task"
+        contentWidth="70%"
+        contentHeight="80%"
+        resizable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Basic Information Tab -->
+                    <IconTabFilter text="Basic Info" icon="sap-icon://hint">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Task Name" required="true"/>
+                                <Input 
+                                    value="{create>/taskName}"
+                                    placeholder="Enter quality control task name"/>
+                                
+                                <Label text="Description"/>
+                                <TextArea 
+                                    value="{create>/description}"
+                                    rows="3"
+                                    placeholder="Describe the quality control requirements"/>
+                                
+                                <Label text="Quality Gate" required="true"/>
+                                <Input 
+                                    value="{create>/qualityGate}"
+                                    placeholder="Select quality gate"
+                                    showValueHelp="true"
+                                    valueHelpRequest=".onSelectQualityGate"/>
+                                
+                                <Label text="Data Source"/>
+                                <Input 
+                                    value="{create>/dataSource}"
+                                    placeholder="Source of data to evaluate"/>
+                                
+                                <Label text="Processing Pipeline"/>
+                                <Input 
+                                    value="{create>/processingPipeline}"
+                                    placeholder="Pipeline or workflow to assess"/>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Evaluation Criteria Tab -->
+                    <IconTabFilter text="Evaluation Criteria" icon="sap-icon://checklist">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Quality Components to Evaluate"/>
+                                <VBox>
+                                    <CheckBox 
+                                        text="Compliance Assessment"
+                                        selected="{create>/evaluationCriteria/compliance}"/>
+                                    <CheckBox 
+                                        text="Performance Evaluation"
+                                        selected="{create>/evaluationCriteria/performance}"/>
+                                    <CheckBox 
+                                        text="Security Analysis"
+                                        selected="{create>/evaluationCriteria/security}"/>
+                                    <CheckBox 
+                                        text="Reliability Testing"
+                                        selected="{create>/evaluationCriteria/reliability}"/>
+                                    <CheckBox 
+                                        text="Usability Assessment"
+                                        selected="{create>/evaluationCriteria/usability}"/>
+                                    <CheckBox 
+                                        text="Maintainability Review"
+                                        selected="{create>/evaluationCriteria/maintainability}"/>
+                                </VBox>
+                                
+                                <Label text="Quality Thresholds"/>
+                                <VBox>
+                                    <HBox>
+                                        <Label text="Minimum Quality Score (%):"/>
+                                        <Slider 
+                                            value="{create>/thresholds/minQualityScore}"
+                                            min="0"
+                                            max="100"
+                                            step="5"
+                                            width="200px"
+                                            enableTickmarks="true"
+                                            inputsAsTooltips="true"/>
+                                    </HBox>
+                                    
+                                    <HBox>
+                                        <Label text="Maximum Issues Allowed:"/>
+                                        <StepInput 
+                                            value="{create>/thresholds/maxIssues}"
+                                            min="0"
+                                            max="50"
+                                            step="1"
+                                            width="100px"/>
+                                    </HBox>
+                                    
+                                    <HBox>
+                                        <Label text="Minimum Trust Score (%):"/>
+                                        <Slider 
+                                            value="{create>/thresholds/minTrustScore}"
+                                            min="0"
+                                            max="100"
+                                            step="5"
+                                            width="200px"
+                                            enableTickmarks="true"
+                                            inputsAsTooltips="true"/>
+                                    </HBox>
+                                </VBox>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Routing Configuration Tab -->
+                    <IconTabFilter text="Routing Config" icon="sap-icon://activity-2">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Routing Strategy"/>
+                                <Select selectedKey="{create>/routingStrategy}">
+                                    <items>
+                                        <core:Item key="QUALITY_BASED" text="Quality Score Based"/>
+                                        <core:Item key="LOAD_BALANCED" text="Load Balanced"/>
+                                        <core:Item key="ROUND_ROBIN" text="Round Robin"/>
+                                        <core:Item key="WEIGHTED" text="Weighted Distribution"/>
+                                        <core:Item key="MANUAL" text="Manual Decision Only"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Auto-Route Threshold"/>
+                                <Slider 
+                                    value="{create>/autoRouteThreshold}"
+                                    min="0"
+                                    max="100"
+                                    step="5"
+                                    enableTickmarks="true"
+                                    inputsAsTooltips="true"/>
+                                
+                                <Label text="Fallback Options"/>
+                                <VBox>
+                                    <CheckBox 
+                                        text="Enable automatic fallback routing"
+                                        selected="{create>/enableFallback}"/>
+                                    <CheckBox 
+                                        text="Require manual approval for critical tasks"
+                                        selected="{create>/requireManualApproval}"/>
+                                    <CheckBox 
+                                        text="Send notifications on routing decisions"
+                                        selected="{create>/notifyOnRouting}"/>
+                                </VBox>
+                                
+                                <Label text="Priority Weighting"/>
+                                <VBox>
+                                    <HBox>
+                                        <Label text="Quality Score Weight:"/>
+                                        <Slider 
+                                            value="{create>/weights/quality}"
+                                            min="0"
+                                            max="100"
+                                            step="10"
+                                            width="150px"/>
+                                    </HBox>
+                                    <HBox>
+                                        <Label text="Performance Weight:"/>
+                                        <Slider 
+                                            value="{create>/weights/performance}"
+                                            min="0"
+                                            max="100"
+                                            step="10"
+                                            width="150px"/>
+                                    </HBox>
+                                    <HBox>
+                                        <Label text="Trust Score Weight:"/>
+                                        <Slider 
+                                            value="{create>/weights/trust}"
+                                            min="0"
+                                            max="100"
+                                            step="10"
+                                            width="150px"/>
+                                    </HBox>
+                                </VBox>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Trust & Verification Tab -->
+                    <IconTabFilter text="Trust & Verification" icon="sap-icon://key">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Trust Verification Level"/>
+                                <Select selectedKey="{create>/trustLevel}">
+                                    <items>
+                                        <core:Item key="BASIC" text="Basic Verification"/>
+                                        <core:Item key="STANDARD" text="Standard Verification"/>
+                                        <core:Item key="ENHANCED" text="Enhanced Verification"/>
+                                        <core:Item key="MAXIMUM" text="Maximum Security"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Verification Requirements"/>
+                                <VBox>
+                                    <CheckBox 
+                                        text="Blockchain verification required"
+                                        selected="{create>/verification/blockchain}"/>
+                                    <CheckBox 
+                                        text="Reputation check required"
+                                        selected="{create>/verification/reputation}"/>
+                                    <CheckBox 
+                                        text="Integrity validation required"
+                                        selected="{create>/verification/integrity}"/>
+                                    <CheckBox 
+                                        text="Consensus mechanism required"
+                                        selected="{create>/verification/consensus}"/>
+                                    <CheckBox 
+                                        text="Digital signature validation"
+                                        selected="{create>/verification/signature}"/>
+                                </VBox>
+                                
+                                <Label text="Trust Factors"/>
+                                <VBox>
+                                    <HBox>
+                                        <Label text="Historical Performance Weight:"/>
+                                        <Slider 
+                                            value="{create>/trustFactors/performance}"
+                                            min="0"
+                                            max="100"
+                                            step="10"
+                                            width="150px"/>
+                                    </HBox>
+                                    <HBox>
+                                        <Label text="Data Quality Weight:"/>
+                                        <Slider 
+                                            value="{create>/trustFactors/dataQuality}"
+                                            min="0"
+                                            max="100"
+                                            step="10"
+                                            width="150px"/>
+                                    </HBox>
+                                    <HBox>
+                                        <Label text="Security Compliance Weight:"/>
+                                        <Slider 
+                                            value="{create>/trustFactors/security}"
+                                            min="0"
+                                            max="100"
+                                            step="10"
+                                            width="150px"/>
+                                    </HBox>
+                                </VBox>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelCreateTask"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Create"
+                type="Emphasized"
+                press=".onConfirmCreateTask"
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/qualityGate} }"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

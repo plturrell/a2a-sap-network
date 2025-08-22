@@ -192,9 +192,11 @@ class MessagePersistenceService extends cds.Service {
             // Build search query
             let searchQuery = SELECT.from(Messages);
             
-            // Add text search
+            // Add text search with parameterized query
             if (query) {
-                searchQuery = searchQuery.where(`content LIKE '%${query}%' OR metadata LIKE '%${query}%'`);
+                const sanitizedQuery = query.replace(/[%_]/g, '\\$&'); // Escape SQL wildcards
+                searchQuery = searchQuery.where("content LIKE ? OR metadata LIKE ?", 
+                    [`%${sanitizedQuery}%`, `%${sanitizedQuery}%`]);
             }
             
             // Add filters

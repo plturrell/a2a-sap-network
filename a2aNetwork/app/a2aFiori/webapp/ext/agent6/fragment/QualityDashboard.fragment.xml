@@ -1,0 +1,399 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:mc="sap.suite.ui.microchart"
+    xmlns:viz="sap.viz">
+    
+    <Dialog
+        id="qualityDashboardDialog"
+        title="Quality Control Dashboard"
+        contentWidth="95%"
+        contentHeight="90%"
+        resizable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Overview Tab -->
+                    <IconTabFilter text="Overview" icon="sap-icon://overview-chart">
+                        <l:Grid defaultSpan="L4 M6 S12">
+                            <l:content>
+                                <!-- Quality Metrics Cards -->
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Overall Quality Score"
+                                    subheader="Average across all tasks"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <mc:RadialMicroChart
+                                                    size="L"
+                                                    percentage="{dashboard>/metrics/overallQuality}"
+                                                    valueColor="Good"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Tasks Processed"
+                                    subheader="Last 24 hours"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <NumericContent
+                                                    value="{dashboard>/metrics/tasksProcessed}"
+                                                    valueColor="Good"
+                                                    indicator="Up"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Trust Score"
+                                    subheader="Average trust rating"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <mc:RadialMicroChart
+                                                    size="L"
+                                                    percentage="{dashboard>/metrics/averageTrustScore}"
+                                                    valueColor="Good"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Issues Detected"
+                                    subheader="Requiring attention"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <NumericContent
+                                                    value="{dashboard>/metrics/issuesDetected}"
+                                                    valueColor="Error"
+                                                    indicator="{= ${dashboard>/metrics/issuesDetected} > 10 ? 'Up' : 'Down' }"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Routing Accuracy"
+                                    subheader="Successful routing decisions"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <mc:RadialMicroChart
+                                                    size="L"
+                                                    percentage="{dashboard>/metrics/routingAccuracy}"
+                                                    valueColor="Good"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Workflow Efficiency"
+                                    subheader="Process optimization"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <NumericContent
+                                                    value="{dashboard>/metrics/workflowEfficiency}"
+                                                    valueColor="Good"
+                                                    indicator="Up"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                            </l:content>
+                        </l:Grid>
+                    </IconTabFilter>
+                    
+                    <!-- Trends Tab -->
+                    <IconTabFilter text="Trends" icon="sap-icon://line-chart">
+                        <VBox>
+                            <Panel headerText="Quality Trends Over Time">
+                                <viz:Popover id="qualityTrendsPopover"/>
+                                <viz:ui5.controls.VizFrame
+                                    id="qualityTrendsChart"
+                                    height="400px"
+                                    width="100%"
+                                    vizType="line">
+                                    <viz:dataset>
+                                        <viz:ui5.data.FlattenedDataset
+                                            data="{dashboard>/trends}">
+                                            <viz:dimensions>
+                                                <viz:ui5.data.DimensionDefinition
+                                                    name="Date"
+                                                    value="{Date}"/>
+                                            </viz:dimensions>
+                                            <viz:measures>
+                                                <viz:ui5.data.MeasureDefinition
+                                                    name="Quality Score"
+                                                    value="{QualityScore}"/>
+                                                <viz:ui5.data.MeasureDefinition
+                                                    name="Task Count"
+                                                    value="{TaskCount}"/>
+                                            </viz:measures>
+                                        </viz:ui5.data.FlattenedDataset>
+                                    </viz:dataset>
+                                </viz:ui5.controls.VizFrame>
+                            </Panel>
+                            
+                            <Panel 
+                                headerText="Routing Distribution"
+                                class="sapUiMediumMarginTop">
+                                <viz:ui5.controls.VizFrame
+                                    id="routingDistributionChart"
+                                    height="350px"
+                                    width="100%"
+                                    vizType="donut">
+                                    <viz:dataset>
+                                        <viz:ui5.data.FlattenedDataset
+                                            data="{dashboard>/routingStats}">
+                                            <viz:dimensions>
+                                                <viz:ui5.data.DimensionDefinition
+                                                    name="Agent"
+                                                    value="{Agent}"/>
+                                            </viz:dimensions>
+                                            <viz:measures>
+                                                <viz:ui5.data.MeasureDefinition
+                                                    name="Task Count"
+                                                    value="{TaskCount}"/>
+                                            </viz:measures>
+                                        </viz:ui5.data.FlattenedDataset>
+                                    </viz:dataset>
+                                </viz:ui5.controls.VizFrame>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Quality Gates Tab -->
+                    <IconTabFilter text="Quality Gates" icon="sap-icon://shield">
+                        <Table
+                            items="{dashboard>/qualityGates}"
+                            mode="None">
+                            <columns>
+                                <Column>
+                                    <Text text="Gate Name"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Category"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Threshold"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Pass Rate"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Status"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{dashboard>name}"/>
+                                        <Text text="{dashboard>category}"/>
+                                        <Text text="{dashboard>threshold}%"/>
+                                        <ProgressIndicator
+                                            percentValue="{dashboard>passRate}"
+                                            displayValue="{dashboard>passRate}%"
+                                            state="{= ${dashboard>passRate} >= 80 ? 'Success' : ${dashboard>passRate} >= 60 ? 'Warning' : 'Error' }"/>
+                                        <ObjectStatus
+                                            text="{dashboard>status}"
+                                            state="{= ${dashboard>status} === 'ACTIVE' ? 'Success' : 'None' }"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </IconTabFilter>
+                    
+                    <!-- Trust Metrics Tab -->
+                    <IconTabFilter text="Trust Metrics" icon="sap-icon://key">
+                        <l:Grid defaultSpan="L6 M12 S12">
+                            <l:content>
+                                <Panel headerText="Trust Score Distribution">
+                                    <mc:ColumnMicroChart
+                                        height="200px"
+                                        width="100%">
+                                        <mc:columns>
+                                            <mc:ColumnMicroChartData
+                                                value="{dashboard>/trustMetrics/high}"
+                                                color="Good"
+                                                label="High (80-100)"/>
+                                            <mc:ColumnMicroChartData
+                                                value="{dashboard>/trustMetrics/medium}"
+                                                color="Critical"
+                                                label="Medium (60-79)"/>
+                                            <mc:ColumnMicroChartData
+                                                value="{dashboard>/trustMetrics/low}"
+                                                color="Error"
+                                                label="Low (0-59)"/>
+                                        </mc:columns>
+                                    </mc:ColumnMicroChart>
+                                </Panel>
+                                
+                                <Panel headerText="Verification Status">
+                                    <VBox class="sapUiMediumMargin">
+                                        <HBox justifyContent="SpaceBetween">
+                                            <Label text="Blockchain Verified:"/>
+                                            <Text text="{dashboard>/trustMetrics/blockchainVerified}"/>
+                                        </HBox>
+                                        <HBox justifyContent="SpaceBetween">
+                                            <Label text="Reputation Checks:"/>
+                                            <Text text="{dashboard>/trustMetrics/reputationChecks}"/>
+                                        </HBox>
+                                        <HBox justifyContent="SpaceBetween">
+                                            <Label text="Integrity Validations:"/>
+                                            <Text text="{dashboard>/trustMetrics/integrityValidations}"/>
+                                        </HBox>
+                                        <HBox justifyContent="SpaceBetween">
+                                            <Label text="Consensus Required:"/>
+                                            <Text text="{dashboard>/trustMetrics/consensusRequired}"/>
+                                        </HBox>
+                                    </VBox>
+                                </Panel>
+                            </l:content>
+                        </l:Grid>
+                    </IconTabFilter>
+                    
+                    <!-- Workflow Health Tab -->
+                    <IconTabFilter text="Workflow Health" icon="sap-icon://workflow-tasks">
+                        <l:Grid defaultSpan="L4 M6 S12">
+                            <l:content>
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Active Workflows"
+                                    subheader="Currently processing"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <NumericContent
+                                                    value="{dashboard>/workflowHealth/activeWorkflows}"
+                                                    valueColor="Good"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Avg. Processing Time"
+                                    subheader="Minutes per task"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <NumericContent
+                                                    value="{dashboard>/workflowHealth/avgProcessingTime}"
+                                                    valueColor="Good"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Bottlenecks"
+                                    subheader="Identified issues"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <NumericContent
+                                                    value="{dashboard>/workflowHealth/bottlenecks}"
+                                                    valueColor="Error"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Resource Utilization"
+                                    subheader="System efficiency"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <mc:RadialMicroChart
+                                                    size="L"
+                                                    percentage="{dashboard>/workflowHealth/resourceUtilization}"
+                                                    valueColor="Good"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Optimization Score"
+                                    subheader="Process improvement"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <mc:RadialMicroChart
+                                                    size="L"
+                                                    percentage="{dashboard>/workflowHealth/optimizationScore}"
+                                                    valueColor="Good"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="SLA Compliance"
+                                    subheader="Meeting targets"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <mc:RadialMicroChart
+                                                    size="L"
+                                                    percentage="{dashboard>/workflowHealth/slaCompliance}"
+                                                    valueColor="Good"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                            </l:content>
+                        </l:Grid>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button text="Close" press=".onCloseDashboard"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Refresh Data"
+                icon="sap-icon://refresh"
+                press=".onRefreshDashboard"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

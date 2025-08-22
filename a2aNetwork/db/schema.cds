@@ -733,6 +733,168 @@ entity ExtensionFields : managed {
 }
 
 // ================================
+// AGENT 2 - AI PREPARATION ENTITIES
+// ================================
+
+// AI Preparation Tasks with performance indexes
+@cds.persistence.index: [
+    { elements: ['status', 'createdAt'] },
+    { elements: ['modelType', 'dataType'] },
+    { elements: ['priority', 'status'] }
+]
+@Analytics: { DCL: 'AI_PREP_TASK' }
+@UI.HeaderInfo: {
+    TypeName: 'AI Preparation Task',
+    TypeNamePlural: 'AI Preparation Tasks',
+    Title: { Value: taskName }
+}
+entity AIPreparationTasks : cuid, managed {
+    @Common.Label: 'Task Name'
+    @Search.defaultSearchElement: true
+    taskName        : String(100) @mandatory;
+    
+    @Common.Label: 'Description'
+    @UI.MultiLineText: true
+    description     : String(1000);
+    
+    @Common.Label: 'Dataset Name'
+    datasetName     : String(100) @mandatory;
+    
+    @Common.Label: 'Model Type'
+    modelType       : String(50) @mandatory enum { 
+        CLASSIFICATION; REGRESSION; CLUSTERING; EMBEDDING; 
+        LLM; TIME_SERIES; RECOMMENDATION; ANOMALY; 
+    };
+    
+    @Common.Label: 'Data Type'
+    dataType        : String(50) @mandatory enum { 
+        TABULAR; TEXT; IMAGE; AUDIO; VIDEO; TIME_SERIES; GRAPH; 
+    };
+    
+    @Common.Label: 'ML Framework'
+    framework       : String(50) default 'TENSORFLOW' enum { 
+        TENSORFLOW; PYTORCH; SCIKIT_LEARN; XGBOOST; HUGGINGFACE; AUTO; 
+    };
+    
+    @Common.Label: 'Train/Test Split Ratio'
+    @assert.range: [50, 90]
+    splitRatio      : Integer default 80;
+    
+    @Common.Label: 'Validation Strategy'
+    validationStrategy : String(20) default 'KFOLD' enum { KFOLD; HOLDOUT; };
+    
+    @Common.Label: 'Random Seed'
+    randomSeed      : Integer default 42;
+    
+    @Common.Label: 'Feature Selection Enabled'
+    featureSelection : Boolean default true;
+    
+    @Common.Label: 'Auto Feature Engineering'
+    autoFeatureEngineering : Boolean default true;
+    
+    @Common.Label: 'Optimization Metric'
+    optimizationMetric : String(20) default 'AUTO' enum { 
+        AUTO; ACCURACY; AUC; F1; MSE; MAE; PERPLEXITY; 
+    };
+    
+    @Common.Label: 'Use GPU Acceleration'
+    useGPU          : Boolean default false;
+    
+    @Common.Label: 'Enable Distributed Processing'
+    distributed     : Boolean default false;
+    
+    @Common.Label: 'Memory Optimized'
+    memoryOptimized : Boolean default false;
+    
+    @Common.Label: 'Cache Intermediate Results'
+    cacheResults    : Boolean default true;
+    
+    @Common.Label: 'Task Status'
+    status          : String(20) default 'DRAFT' enum { 
+        DRAFT; PENDING; RUNNING; COMPLETED; FAILED; PAUSED; 
+    };
+    
+    @Common.Label: 'Priority'
+    priority        : String(10) default 'MEDIUM' enum { LOW; MEDIUM; HIGH; URGENT; };
+    
+    @Common.Label: 'Progress Percentage'
+    @assert.range: [0, 100]
+    progressPercent : Integer default 0;
+    
+    @Common.Label: 'Current Stage'
+    currentStage    : String(50);
+    
+    @Common.Label: 'Processing Time (seconds)'
+    processingTime  : Integer;
+    
+    @Common.Label: 'Results Summary'
+    @Core.MediaType: 'application/json'
+    resultsSummary  : LargeString;
+    
+    @Common.Label: 'Error Details'
+    errorDetails    : String(1000);
+    
+    @Common.Label: 'Started At'
+    startedAt       : DateTime;
+    
+    @Common.Label: 'Completed At'
+    completedAt     : DateTime;
+    
+    @Common.Label: 'Agent'
+    agent           : Association to Agents;
+    
+    @Common.Label: 'Features'
+    features        : Composition of many AIPreparationFeatures on features.task = $self;
+}
+
+// AI Preparation Features
+entity AIPreparationFeatures : cuid {
+    @Common.Label: 'Task'
+    task            : Association to AIPreparationTasks;
+    
+    @Common.Label: 'Feature Name'
+    name            : String(100) @mandatory;
+    
+    @Common.Label: 'Feature Type'
+    type            : String(20) enum { NUMERICAL; CATEGORICAL; TEXT; DATETIME; BOOLEAN; };
+    
+    @Common.Label: 'Data Type'
+    dataType        : String(20);
+    
+    @Common.Label: 'Is Target'
+    isTarget        : Boolean default false;
+    
+    @Common.Label: 'Is Selected'
+    isSelected      : Boolean default true;
+    
+    @Common.Label: 'Importance Score'
+    @assert.range: [0.0, 1.0]
+    importance      : Decimal(5,4);
+    
+    @Common.Label: 'Missing Percentage'
+    @assert.range: [0.0, 100.0]
+    missingPercent  : Decimal(5,2);
+    
+    @Common.Label: 'Unique Values'
+    uniqueValues    : Integer;
+    
+    @Common.Label: 'Mean Value'
+    meanValue       : Decimal(15,6);
+    
+    @Common.Label: 'Standard Deviation'
+    stdDev          : Decimal(15,6);
+    
+    @Common.Label: 'Min Value'
+    minValue        : Decimal(15,6);
+    
+    @Common.Label: 'Max Value'
+    maxValue        : Decimal(15,6);
+    
+    @Common.Label: 'Feature Engineering Applied'
+    engineeringApplied : String(500);
+}
+
+// ================================
 // REPUTATION SYSTEM ENTITIES
 // ================================
 
@@ -965,6 +1127,401 @@ entity ReputationAnalytics : cuid {
     @Common.Label: 'Service Rating Average'
     @Analytics.Measure: true
     serviceRatingAverage  : Decimal(3,2);
+}
+
+// ================================
+// AGENT 1 - DATA STANDARDIZATION ENTITIES
+// ================================
+
+// Data Standardization Tasks with performance indexes
+@cds.persistence.index: [
+    { elements: ['status', 'createdAt'] },
+    { elements: ['sourceFormat', 'targetFormat'] },
+    { elements: ['priority', 'status'] }
+]
+@Analytics: { DCL: 'STANDARDIZATION_TASK' }
+@UI.HeaderInfo: {
+    TypeName: 'Standardization Task',
+    TypeNamePlural: 'Standardization Tasks',
+    Title: { Value: taskName }
+}
+entity StandardizationTasks : cuid, managed {
+    @Common.Label: 'Task Name'
+    @Search.defaultSearchElement: true
+    taskName           : String(100) @mandatory;
+    
+    @Common.Label: 'Description'
+    @UI.MultiLineText: true
+    description        : String(1000);
+    
+    @Common.Label: 'Source Format'
+    sourceFormat       : String(50) @mandatory enum { 
+        CSV; JSON; XML; EXCEL; FIXED_WIDTH; AVRO; PARQUET; 
+    };
+    
+    @Common.Label: 'Target Format'
+    targetFormat       : String(50) @mandatory enum { 
+        CSV; JSON; XML; PARQUET; AVRO; 
+    };
+    
+    @Common.Label: 'Schema Template ID'
+    schemaTemplateId   : String(50) enum { 
+        RETAIL_PRODUCT; FINANCIAL_TRANSACTION; CUSTOMER_DATA; INVENTORY; SALES_ORDER; 
+    };
+    
+    @Common.Label: 'Schema Validation'
+    schemaValidation   : Boolean default true;
+    
+    @Common.Label: 'Data Type Validation'
+    dataTypeValidation : Boolean default true;
+    
+    @Common.Label: 'Format Validation'
+    formatValidation   : Boolean default true;
+    
+    @Common.Label: 'Processing Mode'
+    processingMode     : String(20) default 'FULL' enum { FULL; BATCH; };
+    
+    @Common.Label: 'Batch Size'
+    batchSize          : Integer default 1000;
+    
+    @Common.Label: 'Task Status'
+    status             : String(20) default 'DRAFT' enum { 
+        DRAFT; PENDING; RUNNING; COMPLETED; FAILED; PAUSED; 
+    };
+    
+    @Common.Label: 'Priority'
+    priority           : String(10) default 'MEDIUM' enum { LOW; MEDIUM; HIGH; URGENT; };
+    
+    @Common.Label: 'Progress Percentage'
+    @assert.range: [0, 100]
+    progressPercent    : Integer default 0;
+    
+    @Common.Label: 'Current Stage'
+    currentStage       : String(50);
+    
+    @Common.Label: 'Processing Time (seconds)'
+    processingTime     : Integer;
+    
+    @Common.Label: 'Records Processed'
+    recordsProcessed   : Integer default 0;
+    
+    @Common.Label: 'Records Total'
+    recordsTotal       : Integer default 0;
+    
+    @Common.Label: 'Error Count'
+    errorCount         : Integer default 0;
+    
+    @Common.Label: 'Validation Results'
+    @Core.MediaType: 'application/json'
+    validationResults  : LargeString;
+    
+    @Common.Label: 'Error Details'
+    errorDetails       : String(1000);
+    
+    @Common.Label: 'Started At'
+    startedAt          : DateTime;
+    
+    @Common.Label: 'Completed At'
+    completedAt        : DateTime;
+    
+    @Common.Label: 'Agent'
+    agent              : Association to Agents;
+    
+    @Common.Label: 'Standardization Rules'
+    rules              : Composition of many StandardizationRules on rules.task = $self;
+}
+
+// Standardization Rules
+entity StandardizationRules : cuid {
+    @Common.Label: 'Task'
+    task           : Association to StandardizationTasks;
+    
+    @Common.Label: 'Rule Name'
+    name           : String(100) @mandatory;
+    
+    @Common.Label: 'Rule Type'
+    type           : String(20) enum { 
+        FIELD_MAPPING; DATA_TYPE_CONVERSION; VALUE_TRANSFORMATION; 
+        VALIDATION_RULE; ENRICHMENT_RULE; 
+    };
+    
+    @Common.Label: 'Source Field'
+    sourceField    : String(100);
+    
+    @Common.Label: 'Target Field'
+    targetField    : String(100);
+    
+    @Common.Label: 'Transformation'
+    transformation : String(500);
+    
+    @Common.Label: 'Is Active'
+    isActive       : Boolean default true;
+    
+    @Common.Label: 'Execution Order'
+    executionOrder : Integer;
+}
+
+// ================================
+// AGENT 3 - VECTOR PROCESSING ENTITIES
+// ================================
+
+// Vector Processing Tasks with performance indexes
+@cds.persistence.index: [
+    { elements: ['status', 'createdAt'] },
+    { elements: ['dataType', 'embeddingModel'] },
+    { elements: ['priority', 'status'] }
+]
+@Analytics: { DCL: 'VECTOR_TASK' }
+@UI.HeaderInfo: {
+    TypeName: 'Vector Processing Task',
+    TypeNamePlural: 'Vector Processing Tasks',
+    Title: { Value: taskName }
+}
+entity VectorProcessingTasks : cuid, managed {
+    @Common.Label: 'Task Name'
+    @Search.defaultSearchElement: true
+    taskName           : String(100) @mandatory;
+    
+    @Common.Label: 'Description'
+    @UI.MultiLineText: true
+    description        : String(1000);
+    
+    @Common.Label: 'Data Source'
+    dataSource         : String(500) @mandatory;
+    
+    @Common.Label: 'Data Type'
+    dataType           : String(50) @mandatory enum { 
+        TEXT; IMAGE; AUDIO; VIDEO; DOCUMENT; CODE; 
+    };
+    
+    @Common.Label: 'Embedding Model'
+    embeddingModel     : String(100) @mandatory;
+    
+    @Common.Label: 'Model Provider'
+    modelProvider      : String(50) default 'OPENAI' enum { 
+        OPENAI; HUGGINGFACE; COHERE; ANTHROPIC; GOOGLE; CUSTOM; 
+    };
+    
+    @Common.Label: 'Vector Database'
+    vectorDatabase     : String(50) default 'PINECONE' enum { 
+        PINECONE; WEAVIATE; MILVUS; CHROMA; QDRANT; PGVECTOR; 
+    };
+    
+    @Common.Label: 'Index Type'
+    indexType          : String(20) default 'HNSW' enum { 
+        HNSW; IVF; FLAT; LSH; 
+    };
+    
+    @Common.Label: 'Distance Metric'
+    distanceMetric     : String(20) default 'COSINE' enum { 
+        COSINE; EUCLIDEAN; DOT_PRODUCT; MANHATTAN; 
+    };
+    
+    @Common.Label: 'Vector Dimensions'
+    @assert.range: [128, 4096]
+    dimensions         : Integer default 1536;
+    
+    @Common.Label: 'Chunk Size'
+    @assert.range: [100, 8192]
+    chunkSize          : Integer default 512;
+    
+    @Common.Label: 'Chunk Overlap'
+    @assert.range: [0, 200]
+    chunkOverlap       : Integer default 50;
+    
+    @Common.Label: 'Enable Normalization'
+    normalization      : Boolean default true;
+    
+    @Common.Label: 'Use GPU Acceleration'
+    useGPU             : Boolean default false;
+    
+    @Common.Label: 'Batch Size'
+    batchSize          : Integer default 100;
+    
+    @Common.Label: 'Task Status'
+    status             : String(20) default 'DRAFT' enum { 
+        DRAFT; PENDING; RUNNING; COMPLETED; FAILED; PAUSED; 
+    };
+    
+    @Common.Label: 'Priority'
+    priority           : String(10) default 'MEDIUM' enum { LOW; MEDIUM; HIGH; URGENT; };
+    
+    @Common.Label: 'Progress Percentage'
+    @assert.range: [0, 100]
+    progressPercent    : Integer default 0;
+    
+    @Common.Label: 'Current Stage'
+    currentStage       : String(50);
+    
+    @Common.Label: 'Processing Time (seconds)'
+    processingTime     : Integer;
+    
+    @Common.Label: 'Vectors Generated'
+    vectorsGenerated   : Integer default 0;
+    
+    @Common.Label: 'Chunks Processed'
+    chunksProcessed    : Integer default 0;
+    
+    @Common.Label: 'Total Chunks'
+    totalChunks        : Integer default 0;
+    
+    @Common.Label: 'Collection Name'
+    collectionName     : String(100);
+    
+    @Common.Label: 'Index Size (MB)'
+    indexSize          : Decimal(10,2) default 0;
+    
+    @Common.Label: 'Error Details'
+    errorDetails       : String(1000);
+    
+    @Common.Label: 'Started At'
+    startedAt          : DateTime;
+    
+    @Common.Label: 'Completed At'
+    completedAt        : DateTime;
+    
+    @Common.Label: 'Agent'
+    agent              : Association to Agents;
+    
+    @Common.Label: 'Vector Collection'
+    collection         : Association to VectorCollections;
+    
+    @Common.Label: 'Similarity Results'
+    similarityResults  : Composition of many VectorSimilarityResults on similarityResults.task = $self;
+}
+
+// Vector Collections
+entity VectorCollections : cuid, managed {
+    @Common.Label: 'Collection Name'
+    @Search.defaultSearchElement: true
+    name               : String(100) @mandatory @assert.unique;
+    
+    @Common.Label: 'Description'
+    @UI.MultiLineText: true
+    description        : String(1000);
+    
+    @Common.Label: 'Vector Database'
+    vectorDatabase     : String(50) @mandatory;
+    
+    @Common.Label: 'Embedding Model'
+    embeddingModel     : String(100) @mandatory;
+    
+    @Common.Label: 'Vector Dimensions'
+    dimensions         : Integer @mandatory;
+    
+    @Common.Label: 'Distance Metric'
+    distanceMetric     : String(20) @mandatory;
+    
+    @Common.Label: 'Index Type'
+    indexType          : String(20) @mandatory;
+    
+    @Common.Label: 'Total Vectors'
+    totalVectors       : Integer default 0;
+    
+    @Common.Label: 'Index Size (MB)'
+    indexSize          : Decimal(10,2) default 0;
+    
+    @Common.Label: 'Is Active'
+    isActive           : Boolean default true;
+    
+    @Common.Label: 'Is Optimized'
+    isOptimized        : Boolean default false;
+    
+    @Common.Label: 'Last Optimized'
+    lastOptimized      : DateTime;
+    
+    @Common.Label: 'Metadata Schema'
+    @Core.MediaType: 'application/json'
+    metadataSchema     : LargeString;
+    
+    @Common.Label: 'Processing Tasks'
+    tasks              : Composition of many VectorProcessingTasks on tasks.collection = $self;
+}
+
+// Vector Similarity Search Results
+entity VectorSimilarityResults : cuid {
+    @Common.Label: 'Task'
+    task               : Association to VectorProcessingTasks;
+    
+    @Common.Label: 'Query Text'
+    queryText          : String(1000);
+    
+    @Common.Label: 'Query Vector'
+    @Core.MediaType: 'application/json'
+    queryVector        : LargeString;
+    
+    @Common.Label: 'Result Vector ID'
+    resultVectorId     : String(100);
+    
+    @Common.Label: 'Similarity Score'
+    @assert.range: [0.0, 1.0]
+    similarityScore    : Decimal(5,4);
+    
+    @Common.Label: 'Distance'
+    distance           : Decimal(10,6);
+    
+    @Common.Label: 'Result Content'
+    @UI.MultiLineText: true
+    resultContent      : String(2000);
+    
+    @Common.Label: 'Result Metadata'
+    @Core.MediaType: 'application/json'
+    resultMetadata     : LargeString;
+    
+    @Common.Label: 'Rank'
+    rank               : Integer;
+    
+    @Common.Label: 'Search Timestamp'
+    searchTimestamp    : DateTime;
+}
+
+// Vector Processing Jobs (for batch operations)
+entity VectorProcessingJobs : cuid, managed {
+    @Common.Label: 'Job Name'
+    jobName            : String(100) @mandatory;
+    
+    @Common.Label: 'Job Type'
+    jobType            : String(50) enum { 
+        BATCH_EMBEDDING; INDEX_OPTIMIZATION; SIMILARITY_SEARCH; CLUSTERING; 
+    };
+    
+    @Common.Label: 'Status'
+    status             : String(20) default 'PENDING' enum { 
+        PENDING; RUNNING; COMPLETED; FAILED; CANCELLED; 
+    };
+    
+    @Common.Label: 'Task IDs'
+    @Core.MediaType: 'application/json'
+    taskIds            : LargeString;
+    
+    @Common.Label: 'Progress Percentage'
+    @assert.range: [0, 100]
+    progressPercent    : Integer default 0;
+    
+    @Common.Label: 'Estimated Vectors'
+    estimatedVectors   : Integer;
+    
+    @Common.Label: 'Use GPU'
+    useGPU             : Boolean default false;
+    
+    @Common.Label: 'Parallel Processing'
+    parallel           : Boolean default true;
+    
+    @Common.Label: 'Priority'
+    priority           : String(10) default 'MEDIUM';
+    
+    @Common.Label: 'Started At'
+    startedAt          : DateTime;
+    
+    @Common.Label: 'Completed At'
+    completedAt        : DateTime;
+    
+    @Common.Label: 'Error Details'
+    errorDetails       : String(1000);
+    
+    @Common.Label: 'Result Data'
+    @Core.MediaType: 'application/json'
+    resultData         : LargeString;
 }
 
 // Business Validations (implemented in service layer)

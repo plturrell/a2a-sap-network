@@ -1,0 +1,212 @@
+{
+    "_version": "1.60.0",
+    "sap.app": {
+        "id": "a2a.network.agent4",
+        "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "title": "{{agent4Title}}",
+        "description": "{{agent4Description}}",
+        "applicationVersion": {
+            "version": "1.0.0"
+        },
+        "dataSources": {
+            "mainService": {
+                "uri": "/a2a/agent4/v1/odata/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
+            }
+        }
+    },
+    "sap.ui5": {
+        "dependencies": {
+            "minUI5Version": "1.120.0",
+            "libs": {
+                "sap.fe.templates": {},
+                "sap.f": {},
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.uxap": {},
+                "sap.viz": {},
+                "sap.ui.table": {},
+                "sap.ui.comp": {},
+                "sap.suite.ui.microchart": {}
+            }
+        },
+        "models": {
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
+                "settings": {
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
+                }
+            },
+            "@i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "uri": "i18n/i18n.properties"
+            }
+        },
+        "routing": {
+            "routes": [
+                {
+                    "name": "CalculationValidationTasksList",
+                    "pattern": ":?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "CalculationValidationTasksList",
+                        "options": {
+                            "settings": {
+                                "entitySet": "CalculationValidationTasks",
+                                "variantManagement": "Page",
+                                "initialLoad": true,
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.LineItem": {
+                                        "tableSettings": {
+                                            "type": "ResponsiveTable",
+                                            "selectionMode": "Multi"
+                                        },
+                                        "actions": {
+                                            "CreateValidationTask": {
+                                                "press": ".extension.a2a.network.agent4.ext.controller.ListReportExt.onCreateValidationTask",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Create Validation Task"
+                                            },
+                                            "FormulaBuilder": {
+                                                "press": ".extension.a2a.network.agent4.ext.controller.ListReportExt.onFormulaBuilder",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Formula Builder"
+                                            },
+                                            "BatchValidation": {
+                                                "press": ".extension.a2a.network.agent4.ext.controller.ListReportExt.onBatchValidation",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": true,
+                                                "text": "Batch Validation"
+                                            },
+                                            "CalculationTemplates": {
+                                                "press": ".extension.a2a.network.agent4.ext.controller.ListReportExt.onCalculationTemplates",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Templates"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "CalculationValidationTaskDetails",
+                    "pattern": "CalculationValidationTasks({key}):?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "CalculationValidationTaskDetails",
+                        "options": {
+                            "settings": {
+                                "entitySet": "CalculationValidationTasks",
+                                "navigation": {
+                                    "Formulas": {
+                                        "detail": {
+                                            "route": "FormulaDetails"
+                                        }
+                                    },
+                                    "ValidationErrors": {
+                                        "detail": {
+                                            "route": "ValidationErrorDetails"
+                                        }
+                                    }
+                                },
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.HeaderInfo": {
+                                        "actions": {
+                                            "StartValidation": {
+                                                "press": ".extension.a2a.network.agent4.ext.controller.ObjectPageExt.onStartValidation",
+                                                "visible": "{= ${validationStatus} === 'DRAFT' || ${validationStatus} === 'PAUSED' }",
+                                                "enabled": true,
+                                                "text": "Start Validation"
+                                            },
+                                            "ValidateFormulas": {
+                                                "press": ".extension.a2a.network.agent4.ext.controller.ObjectPageExt.onValidateFormulas",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Validate Formulas"
+                                            },
+                                            "RunBenchmark": {
+                                                "press": ".extension.a2a.network.agent4.ext.controller.ObjectPageExt.onRunBenchmark",
+                                                "visible": "{= ${validationStatus} === 'COMPLETED' }",
+                                                "enabled": true,
+                                                "text": "Benchmark"
+                                            },
+                                            "GenerateReport": {
+                                                "press": ".extension.a2a.network.agent4.ext.controller.ObjectPageExt.onGenerateReport",
+                                                "visible": "{= ${validationStatus} === 'COMPLETED' }",
+                                                "enabled": true,
+                                                "text": "Generate Report"
+                                            },
+                                            "OptimizeCalculations": {
+                                                "press": ".extension.a2a.network.agent4.ext.controller.ObjectPageExt.onOptimizeCalculations",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Optimize"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "CalculationTemplates",
+                    "pattern": "calculation-templates:?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "CalculationTemplatesList",
+                        "options": {
+                            "settings": {
+                                "entitySet": "CalculationTemplates",
+                                "variantManagement": "Page"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "FormulaBuilder",
+                    "pattern": "formula-builder",
+                    "target": {
+                        "type": "Component",
+                        "name": "FormulaBuilder"
+                    }
+                }
+            ]
+        },
+        "extends": {
+            "extensions": {
+                "sap.ui.controllerExtensions": {
+                    "sap.fe.templates.ListReport.ListReportController": {
+                        "controllerName": "a2a.network.agent4.ext.controller.ListReportExt"
+                    },
+                    "sap.fe.templates.ObjectPage.ObjectPageController": {
+                        "controllerName": "a2a.network.agent4.ext.controller.ObjectPageExt"
+                    }
+                }
+            }
+        }
+    },
+    "sap.fiori": {
+        "registrationIds": ["F0001A4"],
+        "archeType": "transactional"
+    },
+    "sap.fe": {
+        "type": "default"
+    }
+}

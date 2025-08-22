@@ -1,0 +1,109 @@
+{
+  "sap.flp": {
+    "version": "1.0.0",
+    "config": {
+      "ushellConfig": {
+        "defaultRenderer": "fiori2",
+        "renderers": {
+          "fiori2": {
+            "componentData": {
+              "config": {
+                "enableSearch": true,
+                "enablePersonalization": true,
+                "enableUserActivityLog": true,
+                "enableAbout": true,
+                "enableHelp": true,
+                "preloadLibrariesForRootIntent": true,
+                "enableNotificationsUI": true,
+                "enableRecentActivity": true,
+                "enableBackGroundShapes": true,
+                "theme": "sap_horizon",
+                "themes": {
+                  "sap_horizon": {
+                    "displayName": "SAP Horizon"
+                  },
+                  "sap_horizon_dark": {
+                    "displayName": "SAP Horizon Dark"
+                  },
+                  "sap_horizon_hcb": {
+                    "displayName": "High Contrast Black"
+                  },
+                  "sap_horizon_hcw": {
+                    "displayName": "High Contrast White"
+                  }
+                },
+                "applications": {
+                  "Shell-home": {
+                    "enableEasyAccess": true,
+                    "enableHideGroups": true,
+                    "enablePersonalization": true,
+                    "enableTagFiltering": true,
+                    "enableCatalogSearch": true,
+                    "enableCatalogSelection": true,
+                    "disableSortedCatalog": false,
+                    "enableActionModeMenuButton": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "services": {
+          "Personalization": {
+            "config": {
+              "appVariantStorage": {
+                "enabled": true,
+                "adapter": "LrepConnector"
+              }
+            }
+          },
+          "CommonDataModel": {
+            "adapter": {
+              "module": "sap.ushell.adapters.cdm.v3.CommonDataModelAdapter",
+              "config": {
+                "cdmSiteUrl": "/sap/bc/ui2/cdm3/site"
+              }
+            }
+          },
+          "ClientSideTargetResolution": {
+            "adapter": {
+              "module": "sap.ushell.adapters.cdm.v3.ClientSideTargetResolutionAdapter",
+              "config": {
+                "siteDataUrl": "/sap/bc/ui2/cdm3/sitedata"
+              }
+            }
+          },
+          "UserInfo": {
+            "adapter": {
+              "module": "sap.ushell.adapters.cdm.v3.UserInfoAdapter",
+              "config": {
+                "userInfoUrl": "/sap/bc/ui2/cdm3/userinfo"
+              }
+            }
+          },
+          "Container": {
+            "adapter": {
+              "config": {
+                "siteDataUrl": "/sap/bc/ui2/cdm3/sitedata",
+                "cdmSiteUrl": "/sap/bc/ui2/cdm3/site",
+                "userInfoUrl": "/sap/bc/ui2/cdm3/userinfo"
+              }
+            }
+          }
+        }
+      },
+      "ui5": {
+        "libs": {
+          "sap.ushell": {
+            "url": "/sap/bc/ui5_ui5/ui2/ushell",
+            "lazy": false
+          },
+          "sap.ui.core": {
+            "url": "/sap/bc/ui5_ui5/sap/ui_core",
+            "lazy": false
+          }
+        }
+      }
+    }
+  }
+}

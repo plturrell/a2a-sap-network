@@ -1,0 +1,138 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        id="createStandardizationDialog"
+        title="Create Standardization Task"
+        contentWidth="50%"
+        resizable="true">
+        
+        <content>
+            <form:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                labelSpanXL="3"
+                labelSpanL="3"
+                labelSpanM="12"
+                labelSpanS="12"
+                adjustLabelSpan="false"
+                columnsXL="1"
+                columnsL="1"
+                columnsM="1">
+                
+                <form:content>
+                    <Label text="Task Name" required="true"/>
+                    <Input 
+                        id="taskNameInput"
+                        value="{create>/taskName}"
+                        placeholder="Enter task name"
+                        liveChange=".onTaskNameChange"/>
+                    
+                    <Label text="Description"/>
+                    <TextArea 
+                        value="{create>/description}"
+                        rows="2"
+                        placeholder="Describe the standardization task"/>
+                    
+                    <Label text="Source Format" required="true"/>
+                    <Select 
+                        id="sourceFormatSelect"
+                        selectedKey="{create>/sourceFormat}"
+                        change=".onSourceFormatChange">
+                        <items>
+                            <core:Item key="" text="Select format..."/>
+                            <core:Item key="CSV" text="CSV"/>
+                            <core:Item key="JSON" text="JSON"/>
+                            <core:Item key="XML" text="XML"/>
+                            <core:Item key="EXCEL" text="Excel"/>
+                            <core:Item key="FIXED_WIDTH" text="Fixed Width"/>
+                            <core:Item key="AVRO" text="Avro"/>
+                            <core:Item key="PARQUET" text="Parquet"/>
+                        </items>
+                    </Select>
+                    
+                    <Label text="Target Format" required="true"/>
+                    <Select 
+                        selectedKey="{create>/targetFormat}"
+                        change=".onTargetFormatChange">
+                        <items>
+                            <core:Item key="" text="Select format..."/>
+                            <core:Item key="CSV" text="CSV"/>
+                            <core:Item key="JSON" text="JSON"/>
+                            <core:Item key="XML" text="XML"/>
+                            <core:Item key="PARQUET" text="Parquet"/>
+                            <core:Item key="AVRO" text="Avro"/>
+                        </items>
+                    </Select>
+                    
+                    <Label text="Schema Template"/>
+                    <HBox>
+                        <Select 
+                            selectedKey="{create>/schemaTemplateId}"
+                            width="100%">
+                            <items>
+                                <core:Item key="" text="No template"/>
+                                <core:Item key="RETAIL_PRODUCT" text="Retail Product"/>
+                                <core:Item key="FINANCIAL_TRANSACTION" text="Financial Transaction"/>
+                                <core:Item key="CUSTOMER_DATA" text="Customer Data"/>
+                                <core:Item key="INVENTORY" text="Inventory"/>
+                                <core:Item key="SALES_ORDER" text="Sales Order"/>
+                            </items>
+                        </Select>
+                        <Button 
+                            icon="sap-icon://upload"
+                            tooltip="Upload custom template"
+                            press=".onUploadTemplate"/>
+                    </HBox>
+                    
+                    <Label text="Validation Settings"/>
+                    <VBox>
+                        <CheckBox 
+                            text="Enable schema validation"
+                            selected="{create>/schemaValidation}"/>
+                        <CheckBox 
+                            text="Enable data type validation"
+                            selected="{create>/dataTypeValidation}"/>
+                        <CheckBox 
+                            text="Enable format validation"
+                            selected="{create>/formatValidation}"/>
+                    </VBox>
+                    
+                    <Label text="Processing Options"/>
+                    <VBox>
+                        <RadioButtonGroup selectedIndex="{create>/processingMode}">
+                            <RadioButton text="Process entire file"/>
+                            <RadioButton text="Process in batches"/>
+                        </RadioButtonGroup>
+                        <HBox visible="{= ${create>/processingMode} === 1 }">
+                            <Label text="Batch size:" width="100px"/>
+                            <Input 
+                                value="{create>/batchSize}"
+                                type="Number"
+                                width="100px"/>
+                        </HBox>
+                    </VBox>
+                </form:content>
+            </form:SimpleForm>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelCreate"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Create"
+                type="Emphasized"
+                press=".onConfirmCreate"
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/sourceFormat} &amp;&amp; ${create>/targetFormat} }"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

@@ -1,0 +1,177 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz.ui5.controls"
+    xmlns:l="sap.ui.layout"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="dataProfilerDialog"
+        title="Data Profiler - AI Readiness Assessment"
+        contentWidth="90%"
+        contentHeight="90%"
+        resizable="true">
+        
+        <content>
+            <IconTabBar id="profilerTabBar" expandable="false">
+                
+                <!-- Overview Tab -->
+                <items>
+                    <IconTabFilter text="Overview" icon="sap-icon://chart">
+                        <l:Grid defaultSpan="L6 M12 S12">
+                            <l:content>
+                                <!-- Dataset Summary Card -->
+                                <Card>
+                                    <header>
+                                        <CardHeader title="Dataset Summary" subtitle="Available datasets"/>
+                                    </header>
+                                    <content>
+                                        <List items="{profile>/datasets}">
+                                            <CustomListItem>
+                                                <HBox alignItems="Center" justifyContent="SpaceBetween">
+                                                    <VBox>
+                                                        <Title text="{profile>name}" level="H4"/>
+                                                        <Label text="Records: {profile>recordCount} | Features: {profile>featureCount}"/>
+                                                    </VBox>
+                                                    <mc:RadialMicroChart
+                                                        percentage="{profile>aiReadinessScore}"
+                                                        press=".onDatasetPress"/>
+                                                </HBox>
+                                            </CustomListItem>
+                                        </List>
+                                    </content>
+                                </Card>
+                                
+                                <!-- Data Quality Card -->
+                                <Card>
+                                    <header>
+                                        <CardHeader title="Overall Data Quality" subtitle="Quality metrics"/>
+                                    </header>
+                                    <content>
+                                        <VBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Completeness"/>
+                                                <ObjectStatus 
+                                                    text="{profile>/dataQuality/completeness}%"
+                                                    state="{= ${profile>/dataQuality/completeness} > 90 ? 'Success' : ${profile>/dataQuality/completeness} > 70 ? 'Warning' : 'Error' }"/>
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Consistency"/>
+                                                <ObjectStatus 
+                                                    text="{profile>/dataQuality/consistency}%"
+                                                    state="{= ${profile>/dataQuality/consistency} > 90 ? 'Success' : ${profile>/dataQuality/consistency} > 70 ? 'Warning' : 'Error' }"/>
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Uniqueness"/>
+                                                <ObjectStatus 
+                                                    text="{profile>/dataQuality/uniqueness}%"
+                                                    state="{= ${profile>/dataQuality/uniqueness} > 90 ? 'Success' : ${profile>/dataQuality/uniqueness} > 70 ? 'Warning' : 'Error' }"/>
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Validity"/>
+                                                <ObjectStatus 
+                                                    text="{profile>/dataQuality/validity}%"
+                                                    state="{= ${profile>/dataQuality/validity} > 90 ? 'Success' : ${profile>/dataQuality/validity} > 70 ? 'Warning' : 'Error' }"/>
+                                            </HBox>
+                                        </VBox>
+                                    </content>
+                                </Card>
+                            </l:content>
+                        </l:Grid>
+                    </IconTabFilter>
+                    
+                    <!-- Statistical Analysis Tab -->
+                    <IconTabFilter text="Statistical Analysis" icon="sap-icon://line-chart">
+                        <viz:VizFrame
+                            id="statisticsChart"
+                            height="400px"
+                            width="100%"
+                            vizType="column">
+                        </viz:VizFrame>
+                        
+                        <Table
+                            items="{profile>/statistics/features}">
+                            <columns>
+                                <Column>
+                                    <Text text="Feature"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Type"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Mean"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Std Dev"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Min"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Max"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Missing %"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Cardinality"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{profile>name}"/>
+                                        <Text text="{profile>type}"/>
+                                        <Text text="{profile>mean}"/>
+                                        <Text text="{profile>stdDev}"/>
+                                        <Text text="{profile>min}"/>
+                                        <Text text="{profile>max}"/>
+                                        <ObjectStatus 
+                                            text="{profile>missingPercent}%"
+                                            state="{= ${profile>missingPercent} > 20 ? 'Error' : ${profile>missingPercent} > 5 ? 'Warning' : 'Success' }"/>
+                                        <Text text="{profile>cardinality}"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </IconTabFilter>
+                    
+                    <!-- AI Recommendations Tab -->
+                    <IconTabFilter text="AI Recommendations" icon="sap-icon://lightbulb">
+                        <List
+                            headerText="Recommended Actions for AI/ML Readiness"
+                            items="{profile>/recommendations}">
+                            <FeedListItem
+                                icon="{= ${profile>priority} === 'HIGH' ? 'sap-icon://alert' : ${profile>priority} === 'MEDIUM' ? 'sap-icon://warning' : 'sap-icon://hint' }"
+                                iconActive="false"
+                                sender="{profile>category}"
+                                text="{profile>recommendation}"
+                                info="{profile>impact}"
+                                timestamp="{profile>priority}">
+                            </FeedListItem>
+                        </List>
+                    </IconTabFilter>
+                    
+                    <!-- Data Distribution Tab -->
+                    <IconTabFilter text="Data Distribution" icon="sap-icon://bar-chart">
+                        <ScrollContainer height="100%" width="100%" vertical="true">
+                            <l:Grid defaultSpan="L6 M12 S12" id="distributionGrid">
+                                <!-- Distribution charts will be dynamically added here -->
+                            </l:Grid>
+                        </ScrollContainer>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button text="Export Report" icon="sap-icon://excel-attachment" press=".onExportProfile"/>
+        </beginButton>
+        
+        <endButton>
+            <Button text="Close" press=".onCloseProfiler"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

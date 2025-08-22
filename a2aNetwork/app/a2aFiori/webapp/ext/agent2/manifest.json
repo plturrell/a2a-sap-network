@@ -1,0 +1,193 @@
+{
+    "_version": "1.60.0",
+    "sap.app": {
+        "id": "a2a.network.agent2",
+        "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "title": "{{agent2Title}}",
+        "description": "{{agent2Description}}",
+        "applicationVersion": {
+            "version": "1.0.0"
+        },
+        "dataSources": {
+            "mainService": {
+                "uri": "/a2a/agent2/v1/odata/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
+            }
+        }
+    },
+    "sap.ui5": {
+        "dependencies": {
+            "minUI5Version": "1.120.0",
+            "libs": {
+                "sap.fe.templates": {},
+                "sap.f": {},
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.uxap": {},
+                "sap.viz": {},
+                "sap.suite.ui.microchart": {},
+                "sap.ui.comp": {}
+            }
+        },
+        "models": {
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
+                "settings": {
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
+                }
+            },
+            "@i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "uri": "i18n/i18n.properties"
+            }
+        },
+        "routing": {
+            "routes": [
+                {
+                    "name": "AIPreparationTasksList",
+                    "pattern": ":?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "AIPreparationTasksList",
+                        "options": {
+                            "settings": {
+                                "entitySet": "AIPreparationTasks",
+                                "variantManagement": "Page",
+                                "initialLoad": true,
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.LineItem": {
+                                        "tableSettings": {
+                                            "type": "ResponsiveTable",
+                                            "selectionMode": "Multi"
+                                        },
+                                        "actions": {
+                                            "CreateAITask": {
+                                                "press": ".extension.a2a.network.agent2.ext.controller.ListReportExt.onCreateAITask",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Create AI Task"
+                                            },
+                                            "DataProfiler": {
+                                                "press": ".extension.a2a.network.agent2.ext.controller.ListReportExt.onOpenDataProfiler",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Data Profiler"
+                                            },
+                                            "AutoML": {
+                                                "press": ".extension.a2a.network.agent2.ext.controller.ListReportExt.onAutoML",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "AutoML Wizard"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "AIPreparationTaskDetails",
+                    "pattern": "AIPreparationTasks({key}):?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "AIPreparationTaskDetails",
+                        "options": {
+                            "settings": {
+                                "entitySet": "AIPreparationTasks",
+                                "navigation": {
+                                    "Features": {
+                                        "detail": {
+                                            "route": "FeatureDetails"
+                                        }
+                                    }
+                                },
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.HeaderInfo": {
+                                        "actions": {
+                                            "StartPreparation": {
+                                                "press": ".extension.a2a.network.agent2.ext.controller.ObjectPageExt.onStartPreparation",
+                                                "visible": "{= ${status} === 'DRAFT' || ${status} === 'PAUSED' }",
+                                                "enabled": true,
+                                                "text": "Start Preparation"
+                                            },
+                                            "AnalyzeFeatures": {
+                                                "press": ".extension.a2a.network.agent2.ext.controller.ObjectPageExt.onAnalyzeFeatures",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Analyze Features"
+                                            },
+                                            "GenerateEmbeddings": {
+                                                "press": ".extension.a2a.network.agent2.ext.controller.ObjectPageExt.onGenerateEmbeddings",
+                                                "visible": "{= ${modelType} === 'EMBEDDING' || ${modelType} === 'LLM' }",
+                                                "enabled": "{= ${status} === 'PREPARED' }",
+                                                "text": "Generate Embeddings"
+                                            },
+                                            "ExportPreparedData": {
+                                                "press": ".extension.a2a.network.agent2.ext.controller.ObjectPageExt.onExportPreparedData",
+                                                "visible": "{= ${status} === 'COMPLETED' }",
+                                                "enabled": true,
+                                                "text": "Export Data"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "ModelTemplates",
+                    "pattern": "model-templates:?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "ModelTemplatesList",
+                        "options": {
+                            "settings": {
+                                "entitySet": "ModelTemplates",
+                                "variantManagement": "Page"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "DataProfiler",
+                    "pattern": "data-profiler",
+                    "target": {
+                        "type": "Component",
+                        "name": "DataProfiler"
+                    }
+                }
+            ]
+        },
+        "extends": {
+            "extensions": {
+                "sap.ui.controllerExtensions": {
+                    "sap.fe.templates.ListReport.ListReportController": {
+                        "controllerName": "a2a.network.agent2.ext.controller.ListReportExt"
+                    },
+                    "sap.fe.templates.ObjectPage.ObjectPageController": {
+                        "controllerName": "a2a.network.agent2.ext.controller.ObjectPageExt"
+                    }
+                }
+            }
+        }
+    },
+    "sap.fiori": {
+        "registrationIds": ["F0001A2"],
+        "archeType": "transactional"
+    },
+    "sap.fe": {
+        "type": "default"
+    }
+}

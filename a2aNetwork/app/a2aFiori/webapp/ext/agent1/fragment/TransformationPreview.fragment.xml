@@ -1,0 +1,282 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:table="sap.ui.table">
+    
+    <Dialog
+        id="transformationPreviewDialog"
+        title="Transformation Preview"
+        contentWidth="95%"
+        contentHeight="85%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Preview Controls -->
+                <Panel headerText="Preview Configuration" class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Label text="Sample Size"/>
+                            <Select 
+                                selectedKey="{preview>/sampleSize}"
+                                change=".onSampleSizeChange">
+                                <items>
+                                    <core:Item key="10" text="10 records"/>
+                                    <core:Item key="50" text="50 records"/>
+                                    <core:Item key="100" text="100 records"/>
+                                    <core:Item key="500" text="500 records"/>
+                                </items>
+                            </Select>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Label text="Record Selection"/>
+                            <RadioButtonGroup selectedIndex="{preview>/selectionMode}">
+                                <RadioButton text="First records"/>
+                                <RadioButton text="Random sample"/>
+                                <RadioButton text="Custom range"/>
+                            </RadioButtonGroup>
+                        </VBox>
+                        <VBox>
+                            <Label text=" "/>
+                            <Button 
+                                text="Refresh Preview"
+                                icon="sap-icon://refresh"
+                                press=".onRefreshPreview"
+                                type="Emphasized"/>
+                        </VBox>
+                    </HBox>
+                </Panel>
+                
+                <!-- Transformation Status -->
+                <MessageStrip 
+                    text="Preview generated for {preview>/recordCount} records. {preview>/successCount} successful, {preview>/errorCount} errors."
+                    type="{preview>/statusType}"
+                    class="sapUiResponsiveMargin"/>
+                
+                <!-- Side-by-Side Comparison -->
+                <HBox>
+                    <!-- Source Data -->
+                    <VBox width="48%" class="sapUiMediumMarginEnd">
+                        <Panel headerText="Source Data ({preview>/sourceFormat})">
+                            <table:Table
+                                rows="{preview>/sourceData}"
+                                selectionMode="Single"
+                                visibleRowCount="10"
+                                rowSelectionChange=".onSourceRowSelect">
+                                
+                                <table:columns>
+                                    <table:Column width="30px">
+                                        <Label text="#"/>
+                                        <table:template>
+                                            <Text text="{preview>rowNumber}"/>
+                                        </table:template>
+                                    </table:Column>
+                                    <table:Column 
+                                        sortProperty="fieldName" 
+                                        filterProperty="fieldName">
+                                        <Label text="Field"/>
+                                        <table:template>
+                                            <Text text="{preview>fieldName}"/>
+                                        </table:template>
+                                    </table:Column>
+                                    <table:Column>
+                                        <Label text="Value"/>
+                                        <table:template>
+                                            <Text 
+                                                text="{preview>value}"
+                                                maxLines="3"/>
+                                        </table:template>
+                                    </table:Column>
+                                    <table:Column width="80px">
+                                        <Label text="Type"/>
+                                        <table:template>
+                                            <Text text="{preview>dataType}"/>
+                                        </table:template>
+                                    </table:Column>
+                                </table:columns>
+                            </table:Table>
+                        </Panel>
+                    </VBox>
+                    
+                    <!-- Arrow Indicator -->
+                    <VBox width="4%" class="sapUiMediumMargin">
+                        <Icon 
+                            src="sap-icon://arrow-right" 
+                            size="2rem"
+                            class="sapUiLargeMarginTop"/>
+                    </VBox>
+                    
+                    <!-- Target Data -->
+                    <VBox width="48%">
+                        <Panel headerText="Transformed Data ({preview>/targetFormat})">
+                            <table:Table
+                                rows="{preview>/targetData}"
+                                selectionMode="Single"
+                                visibleRowCount="10">
+                                
+                                <table:columns>
+                                    <table:Column width="30px">
+                                        <Label text="#"/>
+                                        <table:template>
+                                            <Text text="{preview>rowNumber}"/>
+                                        </table:template>
+                                    </table:Column>
+                                    <table:Column 
+                                        sortProperty="fieldName" 
+                                        filterProperty="fieldName">
+                                        <Label text="Field"/>
+                                        <table:template>
+                                            <Text text="{preview>fieldName}"/>
+                                        </table:template>
+                                    </table:Column>
+                                    <table:Column>
+                                        <Label text="Value"/>
+                                        <table:template>
+                                            <Text 
+                                                text="{preview>value}"
+                                                maxLines="3"/>
+                                        </table:template>
+                                    </table:Column>
+                                    <table:Column width="80px">
+                                        <Label text="Type"/>
+                                        <table:template>
+                                            <Text text="{preview>dataType}"/>
+                                        </table:template>
+                                    </table:Column>
+                                    <table:Column width="60px">
+                                        <Label text="Status"/>
+                                        <table:template>
+                                            <Icon 
+                                                src="{parts: ['preview>isValid'], formatter: '.formatValidationIcon'}"
+                                                color="{parts: ['preview>isValid'], formatter: '.formatValidationColor'}"/>
+                                        </table:template>
+                                    </table:Column>
+                                </table:columns>
+                            </table:Table>
+                        </Panel>
+                    </VBox>
+                </HBox>
+                
+                <!-- Transformation Rules Applied -->
+                <Panel 
+                    headerText="Applied Transformation Rules"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <Table items="{preview>/appliedRules}">
+                        <columns>
+                            <Column>
+                                <Text text="Rule Name"/>
+                            </Column>
+                            <Column>
+                                <Text text="Type"/>
+                            </Column>
+                            <Column>
+                                <Text text="Source Field"/>
+                            </Column>
+                            <Column>
+                                <Text text="Target Field"/>
+                            </Column>
+                            <Column>
+                                <Text text="Transformation"/>
+                            </Column>
+                            <Column>
+                                <Text text="Status"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <Text text="{preview>ruleName}"/>
+                                    <Text text="{preview>ruleType}"/>
+                                    <Text text="{preview>sourceField}"/>
+                                    <Text text="{preview>targetField}"/>
+                                    <Text text="{preview>transformation}" maxLines="2"/>
+                                    <ObjectStatus 
+                                        text="{preview>status}"
+                                        state="{parts: ['preview>status'], formatter: '.formatRuleStatus'}"/>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Validation Issues -->
+                <Panel 
+                    headerText="Validation Issues ({preview>/issueCount})"
+                    expandable="true"
+                    expanded="{= ${preview>/issueCount} > 0 }"
+                    class="sapUiResponsiveMargin">
+                    <List items="{preview>/validationIssues}">
+                        <StandardListItem 
+                            title="{preview>message}"
+                            description="Row {preview>rowNumber} - Field: {preview>fieldName}"
+                            icon="{parts: ['preview>severity'], formatter: '.formatSeverityIcon'}"
+                            iconInset="false"
+                            type="Active"
+                            press=".onIssueDetails"/>
+                    </List>
+                </Panel>
+                
+                <!-- Statistics -->
+                <Panel 
+                    headerText="Transformation Statistics"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Records Processed" level="H4"/>
+                            <ObjectNumber 
+                                number="{preview>/processedCount}"
+                                state="Success"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Success Rate" level="H4"/>
+                            <ObjectNumber 
+                                number="{preview>/successRate}"
+                                unit="%"
+                                state="{preview>/successRateState}"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Fields Mapped" level="H4"/>
+                            <ObjectNumber 
+                                number="{preview>/mappedFields}"
+                                state="None"/>
+                        </VBox>
+                        <VBox>
+                            <Title text="Processing Time" level="H4"/>
+                            <ObjectNumber 
+                                number="{preview>/processingTime}"
+                                unit="ms"
+                                state="None"/>
+                        </VBox>
+                    </HBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button 
+                text="Download Sample"
+                icon="sap-icon://download"
+                press=".onDownloadSample"/>
+            <Button 
+                text="Modify Rules"
+                icon="sap-icon://edit"
+                press=".onModifyRules"/>
+            <Button 
+                text="Accept & Process All"
+                icon="sap-icon://accept"
+                type="Accept"
+                press=".onAcceptTransformation"
+                enabled="{= ${preview>/successRate} >= 80}"/>
+            <Button 
+                text="Close"
+                press=".onClosePreview"/>
+        </buttons>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

@@ -1,0 +1,216 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        id="embeddingConfigDialog"
+        title="Generate Embeddings Configuration"
+        contentWidth="60%"
+        contentHeight="70%"
+        resizable="true">
+        
+        <content>
+            <IconTabBar id="embeddingTabBar" expandable="false">
+                
+                <!-- Model Configuration Tab -->
+                <items>
+                    <IconTabFilter text="Model Configuration" icon="sap-icon://ai">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Embedding Model" required="true"/>
+                                <Select selectedKey="{embedding>/embeddingModel}">
+                                    <items>
+                                        <core:Item key="text-embedding-ada-002" text="OpenAI Ada-002 (1536 dims)"/>
+                                        <core:Item key="text-embedding-3-small" text="OpenAI Text-3-Small (1536 dims)"/>
+                                        <core:Item key="text-embedding-3-large" text="OpenAI Text-3-Large (3072 dims)"/>
+                                        <core:Item key="sentence-transformers/all-MiniLM-L6-v2" text="MiniLM-L6-v2 (384 dims)"/>
+                                        <core:Item key="sentence-transformers/all-mpnet-base-v2" text="MPNet Base v2 (768 dims)"/>
+                                        <core:Item key="sentence-transformers/distilbert-base-nli-stsb-mean-tokens" text="DistilBERT NLI (768 dims)"/>
+                                        <core:Item key="huggingface/CodeBERTa-small-v1" text="CodeBERTa Small (768 dims)"/>
+                                        <core:Item key="custom" text="Custom Model"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Custom Model Path" 
+                                       visible="{= ${embedding>/embeddingModel} === 'custom' }"/>
+                                <Input 
+                                    value="{embedding>/customModelPath}"
+                                    placeholder="Enter path to custom model"
+                                    visible="{= ${embedding>/embeddingModel} === 'custom' }"/>
+                                
+                                <Label text="Output Dimensions"/>
+                                <Slider
+                                    value="{embedding>/dimensions}"
+                                    min="128"
+                                    max="4096"
+                                    step="64"
+                                    enableTickmarks="true"
+                                    inputsAsTooltips="true"/>
+                                
+                                <Label text="Model Information"/>
+                                <FormattedText 
+                                    htmlText="{parts: ['embedding>/embeddingModel'], formatter: '.formatModelInfo'}"
+                                    class="sapUiTinyMargin"/>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Processing Configuration Tab -->
+                    <IconTabFilter text="Processing Settings" icon="sap-icon://settings">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Batch Size"/>
+                                <Slider
+                                    value="{embedding>/batchSize}"
+                                    min="1"
+                                    max="128"
+                                    step="1"
+                                    enableTickmarks="true"
+                                    inputsAsTooltips="true"/>
+                                <Text 
+                                    text="Larger batch sizes increase memory usage but improve processing speed"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <Label text="Normalization"/>
+                                <CheckBox 
+                                    text="Normalize embeddings to unit length"
+                                    selected="{embedding>/normalization}"/>
+                                <Text 
+                                    text="Recommended for similarity calculations and clustering"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <Label text="Hardware Acceleration"/>
+                                <CheckBox 
+                                    text="Use GPU acceleration if available"
+                                    selected="{embedding>/useGPU}"/>
+                                <Text 
+                                    text="Significantly faster processing with compatible GPUs"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <Label text="Parallel Processing"/>
+                                <CheckBox 
+                                    text="Enable multi-threading"
+                                    selected="{embedding>/parallelProcessing}"/>
+                                
+                                <Label text="Thread Count" 
+                                       visible="{embedding>/parallelProcessing}"/>
+                                <Slider
+                                    value="{embedding>/threadCount}"
+                                    min="1"
+                                    max="16"
+                                    step="1"
+                                    enableTickmarks="true"
+                                    inputsAsTooltips="true"
+                                    visible="{embedding>/parallelProcessing}"/>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Output Configuration Tab -->
+                    <IconTabFilter text="Output Settings" icon="sap-icon://export">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Output Format"/>
+                                <Select selectedKey="{embedding>/outputFormat}">
+                                    <items>
+                                        <core:Item key="NUMPY" text="NumPy Array (.npy)"/>
+                                        <core:Item key="PARQUET" text="Parquet (.parquet)"/>
+                                        <core:Item key="CSV" text="CSV (.csv)"/>
+                                        <core:Item key="JSON" text="JSON (.json)"/>
+                                        <core:Item key="HDF5" text="HDF5 (.h5)"/>
+                                        <core:Item key="PICKLE" text="Pickle (.pkl)"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Compression"/>
+                                <Select selectedKey="{embedding>/compression}">
+                                    <items>
+                                        <core:Item key="NONE" text="No Compression"/>
+                                        <core:Item key="GZIP" text="GZIP"/>
+                                        <core:Item key="BZIP2" text="BZIP2"/>
+                                        <core:Item key="LZ4" text="LZ4 (Fast)"/>
+                                        <core:Item key="ZSTD" text="ZSTD (Balanced)"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Include Metadata"/>
+                                <CheckBox 
+                                    text="Include model metadata and configuration"
+                                    selected="{embedding>/includeMetadata}"/>
+                                
+                                <Label text="Save Intermediate Results"/>
+                                <CheckBox 
+                                    text="Save embeddings at regular intervals"
+                                    selected="{embedding>/saveIntermediate}"/>
+                                
+                                <Label text="Checkpoint Interval" 
+                                       visible="{embedding>/saveIntermediate}"/>
+                                <Input 
+                                    value="{embedding>/checkpointInterval}"
+                                    type="Number"
+                                    placeholder="1000"
+                                    description="Records"
+                                    visible="{embedding>/saveIntermediate}"/>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+            
+            <!-- Progress Panel -->
+            <Panel 
+                headerText="Processing Estimation"
+                class="sapUiMediumMarginTop">
+                <content>
+                    <l:HorizontalLayout>
+                        <l:content>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Estimated Processing Time"/>
+                                <ObjectStatus 
+                                    text="{parts: ['embedding>/batchSize', 'embedding>/useGPU'], formatter: '.formatEstimatedTime'}"
+                                    state="Information"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Memory Usage"/>
+                                <ObjectStatus 
+                                    text="{parts: ['embedding>/dimensions', 'embedding>/batchSize'], formatter: '.formatMemoryUsage'}"
+                                    state="Information"/>
+                            </VBox>
+                            <VBox>
+                                <Label text="Output Size"/>
+                                <ObjectStatus 
+                                    text="{parts: ['embedding>/dimensions', 'embedding>/compression'], formatter: '.formatOutputSize'}"
+                                    state="Information"/>
+                            </VBox>
+                        </l:content>
+                    </l:HorizontalLayout>
+                </content>
+            </Panel>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelEmbeddings"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Generate Embeddings"
+                type="Emphasized"
+                icon="sap-icon://play"
+                press=".onConfirmGenerateEmbeddings"
+                enabled="{= ${embedding>/embeddingModel} &amp;&amp; ${embedding>/dimensions} }"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

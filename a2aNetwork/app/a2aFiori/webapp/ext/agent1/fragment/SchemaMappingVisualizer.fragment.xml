@@ -1,0 +1,140 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz.ui5.controls"
+    xmlns:l="sap.ui.layout"
+    xmlns:ndc="sap.suite.ui.commons.networkgraph">
+    
+    <Dialog
+        id="schemaMappingDialog"
+        title="Schema Mapping Visualizer"
+        contentWidth="80%"
+        contentHeight="80%"
+        resizable="true">
+        
+        <content>
+            <l:Splitter height="100%" width="100%">
+                <!-- Source Schema Panel -->
+                <l:contentAreas>
+                    <Panel headerText="Source Schema ({mapping>/sourceFormat})">
+                        <content>
+                            <Tree
+                                id="sourceSchemaTree"
+                                items="{mapping>/sourceFields}">
+                                <StandardTreeItem
+                                    title="{mapping>fieldName}"
+                                    tooltip="{mapping>dataType}"/>
+                            </Tree>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Mapping Rules Panel -->
+                    <Panel headerText="Mapping Rules" width="40%">
+                        <content>
+                            <VBox>
+                                <Toolbar>
+                                    <Title text="Field Mappings"/>
+                                    <ToolbarSpacer/>
+                                    <Button 
+                                        icon="sap-icon://add"
+                                        tooltip="Add mapping"
+                                        press=".onAddMapping"/>
+                                    <Button 
+                                        icon="sap-icon://synchronize"
+                                        tooltip="Auto-map fields"
+                                        press=".onAutoMap"/>
+                                </Toolbar>
+                                
+                                <Table
+                                    items="{mapping>/mappingRules}"
+                                    mode="Delete">
+                                    <columns>
+                                        <Column width="40%">
+                                            <Text text="Source Field"/>
+                                        </Column>
+                                        <Column width="20%">
+                                            <Text text="Transform"/>
+                                        </Column>
+                                        <Column width="40%">
+                                            <Text text="Target Field"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Select selectedKey="{mapping>sourceField}">
+                                                    <items>
+                                                        <core:ListItem 
+                                                            key="{sourceFields>fieldName}"
+                                                            text="{sourceFields>fieldName}"/>
+                                                    </items>
+                                                </Select>
+                                                <Select selectedKey="{mapping>transformation}">
+                                                    <items>
+                                                        <core:Item key="DIRECT" text="Direct"/>
+                                                        <core:Item key="UPPERCASE" text="Uppercase"/>
+                                                        <core:Item key="LOWERCASE" text="Lowercase"/>
+                                                        <core:Item key="TRIM" text="Trim"/>
+                                                        <core:Item key="DATE_FORMAT" text="Date Format"/>
+                                                        <core:Item key="CUSTOM" text="Custom"/>
+                                                    </items>
+                                                </Select>
+                                                <Select selectedKey="{mapping>targetField}">
+                                                    <items>
+                                                        <core:ListItem 
+                                                            key="{targetFields>fieldName}"
+                                                            text="{targetFields>fieldName}"/>
+                                                    </items>
+                                                </Select>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                                
+                                <!-- Transformation Script Editor -->
+                                <Panel 
+                                    headerText="Custom Transformation Script"
+                                    expandable="true"
+                                    expanded="false">
+                                    <content>
+                                        <TextArea
+                                            value="{mapping>/transformationScript}"
+                                            rows="10"
+                                            width="100%"
+                                            placeholder="// JavaScript transformation function&#10;function transform(value, row) {&#10;    return value;&#10;}"/>
+                                    </content>
+                                </Panel>
+                            </VBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Target Schema Panel -->
+                    <Panel headerText="Target Schema ({mapping>/targetFormat})">
+                        <content>
+                            <Tree
+                                id="targetSchemaTree"
+                                items="{mapping>/targetFields}">
+                                <StandardTreeItem
+                                    title="{mapping>fieldName}"
+                                    tooltip="{mapping>dataType}"/>
+                            </Tree>
+                        </content>
+                    </Panel>
+                </l:contentAreas>
+            </l:Splitter>
+        </content>
+        
+        <beginButton>
+            <Button text="Close" press=".onCloseMappingDialog"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Save Mapping"
+                type="Emphasized"
+                press=".onSaveMapping"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

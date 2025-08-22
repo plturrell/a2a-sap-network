@@ -1,0 +1,243 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="autoMLWizardDialog"
+        title="AutoML Wizard - Automated Machine Learning"
+        contentWidth="80%"
+        contentHeight="85%"
+        resizable="true">
+        
+        <content>
+            <Wizard id="autoMLWizard" complete=".onAutoMLComplete">
+                
+                <!-- Step 1: Dataset Selection -->
+                <WizardStep
+                    id="datasetStep"
+                    title="Dataset Selection"
+                    icon="sap-icon://database"
+                    validated="true">
+                    
+                    <MessageStrip
+                        text="Select the dataset and define the machine learning problem type."
+                        type="Information"
+                        class="sapUiMediumMargin"/>
+                    
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="4"
+                        labelSpanL="4"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        adjustLabelSpan="false"
+                        emptySpanXL="0"
+                        emptySpanL="0"
+                        emptySpanM="0"
+                        emptySpanS="0"
+                        columnsXL="2"
+                        columnsL="2"
+                        columnsM="1"
+                        singleContainerFullSize="false">
+                        
+                        <form:content>
+                            <Label text="Dataset" required="true"/>
+                            <ComboBox
+                                id="datasetComboBox"
+                                value="{automl>/dataset}"
+                                placeholder="Select or enter dataset name"
+                                showValueHelp="true"
+                                valueHelpRequest=".onDatasetValueHelp">
+                                <items>
+                                    <core:Item key="customer_data.csv" text="Customer Data (10,000 rows)"/>
+                                    <core:Item key="sales_data.csv" text="Sales Data (25,000 rows)"/>
+                                    <core:Item key="product_reviews.csv" text="Product Reviews (50,000 rows)"/>
+                                    <core:Item key="financial_data.csv" text="Financial Data (15,000 rows)"/>
+                                    <core:Item key="sensor_data.csv" text="Sensor Data (100,000 rows)"/>
+                                </items>
+                            </ComboBox>
+                            
+                            <Label text="Problem Type" required="true"/>
+                            <Select selectedKey="{automl>/problemType}">
+                                <items>
+                                    <core:Item key="" text="Select problem type..."/>
+                                    <core:Item key="CLASSIFICATION" text="Classification"/>
+                                    <core:Item key="REGRESSION" text="Regression"/>
+                                    <core:Item key="TIME_SERIES" text="Time Series Forecasting"/>
+                                    <core:Item key="CLUSTERING" text="Clustering"/>
+                                    <core:Item key="ANOMALY_DETECTION" text="Anomaly Detection"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Target Column" required="true"/>
+                            <ComboBox
+                                value="{automl>/targetColumn}"
+                                placeholder="Select target column"
+                                enabled="{= ${automl>/problemType} !== 'CLUSTERING' }">
+                                <items>
+                                    <core:Item key="revenue" text="Revenue"/>
+                                    <core:Item key="category" text="Category"/>
+                                    <core:Item key="satisfaction" text="Customer Satisfaction"/>
+                                    <core:Item key="churn" text="Customer Churn"/>
+                                    <core:Item key="price" text="Price"/>
+                                </items>
+                            </ComboBox>
+                            
+                            <Label text="Data Preview"/>
+                            <Button 
+                                text="Preview Dataset" 
+                                icon="sap-icon://show"
+                                press=".onPreviewDataset"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </WizardStep>
+                
+                <!-- Step 2: Model Configuration -->
+                <WizardStep
+                    id="modelConfigStep"
+                    title="Model Configuration"
+                    icon="sap-icon://settings"
+                    validated="true">
+                    
+                    <MessageStrip
+                        text="Configure the AutoML algorithm parameters and evaluation criteria."
+                        type="Information"
+                        class="sapUiMediumMargin"/>
+                    
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout">
+                        <form:content>
+                            <Label text="Evaluation Metric"/>
+                            <Select selectedKey="{automl>/evaluationMetric}">
+                                <items>
+                                    <core:Item key="AUTO" text="Auto-select Best Metric"/>
+                                    <core:Item key="ACCURACY" text="Accuracy"/>
+                                    <core:Item key="AUC" text="AUC-ROC"/>
+                                    <core:Item key="F1" text="F1 Score"/>
+                                    <core:Item key="PRECISION" text="Precision"/>
+                                    <core:Item key="RECALL" text="Recall"/>
+                                    <core:Item key="MSE" text="Mean Squared Error"/>
+                                    <core:Item key="MAE" text="Mean Absolute Error"/>
+                                    <core:Item key="R2" text="R-squared"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Time Limit (minutes)"/>
+                            <Slider
+                                value="{automl>/timeLimit}"
+                                min="5"
+                                max="180"
+                                step="5"
+                                enableTickmarks="true"
+                                inputsAsTooltips="true"/>
+                            
+                            <Label text="Maximum Models to Train"/>
+                            <Slider
+                                value="{automl>/maxModels}"
+                                min="5"
+                                max="50"
+                                step="5"
+                                enableTickmarks="true"
+                                inputsAsTooltips="true"/>
+                            
+                            <Label text="Cross Validation Folds"/>
+                            <Slider
+                                value="{automl>/crossValidation}"
+                                min="3"
+                                max="10"
+                                step="1"
+                                enableTickmarks="true"
+                                inputsAsTooltips="true"/>
+                            
+                            <Label text="Advanced Options"/>
+                            <CheckBox 
+                                text="Include Ensemble Models"
+                                selected="{automl>/includeEnsemble}"/>
+                            
+                            <Label text=""/>
+                            <CheckBox 
+                                text="Enable Feature Engineering"
+                                selected="{automl>/featureEngineering}"/>
+                            
+                            <Label text=""/>
+                            <CheckBox 
+                                text="Use GPU Acceleration"
+                                selected="{automl>/useGPU}"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </WizardStep>
+                
+                <!-- Step 3: Review & Launch -->
+                <WizardStep
+                    id="reviewStep"
+                    title="Review & Launch"
+                    icon="sap-icon://rocket"
+                    validated="true">
+                    
+                    <MessageStrip
+                        text="Review your AutoML configuration and start the automated training process."
+                        type="Success"
+                        class="sapUiMediumMargin"/>
+                    
+                    <ObjectHeader
+                        title="AutoML Configuration Summary"
+                        icon="sap-icon://artificial-intelligence">
+                        
+                        <attributes>
+                            <ObjectAttribute title="Dataset" text="{automl>/dataset}"/>
+                            <ObjectAttribute title="Problem Type" text="{automl>/problemType}"/>
+                            <ObjectAttribute title="Target Column" text="{automl>/targetColumn}"/>
+                            <ObjectAttribute title="Evaluation Metric" text="{automl>/evaluationMetric}"/>
+                            <ObjectAttribute title="Time Limit" text="{automl>/timeLimit} minutes"/>
+                            <ObjectAttribute title="Max Models" text="{automl>/maxModels}"/>
+                        </attributes>
+                        
+                        <statuses>
+                            <ObjectStatus 
+                                text="{= ${automl>/includeEnsemble} ? 'Ensemble Enabled' : 'Single Models Only' }"
+                                state="{= ${automl>/includeEnsemble} ? 'Success' : 'Information' }"/>
+                            <ObjectStatus 
+                                text="{= ${automl>/useGPU} ? 'GPU Acceleration' : 'CPU Only' }"
+                                state="{= ${automl>/useGPU} ? 'Success' : 'Information' }"/>
+                        </statuses>
+                    </ObjectHeader>
+                    
+                    <Panel
+                        headerText="Estimated Training Time"
+                        class="sapUiMediumMarginTop">
+                        <content>
+                            <MessageStrip
+                                text="{parts: ['automl>/timeLimit', 'automl>/maxModels'], formatter: '.formatEstimatedTime'}"
+                                type="Information"/>
+                            
+                            <Text 
+                                text="The AutoML process will automatically train multiple algorithms, perform hyperparameter optimization, and select the best performing model based on your chosen evaluation metric."
+                                class="sapUiMediumMarginTop"/>
+                        </content>
+                    </Panel>
+                </WizardStep>
+            </Wizard>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelAutoML"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Start AutoML"
+                type="Emphasized"
+                icon="sap-icon://play"
+                press=".onStartAutoML"
+                enabled="{= ${automl>/dataset} &amp;&amp; ${automl>/problemType} &amp;&amp; (${automl>/problemType} === 'CLUSTERING' || ${automl>/targetColumn}) }"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

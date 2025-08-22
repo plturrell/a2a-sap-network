@@ -1,0 +1,44 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # A2A Agents monitoring
+  - job_name: 'a2a-agents'
+    static_configs:
+      - targets: ['localhost:8001', 'localhost:8002', 'localhost:8003', 'localhost:8004', 
+                  'localhost:8005', 'localhost:8006', 'localhost:8007', 'localhost:8008',
+                  'localhost:8009', 'localhost:8010', 'localhost:8011', 'localhost:8012',
+                  'localhost:8013', 'localhost:8014', 'localhost:8015']
+        labels:
+          group: 'agents'
+
+  # Network services
+  - job_name: 'a2a-network'
+    static_configs:
+      - targets: ['localhost:4004']
+        labels:
+          group: 'network'
+
+  # Core services
+  - job_name: 'a2a-core'
+    static_configs:
+      - targets: ['localhost:8080', 'localhost:8090', 'localhost:8091', 'localhost:8889']
+        labels:
+          group: 'core'
+
+  # MCP servers
+  - job_name: 'mcp-servers'
+    static_configs:
+      - targets: ['localhost:8101', 'localhost:8102', 'localhost:8103', 'localhost:8104',
+                  'localhost:8105', 'localhost:8106', 'localhost:8107', 'localhost:8108',
+                  'localhost:8109']
+        labels:
+          group: 'mcp'
+
+  # Infrastructure
+  - job_name: 'infrastructure'
+    static_configs:
+      - targets: ['localhost:6379']  # Redis
+        labels:
+          service: 'redis'

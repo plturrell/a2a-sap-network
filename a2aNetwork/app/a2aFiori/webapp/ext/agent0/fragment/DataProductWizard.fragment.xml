@@ -1,0 +1,221 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:u="sap.ui.unified">
+    
+    <Dialog
+        id="dataProductWizardDialog"
+        title="Create Data Product"
+        contentWidth="60%"
+        contentHeight="80%"
+        resizable="true">
+        
+        <content>
+            <Wizard id="dataProductWizard" complete="onWizardComplete">
+                
+                <!-- Step 1: Basic Information -->
+                <WizardStep
+                    id="basicInfoStep"
+                    title="Basic Information"
+                    validated="true"
+                    activate="onValidateStep1">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout">
+                        <form:content>
+                            <Label text="Product Name" required="true"/>
+                            <Input value="{wizard>/dataProduct/name}" placeholder="Enter product name"/>
+                            
+                            <Label text="Description" required="true"/>
+                            <TextArea 
+                                value="{wizard>/dataProduct/description}" 
+                                rows="3"
+                                placeholder="Describe your data product"/>
+                            
+                            <Label text="Upload File" required="true"/>
+                            <u:FileUploader
+                                id="fileUploader"
+                                name="dataFile"
+                                uploadUrl="/upload"
+                                placeholder="Choose file..."
+                                change="onFileChange"
+                                fileType="csv,json,xml,parquet,txt,xlsx,xls"
+                                maximumFileSize="100"/>
+                            
+                            <Label text="Format"/>
+                            <Text text="{wizard>/dataProduct/format}"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </WizardStep>
+                
+                <!-- Step 2: Dublin Core Metadata -->
+                <WizardStep
+                    id="metadataStep"
+                    title="Metadata (Dublin Core)"
+                    validated="true"
+                    activate="onValidateMetadata">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        columnsM="2"
+                        columnsL="3">
+                        <form:content>
+                            <Label text="Title" required="true"/>
+                            <Input value="{wizard>/dataProduct/metadata/dcTitle}"/>
+                            
+                            <Label text="Creator" required="true"/>
+                            <Input value="{wizard>/dataProduct/metadata/dcCreator}"/>
+                            
+                            <Label text="Type" required="true"/>
+                            <Select selectedKey="{wizard>/dataProduct/metadata/dcType}">
+                                <items>
+                                    <core:Item key="Dataset" text="Dataset"/>
+                                    <core:Item key="Text" text="Text"/>
+                                    <core:Item key="Image" text="Image"/>
+                                    <core:Item key="Software" text="Software"/>
+                                    <core:Item key="Service" text="Service"/>
+                                    <core:Item key="Collection" text="Collection"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Subject"/>
+                            <Input value="{wizard>/dataProduct/metadata/dcSubject}"/>
+                            
+                            <Label text="Publisher"/>
+                            <Input value="{wizard>/dataProduct/metadata/dcPublisher}"/>
+                            
+                            <Label text="Date"/>
+                            <DatePicker value="{wizard>/dataProduct/metadata/dcDate}"/>
+                            
+                            <Label text="Language"/>
+                            <Select selectedKey="{wizard>/dataProduct/metadata/dcLanguage}">
+                                <items>
+                                    <core:Item key="en" text="English"/>
+                                    <core:Item key="de" text="German"/>
+                                    <core:Item key="fr" text="French"/>
+                                    <core:Item key="es" text="Spanish"/>
+                                    <core:Item key="zh" text="Chinese"/>
+                                    <core:Item key="ja" text="Japanese"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Rights"/>
+                            <TextArea 
+                                value="{wizard>/dataProduct/metadata/dcRights}"
+                                rows="2"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </WizardStep>
+                
+                <!-- Step 3: Data Transformation Rules -->
+                <WizardStep
+                    id="transformationStep"
+                    title="Transformation Rules"
+                    validated="true">
+                    <VBox>
+                        <Toolbar>
+                            <Title text="Transformation Rules"/>
+                            <ToolbarSpacer/>
+                            <Button 
+                                text="Add Rule" 
+                                icon="sap-icon://add"
+                                press="onAddTransformationRule"/>
+                        </Toolbar>
+                        
+                        <Table
+                            items="{wizard>/dataProduct/transformationRules}"
+                            mode="Delete">
+                            <columns>
+                                <Column>
+                                    <Text text="Type"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Field"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Operation"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Select selectedKey="{wizard>type}">
+                                            <items>
+                                                <core:Item key="NORMALIZE" text="Normalize"/>
+                                                <core:Item key="CLEAN" text="Clean"/>
+                                                <core:Item key="ENRICH" text="Enrich"/>
+                                                <core:Item key="VALIDATE" text="Validate"/>
+                                            </items>
+                                        </Select>
+                                        <Input value="{wizard>field}" placeholder="Field name"/>
+                                        <Input value="{wizard>operation}" placeholder="Operation"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </WizardStep>
+                
+                <!-- Step 4: Quality Settings -->
+                <WizardStep
+                    id="qualityStep"
+                    title="Quality Settings"
+                    validated="true">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout">
+                        <form:content>
+                            <Label text="Quality Threshold"/>
+                            <Slider
+                                value="{wizard>/dataProduct/qualityThreshold}"
+                                min="0"
+                                max="100"
+                                step="5"
+                                enableTickmarks="true"
+                                inputsAsTooltips="true"/>
+                            
+                            <Label text="Validation Rules"/>
+                            <CheckBox text="Check data completeness" selected="true"/>
+                            <CheckBox text="Validate data types" selected="true"/>
+                            <CheckBox text="Check referential integrity" selected="true"/>
+                            <CheckBox text="Verify data freshness" selected="false"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </WizardStep>
+                
+                <!-- Step 5: Review -->
+                <WizardStep
+                    id="reviewStep"
+                    title="Review & Submit"
+                    validated="true">
+                    <ObjectHeader
+                        title="{wizard>/dataProduct/name}"
+                        number="{wizard>/dataProduct/format}">
+                        <attributes>
+                            <ObjectAttribute title="Description" text="{wizard>/dataProduct/description}"/>
+                            <ObjectAttribute title="Creator" text="{wizard>/dataProduct/metadata/dcCreator}"/>
+                            <ObjectAttribute title="Type" text="{wizard>/dataProduct/metadata/dcType}"/>
+                            <ObjectAttribute title="Quality Threshold" text="{wizard>/dataProduct/qualityThreshold}%"/>
+                        </attributes>
+                    </ObjectHeader>
+                </WizardStep>
+                
+            </Wizard>
+        </content>
+        
+        <beginButton>
+            <Button text="Cancel" press="onWizardCancel"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Create" 
+                type="Emphasized"
+                press="onWizardComplete"
+                enabled="{= ${wizard>/dataProduct/name} &amp;&amp; ${wizard>/dataProduct/file} }"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

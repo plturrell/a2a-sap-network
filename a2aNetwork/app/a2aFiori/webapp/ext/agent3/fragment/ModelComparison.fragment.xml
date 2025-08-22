@@ -1,0 +1,406 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz"
+    xmlns:suite="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="modelComparisonDialog"
+        title="Embedding Model Comparison"
+        contentWidth="90%"
+        contentHeight="80%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <IconTabBar>
+                <!-- Performance Comparison Tab -->
+                <IconTabFilter text="Performance" icon="sap-icon://performance">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Model Selection -->
+                        <Panel headerText="Model Selection" class="sapUiResponsiveMargin">
+                            <HBox class="sapUiMediumMargin">
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Label text="Primary Model"/>
+                                    <Select selectedKey="{comparison>/primaryModel}">
+                                        <items>
+                                            <core:Item key="text-embedding-ada-002" text="OpenAI Ada-002"/>
+                                            <core:Item key="text-embedding-3-small" text="OpenAI v3 Small"/>
+                                            <core:Item key="text-embedding-3-large" text="OpenAI v3 Large"/>
+                                            <core:Item key="embed-english-v3.0" text="Cohere English v3"/>
+                                            <core:Item key="embed-multilingual-v3.0" text="Cohere Multilingual v3"/>
+                                            <core:Item key="sentence-transformers/all-MiniLM-L6-v2" text="SentenceTransformers MiniLM"/>
+                                            <core:Item key="sentence-transformers/all-mpnet-base-v2" text="SentenceTransformers MPNet"/>
+                                        </items>
+                                    </Select>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Label text="Comparison Model"/>
+                                    <Select selectedKey="{comparison>/comparisonModel}">
+                                        <items>
+                                            <core:Item key="text-embedding-ada-002" text="OpenAI Ada-002"/>
+                                            <core:Item key="text-embedding-3-small" text="OpenAI v3 Small"/>
+                                            <core:Item key="text-embedding-3-large" text="OpenAI v3 Large"/>
+                                            <core:Item key="embed-english-v3.0" text="Cohere English v3"/>
+                                            <core:Item key="embed-multilingual-v3.0" text="Cohere Multilingual v3"/>
+                                            <core:Item key="sentence-transformers/all-MiniLM-L6-v2" text="SentenceTransformers MiniLM"/>
+                                            <core:Item key="sentence-transformers/all-mpnet-base-v2" text="SentenceTransformers MPNet"/>
+                                        </items>
+                                    </Select>
+                                </VBox>
+                                <VBox>
+                                    <Label text=" "/>
+                                    <Button 
+                                        text="Compare Models"
+                                        type="Emphasized"
+                                        press=".onCompareModels"/>
+                                </VBox>
+                            </HBox>
+                        </Panel>
+                        
+                        <!-- Performance Metrics -->
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Primary Model" level="H3"/>
+                                <suite:RadialMicroChart 
+                                    size="M"
+                                    percentage="{comparison>/primaryPerformance}">
+                                    <suite:centerLabel>Performance</suite:centerLabel>
+                                </suite:RadialMicroChart>
+                                <Text text="Avg Latency: {comparison>/primaryLatency}ms"/>
+                                <Text text="Cost: ${comparison>/primaryCost}/1k tokens"/>
+                                <Text text="Dimensions: {comparison>/primaryDimensions}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Comparison Model" level="H3"/>
+                                <suite:RadialMicroChart 
+                                    size="M"
+                                    percentage="{comparison>/comparisonPerformance}">
+                                    <suite:centerLabel>Performance</suite:centerLabel>
+                                </suite:RadialMicroChart>
+                                <Text text="Avg Latency: {comparison>/comparisonLatency}ms"/>
+                                <Text text="Cost: ${comparison>/comparisonCost}/1k tokens"/>
+                                <Text text="Dimensions: {comparison>/comparisonDimensions}"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="Recommendation" level="H3"/>
+                                <MessageStrip 
+                                    text="{comparison>/recommendation}"
+                                    type="{comparison>/recommendationType}"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <!-- Performance Chart -->
+                        <Panel headerText="Performance Comparison Chart">
+                            <viz:VizFrame 
+                                id="performanceComparisonChart"
+                                width="100%" 
+                                height="400px"
+                                vizType="dual_combination">
+                                <viz:dataset>
+                                    <viz:FlattenedDataset data="{comparison>/performanceData}">
+                                        <viz:dimensions>
+                                            <viz:DimensionDefinition name="Metric" value="{metric}"/>
+                                        </viz:dimensions>
+                                        <viz:measures>
+                                            <viz:MeasureDefinition name="Primary Model" value="{primaryValue}"/>
+                                            <viz:MeasureDefinition name="Comparison Model" value="{comparisonValue}"/>
+                                        </viz:measures>
+                                    </viz:FlattenedDataset>
+                                </viz:dataset>
+                            </viz:VizFrame>
+                        </Panel>
+                    </VBox>
+                </IconTabFilter>
+                
+                <!-- Quality Comparison Tab -->
+                <IconTabFilter text="Quality" icon="sap-icon://quality-issue">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Quality Metrics -->
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Semantic Similarity" level="H4"/>
+                                <suite:BulletMicroChart 
+                                    size="M" 
+                                    actual="{comparison>/semanticSimilarity}"
+                                    targetValue="90"
+                                    minValue="0"
+                                    maxValue="100">
+                                    <suite:actualValueLabel>
+                                        <suite:BulletMicroChartData value="{comparison>/semanticSimilarity}" color="Good"/>
+                                    </suite:actualValueLabel>
+                                </suite:BulletMicroChart>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Clustering Quality" level="H4"/>
+                                <suite:BulletMicroChart 
+                                    size="M" 
+                                    actual="{comparison>/clusteringQuality}"
+                                    targetValue="85"
+                                    minValue="0"
+                                    maxValue="100">
+                                    <suite:actualValueLabel>
+                                        <suite:BulletMicroChartData value="{comparison>/clusteringQuality}" color="Good"/>
+                                    </suite:actualValueLabel>
+                                </suite:BulletMicroChart>
+                            </VBox>
+                            <VBox>
+                                <Title text="Retrieval Accuracy" level="H4"/>
+                                <suite:BulletMicroChart 
+                                    size="M" 
+                                    actual="{comparison>/retrievalAccuracy}"
+                                    targetValue="80"
+                                    minValue="0"
+                                    maxValue="100">
+                                    <suite:actualValueLabel>
+                                        <suite:BulletMicroChartData value="{comparison>/retrievalAccuracy}" color="Good"/>
+                                    </suite:actualValueLabel>
+                                </suite:BulletMicroChart>
+                            </VBox>
+                        </HBox>
+                        
+                        <!-- Quality Comparison Table -->
+                        <Table items="{comparison>/qualityMetrics}">
+                            <headerToolbar>
+                                <Toolbar>
+                                    <Title text="Detailed Quality Metrics"/>
+                                </Toolbar>
+                            </headerToolbar>
+                            <columns>
+                                <Column>
+                                    <Text text="Metric"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Primary Model"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Comparison Model"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Difference"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Better"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{metricName}"/>
+                                        <ObjectNumber number="{primaryScore}" unit="{unit}"/>
+                                        <ObjectNumber number="{comparisonScore}" unit="{unit}"/>
+                                        <ObjectNumber 
+                                            number="{difference}" 
+                                            unit="{unit}"
+                                            state="{differenceState}"/>
+                                        <Icon 
+                                            src="{betterIcon}" 
+                                            color="{betterColor}"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </IconTabFilter>
+                
+                <!-- Cost Analysis Tab -->
+                <IconTabFilter text="Cost Analysis" icon="sap-icon://money-bills">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Cost Breakdown -->
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Monthly Cost Estimate" level="H3"/>
+                                <ObjectNumber 
+                                    number="{comparison>/primaryMonthlyCost}" 
+                                    unit="USD"
+                                    state="None"
+                                    emphasized="true"/>
+                                <Text text="Primary Model"/>
+                            </VBox>
+                            <Icon 
+                                src="sap-icon://arrow-right" 
+                                size="2rem"
+                                class="sapUiMediumMargin"/>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Projected Savings" level="H3"/>
+                                <ObjectNumber 
+                                    number="{comparison>/monthlySavings}" 
+                                    unit="USD"
+                                    state="{comparison>/savingsState}"
+                                    emphasized="true"/>
+                                <Text text="vs Comparison Model"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="ROI Timeline" level="H3"/>
+                                <ObjectNumber 
+                                    number="{comparison>/roiMonths}" 
+                                    unit="months"
+                                    state="Success"/>
+                                <Text text="Break-even period"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <!-- Cost Trend Chart -->
+                        <Panel headerText="Cost Projection">
+                            <viz:VizFrame 
+                                id="costTrendChart"
+                                width="100%" 
+                                height="300px"
+                                vizType="line">
+                                <viz:dataset>
+                                    <viz:FlattenedDataset data="{comparison>/costTrend}">
+                                        <viz:dimensions>
+                                            <viz:DimensionDefinition name="Month" value="{month}"/>
+                                        </viz:dimensions>
+                                        <viz:measures>
+                                            <viz:MeasureDefinition name="Primary Model Cost" value="{primaryCost}"/>
+                                            <viz:MeasureDefinition name="Comparison Model Cost" value="{comparisonCost}"/>
+                                        </viz:measures>
+                                    </viz:FlattenedDataset>
+                                </viz:dataset>
+                            </viz:VizFrame>
+                        </Panel>
+                        
+                        <!-- Cost Factors -->
+                        <Panel headerText="Cost Factors" expandable="true" expanded="false">
+                            <List items="{comparison>/costFactors}">
+                                <StandardListItem 
+                                    title="{factor}"
+                                    description="{description}"
+                                    info="{impact}"
+                                    infoState="{impactState}"/>
+                            </List>
+                        </Panel>
+                    </VBox>
+                </IconTabFilter>
+                
+                <!-- Use Case Fit Tab -->
+                <IconTabFilter text="Use Case Fit" icon="sap-icon://business-objects-experience">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Use Case Assessment -->
+                        <VBox class="sapUiMediumMarginBottom">
+                            <Title text="Use Case Assessment" level="H3"/>
+                            <HBox class="sapUiMediumMargin">
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Label text="Primary Use Case"/>
+                                    <Select selectedKey="{comparison>/useCase}">
+                                        <items>
+                                            <core:Item key="SEMANTIC_SEARCH" text="Semantic Search"/>
+                                            <core:Item key="DOCUMENT_SIMILARITY" text="Document Similarity"/>
+                                            <core:Item key="CLUSTERING" text="Content Clustering"/>
+                                            <core:Item key="CLASSIFICATION" text="Text Classification"/>
+                                            <core:Item key="RAG" text="RAG Applications"/>
+                                            <core:Item key="MULTILINGUAL" text="Multilingual Processing"/>
+                                        </items>
+                                    </Select>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Label text="Data Volume"/>
+                                    <Select selectedKey="{comparison>/dataVolume}">
+                                        <items>
+                                            <core:Item key="SMALL" text="< 10K documents"/>
+                                            <core:Item key="MEDIUM" text="10K - 100K documents"/>
+                                            <core:Item key="LARGE" text="100K - 1M documents"/>
+                                            <core:Item key="ENTERPRISE" text="> 1M documents"/>
+                                        </items>
+                                    </Select>
+                                </VBox>
+                                <VBox>
+                                    <Label text=" "/>
+                                    <Button 
+                                        text="Assess Fit"
+                                        press=".onAssessUseCaseFit"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                        
+                        <!-- Fit Score -->
+                        <Panel headerText="Use Case Fit Scores">
+                            <HBox class="sapUiMediumMargin">
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Title text="Primary Model Fit" level="H4"/>
+                                    <suite:RadialMicroChart 
+                                        size="L"
+                                        percentage="{comparison>/primaryUseCaseFit}">
+                                        <suite:centerLabel>Fit Score</suite:centerLabel>
+                                    </suite:RadialMicroChart>
+                                    <Text text="{comparison>/primaryFitReason}"/>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Title text="Comparison Model Fit" level="H4"/>
+                                    <suite:RadialMicroChart 
+                                        size="L"
+                                        percentage="{comparison>/comparisonUseCaseFit}">
+                                        <suite:centerLabel>Fit Score</suite:centerLabel>
+                                    </suite:RadialMicroChart>
+                                    <Text text="{comparison>/comparisonFitReason}"/>
+                                </VBox>
+                                <VBox>
+                                    <Title text="Recommendation" level="H4"/>
+                                    <MessageStrip 
+                                        text="{comparison>/useCaseRecommendation}"
+                                        type="{comparison>/useCaseRecommendationType}"/>
+                                </VBox>
+                            </HBox>
+                        </Panel>
+                        
+                        <!-- Detailed Comparison -->
+                        <Table items="{comparison>/useCaseComparison}">
+                            <headerToolbar>
+                                <Toolbar>
+                                    <Title text="Detailed Use Case Analysis"/>
+                                </Toolbar>
+                            </headerToolbar>
+                            <columns>
+                                <Column>
+                                    <Text text="Aspect"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Primary Model"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Comparison Model"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Winner"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{aspect}"/>
+                                        <ObjectStatus 
+                                            text="{primaryRating}" 
+                                            state="{primaryState}"/>
+                                        <ObjectStatus 
+                                            text="{comparisonRating}" 
+                                            state="{comparisonState}"/>
+                                        <Icon 
+                                            src="{winnerIcon}" 
+                                            color="{winnerColor}"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </IconTabFilter>
+            </IconTabBar>
+        </content>
+        
+        <buttons>
+            <Button 
+                text="Generate Report"
+                icon="sap-icon://download"
+                press=".onGenerateComparisonReport"/>
+            <Button 
+                text="Save Comparison"
+                icon="sap-icon://save"
+                press=".onSaveComparison"/>
+            <Button 
+                text="Close"
+                press=".onCloseModelComparison"/>
+        </buttons>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

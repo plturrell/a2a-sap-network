@@ -1,0 +1,213 @@
+{
+    "_version": "1.60.0",
+    "sap.app": {
+        "id": "a2a.network.agent5",
+        "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "title": "{{agent5Title}}",
+        "description": "{{agent5Description}}",
+        "applicationVersion": {
+            "version": "1.0.0"
+        },
+        "dataSources": {
+            "mainService": {
+                "uri": "/a2a/agent5/v1/odata/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
+            }
+        }
+    },
+    "sap.ui5": {
+        "dependencies": {
+            "minUI5Version": "1.120.0",
+            "libs": {
+                "sap.fe.templates": {},
+                "sap.f": {},
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.uxap": {},
+                "sap.viz": {},
+                "sap.ui.table": {},
+                "sap.ui.comp": {},
+                "sap.suite.ui.commons": {},
+                "sap.suite.ui.microchart": {}
+            }
+        },
+        "models": {
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
+                "settings": {
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
+                }
+            },
+            "@i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "uri": "i18n/i18n.properties"
+            }
+        },
+        "routing": {
+            "routes": [
+                {
+                    "name": "QAValidationTasksList",
+                    "pattern": ":?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "QAValidationTasksList",
+                        "options": {
+                            "settings": {
+                                "entitySet": "QAValidationTasks",
+                                "variantManagement": "Page",
+                                "initialLoad": true,
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.LineItem": {
+                                        "tableSettings": {
+                                            "type": "ResponsiveTable",
+                                            "selectionMode": "Multi"
+                                        },
+                                        "actions": {
+                                            "CreateQATask": {
+                                                "press": ".extension.a2a.network.agent5.ext.controller.ListReportExt.onCreateQATask",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Create QA Task"
+                                            },
+                                            "TestRunner": {
+                                                "press": ".extension.a2a.network.agent5.ext.controller.ListReportExt.onTestRunner",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Test Runner"
+                                            },
+                                            "QualityDashboard": {
+                                                "press": ".extension.a2a.network.agent5.ext.controller.ListReportExt.onQualityDashboard",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Quality Dashboard"
+                                            },
+                                            "BatchExecution": {
+                                                "press": ".extension.a2a.network.agent5.ext.controller.ListReportExt.onBatchExecution",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": true,
+                                                "text": "Batch Execute"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "QAValidationTaskDetails",
+                    "pattern": "QAValidationTasks({key}):?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "QAValidationTaskDetails",
+                        "options": {
+                            "settings": {
+                                "entitySet": "QAValidationTasks",
+                                "navigation": {
+                                    "TestCases": {
+                                        "detail": {
+                                            "route": "TestCaseDetails"
+                                        }
+                                    },
+                                    "QualityIssues": {
+                                        "detail": {
+                                            "route": "QualityIssueDetails"
+                                        }
+                                    }
+                                },
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.HeaderInfo": {
+                                        "actions": {
+                                            "ExecuteTests": {
+                                                "press": ".extension.a2a.network.agent5.ext.controller.ObjectPageExt.onExecuteTests",
+                                                "visible": "{= ${validationStatus} === 'READY' || ${validationStatus} === 'DRAFT' }",
+                                                "enabled": true,
+                                                "text": "Execute Tests"
+                                            },
+                                            "ValidateCompliance": {
+                                                "press": ".extension.a2a.network.agent5.ext.controller.ObjectPageExt.onValidateCompliance",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Validate Compliance"
+                                            },
+                                            "GenerateTestReport": {
+                                                "press": ".extension.a2a.network.agent5.ext.controller.ObjectPageExt.onGenerateTestReport",
+                                                "visible": "{= ${validationStatus} === 'COMPLETED' }",
+                                                "enabled": true,
+                                                "text": "Generate Report"
+                                            },
+                                            "CreateDefect": {
+                                                "press": ".extension.a2a.network.agent5.ext.controller.ObjectPageExt.onCreateDefect",
+                                                "visible": "{= ${failedTests} > 0 }",
+                                                "enabled": true,
+                                                "text": "Create Defect"
+                                            },
+                                            "ScheduleRegression": {
+                                                "press": ".extension.a2a.network.agent5.ext.controller.ObjectPageExt.onScheduleRegression",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Schedule Regression"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "TestSuites",
+                    "pattern": "test-suites:?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "TestSuitesList",
+                        "options": {
+                            "settings": {
+                                "entitySet": "TestSuites",
+                                "variantManagement": "Page"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "QualityDashboard",
+                    "pattern": "quality-dashboard",
+                    "target": {
+                        "type": "Component",
+                        "name": "QualityDashboard"
+                    }
+                }
+            ]
+        },
+        "extends": {
+            "extensions": {
+                "sap.ui.controllerExtensions": {
+                    "sap.fe.templates.ListReport.ListReportController": {
+                        "controllerName": "a2a.network.agent5.ext.controller.ListReportExt"
+                    },
+                    "sap.fe.templates.ObjectPage.ObjectPageController": {
+                        "controllerName": "a2a.network.agent5.ext.controller.ObjectPageExt"
+                    }
+                }
+            }
+        }
+    },
+    "sap.fiori": {
+        "registrationIds": ["F0001A5"],
+        "archeType": "transactional"
+    },
+    "sap.fe": {
+        "type": "default"
+    }
+}

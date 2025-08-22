@@ -1,0 +1,216 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        id="formulaBuilderDialog"
+        title="Formula Builder & Calculator"
+        contentWidth="85%"
+        contentHeight="85%"
+        resizable="true">
+        
+        <content>
+            <l:Splitter height="100%" orientation="Horizontal">
+                <l:contentAreas>
+                    <!-- Formula Editor Panel -->
+                    <Panel headerText="Formula Editor" width="60%">
+                        <content>
+                            <VBox>
+                                <!-- Formula Input -->
+                                <VBox class="sapUiMediumMargin">
+                                    <Label text="Formula Expression"/>
+                                    <TextArea
+                                        id="formulaInput"
+                                        value="{formula>/currentFormula}"
+                                        rows="4"
+                                        width="100%"
+                                        placeholder="Enter your formula here..."
+                                        liveChange=".onFormulaChange"/>
+                                    
+                                    <HBox>
+                                        <Text 
+                                            text="Syntax: Valid"
+                                            class="sapUiTinyMarginTop"
+                                            visible="{formula>/syntaxValid}"/>
+                                        <Text 
+                                            text="Syntax Error: {formula>/syntaxError}"
+                                            class="sapUiTinyMarginTop sapMObjectStatusError"
+                                            visible="{= !${formula>/syntaxValid} }"/>
+                                    </HBox>
+                                </VBox>
+                                
+                                <!-- Function Library -->
+                                <Panel 
+                                    headerText="Function Library"
+                                    expandable="true"
+                                    expanded="true">
+                                    <l:Grid defaultSpan="L2 M3 S6">
+                                        <Button 
+                                            text="{formula>}"
+                                            press=".onAddFunction"
+                                            class="sapUiTinyMargin"/>
+                                    </l:Grid>
+                                </Panel>
+                                
+                                <!-- Operators -->
+                                <Panel 
+                                    headerText="Operators"
+                                    expandable="true"
+                                    expanded="true">
+                                    <l:Grid defaultSpan="L1 M2 S3">
+                                        <Button 
+                                            text="{formula>}"
+                                            press=".onAddOperator"
+                                            class="sapUiTinyMargin"/>
+                                    </l:Grid>
+                                </Panel>
+                                
+                                <!-- Variable Manager -->
+                                <Panel 
+                                    headerText="Variables"
+                                    expandable="true"
+                                    expanded="false">
+                                    <VBox>
+                                        <Toolbar>
+                                            <Input 
+                                                id="newVariableName"
+                                                placeholder="Variable name"
+                                                width="150px"/>
+                                            <Input 
+                                                id="newVariableValue"
+                                                placeholder="Default value"
+                                                type="Number"
+                                                width="100px"/>
+                                            <Button 
+                                                text="Add"
+                                                press=".onAddVariable"/>
+                                        </Toolbar>
+                                        
+                                        <Table
+                                            items="{formula>/variables}"
+                                            mode="Delete">
+                                            <columns>
+                                                <Column><Text text="Name"/></Column>
+                                                <Column><Text text="Value"/></Column>
+                                                <Column><Text text="Type"/></Column>
+                                            </columns>
+                                            <items>
+                                                <ColumnListItem>
+                                                    <cells>
+                                                        <Text text="{formula>name}"/>
+                                                        <Input 
+                                                            value="{formula>value}"
+                                                            type="Number"/>
+                                                        <Text text="{formula>type}"/>
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+                                        </Table>
+                                    </VBox>
+                                </Panel>
+                            </VBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Testing & Results Panel -->
+                    <Panel headerText="Testing & Results" width="40%">
+                        <content>
+                            <VBox class="sapUiMediumMargin">
+                                <!-- Quick Test -->
+                                <VBox>
+                                    <Label text="Quick Test"/>
+                                    <Button 
+                                        text="Test Formula"
+                                        type="Emphasized"
+                                        press=".onTestFormula"
+                                        enabled="{formula>/syntaxValid}"/>
+                                </VBox>
+                                
+                                <!-- Test Results -->
+                                <Panel 
+                                    headerText="Test Results"
+                                    class="sapUiMediumMarginTop">
+                                    <Table
+                                        items="{formula>/testResults}"
+                                        mode="None">
+                                        <columns>
+                                            <Column><Text text="Input"/></Column>
+                                            <Column><Text text="Result"/></Column>
+                                            <Column><Text text="Status"/></Column>
+                                        </columns>
+                                        <items>
+                                            <ColumnListItem>
+                                                <cells>
+                                                    <Text text="{formula>input}"/>
+                                                    <Text text="{formula>result}"/>
+                                                    <ObjectStatus 
+                                                        text="{formula>status}"
+                                                        state="{= ${formula>status} === 'PASS' ? 'Success' : 'Error' }"/>
+                                                </cells>
+                                            </ColumnListItem>
+                                        </items>
+                                    </Table>
+                                </Panel>
+                                
+                                <!-- Formula Examples -->
+                                <Panel 
+                                    headerText="Examples"
+                                    expandable="true"
+                                    expanded="false"
+                                    class="sapUiMediumMarginTop">
+                                    <List>
+                                        <StandardListItem
+                                            title="Compound Interest"
+                                            description="P * (1 + r/n)^(n*t)"
+                                            press=".onLoadExample"/>
+                                        <StandardListItem
+                                            title="Quadratic Formula"
+                                            description="(-b + SQRT(b^2 - 4*a*c)) / (2*a)"
+                                            press=".onLoadExample"/>
+                                        <StandardListItem
+                                            title="Normal Distribution"
+                                            description="(1/SQRT(2*PI*σ²))*EXP(-0.5*((x-μ)/σ)²)"
+                                            press=".onLoadExample"/>
+                                        <StandardListItem
+                                            title="Black-Scholes"
+                                            description="S*N(d1) - K*EXP(-r*T)*N(d2)"
+                                            press=".onLoadExample"/>
+                                    </List>
+                                </Panel>
+                                
+                                <!-- Formula History -->
+                                <Panel 
+                                    headerText="Recent Formulas"
+                                    expandable="true"
+                                    expanded="false"
+                                    class="sapUiMediumMarginTop">
+                                    <List items="{formula>/history}">
+                                        <StandardListItem
+                                            title="{formula>expression}"
+                                            description="{formula>timestamp}"
+                                            press=".onLoadFromHistory"/>
+                                    </List>
+                                </Panel>
+                            </VBox>
+                        </content>
+                    </Panel>
+                </l:contentAreas>
+            </l:Splitter>
+        </content>
+        
+        <beginButton>
+            <Button text="Clear" press=".onClearFormula"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Use Formula"
+                type="Emphasized"
+                press=".onUseFormula"
+                enabled="{formula>/syntaxValid}"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

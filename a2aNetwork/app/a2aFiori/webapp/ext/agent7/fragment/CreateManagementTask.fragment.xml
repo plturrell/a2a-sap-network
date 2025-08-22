@@ -1,0 +1,352 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="createManagementTaskDialog"
+        title="Create Agent Management Task"
+        contentWidth="70%"
+        contentHeight="75%"
+        resizable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Basic Information Tab -->
+                    <IconTabFilter text="Basic Info" icon="sap-icon://hint">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Task Name" required="true"/>
+                                <Input 
+                                    value="{create>/taskName}"
+                                    placeholder="Enter management task name"/>
+                                
+                                <Label text="Description"/>
+                                <TextArea 
+                                    value="{create>/description}"
+                                    rows="3"
+                                    placeholder="Describe the management task"/>
+                                
+                                <Label text="Managed Agent" required="true"/>
+                                <Select 
+                                    selectedKey="{create>/managedAgent}"
+                                    items="{create>/availableAgents}">
+                                    <core:ListItem 
+                                        key="{create>agentId}"
+                                        text="{create>agentName} ({create>agentType})"/>
+                                </Select>
+                                
+                                <Label text="Operation Type" required="true"/>
+                                <Select 
+                                    selectedKey="{create>/operationType}"
+                                    items="{create>/availableOperations}">
+                                    <core:ListItem 
+                                        key="{create>operationKey}"
+                                        text="{create>operationName}"/>
+                                </Select>
+                                
+                                <Label text="Priority"/>
+                                <Select selectedKey="{create>/priority}">
+                                    <items>
+                                        <core:Item key="LOW" text="Low"/>
+                                        <core:Item key="MEDIUM" text="Medium"/>
+                                        <core:Item key="HIGH" text="High"/>
+                                        <core:Item key="CRITICAL" text="Critical"/>
+                                    </items>
+                                </Select>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Operation Configuration Tab -->
+                    <IconTabFilter text="Operation Config" icon="sap-icon://settings">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Execution Mode"/>
+                                <Select selectedKey="{create>/executionMode}">
+                                    <items>
+                                        <core:Item key="IMMEDIATE" text="Execute Immediately"/>
+                                        <core:Item key="SCHEDULED" text="Schedule for Later"/>
+                                        <core:Item key="CONDITIONAL" text="Execute When Condition Met"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Scheduled Time"/>
+                                <DateTimePicker 
+                                    value="{create>/scheduledTime}"
+                                    visible="{= ${create>/executionMode} === 'SCHEDULED' }"/>
+                                
+                                <Label text="Timeout (minutes)"/>
+                                <StepInput 
+                                    value="{create>/timeout}"
+                                    min="1"
+                                    max="1440"
+                                    step="5"/>
+                                
+                                <Label text="Retry Attempts"/>
+                                <StepInput 
+                                    value="{create>/retryAttempts}"
+                                    min="0"
+                                    max="10"
+                                    step="1"/>
+                                
+                                <Label text="Operation Options"/>
+                                <VBox>
+                                    <CheckBox 
+                                        text="Force execution (ignore warnings)"
+                                        selected="{create>/forceExecution}"/>
+                                    <CheckBox 
+                                        text="Create backup before operation"
+                                        selected="{create>/createBackup}"/>
+                                    <CheckBox 
+                                        text="Rollback on failure"
+                                        selected="{create>/rollbackOnFailure}"/>
+                                    <CheckBox 
+                                        text="Send notification on completion"
+                                        selected="{create>/notifyOnCompletion}"/>
+                                </VBox>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Parameters Tab -->
+                    <IconTabFilter text="Parameters" icon="sap-icon://parameter">
+                        <VBox>
+                            <Toolbar>
+                                <Title text="Operation Parameters"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Add Parameter"
+                                    icon="sap-icon://add"
+                                    press=".onAddParameter"/>
+                                <Button 
+                                    text="Load Template"
+                                    icon="sap-icon://template"
+                                    press=".onLoadParameterTemplate"/>
+                            </Toolbar>
+                            
+                            <Table
+                                items="{create>/parameters}"
+                                mode="Delete"
+                                delete=".onDeleteParameter">
+                                <columns>
+                                    <Column width="30%">
+                                        <Text text="Parameter Name"/>
+                                    </Column>
+                                    <Column width="20%">
+                                        <Text text="Type"/>
+                                    </Column>
+                                    <Column width="40%">
+                                        <Text text="Value"/>
+                                    </Column>
+                                    <Column width="10%">
+                                        <Text text="Required"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Input 
+                                                value="{create>parameterName}"
+                                                placeholder="Parameter name"/>
+                                            <Select selectedKey="{create>parameterType}">
+                                                <items>
+                                                    <core:Item key="STRING" text="String"/>
+                                                    <core:Item key="NUMBER" text="Number"/>
+                                                    <core:Item key="BOOLEAN" text="Boolean"/>
+                                                    <core:Item key="DATE" text="Date"/>
+                                                    <core:Item key="JSON" text="JSON"/>
+                                                </items>
+                                            </Select>
+                                            <Input 
+                                                value="{create>parameterValue}"
+                                                placeholder="Parameter value"/>
+                                            <CheckBox selected="{create>required}"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Dependencies Tab -->
+                    <IconTabFilter text="Dependencies" icon="sap-icon://chain-link">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Dependency Type"/>
+                                <Select selectedKey="{create>/dependencyType}">
+                                    <items>
+                                        <core:Item key="NONE" text="No Dependencies"/>
+                                        <core:Item key="AGENT_STATUS" text="Agent Status"/>
+                                        <core:Item key="TASK_COMPLETION" text="Task Completion"/>
+                                        <core:Item key="RESOURCE_AVAILABILITY" text="Resource Availability"/>
+                                        <core:Item key="TIME_WINDOW" text="Time Window"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Required Agent Status"/>
+                                <Select 
+                                    selectedKey="{create>/requiredAgentStatus}"
+                                    visible="{= ${create>/dependencyType} === 'AGENT_STATUS' }">
+                                    <items>
+                                        <core:Item key="ONLINE" text="Online"/>
+                                        <core:Item key="IDLE" text="Idle"/>
+                                        <core:Item key="HEALTHY" text="Healthy"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Prerequisite Tasks"/>
+                                <MultiInput 
+                                    value="{create>/prerequisiteTasks}"
+                                    visible="{= ${create>/dependencyType} === 'TASK_COMPLETION' }"
+                                    placeholder="Enter task IDs"/>
+                                
+                                <Label text="Resource Requirements"/>
+                                <VBox visible="{= ${create>/dependencyType} === 'RESOURCE_AVAILABILITY' }">
+                                    <HBox>
+                                        <Label text="Min CPU Available (%):"/>
+                                        <Slider 
+                                            value="{create>/minCpuAvailable}"
+                                            min="0"
+                                            max="100"
+                                            step="10"
+                                            width="150px"/>
+                                    </HBox>
+                                    <HBox>
+                                        <Label text="Min Memory Available (%):"/>
+                                        <Slider 
+                                            value="{create>/minMemoryAvailable}"
+                                            min="0"
+                                            max="100"
+                                            step="10"
+                                            width="150px"/>
+                                    </HBox>
+                                </VBox>
+                                
+                                <Label text="Execution Time Window"/>
+                                <VBox visible="{= ${create>/dependencyType} === 'TIME_WINDOW' }">
+                                    <HBox>
+                                        <Label text="Start Time:"/>
+                                        <TimePicker value="{create>/timeWindowStart}"/>
+                                    </HBox>
+                                    <HBox>
+                                        <Label text="End Time:"/>
+                                        <TimePicker value="{create>/timeWindowEnd}"/>
+                                    </HBox>
+                                </VBox>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Monitoring Tab -->
+                    <IconTabFilter text="Monitoring" icon="sap-icon://monitor">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Monitoring Level"/>
+                                <Select selectedKey="{create>/monitoringLevel}">
+                                    <items>
+                                        <core:Item key="BASIC" text="Basic (Status Only)"/>
+                                        <core:Item key="DETAILED" text="Detailed (With Metrics)"/>
+                                        <core:Item key="VERBOSE" text="Verbose (Full Logging)"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Health Check Interval"/>
+                                <StepInput 
+                                    value="{create>/healthCheckInterval}"
+                                    min="5"
+                                    max="300"
+                                    step="5"
+                                    description="seconds"/>
+                                
+                                <Label text="Performance Monitoring"/>
+                                <VBox>
+                                    <CheckBox 
+                                        text="Monitor CPU usage"
+                                        selected="{create>/monitorCpu}"/>
+                                    <CheckBox 
+                                        text="Monitor memory usage"
+                                        selected="{create>/monitorMemory}"/>
+                                    <CheckBox 
+                                        text="Monitor network latency"
+                                        selected="{create>/monitorNetwork}"/>
+                                    <CheckBox 
+                                        text="Monitor response times"
+                                        selected="{create>/monitorResponse}"/>
+                                </VBox>
+                                
+                                <Label text="Alert Thresholds"/>
+                                <VBox>
+                                    <HBox>
+                                        <Label text="CPU Alert Threshold (%):"/>
+                                        <Slider 
+                                            value="{create>/cpuAlertThreshold}"
+                                            min="50"
+                                            max="100"
+                                            step="5"
+                                            width="150px"/>
+                                    </HBox>
+                                    <HBox>
+                                        <Label text="Memory Alert Threshold (%):"/>
+                                        <Slider 
+                                            value="{create>/memoryAlertThreshold}"
+                                            min="50"
+                                            max="100"
+                                            step="5"
+                                            width="150px"/>
+                                    </HBox>
+                                    <HBox>
+                                        <Label text="Response Time Alert (ms):"/>
+                                        <StepInput 
+                                            value="{create>/responseTimeAlert}"
+                                            min="100"
+                                            max="10000"
+                                            step="100"/>
+                                    </HBox>
+                                </VBox>
+                                
+                                <Label text="Notification Settings"/>
+                                <VBox>
+                                    <CheckBox 
+                                        text="Email notifications"
+                                        selected="{create>/emailNotifications}"/>
+                                    <CheckBox 
+                                        text="SMS notifications for critical alerts"
+                                        selected="{create>/smsNotifications}"/>
+                                    <CheckBox 
+                                        text="Slack notifications"
+                                        selected="{create>/slackNotifications}"/>
+                                </VBox>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelCreateTask"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Create"
+                type="Emphasized"
+                press=".onConfirmCreateTask"
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/managedAgent} &amp;&amp; ${create>/operationType} }"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

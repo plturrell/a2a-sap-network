@@ -1,0 +1,278 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="routingDecisionManagerDialog"
+        title="Routing Decision Manager"
+        contentWidth="85%"
+        contentHeight="80%"
+        resizable="true">
+        
+        <content>
+            <l:Splitter height="100%" orientation="Horizontal">
+                <l:contentAreas>
+                    <!-- Routing Rules Panel -->
+                    <Panel headerText="Routing Rules" width="40%">
+                        <content>
+                            <VBox>
+                                <Toolbar>
+                                    <Title text="Active Rules"/>
+                                    <ToolbarSpacer/>
+                                    <Button 
+                                        text="Add Rule"
+                                        icon="sap-icon://add"
+                                        press=".onAddRoutingRule"/>
+                                    <Button 
+                                        text="Import Rules"
+                                        icon="sap-icon://upload"
+                                        press=".onImportRoutingRules"/>
+                                </Toolbar>
+                                
+                                <Table
+                                    items="{routing>/rules}"
+                                    mode="SingleSelection"
+                                    selectionChange=".onRoutingRuleSelect">
+                                    <columns>
+                                        <Column>
+                                            <Text text="Rule Name"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Source"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Target"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Priority"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Active"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="{routing>ruleName}"/>
+                                                <Text text="{routing>sourceAgent}"/>
+                                                <Text text="{routing>targetAgent}"/>
+                                                <Text text="{routing>priority}"/>
+                                                <Switch 
+                                                    state="{routing>isActive}"
+                                                    change=".onToggleRule"/>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </VBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Decision Making Panel -->
+                    <Panel headerText="Decision Making" width="60%">
+                        <content>
+                            <IconTabBar expandable="false">
+                                <items>
+                                    <!-- Pending Decisions Tab -->
+                                    <IconTabFilter text="Pending Decisions" icon="sap-icon://pending">
+                                        <Table
+                                            items="{routing>/pendingDecisions}"
+                                            mode="SingleSelection">
+                                            <columns>
+                                                <Column>
+                                                    <Text text="Task"/>
+                                                </Column>
+                                                <Column>
+                                                    <Text text="Quality Score"/>
+                                                </Column>
+                                                <Column>
+                                                    <Text text="Recommended Route"/>
+                                                </Column>
+                                                <Column>
+                                                    <Text text="Confidence"/>
+                                                </Column>
+                                                <Column>
+                                                    <Text text="Actions"/>
+                                                </Column>
+                                            </columns>
+                                            <items>
+                                                <ColumnListItem>
+                                                    <cells>
+                                                        <Text text="{routing>taskName}"/>
+                                                        <ProgressIndicator
+                                                            percentValue="{routing>qualityScore}"
+                                                            displayValue="{routing>qualityScore}%"
+                                                            state="{= ${routing>qualityScore} >= 80 ? 'Success' : ${routing>qualityScore} >= 60 ? 'Warning' : 'Error' }"/>
+                                                        <Text text="{routing>recommendedAgent}"/>
+                                                        <RatingIndicator
+                                                            value="{= ${routing>confidence} / 20 }"
+                                                            maxValue="5"
+                                                            enabled="false"/>
+                                                        <HBox>
+                                                            <Button 
+                                                                text="Approve"
+                                                                type="Accept"
+                                                                press=".onApproveRouting"/>
+                                                            <Button 
+                                                                text="Override"
+                                                                type="Neutral"
+                                                                press=".onOverrideRouting"/>
+                                                        </HBox>
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+                                        </Table>
+                                    </IconTabFilter>
+                                    
+                                    <!-- Decision Analytics Tab -->
+                                    <IconTabFilter text="Analytics" icon="sap-icon://line-chart">
+                                        <l:Grid defaultSpan="L6 M12 S12">
+                                            <l:content>
+                                                <Panel headerText="Routing Success Rate by Agent">
+                                                    <GenericTile
+                                                        class="sapUiTinyMargin"
+                                                        header="Agent 1"
+                                                        subheader="Data Standardization">
+                                                        <tileContent>
+                                                            <TileContent>
+                                                                <content>
+                                                                    <NumericContent
+                                                                        value="92"
+                                                                        valueColor="Good"
+                                                                        indicator="Up"/>
+                                                                </content>
+                                                            </TileContent>
+                                                        </tileContent>
+                                                    </GenericTile>
+                                                    
+                                                    <GenericTile
+                                                        class="sapUiTinyMargin"
+                                                        header="Agent 2"
+                                                        subheader="AI Preparation">
+                                                        <tileContent>
+                                                            <TileContent>
+                                                                <content>
+                                                                    <NumericContent
+                                                                        value="87"
+                                                                        valueColor="Good"
+                                                                        indicator="Up"/>
+                                                                </content>
+                                                            </TileContent>
+                                                        </tileContent>
+                                                    </GenericTile>
+                                                    
+                                                    <GenericTile
+                                                        class="sapUiTinyMargin"
+                                                        header="Agent 3"
+                                                        subheader="Vector Processing">
+                                                        <tileContent>
+                                                            <TileContent>
+                                                                <content>
+                                                                    <NumericContent
+                                                                        value="94"
+                                                                        valueColor="Good"
+                                                                        indicator="Up"/>
+                                                                </content>
+                                                            </TileContent>
+                                                        </tileContent>
+                                                    </GenericTile>
+                                                </Panel>
+                                                
+                                                <Panel headerText="Decision Time Analysis">
+                                                    <VBox class="sapUiMediumMargin">
+                                                        <HBox justifyContent="SpaceBetween">
+                                                            <Label text="Average Decision Time:"/>
+                                                            <Text text="2.3 seconds"/>
+                                                        </HBox>
+                                                        <HBox justifyContent="SpaceBetween">
+                                                            <Label text="Fastest Decision:"/>
+                                                            <Text text="0.8 seconds"/>
+                                                        </HBox>
+                                                        <HBox justifyContent="SpaceBetween">
+                                                            <Label text="Slowest Decision:"/>
+                                                            <Text text="15.2 seconds"/>
+                                                        </HBox>
+                                                        <HBox justifyContent="SpaceBetween">
+                                                            <Label text="Manual Overrides:"/>
+                                                            <Text text="12%"/>
+                                                        </HBox>
+                                                    </VBox>
+                                                </Panel>
+                                            </l:content>
+                                        </l:Grid>
+                                    </IconTabFilter>
+                                    
+                                    <!-- Configuration Tab -->
+                                    <IconTabFilter text="Configuration" icon="sap-icon://settings">
+                                        <form:SimpleForm
+                                            editable="true"
+                                            layout="ResponsiveGridLayout">
+                                            <form:content>
+                                                <Label text="Auto-Decision Threshold"/>
+                                                <Slider 
+                                                    value="80"
+                                                    min="0"
+                                                    max="100"
+                                                    step="5"
+                                                    enableTickmarks="true"
+                                                    inputsAsTooltips="true"/>
+                                                
+                                                <Label text="Decision Timeout (seconds)"/>
+                                                <StepInput 
+                                                    value="30"
+                                                    min="5"
+                                                    max="300"
+                                                    step="5"/>
+                                                
+                                                <Label text="Load Balancing"/>
+                                                <Select selectedKey="WEIGHTED">
+                                                    <items>
+                                                        <core:Item key="ROUND_ROBIN" text="Round Robin"/>
+                                                        <core:Item key="WEIGHTED" text="Weighted by Capacity"/>
+                                                        <core:Item key="LEAST_LOAD" text="Least Loaded"/>
+                                                        <core:Item key="QUALITY_BASED" text="Quality Based"/>
+                                                    </items>
+                                                </Select>
+                                                
+                                                <Label text="Routing Options"/>
+                                                <VBox>
+                                                    <CheckBox 
+                                                        text="Enable fallback routing"
+                                                        selected="true"/>
+                                                    <CheckBox 
+                                                        text="Log all routing decisions"
+                                                        selected="true"/>
+                                                    <CheckBox 
+                                                        text="Require confirmation for low confidence"
+                                                        selected="true"/>
+                                                    <CheckBox 
+                                                        text="Send notifications on manual overrides"
+                                                        selected="false"/>
+                                                </VBox>
+                                            </form:content>
+                                        </form:SimpleForm>
+                                    </IconTabFilter>
+                                </items>
+                            </IconTabBar>
+                        </content>
+                    </Panel>
+                </l:contentAreas>
+            </l:Splitter>
+        </content>
+        
+        <beginButton>
+            <Button text="Close" press=".onCloseRoutingManager"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Save Configuration"
+                type="Emphasized"
+                press=".onSaveRoutingConfig"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

@@ -1,25 +1,87 @@
 <core:FragmentDefinition
     xmlns="sap.m"
+    xmlns:f="sap.f"
     xmlns:core="sap.ui.core">
+    
+    <!-- SAP Standard Dialog Pattern -->
     <Dialog
         id="personalizationDialog"
-        title="Personalization"
-        contentWidth="300px">
+        title="{i18n>personalization}"
+        contentWidth="90%"
+        contentHeight="auto"
+        resizable="true"
+        draggable="true"
+        class="sapUiResponsiveMargin"
+        afterClose="onDialogAfterClose">
+        
         <content>
-            <VBox class="sapUiSmallMargin">
-                <Label text="Theme Selection" class="sapUiTinyMarginBottom"/>
-                <Select id="themeSelect" width="100%" change="onThemeChange">
-                    <core:Item key="sap_horizon" text="SAP Horizon (Default)" />
-                    <core:Item key="sap_horizon_dark" text="SAP Horizon Dark" />
-                    <core:Item key="sap_fiori_3" text="SAP Fiori 3" />
-                    <core:Item key="sap_fiori_3_dark" text="SAP Fiori 3 Dark" />
-                    <core:Item key="sap_belize" text="SAP Belize" />
-                    <core:Item key="sap_belize_plus" text="SAP Belize Deep" />
+            <!-- Standard Form Layout using SimpleForm -->
+            <f:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                labelSpanXL="4"
+                labelSpanL="4"
+                labelSpanM="12"
+                labelSpanS="12"
+                adjustLabelSpan="false"
+                emptySpanXL="0"
+                emptySpanL="0"
+                emptySpanM="0"
+                emptySpanS="0"
+                columnsXL="1"
+                columnsL="1"
+                columnsM="1"
+                singleContainerFullSize="false"
+                class="sapUiResponsiveMargin">
+                
+                <!-- Form Title -->
+                <Title text="{i18n>themeSettings}"/>
+                
+                <!-- Theme Selection -->
+                <Label text="{i18n>themeSelection}" required="false"/>
+                <Select id="themeSelect" width="100%" change="onThemeChange" selectedKey="{/selectedTheme}">
+                    <core:Item key="sap_horizon" text="{i18n>sapHorizon}" />
+                    <core:Item key="sap_horizon_dark" text="{i18n>sapHorizonDark}" />
+                    <core:Item key="sap_horizon_hcb" text="{i18n>sapHorizonHCB}" />
+                    <core:Item key="sap_horizon_hcw" text="{i18n>sapHorizonHCW}" />
                 </Select>
-            </VBox>
+                
+                <!-- Additional Settings -->
+                <Title text="{i18n>displaySettings}"/>
+                
+                <Label text="{i18n>contentDensity}"/>
+                <SegmentedButton selectedKey="{/contentDensity}" selectionChange="onContentDensityChange">
+                    <items>
+                        <SegmentedButtonItem key="cozy" text="{i18n>cozy}"/>
+                        <SegmentedButtonItem key="compact" text="{i18n>compact}"/>
+                    </items>
+                </SegmentedButton>
+                
+                <Label text="{i18n>language}"/>
+                <Select id="languageSelect" width="100%" change="onLanguageChange" selectedKey="{/selectedLanguage}">
+                    <core:Item key="en" text="English" />
+                    <core:Item key="de" text="Deutsch" />
+                    <core:Item key="fr" text="Français" />
+                    <core:Item key="es" text="Español" />
+                </Select>
+                
+            </f:SimpleForm>
         </content>
+        
+        <!-- SAP Standard Button Pattern -->
         <beginButton>
-            <Button text="Close" press="onClosePersonalization" />
+            <Button
+                text="{i18n>apply}"
+                type="Emphasized"
+                press="onApplyPersonalization"/>
         </beginButton>
+        
+        <endButton>
+            <Button
+                text="{i18n>close}"
+                press="onClosePersonalization"/>
+        </endButton>
+        
     </Dialog>
+    
 </core:FragmentDefinition>

@@ -1,0 +1,62 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core">
+    
+    <!-- SAP Standard Dialog Pattern -->
+    <Dialog
+        id="{dialogId}"
+        title="{title}"
+        contentWidth="90%"
+        contentHeight="auto"
+        resizable="true"
+        draggable="true"
+        class="sapUiResponsiveMargin"
+        afterClose="onDialogAfterClose">
+        
+        <content>
+            <!-- Standard Form Layout using SimpleForm -->
+            <f:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                labelSpanXL="4"
+                labelSpanL="4"
+                labelSpanM="12"
+                labelSpanS="12"
+                adjustLabelSpan="false"
+                emptySpanXL="0"
+                emptySpanL="0"
+                emptySpanM="0"
+                emptySpanS="0"
+                columnsXL="2"
+                columnsL="2"
+                columnsM="1"
+                singleContainerFullSize="false"
+                class="sapUiResponsiveMargin">
+                
+                <!-- Form content will be added here -->
+                <core:Fragment fragmentName="{formFragment}" type="XML"/>
+                
+            </f:SimpleForm>
+        </content>
+        
+        <!-- SAP Standard Button Pattern -->
+        <beginButton>
+            <Button
+                id="{primaryButtonId}"
+                text="{primaryButtonText}"
+                type="Emphasized"
+                press="{primaryButtonPress}"
+                enabled="{primaryButtonEnabled}"/>
+        </beginButton>
+        
+        <endButton>
+            <Button
+                id="{secondaryButtonId}"
+                text="{secondaryButtonText}"
+                press="{secondaryButtonPress}"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

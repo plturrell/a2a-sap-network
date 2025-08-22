@@ -1,0 +1,147 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:upload="sap.ui.unified">
+    
+    <Dialog
+        id="importSchemaDialog"
+        title="Import Schema Template"
+        contentWidth="60%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <form:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                labelSpanXL="3"
+                labelSpanL="3"
+                labelSpanM="12"
+                labelSpanS="12"
+                adjustLabelSpan="false"
+                columnsXL="1"
+                columnsL="1"
+                columnsM="1">
+                
+                <form:content>
+                    <Label text="Schema Source" required="true"/>
+                    <RadioButtonGroup selectedIndex="{import>/schemaSource}">
+                        <RadioButton text="Upload File"/>
+                        <RadioButton text="Enter JSON"/>
+                        <RadioButton text="From URL"/>
+                    </RadioButtonGroup>
+                    
+                    <!-- File Upload Option -->
+                    <VBox visible="{= ${import>/schemaSource} === 0 }">
+                        <Label text="Schema File"/>
+                        <upload:FileUploader 
+                            id="schemaFileUploader"
+                            multiple="false"
+                            uploadComplete=".onSchemaFileUploaded"
+                            fileType="json,xsd,avsc"
+                            mimeType="application/json,application/xml,text/plain"
+                            placeholder="Select schema file..."/>
+                        <Text text="Supported formats: JSON Schema, XSD, Avro Schema" class="sapUiTinyMarginTop"/>
+                    </VBox>
+                    
+                    <!-- JSON Input Option -->
+                    <VBox visible="{= ${import>/schemaSource} === 1 }">
+                        <Label text="JSON Schema"/>
+                        <TextArea 
+                            value="{import>/schemaJson}"
+                            rows="8"
+                            placeholder="Enter JSON schema definition..."
+                            growing="true"/>
+                    </VBox>
+                    
+                    <!-- URL Option -->
+                    <VBox visible="{= ${import>/schemaSource} === 2 }">
+                        <Label text="Schema URL"/>
+                        <Input 
+                            value="{import>/schemaUrl}"
+                            placeholder="https://example.com/schema.json"/>
+                        <Button 
+                            text="Fetch Schema"
+                            press=".onFetchSchemaFromUrl"
+                            class="sapUiTinyMarginTop"/>
+                    </VBox>
+                    
+                    <Label text="Template Name" required="true"/>
+                    <Input 
+                        value="{import>/templateName}"
+                        placeholder="Enter template name"
+                        liveChange=".onTemplateNameChange"/>
+                    
+                    <Label text="Format Type"/>
+                    <Select selectedKey="{import>/format}">
+                        <items>
+                            <core:Item key="JSON" text="JSON Schema"/>
+                            <core:Item key="XSD" text="XML Schema (XSD)"/>
+                            <core:Item key="AVRO" text="Avro Schema"/>
+                            <core:Item key="OPENAPI" text="OpenAPI Schema"/>
+                        </items>
+                    </Select>
+                    
+                    <Label text="Description"/>
+                    <TextArea 
+                        value="{import>/description}"
+                        rows="2"
+                        placeholder="Describe this schema template"/>
+                    
+                    <Label text="Tags"/>
+                    <MultiInput 
+                        value="{import>/tags}"
+                        showValueHelp="true"
+                        valueHelpRequest=".onTagsValueHelp"
+                        placeholder="Add tags for classification"/>
+                    
+                    <Label text="Validation Options"/>
+                    <VBox>
+                        <CheckBox 
+                            text="Validate on import"
+                            selected="{import>/validateOnImport}"/>
+                        <CheckBox 
+                            text="Set as default for format"
+                            selected="{import>/setAsDefault}"/>
+                        <CheckBox 
+                            text="Generate sample data"
+                            selected="{import>/generateSample}"/>
+                    </VBox>
+                </form:content>
+            </form:SimpleForm>
+            
+            <!-- Preview Section -->
+            <Panel 
+                headerText="Schema Preview"
+                expandable="true"
+                expanded="false"
+                class="sapUiResponsiveMargin">
+                <content>
+                    <TextArea 
+                        id="schemaPreview"
+                        value="{import>/previewText}"
+                        rows="6"
+                        editable="false"
+                        growing="true"/>
+                </content>
+            </Panel>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelImport"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Import"
+                type="Emphasized"
+                press=".onConfirmImport"
+                enabled="{= ${import>/templateName} && (${import>/schemaJson} || ${import>/schemaUrl} || ${import>/uploadedFile}) }"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

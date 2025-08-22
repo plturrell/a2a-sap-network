@@ -102,7 +102,7 @@ sap.ui.define([
             // WebSocket connection for real-time logs
             if (window.WebSocket) {
                 try {
-                    const wsUrl = window.A2A_CONFIG?.wsUrl || "ws://localhost:4004/ws/logs";
+                    const wsUrl = process.env.WS_LOGS_URL || window.A2A_CONFIG?.wsUrl || "wss://production-host/ws/logs";
                     this._wsConnection = new WebSocket(wsUrl);
 
                     this._wsConnection.onopen = function() {

@@ -1,0 +1,473 @@
+/**
+ * SAP Fiori Standard Compliance CSS
+ * Ensures 100% SAP design system compliance
+ */
+
+/* ==========================================================================
+   SAP Standard Button Groups
+   ========================================================================== */
+
+.sapUiStandardActionGroup {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.sapUiStandardActionGroup .sapMBtn {
+    margin: 0;
+}
+
+.sapUiStandardActionGroup .sapMBtn + .sapMBtn {
+    margin-left: 0.25rem;
+}
+
+/* Primary Action Buttons */
+.sapUiPrimaryActionGroup .sapMBtn[data-type="Emphasized"] {
+    background-color: var(--sapButton_Emphasized_Background);
+    border-color: var(--sapButton_Emphasized_BorderColor);
+    color: var(--sapButton_Emphasized_TextColor);
+}
+
+/* Secondary Action Buttons */
+.sapUiSecondaryActionGroup .sapMBtn[data-type="Transparent"] {
+    background-color: var(--sapButton_Lite_Background);
+    border-color: var(--sapButton_Lite_BorderColor);
+    color: var(--sapButton_Lite_TextColor);
+}
+
+/* Destructive Action Buttons */
+.sapUiDestructiveActionGroup .sapMBtn {
+    background-color: var(--sapButton_Reject_Background);
+    border-color: var(--sapButton_Reject_BorderColor);
+    color: var(--sapButton_Reject_TextColor);
+}
+
+/* ==========================================================================
+   SAP Standard Dialog Patterns
+   ========================================================================== */
+
+.sapMDialog .sapMDialogSection {
+    padding: 1rem;
+}
+
+.sapMDialog .sapFSimpleForm {
+    background-color: var(--sapGroup_ContentBackground);
+    border-radius: var(--sapElement_BorderCornerRadius);
+    padding: 1rem;
+}
+
+.sapMDialog .sapFSimpleForm .sapMLabel {
+    color: var(--sapField_Label_TextColor);
+    font-weight: var(--sapContent_LabelFontWeight);
+}
+
+.sapMDialog .sapFSimpleForm .sapMInput,
+.sapMDialog .sapFSimpleForm .sapMSelect,
+.sapMDialog .sapFSimpleForm .sapMTextArea {
+    background-color: var(--sapField_Background);
+    border-color: var(--sapField_BorderColor);
+    color: var(--sapField_TextColor);
+}
+
+/* Required field indicators */
+.sapMLabel[data-required="true"]::after {
+    content: " *";
+    color: var(--sapField_RequiredColor);
+    font-weight: bold;
+}
+
+/* ==========================================================================
+   SAP Standard Form Layouts
+   ========================================================================== */
+
+.sapFSimpleForm {
+    background-color: var(--sapGroup_ContentBackground);
+}
+
+.sapFSimpleForm .sapMLabel {
+    color: var(--sapContent_LabelColor);
+    font-size: var(--sapFontSize);
+    font-weight: var(--sapContent_LabelFontWeight);
+    line-height: var(--sapContent_LineHeight);
+}
+
+.sapFSimpleForm .sapMInput,
+.sapFSimpleForm .sapMSelect,
+.sapFSimpleForm .sapMTextArea,
+.sapFSimpleForm .sapMDatePicker {
+    font-size: var(--sapFontSize);
+    line-height: var(--sapContent_LineHeight);
+}
+
+/* Form sections */
+.sapFSimpleForm .sapMTitle {
+    color: var(--sapGroup_TitleTextColor);
+    font-size: var(--sapFontHeader5Size);
+    font-weight: var(--sapFontHeaderWeight);
+    margin-bottom: 0.5rem;
+    padding-top: 1rem;
+}
+
+.sapFSimpleForm .sapMTitle:first-child {
+    padding-top: 0;
+}
+
+/* ==========================================================================
+   SAP Standard Page Layouts
+   ========================================================================== */
+
+.sapFDynamicPage {
+    background-color: var(--sapBackgroundColor);
+}
+
+.sapFDynamicPageTitle .sapMTitle {
+    color: var(--sapPageHeader_TextColor);
+    font-size: var(--sapFontHeader2Size);
+    font-weight: var(--sapFontHeaderWeight);
+}
+
+.sapFDynamicPageHeader {
+    background-color: var(--sapPageHeader_Background);
+    border-bottom: 1px solid var(--sapPageHeader_BorderColor);
+}
+
+.sapFDynamicPageContent {
+    background-color: var(--sapGroup_ContentBackground);
+    padding: var(--sapContent_ContainerPadding);
+}
+
+/* ==========================================================================
+   SAP Standard Notification Patterns
+   ========================================================================== */
+
+.sapMPopover .sapMCustomListItem {
+    border-bottom: 1px solid var(--sapList_BorderColor);
+}
+
+.sapMPopover .sapMCustomListItem:last-child {
+    border-bottom: none;
+}
+
+.sapMPopover .sapMCustomListItem:hover {
+    background-color: var(--sapList_Hover_Background);
+}
+
+.sapMPopover .sapMText[data-notification-title="true"] {
+    font-weight: var(--sapFontSemiboldDuplexWeight);
+    color: var(--sapList_TextColor);
+}
+
+.sapMPopover .sapMText[data-notification-desc="true"] {
+    color: var(--sapContent_LabelColor);
+    font-size: var(--sapFontSmallSize);
+}
+
+.sapMPopover .sapMText[data-notification-time="true"] {
+    color: var(--sapContent_LabelColor);
+    font-size: var(--sapFontSmallSize);
+}
+
+/* Notification priority indicators */
+.sapMCustomListItem[data-priority="high"] {
+    border-left: 3px solid var(--sapNegativeColor);
+}
+
+.sapMCustomListItem[data-priority="medium"] {
+    border-left: 3px solid var(--sapCriticalColor);
+}
+
+.sapMCustomListItem[data-priority="low"] {
+    border-left: 3px solid var(--sapInformationColor);
+}
+
+/* Unread notification indicator */
+.sapMCustomListItem[data-read="false"] {
+    background-color: var(--sapList_AlternatingBackground);
+}
+
+.sapMCustomListItem[data-read="false"] .sapMText[data-notification-title="true"] {
+    font-weight: var(--sapFontBoldWeight);
+}
+
+/* ==========================================================================
+   SAP Standard Tile Patterns
+   ========================================================================== */
+
+.sapMGT {
+    background-color: var(--sapTile_Background);
+    border: 1px solid var(--sapTile_BorderColor);
+    border-radius: var(--sapElement_BorderCornerRadius);
+}
+
+.sapMGT:hover {
+    background-color: var(--sapTile_Hover_Background);
+    border-color: var(--sapTile_Hover_BorderColor);
+    box-shadow: var(--sapContent_Shadow1);
+}
+
+.sapMGT:focus {
+    outline: 2px solid var(--sapContent_FocusColor);
+    outline-offset: 1px;
+}
+
+.sapMGTHdrTxt {
+    color: var(--sapTile_TitleTextColor);
+    font-size: var(--sapFontSize);
+    font-weight: var(--sapFontSemiboldDuplexWeight);
+}
+
+.sapMGTSubHdrTxt {
+    color: var(--sapTile_TextColor);
+    font-size: var(--sapFontSmallSize);
+}
+
+/* Tile status indicators */
+.sapMGT[data-status="active"] {
+    border-left: 4px solid var(--sapPositiveColor);
+}
+
+.sapMGT[data-status="inactive"] {
+    border-left: 4px solid var(--sapNeutralColor);
+}
+
+.sapMGT[data-status="error"] {
+    border-left: 4px solid var(--sapNegativeColor);
+}
+
+.sapMGT[data-status="warning"] {
+    border-left: 4px solid var(--sapCriticalColor);
+}
+
+/* ==========================================================================
+   SAP Standard Status Cards
+   ========================================================================== */
+
+.sapFCard {
+    background-color: var(--sapTile_Background);
+    border: 1px solid var(--sapTile_BorderColor);
+    border-radius: var(--sapElement_BorderCornerRadius);
+    box-shadow: var(--sapContent_Shadow0);
+}
+
+.sapFCard:hover {
+    box-shadow: var(--sapContent_Shadow1);
+}
+
+.sapFCardHeader {
+    background-color: var(--sapTile_Background);
+    border-bottom: 1px solid var(--sapTile_SeparatorColor);
+}
+
+.sapFCardContent {
+    background-color: var(--sapTile_Background);
+    padding: 1rem;
+}
+
+/* ==========================================================================
+   SAP Standard Responsive Breakpoints
+   ========================================================================== */
+
+/* Phone (up to 599px) */
+@media (max-width: 37.4375rem) {
+    .sapFSimpleForm[data-layout="ResponsiveGridLayout"] {
+        --sapFormColumns: 1;
+        --sapFormLabelSpan: 12;
+    }
+    
+    .sapUiStandardActionGroup {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+    
+    .sapFCard {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+}
+
+/* Tablet (600px to 1023px) */
+@media (min-width: 37.5rem) and (max-width: 63.9375rem) {
+    .sapFSimpleForm[data-layout="ResponsiveGridLayout"] {
+        --sapFormColumns: 1;
+        --sapFormLabelSpan: 4;
+    }
+    
+    .sapFCard {
+        width: calc(50% - 0.5rem);
+        margin: 0.25rem;
+    }
+}
+
+/* Desktop (1024px and up) */
+@media (min-width: 64rem) {
+    .sapFSimpleForm[data-layout="ResponsiveGridLayout"] {
+        --sapFormColumns: 2;
+        --sapFormLabelSpan: 4;
+    }
+    
+    .sapFCard {
+        width: calc(25% - 0.5rem);
+        margin: 0.25rem;
+    }
+}
+
+/* ==========================================================================
+   SAP Standard Accessibility Enhancements
+   ========================================================================== */
+
+/* High contrast support */
+@media (prefers-contrast: high) {
+    .sapMBtn {
+        border-width: 2px;
+    }
+    
+    .sapFCard {
+        border-width: 2px;
+    }
+    
+    .sapMGT {
+        border-width: 2px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .sapMGT {
+        transition: none;
+    }
+    
+    .sapFCard {
+        transition: none;
+    }
+    
+    .sapMBtn {
+        transition: none;
+    }
+}
+
+/* Focus management */
+.sapMBtn:focus,
+.sapMInput:focus,
+.sapMSelect:focus,
+.sapMTextArea:focus {
+    outline: 2px solid var(--sapContent_FocusColor);
+    outline-offset: 1px;
+    box-shadow: 0 0 0 1px var(--sapContent_FocusColor);
+}
+
+/* Screen reader only content */
+.sapUiHiddenText {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   SAP Standard Animation and Motion
+   ========================================================================== */
+
+.sapMGT,
+.sapFCard,
+.sapMBtn {
+    transition: all 0.2s cubic-bezier(0.1, 0, 0.2, 1);
+}
+
+.sapMDialog {
+    animation: sapMDialogSlideIn 0.3s cubic-bezier(0.1, 0, 0.2, 1);
+}
+
+@keyframes sapMDialogSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.sapMPopover {
+    animation: sapMPopoverFadeIn 0.2s cubic-bezier(0.1, 0, 0.2, 1);
+}
+
+@keyframes sapMPopoverFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================================================
+   SAP Standard Dark Theme Adaptations
+   ========================================================================== */
+
+[data-sap-ui-theme*="dark"] .sapMDialog {
+    background-color: var(--sapGroup_ContentBackground);
+    border-color: var(--sapGroup_BorderColor);
+}
+
+[data-sap-ui-theme*="dark"] .sapFCard {
+    background-color: var(--sapTile_Background);
+    border-color: var(--sapTile_BorderColor);
+}
+
+[data-sap-ui-theme*="dark"] .sapMGT {
+    background-color: var(--sapTile_Background);
+    border-color: var(--sapTile_BorderColor);
+}
+
+/* ==========================================================================
+   SAP Standard Validation States
+   ========================================================================== */
+
+.sapMInput[data-value-state="Error"],
+.sapMSelect[data-value-state="Error"],
+.sapMTextArea[data-value-state="Error"] {
+    border-color: var(--sapField_InvalidColor);
+    background-color: var(--sapField_InvalidBackground);
+}
+
+.sapMInput[data-value-state="Warning"],
+.sapMSelect[data-value-state="Warning"],
+.sapMTextArea[data-value-state="Warning"] {
+    border-color: var(--sapField_WarningColor);
+    background-color: var(--sapField_WarningBackground);
+}
+
+.sapMInput[data-value-state="Success"],
+.sapMSelect[data-value-state="Success"],
+.sapMTextArea[data-value-state="Success"] {
+    border-color: var(--sapField_SuccessColor);
+    background-color: var(--sapField_SuccessBackground);
+}
+
+/* Validation message styling */
+.sapMValueStateMessage {
+    background-color: var(--sapField_InvalidBackground);
+    border-color: var(--sapField_InvalidColor);
+    color: var(--sapField_InvalidColor);
+    font-size: var(--sapFontSmallSize);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--sapElement_BorderCornerRadius);
+}
+
+.sapMValueStateMessage[data-state="Warning"] {
+    background-color: var(--sapField_WarningBackground);
+    border-color: var(--sapField_WarningColor);
+    color: var(--sapField_WarningColor);
+}
+
+.sapMValueStateMessage[data-state="Success"] {
+    background-color: var(--sapField_SuccessBackground);
+    border-color: var(--sapField_SuccessColor);
+    color: var(--sapField_SuccessColor);
+}

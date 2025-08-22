@@ -1,0 +1,220 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz.ui5.controls"
+    xmlns:l="sap.ui.layout"
+    xmlns:suite="sap.suite.ui.commons">
+    
+    <Dialog
+        id="featureAnalysisDialog"
+        title="Feature Analysis & Engineering"
+        contentWidth="85%"
+        contentHeight="85%"
+        resizable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Feature Importance Tab -->
+                    <IconTabFilter text="Feature Importance" icon="sap-icon://chart">
+                        <l:Splitter height="500px">
+                            <l:contentAreas>
+                                <!-- Feature Importance Chart -->
+                                <viz:VizFrame
+                                    id="featureImportanceChart"
+                                    height="100%"
+                                    width="100%"
+                                    vizType="horizontal_bar">
+                                </viz:VizFrame>
+                                
+                                <!-- Feature Details -->
+                                <Panel headerText="Feature Details">
+                                    <Table
+                                        items="{analysis>/features}"
+                                        mode="SingleSelectMaster">
+                                        <columns>
+                                            <Column width="30%">
+                                                <Text text="Feature"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="Importance"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="Type"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="Action"/>
+                                            </Column>
+                                        </columns>
+                                        <items>
+                                            <ColumnListItem>
+                                                <cells>
+                                                    <Text text="{analysis>name}"/>
+                                                    <ProgressIndicator
+                                                        percentValue="{analysis>importance}"
+                                                        displayValue="{analysis>importance}%"
+                                                        state="{= ${analysis>importance} > 70 ? 'Success' : ${analysis>importance} > 30 ? 'Warning' : 'Error' }"/>
+                                                    <Text text="{analysis>dataType}"/>
+                                                    <Button 
+                                                        icon="sap-icon://edit"
+                                                        tooltip="Configure feature"
+                                                        press=".onConfigureFeature"/>
+                                                </cells>
+                                            </ColumnListItem>
+                                        </items>
+                                    </Table>
+                                </Panel>
+                            </l:contentAreas>
+                        </l:Splitter>
+                    </IconTabFilter>
+                    
+                    <!-- Correlation Matrix Tab -->
+                    <IconTabFilter text="Correlation Matrix" icon="sap-icon://matrix-diagram">
+                        <suite:NetworkGraph
+                            id="correlationMatrix"
+                            height="500px"
+                            width="100%"
+                            nodes="{analysis>/correlationNodes}"
+                            lines="{analysis>/correlationEdges}">
+                            <suite:layoutData>
+                                <suite:GraphLayoutData 
+                                    renderType="Svg"
+                                    preventOverlapping="true"/>
+                            </suite:layoutData>
+                        </suite:NetworkGraph>
+                        
+                        <Panel headerText="High Correlations" expandable="true" expanded="false">
+                            <List items="{analysis>/highCorrelations}">
+                                <StandardListItem
+                                    title="{analysis>feature1} ↔ {analysis>feature2}"
+                                    description="Correlation: {analysis>correlation}"
+                                    info="{analysis>recommendation}"
+                                    infoState="{= ${analysis>correlation} > 0.9 ? 'Error' : 'Warning' }"/>
+                            </List>
+                        </Panel>
+                    </IconTabFilter>
+                    
+                    <!-- Feature Engineering Tab -->
+                    <IconTabFilter text="Feature Engineering" icon="sap-icon://tools-opportunity">
+                        <l:VerticalLayout>
+                            <Panel headerText="Recommended Transformations">
+                                <List items="{analysis>/recommendedTransformations}">
+                                    <CustomListItem>
+                                        <HBox alignItems="Center" justifyContent="SpaceBetween">
+                                            <VBox width="70%">
+                                                <Title text="{analysis>transformation}" level="H5"/>
+                                                <Text text="{analysis>description}"/>
+                                                <Label text="Affected features: {analysis>features}"/>
+                                            </VBox>
+                                            <VBox>
+                                                <Button 
+                                                    text="Apply"
+                                                    type="Emphasized"
+                                                    press=".onApplyTransformation"/>
+                                                <Button 
+                                                    text="Preview"
+                                                    press=".onPreviewTransformation"/>
+                                            </VBox>
+                                        </HBox>
+                                    </CustomListItem>
+                                </List>
+                            </Panel>
+                            
+                            <Panel headerText="Custom Feature Creation" expandable="true">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout">
+                                    <form:content>
+                                        <Label text="Feature Name"/>
+                                        <Input 
+                                            value="{custom>/featureName}"
+                                            placeholder="new_feature_name"/>
+                                        
+                                        <Label text="Expression"/>
+                                        <TextArea
+                                            value="{custom>/expression}"
+                                            rows="3"
+                                            placeholder="e.g., feature1 * feature2 + log(feature3)"/>
+                                        
+                                        <Label text=""/>
+                                        <Button 
+                                            text="Create Feature"
+                                            type="Emphasized"
+                                            press=".onCreateCustomFeature"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                            </Panel>
+                        </l:VerticalLayout>
+                    </IconTabFilter>
+                    
+                    <!-- Missing Data Tab -->
+                    <IconTabFilter text="Missing Data" icon="sap-icon://question-mark">
+                        <viz:VizFrame
+                            id="missingDataChart"
+                            height="300px"
+                            width="100%"
+                            vizType="heatmap">
+                        </viz:VizFrame>
+                        
+                        <Table
+                            headerText="Missing Data Handling Strategies"
+                            items="{analysis>/missingDataStrategies}">
+                            <columns>
+                                <Column>
+                                    <Text text="Feature"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Missing %"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Pattern"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Recommended Strategy"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Action"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{analysis>feature}"/>
+                                        <ObjectStatus 
+                                            text="{analysis>missingPercent}%"
+                                            state="{= ${analysis>missingPercent} > 30 ? 'Error' : ${analysis>missingPercent} > 10 ? 'Warning' : 'Success' }"/>
+                                        <Text text="{analysis>pattern}"/>
+                                        <Select selectedKey="{analysis>strategy}">
+                                            <items>
+                                                <core:Item key="DROP" text="Drop Feature"/>
+                                                <core:Item key="MEAN" text="Mean Imputation"/>
+                                                <core:Item key="MEDIAN" text="Median Imputation"/>
+                                                <core:Item key="MODE" text="Mode Imputation"/>
+                                                <core:Item key="FORWARD_FILL" text="Forward Fill"/>
+                                                <core:Item key="INTERPOLATE" text="Interpolate"/>
+                                                <core:Item key="MODEL" text="Model-based Imputation"/>
+                                            </items>
+                                        </Select>
+                                        <Button 
+                                            text="Apply"
+                                            press=".onApplyMissingDataStrategy"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button text="Export Analysis" icon="sap-icon://download" press=".onExportAnalysis"/>
+        </beginButton>
+        
+        <endButton>
+            <Button text="Close" press=".onCloseAnalysis"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

@@ -1,0 +1,238 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        id="createVectorTaskDialog"
+        title="Create Vector Processing Task"
+        contentWidth="70%"
+        contentHeight="80%"
+        resizable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Basic Configuration Tab -->
+                    <IconTabFilter text="Basic Info" icon="sap-icon://hint">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Task Name" required="true"/>
+                                <Input 
+                                    value="{create>/taskName}"
+                                    placeholder="Enter task name"/>
+                                
+                                <Label text="Description"/>
+                                <TextArea 
+                                    value="{create>/description}"
+                                    rows="2"
+                                    placeholder="Describe the vector processing task"/>
+                                
+                                <Label text="Data Source" required="true"/>
+                                <Input 
+                                    value="{create>/dataSource}"
+                                    placeholder="Path to data source"
+                                    showValueHelp="true"
+                                    valueHelpRequest=".onSelectDataSource"/>
+                                
+                                <Label text="Data Type"/>
+                                <Select selectedKey="{create>/dataType}">
+                                    <items>
+                                        <core:Item key="TEXT" text="Text Documents"/>
+                                        <core:Item key="CODE" text="Source Code"/>
+                                        <core:Item key="STRUCTURED" text="Structured Data"/>
+                                        <core:Item key="IMAGE" text="Images"/>
+                                        <core:Item key="AUDIO" text="Audio"/>
+                                        <core:Item key="MULTIMODAL" text="Multimodal"/>
+                                    </items>
+                                </Select>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Embedding Configuration Tab -->
+                    <IconTabFilter text="Embedding Model" icon="sap-icon://artificial-intelligence">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Model Provider"/>
+                                <Select 
+                                    selectedKey="{create>/modelProvider}"
+                                    change=".onModelProviderChange">
+                                    <items>
+                                        <core:Item key="OPENAI" text="OpenAI"/>
+                                        <core:Item key="COHERE" text="Cohere"/>
+                                        <core:Item key="HUGGINGFACE" text="Hugging Face"/>
+                                        <core:Item key="SENTENCE_TRANSFORMERS" text="Sentence Transformers"/>
+                                        <core:Item key="CUSTOM" text="Custom Model"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Embedding Model"/>
+                                <Select selectedKey="{create>/embeddingModel}">
+                                    <items>
+                                        <core:Item key="text-embedding-ada-002" text="text-embedding-ada-002 (OpenAI)"/>
+                                        <core:Item key="text-embedding-3-small" text="text-embedding-3-small (OpenAI)"/>
+                                        <core:Item key="text-embedding-3-large" text="text-embedding-3-large (OpenAI)"/>
+                                        <core:Item key="embed-english-v3.0" text="embed-english-v3.0 (Cohere)"/>
+                                        <core:Item key="all-MiniLM-L6-v2" text="all-MiniLM-L6-v2 (Sentence Transformers)"/>
+                                        <core:Item key="all-mpnet-base-v2" text="all-mpnet-base-v2 (Sentence Transformers)"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Output Dimensions"/>
+                                <Input 
+                                    value="{create>/dimensions}"
+                                    type="Number"
+                                    editable="false"
+                                    description="Auto-set based on model"/>
+                                
+                                <Label text="Chunk Size (tokens)"/>
+                                <Slider 
+                                    value="{create>/chunkSize}"
+                                    min="128"
+                                    max="2048"
+                                    step="128"
+                                    enableTickmarks="true"
+                                    inputsAsTooltips="true"/>
+                                
+                                <Label text="Chunk Overlap (tokens)"/>
+                                <Slider 
+                                    value="{create>/chunkOverlap}"
+                                    min="0"
+                                    max="200"
+                                    step="10"
+                                    enableTickmarks="true"
+                                    inputsAsTooltips="true"/>
+                                
+                                <Label text="Normalization"/>
+                                <CheckBox 
+                                    text="Normalize embeddings to unit length"
+                                    selected="{create>/normalization}"/>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Vector Database Tab -->
+                    <IconTabFilter text="Vector Database" icon="sap-icon://database">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Vector Database"/>
+                                <Select 
+                                    selectedKey="{create>/vectorDatabase}"
+                                    change=".onVectorDatabaseChange">
+                                    <items>
+                                        <core:Item key="PINECONE" text="Pinecone"/>
+                                        <core:Item key="WEAVIATE" text="Weaviate"/>
+                                        <core:Item key="QDRANT" text="Qdrant"/>
+                                        <core:Item key="MILVUS" text="Milvus"/>
+                                        <core:Item key="CHROMA" text="Chroma"/>
+                                        <core:Item key="FAISS" text="FAISS (Local)"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Index Type"/>
+                                <Select selectedKey="{create>/indexType}">
+                                    <items>
+                                        <core:Item key="HNSW" text="HNSW (Hierarchical NSW)"/>
+                                        <core:Item key="IVF" text="IVF (Inverted File)"/>
+                                        <core:Item key="FLAT" text="Flat (Exact Search)"/>
+                                        <core:Item key="LSH" text="LSH (Locality Sensitive Hashing)"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Distance Metric"/>
+                                <Select selectedKey="{create>/distanceMetric}">
+                                    <items>
+                                        <core:Item key="COSINE" text="Cosine Similarity"/>
+                                        <core:Item key="EUCLIDEAN" text="Euclidean Distance"/>
+                                        <core:Item key="DOT_PRODUCT" text="Dot Product"/>
+                                        <core:Item key="MANHATTAN" text="Manhattan Distance"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Collection Name"/>
+                                <Input 
+                                    value="{create>/collectionName}"
+                                    placeholder="Enter collection name"/>
+                                
+                                <Label text="Metadata Schema"/>
+                                <TextArea
+                                    value="{create>/metadataSchema}"
+                                    rows="4"
+                                    placeholder='{"title": "string", "category": "string", "timestamp": "datetime"}'/>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Processing Options Tab -->
+                    <IconTabFilter text="Processing" icon="sap-icon://settings">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Batch Size"/>
+                                <Slider 
+                                    value="{create>/batchSize}"
+                                    min="1"
+                                    max="100"
+                                    step="1"
+                                    enableTickmarks="true"
+                                    inputsAsTooltips="true"/>
+                                
+                                <Label text="Parallel Processing"/>
+                                <CheckBox 
+                                    text="Enable parallel processing"
+                                    selected="{create>/parallelProcessing}"/>
+                                
+                                <Label text="GPU Acceleration"/>
+                                <CheckBox 
+                                    text="Use GPU if available"
+                                    selected="{create>/useGPU}"/>
+                                
+                                <Label text="Error Handling"/>
+                                <RadioButtonGroup selectedIndex="{create>/errorHandling}">
+                                    <RadioButton text="Stop on first error"/>
+                                    <RadioButton text="Skip errors and continue"/>
+                                    <RadioButton text="Retry failed items"/>
+                                </RadioButtonGroup>
+                                
+                                <Label text="Progress Monitoring"/>
+                                <CheckBox 
+                                    text="Enable real-time progress updates"
+                                    selected="{create>/progressMonitoring}"/>
+                                
+                                <Label text="Incremental Updates"/>
+                                <CheckBox 
+                                    text="Only process new/changed documents"
+                                    selected="{create>/incrementalUpdates}"/>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelCreateTask"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Create"
+                type="Emphasized"
+                press=".onConfirmCreateTask"
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/dataSource} }"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

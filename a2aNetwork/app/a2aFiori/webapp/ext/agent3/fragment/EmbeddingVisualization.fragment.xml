@@ -1,0 +1,353 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:html="http://www.w3.org/1999/xhtml">
+    
+    <Dialog
+        id="embeddingVisualizationDialog"
+        title="Embedding Visualization"
+        contentWidth="95%"
+        contentHeight="90%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Visualization Controls -->
+                <Panel headerText="Visualization Settings" class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Label text="Reduction Method"/>
+                            <Select 
+                                selectedKey="{visualization>/method}"
+                                change=".onVisualizationMethodChange">
+                                <items>
+                                    <core:Item key="TSNE" text="t-SNE"/>
+                                    <core:Item key="UMAP" text="UMAP"/>
+                                    <core:Item key="PCA" text="PCA"/>
+                                    <core:Item key="ISOMAP" text="Isomap"/>
+                                    <core:Item key="LLE" text="Locally Linear Embedding"/>
+                                </items>
+                            </Select>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Label text="Dimensions"/>
+                            <RadioButtonGroup selectedIndex="{visualization>/dimensions}">
+                                <RadioButton text="2D"/>
+                                <RadioButton text="3D"/>
+                            </RadioButtonGroup>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Label text="Sample Size"/>
+                            <Select selectedKey="{visualization>/sampleSize}">
+                                <items>
+                                    <core:Item key="500" text="500 vectors"/>
+                                    <core:Item key="1000" text="1,000 vectors"/>
+                                    <core:Item key="2000" text="2,000 vectors"/>
+                                    <core:Item key="5000" text="5,000 vectors"/>
+                                    <core:Item key="10000" text="10,000 vectors"/>
+                                </items>
+                            </Select>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Label text="Color By"/>
+                            <Select selectedKey="{visualization>/colorBy}">
+                                <items>
+                                    <core:Item key="cluster" text="Cluster"/>
+                                    <core:Item key="content_type" text="Content Type"/>
+                                    <core:Item key="source" text="Source"/>
+                                    <core:Item key="similarity" text="Similarity Score"/>
+                                    <core:Item key="timestamp" text="Creation Time"/>
+                                </items>
+                            </Select>
+                        </VBox>
+                        <VBox>
+                            <Label text=" "/>
+                            <Button 
+                                text="Generate"
+                                type="Emphasized"
+                                press=".onGenerateVisualization"/>
+                        </VBox>
+                    </HBox>
+                    
+                    <!-- Advanced Parameters -->
+                    <VBox visible="{= ${visualization>/method} === 'TSNE' }" class="sapUiMediumMargin">
+                        <Title text="t-SNE Parameters" level="H4"/>
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Perplexity"/>
+                                <Slider 
+                                    value="{visualization>/perplexity}"
+                                    min="5"
+                                    max="100"
+                                    step="5"
+                                    width="200px"/>
+                                <Text text="{visualization>/perplexity}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Learning Rate"/>
+                                <Slider 
+                                    value="{visualization>/learningRate}"
+                                    min="10"
+                                    max="1000"
+                                    step="10"
+                                    width="200px"/>
+                                <Text text="{visualization>/learningRate}"/>
+                            </VBox>
+                            <VBox>
+                                <Label text="Iterations"/>
+                                <Input 
+                                    value="{visualization>/iterations}"
+                                    type="Number"
+                                    width="100px"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                    
+                    <VBox visible="{= ${visualization>/method} === 'UMAP' }" class="sapUiMediumMargin">
+                        <Title text="UMAP Parameters" level="H4"/>
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Neighbors"/>
+                                <Slider 
+                                    value="{visualization>/neighbors}"
+                                    min="5"
+                                    max="200"
+                                    step="5"
+                                    width="200px"/>
+                                <Text text="{visualization>/neighbors}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Min Distance"/>
+                                <Slider 
+                                    value="{visualization>/minDistance}"
+                                    min="0.0"
+                                    max="1.0"
+                                    step="0.1"
+                                    width="200px"/>
+                                <Text text="{visualization>/minDistance}"/>
+                            </VBox>
+                            <VBox>
+                                <Label text="Metric"/>
+                                <Select selectedKey="{visualization>/metric}">
+                                    <items>
+                                        <core:Item key="euclidean" text="Euclidean"/>
+                                        <core:Item key="cosine" text="Cosine"/>
+                                        <core:Item key="manhattan" text="Manhattan"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Visualization Area -->
+                <Panel headerText="Embedding Space Visualization" class="sapUiResponsiveMargin">
+                    <VBox>
+                        <!-- 3D/2D Visualization Container -->
+                        <core:HTML 
+                            id="embeddingVisualizationContainer"
+                            content='<div id="plotlyContainer" style="width: 100%; height: 600px;"></div>'
+                            preferDOM="true"/>
+                        
+                        <!-- Visualization Controls -->
+                        <HBox class="sapUiMediumMargin">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Point Size"/>
+                                <Slider 
+                                    value="{visualization>/pointSize}"
+                                    min="1"
+                                    max="10"
+                                    step="1"
+                                    width="150px"
+                                    liveChange=".onUpdatePointSize"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Opacity"/>
+                                <Slider 
+                                    value="{visualization>/opacity}"
+                                    min="0.1"
+                                    max="1.0"
+                                    step="0.1"
+                                    width="150px"
+                                    liveChange=".onUpdateOpacity"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <CheckBox 
+                                    text="Show labels"
+                                    selected="{visualization>/showLabels}"
+                                    select=".onToggleLabels"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <CheckBox 
+                                    text="Show clusters"
+                                    selected="{visualization>/showClusters}"
+                                    select=".onToggleClusters"/>
+                            </VBox>
+                            <VBox>
+                                <Button 
+                                    text="Reset View"
+                                    press=".onResetView"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Cluster Analysis -->
+                <Panel 
+                    headerText="Cluster Analysis"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Clustering Algorithm"/>
+                                <Select selectedKey="{visualization>/clusterAlgorithm}">
+                                    <items>
+                                        <core:Item key="KMEANS" text="K-Means"/>
+                                        <core:Item key="DBSCAN" text="DBSCAN"/>
+                                        <core:Item key="HDBSCAN" text="HDBSCAN"/>
+                                        <core:Item key="GAUSSIAN_MIXTURE" text="Gaussian Mixture"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Number of Clusters"/>
+                                <Input 
+                                    value="{visualization>/numClusters}"
+                                    type="Number"
+                                    width="100px"
+                                    enabled="{= ${visualization>/clusterAlgorithm} === 'KMEANS'}"/>
+                            </VBox>
+                            <VBox>
+                                <Label text=" "/>
+                                <Button 
+                                    text="Run Clustering"
+                                    press=".onRunClustering"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <!-- Cluster Results -->
+                        <Table 
+                            items="{visualization>/clusterResults}"
+                            visible="{= ${visualization>/clusterResults}.length > 0}">
+                            <columns>
+                                <Column>
+                                    <Text text="Cluster"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Size"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Centroid"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Inertia"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Top Terms"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <ObjectNumber 
+                                            number="{clusterId}"
+                                            state="None"/>
+                                        <Text text="{size}"/>
+                                        <Text text="{centroid}"/>
+                                        <Text text="{inertia}"/>
+                                        <Text text="{topTerms}"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </Panel>
+                
+                <!-- Point Details -->
+                <Panel 
+                    headerText="Point Details"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <Text text="Click on a point in the visualization to see details"/>
+                        <VBox visible="{= !!${visualization>/selectedPoint}}">
+                            <Title text="Selected Point" level="H4"/>
+                            <VBox class="sapUiMediumMargin">
+                                <Text text="Vector ID: {visualization>/selectedPoint/id}"/>
+                                <Text text="Cluster: {visualization>/selectedPoint/cluster}"/>
+                                <Text text="Content Type: {visualization>/selectedPoint/contentType}"/>
+                                <Text text="Coordinates: ({visualization>/selectedPoint/x}, {visualization>/selectedPoint/y})"/>
+                                <Text text="Content Preview:"/>
+                                <Text 
+                                    text="{visualization>/selectedPoint/content}"
+                                    maxLines="3"/>
+                                
+                                <HBox class="sapUiMediumMarginTop">
+                                    <Button 
+                                        text="Find Similar"
+                                        press=".onFindSimilarFromPoint"
+                                        class="sapUiTinyMarginEnd"/>
+                                    <Button 
+                                        text="View Full Content"
+                                        press=".onViewFullContent"
+                                        class="sapUiTinyMarginEnd"/>
+                                    <Button 
+                                        text="Add to Collection"
+                                        press=".onAddToCollection"/>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Statistics -->
+                <Panel 
+                    headerText="Visualization Statistics"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <HBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Data Quality" level="H4"/>
+                            <Text text="Stress: {visualization>/stress}"/>
+                            <Text text="Trustworthiness: {visualization>/trustworthiness}"/>
+                            <Text text="Continuity: {visualization>/continuity}"/>
+                        </VBox>
+                        <VBox class="sapUiMediumMarginEnd">
+                            <Title text="Cluster Quality" level="H4"/>
+                            <Text text="Silhouette Score: {visualization>/silhouetteScore}"/>
+                            <Text text="Calinski-Harabasz: {visualization>/calinskiHarabasz}"/>
+                            <Text text="Davies-Bouldin: {visualization>/daviesBouldin}"/>
+                        </VBox>
+                        <VBox>
+                            <Title text="Performance" level="H4"/>
+                            <Text text="Reduction Time: {visualization>/reductionTime}s"/>
+                            <Text text="Rendering Time: {visualization>/renderingTime}s"/>
+                            <Text text="Memory Usage: {visualization>/memoryUsage}MB"/>
+                        </VBox>
+                    </HBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button 
+                text="Export Image"
+                icon="sap-icon://camera"
+                press=".onExportVisualization"/>
+            <Button 
+                text="Save Configuration"
+                icon="sap-icon://save"
+                press=".onSaveVisualizationConfig"/>
+            <Button 
+                text="Close"
+                press=".onCloseVisualization"/>
+        </buttons>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

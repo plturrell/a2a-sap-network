@@ -1,0 +1,39 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core">
+    
+    <!-- SAP Standard Form Pattern -->
+    <f:SimpleForm
+        id="{formId}"
+        editable="{/editable}"
+        layout="ResponsiveGridLayout"
+        labelSpanXL="4"
+        labelSpanL="4"
+        labelSpanM="12"
+        labelSpanS="12"
+        adjustLabelSpan="false"
+        emptySpanXL="0"
+        emptySpanL="0"
+        emptySpanM="0"
+        emptySpanS="0"
+        columnsXL="2"
+        columnsL="2"
+        columnsM="1"
+        singleContainerFullSize="false"
+        class="sapUiResponsiveMargin">
+        
+        <!-- Form Title (Optional) -->
+        <Title text="{formTitle}" visible="{formTitleVisible}"/>
+        
+        <!-- Required Field Indicator Legend -->
+        <core:Fragment fragmentName="a2a.network.launchpad.fragment.RequiredFieldLegend" type="XML"/>
+        
+        <!-- Form Fields Container -->
+        <VBox id="formFieldsContainer" class="sapUiNoMargin">
+            <!-- Dynamic form fields will be added here -->
+        </VBox>
+        
+    </f:SimpleForm>
+    
+</core:FragmentDefinition>

@@ -1,0 +1,287 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        id="createValidationTaskDialog"
+        title="Create Calculation Validation Task"
+        contentWidth="70%"
+        contentHeight="80%"
+        resizable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Basic Information Tab -->
+                    <IconTabFilter text="Basic Info" icon="sap-icon://hint">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Task Name" required="true"/>
+                                <Input 
+                                    value="{create>/taskName}"
+                                    placeholder="Enter validation task name"/>
+                                
+                                <Label text="Description"/>
+                                <TextArea 
+                                    value="{create>/description}"
+                                    rows="2"
+                                    placeholder="Describe the validation requirements"/>
+                                
+                                <Label text="Calculation Type" required="true"/>
+                                <Select selectedKey="{create>/calculationType}">
+                                    <items>
+                                        <core:Item key="FINANCIAL" text="Financial Calculations"/>
+                                        <core:Item key="MATHEMATICAL" text="Mathematical Functions"/>
+                                        <core:Item key="STATISTICAL" text="Statistical Analysis"/>
+                                        <core:Item key="ENGINEERING" text="Engineering Formulas"/>
+                                        <core:Item key="SCIENTIFIC" text="Scientific Computations"/>
+                                        <core:Item key="ACTUARIAL" text="Actuarial Models"/>
+                                        <core:Item key="ACCOUNTING" text="Accounting Rules"/>
+                                        <core:Item key="PHYSICS" text="Physics Equations"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Data Source"/>
+                                <Input 
+                                    value="{create>/dataSource}"
+                                    placeholder="Path to calculation data"
+                                    showValueHelp="true"
+                                    valueHelpRequest=".onSelectDataSource"/>
+                                
+                                <Label text="Priority"/>
+                                <Select selectedKey="{create>/priority}">
+                                    <items>
+                                        <core:Item key="LOW" text="Low"/>
+                                        <core:Item key="MEDIUM" text="Medium"/>
+                                        <core:Item key="HIGH" text="High"/>
+                                        <core:Item key="URGENT" text="Urgent"/>
+                                    </items>
+                                </Select>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Validation Settings Tab -->
+                    <IconTabFilter text="Validation Settings" icon="sap-icon://settings">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Validation Mode"/>
+                                <Select selectedKey="{create>/validationMode}">
+                                    <items>
+                                        <core:Item key="STANDARD" text="Standard Validation"/>
+                                        <core:Item key="STRICT" text="Strict Validation"/>
+                                        <core:Item key="CUSTOM" text="Custom Rules"/>
+                                        <core:Item key="BENCHMARK" text="Benchmark Mode"/>
+                                    </items>
+                                </Select>
+                                
+                                <Label text="Precision Threshold"/>
+                                <StepInput 
+                                    value="{create>/precisionThreshold}"
+                                    min="0.00001"
+                                    max="1"
+                                    step="0.00001"
+                                    displayValuePrecision="5"/>
+                                
+                                <Label text="Tolerance Level"/>
+                                <Slider 
+                                    value="{create>/toleranceLevel}"
+                                    min="0"
+                                    max="0.1"
+                                    step="0.001"
+                                    enableTickmarks="true"
+                                    inputsAsTooltips="true"/>
+                                
+                                <Label text="Comparison Method"/>
+                                <RadioButtonGroup selectedIndex="{create>/comparisonMethod}">
+                                    <RadioButton text="Absolute Difference"/>
+                                    <RadioButton text="Relative Error"/>
+                                    <RadioButton text="Statistical Test"/>
+                                </RadioButtonGroup>
+                                
+                                <Label text="Advanced Options"/>
+                                <VBox>
+                                    <CheckBox 
+                                        text="Enable cross-validation"
+                                        selected="{create>/enableCrossValidation}"/>
+                                    <CheckBox 
+                                        text="Enable statistical tests"
+                                        selected="{create>/enableStatisticalTests}"/>
+                                    <CheckBox 
+                                        text="Parallel processing"
+                                        selected="{create>/parallelProcessing}"/>
+                                    <CheckBox 
+                                        text="Generate detailed logs"
+                                        selected="{create>/detailedLogs}"/>
+                                </VBox>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Formulas Tab -->
+                    <IconTabFilter text="Formulas" icon="sap-icon://functional-location">
+                        <VBox>
+                            <Toolbar>
+                                <Title text="Formulas to Validate"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Add Formula"
+                                    icon="sap-icon://add"
+                                    press=".onAddFormula"/>
+                                <Button 
+                                    text="Import from File"
+                                    icon="sap-icon://upload"
+                                    press=".onImportFormulas"/>
+                            </Toolbar>
+                            
+                            <Table
+                                items="{create>/formulas}"
+                                mode="Delete">
+                                <columns>
+                                    <Column width="30%">
+                                        <Text text="Formula Expression"/>
+                                    </Column>
+                                    <Column width="20%">
+                                        <Text text="Expected Result"/>
+                                    </Column>
+                                    <Column width="15%">
+                                        <Text text="Type"/>
+                                    </Column>
+                                    <Column width="25%">
+                                        <Text text="Test Data"/>
+                                    </Column>
+                                    <Column width="10%">
+                                        <Text text="Actions"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <TextArea 
+                                                value="{create>expression}"
+                                                rows="2"
+                                                placeholder="Enter formula expression"/>
+                                            <Input 
+                                                value="{create>expectedResult}"
+                                                type="Number"
+                                                placeholder="Expected value"/>
+                                            <Select selectedKey="{create>type}">
+                                                <items>
+                                                    <core:Item key="ARITHMETIC" text="Arithmetic"/>
+                                                    <core:Item key="TRIGONOMETRIC" text="Trigonometric"/>
+                                                    <core:Item key="LOGARITHMIC" text="Logarithmic"/>
+                                                    <core:Item key="STATISTICAL" text="Statistical"/>
+                                                    <core:Item key="FINANCIAL" text="Financial"/>
+                                                </items>
+                                            </Select>
+                                            <TextArea 
+                                                value="{create>testData}"
+                                                rows="2"
+                                                placeholder='{"x": 5, "y": 10}'/> 
+                                            <Button 
+                                                icon="sap-icon://validate"
+                                                tooltip="Test formula"
+                                                press=".onTestFormula"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                            
+                            <!-- Formula Templates -->
+                            <Panel 
+                                headerText="Formula Templates"
+                                expandable="true"
+                                expanded="false">
+                                <List items="{create>/templates}">
+                                    <StandardListItem
+                                        title="{create>name}"
+                                        description="{create>formula}"
+                                        info="{create>category}"
+                                        press=".onSelectTemplate"/>
+                                </List>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Advanced Options Tab -->
+                    <IconTabFilter text="Advanced" icon="sap-icon://wrench">
+                        <form:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout">
+                            <form:content>
+                                <Label text="Custom Validation Rules"/>
+                                <TextArea
+                                    value="{create>/customValidationRules}"
+                                    rows="4"
+                                    placeholder="Enter custom validation logic (JavaScript)"/>
+                                
+                                <Label text="Benchmark Dataset"/>
+                                <Input 
+                                    value="{create>/benchmarkDataset}"
+                                    placeholder="Reference dataset for comparison"
+                                    showValueHelp="true"/>
+                                
+                                <Label text="Performance Settings"/>
+                                <VBox>
+                                    <HBox>
+                                        <Label text="Max execution time (seconds):" width="200px"/>
+                                        <Input 
+                                            value="{create>/maxExecutionTime}"
+                                            type="Number"
+                                            width="100px"/>
+                                    </HBox>
+                                    <HBox>
+                                        <Label text="Memory limit (MB):" width="200px"/>
+                                        <Input 
+                                            value="{create>/memoryLimit}"
+                                            type="Number"
+                                            width="100px"/>
+                                    </HBox>
+                                </VBox>
+                                
+                                <Label text="Error Handling"/>
+                                <RadioButtonGroup selectedIndex="{create>/errorHandling}">
+                                    <RadioButton text="Stop on first error"/>
+                                    <RadioButton text="Continue with warnings"/>
+                                    <RadioButton text="Skip invalid formulas"/>
+                                </RadioButtonGroup>
+                                
+                                <Label text="Notification Settings"/>
+                                <VBox>
+                                    <CheckBox 
+                                        text="Email notification on completion"
+                                        selected="{create>/emailNotification}"/>
+                                    <CheckBox 
+                                        text="Real-time progress updates"
+                                        selected="{create>/progressUpdates}"/>
+                                </VBox>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelCreateTask"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Create"
+                type="Emphasized"
+                press=".onConfirmCreateTask"
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/calculationType} &amp;&amp; ${create>/formulas}.length > 0 }"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

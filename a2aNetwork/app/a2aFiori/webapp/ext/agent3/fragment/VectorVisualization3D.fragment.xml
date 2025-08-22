@@ -1,0 +1,169 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        id="vectorVisualization3DDialog"
+        title="3D Vector Space Visualization"
+        contentWidth="95%"
+        contentHeight="90%"
+        resizable="true">
+        
+        <content>
+            <l:Splitter height="100%" orientation="Horizontal">
+                <l:contentAreas>
+                    <!-- 3D Visualization Container -->
+                    <Panel headerText="Vector Space" width="75%">
+                        <content>
+                            <!-- This container will hold the Three.js canvas -->
+                            <HTML
+                                id="visualization3DContainer"
+                                content="&lt;div id='vector3d-canvas' style='width: 100%; height: 600px; background: #f8f9fa;'&gt;&lt;/div&gt;"
+                                afterRendering=".onAfter3DRender"/>
+                        </content>
+                        
+                        <!-- 3D Controls -->
+                        <Toolbar>
+                            <Button 
+                                text="Reset View"
+                                icon="sap-icon://refresh"
+                                press=".onReset3DView"/>
+                            <Button 
+                                text="Clusters"
+                                icon="sap-icon://group-2"
+                                press=".onToggleClusters"/>
+                            <Button 
+                                text="Labels"
+                                icon="sap-icon://text"
+                                press=".onToggleLabels"/>
+                            <ToolbarSpacer/>
+                            <Button 
+                                text="Screenshot"
+                                icon="sap-icon://camera"
+                                press=".onTakeScreenshot"/>
+                        </Toolbar>
+                    </Panel>
+                    
+                    <!-- Configuration Panel -->
+                    <Panel headerText="Visualization Settings" width="25%">
+                        <content>
+                            <VBox class="sapUiMediumMargin">
+                                <!-- Dimension Reduction Settings -->
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout">
+                                    <form:content>
+                                        <Label text="Reduction Method"/>
+                                        <Select 
+                                            selectedKey="{viz>/method}"
+                                            change=".onMethodChange">
+                                            <items>
+                                                <core:Item key="TSNE" text="t-SNE"/>
+                                                <core:Item key="UMAP" text="UMAP"/>
+                                                <core:Item key="PCA" text="PCA"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Perplexity" visible="{= ${viz>/method} === 'TSNE' }"/>
+                                        <Slider 
+                                            value="{viz>/perplexity}"
+                                            min="5"
+                                            max="50"
+                                            step="5"
+                                            visible="{= ${viz>/method} === 'TSNE' }"
+                                            change=".onParameterChange"/>
+                                        
+                                        <Label text="Sample Size"/>
+                                        <Slider 
+                                            value="{viz>/sampleSize}"
+                                            min="100"
+                                            max="5000"
+                                            step="100"
+                                            change=".onParameterChange"/>
+                                        
+                                        <Label text="Point Size"/>
+                                        <Slider 
+                                            value="{viz>/pointSize}"
+                                            min="1"
+                                            max="10"
+                                            step="1"
+                                            change=".onRenderingChange"/>
+                                        
+                                        <Label text=""/>
+                                        <Button 
+                                            text="Update Visualization"
+                                            type="Emphasized"
+                                            press=".onUpdateVisualization"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                                
+                                <!-- Color Coding -->
+                                <Panel 
+                                    headerText="Color Coding"
+                                    expandable="true"
+                                    expanded="true">
+                                    <RadioButtonGroup 
+                                        selectedIndex="{viz>/colorBy}"
+                                        select=".onColorModeChange">
+                                        <RadioButton text="None (Single Color)"/>
+                                        <RadioButton text="Clusters"/>
+                                        <RadioButton text="Similarity"/>
+                                        <RadioButton text="Metadata"/>
+                                    </RadioButtonGroup>
+                                    
+                                    <Select 
+                                        selectedKey="{viz>/metadataField}"
+                                        visible="{= ${viz>/colorBy} === 3 }">
+                                        <items>
+                                            <core:Item key="category" text="Category"/>
+                                            <core:Item key="source" text="Source"/>
+                                            <core:Item key="timestamp" text="Timestamp"/>
+                                        </items>
+                                    </Select>
+                                </Panel>
+                                
+                                <!-- Interaction Info -->
+                                <Panel 
+                                    headerText="Interactions"
+                                    expandable="true"
+                                    expanded="false">
+                                    <VBox>
+                                        <Text text="• Mouse: Rotate view"/>
+                                        <Text text="• Wheel: Zoom in/out"/>
+                                        <Text text="• Click: Select point"/>
+                                        <Text text="• Shift+Click: Multi-select"/>
+                                    </VBox>
+                                </Panel>
+                                
+                                <!-- Selected Point Info -->
+                                <Panel 
+                                    headerText="Selected Point"
+                                    visible="{viz>/selectedPoint}">
+                                    <VBox>
+                                        <Text text="ID: {viz>/selectedPoint/id}"/>
+                                        <Text text="Content: {viz>/selectedPoint/content}"/>
+                                        <Text text="Cluster: {viz>/selectedPoint/cluster}"/>
+                                        <Button 
+                                            text="Find Similar"
+                                            press=".onFindSimilar"/>
+                                    </VBox>
+                                </Panel>
+                            </VBox>
+                        </content>
+                    </Panel>
+                </l:contentAreas>
+            </l:Splitter>
+        </content>
+        
+        <beginButton>
+            <Button text="Export View" icon="sap-icon://download" press=".onExport3DView"/>
+        </beginButton>
+        
+        <endButton>
+            <Button text="Close" press=".onClose3DVisualization"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

@@ -1,0 +1,503 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:mc="sap.suite.ui.microchart"
+    xmlns:viz="sap.viz">
+    
+    <Dialog
+        id="agentDashboardDialog"
+        title="Agent Management Dashboard"
+        contentWidth="95%"
+        contentHeight="90%"
+        resizable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Overview Tab -->
+                    <IconTabFilter text="Overview" icon="sap-icon://overview-chart">
+                        <l:Grid defaultSpan="L3 M6 S12">
+                            <l:content>
+                                <!-- System Health Cards -->
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Total Agents"
+                                    subheader="Registered in network"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <NumericContent
+                                                    value="{dashboard>/summary/totalAgents}"
+                                                    valueColor="Good"
+                                                    indicator="Up"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Online Agents"
+                                    subheader="Currently active"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <NumericContent
+                                                    value="{dashboard>/summary/onlineAgents}"
+                                                    valueColor="Good"
+                                                    indicator="Up"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="System Health"
+                                    subheader="Overall network health"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <mc:RadialMicroChart
+                                                    size="L"
+                                                    percentage="{dashboard>/summary/systemHealth}"
+                                                    valueColor="Good"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Performance Score"
+                                    subheader="Average across all agents"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <mc:RadialMicroChart
+                                                    size="L"
+                                                    percentage="{dashboard>/summary/performanceScore}"
+                                                    valueColor="Good"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Active Operations"
+                                    subheader="Currently running"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <NumericContent
+                                                    value="{dashboard>/summary/activeOperations}"
+                                                    valueColor="Critical"
+                                                    indicator="Up"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Failed Operations"
+                                    subheader="Last 24 hours"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <NumericContent
+                                                    value="{dashboard>/summary/failedOperations}"
+                                                    valueColor="Error"
+                                                    indicator="{= ${dashboard>/summary/failedOperations} > 0 ? 'Up' : 'Down' }"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Network Latency"
+                                    subheader="Average response time"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <NumericContent
+                                                    value="{dashboard>/summary/networkLatency}"
+                                                    valueColor="Good"
+                                                    indicator="Down"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                                
+                                <GenericTile
+                                    class="sapUiTinyMargin"
+                                    header="Load Balance"
+                                    subheader="Distribution efficiency"
+                                    state="Loaded">
+                                    <tileContent>
+                                        <TileContent>
+                                            <content>
+                                                <mc:RadialMicroChart
+                                                    size="L"
+                                                    percentage="{dashboard>/summary/loadBalance}"
+                                                    valueColor="Good"/>
+                                            </content>
+                                        </TileContent>
+                                    </tileContent>
+                                </GenericTile>
+                            </l:content>
+                        </l:Grid>
+                    </IconTabFilter>
+                    
+                    <!-- Agent Health Tab -->
+                    <IconTabFilter text="Agent Health" icon="sap-icon://heart">
+                        <VBox>
+                            <Panel headerText="Agent Health Overview">
+                                <viz:Popover id="agentHealthPopover"/>
+                                <viz:ui5.controls.VizFrame
+                                    id="agentHealthChart"
+                                    height="400px"
+                                    width="100%"
+                                    vizType="column">
+                                    <viz:dataset>
+                                        <viz:ui5.data.FlattenedDataset
+                                            data="{dashboard>/agentHealth}">
+                                            <viz:dimensions>
+                                                <viz:ui5.data.DimensionDefinition
+                                                    name="Agent"
+                                                    value="{Agent}"/>
+                                            </viz:dimensions>
+                                            <viz:measures>
+                                                <viz:ui5.data.MeasureDefinition
+                                                    name="Health Score"
+                                                    value="{Health}"/>
+                                                <viz:ui5.data.MeasureDefinition
+                                                    name="Response Time"
+                                                    value="{ResponseTime}"/>
+                                            </viz:measures>
+                                        </viz:ui5.data.FlattenedDataset>
+                                    </viz:dataset>
+                                </viz:ui5.controls.VizFrame>
+                            </Panel>
+                            
+                            <Panel 
+                                headerText="Health Status Details"
+                                class="sapUiMediumMarginTop">
+                                <Table
+                                    items="{dashboard>/agentHealth}"
+                                    mode="None">
+                                    <columns>
+                                        <Column>
+                                            <Text text="Agent"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Status"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Health Score"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Uptime"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Last Check"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="{dashboard>Agent}"/>
+                                                <ObjectStatus
+                                                    text="{dashboard>status}"
+                                                    state="{= ${dashboard>status} === 'ONLINE' ? 'Success' : ${dashboard>status} === 'OFFLINE' ? 'Error' : 'Warning' }"/>
+                                                <ProgressIndicator
+                                                    percentValue="{dashboard>Health}"
+                                                    displayValue="{dashboard>Health}%"
+                                                    state="{= ${dashboard>Health} >= 80 ? 'Success' : ${dashboard>Health} >= 60 ? 'Warning' : 'Error' }"/>
+                                                <Text text="{dashboard>Uptime}"/>
+                                                <Text text="{dashboard>lastCheck}"/>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Performance Tab -->
+                    <IconTabFilter text="Performance" icon="sap-icon://performance">
+                        <VBox>
+                            <Panel headerText="Performance Metrics">
+                                <viz:ui5.controls.VizFrame
+                                    id="performanceChart"
+                                    height="350px"
+                                    width="100%"
+                                    vizType="line">
+                                    <viz:dataset>
+                                        <viz:ui5.data.FlattenedDataset
+                                            data="{dashboard>/performance}">
+                                            <viz:dimensions>
+                                                <viz:ui5.data.DimensionDefinition
+                                                    name="Time"
+                                                    value="{Time}"/>
+                                            </viz:dimensions>
+                                            <viz:measures>
+                                                <viz:ui5.data.MeasureDefinition
+                                                    name="Response Time"
+                                                    value="{ResponseTime}"/>
+                                                <viz:ui5.data.MeasureDefinition
+                                                    name="Throughput"
+                                                    value="{Throughput}"/>
+                                            </viz:measures>
+                                        </viz:ui5.data.FlattenedDataset>
+                                    </viz:dataset>
+                                </viz:ui5.controls.VizFrame>
+                            </Panel>
+                            
+                            <l:Grid 
+                                defaultSpan="L4 M6 S12"
+                                class="sapUiMediumMarginTop">
+                                <l:content>
+                                    <Panel headerText="Resource Utilization">
+                                        <mc:StackedBarMicroChart height="200px">
+                                            <mc:bars>
+                                                <mc:StackedBarMicroChartBar
+                                                    value="{dashboard>/performance/cpuUsage}"
+                                                    valueColor="Good"
+                                                    displayValue="CPU: {dashboard>/performance/cpuUsage}%"/>
+                                                <mc:StackedBarMicroChartBar
+                                                    value="{dashboard>/performance/memoryUsage}"
+                                                    valueColor="Critical"
+                                                    displayValue="Memory: {dashboard>/performance/memoryUsage}%"/>
+                                                <mc:StackedBarMicroChartBar
+                                                    value="{dashboard>/performance/diskUsage}"
+                                                    valueColor="Error"
+                                                    displayValue="Disk: {dashboard>/performance/diskUsage}%"/>
+                                            </mc:bars>
+                                        </mc:StackedBarMicroChart>
+                                    </Panel>
+                                    
+                                    <Panel headerText="Network Statistics">
+                                        <VBox class="sapUiMediumMargin">
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Total Requests:"/>
+                                                <Text text="{dashboard>/performance/totalRequests}"/>
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Success Rate:"/>
+                                                <Text text="{dashboard>/performance/successRate}%"/>
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Error Rate:"/>
+                                                <Text text="{dashboard>/performance/errorRate}%"/>
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Avg Latency:"/>
+                                                <Text text="{dashboard>/performance/avgLatency}ms"/>
+                                            </HBox>
+                                        </VBox>
+                                    </Panel>
+                                    
+                                    <Panel headerText="Load Distribution">
+                                        <mc:ColumnMicroChart height="200px">
+                                            <mc:columns>
+                                                <mc:ColumnMicroChartData
+                                                    value="{dashboard>/performance/agentLoad/agent1}"
+                                                    color="Good"
+                                                    label="Agent 1"/>
+                                                <mc:ColumnMicroChartData
+                                                    value="{dashboard>/performance/agentLoad/agent2}"
+                                                    color="Critical"
+                                                    label="Agent 2"/>
+                                                <mc:ColumnMicroChartData
+                                                    value="{dashboard>/performance/agentLoad/agent3}"
+                                                    color="Good"
+                                                    label="Agent 3"/>
+                                            </mc:columns>
+                                        </mc:ColumnMicroChart>
+                                    </Panel>
+                                </l:content>
+                            </l:Grid>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Operations Tab -->
+                    <IconTabFilter text="Operations" icon="sap-icon://workflow-tasks">
+                        <VBox>
+                            <Panel headerText="Recent Operations">
+                                <Table
+                                    items="{dashboard>/operations}"
+                                    mode="None"
+                                    growing="true"
+                                    growingThreshold="20">
+                                    <columns>
+                                        <Column>
+                                            <Text text="Operation"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Agent"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Status"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Started"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Duration"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Result"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="{dashboard>operation}"/>
+                                                <Text text="{dashboard>agentName}"/>
+                                                <ObjectStatus
+                                                    text="{dashboard>status}"
+                                                    state="{= ${dashboard>status} === 'COMPLETED' ? 'Success' : ${dashboard>status} === 'FAILED' ? 'Error' : 'Warning' }"/>
+                                                <Text text="{dashboard>startTime}"/>
+                                                <Text text="{dashboard>duration}"/>
+                                                <Text text="{dashboard>result}"/>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                            
+                            <Panel 
+                                headerText="Operation Statistics"
+                                class="sapUiMediumMarginTop">
+                                <l:Grid defaultSpan="L6 M12 S12">
+                                    <l:content>
+                                        <viz:ui5.controls.VizFrame
+                                            id="operationsChart"
+                                            height="300px"
+                                            width="100%"
+                                            vizType="donut">
+                                            <viz:dataset>
+                                                <viz:ui5.data.FlattenedDataset
+                                                    data="{dashboard>/operationStats}">
+                                                    <viz:dimensions>
+                                                        <viz:ui5.data.DimensionDefinition
+                                                            name="Status"
+                                                            value="{Status}"/>
+                                                    </viz:dimensions>
+                                                    <viz:measures>
+                                                        <viz:ui5.data.MeasureDefinition
+                                                            name="Count"
+                                                            value="{Count}"/>
+                                                    </viz:measures>
+                                                </viz:ui5.data.FlattenedDataset>
+                                            </viz:dataset>
+                                        </viz:ui5.controls.VizFrame>
+                                        
+                                        <VBox class="sapUiMediumMargin">
+                                            <Title text="Operation Metrics" level="H4"/>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Success Rate:"/>
+                                                <Text text="{dashboard>/operationMetrics/successRate}%"/>
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Average Duration:"/>
+                                                <Text text="{dashboard>/operationMetrics/avgDuration}s"/>
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Total Operations:"/>
+                                                <Text text="{dashboard>/operationMetrics/totalOperations}"/>
+                                            </HBox>
+                                            <HBox justifyContent="SpaceBetween">
+                                                <Label text="Failed Operations:"/>
+                                                <Text text="{dashboard>/operationMetrics/failedOperations}"/>
+                                            </HBox>
+                                        </VBox>
+                                    </l:content>
+                                </l:Grid>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Alerts Tab -->
+                    <IconTabFilter text="Alerts" icon="sap-icon://alert">
+                        <VBox>
+                            <Panel headerText="Active Alerts">
+                                <Table
+                                    items="{dashboard>/alerts}"
+                                    mode="None">
+                                    <columns>
+                                        <Column>
+                                            <Text text="Severity"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Agent"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Alert Type"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Message"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Time"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Actions"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <ObjectStatus
+                                                    text="{dashboard>severity}"
+                                                    state="{= ${dashboard>severity} === 'CRITICAL' ? 'Error' : ${dashboard>severity} === 'HIGH' ? 'Warning' : 'Information' }"/>
+                                                <Text text="{dashboard>agentName}"/>
+                                                <Text text="{dashboard>alertType}"/>
+                                                <Text text="{dashboard>message}"/>
+                                                <Text text="{dashboard>timestamp}"/>
+                                                <HBox>
+                                                    <Button 
+                                                        text="Acknowledge"
+                                                        type="Accept"
+                                                        press=".onAcknowledgeAlert"/>
+                                                    <Button 
+                                                        text="Resolve"
+                                                        type="Emphasized"
+                                                        press=".onResolveAlert"/>
+                                                </HBox>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button text="Close" press=".onCloseDashboard"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Refresh"
+                icon="sap-icon://refresh"
+                press=".onRefreshDashboard"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

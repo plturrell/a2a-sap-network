@@ -1,0 +1,247 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="testRunnerDialog"
+        title="Test Runner - Execution Control"
+        contentWidth="90%"
+        contentHeight="85%"
+        resizable="true">
+        
+        <content>
+            <l:Splitter height="100%" orientation="Horizontal">
+                <l:contentAreas>
+                    <!-- Configuration Panel -->
+                    <Panel headerText="Execution Configuration" width="40%">
+                        <content>
+                            <VBox class="sapUiMediumMargin">
+                                <!-- Test Suite Selection -->
+                                <VBox>
+                                    <Label text="Test Suite"/>
+                                    <Select 
+                                        selectedKey="{runner>/selectedSuite}"
+                                        items="{runner>/availableSuites}">
+                                        <core:ListItem 
+                                            key="{runner>id}"
+                                            text="{runner>name} ({runner>testCount} tests)"/>
+                                    </Select>
+                                </VBox>
+                                
+                                <!-- Execution Settings -->
+                                <VBox class="sapUiMediumMarginTop">
+                                    <Label text="Execution Mode"/>
+                                    <RadioButtonGroup 
+                                        selectedIndex="{= ${runner>/executionMode} === 'SEQUENTIAL' ? 0 : 1 }">
+                                        <RadioButton text="Sequential"/>
+                                        <RadioButton text="Parallel"/>
+                                    </RadioButtonGroup>
+                                </VBox>
+                                
+                                <VBox class="sapUiMediumMarginTop">
+                                    <Label text="Environment"/>
+                                    <Select selectedKey="{runner>/environment}">
+                                        <items>
+                                            <core:Item key="DEV" text="Development"/>
+                                            <core:Item key="TEST" text="Test"/>
+                                            <core:Item key="STAGING" text="Staging"/>
+                                            <core:Item key="PROD" text="Production"/>
+                                        </items>
+                                    </Select>
+                                </VBox>
+                                
+                                <VBox class="sapUiMediumMarginTop">
+                                    <Label text="Parallel Threads"/>
+                                    <Slider 
+                                        value="{runner>/parallelThreads}"
+                                        min="1"
+                                        max="10"
+                                        step="1"
+                                        enableTickmarks="true"
+                                        inputsAsTooltips="true"
+                                        visible="{= ${runner>/executionMode} === 'PARALLEL' }"/>
+                                </VBox>
+                                
+                                <VBox class="sapUiMediumMarginTop">
+                                    <Label text="Retry Attempts"/>
+                                    <StepInput 
+                                        value="{runner>/retryAttempts}"
+                                        min="0"
+                                        max="5"
+                                        step="1"/>
+                                </VBox>
+                                
+                                <!-- Test Filters -->
+                                <Panel 
+                                    headerText="Test Filters"
+                                    expandable="true"
+                                    expanded="true"
+                                    class="sapUiMediumMarginTop">
+                                    <VBox>
+                                        <CheckBox 
+                                            text="Include smoke tests"
+                                            selected="{runner>/testFilters/includeSmoke}"/>
+                                        <CheckBox 
+                                            text="Include regression tests"
+                                            selected="{runner>/testFilters/includeRegression}"/>
+                                        
+                                        <Label text="Priority Filter"/>
+                                        <Select selectedKey="{runner>/testFilters/priorityFilter}">
+                                            <items>
+                                                <core:Item key="ALL" text="All Priorities"/>
+                                                <core:Item key="P1" text="P1 Only"/>
+                                                <core:Item key="P1_P2" text="P1 & P2"/>
+                                                <core:Item key="P3_P4" text="P3 & P4"/>
+                                            </items>
+                                        </Select>
+                                    </VBox>
+                                </Panel>
+                                
+                                <!-- Reporting Options -->
+                                <Panel 
+                                    headerText="Reporting"
+                                    expandable="true"
+                                    expanded="false"
+                                    class="sapUiMediumMarginTop">
+                                    <VBox>
+                                        <CheckBox 
+                                            text="Generate execution report"
+                                            selected="{runner>/generateReport}"/>
+                                        <CheckBox 
+                                            text="Send notification on completion"
+                                            selected="{runner>/notifyOnCompletion}"/>
+                                        <CheckBox 
+                                            text="Capture screenshots"
+                                            selected="{runner>/captureScreenshots}"/>
+                                    </VBox>
+                                </Panel>
+                                
+                                <!-- Execution Control -->
+                                <VBox class="sapUiMediumMarginTop">
+                                    <Button 
+                                        text="Start Execution"
+                                        type="Emphasized"
+                                        icon="sap-icon://play"
+                                        press=".onExecuteTestSuite"
+                                        enabled="{runner>/selectedSuite}"/>
+                                </VBox>
+                            </VBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Execution Monitor Panel -->
+                    <Panel headerText="Execution Monitor" width="60%">
+                        <content>
+                            <VBox>
+                                <!-- Execution Summary -->
+                                <Panel headerText="Execution Summary">
+                                    <l:Grid defaultSpan="L3 M6 S12">
+                                        <l:content>
+                                            <mc:RadialMicroChart
+                                                id="overallProgress"
+                                                size="M"
+                                                percentage="{runner>/executionProgress}"
+                                                press=".onProgressPress"/>
+                                            
+                                            <VBox>
+                                                <Title text="Tests Executed" level="H4"/>
+                                                <Text text="{runner>/testsExecuted} / {runner>/totalTests}"/>
+                                            </VBox>
+                                            
+                                            <VBox>
+                                                <Title text="Success Rate" level="H4"/>
+                                                <Text text="{runner>/successRate}%"/>
+                                            </VBox>
+                                            
+                                            <VBox>
+                                                <Title text="Elapsed Time" level="H4"/>
+                                                <Text text="{runner>/elapsedTime}"/>
+                                            </VBox>
+                                        </l:content>
+                                    </l:Grid>
+                                </Panel>
+                                
+                                <!-- Real-time Test Results -->
+                                <Panel 
+                                    headerText="Test Results"
+                                    class="sapUiMediumMarginTop">
+                                    <Table
+                                        items="{runner>/executionResults}"
+                                        mode="None"
+                                        growing="true"
+                                        growingThreshold="20">
+                                        <columns>
+                                            <Column>
+                                                <Text text="Test Name"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="Status"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="Duration"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="Error"/>
+                                            </Column>
+                                        </columns>
+                                        <items>
+                                            <ColumnListItem>
+                                                <cells>
+                                                    <Text text="{runner>testName}"/>
+                                                    <ObjectStatus 
+                                                        text="{runner>status}"
+                                                        state="{= ${runner>status} === 'PASS' ? 'Success' : ${runner>status} === 'FAIL' ? 'Error' : 'None' }"/>
+                                                    <Text text="{runner>duration}ms"/>
+                                                    <Text 
+                                                        text="{runner>error}"
+                                                        maxLines="2"/>
+                                                </cells>
+                                            </ColumnListItem>
+                                        </items>
+                                    </Table>
+                                </Panel>
+                                
+                                <!-- Execution Controls -->
+                                <Toolbar class="sapUiMediumMarginTop">
+                                    <Button 
+                                        text="Pause"
+                                        icon="sap-icon://pause"
+                                        press=".onPauseExecution"
+                                        enabled="{runner>/isRunning}"/>
+                                    <Button 
+                                        text="Stop"
+                                        icon="sap-icon://stop"
+                                        press=".onStopExecution"
+                                        enabled="{runner>/isRunning}"/>
+                                    <ToolbarSpacer/>
+                                    <Button 
+                                        text="View Logs"
+                                        icon="sap-icon://log"
+                                        press=".onViewLogs"/>
+                                    <Button 
+                                        text="Export Results"
+                                        icon="sap-icon://excel-attachment"
+                                        press=".onExportResults"/>
+                                </Toolbar>
+                            </VBox>
+                        </content>
+                    </Panel>
+                </l:contentAreas>
+            </l:Splitter>
+        </content>
+        
+        <beginButton>
+            <Button text="Close" press=".onCloseTestRunner"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Save Configuration"
+                press=".onSaveConfiguration"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

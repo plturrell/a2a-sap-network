@@ -24,6 +24,8 @@
     "db:seed": "node scripts/seed-data.js",
     "setup:dev": "node scripts/setup-dev-environment.js",
     "dev": "node scripts/quick-start.js",
+    "validate:launchpad": "node scripts/validate-launchpad.js",
+    "health:startup": "node scripts/startup-health-check.js",
     "dev:clean": "rm -rf node_modules data logs temp gen coverage .env && npm run setup:dev",
     "start:clean": "node scripts/start-clean.js",
     "blockchain:local": "sh scripts/start-local-blockchain.sh",

@@ -1,0 +1,214 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="exportResultsDialog"
+        title="Export Standardized Data"
+        contentWidth="60%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <form:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                labelSpanXL="3"
+                labelSpanL="3"
+                labelSpanM="12"
+                labelSpanS="12"
+                adjustLabelSpan="false"
+                columnsXL="1"
+                columnsL="1"
+                columnsM="1">
+                
+                <form:content>
+                    <Label text="Export Format" required="true"/>
+                    <Select 
+                        selectedKey="{export>/format}"
+                        change=".onExportFormatChange">
+                        <items>
+                            <core:Item key="CSV" text="CSV (Comma Separated Values)"/>
+                            <core:Item key="JSON" text="JSON (JavaScript Object Notation)"/>
+                            <core:Item key="XML" text="XML (eXtensible Markup Language)"/>
+                            <core:Item key="PARQUET" text="Parquet (Columnar Format)"/>
+                            <core:Item key="AVRO" text="Avro (Binary Format)"/>
+                            <core:Item key="EXCEL" text="Excel Workbook (.xlsx)"/>
+                        </items>
+                    </Select>
+                    
+                    <Label text="Data Selection"/>
+                    <RadioButtonGroup selectedIndex="{export>/dataSelection}">
+                        <RadioButton text="All processed records"/>
+                        <RadioButton text="Valid records only"/>
+                        <RadioButton text="Invalid records only"/>
+                        <RadioButton text="Custom range"/>
+                    </RadioButtonGroup>
+                    
+                    <!-- Custom Range Selection -->
+                    <VBox visible="{= ${export>/dataSelection} === 3 }">
+                        <Label text="Record Range"/>
+                        <HBox>
+                            <Input 
+                                value="{export>/rangeStart}"
+                                placeholder="From record"
+                                type="Number"
+                                width="120px"
+                                class="sapUiTinyMarginEnd"/>
+                            <Text text="to" class="sapUiTinyMargin"/>
+                            <Input 
+                                value="{export>/rangeEnd}"
+                                placeholder="To record"
+                                type="Number"
+                                width="120px"
+                                class="sapUiTinyMarginBegin"/>
+                        </HBox>
+                    </VBox>
+                    
+                    <Label text="Include Options"/>
+                    <VBox>
+                        <CheckBox 
+                            text="Include metadata"
+                            selected="{export>/includeMetadata}"/>
+                        <CheckBox 
+                            text="Include validation results"
+                            selected="{export>/includeValidation}"/>
+                        <CheckBox 
+                            text="Include transformation log"
+                            selected="{export>/includeTransformationLog}"/>
+                        <CheckBox 
+                            text="Include schema definition"
+                            selected="{export>/includeSchema}"/>
+                    </VBox>
+                    
+                    <!-- Format-specific options -->
+                    <VBox visible="{= ${export>/format} === 'CSV' }">
+                        <Label text="CSV Options"/>
+                        <VBox>
+                            <HBox>
+                                <Label text="Delimiter:" width="100px"/>
+                                <Select selectedKey="{export>/csvDelimiter}" width="120px">
+                                    <items>
+                                        <core:Item key="," text="Comma (,)"/>
+                                        <core:Item key=";" text="Semicolon (;)"/>
+                                        <core:Item key="|" text="Pipe (|)"/>
+                                        <core:Item key="	" text="Tab"/>
+                                    </items>
+                                </Select>
+                            </HBox>
+                            <CheckBox 
+                                text="Include header row"
+                                selected="{export>/csvIncludeHeader}"/>
+                            <CheckBox 
+                                text="Quote all fields"
+                                selected="{export>/csvQuoteAll}"/>
+                        </VBox>
+                    </VBox>
+                    
+                    <VBox visible="{= ${export>/format} === 'JSON' }">
+                        <Label text="JSON Options"/>
+                        <VBox>
+                            <CheckBox 
+                                text="Pretty print (formatted)"
+                                selected="{export>/jsonPrettyPrint}"/>
+                            <CheckBox 
+                                text="Include null values"
+                                selected="{export>/jsonIncludeNulls}"/>
+                            <RadioButtonGroup selectedIndex="{export>/jsonStructure}">
+                                <RadioButton text="Array of objects"/>
+                                <RadioButton text="Object with array"/>
+                                <RadioButton text="Line-delimited JSON"/>
+                            </RadioButtonGroup>
+                        </VBox>
+                    </VBox>
+                    
+                    <Label text="Compression"/>
+                    <Select selectedKey="{export>/compression}">
+                        <items>
+                            <core:Item key="NONE" text="No compression"/>
+                            <core:Item key="ZIP" text="ZIP Archive"/>
+                            <core:Item key="GZIP" text="GZIP"/>
+                            <core:Item key="BZIP2" text="BZIP2"/>
+                        </items>
+                    </Select>
+                    
+                    <Label text="File Splitting"/>
+                    <VBox>
+                        <CheckBox 
+                            text="Split large files"
+                            selected="{export>/enableSplitting}"
+                            select=".onSplittingToggle"/>
+                        <HBox visible="{export>/enableSplitting}">
+                            <Label text="Max records per file:" width="150px"/>
+                            <Input 
+                                value="{export>/maxRecordsPerFile}"
+                                type="Number"
+                                width="120px"/>
+                        </HBox>
+                    </VBox>
+                    
+                    <Label text="Output Destination"/>
+                    <RadioButtonGroup selectedIndex="{export>/destination}">
+                        <RadioButton text="Download to browser"/>
+                        <RadioButton text="Save to server"/>
+                        <RadioButton text="Upload to cloud storage"/>
+                        <RadioButton text="Send via email"/>
+                    </RadioButtonGroup>
+                    
+                    <!-- Cloud Storage Options -->
+                    <VBox visible="{= ${export>/destination} === 2 }">
+                        <Label text="Cloud Storage Provider"/>
+                        <Select selectedKey="{export>/cloudProvider}">
+                            <items>
+                                <core:Item key="AWS_S3" text="Amazon S3"/>
+                                <core:Item key="AZURE_BLOB" text="Azure Blob Storage"/>
+                                <core:Item key="GCP_STORAGE" text="Google Cloud Storage"/>
+                            </items>
+                        </Select>
+                        <Input 
+                            value="{export>/cloudPath}"
+                            placeholder="Storage path/bucket name"/>
+                    </VBox>
+                    
+                    <!-- Email Options -->
+                    <VBox visible="{= ${export>/destination} === 3 }">
+                        <Label text="Email Recipients"/>
+                        <MultiInput 
+                            value="{export>/emailRecipients}"
+                            placeholder="Enter email addresses"/>
+                        <Input 
+                            value="{export>/emailSubject}"
+                            placeholder="Email subject"/>
+                    </VBox>
+                    
+                    <Label text="Export Summary"/>
+                    <Panel class="sapUiResponsiveMargin">
+                        <VBox class="sapUiMediumMargin">
+                            <Text text="Records to export: {export>/recordCount}"/>
+                            <Text text="Estimated file size: {export>/estimatedSize}"/>
+                            <Text text="Export format: {export>/format}"/>
+                            <Text text="Compression: {export>/compression}"/>
+                        </VBox>
+                    </Panel>
+                </form:content>
+            </form:SimpleForm>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelExport"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Export"
+                type="Emphasized"
+                press=".onConfirmExport"
+                enabled="{export>/format}"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

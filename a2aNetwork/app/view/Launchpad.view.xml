@@ -1,25 +1,194 @@
 <mvc:View
     controllerName="a2a.network.launchpad.controller.Launchpad"
     xmlns:mvc="sap.ui.core.mvc"
-    xmlns="sap.m">
-    <Page title="{i18n>appTitle}" showHeader="true">
-        <headerContent>
-            <Button icon="sap-icon://refresh" press="onRefresh" tooltip="{i18n>refreshButtonTooltip}"/>
-            <Button icon="sap-icon://business-analytics" press="onOpenAnalytics" tooltip="{i18n>analyticsButtonTooltip}"/>
-            <Button icon="sap-icon://bell" press="onOpenNotifications" tooltip="{i18n>notificationsButtonTooltip}"/>
-            <Button icon="sap-icon://action-settings" press="onOpenPersonalization" tooltip="{i18n>settingsButtonTooltip}"/>
-        </headerContent>
-        <content>
-            <TileContainer id="tileContainer"
-                tiles="{launchpad>/tiles}">
-                <GenericTile
-                    header="{launchpad>header}"
-                    subheader="{launchpad>subheader}">
-                    <TileContent>
-                        <NumericContent value="{launchpad>value}" icon="{launchpad>icon}"/>
-                    </TileContent>
-                </GenericTile>
-            </TileContainer>
-        </content>
-    </Page>
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core">
+    
+    <!-- SAP Standard DynamicPage Pattern -->
+    <f:DynamicPage
+        id="launchpadPage"
+        headerExpanded="true"
+        showFooter="false"
+        class="sapUiResponsiveContentPadding">
+        
+        <!-- Page Title -->
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>appTitle}" level="H1"/>
+                </f:heading>
+                
+                <!-- Subtitle with user info -->
+                <f:snappedContent>
+                    <Text text="{i18n>welcome} {user>/name}" class="sapUiContentLabelColor"/>
+                </f:snappedContent>
+                
+                <f:expandedContent>
+                    <Text text="{i18n>launchpadSubtitle}" class="sapUiContentLabelColor"/>
+                </f:expandedContent>
+                
+                <!-- Page Actions -->
+                <f:actions>
+                    <HBox alignItems="Center" class="sapUiTinyMarginBegin">
+                        <!-- Primary Actions -->
+                        <Button
+                            icon="sap-icon://refresh"
+                            type="Transparent"
+                            press="onRefresh"
+                            tooltip="{i18n>refresh}"
+                            class="sapUiTinyMarginEnd"/>
+                        
+                        <Button
+                            icon="sap-icon://business-analytics"
+                            type="Transparent"
+                            press="onOpenAnalytics"
+                            tooltip="{i18n>analytics}"
+                            class="sapUiTinyMarginEnd"/>
+                        
+                        <!-- Notification Button with Badge -->
+                        <Button
+                            icon="sap-icon://bell"
+                            type="Transparent"
+                            press="onOpenNotifications"
+                            tooltip="{i18n>notifications}"
+                            class="sapUiTinyMarginEnd">
+                            <customData>
+                                <core:CustomData key="badge" value="{notifications>/unreadCount}" writeToDom="true"/>
+                            </customData>
+                        </Button>
+                        
+                        <Button
+                            icon="sap-icon://action-settings"
+                            type="Transparent"
+                            press="onOpenPersonalization"
+                            tooltip="{i18n>settings}"/>
+                    </HBox>
+                </f:actions>
+                
+                <!-- Navigation Actions -->
+                <f:navigationActions>
+                    <Button
+                        icon="sap-icon://full-screen"
+                        type="Transparent"
+                        press="onToggleFullScreen"
+                        tooltip="{i18n>toggleFullScreen}"/>
+                </f:navigationActions>
+                
+            </f:DynamicPageTitle>
+        </f:title>
+        
+        <!-- Page Header (Collapsible) -->
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                
+                <!-- Status Information -->
+                <VBox class="sapUiMediumMarginBottom">
+                    
+                    <!-- System Status Cards -->
+                    <HBox class="sapUiTinyMarginBottom">
+                        <core:Fragment fragmentName="a2a.network.launchpad.fragment.SystemStatusCards" type="XML"/>
+                    </HBox>
+                    
+                    <!-- Quick Actions -->
+                    <HBox alignItems="Center" class="sapUiTinyMarginTop">
+                        <Label text="{i18n>quickActions}" class="sapUiTinyMarginEnd"/>
+                        
+                        <Button
+                            text="{i18n>createAgent}"
+                            icon="sap-icon://add"
+                            type="Transparent"
+                            press="onCreateAgent"
+                            class="sapUiTinyMarginEnd"/>
+                        
+                        <Button
+                            text="{i18n>deployWorkflow}"
+                            icon="sap-icon://workflow-tasks"
+                            type="Transparent"
+                            press="onDeployWorkflow"
+                            class="sapUiTinyMarginEnd"/>
+                        
+                        <Button
+                            text="{i18n>viewReports}"
+                            icon="sap-icon://bar-chart"
+                            type="Transparent"
+                            press="onViewReports"/>
+                    </HBox>
+                    
+                </VBox>
+                
+            </f:DynamicPageHeader>
+        </f:header>
+        
+        <!-- Page Content -->
+        <f:content>
+            <VBox class="sapUiNoMargin" height="100%">
+                
+                <!-- Status Messages -->
+                <MessageStrip
+                    text="{pageState>/statusMessage}"
+                    type="{pageState>/statusType}"
+                    visible="{pageState>/statusVisible}"
+                    showIcon="true"
+                    class="sapUiMediumMarginBottom"/>
+                
+                <!-- Tile Container with Groups -->
+                <VBox class="sapUiNoMargin">
+                    
+                    <!-- Group: Core Processing Agents -->
+                    <VBox class="sapUiMediumMarginBottom">
+                        <Title text="{i18n>coreProcessingAgents}" level="H3" class="sapUiSmallMarginBottom"/>
+                        <TileContainer id="coreAgentsTileContainer">
+                            <GenericTile
+                                header="{launchpad>header}"
+                                subheader="{launchpad>subheader}"
+                                press="onTilePress"
+                                class="sapUiTinyMargin">
+                                <TileContent>
+                                    <NumericContent 
+                                        value="{launchpad>value}" 
+                                        icon="{launchpad>icon}"
+                                        withMargin="false"
+                                        animateTextChange="true"/>
+                                </TileContent>
+                                <!-- Status Indicator -->
+                                <customData>
+                                    <core:CustomData key="status" value="{launchpad>status}" writeToDom="true"/>
+                                    <core:CustomData key="agentId" value="{launchpad>id}" writeToDom="true"/>
+                                </customData>
+                            </GenericTile>
+                        </TileContainer>
+                    </VBox>
+                    
+                    <!-- Group: Analytics & Monitoring -->
+                    <VBox class="sapUiMediumMarginBottom">
+                        <Title text="{i18n>analyticsMonitoring}" level="H3" class="sapUiSmallMarginBottom"/>
+                        <TileContainer id="analyticsTileContainer">
+                            <!-- Analytics tiles will be rendered here -->
+                        </TileContainer>
+                    </VBox>
+                    
+                    <!-- Group: Services & Workflows -->
+                    <VBox class="sapUiMediumMarginBottom">
+                        <Title text="{i18n>servicesWorkflows}" level="H3" class="sapUiSmallMarginBottom"/>
+                        <TileContainer id="servicesTileContainer">
+                            <!-- Services tiles will be rendered here -->
+                        </TileContainer>
+                    </VBox>
+                    
+                    <!-- Group: Security & Compliance -->
+                    <VBox>
+                        <Title text="{i18n>securityCompliance}" level="H3" class="sapUiSmallMarginBottom"/>
+                        <TileContainer id="securityTileContainer">
+                            <!-- Security tiles will be rendered here -->
+                        </TileContainer>
+                    </VBox>
+                    
+                </VBox>
+                
+            </VBox>
+        </f:content>
+        
+    </f:DynamicPage>
+    
 </mvc:View>

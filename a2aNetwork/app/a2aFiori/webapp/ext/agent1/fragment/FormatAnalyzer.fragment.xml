@@ -1,0 +1,249 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz"
+    xmlns:suite="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="formatAnalyzerDialog"
+        title="Format Analysis Dashboard"
+        contentWidth="80%"
+        contentHeight="70%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <IconTabBar>
+                <!-- Overview Tab -->
+                <IconTabFilter text="Overview" icon="sap-icon://overview-chart">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Statistics Cards -->
+                        <HBox class="sapUiMediumMarginBottom">
+                            <NumericTile
+                                headerText="Total Files Analyzed"
+                                subHeaderText="This Month"
+                                value="{stats>/totalFiles}"
+                                size="M"
+                                class="sapUiMediumMarginEnd"/>
+                            <NumericTile
+                                headerText="Success Rate"
+                                subHeaderText="Format Detection"
+                                value="{stats>/successRate}"
+                                unit="%"
+                                size="M"
+                                class="sapUiMediumMarginEnd"/>
+                            <NumericTile
+                                headerText="Most Common Format"
+                                subHeaderText="Current Period"
+                                value="{stats>/mostCommonFormat}"
+                                size="M"/>
+                        </HBox>
+                        
+                        <!-- Format Distribution Chart -->
+                        <Panel headerText="Format Distribution" class="sapUiResponsiveMargin">
+                            <viz:Popover id="formatDistributionPopover"></viz:Popover>
+                            <viz:VizFrame 
+                                id="formatDistributionChart"
+                                width="100%" 
+                                height="300px"
+                                vizType="donut">
+                                <viz:dataset>
+                                    <viz:FlattenedDataset data="{stats>/formatDistribution}">
+                                        <viz:dimensions>
+                                            <viz:DimensionDefinition name="Format" value="{format}"/>
+                                        </viz:dimensions>
+                                        <viz:measures>
+                                            <viz:MeasureDefinition name="Count" value="{count}"/>
+                                        </viz:measures>
+                                    </viz:FlattenedDataset>
+                                </viz:dataset>
+                            </viz:VizFrame>
+                        </Panel>
+                    </VBox>
+                </IconTabFilter>
+                
+                <!-- Quality Metrics Tab -->
+                <IconTabFilter text="Quality Metrics" icon="sap-icon://quality-issue">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Quality Score Cards -->
+                        <HBox class="sapUiMediumMarginBottom">
+                            <suite:BulletMicroChart 
+                                size="M" 
+                                actual="{stats>/qualityScore}"
+                                targetValue="90"
+                                minValue="0"
+                                maxValue="100"
+                                class="sapUiMediumMarginEnd">
+                                <suite:actualValueLabel>
+                                    <suite:BulletMicroChartData value="{stats>/qualityScore}" color="Good"/>
+                                </suite:actualValueLabel>
+                            </suite:BulletMicroChart>
+                            
+                            <suite:RadialMicroChart 
+                                size="M"
+                                percentage="{stats>/completenessRate}"
+                                class="sapUiMediumMarginEnd">
+                                <suite:centerLabel>Completeness</suite:centerLabel>
+                            </suite:RadialMicroChart>
+                            
+                            <suite:AreaMicroChart 
+                                size="M"
+                                target="{stats>/consistencyTarget}"
+                                minXValue="0"
+                                maxXValue="10"
+                                minYValue="0"
+                                maxYValue="100">
+                                <suite:chart>
+                                    <suite:AreaMicroChartData 
+                                        color="Good" 
+                                        values="{stats>/consistencyTrend}"/>
+                                </suite:chart>
+                            </suite:AreaMicroChart>
+                        </HBox>
+                        
+                        <!-- Quality Issues Table -->
+                        <Panel headerText="Quality Issues">
+                            <Table items="{stats>/qualityIssues}">
+                                <columns>
+                                    <Column>
+                                        <Text text="Issue Type"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Count"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Severity"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Recommendation"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{issueType}"/>
+                                            <ObjectNumber number="{count}" state="{severity}"/>
+                                            <ObjectStatus text="{severity}" state="{severity}"/>
+                                            <Text text="{recommendation}"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </Panel>
+                    </VBox>
+                </IconTabFilter>
+                
+                <!-- Processing Performance Tab -->
+                <IconTabFilter text="Performance" icon="sap-icon://performance">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Performance Metrics -->
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Average Processing Time" level="H3"/>
+                                <ObjectNumber 
+                                    number="{stats>/avgProcessingTime}" 
+                                    unit="ms"
+                                    state="Success"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Memory Usage" level="H3"/>
+                                <ObjectNumber 
+                                    number="{stats>/memoryUsage}" 
+                                    unit="MB"
+                                    state="{stats>/memoryState}"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="Throughput" level="H3"/>
+                                <ObjectNumber 
+                                    number="{stats>/throughput}" 
+                                    unit="files/min"
+                                    state="Success"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <!-- Performance Trend Chart -->
+                        <Panel headerText="Processing Time Trend">
+                            <viz:VizFrame 
+                                id="performanceTrendChart"
+                                width="100%" 
+                                height="300px"
+                                vizType="line">
+                                <viz:dataset>
+                                    <viz:FlattenedDataset data="{stats>/performanceTrend}">
+                                        <viz:dimensions>
+                                            <viz:DimensionDefinition name="Time" value="{timestamp}"/>
+                                        </viz:dimensions>
+                                        <viz:measures>
+                                            <viz:MeasureDefinition name="Processing Time" value="{processingTime}"/>
+                                            <viz:MeasureDefinition name="Memory Usage" value="{memoryUsage}"/>
+                                        </viz:measures>
+                                    </viz:FlattenedDataset>
+                                </viz:dataset>
+                            </viz:VizFrame>
+                        </Panel>
+                    </VBox>
+                </IconTabFilter>
+                
+                <!-- Error Analysis Tab -->
+                <IconTabFilter text="Errors" icon="sap-icon://error">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Error Summary -->
+                        <MessageStrip 
+                            text="Error Rate: {stats>/errorRate}% - {stats>/errorTrend}"
+                            type="{stats>/errorSeverity}"
+                            class="sapUiMediumMarginBottom"/>
+                        
+                        <!-- Error Categories Chart -->
+                        <Panel headerText="Error Categories">
+                            <viz:VizFrame 
+                                id="errorCategoriesChart"
+                                width="100%" 
+                                height="250px"
+                                vizType="column">
+                                <viz:dataset>
+                                    <viz:FlattenedDataset data="{stats>/errorCategories}">
+                                        <viz:dimensions>
+                                            <viz:DimensionDefinition name="Category" value="{category}"/>
+                                        </viz:dimensions>
+                                        <viz:measures>
+                                            <viz:MeasureDefinition name="Count" value="{count}"/>
+                                        </viz:measures>
+                                    </viz:FlattenedDataset>
+                                </viz:dataset>
+                            </viz:VizFrame>
+                        </Panel>
+                        
+                        <!-- Recent Errors -->
+                        <Panel headerText="Recent Errors">
+                            <List items="{stats>/recentErrors}">
+                                <StandardListItem 
+                                    title="{errorMessage}"
+                                    description="{timestamp} - {fileName}"
+                                    icon="sap-icon://error"
+                                    iconInset="false"
+                                    type="Active"
+                                    press=".onErrorDetails"/>
+                            </List>
+                        </Panel>
+                    </VBox>
+                </IconTabFilter>
+            </IconTabBar>
+        </content>
+        
+        <buttons>
+            <Button 
+                text="Refresh Data"
+                icon="sap-icon://refresh"
+                press=".onRefreshStats"/>
+            <Button 
+                text="Export Report"
+                icon="sap-icon://download"
+                press=".onExportReport"/>
+            <Button 
+                text="Close"
+                press=".onCloseAnalyzer"/>
+        </buttons>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

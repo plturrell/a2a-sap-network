@@ -1,0 +1,99 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    
+    <!-- SAP Standard Action Button Group Pattern -->
+    <HBox class="sapUiTinyMarginBegin" alignItems="Center">
+        
+        <!-- Primary Actions (Left) -->
+        <HBox visible="{/primaryActionsVisible}" class="sapUiTinyMarginEnd">
+            <Button
+                id="btnCreate"
+                text="{i18n>create}"
+                icon="sap-icon://add"
+                type="Emphasized"
+                press="onCreate"
+                visible="{/createVisible}"
+                enabled="{/createEnabled}"
+                class="sapUiTinyMarginEnd"/>
+            
+            <Button
+                id="btnEdit"
+                text="{i18n>edit}"
+                icon="sap-icon://edit"
+                type="Transparent"
+                press="onEdit"
+                visible="{/editVisible}"
+                enabled="{/editEnabled}"
+                class="sapUiTinyMarginEnd"/>
+            
+            <Button
+                id="btnSave"
+                text="{i18n>save}"
+                icon="sap-icon://save"
+                type="Emphasized"
+                press="onSave"
+                visible="{/saveVisible}"
+                enabled="{/saveEnabled}"
+                class="sapUiTinyMarginEnd"/>
+            
+            <Button
+                id="btnCancel"
+                text="{i18n>cancel}"
+                icon="sap-icon://cancel"
+                type="Transparent"
+                press="onCancel"
+                visible="{/cancelVisible}"
+                enabled="{/cancelEnabled}"
+                class="sapUiTinyMarginEnd"/>
+        </HBox>
+        
+        <!-- Secondary Actions (Center) -->
+        <HBox visible="{/secondaryActionsVisible}" class="sapUiTinyMarginEnd">
+            <Button
+                id="btnRefresh"
+                icon="sap-icon://refresh"
+                type="Transparent"
+                press="onRefresh"
+                visible="{/refreshVisible}"
+                enabled="{/refreshEnabled}"
+                tooltip="{i18n>refresh}"
+                class="sapUiTinyMarginEnd"/>
+            
+            <Button
+                id="btnCopy"
+                icon="sap-icon://copy"
+                type="Transparent"
+                press="onCopy"
+                visible="{/copyVisible}"
+                enabled="{/copyEnabled}"
+                tooltip="{i18n>copy}"
+                class="sapUiTinyMarginEnd"/>
+            
+            <Button
+                id="btnExport"
+                icon="sap-icon://download"
+                type="Transparent"
+                press="onExport"
+                visible="{/exportVisible}"
+                enabled="{/exportEnabled}"
+                tooltip="{i18n>export}"
+                class="sapUiTinyMarginEnd"/>
+        </HBox>
+        
+        <!-- Destructive Actions (Right) -->
+        <HBox visible="{/destructiveActionsVisible}">
+            <Button
+                id="btnDelete"
+                icon="sap-icon://delete"
+                type="Transparent"
+                press="onDelete"
+                visible="{/deleteVisible}"
+                enabled="{/deleteEnabled}"
+                tooltip="{i18n>delete}"
+                class="sapUiButtonReject"/>
+        </HBox>
+        
+    </HBox>
+    
+</core:FragmentDefinition>

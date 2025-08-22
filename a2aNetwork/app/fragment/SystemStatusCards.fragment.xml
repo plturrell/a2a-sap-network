@@ -1,0 +1,82 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core">
+    
+    <!-- SAP Standard Status Cards -->
+    <HBox alignItems="Center" justifyContent="SpaceAround" class="sapUiNoMargin">
+        
+        <!-- System Health Card -->
+        <f:Card class="sapUiTinyMargin" width="12rem" height="8rem">
+            <f:header>
+                <f:CardHeader title="{i18n>systemHealth}" subtitle="{i18n>overall}"/>
+            </f:header>
+            <f:content>
+                <VBox alignItems="Center" justifyContent="Center" class="sapUiSmallMargin">
+                    <core:Icon 
+                        src="sap-icon://status-positive" 
+                        size="2rem" 
+                        color="{= ${system>/healthStatus} === 'healthy' ? 'Positive' : 'Critical'}"
+                        class="sapUiTinyMarginBottom"/>
+                    <Text 
+                        text="{system>/healthStatus}" 
+                        class="{= ${system>/healthStatus} === 'healthy' ? 'sapUiPositiveText' : 'sapUiNegativeText'}"/>
+                </VBox>
+            </f:content>
+        </f:Card>
+        
+        <!-- Active Agents Card -->
+        <f:Card class="sapUiTinyMargin" width="12rem" height="8rem">
+            <f:header>
+                <f:CardHeader title="{i18n>activeAgents}" subtitle="{i18n>running}"/>
+            </f:header>
+            <f:content>
+                <VBox alignItems="Center" justifyContent="Center" class="sapUiSmallMargin">
+                    <core:Icon 
+                        src="sap-icon://collaborate" 
+                        size="2rem" 
+                        color="Accent6"
+                        class="sapUiTinyMarginBottom"/>
+                    <Text text="{system>/activeAgents}" class="sapUiLargeText"/>
+                    <Text text="/ {system>/totalAgents}" class="sapUiContentLabelColor"/>
+                </VBox>
+            </f:content>
+        </f:Card>
+        
+        <!-- Performance Card -->
+        <f:Card class="sapUiTinyMargin" width="12rem" height="8rem">
+            <f:header>
+                <f:CardHeader title="{i18n>performance}" subtitle="{i18n>average}"/>
+            </f:header>
+            <f:content>
+                <VBox alignItems="Center" justifyContent="Center" class="sapUiSmallMargin">
+                    <core:Icon 
+                        src="sap-icon://performance" 
+                        size="2rem" 
+                        color="Accent3"
+                        class="sapUiTinyMarginBottom"/>
+                    <Text text="{system>/performanceScore}%" class="sapUiLargeText"/>
+                </VBox>
+            </f:content>
+        </f:Card>
+        
+        <!-- Alerts Card -->
+        <f:Card class="sapUiTinyMargin" width="12rem" height="8rem">
+            <f:header>
+                <f:CardHeader title="{i18n>alerts}" subtitle="{i18n>active}"/>
+            </f:header>
+            <f:content>
+                <VBox alignItems="Center" justifyContent="Center" class="sapUiSmallMargin">
+                    <core:Icon 
+                        src="sap-icon://alert" 
+                        size="2rem" 
+                        color="{= ${system>/alertCount} > 0 ? 'Critical' : 'Positive'}"
+                        class="sapUiTinyMarginBottom"/>
+                    <Text text="{system>/alertCount}" class="sapUiLargeText"/>
+                </VBox>
+            </f:content>
+        </f:Card>
+        
+    </HBox>
+    
+</core:FragmentDefinition>

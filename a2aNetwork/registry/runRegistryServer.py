@@ -31,9 +31,22 @@ async def lifespan(app: FastAPI):
     
     # Initialize trust system
     try:
-        from trustSystem.smartContractTrust import SmartContractTrust
+        # Add parent directories to Python path for trustSystem imports
+        parent_dir = os.path.dirname(app_dir)
+        sys.path.insert(0, parent_dir)
+        
+        from a2aNetwork.trustSystem.smartContractTrust import SmartContractTrust
         trust_system = SmartContractTrust()
         print("✅ Trust system initialized")
+    except ImportError:
+        try:
+            # Try alternative import path
+            from ..trustSystem.smartContractTrust import SmartContractTrust
+            trust_system = SmartContractTrust()
+            print("✅ Trust system initialized")
+        except Exception as e:
+            print(f"⚠️ Trust system failed: {e}")
+            trust_system = None
     except Exception as e:
         print(f"⚠️ Trust system failed: {e}")
         trust_system = None
@@ -84,9 +97,15 @@ async def register_blockchain_agents():
         
         print("📋 Auto-registering blockchain agents...")
         
-        # Register agents in trust system first
-        agent1_identity = trust_system.register_agent(AGENT1_ADDRESS, "blockchain_financial_agent")
-        agent2_identity = trust_system.register_agent(AGENT2_ADDRESS, "blockchain_message_agent")
+        # Register agents in trust system first (if trust system supports it)
+        agent1_identity = None
+        agent2_identity = None
+        
+        if hasattr(trust_system, 'register_agent'):
+            agent1_identity = trust_system.register_agent(AGENT1_ADDRESS, "blockchain_financial_agent")
+            agent2_identity = trust_system.register_agent(AGENT2_ADDRESS, "blockchain_message_agent")
+        else:
+            print("⚠️ Trust system doesn't support agent registration, skipping trust registration")
         
         # Create Agent1 card (Financial Agent)
         agent1_card = AgentCard(

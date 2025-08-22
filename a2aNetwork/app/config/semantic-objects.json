@@ -1,0 +1,258 @@
+{
+  "semanticObjects": {
+    "Agent": {
+      "description": "A2A Network Agent",
+      "actions": {
+        "display": {
+          "text": "Display Agent",
+          "target": {
+            "type": "URL",
+            "url": "#Agent-display?agentId={agentId}"
+          }
+        },
+        "manage": {
+          "text": "Manage Agent",
+          "target": {
+            "type": "URL",
+            "url": "#Agent-manage?agentId={agentId}"
+          }
+        },
+        "monitor": {
+          "text": "Monitor Agent",
+          "target": {
+            "type": "URL",
+            "url": "#Agent-monitor?agentId={agentId}"
+          }
+        }
+      },
+      "parameters": {
+        "agentId": {
+          "required": true,
+          "type": "string"
+        },
+        "agentType": {
+          "required": false,
+          "type": "string"
+        }
+      }
+    },
+    "Service": {
+      "description": "A2A Network Service",
+      "actions": {
+        "display": {
+          "text": "Display Service",
+          "target": {
+            "type": "URL",
+            "url": "#Service-display?serviceId={serviceId}"
+          }
+        },
+        "subscribe": {
+          "text": "Subscribe to Service",
+          "target": {
+            "type": "URL",
+            "url": "#Service-subscribe?serviceId={serviceId}"
+          }
+        },
+        "configure": {
+          "text": "Configure Service",
+          "target": {
+            "type": "URL",
+            "url": "#Service-configure?serviceId={serviceId}"
+          }
+        }
+      },
+      "parameters": {
+        "serviceId": {
+          "required": true,
+          "type": "string"
+        },
+        "category": {
+          "required": false,
+          "type": "string"
+        }
+      }
+    },
+    "Workflow": {
+      "description": "A2A Network Workflow",
+      "actions": {
+        "display": {
+          "text": "Display Workflow",
+          "target": {
+            "type": "URL",
+            "url": "#Workflow-display?workflowId={workflowId}"
+          }
+        },
+        "design": {
+          "text": "Design Workflow",
+          "target": {
+            "type": "URL",
+            "url": "#Workflow-design?workflowId={workflowId}"
+          }
+        },
+        "execute": {
+          "text": "Execute Workflow",
+          "target": {
+            "type": "URL",
+            "url": "#Workflow-execute?workflowId={workflowId}"
+          }
+        },
+        "monitor": {
+          "text": "Monitor Workflow",
+          "target": {
+            "type": "URL",
+            "url": "#Workflow-monitor?workflowId={workflowId}"
+          }
+        }
+      },
+      "parameters": {
+        "workflowId": {
+          "required": true,
+          "type": "string"
+        },
+        "version": {
+          "required": false,
+          "type": "string"
+        }
+      }
+    },
+    "Analytics": {
+      "description": "A2A Network Analytics",
+      "actions": {
+        "display": {
+          "text": "Display Analytics",
+          "target": {
+            "type": "URL",
+            "url": "#Analytics-display?reportId={reportId}"
+          }
+        },
+        "dashboard": {
+          "text": "Analytics Dashboard",
+          "target": {
+            "type": "URL",
+            "url": "#Analytics-dashboard"
+          }
+        }
+      },
+      "parameters": {
+        "reportId": {
+          "required": false,
+          "type": "string"
+        },
+        "timeframe": {
+          "required": false,
+          "type": "string",
+          "default": "30days"
+        }
+      }
+    },
+    "Contract": {
+      "description": "Blockchain Smart Contract",
+      "actions": {
+        "display": {
+          "text": "Display Contract",
+          "target": {
+            "type": "URL",
+            "url": "#Contract-display?contractId={contractId}"
+          }
+        },
+        "deploy": {
+          "text": "Deploy Contract",
+          "target": {
+            "type": "URL",
+            "url": "#Contract-deploy"
+          }
+        },
+        "interact": {
+          "text": "Interact with Contract",
+          "target": {
+            "type": "URL",
+            "url": "#Contract-interact?contractId={contractId}"
+          }
+        }
+      },
+      "parameters": {
+        "contractId": {
+          "required": false,
+          "type": "string"
+        },
+        "chainId": {
+          "required": false,
+          "type": "string"
+        }
+      }
+    },
+    "Security": {
+      "description": "Security and Compliance",
+      "actions": {
+        "audit": {
+          "text": "Security Audit",
+          "target": {
+            "type": "URL",
+            "url": "#Security-audit"
+          }
+        },
+        "compliance": {
+          "text": "Compliance Dashboard",
+          "target": {
+            "type": "URL",
+            "url": "#Security-compliance"
+          }
+        },
+        "incidents": {
+          "text": "Security Incidents",
+          "target": {
+            "type": "URL",
+            "url": "#Security-incidents"
+          }
+        }
+      }
+    }
+  },
+  "intents": {
+    "Agent-display": {
+      "semanticObject": "Agent",
+      "action": "display",
+      "signature": {
+        "parameters": {
+          "agentId": {
+            "required": true
+          }
+        }
+      }
+    },
+    "Service-display": {
+      "semanticObject": "Service",
+      "action": "display",
+      "signature": {
+        "parameters": {
+          "serviceId": {
+            "required": true
+          }
+        }
+      }
+    },
+    "Workflow-design": {
+      "semanticObject": "Workflow",
+      "action": "design",
+      "signature": {
+        "parameters": {
+          "workflowId": {
+            "required": false
+          }
+        }
+      }
+    },
+    "Analytics-dashboard": {
+      "semanticObject": "Analytics",
+      "action": "dashboard",
+      "signature": {
+        "parameters": {}
+      }
+    }
+  },
+  "navigation": {
+    "defaultIntent": "Shell-home",
+    "errorIntent": "Shell-error",
+    "unauthorizedIntent": "Shell-unauthorized"
+  }
+}
