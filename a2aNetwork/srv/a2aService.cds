@@ -947,6 +947,176 @@ service A2AService @(path: '/api/v1') {
     ) returns String;
     
     // ================================
+    // AGENT 5 - QA VALIDATION
+    // ================================
+    
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE', 'UPDATE'], to: 'QAManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity QaValidationTasks as projection on db.QaValidationTasks {
+        *,
+        agent : redirected to Agents,
+        qaTestResults : redirected to QaTestResults
+    } actions {
+        @requires: ['QAManager', 'Admin']
+        action startValidation() returns String;
+        @requires: ['QAManager', 'Admin']
+        action pauseValidation() returns String;
+        @requires: ['QAManager', 'Admin']
+        action resumeValidation() returns String;
+        @requires: ['QAManager', 'Admin']
+        action cancelValidation() returns String;
+        @requires: ['QAManager', 'Admin']
+        action generateSimpleQATests() returns String;
+        @requires: ['QAManager', 'Admin']
+        action runFactualityTests() returns String;
+        @requires: ['QAManager', 'Admin']
+        action runComplianceCheck() returns String;
+        @requires: ['QAManager', 'Admin']
+        action runVectorSimilarityCheck() returns String;
+        @requires: ['QAManager', 'Admin']
+        action approveValidation(
+            comments: String,
+            conditionalApproval: Boolean
+        ) returns String;
+        @requires: ['QAManager', 'Admin']
+        action rejectValidation(
+            reason: String,
+            actionItems: String
+        ) returns String;
+        @requires: ['QAManager', 'Admin']
+        action exportValidationReport(
+            format: String,
+            includeTestResults: Boolean,
+            includeRecommendations: Boolean
+        ) returns String;
+        @requires: ['QAManager', 'Admin']
+        action discoverFromORD(
+            ordRegistryUrl: String,
+            dataProductId: String
+        ) returns String;
+    };
+    
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE'], to: 'QAManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity QaTestResults as projection on db.QaTestResults;
+    
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE', 'UPDATE'], to: 'QAManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity QaValidationRules as projection on db.QaValidationRules {
+        *
+    } actions {
+        @requires: ['QAManager', 'Admin']
+        action activateRule() returns String;
+        @requires: ['QAManager', 'Admin']
+        action deactivateRule() returns String;
+        @requires: ['QAManager', 'Admin']
+        action testRule(
+            testData: String
+        ) returns String;
+        @requires: ['Admin']
+        action updateSuccessRate() returns String;
+    };
+    
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE', 'UPDATE'], to: 'QAManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity QaApprovalWorkflows as projection on db.QaApprovalWorkflows {
+        *
+    } actions {
+        @requires: ['QAManager', 'Admin']
+        action activateWorkflow() returns String;
+        @requires: ['QAManager', 'Admin']
+        action triggerWorkflow(
+            taskId: String,
+            context: String
+        ) returns String;
+        @requires: ['Admin']
+        action setAsDefault() returns String;
+    };
+    
+    // Agent 5 specific actions for QA validation
+    @requires: ['QAManager', 'Admin']
+    action batchValidateDataProducts(
+        dataProductIds: array of String,
+        validationType: String,
+        qualityThreshold: Decimal,
+        parallel: Boolean
+    ) returns String;
+    
+    @requires: ['QAManager', 'Admin'] 
+    action validateDataProduct(
+        dataProductId: String,
+        ordRegistryUrl: String,
+        validationType: String,
+        qaScope: String
+    ) returns String;
+    
+    @requires: ['QAManager', 'Admin']
+    action generateDynamicTests(
+        dataProductId: String,
+        testCount: Integer,
+        testType: String
+    ) returns String;
+    
+    @requires: ['QAManager', 'Admin']
+    action getORDMetadata(
+        ordRegistryUrl: String,
+        dataProductId: String
+    ) returns String;
+    
+    @requires: ['QAManager', 'Admin']
+    action createValidationRule(
+        ruleName: String,
+        ruleCategory: String,
+        ruleType: String,
+        ruleExpression: String,
+        severityLevel: String
+    ) returns String;
+    
+    @requires: ['QAManager', 'Admin']
+    action runRegressionTests(
+        baselineTaskId: String,
+        currentTaskId: String,
+        threshold: Decimal
+    ) returns String;
+    
+    @requires: ['QAManager', 'Admin']
+    action analyzeQualityTrends(
+        dataProductId: String,
+        timeRange: String
+    ) returns String;
+    
+    @requires: ['QAManager', 'Admin']
+    action configureApprovalWorkflow(
+        workflowName: String,
+        triggerConditions: String,
+        approvalSteps: String,
+        autoApprovalRules: String
+    ) returns String;
+    
+    @requires: ['QAManager', 'Admin']
+    action integrateWithAgent3(
+        taskId: String,
+        vectorSimilarityThreshold: Decimal,
+        collectionName: String
+    ) returns String;
+    
+    // ================================
     // REPUTATION SYSTEM EVENTS
     // ================================
     

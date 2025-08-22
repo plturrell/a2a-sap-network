@@ -1,0 +1,423 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="ordDiscoveryDialog"
+        title="ORD Registry Discovery"
+        contentWidth="75%"
+        contentHeight="70%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- ORD Registry Configuration -->
+                <Panel headerText="ORD Registry Configuration" class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="1"
+                        columnsL="1"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="ORD Registry URL" required="true"/>
+                            <Input 
+                                value="{ord>/registryUrl}"
+                                placeholder="https://api.company.com/.well-known/open_resource_discovery"
+                                change=".onRegistryUrlChange"/>
+                            
+                            <Label text="Authentication"/>
+                            <Select selectedKey="{ord>/authType}">
+                                <items>
+                                    <core:Item key="NONE" text="None"/>
+                                    <core:Item key="BASIC" text="Basic Authentication"/>
+                                    <core:Item key="BEARER" text="Bearer Token"/>
+                                    <core:Item key="API_KEY" text="API Key"/>
+                                    <core:Item key="OAUTH2" text="OAuth 2.0"/>
+                                </items>
+                            </Select>
+                            
+                            <VBox visible="{= ${ord>/authType} !== 'NONE'}">
+                                <Label text="Credentials"/>
+                                <Input 
+                                    value="{ord>/credentials}"
+                                    type="Password"
+                                    placeholder="Enter authentication credentials"/>
+                            </VBox>
+                            
+                            <Label text="Discovery Timeout (seconds)"/>
+                            <Input 
+                                value="{ord>/timeout}"
+                                type="Number"
+                                placeholder="30"/>
+                            
+                            <Label text="Filter Options"/>
+                            <VBox>
+                                <CheckBox 
+                                    text="Include API endpoints"
+                                    selected="{ord>/includeApis}"/>
+                                <CheckBox 
+                                    text="Include data products"
+                                    selected="{ord>/includeDataProducts}"/>
+                                <CheckBox 
+                                    text="Include events"
+                                    selected="{ord>/includeEvents}"/>
+                                <CheckBox 
+                                    text="Include integration dependencies"
+                                    selected="{ord>/includeIntegrationDependencies}"/>
+                            </VBox>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Discovery Progress -->
+                <Panel 
+                    headerText="Discovery Progress"
+                    visible="{ord>/discoveryInProgress}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <ProgressIndicator 
+                            percentValue="{ord>/discoveryProgress}"
+                            displayValue="Discovering ORD metadata: {ord>/discoveryProgress}%"
+                            state="Information"
+                            class="sapUiMediumMarginBottom"/>
+                        
+                        <Text text="Current stage: {ord>/currentStage}"/>
+                        <Text text="Resources discovered: {ord>/resourcesDiscovered}"/>
+                        <Text text="Elapsed time: {ord>/elapsedTime}s"/>
+                    </VBox>
+                </Panel>
+                
+                <!-- Discovery Results -->
+                <Panel 
+                    headerText="Discovery Results"
+                    visible="{= ${ord>/discoveryComplete} && ${ord>/discoveredResources}.length > 0}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Summary Statistics -->
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Total Resources:" class="sapUiContentLabelColor"/>
+                                <Text text="{ord>/totalResources}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Data Products:" class="sapUiContentLabelColor"/>
+                                <Text text="{ord>/dataProductCount}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="APIs:" class="sapUiContentLabelColor"/>
+                                <Text text="{ord>/apiCount}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Events:" class="sapUiContentLabelColor"/>
+                                <Text text="{ord>/eventCount}"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Dependencies:" class="sapUiContentLabelColor"/>
+                                <Text text="{ord>/dependencyCount}"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <!-- Resource List -->
+                        <Table 
+                            items="{ord>/discoveredResources}"
+                            mode="MultiSelect"
+                            selectionChange=".onResourceSelectionChange"
+                            growing="true"
+                            growingThreshold="20">
+                            <columns>
+                                <Column>
+                                    <Text text="Resource Type"/>
+                                </Column>
+                                <Column>
+                                    <Text text="ID"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Title"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Version"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Description"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Tags"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Actions"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <ObjectStatus 
+                                            text="{resourceType}"
+                                            state="{= ${resourceType} === 'dataProduct' ? 'Success' : ${resourceType} === 'api' ? 'Warning' : 'Information'}"/>
+                                        <Text text="{id}"/>
+                                        <VBox>
+                                            <Text text="{title}"/>
+                                            <Text 
+                                                text="{shortDescription}"
+                                                class="sapUiContentLabelColor"/>
+                                        </VBox>
+                                        <Text text="{version}"/>
+                                        <Text 
+                                            text="{description}"
+                                            maxLines="2"/>
+                                        <HBox>
+                                            <core:Icon 
+                                                src="sap-icon://tags"
+                                                size="1rem"
+                                                class="sapUiTinyMarginEnd"/>
+                                            <Text text="{tags}"/>
+                                        </HBox>
+                                        <HBox>
+                                            <Button 
+                                                text="Details"
+                                                type="Transparent"
+                                                icon="sap-icon://detail-view"
+                                                press=".onViewResourceDetails"
+                                                class="sapUiTinyMarginEnd"/>
+                                            <Button 
+                                                text="Validate"
+                                                type="Transparent"
+                                                icon="sap-icon://quality-issue"
+                                                press=".onCreateValidationTask"
+                                                visible="{= ${resourceType} === 'dataProduct'}"/>
+                                        </HBox>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </Panel>
+                
+                <!-- Data Product Details -->
+                <Panel 
+                    headerText="Selected Data Product Details"
+                    visible="{= !!${ord>/selectedDataProduct}}"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <VBox class="sapUiMediumMarginBottom">
+                            <Title text="{ord>/selectedDataProduct/title}" level="H4"/>
+                            <Text text="{ord>/selectedDataProduct/description}"/>
+                            
+                            <HBox class="sapUiMediumMarginTop">
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Text text="Data Product ID:" class="sapUiContentLabelColor"/>
+                                    <Text text="{ord>/selectedDataProduct/id}"/>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Text text="Version:" class="sapUiContentLabelColor"/>
+                                    <Text text="{ord>/selectedDataProduct/version}"/>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Text text="Visibility:" class="sapUiContentLabelColor"/>
+                                    <Text text="{ord>/selectedDataProduct/visibility}"/>
+                                </VBox>
+                                <VBox>
+                                    <Text text="Release Status:" class="sapUiContentLabelColor"/>
+                                    <ObjectStatus 
+                                        text="{ord>/selectedDataProduct/releaseStatus}"
+                                        state="{= ${ord>/selectedDataProduct/releaseStatus} === 'active' ? 'Success' : 'Warning'}"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                        
+                        <!-- Entity Types -->
+                        <VBox 
+                            visible="{= ${ord>/selectedDataProduct/entityTypes}.length > 0}"
+                            class="sapUiMediumMarginBottom">
+                            <Title text="Entity Types" level="H5"/>
+                            <Table items="{ord>/selectedDataProduct/entityTypes}">
+                                <columns>
+                                    <Column>
+                                        <Text text="Entity Type"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Description"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Level"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{id}"/>
+                                            <Text text="{description}"/>
+                                            <ObjectStatus 
+                                                text="{level}"
+                                                state="{= ${level} === 'aggregate' ? 'Success' : 'Information'}"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                        
+                        <!-- Input Ports -->
+                        <VBox 
+                            visible="{= ${ord>/selectedDataProduct/inputPorts}.length > 0}"
+                            class="sapUiMediumMarginBottom">
+                            <Title text="Input Ports" level="H5"/>
+                            <List items="{ord>/selectedDataProduct/inputPorts}">
+                                <StandardListItem
+                                    title="{id}"
+                                    description="{description}"
+                                    info="{mediaType}"
+                                    icon="sap-icon://incoming-call"/>
+                            </List>
+                        </VBox>
+                        
+                        <!-- Output Ports -->
+                        <VBox 
+                            visible="{= ${ord>/selectedDataProduct/outputPorts}.length > 0}">
+                            <Title text="Output Ports" level="H5"/>
+                            <List items="{ord>/selectedDataProduct/outputPorts}">
+                                <StandardListItem
+                                    title="{id}"
+                                    description="{description}"
+                                    info="{mediaType}"
+                                    icon="sap-icon://outgoing-call"/>
+                            </List>
+                        </VBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Validation Configuration -->
+                <Panel 
+                    headerText="QA Validation Configuration"
+                    visible="{= ${ord>/selectedResources}.length > 0}"
+                    class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="1"
+                        columnsL="1"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Validation Type"/>
+                            <Select selectedKey="{ord>/validationType}">
+                                <items>
+                                    <core:Item key="FACTUALITY" text="Factuality Testing"/>
+                                    <core:Item key="QUALITY_ASSURANCE" text="Quality Assurance"/>
+                                    <core:Item key="COMPLIANCE" text="Compliance Check"/>
+                                    <core:Item key="END_TO_END" text="End-to-End Validation"/>
+                                    <core:Item key="REGRESSION" text="Regression Testing"/>
+                                    <core:Item key="INTEGRATION" text="Integration Testing"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="QA Scope"/>
+                            <Select selectedKey="{ord>/qaScope}">
+                                <items>
+                                    <core:Item key="DATA_INTEGRITY" text="Data Integrity"/>
+                                    <core:Item key="BUSINESS_RULES" text="Business Rules"/>
+                                    <core:Item key="REGULATORY_COMPLIANCE" text="Regulatory Compliance"/>
+                                    <core:Item key="PERFORMANCE" text="Performance"/>
+                                    <core:Item key="SECURITY" text="Security"/>
+                                    <core:Item key="COMPLETENESS" text="Completeness"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Test Generation"/>
+                            <RadioButtonGroup selectedIndex="{ord>/testGenerationMethod}">
+                                <RadioButton text="Dynamic SimpleQA"/>
+                                <RadioButton text="Static Rules"/>
+                                <RadioButton text="Hybrid Approach"/>
+                                <RadioButton text="Custom Template"/>
+                            </RadioButtonGroup>
+                            
+                            <Label text="SimpleQA Test Count"/>
+                            <Input 
+                                value="{ord>/simpleQaTestCount}"
+                                type="Number"
+                                placeholder="10"
+                                enabled="{= ${ord>/testGenerationMethod} === 0 || ${ord>/testGenerationMethod} === 2}"/>
+                            
+                            <Label text="Quality Threshold"/>
+                            <Slider 
+                                value="{ord>/qualityThreshold}"
+                                min="0.0"
+                                max="1.0"
+                                step="0.05"
+                                width="250px"/>
+                            <Text text="Threshold: {= (${ord>/qualityThreshold} * 100).toFixed(0)}%"/>
+                            
+                            <Label text="Additional Options"/>
+                            <VBox>
+                                <CheckBox 
+                                    text="Enable factuality testing"
+                                    selected="{ord>/enableFactualityTesting}"/>
+                                <CheckBox 
+                                    text="Enable compliance check"
+                                    selected="{ord>/enableComplianceCheck}"/>
+                                <CheckBox 
+                                    text="Enable vector similarity check"
+                                    selected="{ord>/enableVectorSimilarity}"/>
+                                <CheckBox 
+                                    text="Require approval"
+                                    selected="{ord>/requireApproval}"/>
+                            </VBox>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Error Display -->
+                <Panel 
+                    headerText="Discovery Errors"
+                    visible="{= !!${ord>/errorMessage}}"
+                    class="sapUiResponsiveMargin">
+                    <MessageStrip 
+                        text="{ord>/errorMessage}"
+                        type="Error"
+                        showIcon="true"
+                        class="sapUiMediumMargin"/>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Clear"
+                press=".onClearDiscovery"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Discover"
+                    type="Emphasized"
+                    icon="sap-icon://search"
+                    press=".onStartDiscovery"
+                    enabled="{= !!${ord>/registryUrl} && !${ord>/discoveryInProgress}}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Create Validation Tasks"
+                    icon="sap-icon://add-activity"
+                    press=".onCreateValidationTasks"
+                    enabled="{= ${ord>/selectedResources}.length > 0}"
+                    visible="{ord>/discoveryComplete}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseDiscovery"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

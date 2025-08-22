@@ -1716,6 +1716,286 @@ entity CalcValidationTemplates : cuid, managed {
     successRate        : Decimal(5,4);
 }
 
+// Agent 5 - QA Validation Tasks
+entity QaValidationTasks : cuid, managed {
+    @Common.Label: 'Task Name'
+    @Search.defaultSearchElement: true
+    taskName           : String(100) @mandatory;
+    
+    @Common.Label: 'Description'
+    @UI.MultiLineText: true
+    description        : String(1000);
+    
+    @Common.Label: 'Data Product ID'
+    dataProductId      : String(100) @mandatory;
+    
+    @Common.Label: 'ORD Registry URL'
+    ordRegistryUrl     : String(500);
+    
+    @Common.Label: 'Validation Type'
+    validationType     : String(50) @mandatory enum { 
+        FACTUALITY; QUALITY_ASSURANCE; COMPLIANCE; END_TO_END; REGRESSION; INTEGRATION; 
+    };
+    
+    @Common.Label: 'QA Scope'
+    qaScope            : String(50) enum { 
+        DATA_INTEGRITY; BUSINESS_RULES; REGULATORY_COMPLIANCE; PERFORMANCE; SECURITY; COMPLETENESS; 
+    } default 'DATA_INTEGRITY';
+    
+    @Common.Label: 'Test Generation Method'
+    testGenerationMethod : String(50) enum { 
+        DYNAMIC_SIMPLEQA; STATIC_RULES; HYBRID; CUSTOM_TEMPLATE; 
+    } default 'DYNAMIC_SIMPLEQA';
+    
+    @Common.Label: 'SimpleQA Test Count'
+    simpleQaTestCount  : Integer default 10;
+    
+    @Common.Label: 'Quality Threshold'
+    @assert.range: [0.0, 1.0]
+    qualityThreshold   : Decimal(3,2) default 0.95;
+    
+    @Common.Label: 'Enable Factuality Testing'
+    enableFactualityTesting : Boolean default true;
+    
+    @Common.Label: 'Enable Compliance Check'
+    enableComplianceCheck : Boolean default false;
+    
+    @Common.Label: 'Enable Vector Similarity'
+    enableVectorSimilarity : Boolean default false;
+    
+    @Common.Label: 'Vector Similarity Threshold'
+    @assert.range: [0.0, 1.0]
+    vectorSimilarityThreshold : Decimal(3,2) default 0.85;
+    
+    @Common.Label: 'Approval Required'
+    approvalRequired   : Boolean default false;
+    
+    @Common.Label: 'Auto Approve Threshold'
+    @assert.range: [0.0, 1.0]
+    autoApproveThreshold : Decimal(3,2) default 0.98;
+    
+    @Common.Label: 'Processing Pipeline'
+    @Core.MediaType: 'application/json'
+    processingPipeline : LargeString;
+    
+    @Common.Label: 'QA Rules'
+    @Core.MediaType: 'application/json'
+    qaRules            : LargeString;
+    
+    @Common.Label: 'Status'
+    status             : String(20) enum { 
+        DRAFT; PENDING; DISCOVERING; GENERATING_TESTS; VALIDATING; COMPLETED; FAILED; APPROVED; REJECTED; 
+    } default 'DRAFT';
+    
+    @Common.Label: 'Priority'
+    priority           : String(10) enum { LOW; MEDIUM; HIGH; URGENT; } default 'MEDIUM';
+    
+    @Common.Label: 'Progress Percentage'
+    @assert.range: [0, 100]
+    progressPercent    : Integer default 0;
+    
+    @Common.Label: 'Current Stage'
+    currentStage       : String(100);
+    
+    @Common.Label: 'Validation Time (ms)'
+    validationTime     : Integer;
+    
+    @Common.Label: 'Tests Generated'
+    testsGenerated     : Integer default 0;
+    
+    @Common.Label: 'Tests Passed'
+    testsPassed        : Integer default 0;
+    
+    @Common.Label: 'Tests Failed'
+    testsFailed        : Integer default 0;
+    
+    @Common.Label: 'Quality Score'
+    @assert.range: [0.0, 1.0]
+    qualityScore       : Decimal(5,4);
+    
+    @Common.Label: 'Factuality Score'
+    @assert.range: [0.0, 1.0]
+    factualityScore    : Decimal(5,4);
+    
+    @Common.Label: 'Compliance Score'
+    @assert.range: [0.0, 1.0]
+    complianceScore    : Decimal(5,4);
+    
+    @Common.Label: 'Overall Score'
+    @assert.range: [0.0, 1.0]
+    overallScore       : Decimal(5,4);
+    
+    @Common.Label: 'Approval Status'
+    approvalStatus     : String(20) enum { 
+        PENDING; APPROVED; REJECTED; AUTO_APPROVED; CONDITIONAL; 
+    };
+    
+    @Common.Label: 'Approved By'
+    approvedBy         : String(100);
+    
+    @Common.Label: 'Approved At'
+    approvedAt         : DateTime;
+    
+    @Common.Label: 'Rejection Reason'
+    rejectionReason    : String(1000);
+    
+    @Common.Label: 'Error Details'
+    errorDetails       : String(1000);
+    
+    @Common.Label: 'Validation Report'
+    @Core.MediaType: 'application/json'
+    validationReport   : LargeString;
+    
+    @Common.Label: 'Started At'
+    startedAt          : DateTime;
+    
+    @Common.Label: 'Completed At'
+    completedAt        : DateTime;
+    
+    @Common.Label: 'Agent'
+    agent              : Association to Agents;
+    
+    @Common.Label: 'QA Test Results'
+    qaTestResults      : Composition of many QaTestResults on qaTestResults.task = $self;
+}
+
+// QA Test Results (for individual test details)
+entity QaTestResults : cuid {
+    @Common.Label: 'Task'
+    task               : Association to QaValidationTasks;
+    
+    @Common.Label: 'Test Type'
+    testType           : String(50) @mandatory;
+    
+    @Common.Label: 'Test Name'
+    testName           : String(200);
+    
+    @Common.Label: 'Test Question'
+    @UI.MultiLineText: true
+    testQuestion       : String(1000);
+    
+    @Common.Label: 'Expected Answer'
+    expectedAnswer     : String(500);
+    
+    @Common.Label: 'Actual Answer'
+    actualAnswer       : String(500);
+    
+    @Common.Label: 'Is Passed'
+    isPassed           : Boolean;
+    
+    @Common.Label: 'Confidence Score'
+    @assert.range: [0.0, 1.0]
+    confidenceScore    : Decimal(5,4);
+    
+    @Common.Label: 'Processing Time (ms)'
+    processingTime     : Integer;
+    
+    @Common.Label: 'Error Message'
+    errorMessage       : String(500);
+    
+    @Common.Label: 'Test Data'
+    @Core.MediaType: 'application/json'
+    testData           : LargeString;
+    
+    @Common.Label: 'Test Results'
+    @Core.MediaType: 'application/json'
+    testResults        : LargeString;
+    
+    @Common.Label: 'Executed At'
+    executedAt         : DateTime;
+}
+
+// QA Validation Rules (reusable validation patterns)
+entity QaValidationRules : cuid, managed {
+    @Common.Label: 'Rule Name'
+    @Search.defaultSearchElement: true
+    ruleName           : String(100) @mandatory @assert.unique;
+    
+    @Common.Label: 'Description'
+    @UI.MultiLineText: true
+    description        : String(1000);
+    
+    @Common.Label: 'Rule Category'
+    ruleCategory       : String(50) enum { 
+        DATA_QUALITY; BUSINESS_LOGIC; REGULATORY; SECURITY; PERFORMANCE; COMPLETENESS; 
+    };
+    
+    @Common.Label: 'Rule Type'
+    ruleType           : String(50) enum { 
+        SIMPLE_QA; SQL_QUERY; PYTHON_SCRIPT; REST_API_CHECK; REGEX_PATTERN; THRESHOLD_CHECK; 
+    };
+    
+    @Common.Label: 'Rule Expression'
+    @UI.MultiLineText: true
+    ruleExpression     : String(2000) @mandatory;
+    
+    @Common.Label: 'Expected Result'
+    expectedResult     : String(500);
+    
+    @Common.Label: 'Severity Level'
+    severityLevel      : String(20) enum { 
+        LOW; MEDIUM; HIGH; CRITICAL; 
+    } default 'MEDIUM';
+    
+    @Common.Label: 'Is Active'
+    isActive           : Boolean default true;
+    
+    @Common.Label: 'Is Blocking'
+    isBlocking         : Boolean default false;
+    
+    @Common.Label: 'Execution Order'
+    executionOrder     : Integer default 100;
+    
+    @Common.Label: 'Timeout (seconds)'
+    timeoutSeconds     : Integer default 30;
+    
+    @Common.Label: 'Usage Count'
+    usageCount         : Integer default 0;
+    
+    @Common.Label: 'Success Rate'
+    @assert.range: [0.0, 1.0]
+    successRate        : Decimal(5,4);
+    
+    @Common.Label: 'Tags'
+    tags               : String(500);
+}
+
+// QA Approval Workflows
+entity QaApprovalWorkflows : cuid, managed {
+    @Common.Label: 'Workflow Name'
+    @Search.defaultSearchElement: true
+    workflowName       : String(100) @mandatory;
+    
+    @Common.Label: 'Description'
+    @UI.MultiLineText: true
+    description        : String(1000);
+    
+    @Common.Label: 'Trigger Conditions'
+    @Core.MediaType: 'application/json'
+    triggerConditions  : LargeString;
+    
+    @Common.Label: 'Approval Steps'
+    @Core.MediaType: 'application/json'
+    approvalSteps      : LargeString;
+    
+    @Common.Label: 'Auto Approval Rules'
+    @Core.MediaType: 'application/json'
+    autoApprovalRules  : LargeString;
+    
+    @Common.Label: 'Escalation Rules'
+    @Core.MediaType: 'application/json'
+    escalationRules    : LargeString;
+    
+    @Common.Label: 'Is Active'
+    isActive           : Boolean default true;
+    
+    @Common.Label: 'Default Workflow'
+    isDefault          : Boolean default false;
+    
+    @Common.Label: 'Usage Count'
+    usageCount         : Integer default 0;
+}
+
 // Business Validations (implemented in service layer)
 // 1. Agent reputation must be recalculated after each completed service order
 // 2. Service orders cannot exceed provider's maxCallsPerDay limit

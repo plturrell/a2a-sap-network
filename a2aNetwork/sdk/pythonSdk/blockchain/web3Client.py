@@ -26,6 +26,8 @@ class AgentIdentity:
     address: str
     private_key: str
     account: LocalAccount
+    name: str = None
+    endpoint: str = None
 
 
 class A2ABlockchainClient:

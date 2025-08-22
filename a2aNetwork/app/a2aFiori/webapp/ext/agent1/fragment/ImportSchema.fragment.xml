@@ -41,16 +41,18 @@
                             uploadComplete=".onSchemaFileUploaded"
                             fileType="json,xsd,avsc"
                             mimeType="application/json,application/xml,text/plain"
+                            maximumFileSize="10"
                             placeholder="Select schema file..."/>
-                        <Text text="Supported formats: JSON Schema, XSD, Avro Schema" class="sapUiTinyMarginTop"/>
+                        <Text text="Supported formats: JSON Schema, XSD, Avro Schema (Max 10MB)" class="sapUiTinyMarginTop"/>
                     </VBox>
                     
                     <!-- JSON Input Option -->
                     <VBox visible="{= ${import>/schemaSource} === 1 }">
                         <Label text="JSON Schema"/>
                         <TextArea 
-                            value="{import>/schemaJson}"
+                            value="{path: 'import>/schemaJson', formatter: '.formatSecureText'}"
                             rows="8"
+                            maxLength="50000"
                             placeholder="Enter JSON schema definition..."
                             growing="true"/>
                     </VBox>
@@ -59,8 +61,9 @@
                     <VBox visible="{= ${import>/schemaSource} === 2 }">
                         <Label text="Schema URL"/>
                         <Input 
-                            value="{import>/schemaUrl}"
-                            placeholder="https://example.com/schema.json"/>
+                            value="{path: 'import>/schemaUrl', formatter: '.formatSecureText'}"
+                            placeholder="https://example.com/schema.json"
+                            liveChange=".onSchemaUrlChange"/>
                         <Button 
                             text="Fetch Schema"
                             press=".onFetchSchemaFromUrl"
@@ -69,8 +72,9 @@
                     
                     <Label text="Template Name" required="true"/>
                     <Input 
-                        value="{import>/templateName}"
+                        value="{path: 'import>/templateName', formatter: '.formatSecureText'}"
                         placeholder="Enter template name"
+                        maxLength="100"
                         liveChange=".onTemplateNameChange"/>
                     
                     <Label text="Format Type"/>

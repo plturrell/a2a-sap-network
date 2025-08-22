@@ -339,6 +339,40 @@ sap.ui.define([
                 oInput.setValueState("None");
                 oInput.setValueStateText("");
             }
+        },
+
+        /**
+         * Event handler for template name input changes with validation
+         */
+        onTemplateNameChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oInput = oEvent.getSource();
+            var oValidation = this._validateInput(sValue, "taskName");
+            
+            if (!oValidation.isValid) {
+                oInput.setValueState("Error");
+                oInput.setValueStateText(oValidation.message);
+            } else {
+                oInput.setValueState("None");
+                oInput.setValueStateText("");
+            }
+        },
+
+        /**
+         * Event handler for schema URL input changes with validation
+         */
+        onSchemaUrlChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oInput = oEvent.getSource();
+            var oValidation = this._validateInput(sValue, "url");
+            
+            if (!oValidation.isValid) {
+                oInput.setValueState("Error");
+                oInput.setValueStateText(oValidation.message);
+            } else {
+                oInput.setValueState("None");
+                oInput.setValueStateText("");
+            }
         }
     });
 });

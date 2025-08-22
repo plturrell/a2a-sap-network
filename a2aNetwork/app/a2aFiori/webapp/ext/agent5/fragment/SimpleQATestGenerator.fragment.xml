@@ -1,0 +1,439 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="simpleQATestGeneratorDialog"
+        title="SimpleQA Test Generator"
+        contentWidth="80%"
+        contentHeight="75%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Test Generation Configuration -->
+                <Panel headerText="Test Generation Configuration" class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="2"
+                        columnsL="2"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Data Product ID" required="true"/>
+                            <Input 
+                                value="{testGen>/dataProductId}"
+                                placeholder="Enter data product identifier"/>
+                            
+                            <Label text="Test Generation Method"/>
+                            <Select selectedKey="{testGen>/generationMethod}">
+                                <items>
+                                    <core:Item key="DYNAMIC_SIMPLEQA" text="Dynamic SimpleQA"/>
+                                    <core:Item key="METADATA_BASED" text="Metadata-Based"/>
+                                    <core:Item key="SCHEMA_DRIVEN" text="Schema-Driven"/>
+                                    <core:Item key="SAMPLE_DATA" text="Sample Data Analysis"/>
+                                    <core:Item key="HYBRID" text="Hybrid Approach"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Number of Tests"/>
+                            <Input 
+                                value="{testGen>/testCount}"
+                                type="Number"
+                                placeholder="10"/>
+                            
+                            <Label text="Test Complexity"/>
+                            <Select selectedKey="{testGen>/complexity}">
+                                <items>
+                                    <core:Item key="BASIC" text="Basic (Simple facts)"/>
+                                    <core:Item key="INTERMEDIATE" text="Intermediate (Calculations)"/>
+                                    <core:Item key="ADVANCED" text="Advanced (Relationships)"/>
+                                    <core:Item key="MIXED" text="Mixed Complexity"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Question Types"/>
+                            <VBox>
+                                <CheckBox 
+                                    text="Factual questions"
+                                    selected="{testGen>/includeFactual}"/>
+                                <CheckBox 
+                                    text="Computational questions"
+                                    selected="{testGen>/includeComputational}"/>
+                                <CheckBox 
+                                    text="Relational questions"
+                                    selected="{testGen>/includeRelational}"/>
+                                <CheckBox 
+                                    text="Temporal questions"
+                                    selected="{testGen>/includeTemporal}"/>
+                                <CheckBox 
+                                    text="Aggregation questions"
+                                    selected="{testGen>/includeAggregation}"/>
+                            </VBox>
+                            
+                            <Label text="Language"/>
+                            <Select selectedKey="{testGen>/language}">
+                                <items>
+                                    <core:Item key="EN" text="English"/>
+                                    <core:Item key="DE" text="German"/>
+                                    <core:Item key="FR" text="French"/>
+                                    <core:Item key="ES" text="Spanish"/>
+                                    <core:Item key="MULTI" text="Multi-language"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Answer Format"/>
+                            <RadioButtonGroup selectedIndex="{testGen>/answerFormat}">
+                                <RadioButton text="Short answer"/>
+                                <RadioButton text="Multiple choice"/>
+                                <RadioButton text="True/False"/>
+                                <RadioButton text="Numeric"/>
+                            </RadioButtonGroup>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Data Source Configuration -->
+                <Panel headerText="Data Source Configuration" class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="1"
+                        columnsL="1"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Data Source Type"/>
+                            <Select selectedKey="{testGen>/dataSourceType}">
+                                <items>
+                                    <core:Item key="ORD_METADATA" text="ORD Metadata"/>
+                                    <core:Item key="SAMPLE_DATA" text="Sample Data"/>
+                                    <core:Item key="SCHEMA_DEFINITION" text="Schema Definition"/>
+                                    <core:Item key="API_SPECIFICATION" text="API Specification"/>
+                                    <core:Item key="DOCUMENTATION" text="Documentation"/>
+                                </items>
+                            </Select>
+                            
+                            <VBox visible="{= ${testGen>/dataSourceType} === 'SAMPLE_DATA'}">
+                                <Label text="Sample Data"/>
+                                <TextArea 
+                                    value="{testGen>/sampleData}"
+                                    placeholder="Paste sample data (JSON, CSV, XML, etc.)"
+                                    rows="8"/>
+                            </VBox>
+                            
+                            <VBox visible="{= ${testGen>/dataSourceType} === 'SCHEMA_DEFINITION'}">
+                                <Label text="Schema Definition"/>
+                                <TextArea 
+                                    value="{testGen>/schemaDefinition}"
+                                    placeholder="Paste schema definition (JSON Schema, XSD, etc.)"
+                                    rows="6"/>
+                            </VBox>
+                            
+                            <VBox visible="{= ${testGen>/dataSourceType} === 'API_SPECIFICATION'}">
+                                <Label text="API Specification URL"/>
+                                <Input 
+                                    value="{testGen>/apiSpecUrl}"
+                                    placeholder="https://api.example.com/openapi.json"/>
+                            </VBox>
+                            
+                            <Label text="Focus Areas"/>
+                            <MultiComboBox
+                                selectedKeys="{testGen>/focusAreas}"
+                                placeholder="Select areas to focus test generation on">
+                                <items>
+                                    <core:Item key="DATA_QUALITY" text="Data Quality"/>
+                                    <core:Item key="BUSINESS_RULES" text="Business Rules"/>
+                                    <core:Item key="CALCULATIONS" text="Calculations"/>
+                                    <core:Item key="RELATIONSHIPS" text="Relationships"/>
+                                    <core:Item key="CONSTRAINTS" text="Constraints"/>
+                                    <core:Item key="COMPLETENESS" text="Completeness"/>
+                                    <core:Item key="CONSISTENCY" text="Consistency"/>
+                                    <core:Item key="ACCURACY" text="Accuracy"/>
+                                </items>
+                            </MultiComboBox>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Generation Progress -->
+                <Panel 
+                    headerText="Test Generation Progress"
+                    visible="{testGen>/generationInProgress}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <ProgressIndicator 
+                            percentValue="{testGen>/generationProgress}"
+                            displayValue="Generating SimpleQA tests: {testGen>/generationProgress}%"
+                            state="Information"
+                            class="sapUiMediumMarginBottom"/>
+                        
+                        <Text text="Current stage: {testGen>/currentStage}"/>
+                        <Text text="Tests generated: {testGen>/testsGenerated}/{testGen>/testCount}"/>
+                        <Text text="Elapsed time: {testGen>/elapsedTime}s"/>
+                    </VBox>
+                </Panel>
+                
+                <!-- Generated Tests Preview -->
+                <Panel 
+                    headerText="Generated Tests Preview"
+                    visible="{= ${testGen>/generatedTests}.length > 0}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Test Statistics -->
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Total Tests:" class="sapUiContentLabelColor"/>
+                                <Text text="{testGen>/totalTests}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Factual:" class="sapUiContentLabelColor"/>
+                                <Text text="{testGen>/factualCount}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Computational:" class="sapUiContentLabelColor"/>
+                                <Text text="{testGen>/computationalCount}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Relational:" class="sapUiContentLabelColor"/>
+                                <Text text="{testGen>/relationalCount}"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Avg. Complexity:" class="sapUiContentLabelColor"/>
+                                <Text text="{testGen>/avgComplexity}"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <!-- Test List -->
+                        <Table 
+                            items="{testGen>/generatedTests}"
+                            mode="MultiSelect"
+                            growing="true"
+                            growingThreshold="15">
+                            <columns>
+                                <Column>
+                                    <Text text="Test ID"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Question"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Expected Answer"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Type"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Complexity"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Actions"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{testId}"/>
+                                        <VBox>
+                                            <Text 
+                                                text="{question}"
+                                                maxLines="3"
+                                                wrapping="true"/>
+                                            <Text 
+                                                text="Focus: {focusArea}"
+                                                class="sapUiContentLabelColor"/>
+                                        </VBox>
+                                        <Text 
+                                            text="{expectedAnswer}"
+                                            maxLines="2"/>
+                                        <ObjectStatus 
+                                            text="{testType}"
+                                            state="{= ${testType} === 'factual' ? 'Success' : ${testType} === 'computational' ? 'Warning' : 'Information'}"/>
+                                        <RatingIndicator 
+                                            value="{complexity}"
+                                            maxValue="5"
+                                            displayOnly="true"/>
+                                        <HBox>
+                                            <Button 
+                                                text="Edit"
+                                                type="Transparent"
+                                                icon="sap-icon://edit"
+                                                press=".onEditTest"
+                                                class="sapUiTinyMarginEnd"/>
+                                            <Button 
+                                                text="Test"
+                                                type="Transparent"
+                                                icon="sap-icon://play"
+                                                press=".onTestQuestion"/>
+                                        </HBox>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </Panel>
+                
+                <!-- Test Quality Analysis -->
+                <Panel 
+                    headerText="Test Quality Analysis"
+                    visible="{= ${testGen>/generatedTests}.length > 0}"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Quality Metrics -->
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Coverage Score:" class="sapUiContentLabelColor"/>
+                                <ProgressIndicator 
+                                    percentValue="{= ${testGen>/qualityMetrics/coverage} * 100}"
+                                    displayValue="{= (${testGen>/qualityMetrics/coverage} * 100).toFixed(1)}%"
+                                    state="{= ${testGen>/qualityMetrics/coverage} >= 0.8 ? 'Success' : 'Warning'}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Diversity Score:" class="sapUiContentLabelColor"/>
+                                <ProgressIndicator 
+                                    percentValue="{= ${testGen>/qualityMetrics/diversity} * 100}"
+                                    displayValue="{= (${testGen>/qualityMetrics/diversity} * 100).toFixed(1)}%"
+                                    state="{= ${testGen>/qualityMetrics/diversity} >= 0.7 ? 'Success' : 'Warning'}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Clarity Score:" class="sapUiContentLabelColor"/>
+                                <ProgressIndicator 
+                                    percentValue="{= ${testGen>/qualityMetrics/clarity} * 100}"
+                                    displayValue="{= (${testGen>/qualityMetrics/clarity} * 100).toFixed(1)}%"
+                                    state="{= ${testGen>/qualityMetrics/clarity} >= 0.8 ? 'Success' : 'Warning'}"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Overall Score:" class="sapUiContentLabelColor"/>
+                                <ProgressIndicator 
+                                    percentValue="{= ${testGen>/qualityMetrics/overall} * 100}"
+                                    displayValue="{= (${testGen>/qualityMetrics/overall} * 100).toFixed(1)}%"
+                                    state="{= ${testGen>/qualityMetrics/overall} >= 0.8 ? 'Success' : 'Warning'}"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <!-- Quality Issues -->
+                        <VBox visible="{= ${testGen>/qualityIssues}.length > 0}">
+                            <Title text="Quality Issues" level="H5"/>
+                            <List items="{testGen>/qualityIssues}">
+                                <StandardListItem
+                                    title="{issue}"
+                                    description="{suggestion}"
+                                    info="{severity}"
+                                    infoState="{= ${severity} === 'High' ? 'Error' : ${severity} === 'Medium' ? 'Warning' : 'Information'}"
+                                    icon="sap-icon://warning"/>
+                            </List>
+                        </VBox>
+                        
+                        <!-- Recommendations -->
+                        <VBox visible="{= ${testGen>/recommendations}.length > 0}" class="sapUiMediumMarginTop">
+                            <Title text="Recommendations" level="H5"/>
+                            <List items="{testGen>/recommendations}">
+                                <StandardListItem
+                                    title="{recommendation}"
+                                    description="{rationale}"
+                                    icon="sap-icon://lightbulb"/>
+                            </List>
+                        </VBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Export Options -->
+                <Panel 
+                    headerText="Export Options"
+                    visible="{= ${testGen>/generatedTests}.length > 0}"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="2"
+                        columnsL="2"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Export Format"/>
+                            <Select selectedKey="{testGen>/exportFormat}">
+                                <items>
+                                    <core:Item key="JSON" text="JSON"/>
+                                    <core:Item key="CSV" text="CSV"/>
+                                    <core:Item key="EXCEL" text="Excel"/>
+                                    <core:Item key="XML" text="XML"/>
+                                    <core:Item key="JUNIT" text="JUnit XML"/>
+                                    <core:Item key="PYTEST" text="pytest format"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Include Options"/>
+                            <VBox>
+                                <CheckBox 
+                                    text="Include metadata"
+                                    selected="{testGen>/includeMetadata}"/>
+                                <CheckBox 
+                                    text="Include quality metrics"
+                                    selected="{testGen>/includeQualityMetrics}"/>
+                                <CheckBox 
+                                    text="Include generation config"
+                                    selected="{testGen>/includeConfig}"/>
+                                <CheckBox 
+                                    text="Include test explanations"
+                                    selected="{testGen>/includeExplanations}"/>
+                            </VBox>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Reset"
+                press=".onResetGenerator"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Generate Tests"
+                    type="Emphasized"
+                    icon="sap-icon://create"
+                    press=".onGenerateTests"
+                    enabled="{= !!${testGen>/dataProductId} && !${testGen>/generationInProgress}}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Export Tests"
+                    icon="sap-icon://download"
+                    press=".onExportTests"
+                    enabled="{= ${testGen>/generatedTests}.length > 0}"
+                    visible="{testGen>/generationComplete}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Add to Validation Task"
+                    icon="sap-icon://add-activity"
+                    press=".onAddToValidationTask"
+                    enabled="{= ${testGen>/generatedTests}.length > 0}"
+                    visible="{testGen>/generationComplete}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseGenerator"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

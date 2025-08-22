@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:codeeditor="sap.ui.codeeditor">
+    
+    <Dialog
+        title="{i18n>dialog.createSQLQuery.title}"
+        class="sapUiMediumMargin"
+        contentWidth="85vw"
+        contentHeight="90vh"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <Page showHeader="false">
+                <content>
+                    
+                    <IconTabBar id="createQueryTabBar" class="sapUiNoContentPadding">
+                        
+                        <!-- Basic Information Tab -->
+                        <items>
+                            <IconTabFilter text="{i18n>tab.basicInfo}" key="basic" icon="sap-icon://detail-view">
+                                <content>
+                                    <f:SimpleForm
+                                        editable="true"
+                                        layout="ResponsiveGridLayout"
+                                        class="sapUiMediumMargin">
+                                        
+                                        <f:content>
+                                            
+                                            <!-- Query Name -->
+                                            <Label text="{i18n>field.queryName}" required="true"/>
+                                            <Input id="queryNameInput" value="" placeholder="{i18n>placeholder.queryName}" required="true"/>
+                                            
+                                            <!-- Description -->
+                                            <Label text="{i18n>field.description}"/>
+                                            <TextArea id="descriptionInput" value="" rows="3" placeholder="{i18n>placeholder.description}"/>
+                                            
+                                            <!-- Query Type -->
+                                            <Label text="{i18n>field.queryType}" required="true"/>
+                                            <ComboBox
+                                                id="queryTypeCombo"
+                                                selectedKey=""
+                                                placeholder="{i18n>placeholder.queryType}"
+                                                required="true">
+                                                <core:Item key="select" text="{i18n>query.select}"/>
+                                                <core:Item key="insert" text="{i18n>query.insert}"/>
+                                                <core:Item key="update" text="{i18n>query.update}"/>
+                                                <core:Item key="delete" text="{i18n>query.delete}"/>
+                                                <core:Item key="create" text="{i18n>query.create}"/>
+                                                <core:Item key="alter" text="{i18n>query.alter}"/>
+                                                <core:Item key="drop" text="{i18n>query.drop}"/>
+                                                <core:Item key="procedure" text="{i18n>query.procedure}"/>
+                                                <core:Item key="function" text="{i18n>query.function}"/>
+                                                <core:Item key="trigger" text="{i18n>query.trigger}"/>
+                                                <core:Item key="view" text="{i18n>query.view}"/>
+                                                <core:Item key="index" text="{i18n>query.index}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Database Type -->
+                                            <Label text="{i18n>field.databaseType}" required="true"/>
+                                            <ComboBox
+                                                id="databaseTypeCombo"
+                                                selectedKey=""
+                                                placeholder="{i18n>placeholder.databaseType}"
+                                                required="true">
+                                                <core:Item key="mysql" text="{i18n>db.mysql}"/>
+                                                <core:Item key="postgresql" text="{i18n>db.postgresql}"/>
+                                                <core:Item key="oracle" text="{i18n>db.oracle}"/>
+                                                <core:Item key="sqlserver" text="{i18n>db.sqlserver}"/>
+                                                <core:Item key="sqlite" text="{i18n>db.sqlite}"/>
+                                                <core:Item key="hana" text="{i18n>db.hana}"/>
+                                                <core:Item key="db2" text="{i18n>db.db2}"/>
+                                                <core:Item key="snowflake" text="{i18n>db.snowflake}"/>
+                                                <core:Item key="bigquery" text="{i18n>db.bigquery}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Priority -->
+                                            <Label text="{i18n>field.priority}"/>
+                                            <SegmentedButton id="prioritySegmented" selectedKey="medium">
+                                                <items>
+                                                    <SegmentedButtonItem key="low" text="{i18n>priority.low}"/>
+                                                    <SegmentedButtonItem key="medium" text="{i18n>priority.medium}"/>
+                                                    <SegmentedButtonItem key="high" text="{i18n>priority.high}"/>
+                                                    <SegmentedButtonItem key="critical" text="{i18n>priority.critical}"/>
+                                                </items>
+                                            </SegmentedButton>
+                                            
+                                            <!-- Complexity -->
+                                            <Label text="{i18n>field.complexity}"/>
+                                            <ComboBox id="complexityCombo" selectedKey="moderate">
+                                                <core:Item key="simple" text="{i18n>complexity.simple}"/>
+                                                <core:Item key="moderate" text="{i18n>complexity.moderate}"/>
+                                                <core:Item key="complex" text="{i18n>complexity.complex}"/>
+                                                <core:Item key="very_complex" text="{i18n>complexity.very_complex}"/>
+                                            </ComboBox>
+                                            
+                                        </f:content>
+                                    </f:SimpleForm>
+                                </content>
+                            </IconTabFilter>
+                            
+                            <!-- SQL Statement Tab -->
+                            <IconTabFilter text="{i18n>tab.sqlStatement}" key="sql" icon="sap-icon://syntax">
+                                <content>
+                                    <VBox class="sapUiMediumMargin">
+                                        
+                                        <!-- SQL Statement Editor -->
+                                        <Label text="{i18n>field.sqlStatement}" required="true" class="sapUiSmallMarginBottom"/>
+                                        <codeeditor:CodeEditor
+                                            id="sqlEditor"
+                                            type="sql"
+                                            height="400px"
+                                            width="100%"
+                                            value=""
+                                            class="sapUiSmallMarginBottom"/>
+                                        
+                                        <HBox class="sapUiSmallMarginBottom">
+                                            <VBox class="sapUiMediumMarginEnd" width="50%">
+                                                
+                                                <!-- Query Language -->
+                                                <Label text="{i18n>field.queryLanguage}" class="sapUiSmallMarginBottom"/>
+                                                <ComboBox id="queryLanguageCombo" selectedKey="sql">
+                                                    <core:Item key="sql" text="SQL"/>
+                                                    <core:Item key="tsql" text="T-SQL"/>
+                                                    <core:Item key="plsql" text="PL/SQL"/>
+                                                    <core:Item key="mysql" text="MySQL"/>
+                                                    <core:Item key="postgresql" text="PostgreSQL"/>
+                                                    <core:Item key="nosql" text="NoSQL"/>
+                                                </ComboBox>
+                                                
+                                                <!-- Dialect Version -->
+                                                <Label text="{i18n>field.dialectVersion}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                                <Input id="dialectVersionInput" value="" placeholder="{i18n>placeholder.dialectVersion}"/>
+                                                
+                                            </VBox>
+                                            
+                                            <VBox width="50%">
+                                                
+                                                <!-- Estimated Cost -->
+                                                <Label text="{i18n>field.estimatedCost}" class="sapUiSmallMarginBottom"/>
+                                                <Input id="estimatedCostInput" value="" placeholder="{i18n>placeholder.estimatedCost}"/>
+                                                
+                                                <!-- Index Usage -->
+                                                <Label text="{i18n>field.indexUsage}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                                <ComboBox id="indexUsageCombo" selectedKey="auto">
+                                                    <core:Item key="auto" text="{i18n>indexUsage.auto}"/>
+                                                    <core:Item key="force" text="{i18n>indexUsage.force}"/>
+                                                    <core:Item key="hint" text="{i18n>indexUsage.hint}"/>
+                                                    <core:Item key="none" text="{i18n>indexUsage.none}"/>
+                                                </ComboBox>
+                                                
+                                            </VBox>
+                                        </HBox>
+                                        
+                                        <!-- SQL Keywords Toolbar -->
+                                        <Toolbar class="sapUiSmallMarginBottom">
+                                            <Title text="{i18n>section.sqlKeywords}"/>
+                                            <ToolbarSpacer/>
+                                            <Button text="{i18n>sql.select}" press="onInsertKeyword" type="Transparent"/>
+                                            <Button text="{i18n>sql.from}" press="onInsertKeyword" type="Transparent"/>
+                                            <Button text="{i18n>sql.where}" press="onInsertKeyword" type="Transparent"/>
+                                            <Button text="{i18n>sql.join}" press="onInsertKeyword" type="Transparent"/>
+                                            <Button text="{i18n>sql.group_by}" press="onInsertKeyword" type="Transparent"/>
+                                            <Button text="{i18n>sql.order_by}" press="onInsertKeyword" type="Transparent"/>
+                                        </Toolbar>
+                                        
+                                        <!-- SQL Validation -->
+                                        <HBox class="sapUiSmallMarginTop">
+                                            <Button text="{i18n>btn.validate}" icon="sap-icon://validate" press="onValidateSQL" type="Emphasized" class="sapUiTinyMarginEnd"/>
+                                            <Button text="{i18n>btn.format}" icon="sap-icon://syntax" press="onFormatSQL" type="Transparent" class="sapUiTinyMarginEnd"/>
+                                            <Button text="{i18n>btn.explain}" icon="sap-icon://detail-view" press="onExplainSQL" type="Transparent"/>
+                                        </HBox>
+                                        
+                                    </VBox>
+                                </content>
+                            </IconTabFilter>
+                            
+                            <!-- Database Configuration Tab -->
+                            <IconTabFilter text="{i18n>tab.databaseConfig}" key="database" icon="sap-icon://database">
+                                <content>
+                                    <f:SimpleForm
+                                        editable="true"
+                                        layout="ResponsiveGridLayout"
+                                        class="sapUiMediumMargin">
+                                        
+                                        <f:content>
+                                            
+                                            <!-- Connection String -->
+                                            <Label text="{i18n>field.connectionString}"/>
+                                            <Input id="connectionStringInput" value="" placeholder="{i18n>placeholder.connectionString}" type="Password"/>
+                                            
+                                            <!-- Schema Name -->
+                                            <Label text="{i18n>field.schemaName}"/>
+                                            <ComboBox id="schemaNameCombo" selectedKey="" placeholder="{i18n>placeholder.schemaName}">
+                                                <!-- Schema options will be loaded dynamically -->
+                                            </ComboBox>
+                                            
+                                            <!-- Database Version -->
+                                            <Label text="{i18n>field.databaseVersion}"/>
+                                            <Input id="databaseVersionInput" value="" placeholder="{i18n>placeholder.databaseVersion}"/>
+                                            
+                                            <!-- Connection Pool -->
+                                            <Label text="{i18n>field.connectionPool}"/>
+                                            <StepInput id="connectionPoolInput" value="10" min="1" max="100" step="1"/>
+                                            
+                                            <!-- Timeout Settings -->
+                                            <Label text="{i18n>field.timeoutSettings}"/>
+                                            <StepInput id="timeoutSettingsInput" value="30" min="5" max="300" step="5"/>
+                                            
+                                            <!-- Transaction Mode -->
+                                            <Label text="{i18n>field.transactionMode}"/>
+                                            <ComboBox id="transactionModeCombo" selectedKey="auto">
+                                                <core:Item key="auto" text="{i18n>transaction.auto}"/>
+                                                <core:Item key="manual" text="{i18n>transaction.manual}"/>
+                                                <core:Item key="read_only" text="{i18n>transaction.read_only}"/>
+                                                <core:Item key="read_write" text="{i18n>transaction.read_write}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Isolation Level -->
+                                            <Label text="{i18n>field.isolationLevel}"/>
+                                            <ComboBox id="isolationLevelCombo" selectedKey="read_committed">
+                                                <core:Item key="read_uncommitted" text="{i18n>isolation.read_uncommitted}"/>
+                                                <core:Item key="read_committed" text="{i18n>isolation.read_committed}"/>
+                                                <core:Item key="repeatable_read" text="{i18n>isolation.repeatable_read}"/>
+                                                <core:Item key="serializable" text="{i18n>isolation.serializable}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Auto Commit -->
+                                            <Label text="{i18n>field.autoCommit}"/>
+                                            <Switch id="autoCommitSwitch" state="true"/>
+                                            
+                                        </f:content>
+                                    </f:SimpleForm>
+                                </content>
+                            </IconTabFilter>
+                            
+                            <!-- Parameters Tab -->
+                            <IconTabFilter text="{i18n>tab.parameters}" key="parameters" icon="sap-icon://list">
+                                <content>
+                                    <VBox class="sapUiMediumMargin">
+                                        
+                                        <!-- Query Parameters -->
+                                        <Label text="{i18n>section.queryParameters}" class="sapUiSmallMarginBottom"/>
+                                        <Table id="parametersTable" mode="Delete" class="sapUiSmallMarginBottom">
+                                            <headerToolbar>
+                                                <Toolbar>
+                                                    <Title text="{i18n>section.parameters}"/>
+                                                    <ToolbarSpacer/>
+                                                    <Button text="{i18n>btn.addParameter}" icon="sap-icon://add" press="onAddParameter" type="Transparent"/>
+                                                </Toolbar>
+                                            </headerToolbar>
+                                            
+                                            <columns>
+                                                <Column>
+                                                    <Text text="{i18n>field.parameterName}"/>
+                                                </Column>
+                                                <Column>
+                                                    <Text text="{i18n>field.parameterType}"/>
+                                                </Column>
+                                                <Column>
+                                                    <Text text="{i18n>field.parameterValue}"/>
+                                                </Column>
+                                                <Column>
+                                                    <Text text="{i18n>field.dataType}"/>
+                                                </Column>
+                                                <Column>
+                                                    <Text text="{i18n>field.isRequired}"/>
+                                                </Column>
+                                                <Column>
+                                                    <Text text="{i18n>field.defaultValue}"/>
+                                                </Column>
+                                            </columns>
+                                            
+                                            <items>
+                                                <ColumnListItem>
+                                                    <cells>
+                                                        <Input value="{parameterName}" placeholder="{i18n>placeholder.parameterName}"/>
+                                                        <ComboBox selectedKey="{parameterType}">
+                                                            <core:Item key="input" text="Input"/>
+                                                            <core:Item key="output" text="Output"/>
+                                                            <core:Item key="inout" text="Input/Output"/>
+                                                        </ComboBox>
+                                                        <Input value="{parameterValue}" placeholder="{i18n>placeholder.parameterValue}"/>
+                                                        <ComboBox selectedKey="{dataType}">
+                                                            <core:Item key="varchar" text="VARCHAR"/>
+                                                            <core:Item key="int" text="INTEGER"/>
+                                                            <core:Item key="decimal" text="DECIMAL"/>
+                                                            <core:Item key="date" text="DATE"/>
+                                                            <core:Item key="datetime" text="DATETIME"/>
+                                                            <core:Item key="boolean" text="BOOLEAN"/>
+                                                        </ComboBox>
+                                                        <CheckBox selected="{isRequired}"/>
+                                                        <Input value="{defaultValue}" placeholder="{i18n>placeholder.defaultValue}"/>
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+                                        </Table>
+                                        
+                                    </VBox>
+                                </content>
+                            </IconTabFilter>
+                            
+                            <!-- Security Tab -->
+                            <IconTabFilter text="{i18n>tab.security}" key="security" icon="sap-icon://shield">
+                                <content>
+                                    <VBox class="sapUiMediumMargin">
+                                        
+                                        <!-- Security Settings -->
+                                        <Label text="{i18n>section.securitySettings}" class="sapUiSmallMarginBottom"/>
+                                        <VBox class="sapUiSmallMargin">
+                                            
+                                            <CheckBox id="securityValidationCheck" text="{i18n>security.securityValidation}" selected="true"/>
+                                            <CheckBox id="sqlInjectionCheck" text="{i18n>security.sqlInjectionPrevention}" selected="true"/>
+                                            <CheckBox id="accessControlCheck" text="{i18n>security.accessControl}" selected="true"/>
+                                            <CheckBox id="auditingCheck" text="{i18n>security.auditLogging}" selected="true"/>
+                                            <CheckBox id="encryptionCheck" text="{i18n>security.dataEncryption}" selected="false"/>
+                                            <CheckBox id="dataClassificationCheck" text="{i18n>security.dataClassification}" selected="true"/>
+                                            <CheckBox id="complianceCheck" text="{i18n>security.complianceChecks}" selected="true"/>
+                                            <CheckBox id="dataMaskingCheck" text="{i18n>security.sensitiveDataMasking}" selected="false"/>
+                                            
+                                        </VBox>
+                                        
+                                        <!-- Data Classification -->
+                                        <Label text="{i18n>field.dataClassification}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                        <ComboBox id="dataClassificationCombo" selectedKey="internal">
+                                            <core:Item key="public" text="Public"/>
+                                            <core:Item key="internal" text="Internal"/>
+                                            <core:Item key="confidential" text="Confidential"/>
+                                            <core:Item key="restricted" text="Restricted"/>
+                                        </ComboBox>
+                                        
+                                    </VBox>
+                                </content>
+                            </IconTabFilter>
+                            
+                        </items>
+                    </IconTabBar>
+                    
+                </content>
+            </Page>
+        </content>
+        
+        <beginButton>
+            <Button text="{i18n>btn.createQuery}" press="onCreateQuery" type="Emphasized"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>btn.cancel}" press="onCancelCreateQuery"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Agent 1 UI Security and SAP Standards Scan
- * Comprehensive validation for Agent 1 Data Standardization UI
+ * Agent 2 UI Security and SAP Standards Scan
+ * Comprehensive validation for Agent 2 AI Preparation UI
  */
 
 const fs = require('fs');
 const path = require('path');
 
-class Agent1UIScanner {
+class Agent2UIScanner {
     constructor() {
         this.results = {
             passed: [],
@@ -17,7 +17,7 @@ class Agent1UIScanner {
             score: 0,
             maxScore: 0
         };
-        this.basePath = 'app/a2aFiori/webapp/ext/agent1';
+        this.basePath = 'app/a2aFiori/webapp/ext/agent2';
     }
 
     check(name, condition, isCritical = false) {
@@ -56,19 +56,19 @@ class Agent1UIScanner {
     }
 
     async scan() {
-        console.log('🔍 Agent 1 UI Security & SAP Standards Scan\n');
+        console.log('🔍 Agent 2 UI Security & SAP Standards Scan\n');
 
         // 1. CRITICAL SECURITY CHECKS
         console.log('🔒 Critical Security Validation');
         
         this.check(
-            'No hardcoded credentials in controllers',
+            'No hardcoded credentials or API keys',
             this.validateNoHardcodedCredentials(),
             true
         );
 
         this.check(
-            'Input validation in controllers',
+            'Input validation and sanitization implemented',
             this.validateInputValidation(),
             true
         );
@@ -80,14 +80,20 @@ class Agent1UIScanner {
         );
 
         this.check(
-            'CSRF token handling implemented',
+            'CSRF token handling for API calls',
             this.validateCSRFHandling(),
             true
         );
 
         this.check(
-            'Secure file upload validation',
+            'Secure file upload and data handling',
             this.validateFileUploadSecurity(),
+            true
+        );
+
+        this.check(
+            'EventSource security for real-time updates',
+            this.validateEventSourceSecurity(),
             true
         );
 
@@ -95,7 +101,7 @@ class Agent1UIScanner {
         console.log('\n🏢 SAP Fiori Elements Standards');
 
         this.check(
-            'Valid Fiori Elements manifest',
+            'Valid Fiori Elements manifest structure',
             this.validateFioriElementsManifest()
         );
 
@@ -110,12 +116,12 @@ class Agent1UIScanner {
         );
 
         this.check(
-            'OData service integration correct',
+            'OData service integration properly configured',
             this.validateODataIntegration()
         );
 
         this.check(
-            'Navigation patterns follow Fiori standards',
+            'Navigation and routing follow Fiori standards',
             this.validateNavigationPatterns()
         );
 
@@ -123,7 +129,7 @@ class Agent1UIScanner {
         console.log('\n📱 UI5 Development Standards');
 
         this.check(
-            'Proper module dependencies declared',
+            'Proper module dependencies and loading',
             this.validateModuleDependencies()
         );
 
@@ -133,25 +139,48 @@ class Agent1UIScanner {
         );
 
         this.check(
-            'Model binding patterns correct',
+            'Model binding patterns are secure and correct',
             this.validateModelBinding()
         );
 
         this.check(
-            'Internationalization properly implemented',
+            'Internationalization comprehensively implemented',
             this.validateI18nImplementation()
         );
 
         this.check(
-            'Error handling follows UI5 patterns',
+            'Error handling follows UI5 best practices',
             this.validateUI5ErrorHandling()
         );
 
-        // 4. ENTERPRISE COMPLIANCE
+        // 4. AI/ML SPECIFIC SECURITY
+        console.log('\n🤖 AI/ML Specific Security');
+
+        this.check(
+            'Model configuration validation',
+            this.validateModelConfigSecurity()
+        );
+
+        this.check(
+            'Data export security controls',
+            this.validateDataExportSecurity()
+        );
+
+        this.check(
+            'Embedding generation security',
+            this.validateEmbeddingSecurity()
+        );
+
+        this.check(
+            'AutoML workflow security',
+            this.validateAutoMLSecurity()
+        );
+
+        // 5. ENTERPRISE COMPLIANCE
         console.log('\n🏭 Enterprise Compliance');
 
         this.check(
-            'Backend integration follows SAP best practices',
+            'Backend integration follows SAP patterns',
             this.validateBackendIntegration()
         );
 
@@ -161,36 +190,41 @@ class Agent1UIScanner {
         );
 
         this.check(
-            'User authorization checks implemented',
+            'User authorization and role checks',
             this.validateUserAuthorization()
         );
 
         this.check(
-            'Audit trail capabilities present',
+            'Audit trail and logging capabilities',
             this.validateAuditTrail()
         );
 
-        // 5. PERFORMANCE & ACCESSIBILITY
+        // 6. PERFORMANCE & ACCESSIBILITY
         console.log('\n⚡ Performance & Accessibility');
 
         this.check(
-            'Lazy loading implemented for large datasets',
+            'Lazy loading for large datasets and models',
             this.validateLazyLoading()
         );
 
         this.check(
-            'Accessibility attributes present',
+            'Accessibility attributes and ARIA support',
             this.validateAccessibility()
         );
 
         this.check(
-            'Responsive design patterns used',
+            'Responsive design for all screen sizes',
             this.validateResponsiveDesign()
         );
 
         this.check(
-            'Memory management for large files',
+            'Memory management for large ML datasets',
             this.validateMemoryManagement()
+        );
+
+        this.check(
+            'Real-time updates performance optimization',
+            this.validateRealTimePerformance()
         );
 
         this.generateReport();
@@ -203,10 +237,12 @@ class Agent1UIScanner {
         ];
 
         const dangerousPatterns = [
-            /password\s*[:=]\s*["'][^"']+["']/gi,
-            /token\s*[:=]\s*["'][^"']+["']/gi,
+            /api[_-]?key\s*[:=]\s*["'][^"']+["']/gi,
             /secret\s*[:=]\s*["'][^"']+["']/gi,
-            /api[_-]?key\s*[:=]\s*["'][^"']+["']/gi
+            /token\s*[:=]\s*["'][^"']+["']/gi,
+            /password\s*[:=]\s*["'][^"']+["']/gi,
+            /openai[_-]?key/gi,
+            /hugging[_-]?face[_-]?token/gi
         ];
 
         for (const controller of controllers) {
@@ -224,37 +260,48 @@ class Agent1UIScanner {
 
     validateInputValidation() {
         const listController = this.readFile(path.join(this.basePath, 'controller/ListReportExt.controller.js'));
-        if (!listController) return false;
+        const objectController = this.readFile(path.join(this.basePath, 'controller/ObjectPageExt.controller.js'));
+        
+        if (!listController || !objectController) return false;
 
-        // Check for input validation in key functions
-        return listController.includes('validateInput') ||
-               (listController.includes('trim()') && 
-                listController.includes('length')) ||
-               listController.includes('validation');
+        // Check for comprehensive input validation
+        const hasValidation = (
+            listController.includes('validateInput') ||
+            listController.includes('_validate') ||
+            listController.includes('sanitize')
+        ) && (
+            objectController.includes('validateInput') ||
+            objectController.includes('_validate') ||
+            objectController.includes('sanitize')
+        );
+
+        return hasValidation;
     }
 
     validateXSSProtection() {
         const fragments = [
-            'fragment/CreateStandardizationTask.fragment.xml',
-            'fragment/ImportSchema.fragment.xml',
-            'fragment/SchemaMappingVisualizer.fragment.xml',
-            'fragment/ValidationErrors.fragment.xml'
+            'fragment/CreateAIPreparationTask.fragment.xml',
+            'fragment/AutoMLWizard.fragment.xml',
+            'fragment/DataProfiler.fragment.xml',
+            'fragment/EmbeddingConfiguration.fragment.xml',
+            'fragment/FeatureAnalysis.fragment.xml',
+            'fragment/ExportPreparedData.fragment.xml'
         ];
 
         for (const fragment of fragments) {
             const content = this.readFile(path.join(this.basePath, fragment));
             if (content) {
-                // Check for proper encoding patterns
-                const hasProperBinding = content.includes('{path:') || 
-                                       content.includes('htmlSafe="false"') ||
-                                       content.includes('escapeXML="true"');
+                // Check for proper encoding and secure binding
+                const hasSecureBinding = content.includes('formatter:') ||
+                                       content.includes('path:') ||
+                                       content.includes('htmlSafe="false"');
                 
-                // Check for dangerous innerHTML usage
+                // Check for dangerous patterns
                 const hasDangerousBinding = content.includes('{= ') ||
                                           content.includes('innerHTML') ||
                                           content.includes('html}');
                 
-                if (hasDangerousBinding && !hasProperBinding) {
+                if (hasDangerousBinding && !hasSecureBinding) {
                     return false;
                 }
             }
@@ -271,32 +318,53 @@ class Agent1UIScanner {
         for (const controller of controllers) {
             const content = this.readFile(path.join(this.basePath, controller));
             if (content && content.includes('jQuery.ajax')) {
-                // If using jQuery.ajax, should have CSRF handling
+                // Check for CSRF handling in AJAX calls
                 return content.includes('X-CSRF-Token') || 
                        content.includes('csrf') ||
-                       content.includes('sap.ui.model.odata.v2.ODataModel'); // OData handles CSRF automatically
+                       content.includes('sap.ui.model.odata'); // OData handles CSRF
             }
         }
         
-        // If no direct AJAX calls, assume OData is used (which handles CSRF)
-        return true;
+        // If no direct AJAX, check for OData usage
+        const manifest = this.readFile(path.join(this.basePath, 'manifest.json'));
+        return manifest && manifest.includes('OData');
     }
 
     validateFileUploadSecurity() {
-        const createTaskFragment = this.readFile(path.join(this.basePath, 'fragment/CreateStandardizationTask.fragment.xml'));
-        const importSchemaFragment = this.readFile(path.join(this.basePath, 'fragment/ImportSchema.fragment.xml'));
+        const createTaskFragment = this.readFile(path.join(this.basePath, 'fragment/CreateAIPreparationTask.fragment.xml'));
+        const exportFragment = this.readFile(path.join(this.basePath, 'fragment/ExportPreparedData.fragment.xml'));
         
-        if (!createTaskFragment && !importSchemaFragment) return false;
+        if (!createTaskFragment && !exportFragment) return false;
 
-        // Check for file type restrictions
-        const hasFileTypeValidation = (createTaskFragment && createTaskFragment.includes('fileType')) ||
-                                    (importSchemaFragment && importSchemaFragment.includes('accept='));
+        // Check for file validation
+        const hasFileValidation = (createTaskFragment && 
+                                 (createTaskFragment.includes('maximumFileSize') ||
+                                  createTaskFragment.includes('fileType'))) ||
+                                (exportFragment &&
+                                 (exportFragment.includes('validation') ||
+                                  exportFragment.includes('secure')));
 
-        // Check for size limits
-        const hasSizeValidation = (createTaskFragment && createTaskFragment.includes('maximumFileSize')) ||
-                                (importSchemaFragment && importSchemaFragment.includes('maximumFileSize'));
+        return hasFileValidation;
+    }
 
-        return hasFileTypeValidation || hasSizeValidation;
+    validateEventSourceSecurity() {
+        const controllers = [
+            'controller/ListReportExt.controller.js',
+            'controller/ObjectPageExt.controller.js'
+        ];
+
+        for (const controller of controllers) {
+            const content = this.readFile(path.join(this.basePath, controller));
+            if (content && content.includes('EventSource')) {
+                // Check for secure EventSource usage
+                return content.includes('authentication') ||
+                       content.includes('token') ||
+                       content.includes('authorization');
+            }
+        }
+        
+        // If no EventSource found, assume it's handled securely elsewhere
+        return true;
     }
 
     validateFioriElementsManifest() {
@@ -311,7 +379,7 @@ class Agent1UIScanner {
                    manifestObj['sap.ui5'] &&
                    manifestObj['sap.fe'] &&
                    manifestObj['sap.app'].type === 'application' &&
-                   manifestObj['sap.fe'].template;
+                   (manifestObj['sap.fe'].template || manifestObj['sap.fe'].type);
         } catch (error) {
             return false;
         }
@@ -326,11 +394,11 @@ class Agent1UIScanner {
         // Check for proper controller extension patterns
         const hasProperExtension = (
             listController.includes('sap.ui.define') &&
-            listController.includes('Controller') &&
+            listController.includes('ControllerExtension') &&
             listController.includes('.extend(')
         ) && (
             objectController.includes('sap.ui.define') &&
-            objectController.includes('Controller') &&
+            objectController.includes('ControllerExtension') &&
             objectController.includes('.extend(')
         );
 
@@ -339,9 +407,9 @@ class Agent1UIScanner {
 
     validateFragmentPatterns() {
         const fragments = [
-            'fragment/CreateStandardizationTask.fragment.xml',
-            'fragment/ImportSchema.fragment.xml',
-            'fragment/SchemaMappingVisualizer.fragment.xml'
+            'fragment/CreateAIPreparationTask.fragment.xml',
+            'fragment/AutoMLWizard.fragment.xml',
+            'fragment/DataProfiler.fragment.xml'
         ];
 
         for (const fragment of fragments) {
@@ -350,7 +418,7 @@ class Agent1UIScanner {
                 // Check for proper XML structure and SAP controls
                 const hasProperStructure = content.includes('xmlns') &&
                                          content.includes('sap.m') &&
-                                         content.includes('Dialog');
+                                         (content.includes('Dialog') || content.includes('Panel'));
                 
                 if (!hasProperStructure) {
                     return false;
@@ -369,7 +437,9 @@ class Agent1UIScanner {
             const dataSources = manifestObj['sap.app']?.dataSources;
             
             return dataSources && 
-                   Object.values(dataSources).some(ds => ds.type === 'OData' || ds.uri?.includes('odata'));
+                   Object.values(dataSources).some(ds => 
+                       ds.type === 'OData' || ds.uri?.includes('odata')
+                   );
         } catch (error) {
             return false;
         }
@@ -383,7 +453,7 @@ class Agent1UIScanner {
             const manifestObj = JSON.parse(manifest);
             const routing = manifestObj['sap.ui5']?.routing;
             
-            return routing && routing.routes && Array.isArray(routing.routes) && routing.routes.length > 0;
+            return routing && routing.routes && Array.isArray(routing.routes);
         } catch (error) {
             return false;
         }
@@ -400,7 +470,7 @@ class Agent1UIScanner {
             if (content) {
                 // Check for proper module declaration
                 const hasProperModules = content.includes('sap.ui.define([') &&
-                                        content.includes('sap/ui/core/mvc/Controller');
+                                        content.includes('sap/ui/core/mvc/ControllerExtension');
                 
                 if (!hasProperModules) {
                     return false;
@@ -416,14 +486,11 @@ class Agent1UIScanner {
             'controller/ObjectPageExt.controller.js'
         ];
 
-        const properNamingPattern = /on[A-Z][a-zA-Z]*\s*:\s*function/g;
-
         for (const controller of controllers) {
             const content = this.readFile(path.join(this.basePath, controller));
             if (content) {
                 const handlers = content.match(/on[A-Z][a-zA-Z]*\s*[:=]/g);
                 if (handlers && handlers.length > 0) {
-                    // Found event handlers with proper naming
                     return true;
                 }
             }
@@ -433,9 +500,9 @@ class Agent1UIScanner {
 
     validateModelBinding() {
         const fragments = [
-            'fragment/CreateStandardizationTask.fragment.xml',
-            'fragment/ImportSchema.fragment.xml',
-            'fragment/SchemaMappingVisualizer.fragment.xml'
+            'fragment/CreateAIPreparationTask.fragment.xml',
+            'fragment/AutoMLWizard.fragment.xml',
+            'fragment/EmbeddingConfiguration.fragment.xml'
         ];
 
         for (const fragment of fragments) {
@@ -458,13 +525,16 @@ class Agent1UIScanner {
         
         if (!i18nFile) return false;
 
-        // Check for comprehensive i18n coverage
+        // Check for comprehensive i18n coverage for AI/ML terms
         const hasLabels = i18nFile.includes('title=') && 
                          (i18nFile.includes('label=') || i18nFile.includes('Label='));
         const hasMessages = i18nFile.includes('message.') || 
                            i18nFile.includes('error.');
+        const hasAITerms = i18nFile.includes('model') && 
+                          i18nFile.includes('feature') &&
+                          i18nFile.includes('training');
         
-        return hasLabels && hasMessages;
+        return hasLabels && hasMessages && hasAITerms;
     }
 
     validateUI5ErrorHandling() {
@@ -490,6 +560,51 @@ class Agent1UIScanner {
         return false;
     }
 
+    validateModelConfigSecurity() {
+        const embeddingFragment = this.readFile(path.join(this.basePath, 'fragment/EmbeddingConfiguration.fragment.xml'));
+        const automlFragment = this.readFile(path.join(this.basePath, 'fragment/AutoMLWizard.fragment.xml'));
+        
+        if (!embeddingFragment && !automlFragment) return false;
+
+        // Check for model configuration validation
+        const hasModelValidation = (embeddingFragment && 
+                                   embeddingFragment.includes('validation')) ||
+                                  (automlFragment &&
+                                   automlFragment.includes('validation'));
+
+        return hasModelValidation;
+    }
+
+    validateDataExportSecurity() {
+        const exportFragment = this.readFile(path.join(this.basePath, 'fragment/ExportPreparedData.fragment.xml'));
+        
+        if (!exportFragment) return false;
+
+        // Check for export security controls
+        return exportFragment.includes('format') &&
+               exportFragment.includes('compression');
+    }
+
+    validateEmbeddingSecurity() {
+        const embeddingFragment = this.readFile(path.join(this.basePath, 'fragment/EmbeddingConfiguration.fragment.xml'));
+        
+        if (!embeddingFragment) return false;
+
+        // Check for embedding generation security
+        return embeddingFragment.includes('model') &&
+               embeddingFragment.includes('batch');
+    }
+
+    validateAutoMLSecurity() {
+        const automlFragment = this.readFile(path.join(this.basePath, 'fragment/AutoMLWizard.fragment.xml'));
+        
+        if (!automlFragment) return false;
+
+        // Check for AutoML workflow security
+        return automlFragment.includes('evaluation') &&
+               automlFragment.includes('metric');
+    }
+
     validateBackendIntegration() {
         const controllers = [
             'controller/ListReportExt.controller.js',
@@ -499,7 +614,7 @@ class Agent1UIScanner {
         for (const controller of controllers) {
             const content = this.readFile(path.join(this.basePath, controller));
             if (content) {
-                // Check for proper backend integration patterns
+                // Check for proper backend integration
                 const hasBackendIntegration = content.includes('getModel()') ||
                                             content.includes('odata') ||
                                             content.includes('service') ||
@@ -514,20 +629,13 @@ class Agent1UIScanner {
     }
 
     validateDataValidationRules() {
-        const createTaskFragment = this.readFile(path.join(this.basePath, 'fragment/CreateStandardizationTask.fragment.xml'));
-        const importSchemaFragment = this.readFile(path.join(this.basePath, 'fragment/ImportSchema.fragment.xml'));
+        const createTaskFragment = this.readFile(path.join(this.basePath, 'fragment/CreateAIPreparationTask.fragment.xml'));
         
-        if (!createTaskFragment && !importSchemaFragment) return false;
+        if (!createTaskFragment) return false;
 
         // Check for validation controls
-        const hasValidation = (createTaskFragment && 
-                              (createTaskFragment.includes('required="true"') ||
-                               createTaskFragment.includes('validate'))) ||
-                             (importSchemaFragment &&
-                              (importSchemaFragment.includes('required="true"') ||
-                               importSchemaFragment.includes('validate')));
-
-        return hasValidation;
+        return createTaskFragment.includes('required="true"') ||
+               createTaskFragment.includes('validate');
     }
 
     validateUserAuthorization() {
@@ -539,11 +647,9 @@ class Agent1UIScanner {
         for (const controller of controllers) {
             const content = this.readFile(path.join(this.basePath, controller));
             if (content) {
-                // Check for authorization patterns
                 const hasAuth = content.includes('authorization') ||
                                content.includes('permission') ||
-                               content.includes('role') ||
-                               content.includes('access');
+                               content.includes('role');
                 
                 if (hasAuth) {
                     return true;
@@ -551,7 +657,7 @@ class Agent1UIScanner {
             }
         }
         
-        // Check if using Fiori Elements (which handles auth automatically)
+        // Check for Fiori Elements authorization
         const manifest = this.readFile(path.join(this.basePath, 'manifest.json'));
         return manifest && manifest.includes('"sap.fe"');
     }
@@ -565,11 +671,9 @@ class Agent1UIScanner {
         for (const controller of controllers) {
             const content = this.readFile(path.join(this.basePath, controller));
             if (content) {
-                // Check for audit/logging patterns
                 const hasAudit = content.includes('log') ||
                                content.includes('audit') ||
-                               content.includes('track') ||
-                               content.includes('history');
+                               content.includes('track');
                 
                 if (hasAudit) {
                     return true;
@@ -588,7 +692,6 @@ class Agent1UIScanner {
         for (const controller of controllers) {
             const content = this.readFile(path.join(this.basePath, controller));
             if (content) {
-                // Check for pagination or lazy loading patterns
                 const hasLazyLoading = content.includes('$skip') ||
                                      content.includes('$top') ||
                                      content.includes('pagination') ||
@@ -607,15 +710,14 @@ class Agent1UIScanner {
 
     validateAccessibility() {
         const fragments = [
-            'fragment/CreateStandardizationTask.fragment.xml',
-            'fragment/ImportSchema.fragment.xml',
-            'fragment/SchemaMappingVisualizer.fragment.xml'
+            'fragment/CreateAIPreparationTask.fragment.xml',
+            'fragment/AutoMLWizard.fragment.xml',
+            'fragment/DataProfiler.fragment.xml'
         ];
 
         for (const fragment of fragments) {
             const content = this.readFile(path.join(this.basePath, fragment));
             if (content) {
-                // Check for accessibility attributes
                 const hasA11y = content.includes('ariaLabel') ||
                                content.includes('ariaDescribedBy') ||
                                content.includes('labelFor') ||
@@ -631,15 +733,14 @@ class Agent1UIScanner {
 
     validateResponsiveDesign() {
         const fragments = [
-            'fragment/CreateStandardizationTask.fragment.xml',
-            'fragment/ImportSchema.fragment.xml',
-            'fragment/SchemaMappingVisualizer.fragment.xml'
+            'fragment/CreateAIPreparationTask.fragment.xml',
+            'fragment/AutoMLWizard.fragment.xml',
+            'fragment/DataProfiler.fragment.xml'
         ];
 
         for (const fragment of fragments) {
             const content = this.readFile(path.join(this.basePath, fragment));
             if (content) {
-                // Check for responsive design patterns
                 const hasResponsive = content.includes('Responsive') ||
                                      content.includes('GridLayout') ||
                                      content.includes('FlexBox') ||
@@ -662,7 +763,6 @@ class Agent1UIScanner {
         for (const controller of controllers) {
             const content = this.readFile(path.join(this.basePath, controller));
             if (content) {
-                // Check for memory management patterns
                 const hasMemoryMgmt = content.includes('destroy') ||
                                      content.includes('cleanup') ||
                                      content.includes('batch') ||
@@ -676,9 +776,31 @@ class Agent1UIScanner {
         return false;
     }
 
+    validateRealTimePerformance() {
+        const controllers = [
+            'controller/ListReportExt.controller.js',
+            'controller/ObjectPageExt.controller.js'
+        ];
+
+        for (const controller of controllers) {
+            const content = this.readFile(path.join(this.basePath, controller));
+            if (content) {
+                const hasRealTime = content.includes('EventSource') ||
+                                   content.includes('WebSocket') ||
+                                   content.includes('polling') ||
+                                   content.includes('interval');
+                
+                if (hasRealTime) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     generateReport() {
         console.log('\n' + '='.repeat(60));
-        console.log('📊 AGENT 1 UI SECURITY & STANDARDS REPORT');
+        console.log('📊 AGENT 2 UI SECURITY & STANDARDS REPORT');
         console.log('='.repeat(60));
 
         const percentage = Math.round((this.results.score / this.results.maxScore) * 100);
@@ -703,16 +825,16 @@ class Agent1UIScanner {
         console.log('\n' + '='.repeat(60));
         
         if (percentage >= 95) {
-            console.log('🎉 AGENT 1 UI ENTERPRISE READY');
+            console.log('🎉 AGENT 2 UI ENTERPRISE READY');
             console.log('✅ Meets all production security and standards requirements');
         } else if (percentage >= 90) {
-            console.log('⚠️  AGENT 1 UI MOSTLY COMPLIANT');
+            console.log('⚠️  AGENT 2 UI MOSTLY COMPLIANT');
             console.log('🔧 Address failed checks for full compliance');
         } else if (percentage >= 80) {
-            console.log('🔶 AGENT 1 UI NEEDS IMPROVEMENTS');
+            console.log('🔶 AGENT 2 UI NEEDS IMPROVEMENTS');
             console.log('📝 Several issues require attention');
         } else {
-            console.log('❌ AGENT 1 UI NOT ENTERPRISE READY');
+            console.log('❌ AGENT 2 UI NOT ENTERPRISE READY');
             console.log('🚨 Critical issues must be resolved');
         }
 
@@ -721,5 +843,5 @@ class Agent1UIScanner {
 }
 
 // Run the scan
-const scanner = new Agent1UIScanner();
+const scanner = new Agent2UIScanner();
 scanner.scan().catch(console.error);

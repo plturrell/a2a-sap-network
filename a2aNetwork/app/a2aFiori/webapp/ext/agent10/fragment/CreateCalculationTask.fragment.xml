@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:codeeditor="sap.ui.codeeditor">
+    
+    <Dialog
+        title="{i18n>dialog.createCalculationTask.title}"
+        class="sapUiMediumMargin"
+        contentWidth="80vw"
+        contentHeight="85vh"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <Page showHeader="false">
+                <content>
+                    
+                    <IconTabBar id="createTaskTabBar" class="sapUiNoContentPadding">
+                        
+                        <!-- Basic Information Tab -->
+                        <items>
+                            <IconTabFilter text="{i18n>tab.basicInfo}" key="basic" icon="sap-icon://detail-view">
+                                <content>
+                                    <f:SimpleForm
+                                        editable="true"
+                                        layout="ResponsiveGridLayout"
+                                        class="sapUiMediumMargin">
+                                        
+                                        <f:content>
+                                            
+                                            <!-- Task Name -->
+                                            <Label text="{i18n>field.taskName}" required="true"/>
+                                            <Input id="taskNameInput" value="" placeholder="{i18n>placeholder.taskName}" required="true"/>
+                                            
+                                            <!-- Description -->
+                                            <Label text="{i18n>field.description}"/>
+                                            <TextArea id="descriptionInput" value="" rows="3" placeholder="{i18n>placeholder.description}"/>
+                                            
+                                            <!-- Calculation Type -->
+                                            <Label text="{i18n>field.calculationType}" required="true"/>
+                                            <ComboBox
+                                                id="calculationTypeCombo"
+                                                selectedKey=""
+                                                placeholder="{i18n>placeholder.calculationType}"
+                                                required="true">
+                                                <core:Item key="basic" text="{i18n>calc.basic}"/>
+                                                <core:Item key="advanced" text="{i18n>calc.advanced}"/>
+                                                <core:Item key="statistical" text="{i18n>calc.statistical}"/>
+                                                <core:Item key="financial" text="{i18n>calc.financial}"/>
+                                                <core:Item key="scientific" text="{i18n>calc.scientific}"/>
+                                                <core:Item key="engineering" text="{i18n>calc.engineering}"/>
+                                                <core:Item key="statistical_inference" text="{i18n>calc.statistical_inference}"/>
+                                                <core:Item key="matrix_operations" text="{i18n>calc.matrix_operations}"/>
+                                                <core:Item key="optimization" text="{i18n>calc.optimization}"/>
+                                                <core:Item key="numerical_integration" text="{i18n>calc.numerical_integration}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Formula Category -->
+                                            <Label text="{i18n>field.formulaCategory}" required="true"/>
+                                            <ComboBox
+                                                id="formulaCategoryCombo"
+                                                selectedKey=""
+                                                placeholder="{i18n>placeholder.formulaCategory}"
+                                                required="true">
+                                                <core:Item key="arithmetic" text="{i18n>formula.arithmetic}"/>
+                                                <core:Item key="algebraic" text="{i18n>formula.algebraic}"/>
+                                                <core:Item key="trigonometric" text="{i18n>formula.trigonometric}"/>
+                                                <core:Item key="logarithmic" text="{i18n>formula.logarithmic}"/>
+                                                <core:Item key="exponential" text="{i18n>formula.exponential}"/>
+                                                <core:Item key="statistical" text="{i18n>formula.statistical}"/>
+                                                <core:Item key="financial" text="{i18n>formula.financial}"/>
+                                                <core:Item key="engineering" text="{i18n>formula.engineering}"/>
+                                                <core:Item key="custom" text="{i18n>formula.custom}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Priority -->
+                                            <Label text="{i18n>field.priority}"/>
+                                            <SegmentedButton id="prioritySegmented" selectedKey="medium">
+                                                <items>
+                                                    <SegmentedButtonItem key="low" text="{i18n>priority.low}"/>
+                                                    <SegmentedButtonItem key="medium" text="{i18n>priority.medium}"/>
+                                                    <SegmentedButtonItem key="high" text="{i18n>priority.high}"/>
+                                                </items>
+                                            </SegmentedButton>
+                                            
+                                        </f:content>
+                                    </f:SimpleForm>
+                                </content>
+                            </IconTabFilter>
+                            
+                            <!-- Formula Configuration Tab -->
+                            <IconTabFilter text="{i18n>tab.formulaConfig}" key="formula" icon="sap-icon://syntax">
+                                <content>
+                                    <VBox class="sapUiMediumMargin">
+                                        
+                                        <!-- Formula Expression -->
+                                        <Label text="{i18n>field.formulaExpression}" required="true" class="sapUiSmallMarginBottom"/>
+                                        <codeeditor:CodeEditor
+                                            id="formulaEditor"
+                                            type="javascript"
+                                            height="200px"
+                                            width="100%"
+                                            value=""
+                                            class="sapUiSmallMarginBottom"/>
+                                        
+                                        <HBox class="sapUiSmallMarginBottom">
+                                            <VBox class="sapUiMediumMarginEnd" width="50%">
+                                                
+                                                <!-- Formula Language -->
+                                                <Label text="{i18n>field.formulaLanguage}" class="sapUiSmallMarginBottom"/>
+                                                <ComboBox id="formulaLanguageCombo" selectedKey="javascript">
+                                                    <core:Item key="javascript" text="JavaScript"/>
+                                                    <core:Item key="python" text="Python"/>
+                                                    <core:Item key="r" text="R"/>
+                                                    <core:Item key="matlab" text="MATLAB"/>
+                                                    <core:Item key="excel" text="Excel Formula"/>
+                                                    <core:Item key="sql" text="SQL"/>
+                                                </ComboBox>
+                                                
+                                                <!-- Expected Data Type -->
+                                                <Label text="{i18n>field.expectedDataType}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                                <ComboBox id="expectedDataTypeCombo" selectedKey="number">
+                                                    <core:Item key="number" text="Number"/>
+                                                    <core:Item key="string" text="String"/>
+                                                    <core:Item key="boolean" text="Boolean"/>
+                                                    <core:Item key="array" text="Array"/>
+                                                    <core:Item key="object" text="Object"/>
+                                                    <core:Item key="matrix" text="Matrix"/>
+                                                </ComboBox>
+                                                
+                                            </VBox>
+                                            
+                                            <VBox width="50%">
+                                                
+                                                <!-- Formula Complexity -->
+                                                <Label text="{i18n>field.formulaComplexity}" class="sapUiSmallMarginBottom"/>
+                                                <ComboBox id="formulaComplexityCombo" selectedKey="medium">
+                                                    <core:Item key="low" text="{i18n>complexity.low}"/>
+                                                    <core:Item key="medium" text="{i18n>complexity.medium}"/>
+                                                    <core:Item key="high" text="{i18n>complexity.high}"/>
+                                                    <core:Item key="very_high" text="{i18n>complexity.veryHigh}"/>
+                                                </ComboBox>
+                                                
+                                                <!-- Formula Source -->
+                                                <Label text="{i18n>field.formulaSource}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                                <ComboBox id="formulaSourceCombo" selectedKey="custom">
+                                                    <core:Item key="custom" text="{i18n>source.custom}"/>
+                                                    <core:Item key="library" text="{i18n>source.library}"/>
+                                                    <core:Item key="template" text="{i18n>source.template}"/>
+                                                    <core:Item key="imported" text="{i18n>source.imported}"/>
+                                                </ComboBox>
+                                                
+                                            </VBox>
+                                        </HBox>
+                                        
+                                        <!-- Input Parameters -->
+                                        <Label text="{i18n>field.inputParameters}" class="sapUiSmallMarginBottom"/>
+                                        <Table id="parametersTable" mode="Delete" class="sapUiSmallMarginBottom">
+                                            <headerToolbar>
+                                                <Toolbar>
+                                                    <Title text="{i18n>section.parameters}"/>
+                                                    <ToolbarSpacer/>
+                                                    <Button text="{i18n>btn.addParameter}" icon="sap-icon://add" press="onAddParameter" type="Transparent"/>
+                                                </Toolbar>
+                                            </headerToolbar>
+                                            
+                                            <columns>
+                                                <Column>
+                                                    <Text text="{i18n>field.parameterName}"/>
+                                                </Column>
+                                                <Column>
+                                                    <Text text="{i18n>field.parameterType}"/>
+                                                </Column>
+                                                <Column>
+                                                    <Text text="{i18n>field.defaultValue}"/>
+                                                </Column>
+                                                <Column>
+                                                    <Text text="{i18n>field.constraints}"/>
+                                                </Column>
+                                            </columns>
+                                            
+                                            <items>
+                                                <ColumnListItem>
+                                                    <cells>
+                                                        <Input value="{parameterName}" placeholder="{i18n>placeholder.parameterName}"/>
+                                                        <ComboBox selectedKey="{parameterType}">
+                                                            <core:Item key="number" text="Number"/>
+                                                            <core:Item key="string" text="String"/>
+                                                            <core:Item key="boolean" text="Boolean"/>
+                                                            <core:Item key="array" text="Array"/>
+                                                        </ComboBox>
+                                                        <Input value="{defaultValue}" placeholder="{i18n>placeholder.defaultValue}"/>
+                                                        <Input value="{constraints}" placeholder="{i18n>placeholder.constraints}"/>
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+                                        </Table>
+                                        
+                                    </VBox>
+                                </content>
+                            </IconTabFilter>
+                            
+                            <!-- Execution Configuration Tab -->
+                            <IconTabFilter text="{i18n>tab.executionConfig}" key="execution" icon="sap-icon://settings">
+                                <content>
+                                    <f:SimpleForm
+                                        editable="true"
+                                        layout="ResponsiveGridLayout"
+                                        class="sapUiMediumMargin">
+                                        
+                                        <f:content>
+                                            
+                                            <!-- Precision Level -->
+                                            <Label text="{i18n>field.precisionLevel}"/>
+                                            <ComboBox id="precisionLevelCombo" selectedKey="double">
+                                                <core:Item key="single" text="{i18n>precision.single}"/>
+                                                <core:Item key="double" text="{i18n>precision.double}"/>
+                                                <core:Item key="extended" text="{i18n>precision.extended}"/>
+                                                <core:Item key="quadruple" text="{i18n>precision.quadruple}"/>
+                                                <core:Item key="arbitrary" text="{i18n>precision.arbitrary}"/>
+                                                <core:Item key="decimal128" text="{i18n>precision.decimal128}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Calculation Engine -->
+                                            <Label text="{i18n>field.calculationEngine}"/>
+                                            <ComboBox id="calculationEngineCombo" selectedKey="numpy">
+                                                <core:Item key="numpy" text="{i18n>engine.numpy}"/>
+                                                <core:Item key="scipy" text="{i18n>engine.scipy}"/>
+                                                <core:Item key="sympy" text="{i18n>engine.sympy}"/>
+                                                <core:Item key="custom" text="{i18n>engine.custom}"/>
+                                                <core:Item key="gpu" text="{i18n>engine.gpu}"/>
+                                                <core:Item key="distributed" text="{i18n>engine.distributed}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Parallel Processing -->
+                                            <Label text="{i18n>field.parallelProcessing}"/>
+                                            <Switch id="parallelProcessingSwitch" state="false"/>
+                                            
+                                            <!-- Thread Count -->
+                                            <Label text="{i18n>field.threadCount}"/>
+                                            <StepInput id="threadCountInput" value="4" min="1" max="32" step="1"/>
+                                            
+                                            <!-- GPU Acceleration -->
+                                            <Label text="{i18n>field.gpuAcceleration}"/>
+                                            <Switch id="gpuAccelerationSwitch" state="false"/>
+                                            
+                                            <!-- Caching Enabled -->
+                                            <Label text="{i18n>field.cachingEnabled}"/>
+                                            <Switch id="cachingEnabledSwitch" state="true"/>
+                                            
+                                            <!-- Result Validation -->
+                                            <Label text="{i18n>field.resultValidation}"/>
+                                            <Switch id="resultValidationSwitch" state="true"/>
+                                            
+                                            <!-- Confidence Interval -->
+                                            <Label text="{i18n>field.confidenceInterval}"/>
+                                            <Slider id="confidenceIntervalSlider" value="95" min="90" max="99.9" step="0.1" enableTickmarks="true"/>
+                                            
+                                            <!-- Self-Healing Enabled -->
+                                            <Label text="{i18n>field.selfHealingEnabled}"/>
+                                            <Switch id="selfHealingSwitch" state="true"/>
+                                            
+                                        </f:content>
+                                    </f:SimpleForm>
+                                </content>
+                            </IconTabFilter>
+                            
+                            <!-- Validation & Testing Tab -->
+                            <IconTabFilter text="{i18n>tab.validation}" key="validation" icon="sap-icon://quality-issue">
+                                <content>
+                                    <VBox class="sapUiMediumMargin">
+                                        
+                                        <!-- Test Cases -->
+                                        <Label text="{i18n>section.testCases}" class="sapUiSmallMarginBottom"/>
+                                        <Table id="testCasesTable" mode="Delete" class="sapUiSmallMarginBottom">
+                                            <headerToolbar>
+                                                <Toolbar>
+                                                    <Title text="{i18n>section.testCases}"/>
+                                                    <ToolbarSpacer/>
+                                                    <Button text="{i18n>btn.addTestCase}" icon="sap-icon://add" press="onAddTestCase" type="Transparent"/>
+                                                    <Button text="{i18n>btn.runTests}" icon="sap-icon://play" press="onRunTests" type="Emphasized"/>
+                                                </Toolbar>
+                                            </headerToolbar>
+                                            
+                                            <columns>
+                                                <Column>
+                                                    <Text text="{i18n>field.testName}"/>
+                                                </Column>
+                                                <Column>
+                                                    <Text text="{i18n>field.inputValues}"/>
+                                                </Column>
+                                                <Column>
+                                                    <Text text="{i18n>field.expectedResult}"/>
+                                                </Column>
+                                                <Column>
+                                                    <Text text="{i18n>field.tolerance}"/>
+                                                </Column>
+                                                <Column>
+                                                    <Text text="{i18n>field.status}"/>
+                                                </Column>
+                                            </columns>
+                                            
+                                            <items>
+                                                <ColumnListItem>
+                                                    <cells>
+                                                        <Input value="{testName}" placeholder="{i18n>placeholder.testName}"/>
+                                                        <Input value="{inputValues}" placeholder="{i18n>placeholder.inputValues}"/>
+                                                        <Input value="{expectedResult}" placeholder="{i18n>placeholder.expectedResult}"/>
+                                                        <Input value="{tolerance}" placeholder="{i18n>placeholder.tolerance}"/>
+                                                        <ObjectStatus
+                                                            text="{testStatus}"
+                                                            state="{
+                                                                path: 'testStatus',
+                                                                formatter: '.formatTestStatusState'
+                                                            }"/>
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+                                        </Table>
+                                        
+                                        <!-- Validation Rules -->
+                                        <Label text="{i18n>section.validationRules}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                                        <VBox class="sapUiSmallMargin">
+                                            
+                                            <CheckBox id="boundaryValidationCheck" text="{i18n>validation.boundaryChecks}" selected="true"/>
+                                            <CheckBox id="precisionValidationCheck" text="{i18n>validation.precisionValidation}" selected="true"/>
+                                            <CheckBox id="rangeValidationCheck" text="{i18n>validation.rangeValidation}" selected="true"/>
+                                            <CheckBox id="typeValidationCheck" text="{i18n>validation.typeValidation}" selected="true"/>
+                                            <CheckBox id="overflowValidationCheck" text="{i18n>validation.overflowDetection}" selected="true"/>
+                                            <CheckBox id="nanValidationCheck" text="{i18n>validation.nanDetection}" selected="true"/>
+                                            
+                                        </VBox>
+                                        
+                                    </VBox>
+                                </content>
+                            </IconTabFilter>
+                            
+                        </items>
+                    </IconTabBar>
+                    
+                </content>
+            </Page>
+        </content>
+        
+        <beginButton>
+            <Button text="{i18n>btn.createTask}" press="onCreateTask" type="Emphasized"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>btn.cancel}" press="onCancelCreateTask"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>
