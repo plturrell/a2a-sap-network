@@ -1,0 +1,229 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="registerAgentDialog"
+        title="Register New Agent"
+        contentWidth="70%"
+        contentHeight="75%"
+        resizable="true">
+        
+        <content>
+            <VBox>
+                <!-- Agent Basic Information -->
+                <Panel headerText="Agent Information" class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="1"
+                        columnsL="1"
+                        columnsM="1">
+                        <form:content>
+                            <Label text="Agent Name" required="true"/>
+                            <Input 
+                                value="{register>/agentName}"
+                                placeholder="Enter unique agent name"
+                                maxLength="100"/>
+                            
+                            <Label text="Agent Type" required="true"/>
+                            <Select selectedKey="{register>/agentType}">
+                                <items>
+                                    <core:Item key="" text="Select agent type..."/>
+                                    <core:Item key="BLOCKCHAIN" text="Blockchain Agent"/>
+                                    <core:Item key="SERVICE_MANAGEMENT" text="Service Management"/>
+                                    <core:Item key="NETWORK_INTELLIGENCE" text="Network Intelligence"/>
+                                    <core:Item key="WORKFLOW_AUTOMATION" text="Workflow Automation"/>
+                                    <core:Item key="QUALITY_CONTROL" text="Quality Control"/>
+                                    <core:Item key="SECURITY_MONITOR" text="Security Monitor"/>
+                                    <core:Item key="PERFORMANCE_OPTIMIZER" text="Performance Optimizer"/>
+                                    <core:Item key="DATA_PROCESSOR" text="Data Processor"/>
+                                    <core:Item key="ML_MODEL" text="ML Model"/>
+                                    <core:Item key="CUSTOM" text="Custom Agent"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Agent Version" required="true"/>
+                            <Input 
+                                value="{register>/agentVersion}"
+                                placeholder="e.g., v1.0.0"/>
+                            
+                            <Label text="Endpoint URL" required="true"/>
+                            <Input 
+                                value="{register>/endpointUrl}"
+                                placeholder="https://agent-endpoint.com/api"
+                                type="Url"/>
+                            
+                            <Label text="Priority Level"/>
+                            <Slider 
+                                value="{register>/priority}"
+                                min="1"
+                                max="10"
+                                step="1"
+                                width="300px"
+                                enableTickmarks="true"
+                                inputsAsTooltips="true"/>
+                            
+                            <Label text="Load Balance Weight"/>
+                            <Slider 
+                                value="{register>/loadBalanceWeight}"
+                                min="0"
+                                max="100"
+                                step="5"
+                                width="300px"
+                                enableTickmarks="true"
+                                inputsAsTooltips="true"/>
+                            
+                            <Label text="Tags"/>
+                            <MultiInput 
+                                tokens="{register>/tags}"
+                                placeholder="Add tags for categorization">
+                                <suggestionItems>
+                                    <core:Item key="production" text="Production"/>
+                                    <core:Item key="development" text="Development"/>
+                                    <core:Item key="testing" text="Testing"/>
+                                    <core:Item key="high-availability" text="High Availability"/>
+                                    <core:Item key="critical" text="Critical"/>
+                                </suggestionItems>
+                            </MultiInput>
+                            
+                            <Label text="Notes"/>
+                            <TextArea 
+                                value="{register>/notes}"
+                                placeholder="Additional notes about this agent"
+                                rows="3"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Agent Capabilities -->
+                <Panel headerText="Agent Capabilities" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <Label text="Supported Operations"/>
+                        <CheckBox text="Health Check" selected="{register>/capabilities/healthCheck}"/>
+                        <CheckBox text="Performance Monitoring" selected="{register>/capabilities/performanceMonitoring}"/>
+                        <CheckBox text="Data Processing" selected="{register>/capabilities/dataProcessing}"/>
+                        <CheckBox text="Real-time Analytics" selected="{register>/capabilities/realtimeAnalytics}"/>
+                        <CheckBox text="Batch Processing" selected="{register>/capabilities/batchProcessing}"/>
+                        <CheckBox text="Event Streaming" selected="{register>/capabilities/eventStreaming}"/>
+                        <CheckBox text="Machine Learning" selected="{register>/capabilities/machineLearning}"/>
+                        <CheckBox text="Blockchain Integration" selected="{register>/capabilities/blockchain}"/>
+                        
+                        <Label text="Supported Protocols" class="sapUiMediumMarginTop"/>
+                        <CheckBox text="HTTP/HTTPS" selected="{register>/protocols/http}"/>
+                        <CheckBox text="WebSocket" selected="{register>/protocols/websocket}"/>
+                        <CheckBox text="gRPC" selected="{register>/protocols/grpc}"/>
+                        <CheckBox text="MQTT" selected="{register>/protocols/mqtt}"/>
+                        <CheckBox text="GraphQL" selected="{register>/protocols/graphql}"/>
+                        <CheckBox text="OData" selected="{register>/protocols/odata}"/>
+                        
+                        <Label text="Resource Requirements" class="sapUiMediumMarginTop"/>
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="CPU Cores"/>
+                                <Input value="{register>/requirements/cpuCores}" type="Number"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Memory (GB)"/>
+                                <Input value="{register>/requirements/memoryGB}" type="Number"/>
+                            </VBox>
+                            <VBox>
+                                <Label text="Storage (GB)"/>
+                                <Input value="{register>/requirements/storageGB}" type="Number"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Configuration -->
+                <Panel headerText="Agent Configuration" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <Label text="Configuration JSON"/>
+                        <TextArea 
+                            value="{register>/configuration}"
+                            placeholder='{"timeout": 30000, "retries": 3, "healthCheckInterval": 60}'
+                            rows="8"/>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <Button 
+                                text="Validate Configuration"
+                                icon="sap-icon://accept"
+                                press=".onValidateConfiguration"/>
+                            <Button 
+                                text="Load Template"
+                                icon="sap-icon://template"
+                                press=".onLoadConfigTemplate"
+                                class="sapUiMediumMarginBegin"/>
+                        </HBox>
+                        
+                        <MessageStrip 
+                            text="{register>/validationMessage}"
+                            type="{register>/validationStatus}"
+                            visible="{= !!${register>/validationMessage}}"
+                            showIcon="true"
+                            class="sapUiMediumMarginTop"/>
+                    </VBox>
+                </Panel>
+                
+                <!-- Test Connection -->
+                <Panel 
+                    headerText="Connection Test"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox>
+                            <Button 
+                                text="Test Connection"
+                                icon="sap-icon://test"
+                                press=".onTestConnection"
+                                enabled="{= !!${register>/endpointUrl}}"/>
+                            <Text text="Status: {register>/connectionTest/status}" class="sapUiMediumMarginBegin"/>
+                        </HBox>
+                        
+                        <VBox visible="{= !!${register>/connectionTest/result}}" class="sapUiMediumMarginTop">
+                            <Text text="Response Time: {register>/connectionTest/responseTime} ms"/>
+                            <Text text="Status Code: {register>/connectionTest/statusCode}"/>
+                            <Text text="Result: {register>/connectionTest/result}"/>
+                        </VBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Registration Preview -->
+                <Panel 
+                    headerText="Registration Preview"
+                    visible="{= !!${register>/agentName} && !!${register>/agentType} && !!${register>/endpointUrl}}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <Text text="Agent: {register>/agentName} ({register>/agentType})"/>
+                        <Text text="Endpoint: {register>/endpointUrl}"/>
+                        <Text text="Priority: {register>/priority}, Load Weight: {register>/loadBalanceWeight}%"/>
+                        <Text text="Capabilities: {register>/capabilitySummary}"/>
+                    </VBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelRegistration"/>
+        </beginButton>
+        
+        <endButton>
+            <Button 
+                text="Register Agent"
+                type="Emphasized"
+                icon="sap-icon://add"
+                press=".onExecuteRegistration"
+                enabled="{= !!${register>/agentName} && !!${register>/agentType} && !!${register>/endpointUrl} && ${register>/validationStatus} !== 'Error'}"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

@@ -2351,3 +2351,400 @@ entity WorkflowOptimizations : cuid, managed {
     @Common.Label: 'Task'
     task               : Association to QualityControlTasks;
 }
+
+// Agent 7 Entities - Agent Management & Orchestration System
+// Manages and coordinates multiple AI agents in the distributed network
+entity RegisteredAgents : cuid, managed {
+    @Common.Label: 'Agent Name'
+    @Search.defaultSearchElement: true
+    @mandatory
+    agentName          : String(100);
+    
+    @Common.Label: 'Agent Type'
+    @mandatory
+    agentType          : String(50) enum {
+        BLOCKCHAIN; SERVICE_MANAGEMENT; NETWORK_INTELLIGENCE;
+        WORKFLOW_AUTOMATION; QUALITY_CONTROL; SECURITY_MONITOR;
+        PERFORMANCE_OPTIMIZER; DATA_PROCESSOR; ML_MODEL; CUSTOM;
+    };
+    
+    @Common.Label: 'Agent Version'
+    @mandatory
+    agentVersion       : String(20);
+    
+    @Common.Label: 'Endpoint URL'
+    @mandatory
+    endpointUrl        : String(500);
+    
+    @Common.Label: 'Status'
+    status             : String(20) enum {
+        REGISTERING; ACTIVE; INACTIVE; SUSPENDED; MAINTENANCE; FAILED; DECOMMISSIONED;
+    } default 'REGISTERING';
+    
+    @Common.Label: 'Health Status'
+    healthStatus       : String(20) enum {
+        HEALTHY; DEGRADED; UNHEALTHY; UNKNOWN;
+    } default 'UNKNOWN';
+    
+    @Common.Label: 'Capabilities'
+    @Core.MediaType: 'application/json'
+    capabilities       : LargeString;
+    
+    @Common.Label: 'Configuration'
+    @Core.MediaType: 'application/json'
+    configuration      : LargeString;
+    
+    @Common.Label: 'Performance Score'
+    @assert.range: [0, 100]
+    performanceScore   : Decimal(5, 2) default 0;
+    
+    @Common.Label: 'Response Time (ms)'
+    responseTime       : Integer;
+    
+    @Common.Label: 'Throughput (req/s)'
+    throughput         : Decimal(10, 2);
+    
+    @Common.Label: 'Error Rate'
+    @assert.range: [0, 100]
+    errorRate          : Decimal(5, 2) default 0;
+    
+    @Common.Label: 'Last Health Check'
+    lastHealthCheck    : DateTime;
+    
+    @Common.Label: 'Registration Date'
+    registrationDate   : DateTime;
+    
+    @Common.Label: 'Deactivation Date'
+    deactivationDate   : DateTime;
+    
+    @Common.Label: 'Load Balance Weight'
+    @assert.range: [0, 100]
+    loadBalanceWeight  : Integer default 50;
+    
+    @Common.Label: 'Priority Level'
+    priority           : Integer default 5;
+    
+    @Common.Label: 'Tags'
+    @Core.MediaType: 'application/json'
+    tags               : String(500);
+    
+    @Common.Label: 'Notes'
+    @UI.MultiLineText: true
+    notes              : String(2000);
+    
+    @Common.Label: 'Management Tasks'
+    managementTasks    : Composition of many ManagementTasks on managementTasks.agent = $self;
+    
+    @Common.Label: 'Health Checks'
+    healthChecks       : Composition of many AgentHealthChecks on healthChecks.agent = $self;
+    
+    @Common.Label: 'Performance Metrics'
+    performanceMetrics : Composition of many AgentPerformanceMetrics on performanceMetrics.agent = $self;
+}
+
+// Management Tasks for agents
+entity ManagementTasks : cuid, managed {
+    @Common.Label: 'Task Name'
+    @Search.defaultSearchElement: true
+    @mandatory
+    taskName           : String(100);
+    
+    @Common.Label: 'Task Type'
+    @mandatory
+    taskType           : String(50) enum {
+        HEALTH_CHECK; PERFORMANCE_TEST; CONFIGURATION_UPDATE;
+        RESTART; BACKUP; RESTORE; UPGRADE; DIAGNOSTIC;
+        BULK_OPERATION; COORDINATION_TASK;
+    };
+    
+    @Common.Label: 'Status'
+    status             : String(20) enum {
+        SCHEDULED; PENDING; RUNNING; COMPLETED; FAILED; CANCELLED; TIMEOUT;
+    } default 'SCHEDULED';
+    
+    @Common.Label: 'Priority'
+    priority           : String(10) enum {
+        LOW; NORMAL; HIGH; CRITICAL;
+    } default 'NORMAL';
+    
+    @Common.Label: 'Agent'
+    agent              : Association to RegisteredAgents;
+    
+    @Common.Label: 'Target Agents'
+    @Core.MediaType: 'application/json'
+    targetAgents       : String(2000);
+    
+    @Common.Label: 'Parameters'
+    @Core.MediaType: 'application/json'
+    parameters         : LargeString;
+    
+    @Common.Label: 'Schedule Type'
+    scheduleType       : String(20) enum {
+        IMMEDIATE; SCHEDULED; RECURRING;
+    } default 'IMMEDIATE';
+    
+    @Common.Label: 'Scheduled Time'
+    scheduledTime      : DateTime;
+    
+    @Common.Label: 'Recurrence Pattern'
+    recurrencePattern  : String(100);
+    
+    @Common.Label: 'Start Time'
+    startTime          : DateTime;
+    
+    @Common.Label: 'End Time'
+    endTime            : DateTime;
+    
+    @Common.Label: 'Duration (ms)'
+    duration           : Integer;
+    
+    @Common.Label: 'Progress'
+    @assert.range: [0, 100]
+    progress           : Integer default 0;
+    
+    @Common.Label: 'Result'
+    @Core.MediaType: 'application/json'
+    result             : LargeString;
+    
+    @Common.Label: 'Error Message'
+    errorMessage       : String(2000);
+    
+    @Common.Label: 'Retry Count'
+    retryCount         : Integer default 0;
+    
+    @Common.Label: 'Max Retries'
+    maxRetries         : Integer default 3;
+    
+    @Common.Label: 'Notification Sent'
+    notificationSent   : Boolean default false;
+    
+    @Common.Label: 'Rollback Available'
+    rollbackAvailable  : Boolean default false;
+}
+
+// Agent Health Checks
+entity AgentHealthChecks : cuid {
+    @Common.Label: 'Check ID'
+    @mandatory
+    checkId            : String(50);
+    
+    @Common.Label: 'Agent'
+    agent              : Association to RegisteredAgents not null;
+    
+    @Common.Label: 'Check Type'
+    checkType          : String(50) enum {
+        PING; HTTP_GET; HTTP_POST; HEARTBEAT; DIAGNOSTIC;
+        MEMORY_CHECK; CPU_CHECK; DISK_CHECK; CUSTOM;
+    };
+    
+    @Common.Label: 'Status'
+    status             : String(20) enum {
+        PASS; FAIL; WARNING; TIMEOUT; ERROR;
+    };
+    
+    @Common.Label: 'Response Time (ms)'
+    responseTime       : Integer;
+    
+    @Common.Label: 'Status Code'
+    statusCode         : Integer;
+    
+    @Common.Label: 'Check Details'
+    @Core.MediaType: 'application/json'
+    checkDetails       : LargeString;
+    
+    @Common.Label: 'Error Details'
+    errorDetails       : String(2000);
+    
+    @Common.Label: 'Timestamp'
+    timestamp          : DateTime;
+    
+    @Common.Label: 'Alert Triggered'
+    alertTriggered     : Boolean default false;
+    
+    @Common.Label: 'Recommendations'
+    @Core.MediaType: 'application/json'
+    recommendations    : String(2000);
+}
+
+// Agent Performance Metrics
+entity AgentPerformanceMetrics : cuid {
+    @Common.Label: 'Metric ID'
+    @mandatory
+    metricId           : String(50);
+    
+    @Common.Label: 'Agent'
+    agent              : Association to RegisteredAgents not null;
+    
+    @Common.Label: 'Metric Type'
+    metricType         : String(50) enum {
+        RESPONSE_TIME; THROUGHPUT; ERROR_RATE; CPU_USAGE;
+        MEMORY_USAGE; QUEUE_LENGTH; SUCCESS_RATE; LATENCY;
+    };
+    
+    @Common.Label: 'Value'
+    value              : Decimal(20, 5);
+    
+    @Common.Label: 'Unit'
+    unit               : String(20);
+    
+    @Common.Label: 'Timestamp'
+    timestamp          : DateTime;
+    
+    @Common.Label: 'Time Window'
+    timeWindow         : String(20) enum {
+        MINUTE; HOUR; DAY; WEEK; MONTH;
+    } default 'MINUTE';
+    
+    @Common.Label: 'Min Value'
+    minValue           : Decimal(20, 5);
+    
+    @Common.Label: 'Max Value'
+    maxValue           : Decimal(20, 5);
+    
+    @Common.Label: 'Average Value'
+    averageValue       : Decimal(20, 5);
+    
+    @Common.Label: 'Percentile 95'
+    percentile95       : Decimal(20, 5);
+    
+    @Common.Label: 'Percentile 99'
+    percentile99       : Decimal(20, 5);
+    
+    @Common.Label: 'Trend'
+    trend              : String(20) enum {
+        IMPROVING; STABLE; DEGRADING;
+    };
+    
+    @Common.Label: 'Anomaly Detected'
+    anomalyDetected    : Boolean default false;
+    
+    @Common.Label: 'Benchmark Comparison'
+    @assert.range: [-100, 100]
+    benchmarkComparison : Decimal(5, 2);
+}
+
+// Agent Coordination
+entity AgentCoordination : cuid, managed {
+    @Common.Label: 'Coordination Name'
+    @Search.defaultSearchElement: true
+    @mandatory
+    coordinationName   : String(100);
+    
+    @Common.Label: 'Coordination Type'
+    coordinationType   : String(50) enum {
+        WORKFLOW; CHAIN; PARALLEL; CONDITIONAL; LOAD_BALANCE;
+        FAILOVER; ROUND_ROBIN; CONSENSUS;
+    };
+    
+    @Common.Label: 'Status'
+    status             : String(20) enum {
+        DRAFT; ACTIVE; PAUSED; COMPLETED; FAILED;
+    } default 'DRAFT';
+    
+    @Common.Label: 'Primary Agent'
+    primaryAgent       : Association to RegisteredAgents;
+    
+    @Common.Label: 'Participating Agents'
+    @Core.MediaType: 'application/json'
+    participatingAgents : LargeString;
+    
+    @Common.Label: 'Coordination Rules'
+    @Core.MediaType: 'application/json'
+    coordinationRules  : LargeString;
+    
+    @Common.Label: 'Load Balance Strategy'
+    loadBalanceStrategy : String(50);
+    
+    @Common.Label: 'Failover Config'
+    @Core.MediaType: 'application/json'
+    failoverConfig     : String(2000);
+    
+    @Common.Label: 'Performance Target'
+    performanceTarget  : Decimal(10, 2);
+    
+    @Common.Label: 'Current Performance'
+    currentPerformance : Decimal(10, 2);
+    
+    @Common.Label: 'Success Rate'
+    @assert.range: [0, 100]
+    successRate        : Decimal(5, 2) default 0;
+    
+    @Common.Label: 'Total Executions'
+    totalExecutions    : Integer default 0;
+    
+    @Common.Label: 'Failed Executions'
+    failedExecutions   : Integer default 0;
+    
+    @Common.Label: 'Average Duration'
+    averageDuration    : Integer;
+    
+    @Common.Label: 'Last Execution'
+    lastExecution      : DateTime;
+    
+    @Common.Label: 'Next Scheduled'
+    nextScheduled      : DateTime;
+}
+
+// Bulk Operations Log
+entity BulkOperations : cuid, managed {
+    @Common.Label: 'Operation Name'
+    @mandatory
+    operationName      : String(100);
+    
+    @Common.Label: 'Operation Type'
+    operationType      : String(50) enum {
+        UPDATE_CONFIG; RESTART_AGENTS; HEALTH_CHECK;
+        PERFORMANCE_TEST; BACKUP; UPGRADE; DEACTIVATE;
+    };
+    
+    @Common.Label: 'Status'
+    status             : String(20) enum {
+        PREPARING; EXECUTING; COMPLETED; PARTIALLY_COMPLETED; FAILED; ROLLED_BACK;
+    } default 'PREPARING';
+    
+    @Common.Label: 'Target Count'
+    targetCount        : Integer;
+    
+    @Common.Label: 'Successful Count'
+    successfulCount    : Integer default 0;
+    
+    @Common.Label: 'Failed Count'
+    failedCount        : Integer default 0;
+    
+    @Common.Label: 'Progress'
+    @assert.range: [0, 100]
+    progress           : Integer default 0;
+    
+    @Common.Label: 'Operation Details'
+    @Core.MediaType: 'application/json'
+    operationDetails   : LargeString;
+    
+    @Common.Label: 'Results'
+    @Core.MediaType: 'application/json'
+    results            : LargeString;
+    
+    @Common.Label: 'Rollback Data'
+    @Core.MediaType: 'application/json'
+    rollbackData       : LargeString;
+    
+    @Common.Label: 'Start Time'
+    startTime          : DateTime;
+    
+    @Common.Label: 'End Time'
+    endTime            : DateTime;
+    
+    @Common.Label: 'Duration (ms)'
+    duration           : Integer;
+    
+    @Common.Label: 'Initiated By'
+    initiatedBy        : String(100);
+    
+    @Common.Label: 'Approval Required'
+    approvalRequired   : Boolean default false;
+    
+    @Common.Label: 'Approved By'
+    approvedBy         : String(100);
+    
+    @Common.Label: 'Approval Time'
+    approvalTime       : DateTime;
+}

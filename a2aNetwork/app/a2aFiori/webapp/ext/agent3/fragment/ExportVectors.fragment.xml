@@ -1,6 +1,5 @@
 <core:FragmentDefinition
     xmlns="sap.m"
-    xmlns="sap.m"
     xmlns:core="sap.ui.core"
     xmlns:form="sap.ui.layout.form">
     
@@ -9,7 +8,8 @@
         title="Export Vector Data"
         contentWidth="65%"
         resizable="true"
-        draggable="true">
+        draggable="true"
+        ariaLabel="Export vector data dialog">
         
         <content>
             <form:SimpleForm
@@ -25,10 +25,12 @@
                 columnsM="1">
                 
                 <form:content>
-                    <Label text="Export Format" required="true"/>
+                    <Label text="Export Format" required="true" labelFor="exportFormatSelect"/>
                     <Select 
+                        id="exportFormatSelect"
                         selectedKey="{export>/format}"
-                        change=".onExportFormatChange">
+                        change=".onExportFormatChange"
+                        ariaLabel="Select export format">
                         <items>
                             <core:Item key="NUMPY" text="NumPy (.npy) - Python"/>
                             <core:Item key="PARQUET" text="Parquet - Apache Arrow"/>
@@ -36,184 +38,26 @@
                             <core:Item key="CSV" text="CSV - Comma Separated"/>
                             <core:Item key="JSON" text="JSON - JavaScript Object"/>
                             <core:Item key="PICKLE" text="Pickle - Python Binary"/>
-                            <core:Item key="FAISS" text="FAISS Index - Facebook AI"/>
-                            <core:Item key="ANNOY" text="Annoy Index - Spotify"/>
-                            <core:Item key="HNSWLIB" text="HNSW Index - Hierarchical NSW"/>
                         </items>
                     </Select>
-                    
-                    <Label text="Data Selection"/>
-                    <RadioButtonGroup selectedIndex="{export>/dataSelection}">
-                        <RadioButton text="All vectors"/>
-                        <RadioButton text="Top K vectors by similarity"/>
-                        <RadioButton text="Random sample"/>
-                        <RadioButton text="Custom range"/>
-                        <RadioButton text="Filtered subset"/>
-                    </RadioButtonGroup>
-                    
-                    <!-- Top K Selection -->
-                    <VBox visible="{= ${export>/dataSelection} === 1 }">
-                        <Label text="Number of Vectors"/>
-                        <Input 
-                            value="{export>/topK}"
-                            type="Number"
-                            width="120px"/>
-                        <Text text="Based on query: {export>/lastQuery}"/>
-                    </VBox>
-                    
-                    <!-- Random Sample -->
-                    <VBox visible="{= ${export>/dataSelection} === 2 }">
-                        <Label text="Sample Size"/>
-                        <Input 
-                            value="{export>/sampleSize}"
-                            type="Number"
-                            width="120px"/>
-                        <CheckBox 
-                            text="Stratified sampling"
-                            selected="{export>/stratifiedSampling}"/>
-                    </VBox>
-                    
-                    <!-- Custom Range -->
-                    <VBox visible="{= ${export>/dataSelection} === 3 }">
-                        <Label text="Vector Range"/>
-                        <HBox>
-                            <Input 
-                                value="{export>/rangeStart}"
-                                placeholder="From index"
-                                type="Number"
-                                width="120px"
-                                class="sapUiTinyMarginEnd"/>
-                            <Text text="to" class="sapUiTinyMargin"/>
-                            <Input 
-                                value="{export>/rangeEnd}"
-                                placeholder="To index"
-                                type="Number"
-                                width="120px"
-                                class="sapUiTinyMarginBegin"/>
-                        </HBox>
-                    </VBox>
-                    
-                    <!-- Filtered Subset -->
-                    <VBox visible="{= ${export>/dataSelection} === 4 }">
-                        <Label text="Filter Criteria"/>
-                        <HBox>
-                            <Select 
-                                selectedKey="{export>/filterField}"
-                                width="150px"
-                                class="sapUiTinyMarginEnd">
-                                <items>
-                                    <core:Item key="content_type" text="Content Type"/>
-                                    <core:Item key="source" text="Source"/>
-                                    <core:Item key="category" text="Category"/>
-                                    <core:Item key="created_date" text="Created Date"/>
-                                    <core:Item key="similarity_score" text="Similarity Score"/>
-                                </items>
-                            </Select>
-                            <Select 
-                                selectedKey="{export>/filterOperator}"
-                                width="100px"
-                                class="sapUiTinyMarginEnd">
-                                <items>
-                                    <core:Item key="eq" text="Equals"/>
-                                    <core:Item key="ne" text="Not Equals"/>
-                                    <core:Item key="gt" text="Greater Than"/>
-                                    <core:Item key="lt" text="Less Than"/>
-                                    <core:Item key="contains" text="Contains"/>
-                                </items>
-                            </Select>
-                            <Input 
-                                value="{export>/filterValue}"
-                                placeholder="Filter value"
-                                width="150px"/>
-                        </HBox>
-                    </VBox>
                     
                     <Label text="Include Options"/>
                     <VBox>
                         <CheckBox 
                             text="Include metadata"
-                            selected="{export>/includeMetadata}"/>
+                            selected="{export>/includeMetadata}"
+                            ariaLabel="Include vector metadata"/>
                         <CheckBox 
-                            text="Include original content"
-                            selected="{export>/includeContent}"/>
-                        <CheckBox 
-                            text="Include vector IDs"
-                            selected="{export>/includeVectorIds}"/>
-                        <CheckBox 
-                            text="Include similarity scores"
-                            selected="{export>/includeSimilarityScores}"
-                            visible="{= ${export>/dataSelection} === 1}"/>
-                        <CheckBox 
-                            text="Include timestamps"
-                            selected="{export>/includeTimestamps}"/>
+                            text="Data validation"
+                            selected="{export>/validation}"
+                            ariaLabel="Validate data before export"/>
                     </VBox>
                     
-                    <!-- Format-specific options -->
-                    <VBox visible="{= ${export>/format} === 'CSV' }">
-                        <Label text="CSV Options"/>
-                        <VBox>
-                            <HBox>
-                                <Label text="Delimiter:" width="100px"/>
-                                <Select selectedKey="{export>/csvDelimiter}" width="120px">
-                                    <items>
-                                        <core:Item key="," text="Comma (,)"/>
-                                        <core:Item key=";" text="Semicolon (;)"/>
-                                        <core:Item key="|" text="Pipe (|)"/>
-                                        <core:Item key="	" text="Tab"/>
-                                    </items>
-                                </Select>
-                            </HBox>
-                            <CheckBox 
-                                text="Include header row"
-                                selected="{export>/csvIncludeHeader}"/>
-                            <CheckBox 
-                                text="Flatten vector arrays"
-                                selected="{export>/csvFlattenVectors}"/>
-                        </VBox>
-                    </VBox>
-                    
-                    <VBox visible="{= ${export>/format} === 'JSON' }">
-                        <Label text="JSON Options"/>
-                        <VBox>
-                            <CheckBox 
-                                text="Pretty print (formatted)"
-                                selected="{export>/jsonPrettyPrint}"/>
-                            <CheckBox 
-                                text="Include schema"
-                                selected="{export>/jsonIncludeSchema}"/>
-                            <RadioButtonGroup selectedIndex="{export>/jsonStructure}">
-                                <RadioButton text="Array of objects"/>
-                                <RadioButton text="Object with arrays"/>
-                                <RadioButton text="Line-delimited JSON"/>
-                            </RadioButtonGroup>
-                        </VBox>
-                    </VBox>
-                    
-                    <VBox visible="{= ${export>/format} === 'FAISS' || ${export>/format} === 'ANNOY' || ${export>/format} === 'HNSWLIB'}">
-                        <Label text="Index Options"/>
-                        <VBox>
-                            <HBox>
-                                <Label text="Index type:" width="100px"/>
-                                <Select selectedKey="{export>/indexType}" width="150px">
-                                    <items>
-                                        <core:Item key="IndexFlatL2" text="Flat L2"/>
-                                        <core:Item key="IndexFlatIP" text="Flat Inner Product"/>
-                                        <core:Item key="IndexIVFFlat" text="IVF Flat"/>
-                                        <core:Item key="IndexHNSW" text="HNSW"/>
-                                    </items>
-                                </Select>
-                            </HBox>
-                            <CheckBox 
-                                text="Include trained index"
-                                selected="{export>/includeTrainedIndex}"/>
-                            <CheckBox 
-                                text="Optimize for memory"
-                                selected="{export>/optimizeMemory}"/>
-                        </VBox>
-                    </VBox>
-                    
-                    <Label text="Compression"/>
-                    <Select selectedKey="{export>/compression}">
+                    <Label text="Compression" labelFor="compressionSelect"/>
+                    <Select 
+                        id="compressionSelect"
+                        selectedKey="{export>/compression}"
+                        ariaLabel="Select compression type">
                         <items>
                             <core:Item key="NONE" text="No compression"/>
                             <core:Item key="GZIP" text="GZIP"/>
@@ -223,78 +67,21 @@
                         </items>
                     </Select>
                     
-                    <Label text="Chunking"/>
-                    <VBox>
-                        <CheckBox 
-                            text="Split into chunks"
-                            selected="{export>/enableChunking}"
-                            select=".onChunkingToggle"/>
-                        <HBox visible="{export>/enableChunking}">
-                            <Label text="Vectors per chunk:" width="150px"/>
-                            <Input 
-                                value="{export>/chunkSize}"
-                                type="Number"
-                                width="120px"/>
-                        </HBox>
-                        <Text 
-                            visible="{export>/enableChunking}"
-                            text="Estimated chunks: {export>/estimatedChunks}"/>
-                    </VBox>
-                    
-                    <Label text="Output Destination"/>
-                    <RadioButtonGroup selectedIndex="{export>/destination}">
-                        <RadioButton text="Download to browser"/>
-                        <RadioButton text="Save to server"/>
-                        <RadioButton text="Upload to cloud storage"/>
-                        <RadioButton text="Send to external API"/>
-                    </RadioButtonGroup>
-                    
-                    <!-- Cloud Storage Options -->
-                    <VBox visible="{= ${export>/destination} === 2 }">
-                        <Label text="Cloud Storage Provider"/>
-                        <Select selectedKey="{export>/cloudProvider}">
-                            <items>
-                                <core:Item key="AWS_S3" text="Amazon S3"/>
-                                <core:Item key="AZURE_BLOB" text="Azure Blob Storage"/>
-                                <core:Item key="GCP_STORAGE" text="Google Cloud Storage"/>
-                                <core:Item key="HUGGINGFACE" text="Hugging Face Hub"/>
-                            </items>
-                        </Select>
-                        <Input 
-                            value="{export>/cloudPath}"
-                            placeholder="Storage path/bucket name"/>
-                    </VBox>
-                    
-                    <!-- External API Options -->
-                    <VBox visible="{= ${export>/destination} === 3 }">
-                        <Label text="API Endpoint"/>
-                        <Input 
-                            value="{export>/apiEndpoint}"
-                            placeholder="https://api.example.com/vectors"/>
-                        <Label text="Authentication"/>
-                        <Select selectedKey="{export>/authType}">
-                            <items>
-                                <core:Item key="NONE" text="None"/>
-                                <core:Item key="API_KEY" text="API Key"/>
-                                <core:Item key="BEARER" text="Bearer Token"/>
-                                <core:Item key="BASIC" text="Basic Auth"/>
-                            </items>
-                        </Select>
-                        <Input 
-                            value="{export>/authValue}"
-                            placeholder="API key or token"
-                            type="Password"
-                            visible="{= ${export>/authType} !== 'NONE'}"/>
-                    </VBox>
+                    <Label text="Chunk Size" labelFor="chunkSizeInput"/>
+                    <Input 
+                        id="chunkSizeInput"
+                        value="{export>/chunkSize}"
+                        type="Number"
+                        description="Number of vectors per chunk"
+                        ariaLabel="Vectors per chunk"/>
                     
                     <Label text="Export Summary"/>
                     <Panel class="sapUiResponsiveMargin">
                         <VBox class="sapUiMediumMargin">
-                            <Text text="Vectors to export: {export>/vectorCount}"/>
-                            <Text text="Estimated file size: {export>/estimatedSize}"/>
-                            <Text text="Export format: {export>/format}"/>
+                            <Text text="Task: {path: 'export>/taskName', formatter: '.formatSecureText'}"/>
+                            <Text text="Format: {export>/format}"/>
                             <Text text="Compression: {export>/compression}"/>
-                            <Text text="Processing time: ~{export>/estimatedTime} minutes"/>
+                            <Text text="Chunk size: {export>/chunkSize} vectors"/>
                         </VBox>
                     </Panel>
                 </form:content>
@@ -304,7 +91,8 @@
         <beginButton>
             <Button 
                 text="Cancel"
-                press=".onCancelExport"/>
+                press=".onCancelExport"
+                ariaLabel="Cancel export"/>
         </beginButton>
         
         <endButton>
@@ -312,7 +100,8 @@
                 text="Export"
                 type="Emphasized"
                 press=".onExecuteExport"
-                enabled="{export>/format}"/>
+                enabled="{export>/format}"
+                ariaLabel="Execute export"/>
         </endButton>
         
     </Dialog>

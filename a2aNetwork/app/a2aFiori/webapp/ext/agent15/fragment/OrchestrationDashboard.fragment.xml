@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:suite="sap.suite.ui.commons"
+    xmlns:viz="sap.viz">
+    
+    <Dialog
+        title="{i18n>dialog.orchestrationDashboard.title}"
+        class="sapUiMediumMargin"
+        contentWidth="95vw"
+        contentHeight="90vh"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <Page showHeader="false">
+                <content>
+                    
+                    <!-- Key Performance Indicators -->
+                    <Panel headerText="{i18n>section.keyMetrics}" class="sapUiMediumMargin">
+                        <content>
+                            <FlexBox wrap="Wrap" class="sapUiSmallMargin">
+                                
+                                <!-- Total Workflows -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.totalWorkflows}"
+                                    subheaderText="{i18n>kpi.allTypes}"
+                                    valueColor="Good"
+                                    indicator="Up"
+                                    value="847"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <!-- Active Workflows -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.activeWorkflows}"
+                                    subheaderText="{i18n>kpi.currentlyRunning}"
+                                    valueColor="Neutral"
+                                    indicator="None"
+                                    value="23"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <!-- Completed Today -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.completedToday}"
+                                    subheaderText="{i18n>kpi.last24Hours}"
+                                    valueColor="Good"
+                                    indicator="Up"
+                                    value="156"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <!-- Success Rate -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.successRate}"
+                                    subheaderText="{i18n>kpi.last7Days}"
+                                    valueColor="Good"
+                                    indicator="Up"
+                                    value="97.8%"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <!-- Average Execution Time -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.avgExecutionTime}"
+                                    subheaderText="{i18n>kpi.allWorkflows}"
+                                    valueColor="Good"
+                                    indicator="Down"
+                                    value="4.2m"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                                <!-- Active Agents -->
+                                <suite:NumericTile
+                                    headerText="{i18n>kpi.activeAgents}"
+                                    subheaderText="{i18n>kpi.networkHealth}"
+                                    valueColor="Good"
+                                    indicator="None"
+                                    value="16"
+                                    size="M"
+                                    class="sapUiTinyMargin"/>
+                                
+                            </FlexBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Workflow Execution Trends -->
+                    <Panel headerText="{i18n>section.workflowTrends}" class="sapUiMediumMargin">
+                        <content>
+                            <HBox class="sapUiMediumMargin">
+                                
+                                <!-- Execution Trends Chart -->
+                                <VBox class="sapUiMediumMarginEnd" width="50%">
+                                    <Title text="{i18n>chart.workflowTrends}" level="H4" class="sapUiSmallMarginBottom"/>
+                                    <viz:Popover id="workflowTrendsPopover"/>
+                                    <viz:VizFrame
+                                        id="workflowTrendsChart"
+                                        vizType="line"
+                                        width="100%"
+                                        height="300px">
+                                        <viz:dataset>
+                                            <viz:FlattenedDataset data="{/workflowTrends}">
+                                                <viz:dimensions>
+                                                    <viz:DimensionDefinition name="Date" value="{date}"/>
+                                                </viz:dimensions>
+                                                <viz:measures>
+                                                    <viz:MeasureDefinition name="Completed" value="{completed}"/>
+                                                    <viz:MeasureDefinition name="Failed" value="{failed}"/>
+                                                    <viz:MeasureDefinition name="Running" value="{running}"/>
+                                                </viz:measures>
+                                            </viz:FlattenedDataset>
+                                        </viz:dataset>
+                                        <viz:feeds>
+                                            <viz:FeedItem uid="categoryAxis" type="Dimension" values="Date"/>
+                                            <viz:FeedItem uid="valueAxis" type="Measure" values="Completed,Failed,Running"/>
+                                        </viz:feeds>
+                                    </viz:VizFrame>
+                                </VBox>
+                                
+                                <!-- Throughput Analysis Chart -->
+                                <VBox width="50%">
+                                    <Title text="{i18n>chart.throughputAnalysis}" level="H4" class="sapUiSmallMarginBottom"/>
+                                    <viz:Popover id="throughputAnalysisPopover"/>
+                                    <viz:VizFrame
+                                        id="throughputAnalysisChart"
+                                        vizType="column"
+                                        width="100%"
+                                        height="300px">
+                                        <viz:dataset>
+                                            <viz:FlattenedDataset data="{/throughputAnalysis}">
+                                                <viz:dimensions>
+                                                    <viz:DimensionDefinition name="Hour" value="{hour}"/>
+                                                </viz:dimensions>
+                                                <viz:measures>
+                                                    <viz:MeasureDefinition name="Workflows/Hour" value="{throughput}"/>
+                                                    <viz:MeasureDefinition name="Peak Capacity" value="{peakCapacity}"/>
+                                                </viz:measures>
+                                            </viz:FlattenedDataset>
+                                        </viz:dataset>
+                                        <viz:feeds>
+                                            <viz:FeedItem uid="categoryAxis" type="Dimension" values="Hour"/>
+                                            <viz:FeedItem uid="valueAxis" type="Measure" values="Workflows/Hour,Peak Capacity"/>
+                                        </viz:feeds>
+                                    </viz:VizFrame>
+                                </VBox>
+                                
+                            </HBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Active Workflows Status -->
+                    <Panel headerText="{i18n>section.activeWorkflows}" class="sapUiMediumMargin">
+                        <content>
+                            <Table
+                                id="activeWorkflowsTable"
+                                items="{/activeWorkflows}"
+                                mode="None"
+                                class="sapUiSmallMarginTop">
+                                
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>field.workflowName}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.workflowType}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.status}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.progress}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.activeSteps}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.assignedAgents}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.executionTime}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.priority}"/>
+                                    </Column>
+                                </columns>
+                                
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Link text="{workflowName}" press="onNavigateToWorkflow"/>
+                                            <Text text="{workflowType}"/>
+                                            <ObjectStatus
+                                                text="{status}"
+                                                state="{
+                                                    path: 'status',
+                                                    formatter: '.formatWorkflowStatusState'
+                                                }"/>
+                                            <ProgressIndicator
+                                                percentValue="{completionRate}"
+                                                displayValue="{completionRate}%"
+                                                state="{
+                                                    path: 'completionRate',
+                                                    formatter: '.formatProgressState'
+                                                }"/>
+                                            <Text text="{activeSteps}/{totalSteps}"/>
+                                            <Text text="{assignedAgents}"/>
+                                            <Text text="{executionTime}"/>
+                                            <ObjectStatus
+                                                text="{priority}"
+                                                state="{
+                                                    path: 'priority',
+                                                    formatter: '.formatPriorityState'
+                                                }"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Agent Network Status -->
+                    <Panel headerText="{i18n>section.agentNetwork}" class="sapUiMediumMargin">
+                        <content>
+                            <HBox class="sapUiMediumMargin">
+                                
+                                <!-- Agent Performance Chart -->
+                                <VBox class="sapUiMediumMarginEnd" width="50%">
+                                    <Title text="{i18n>chart.agentPerformance}" level="H4" class="sapUiSmallMarginBottom"/>
+                                    <viz:Popover id="agentPerformancePopover"/>
+                                    <viz:VizFrame
+                                        id="agentPerformanceChart"
+                                        vizType="radar"
+                                        width="100%"
+                                        height="300px">
+                                        <viz:dataset>
+                                            <viz:FlattenedDataset data="{/agentPerformance}">
+                                                <viz:dimensions>
+                                                    <viz:DimensionDefinition name="Agent" value="{agentName}"/>
+                                                </viz:dimensions>
+                                                <viz:measures>
+                                                    <viz:MeasureDefinition name="Performance" value="{performance}"/>
+                                                    <viz:MeasureDefinition name="Availability" value="{availability}"/>
+                                                    <viz:MeasureDefinition name="Workload" value="{workload}"/>
+                                                </viz:measures>
+                                            </viz:FlattenedDataset>
+                                        </viz:dataset>
+                                        <viz:feeds>
+                                            <viz:FeedItem uid="categoryAxis" type="Dimension" values="Agent"/>
+                                            <viz:FeedItem uid="valueAxis" type="Measure" values="Performance,Availability,Workload"/>
+                                        </viz:feeds>
+                                    </viz:VizFrame>
+                                </VBox>
+                                
+                                <!-- Coordination Efficiency Chart -->
+                                <VBox width="50%">
+                                    <Title text="{i18n>chart.coordinationEfficiency}" level="H4" class="sapUiSmallMarginBottom"/>
+                                    <viz:Popover id="coordinationEfficiencyPopover"/>
+                                    <viz:VizFrame
+                                        id="coordinationEfficiencyChart"
+                                        vizType="donut"
+                                        width="100%"
+                                        height="300px">
+                                        <viz:dataset>
+                                            <viz:FlattenedDataset data="{/coordinationEfficiency}">
+                                                <viz:dimensions>
+                                                    <viz:DimensionDefinition name="Pattern" value="{patternName}"/>
+                                                </viz:dimensions>
+                                                <viz:measures>
+                                                    <viz:MeasureDefinition name="Efficiency" value="{efficiency}"/>
+                                                </viz:measures>
+                                            </viz:FlattenedDataset>
+                                        </viz:dataset>
+                                        <viz:feeds>
+                                            <viz:FeedItem uid="color" type="Dimension" values="Pattern"/>
+                                            <viz:FeedItem uid="size" type="Measure" values="Efficiency"/>
+                                        </viz:feeds>
+                                    </viz:VizFrame>
+                                </VBox>
+                                
+                            </HBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- System Health Metrics -->
+                    <Panel headerText="{i18n>section.systemHealth}" class="sapUiMediumMargin">
+                        <content>
+                            <HBox class="sapUiMediumMargin">
+                                
+                                <!-- System Load -->
+                                <VBox class="sapUiMediumMarginEnd" width="25%">
+                                    <Title text="{i18n>metric.systemLoad}" level="H5" class="sapUiSmallMarginBottom"/>
+                                    <suite:RadialMicroChart
+                                        size="M"
+                                        percentage="73"
+                                        valueColor="Good"
+                                        class="sapUiSmallMargin"/>
+                                    <Text text="73%" class="sapUiSmallMarginTop"/>
+                                </VBox>
+                                
+                                <!-- Network Latency -->
+                                <VBox class="sapUiMediumMarginEnd" width="25%">
+                                    <Title text="{i18n>metric.networkLatency}" level="H5" class="sapUiSmallMarginBottom"/>
+                                    <suite:RadialMicroChart
+                                        size="M"
+                                        percentage="15"
+                                        valueColor="Good"
+                                        class="sapUiSmallMargin"/>
+                                    <Text text="15ms" class="sapUiSmallMarginTop"/>
+                                </VBox>
+                                
+                                <!-- Error Rate -->
+                                <VBox class="sapUiMediumMarginEnd" width="25%">
+                                    <Title text="{i18n>metric.errorRate}" level="H5" class="sapUiSmallMarginBottom"/>
+                                    <suite:RadialMicroChart
+                                        size="M"
+                                        percentage="2"
+                                        valueColor="Good"
+                                        class="sapUiSmallMargin"/>
+                                    <Text text="2.2%" class="sapUiSmallMarginTop"/>
+                                </VBox>
+                                
+                                <!-- SLA Compliance -->
+                                <VBox width="25%">
+                                    <Title text="{i18n>metric.slaCompliance}" level="H5" class="sapUiSmallMarginBottom"/>
+                                    <suite:RadialMicroChart
+                                        size="M"
+                                        percentage="98"
+                                        valueColor="Good"
+                                        class="sapUiSmallMargin"/>
+                                    <Text text="98.1%" class="sapUiSmallMarginTop"/>
+                                </VBox>
+                                
+                            </HBox>
+                        </content>
+                    </Panel>
+                    
+                    <!-- Recent Events -->
+                    <Panel headerText="{i18n>section.recentEvents}" class="sapUiMediumMargin">
+                        <content>
+                            <Table
+                                id="recentEventsTable"
+                                items="{/recentEvents}"
+                                mode="None"
+                                class="sapUiSmallMarginTop">
+                                
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>field.timestamp}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.eventType}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.workflowName}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.agentName}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.severity}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>field.message}"/>
+                                    </Column>
+                                </columns>
+                                
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{timestamp}"/>
+                                            <Text text="{eventType}"/>
+                                            <Link text="{workflowName}" press="onNavigateToWorkflow"/>
+                                            <Link text="{agentName}" press="onNavigateToAgent"/>
+                                            <ObjectStatus
+                                                text="{severity}"
+                                                state="{
+                                                    path: 'severity',
+                                                    formatter: '.formatSeverityState'
+                                                }"/>
+                                            <Text text="{message}"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </content>
+                    </Panel>
+                    
+                </content>
+            </Page>
+        </content>
+        
+        <beginButton>
+            <Button text="{i18n>btn.refresh}" press="onRefreshDashboard" type="Emphasized"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>btn.close}" press="onCloseDashboard"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

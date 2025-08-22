@@ -1320,3 +1320,283 @@ service A2AService @(path: '/api/v1') {
         timestamp: DateTime;
     };
 }
+
+// Agent 7 Service - Agent Management & Orchestration
+service Agent7Service {
+    // Main entity for registered agents with full management capabilities
+    entity RegisteredAgents as projection on db.RegisteredAgents actions {
+        action registerAgent(
+            @title: 'Agent Data'
+            agentData: {
+                agentName: String;
+                agentType: String;
+                endpointUrl: String;
+                capabilities: String;
+                configuration: String;
+            }
+        ) returns String;
+        
+        action updateStatus(
+            @title: 'New Status'
+            status: String;
+            @title: 'Reason'
+            reason: String;
+        ) returns String;
+        
+        action performHealthCheck() returns String;
+        
+        action updateConfiguration(
+            @title: 'Configuration'
+            configuration: String;
+            @title: 'Restart Required'
+            restartRequired: Boolean;
+        ) returns String;
+        
+        action deactivateAgent(
+            @title: 'Reason'
+            reason: String;
+            @title: 'Graceful Shutdown'
+            gracefulShutdown: Boolean;
+        ) returns String;
+        
+        action scheduleTask(
+            @title: 'Task Data'
+            taskData: {
+                taskType: String;
+                parameters: String;
+                scheduledTime: DateTime;
+                priority: String;
+            }
+        ) returns String;
+        
+        action assignWorkload(
+            @title: 'Workload Data'
+            workloadData: {
+                workloadType: String;
+                parameters: String;
+                priority: String;
+                expectedDuration: Integer;
+            }
+        ) returns String;
+    };
+    
+    // Management tasks for coordinating agent activities
+    entity ManagementTasks as projection on db.ManagementTasks actions {
+        action executeTask() returns String;
+        
+        action pauseTask() returns String;
+        
+        action resumeTask() returns String;
+        
+        action cancelTask(
+            @title: 'Reason'
+            reason: String;
+        ) returns String;
+        
+        action retryTask(
+            @title: 'Force Retry'
+            forceRetry: Boolean;
+        ) returns String;
+        
+        action rollbackTask() returns String;
+    };
+    
+    // Health monitoring for all agents
+    entity AgentHealthChecks as projection on db.AgentHealthChecks;
+    
+    // Performance metrics tracking
+    entity AgentPerformanceMetrics as projection on db.AgentPerformanceMetrics;
+    
+    // Agent coordination and orchestration
+    entity AgentCoordination as projection on db.AgentCoordination actions {
+        action activateCoordination() returns String;
+        
+        action pauseCoordination() returns String;
+        
+        action updateRules(
+            @title: 'New Rules'
+            rules: String;
+        ) returns String;
+        
+        action addAgent(
+            @title: 'Agent ID'
+            agentId: String;
+            @title: 'Role'
+            role: String;
+        ) returns String;
+        
+        action removeAgent(
+            @title: 'Agent ID'
+            agentId: String;
+            @title: 'Graceful Removal'
+            graceful: Boolean;
+        ) returns String;
+    };
+    
+    // Bulk operations for managing multiple agents
+    entity BulkOperations as projection on db.BulkOperations actions {
+        action executeBulkOperation() returns String;
+        
+        action rollbackOperation() returns String;
+        
+        action pauseOperation() returns String;
+        
+        action resumeOperation() returns String;
+    };
+    
+    // Agent management functions
+    function getAgentTypes() returns array of {
+        type: String;
+        description: String;
+        capabilities: String;
+        requirements: String;
+    };
+    
+    function getDashboardData() returns {
+        totalAgents: Integer;
+        activeAgents: Integer;
+        healthyAgents: Integer;
+        tasksInProgress: Integer;
+        averageResponseTime: Decimal;
+        systemLoad: Decimal;
+        alerts: array of String;
+        trends: String;
+    };
+    
+    function getHealthStatus(
+        @title: 'Agent ID'
+        agentId: String
+    ) returns {
+        agentId: String;
+        status: String;
+        lastCheck: DateTime;
+        responseTime: Integer;
+        errorRate: Decimal;
+        alerts: array of String;
+        recommendations: array of String;
+    };
+    
+    function getPerformanceAnalysis(
+        @title: 'Agent ID'
+        agentId: String;
+        @title: 'Time Range'
+        timeRange: String
+    ) returns {
+        agentId: String;
+        metrics: array of {
+            metricType: String;
+            value: Decimal;
+            trend: String;
+            benchmark: Decimal;
+        };
+        bottlenecks: array of String;
+        recommendations: array of String;
+    };
+    
+    function getCoordinationStatus() returns {
+        activeCoordinations: Integer;
+        totalWorkflows: Integer;
+        averageSuccess: Decimal;
+        currentLoad: Decimal;
+        connections: array of {
+            source: String;
+            target: String;
+            status: String;
+            latency: Integer;
+        };
+    };
+    
+    function getAgentCapabilities(
+        @title: 'Agent Type'
+        agentType: String
+    ) returns {
+        type: String;
+        capabilities: array of String;
+        supportedProtocols: array of String;
+        requirements: String;
+        limitations: String;
+    };
+    
+    function validateConfiguration(
+        @title: 'Configuration'
+        configuration: String;
+        @title: 'Agent Type'
+        agentType: String
+    ) returns {
+        valid: Boolean;
+        errors: array of String;
+        warnings: array of String;
+        suggestions: array of String;
+    };
+    
+    function getLoadBalancingRecommendations() returns {
+        strategy: String;
+        distribution: array of {
+            agentId: String;
+            recommendedWeight: Integer;
+            currentLoad: Decimal;
+            capacity: Decimal;
+        };
+        expectedImprovement: Decimal;
+    };
+    
+    // Event definitions for agent management
+    event AgentRegistered : {
+        agentId: String;
+        agentName: String;
+        agentType: String;
+        timestamp: DateTime;
+    };
+    
+    event AgentStatusChanged : {
+        agentId: String;
+        oldStatus: String;
+        newStatus: String;
+        reason: String;
+        timestamp: DateTime;
+    };
+    
+    event HealthCheckFailed : {
+        agentId: String;
+        checkType: String;
+        errorDetails: String;
+        alertLevel: String;
+        timestamp: DateTime;
+    };
+    
+    event PerformanceAnomaly : {
+        agentId: String;
+        metricType: String;
+        currentValue: Decimal;
+        threshold: Decimal;
+        severity: String;
+        timestamp: DateTime;
+    };
+    
+    event TaskCompleted : {
+        taskId: String;
+        agentId: String;
+        taskType: String;
+        status: String;
+        duration: Integer;
+        timestamp: DateTime;
+    };
+    
+    event CoordinationUpdated : {
+        coordinationId: String;
+        coordinationType: String;
+        action: String;
+        affectedAgents: Integer;
+        timestamp: DateTime;
+    };
+    
+    event BulkOperationCompleted : {
+        operationId: String;
+        operationType: String;
+        targetCount: Integer;
+        successfulCount: Integer;
+        failedCount: Integer;
+        duration: Integer;
+        timestamp: DateTime;
+    };
+}

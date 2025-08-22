@@ -1,0 +1,91 @@
+{
+    "sap.app": {
+        "id": "a2a.network.agent15.ext",
+        "type": "component"
+    },
+    "sap.ui5": {
+        "dependencies": {
+            "minUI5Version": "1.120.0",
+            "libs": {
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.uxap": {},
+                "sap.f": {},
+                "sap.ui.layout": {},
+                "sap.suite.ui.commons": {},
+                "sap.viz": {}
+            }
+        },
+        "models": {
+            "i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "settings": {
+                    "bundleName": "a2a.network.agent15.ext.i18n.i18n"
+                }
+            }
+        },
+        "contentDensities": {
+            "compact": true,
+            "cozy": true
+        }
+    },
+    "sap.fiori": {
+        "registrationIds": ["F7015"],
+        "archeType": "transactional"
+    },
+    "sap.ui.generic.app": {
+        "_version": "1.3.0",
+        "settings": {
+            "forceGlobalRefresh": false,
+            "objectPageHeaderType": "Dynamic",
+            "considerAnalyticalParameters": true,
+            "showDraftToggle": false
+        },
+        "pages": {
+            "ListReport|Workflows": {
+                "entitySet": "Workflows",
+                "component": {
+                    "name": "sap.suite.ui.generic.template.ListReport",
+                    "list": true,
+                    "settings": {
+                        "condensedTableLayout": true,
+                        "smartVariantManagement": true,
+                        "enableTableFilterInPageVariant": true,
+                        "tableSettings": {
+                            "type": "GridTable",
+                            "multiSelect": true,
+                            "selectAll": true,
+                            "selectionLimit": 200
+                        }
+                    }
+                },
+                "pages": {
+                    "ObjectPage|Workflows": {
+                        "entitySet": "Workflows",
+                        "defaultLayoutTypeIfExternalNavigation": "MidColumnFullScreen",
+                        "component": {
+                            "name": "sap.suite.ui.generic.template.ObjectPage"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "sap.platform.hcp": {
+        "uri": ""
+    },
+    "sap.app/crossNavigation": {
+        "inbounds": {
+            "a2a-network-agent15-display": {
+                "semanticObject": "OrchestratorAgent",
+                "action": "display",
+                "title": "Orchestrator Agent",
+                "icon": "sap-icon://workflow-tasks",
+                "signature": {
+                    "parameters": {},
+                    "additionalParameters": "allowed"
+                }
+            }
+        }
+    }
+}

@@ -19,26 +19,26 @@
                         <VBox class="sapUiMediumMarginEnd">
                             <Title text="Results Found" level="H3"/>
                             <ObjectNumber 
-                                number="{results>/totalResults}" 
+                                number="{path: 'results>/totalResults', formatter: '.formatSecureText'}" 
                                 state="Success"
                                 emphasized="true"/>
                         </VBox>
                         <VBox class="sapUiMediumMarginEnd">
                             <Title text="Search Time" level="H3"/>
                             <ObjectNumber 
-                                number="{results>/searchTime}" 
+                                number="{path: 'results>/searchTime', formatter: '.formatSecureText'}" 
                                 unit="ms"
                                 state="None"/>
                         </VBox>
                         <VBox class="sapUiMediumMarginEnd">
                             <Title text="Best Score" level="H3"/>
                             <ObjectNumber 
-                                number="{results>/bestScore}" 
+                                number="{path: 'results>/bestScore', formatter: '.formatSecureText'}" 
                                 state="Success"/>
                         </VBox>
                         <VBox>
                             <Title text="Collection" level="H3"/>
-                            <Text text="{results>/collection}"/>
+                            <Text text="{path: 'results>/collection', formatter: '.formatSecureText'}"/>
                         </VBox>
                     </HBox>
                 </Panel>
@@ -47,18 +47,24 @@
                 <Panel headerText="Filter & Sort" expandable="true" expanded="false">
                     <HBox class="sapUiMediumMargin">
                         <VBox class="sapUiMediumMarginEnd">
-                            <Label text="Minimum Score"/>
+                            <Label text="Minimum Score" labelFor="minScoreSlider"/>
                             <Slider 
+                                id="minScoreSlider"
                                 value="{results>/minScore}"
                                 min="0"
                                 max="1"
                                 step="0.01"
                                 width="200px"
-                                liveChange=".onFilterResults"/>
+                                liveChange=".onFilterResults"
+                                ariaLabel="Minimum similarity score filter"/>
                         </VBox>
                         <VBox class="sapUiMediumMarginEnd">
-                            <Label text="Sort By"/>
-                            <Select selectedKey="{results>/sortBy}" change=".onSortResults">
+                            <Label text="Sort By" labelFor="sortBySelect"/>
+                            <Select 
+                                id="sortBySelect"
+                                selectedKey="{results>/sortBy}" 
+                                change=".onSortResults"
+                                ariaLabel="Sort results by attribute">
                                 <items>
                                     <core:Item key="score" text="Similarity Score"/>
                                     <core:Item key="distance" text="Distance"/>
@@ -68,8 +74,11 @@
                             </Select>
                         </VBox>
                         <VBox class="sapUiMediumMarginEnd">
-                            <Label text="Order"/>
-                            <RadioButtonGroup selectedIndex="{results>/sortOrder}">
+                            <Label text="Order" labelFor="sortOrderGroup"/>
+                            <RadioButtonGroup 
+                                id="sortOrderGroup"
+                                selectedIndex="{results>/sortOrder}"
+                                ariaLabel="Sort order direction">
                                 <RadioButton text="Descending"/>
                                 <RadioButton text="Ascending"/>
                             </RadioButtonGroup>
@@ -78,7 +87,8 @@
                             <Label text=" "/>
                             <Button 
                                 text="Apply Filters"
-                                press=".onApplyResultFilters"/>
+                                press=".onApplyResultFilters"
+                                ariaLabel="Apply filter and sort settings"/>
                         </VBox>
                     </HBox>
                 </Panel>
@@ -98,16 +108,19 @@
                             <Button 
                                 text="Export Results"
                                 icon="sap-icon://download"
-                                press=".onExportResults"/>
+                                press=".onExportResults"
+                                ariaLabel="Export search results"/>
                             <Button 
                                 text="Create Collection"
                                 icon="sap-icon://create"
                                 press=".onCreateCollectionFromResults"
-                                enabled="{= ${results>/selectedResults} > 0}"/>
+                                enabled="{= ${results>/selectedResults} > 0}"
+                                ariaLabel="Create collection from selected results"/>
                             <Button 
                                 text="View in 3D"
                                 icon="sap-icon://dimension"
-                                press=".onVisualize3D"/>
+                                press=".onVisualize3D"
+                                ariaLabel="Visualize results in 3D space"/>
                         </Toolbar>
                     </table:extension>
                     
@@ -115,7 +128,7 @@
                         <table:Column width="60px" sortProperty="rank">
                             <Label text="Rank"/>
                             <table:template>
-                                <Text text="{results>rank}"/>
+                                <Text text="{path: 'results>rank', formatter: '.formatSecureText'}"/>
                             </table:template>
                         </table:Column>
                         
@@ -123,7 +136,7 @@
                             <Label text="Score"/>
                             <table:template>
                                 <ObjectNumber 
-                                    number="{results>similarityScore}" 
+                                    number="{path: 'results>similarityScore', formatter: '.formatSecureText'}" 
                                     state="{parts: ['results>similarityScore'], formatter: '.formatScoreState'}"
                                     emphasized="true"/>
                             </table:template>
@@ -132,7 +145,7 @@
                         <table:Column width="80px" sortProperty="distance">
                             <Label text="Distance"/>
                             <table:template>
-                                <Text text="{path: 'results>distance', formatter: '.formatDistance'}"/>
+                                <Text text="{path: 'results>distance', formatter: '.formatSecureText'}"/>
                             </table:template>
                         </table:Column>
                         
@@ -141,10 +154,10 @@
                             <table:template>
                                 <VBox>
                                     <FormattedText 
-                                        htmlText="{results>resultContent}"
+                                        htmlText="{path: 'results>resultContent', formatter: '.formatSecureText'}"
                                         class="sapUiTinyMarginBottom"/>
                                     <Text 
-                                        text="ID: {results>resultVectorId}"
+                                        text="ID: {path: 'results>resultVectorId', formatter: '.formatSecureText'}"
                                         class="sapThemeTextSubtle"/>
                                 </VBox>
                             </table:template>
@@ -154,9 +167,9 @@
                             <Label text="Type"/>
                             <table:template>
                                 <VBox>
-                                    <Text text="{results>contentType}"/>
+                                    <Text text="{path: 'results>contentType', formatter: '.formatSecureText'}"/>
                                     <Text 
-                                        text="Source: {results>source}"
+                                        text="Source: {path: 'results>source', formatter: '.formatSecureText'}"
                                         class="sapThemeTextSubtle"/>
                                 </VBox>
                             </table:template>
@@ -166,9 +179,9 @@
                             <Label text="Metadata"/>
                             <table:template>
                                 <VBox>
-                                    <Text text="Created: {results>created}"/>
-                                    <Text text="Tags: {results>tags}"/>
-                                    <Text text="Category: {results>category}"/>
+                                    <Text text="Created: {path: 'results>created', formatter: '.formatSecureText'}"/>
+                                    <Text text="Tags: {path: 'results>tags', formatter: '.formatSecureText'}"/>
+                                    <Text text="Category: {path: 'results>category', formatter: '.formatSecureText'}"/>
                                 </VBox>
                             </table:template>
                         </table:Column>
@@ -181,17 +194,20 @@
                                         icon="sap-icon://detail-view"
                                         tooltip="View Details"
                                         press=".onViewResultDetails"
-                                        type="Transparent"/>
+                                        type="Transparent"
+                                        ariaLabel="View detailed information"/>
                                     <Button 
                                         icon="sap-icon://copy"
                                         tooltip="Copy Content"
                                         press=".onCopyContent"
-                                        type="Transparent"/>
+                                        type="Transparent"
+                                        ariaLabel="Copy content to clipboard"/>
                                     <Button 
                                         icon="sap-icon://share-2"
                                         tooltip="Find Similar"
                                         press=".onFindSimilar"
-                                        type="Transparent"/>
+                                        type="Transparent"
+                                        ariaLabel="Find similar vectors"/>
                                 </HBox>
                             </table:template>
                         </table:Column>
@@ -207,24 +223,24 @@
                     <HBox class="sapUiMediumMargin">
                         <VBox class="sapUiMediumMarginEnd">
                             <Title text="Score Distribution" level="H4"/>
-                            <Text text="Average: {results>/avgScore}"/>
-                            <Text text="Median: {results>/medianScore}"/>
-                            <Text text="Std Dev: {results>/scoreStdDev}"/>
+                            <Text text="Average: {path: 'results>/avgScore', formatter: '.formatSecureText'}"/>
+                            <Text text="Median: {path: 'results>/medianScore', formatter: '.formatSecureText'}"/>
+                            <Text text="Std Dev: {path: 'results>/scoreStdDev', formatter: '.formatSecureText'}"/>
                         </VBox>
                         <VBox class="sapUiMediumMarginEnd">
                             <Title text="Content Types" level="H4"/>
                             <List items="{results>/contentTypeDistribution}">
                                 <StandardListItem 
-                                    title="{type}"
-                                    info="{count}"
+                                    title="{path: 'type', formatter: '.formatSecureText'}"
+                                    info="{path: 'count', formatter: '.formatSecureText'}"
                                     infoState="None"/>
                             </List>
                         </VBox>
                         <VBox>
                             <Title text="Quality Metrics" level="H4"/>
-                            <Text text="Diversity Index: {results>/diversityIndex}"/>
-                            <Text text="Coverage: {results>/coverage}%"/>
-                            <Text text="Precision@5: {results>/precisionAt5}"/>
+                            <Text text="Diversity Index: {path: 'results>/diversityIndex', formatter: '.formatSecureText'}"/>
+                            <Text text="Coverage: {path: 'results>/coverage', formatter: '.formatSecureText'}%"/>
+                            <Text text="Precision@5: {path: 'results>/precisionAt5', formatter: '.formatSecureText'}"/>
                         </VBox>
                     </HBox>
                 </Panel>
@@ -238,14 +254,15 @@
                     visible="{= ${results>/suggestions}.length > 0}">
                     <List items="{results>/suggestions}">
                         <ActionListItem 
-                            text="{suggestion}"
+                            text="{path: 'suggestion', formatter: '.formatSecureText'}"
                             press=".onApplySuggestion"
                             type="Active">
                             <firstAction>
                                 <Button 
                                     icon="sap-icon://search"
                                     tooltip="Apply this suggestion"
-                                    press=".onApplySuggestion"/>
+                                    press=".onApplySuggestion"
+                                    ariaLabel="Apply search suggestion"/>
                             </firstAction>
                         </ActionListItem>
                     </List>
@@ -257,14 +274,17 @@
             <Button 
                 text="New Search"
                 icon="sap-icon://search"
-                press=".onNewSearch"/>
+                press=".onNewSearch"
+                ariaLabel="Start new search"/>
             <Button 
                 text="Save Results"
                 icon="sap-icon://save"
-                press=".onSaveResults"/>
+                press=".onSaveResults"
+                ariaLabel="Save search results"/>
             <Button 
                 text="Close"
-                press=".onCloseResults"/>
+                press=".onCloseResults"
+                ariaLabel="Close results dialog"/>
         </buttons>
         
     </Dialog>

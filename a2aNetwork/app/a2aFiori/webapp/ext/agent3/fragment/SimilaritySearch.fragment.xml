@@ -9,7 +9,8 @@
         contentWidth="70%"
         contentHeight="60%"
         resizable="true"
-        draggable="true">
+        draggable="true"
+        ariaLabel="Vector similarity search dialog">
         
         <content>
             <form:SimpleForm
@@ -25,88 +26,64 @@
                 columnsM="1">
                 
                 <form:content>
-                    <Label text="Query Type" required="true"/>
-                    <RadioButtonGroup selectedIndex="{similarity>/queryType}">
+                    <Label text="Query Type" required="true" labelFor="queryTypeGroup"/>
+                    <RadioButtonGroup 
+                        id="queryTypeGroup"
+                        selectedIndex="{similarity>/queryType}"
+                        ariaLabel="Select search query type">
                         <RadioButton text="Text Query"/>
                         <RadioButton text="Vector Query"/>
-                        <RadioButton text="Hybrid Search"/>
                     </RadioButtonGroup>
                     
                     <!-- Text Query Section -->
                     <VBox visible="{= ${similarity>/queryType} === 0 }">
-                        <Label text="Search Query" required="true"/>
+                        <Label text="Search Query" required="true" labelFor="textQueryInput"/>
                         <TextArea 
+                            id="textQueryInput"
                             value="{similarity>/query}"
                             rows="3"
                             placeholder="Enter your search query..."
-                            liveChange=".onQueryChange"/>
-                        <CheckBox 
-                            text="Use semantic expansion"
-                            selected="{similarity>/useSemanticExpansion}"/>
+                            maxLength="1000"
+                            liveChange=".onQueryChange"
+                            ariaLabel="Text search query input"/>
                     </VBox>
                     
                     <!-- Vector Query Section -->
                     <VBox visible="{= ${similarity>/queryType} === 1 }">
-                        <Label text="Vector Input"/>
+                        <Label text="Vector Input" labelFor="vectorQueryInput"/>
                         <TextArea 
+                            id="vectorQueryInput"
                             value="{similarity>/vectorQuery}"
                             rows="4"
                             placeholder="Enter vector as comma-separated values: 0.1, 0.2, -0.3, ..."
-                            liveChange=".onVectorQueryChange"/>
+                            maxLength="10000"
+                            liveChange=".onVectorQueryChange"
+                            ariaLabel="Vector coordinates input"/>
                         <Text text="Expected dimensions: {similarity>/expectedDimensions}"/>
                     </VBox>
                     
-                    <!-- Hybrid Search Section -->
-                    <VBox visible="{= ${similarity>/queryType} === 2 }">
-                        <Label text="Text Component"/>
-                        <TextArea 
-                            value="{similarity>/query}"
-                            rows="2"
-                            placeholder="Text query component"/>
-                        <Label text="Vector Component"/>
-                        <TextArea 
-                            value="{similarity>/vectorQuery}"
-                            rows="2"
-                            placeholder="Vector component"/>
-                        <HBox>
-                            <Label text="Text Weight:" width="100px"/>
-                            <Slider 
-                                value="{similarity>/textWeight}"
-                                min="0"
-                                max="1"
-                                step="0.1"
-                                width="200px"/>
-                            <Text text="{similarity>/textWeight}"/>
-                        </HBox>
-                    </VBox>
-                    
-                    <Label text="Collection" required="true"/>
+                    <Label text="Collection" required="true" labelFor="collectionSelect"/>
                     <Select 
+                        id="collectionSelect"
                         selectedKey="{similarity>/collection}"
-                        change=".onCollectionChange">
+                        change=".onCollectionChange"
+                        ariaLabel="Select vector collection">
                         <items>
                             <core:Item key="" text="Select collection..."/>
+                            <core:Item key="{>name}" text="{path: '>name', formatter: '.formatSecureText'}"/>
                         </items>
                     </Select>
                     
                     <Label text="Search Parameters"/>
                     <VBox>
                         <HBox>
-                            <Label text="Top K Results:" width="120px"/>
+                            <Label text="Top K Results:" width="120px" labelFor="topKInput"/>
                             <Input 
+                                id="topKInput"
                                 value="{similarity>/topK}"
                                 type="Number"
-                                width="80px"/>
-                        </HBox>
-                        <HBox class="sapUiTinyMarginTop">
-                            <Label text="Similarity Threshold:" width="120px"/>
-                            <Slider 
-                                value="{similarity>/similarityThreshold}"
-                                min="0"
-                                max="1"
-                                step="0.01"
-                                width="200px"/>
-                            <Text text="{similarity>/similarityThreshold}" class="sapUiTinyMarginBegin"/>
+                                width="80px"
+                                ariaLabel="Number of results to return"/>
                         </HBox>
                     </VBox>
                     
@@ -114,113 +91,35 @@
                     <VBox>
                         <CheckBox 
                             text="Include metadata"
-                            selected="{similarity>/includeMetadata}"/>
+                            selected="{similarity>/includeMetadata}"
+                            ariaLabel="Include result metadata"/>
                         <CheckBox 
                             text="Include distances"
-                            selected="{similarity>/includeDistance}"/>
-                        <CheckBox 
-                            text="Include vectors"
-                            selected="{similarity>/includeVectors}"/>
-                        <CheckBox 
-                            text="Sort by relevance"
-                            selected="{similarity>/sortByRelevance}"/>
+                            selected="{similarity>/includeDistance}"
+                            ariaLabel="Include distance scores"/>
                     </VBox>
                     
-                    <Label text="Filters (Optional)"/>
-                    <VBox>
-                        <HBox>
-                            <Input 
-                                placeholder="Filter field"
-                                value="{similarity>/filterField}"
-                                width="150px"
-                                class="sapUiTinyMarginEnd"/>
-                            <Select 
-                                selectedKey="{similarity>/filterOperator}"
-                                width="100px"
-                                class="sapUiTinyMarginEnd">
-                                <items>
-                                    <core:Item key="eq" text="Equals"/>
-                                    <core:Item key="ne" text="Not Equals"/>
-                                    <core:Item key="gt" text="Greater Than"/>
-                                    <core:Item key="lt" text="Less Than"/>
-                                    <core:Item key="contains" text="Contains"/>
-                                    <core:Item key="in" text="In"/>
-                                </items>
-                            </Select>
-                            <Input 
-                                placeholder="Filter value"
-                                value="{similarity>/filterValue}"
-                                width="150px"
-                                class="sapUiTinyMarginEnd"/>
-                            <Button 
-                                icon="sap-icon://add"
-                                tooltip="Add filter"
-                                press=".onAddFilter"/>
-                        </HBox>
-                        
-                        <!-- Active Filters -->
-                        <List 
-                            items="{similarity>/activeFilters}"
-                            visible="{= ${similarity>/activeFilters}.length > 0}">
-                            <StandardListItem 
-                                title="{field} {operator} {value}"
-                                press=".onRemoveFilter"
-                                type="Active"
-                                icon="sap-icon://delete"/>
-                        </List>
-                    </VBox>
-                    
-                    <Label text="Advanced Options"/>
-                    <VBox>
-                        <CheckBox 
-                            text="Enable re-ranking"
-                            selected="{similarity>/enableReranking}"/>
-                        <HBox visible="{similarity>/enableReranking}">
-                            <Label text="Re-ranking model:" width="120px"/>
-                            <Select selectedKey="{similarity>/rerankingModel}" width="200px">
-                                <items>
-                                    <core:Item key="cohere-rerank-v3" text="Cohere Rerank v3"/>
-                                    <core:Item key="cross-encoder" text="Cross Encoder"/>
-                                    <core:Item key="bge-reranker" text="BGE Reranker"/>
-                                </items>
-                            </Select>
-                        </HBox>
-                        
-                        <CheckBox 
-                            text="Use approximate search (faster)"
-                            selected="{similarity>/useApproximateSearch}"/>
-                        
-                        <HBox>
-                            <Label text="Search timeout:" width="120px"/>
-                            <Input 
-                                value="{similarity>/searchTimeout}"
-                                type="Number"
-                                width="80px"/>
-                            <Text text="seconds" class="sapUiTinyMarginBegin"/>
-                        </HBox>
+                    <Label text="Filters (Optional)" labelFor="filterSection"/>
+                    <VBox id="filterSection">
+                        <Text text="{= ${similarity>/filters} ? 'Filters applied' : 'No filters applied' }" 
+                              class="sapUiTinyMarginBottom"/>
                     </VBox>
                 </form:content>
             </form:SimpleForm>
             
-            <!-- Search Preview -->
-            <Panel 
-                headerText="Search Preview"
-                expandable="true"
-                expanded="false"
-                class="sapUiResponsiveMargin">
-                <VBox class="sapUiMediumMargin">
-                    <Text text="Collection: {similarity>/collection}"/>
-                    <Text text="Query: {similarity>/query}"/>
-                    <Text text="Expected results: {similarity>/topK}"/>
-                    <Text text="Estimated processing time: {similarity>/estimatedTime}ms"/>
-                </VBox>
-            </Panel>
+            <!-- Search validation Messages -->
+            <MessageStrip 
+                text="Validation enabled for secure similarity search"
+                type="Information"
+                showIcon="true"
+                class="sapUiMediumMarginTop"/>
         </content>
         
         <beginButton>
             <Button 
                 text="Cancel"
-                press=".onCancelSimilaritySearch"/>
+                press=".onCancelSimilaritySearch"
+                ariaLabel="Cancel similarity search"/>
         </beginButton>
         
         <endButton>
@@ -228,7 +127,8 @@
                 text="Search"
                 type="Emphasized"
                 press=".onExecuteSimilaritySearch"
-                enabled="{= (${similarity>/query} || ${similarity>/vectorQuery}) && ${similarity>/collection} }"/>
+                enabled="{= (${similarity>/query} || ${similarity>/vectorQuery}) && ${similarity>/collection} }"
+                ariaLabel="Execute similarity search"/>
         </endButton>
         
     </Dialog>

@@ -1,0 +1,479 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="bulkOperationsDialog"
+        title="Bulk Operations Manager"
+        contentWidth="85%"
+        contentHeight="80%"
+        resizable="true">
+        
+        <content>
+            <VBox>
+                <!-- Operation Configuration -->
+                <Panel headerText="Bulk Operation Configuration" class="sapUiResponsiveMargin">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3"
+                        labelSpanL="3"
+                        labelSpanM="12"
+                        labelSpanS="12"
+                        columnsXL="1"
+                        columnsL="1"
+                        columnsM="1"
+                        class="sapUiMediumMargin">
+                        <form:content>
+                            <Label text="Operation Name" required="true"/>
+                            <Input 
+                                value="{bulk>/operationName}"
+                                placeholder="Enter operation name"/>
+                            
+                            <Label text="Operation Type" required="true"/>
+                            <Select selectedKey="{bulk>/operationType}">
+                                <items>
+                                    <core:Item key="" text="Select operation type..."/>
+                                    <core:Item key="UPDATE_CONFIG" text="Update Configuration"/>
+                                    <core:Item key="RESTART_AGENTS" text="Restart Agents"/>
+                                    <core:Item key="HEALTH_CHECK" text="Health Check"/>
+                                    <core:Item key="PERFORMANCE_TEST" text="Performance Test"/>
+                                    <core:Item key="BACKUP" text="Backup Data"/>
+                                    <core:Item key="UPGRADE" text="Upgrade Agents"/>
+                                    <core:Item key="DEACTIVATE" text="Deactivate Agents"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Target Selection"/>
+                            <RadioButtonGroup selectedIndex="{bulk>/targetSelectionMode}">
+                                <RadioButton text="All Agents"/>
+                                <RadioButton text="By Agent Type"/>
+                                <RadioButton text="By Status"/>
+                                <RadioButton text="Custom Selection"/>
+                            </RadioButtonGroup>
+                            
+                            <VBox visible="{= ${bulk>/targetSelectionMode} === 1}">
+                                <Label text="Agent Types"/>
+                                <MultiComboBox 
+                                    selectedKeys="{bulk>/selectedAgentTypes}"
+                                    items="{bulk>/availableAgentTypes}">
+                                    <core:Item key="{type}" text="{type} ({count} agents)"/>
+                                </MultiComboBox>
+                            </VBox>
+                            
+                            <VBox visible="{= ${bulk>/targetSelectionMode} === 2}">
+                                <Label text="Agent Status"/>
+                                <MultiComboBox 
+                                    selectedKeys="{bulk>/selectedStatuses}"
+                                    items="{bulk>/availableStatuses}">
+                                    <core:Item key="{status}" text="{status} ({count} agents)"/>
+                                </MultiComboBox>
+                            </VBox>
+                            
+                            <VBox visible="{= ${bulk>/targetSelectionMode} === 3}">
+                                <Label text="Custom Agent Selection"/>
+                                <MultiComboBox 
+                                    selectedKeys="{bulk>/selectedAgents}"
+                                    items="{bulk>/availableAgents}">
+                                    <core:Item key="{ID}" text="{agentName} ({agentType})"/>
+                                </MultiComboBox>
+                            </VBox>
+                            
+                            <Label text="Execution Mode"/>
+                            <RadioButtonGroup selectedIndex="{bulk>/executionMode}">
+                                <RadioButton text="Sequential (one by one)"/>
+                                <RadioButton text="Batch (groups of agents)"/>
+                                <RadioButton text="Parallel (all at once)"/>
+                            </RadioButtonGroup>
+                            
+                            <VBox visible="{= ${bulk>/executionMode} === 1}">
+                                <Label text="Batch Size"/>
+                                <Input 
+                                    value="{bulk>/batchSize}"
+                                    type="Number"
+                                    placeholder="Number of agents per batch"/>
+                            </VBox>
+                            
+                            <Label text="Timeout (seconds)"/>
+                            <Input 
+                                value="{bulk>/timeout}"
+                                type="Number"
+                                placeholder="Operation timeout per agent"/>
+                            
+                            <Label text="Rollback on Failure"/>
+                            <CheckBox selected="{bulk>/rollbackOnFailure}"/>
+                            
+                            <Label text="Approval Required"/>
+                            <CheckBox selected="{bulk>/approvalRequired}"/>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Operation Parameters -->
+                <Panel 
+                    headerText="Operation Parameters"
+                    visible="{= !!${bulk>/operationType}}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Update Config Parameters -->
+                        <VBox visible="{= ${bulk>/operationType} === 'UPDATE_CONFIG'}">
+                            <Label text="Configuration Update"/>
+                            <TextArea 
+                                value="{bulk>/configUpdate}"
+                                placeholder='{"setting": "value", "another": "value2"}'
+                                rows="6"/>
+                            <CheckBox 
+                                text="Merge with existing configuration"
+                                selected="{bulk>/mergeConfig}"
+                                class="sapUiMediumMarginTop"/>
+                        </VBox>
+                        
+                        <!-- Restart Parameters -->
+                        <VBox visible="{= ${bulk>/operationType} === 'RESTART_AGENTS'}">
+                            <CheckBox 
+                                text="Graceful restart (wait for current tasks)"
+                                selected="{bulk>/gracefulRestart}"/>
+                            <HBox class="sapUiMediumMarginTop">
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Label text="Restart Delay (seconds)"/>
+                                    <Input 
+                                        value="{bulk>/restartDelay}"
+                                        type="Number"/>
+                                </VBox>
+                                <VBox>
+                                    <Label text="Max Wait Time (seconds)"/>
+                                    <Input 
+                                        value="{bulk>/maxWaitTime}"
+                                        type="Number"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                        
+                        <!-- Health Check Parameters -->
+                        <VBox visible="{= ${bulk>/operationType} === 'HEALTH_CHECK'}">
+                            <Label text="Health Check Types"/>
+                            <CheckBox text="Basic Connectivity" selected="{bulk>/healthChecks/connectivity}"/>
+                            <CheckBox text="Performance Metrics" selected="{bulk>/healthChecks/performance}"/>
+                            <CheckBox text="Resource Usage" selected="{bulk>/healthChecks/resources}"/>
+                            <CheckBox text="Custom Health Endpoints" selected="{bulk>/healthChecks/custom}"/>
+                        </VBox>
+                        
+                        <!-- Performance Test Parameters -->
+                        <VBox visible="{= ${bulk>/operationType} === 'PERFORMANCE_TEST'}">
+                            <HBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Label text="Test Duration (seconds)"/>
+                                    <Input 
+                                        value="{bulk>/perfTest/duration}"
+                                        type="Number"/>
+                                </VBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Label text="Request Rate (req/sec)"/>
+                                    <Input 
+                                        value="{bulk>/perfTest/requestRate}"
+                                        type="Number"/>
+                                </VBox>
+                                <VBox>
+                                    <Label text="Concurrent Users"/>
+                                    <Input 
+                                        value="{bulk>/perfTest/concurrentUsers}"
+                                        type="Number"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                        
+                        <!-- Upgrade Parameters -->
+                        <VBox visible="{= ${bulk>/operationType} === 'UPGRADE'}">
+                            <HBox>
+                                <VBox class="sapUiMediumMarginEnd">
+                                    <Label text="Target Version"/>
+                                    <Input 
+                                        value="{bulk>/upgrade/targetVersion}"
+                                        placeholder="e.g., v2.1.0"/>
+                                </VBox>
+                                <VBox>
+                                    <Label text="Upgrade Package URL"/>
+                                    <Input 
+                                        value="{bulk>/upgrade/packageUrl}"
+                                        placeholder="https://releases.example.com/agent-v2.1.0"/>
+                                </VBox>
+                            </HBox>
+                            <CheckBox 
+                                text="Backup before upgrade"
+                                selected="{bulk>/upgrade/backup}"
+                                class="sapUiMediumMarginTop"/>
+                        </VBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Target Agents Preview -->
+                <Panel 
+                    headerText="Target Agents Preview"
+                    visible="{= ${bulk>/targetAgents}.length > 0}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <MessageStrip 
+                            text="This operation will affect {bulk>/targetAgents}.length agents"
+                            type="Information"
+                            showIcon="true"
+                            class="sapUiMediumMarginBottom"/>
+                        
+                        <Table 
+                            items="{bulk>/targetAgents}"
+                            mode="None"
+                            growing="true"
+                            growingThreshold="10">
+                            <columns>
+                                <Column>
+                                    <Text text="Agent"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Type"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Status"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Version"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Last Health Check"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{agentName}"/>
+                                        <Text text="{agentType}"/>
+                                        <ObjectStatus 
+                                            text="{status}"
+                                            state="{= ${status} === 'ACTIVE' ? 'Success' : ${status} === 'INACTIVE' ? 'Warning' : 'Error'}"/>
+                                        <Text text="{agentVersion}"/>
+                                        <Text text="{lastHealthCheck}"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </Panel>
+                
+                <!-- Operation Schedule -->
+                <Panel 
+                    headerText="Execution Schedule"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <RadioButtonGroup selectedIndex="{bulk>/scheduleType}">
+                            <RadioButton text="Execute Immediately"/>
+                            <RadioButton text="Schedule for Later"/>
+                            <RadioButton text="Recurring Operation"/>
+                        </RadioButtonGroup>
+                        
+                        <VBox visible="{= ${bulk>/scheduleType} === 1}" class="sapUiMediumMarginTop">
+                            <Label text="Scheduled Date & Time"/>
+                            <DateTimePicker value="{bulk>/scheduledDateTime}"/>
+                        </VBox>
+                        
+                        <VBox visible="{= ${bulk>/scheduleType} === 2}" class="sapUiMediumMarginTop">
+                            <Label text="Recurrence Pattern"/>
+                            <Select selectedKey="{bulk>/recurrencePattern}">
+                                <items>
+                                    <core:Item key="DAILY" text="Daily"/>
+                                    <core:Item key="WEEKLY" text="Weekly"/>
+                                    <core:Item key="MONTHLY" text="Monthly"/>
+                                    <core:Item key="CUSTOM" text="Custom Cron Expression"/>
+                                </items>
+                            </Select>
+                            
+                            <VBox visible="{= ${bulk>/recurrencePattern} === 'CUSTOM'}" class="sapUiMediumMarginTop">
+                                <Label text="Cron Expression"/>
+                                <Input 
+                                    value="{bulk>/cronExpression}"
+                                    placeholder="0 2 * * 0 (every Sunday at 2 AM)"/>
+                            </VBox>
+                        </VBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Operation Progress -->
+                <Panel 
+                    headerText="Operation Progress"
+                    visible="{= ${bulk>/operationInProgress}}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Overall Progress:" class="sapUiContentLabelColor"/>
+                                <ProgressIndicator 
+                                    percentValue="{bulk>/progress}"
+                                    displayValue="{bulk>/progress}%"
+                                    state="{= ${bulk>/status} === 'FAILED' ? 'Error' : ${bulk>/status} === 'COMPLETED' ? 'Success' : 'Information'}"
+                                    width="200px"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Status:" class="sapUiContentLabelColor"/>
+                                <ObjectStatus 
+                                    text="{bulk>/status}"
+                                    state="{= ${bulk>/status} === 'EXECUTING' ? 'Information' : ${bulk>/status} === 'COMPLETED' ? 'Success' : 'Error'}"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Elapsed Time:" class="sapUiContentLabelColor"/>
+                                <Text text="{bulk>/elapsedTime}"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Successful:" class="sapUiContentLabelColor"/>
+                                <Text text="{bulk>/successfulCount} / {bulk>/targetCount}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Failed:" class="sapUiContentLabelColor"/>
+                                <Text text="{bulk>/failedCount}"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Remaining:" class="sapUiContentLabelColor"/>
+                                <Text text="{= ${bulk>/targetCount} - ${bulk>/successfulCount} - ${bulk>/failedCount}}"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <Button 
+                                text="Pause Operation"
+                                icon="sap-icon://pause"
+                                press=".onPauseBulkOperation"
+                                enabled="{= ${bulk>/status} === 'EXECUTING'}"/>
+                            <Button 
+                                text="Resume Operation"
+                                icon="sap-icon://play"
+                                press=".onResumeBulkOperation"
+                                enabled="{= ${bulk>/status} === 'PAUSED'}"
+                                class="sapUiMediumMarginBegin"/>
+                            <Button 
+                                text="Cancel Operation"
+                                icon="sap-icon://stop"
+                                press=".onCancelBulkOperation"
+                                enabled="{= ${bulk>/status} === 'EXECUTING' || ${bulk>/status} === 'PAUSED'}"
+                                class="sapUiMediumMarginBegin"/>
+                        </HBox>
+                        
+                        <!-- Real-time Log -->
+                        <VBox class="sapUiMediumMarginTop">
+                            <Label text="Operation Log"/>
+                            <TextArea 
+                                value="{bulk>/operationLog}"
+                                rows="8"
+                                editable="false"/>
+                        </VBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Operation History -->
+                <Panel 
+                    headerText="Operation History"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <Table items="{bulk>/operationHistory}">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Previous Operations"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Clear History"
+                                    icon="sap-icon://delete"
+                                    press=".onClearOperationHistory"/>
+                            </Toolbar>
+                        </headerToolbar>
+                        <columns>
+                            <Column>
+                                <Text text="Operation"/>
+                            </Column>
+                            <Column>
+                                <Text text="Date"/>
+                            </Column>
+                            <Column>
+                                <Text text="Status"/>
+                            </Column>
+                            <Column>
+                                <Text text="Target Count"/>
+                            </Column>
+                            <Column>
+                                <Text text="Success Rate"/>
+                            </Column>
+                            <Column>
+                                <Text text="Duration"/>
+                            </Column>
+                            <Column>
+                                <Text text="Actions"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <VBox>
+                                        <Text text="{operationName}"/>
+                                        <Text text="{operationType}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <Text text="{startTime}"/>
+                                    <ObjectStatus 
+                                        text="{status}"
+                                        state="{= ${status} === 'COMPLETED' ? 'Success' : ${status} === 'PARTIALLY_COMPLETED' ? 'Warning' : 'Error'}"/>
+                                    <Text text="{targetCount}"/>
+                                    <ProgressIndicator 
+                                        percentValue="{= Math.round(${successfulCount} / ${targetCount} * 100)}"
+                                        displayValue="{= Math.round(${successfulCount} / ${targetCount} * 100)}%"
+                                        state="{= ${successfulCount} === ${targetCount} ? 'Success' : ${failedCount} > 0 ? 'Error' : 'Warning'}"
+                                        width="80px"/>
+                                    <Text text="{duration}"/>
+                                    <HBox>
+                                        <Button 
+                                            icon="sap-icon://detail-view"
+                                            tooltip="View Details"
+                                            press=".onViewOperationDetails"/>
+                                        <Button 
+                                            icon="sap-icon://repeat"
+                                            tooltip="Repeat Operation"
+                                            press=".onRepeatOperation"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Cancel"
+                press=".onCancelBulkOperationDialog"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Validate Operation"
+                    icon="sap-icon://validate"
+                    press=".onValidateBulkOperation"
+                    visible="{= !${bulk>/operationInProgress}}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Execute Operation"
+                    type="Emphasized"
+                    icon="sap-icon://play"
+                    press=".onExecuteBulkOperation"
+                    enabled="{= !!${bulk>/operationName} && !!${bulk>/operationType} && ${bulk>/targetAgents}.length > 0 && !${bulk>/operationInProgress}}"
+                    visible="{= !${bulk>/operationInProgress}}"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseBulkOperations"
+                    visible="{= ${bulk>/operationInProgress}}"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

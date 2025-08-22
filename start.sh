@@ -919,13 +919,62 @@ start_agents() {
     local agents_pid=$!
     echo $agents_pid > "$PID_DIR/agents.pid"
     
-    # Start all 16 agents using comprehensive Makefile (100% coverage)
+    # Start agents using comprehensive Makefile with intelligent resource management
     if [ -f "Makefile" ]; then
-        log_info "Starting all 16 agents for 100% coverage..."
         # Fix python command in Makefile first
         sed -i '' 's/python scripts/python3 scripts/g' Makefile 2>/dev/null || true
-        make start-all > "$LOG_DIR/all-agents.log" 2>&1 &
-        sleep 10  # Give agents time to start up
+        
+        # Check available memory and choose startup strategy
+        local available_memory=0
+        if command -v free >/dev/null 2>&1; then
+            available_memory=$(free -m | awk 'NR==2{printf "%.0f", $7}')
+        elif command -v vm_stat >/dev/null 2>&1; then
+            # macOS - calculate free memory in MB
+            local free_pages=$(vm_stat | grep "Pages free" | awk '{print $3}' | sed 's/\.//')
+            available_memory=$((free_pages * 16384 / 1024 / 1024))
+        fi
+        
+        local startup_mode="essential"
+        local agent_startup_time=40
+        local expected_agents=8
+        
+        if [ "$available_memory" -gt 8000 ]; then
+            startup_mode="start-all"
+            agent_startup_time=90
+            expected_agents=16
+            log_info "High memory available (${available_memory}MB) - starting all 16 agents sequentially..."
+        elif [ "$available_memory" -gt 4000 ]; then
+            startup_mode="start-essential"
+            agent_startup_time=40
+            expected_agents=8
+            log_info "Moderate memory available (${available_memory}MB) - starting 8 essential agents..."
+        else
+            startup_mode="start-minimal"
+            agent_startup_time=20
+            expected_agents=4
+            log_info "Limited memory available (${available_memory}MB) - starting 4 core agents..."
+        fi
+        
+        # Start agents with progress tracking
+        log_info "Using startup mode: $startup_mode (this will take ~$((agent_startup_time/3)) minutes)"
+        make $startup_mode > "$LOG_DIR/all-agents.log" 2>&1 &
+        
+        # Monitor startup progress
+        log_info "Waiting ${agent_startup_time}s for sequential agent startup..."
+        sleep $agent_startup_time
+        
+        # Check if agents are running
+        local running_agents=0
+        for port in {8000..8015}; do
+            if curl -sf "http://localhost:$port/health" > /dev/null 2>&1; then
+                ((running_agents++))
+            fi
+        done
+        log_info "Started $running_agents/$expected_agents agents successfully"
+        
+        if [ "$running_agents" -lt $((expected_agents / 2)) ]; then
+            log_warning "Only $running_agents/$expected_agents agents started. System may be under memory pressure."
+        fi
     fi
     
     # Wait for service
@@ -952,6 +1001,19 @@ start_agents() {
     done
     
     log_error "Agents Service failed to start within timeout"
+    
+    # Provide diagnostic information
+    log_info "Diagnostic Information:"
+    if command -v free >/dev/null 2>&1; then
+        log_info "- Memory usage: $(free -h | head -2 | tail -1)"
+    elif command -v vm_stat >/dev/null 2>&1; then
+        local free_pages=$(vm_stat | grep "Pages free" | awk '{print $3}' | sed 's/\.//')
+        local free_mb=$((free_pages * 16384 / 1024 / 1024))
+        log_info "- Available memory: ${free_mb}MB"
+    fi
+    log_info "- Running agent processes: $(ps aux | grep -c 'unifiedLauncher.py' || echo '0')"
+    log_info "- Check agent service log: tail -20 $LOG_DIR/agents-service.log"
+    
     cd "$SCRIPT_DIR"
     return 1
 }

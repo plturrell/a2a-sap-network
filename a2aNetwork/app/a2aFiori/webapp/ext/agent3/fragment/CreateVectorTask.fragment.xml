@@ -100,7 +100,7 @@
                                     value="{create>/dimensions}"
                                     type="Number"
                                     editable="false"
-                                    description="Auto-set based on model"/>
+                                    description="{path: 'create>/dimensionsDescription', formatter: '.formatSecureText'}"/>
                                 
                                 <Label text="Chunk Size (tokens)"/>
                                 <Slider 

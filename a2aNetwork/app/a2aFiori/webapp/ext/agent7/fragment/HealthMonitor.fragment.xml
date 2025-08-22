@@ -1,0 +1,303 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="healthMonitorDialog"
+        title="Agent Health Monitor"
+        contentWidth="90%"
+        contentHeight="85%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Health Overview -->
+                <Panel headerText="Health Overview" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="System Health" level="H4"/>
+                                <mc:RadialMicroChart
+                                    size="L"
+                                    percentage="{health>/systemHealth}"
+                                    valueColor="{= ${health>/systemHealth} >= 90 ? 'Good' : ${health>/systemHealth} >= 70 ? 'Critical' : 'Error'}"/>
+                                <Text text="{health>/systemHealth}%" class="sapUiLargeMarginTop"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Active Agents" level="H4"/>
+                                <ObjectNumber 
+                                    number="{health>/activeAgents}"
+                                    unit="of {health>/totalAgents}"
+                                    state="{= ${health>/activeAgents} === ${health>/totalAgents} ? 'Success' : 'Warning'}"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Health Agents" level="H4"/>
+                                <ObjectNumber 
+                                    number="{health>/healthyAgents}"
+                                    unit="agents"
+                                    state="Success"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="Critical Alerts" level="H4"/>
+                                <ObjectNumber 
+                                    number="{health>/criticalAlerts}"
+                                    state="{= ${health>/criticalAlerts} === 0 ? 'Success' : 'Error'}"
+                                    emphasized="true"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <MessageStrip 
+                            text="{health>/systemMessage}"
+                            type="{health>/systemMessageType}"
+                            showIcon="true"
+                            class="sapUiMediumMarginTop"/>
+                    </VBox>
+                </Panel>
+                
+                <!-- Health Checks List -->
+                <Panel headerText="Agent Health Status" class="sapUiResponsiveMargin">
+                    <Table 
+                        items="{health>/agentHealthStatus}"
+                        mode="MultiSelect"
+                        selectionChange=".onHealthStatusSelectionChange">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Health Checks"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Run Health Check"
+                                    icon="sap-icon://restart"
+                                    press=".onRunHealthCheck"/>
+                                <Button 
+                                    text="Refresh"
+                                    icon="sap-icon://refresh"
+                                    press=".onRefreshHealthStatus"/>
+                            </Toolbar>
+                        </headerToolbar>
+                        <columns>
+                            <Column>
+                                <Text text="Agent"/>
+                            </Column>
+                            <Column>
+                                <Text text="Health Status"/>
+                            </Column>
+                            <Column>
+                                <Text text="Last Check"/>
+                            </Column>
+                            <Column>
+                                <Text text="Response Time"/>
+                            </Column>
+                            <Column>
+                                <Text text="Error Rate"/>
+                            </Column>
+                            <Column>
+                                <Text text="Alerts"/>
+                            </Column>
+                            <Column>
+                                <Text text="Actions"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <VBox>
+                                        <Text text="{agentName}"/>
+                                        <Text text="{agentType}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <ObjectStatus 
+                                        text="{healthStatus}"
+                                        state="{= ${healthStatus} === 'HEALTHY' ? 'Success' : ${healthStatus} === 'DEGRADED' ? 'Warning' : 'Error'}"
+                                        icon="{= ${healthStatus} === 'HEALTHY' ? 'sap-icon://status-positive' : ${healthStatus} === 'DEGRADED' ? 'sap-icon://status-critical' : 'sap-icon://status-negative'}"/>
+                                    <Text text="{lastHealthCheck}"/>
+                                    <HBox>
+                                        <Text text="{responseTime} ms"/>
+                                        <mc:ColumnMicroChart
+                                            size="S"
+                                            columns="{responseTimeHistory}"
+                                            class="sapUiTinyMarginBegin">
+                                            <mc:columns>
+                                                <mc:ColumnMicroChartData 
+                                                    value="{value}"
+                                                    color="{= ${value} > 1000 ? 'Error' : ${value} > 500 ? 'Critical' : 'Good'}"/>
+                                            </mc:columns>
+                                        </mc:ColumnMicroChart>
+                                    </HBox>
+                                    <ProgressIndicator 
+                                        percentValue="{errorRate}"
+                                        displayValue="{errorRate}%"
+                                        state="{= ${errorRate} < 1 ? 'Success' : ${errorRate} < 5 ? 'Warning' : 'Error'}"
+                                        width="100px"/>
+                                    <VBox>
+                                        <Text text="{alertCount} alerts"/>
+                                        <Button 
+                                            text="View"
+                                            type="Transparent"
+                                            press=".onViewAlerts"
+                                            visible="{= ${alertCount} > 0}"/>
+                                    </VBox>
+                                    <HBox>
+                                        <Button 
+                                            icon="sap-icon://restart"
+                                            tooltip="Run Health Check"
+                                            press=".onRunSingleHealthCheck"/>
+                                        <Button 
+                                            icon="sap-icon://detail-view"
+                                            tooltip="View Details"
+                                            press=".onViewHealthDetails"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Health Trends -->
+                <Panel 
+                    headerText="Health Trends"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <core:HTML 
+                            id="healthTrendsChart"
+                            content='<div id="healthTrendsChartDiv" style="width: 100%; height: 400px;"></div>'
+                            preferDOM="true"/>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Average Response Time:" class="sapUiContentLabelColor"/>
+                                <Text text="{health>/trends/avgResponseTime} ms"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="System Uptime:" class="sapUiContentLabelColor"/>
+                                <Text text="{health>/trends/uptime}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Error Trend:" class="sapUiContentLabelColor"/>
+                                <ObjectStatus 
+                                    text="{health>/trends/errorTrend}"
+                                    state="{= ${health>/trends/errorTrend} === 'IMPROVING' ? 'Success' : ${health>/trends/errorTrend} === 'STABLE' ? 'Warning' : 'Error'}"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Alerts and Recommendations -->
+                <Panel 
+                    headerText="Active Alerts & Recommendations"
+                    visible="{= ${health>/alerts}.length > 0 || ${health>/recommendations}.length > 0}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <!-- Alerts -->
+                        <VBox visible="{= ${health>/alerts}.length > 0}">
+                            <Title text="Active Alerts" level="H5"/>
+                            <List items="{health>/alerts}">
+                                <StandardListItem
+                                    title="{agent}: {message}"
+                                    description="{timestamp}"
+                                    info="{severity}"
+                                    infoState="{= ${severity} === 'CRITICAL' ? 'Error' : ${severity} === 'WARNING' ? 'Warning' : 'Information'}"
+                                    icon="sap-icon://alert"
+                                    iconInset="false"/>
+                            </List>
+                        </VBox>
+                        
+                        <!-- Recommendations -->
+                        <VBox 
+                            visible="{= ${health>/recommendations}.length > 0}"
+                            class="sapUiMediumMarginTop">
+                            <Title text="Recommendations" level="H5"/>
+                            <List items="{health>/recommendations}">
+                                <StandardListItem
+                                    title="{title}"
+                                    description="{description}"
+                                    info="{priority}"
+                                    infoState="{= ${priority} === 'HIGH' ? 'Error' : ${priority} === 'MEDIUM' ? 'Warning' : 'Success'}"
+                                    icon="sap-icon://lightbulb"
+                                    iconInset="false"/>
+                            </List>
+                        </VBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Health Check Configuration -->
+                <Panel 
+                    headerText="Health Check Configuration"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Check Interval (seconds)"/>
+                                <Input 
+                                    value="{health>/config/checkInterval}"
+                                    type="Number"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Timeout (seconds)"/>
+                                <Input 
+                                    value="{health>/config/timeout}"
+                                    type="Number"/>
+                            </VBox>
+                            <VBox>
+                                <Label text="Retry Count"/>
+                                <Input 
+                                    value="{health>/config/retryCount}"
+                                    type="Number"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <VBox class="sapUiMediumMarginTop">
+                            <Label text="Enabled Checks"/>
+                            <CheckBox text="Ping Check" selected="{health>/config/checks/ping}"/>
+                            <CheckBox text="HTTP Health Check" selected="{health>/config/checks/http}"/>
+                            <CheckBox text="Performance Metrics" selected="{health>/config/checks/performance}"/>
+                            <CheckBox text="Resource Usage" selected="{health>/config/checks/resources}"/>
+                            <CheckBox text="Custom Checks" selected="{health>/config/checks/custom}"/>
+                        </VBox>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <Button 
+                                text="Save Configuration"
+                                icon="sap-icon://save"
+                                press=".onSaveHealthConfig"/>
+                            <Button 
+                                text="Reset to Defaults"
+                                press=".onResetHealthConfig"
+                                class="sapUiMediumMarginBegin"/>
+                        </HBox>
+                    </VBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Export Report"
+                icon="sap-icon://download"
+                press=".onExportHealthReport"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Auto-Refresh"
+                    icon="{= ${health>/autoRefresh} ? 'sap-icon://pause' : 'sap-icon://play'}"
+                    press=".onToggleAutoRefresh"
+                    type="{= ${health>/autoRefresh} ? 'Emphasized' : 'Default'}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseHealthMonitor"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

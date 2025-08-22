@@ -20,7 +20,8 @@
                             <HTML
                                 id="visualization3DContainer"
                                 content="&lt;div id='vector3d-canvas' style='width: 100%; height: 600px; background: #f8f9fa;'&gt;&lt;/div&gt;"
-                                afterRendering=".onAfter3DRender"/>
+                                afterRendering=".onAfter3DRender"
+                                ariaLabel="3D vector space visualization canvas"/>
                         </content>
                         
                         <!-- 3D Controls -->
@@ -28,20 +29,24 @@
                             <Button 
                                 text="Reset View"
                                 icon="sap-icon://refresh"
-                                press=".onReset3DView"/>
+                                press=".onReset3DView"
+                                ariaLabel="Reset 3D view to default position"/>
                             <Button 
                                 text="Clusters"
                                 icon="sap-icon://group-2"
-                                press=".onToggleClusters"/>
+                                press=".onToggleClusters"
+                                ariaLabel="Toggle cluster visualization"/>
                             <Button 
                                 text="Labels"
                                 icon="sap-icon://text"
-                                press=".onToggleLabels"/>
+                                press=".onToggleLabels"
+                                ariaLabel="Toggle point labels"/>
                             <ToolbarSpacer/>
                             <Button 
                                 text="Screenshot"
                                 icon="sap-icon://camera"
-                                press=".onTakeScreenshot"/>
+                                press=".onTakeScreenshot"
+                                ariaLabel="Take screenshot of 3D visualization"/>
                         </Toolbar>
                     </Panel>
                     
@@ -54,10 +59,12 @@
                                     editable="true"
                                     layout="ResponsiveGridLayout">
                                     <form:content>
-                                        <Label text="Reduction Method"/>
+                                        <Label text="Reduction Method" labelFor="methodSelect"/>
                                         <Select 
+                                            id="methodSelect"
                                             selectedKey="{viz>/method}"
-                                            change=".onMethodChange">
+                                            change=".onMethodChange"
+                                            ariaLabel="Select dimensionality reduction method">
                                             <items>
                                                 <core:Item key="TSNE" text="t-SNE"/>
                                                 <core:Item key="UMAP" text="UMAP"/>
@@ -65,36 +72,43 @@
                                             </items>
                                         </Select>
                                         
-                                        <Label text="Perplexity" visible="{= ${viz>/method} === 'TSNE' }"/>
+                                        <Label text="Perplexity" labelFor="perplexitySlider3D" visible="{= ${viz>/method} === 'TSNE' }"/>
                                         <Slider 
+                                            id="perplexitySlider3D"
                                             value="{viz>/perplexity}"
                                             min="5"
                                             max="50"
                                             step="5"
                                             visible="{= ${viz>/method} === 'TSNE' }"
-                                            change=".onParameterChange"/>
+                                            change=".onParameterChange"
+                                            ariaLabel="t-SNE perplexity parameter"/>
                                         
-                                        <Label text="Sample Size"/>
+                                        <Label text="Sample Size" labelFor="sampleSizeSlider"/>
                                         <Slider 
+                                            id="sampleSizeSlider"
                                             value="{viz>/sampleSize}"
                                             min="100"
                                             max="5000"
                                             step="100"
-                                            change=".onParameterChange"/>
+                                            change=".onParameterChange"
+                                            ariaLabel="Number of vectors to sample"/>
                                         
-                                        <Label text="Point Size"/>
+                                        <Label text="Point Size" labelFor="pointSizeSlider3D"/>
                                         <Slider 
+                                            id="pointSizeSlider3D"
                                             value="{viz>/pointSize}"
                                             min="1"
                                             max="10"
                                             step="1"
-                                            change=".onRenderingChange"/>
+                                            change=".onRenderingChange"
+                                            ariaLabel="Size of visualization points"/>
                                         
                                         <Label text=""/>
                                         <Button 
                                             text="Update Visualization"
                                             type="Emphasized"
-                                            press=".onUpdateVisualization"/>
+                                            press=".onUpdateVisualization"
+                                            ariaLabel="Update 3D visualization"/>
                                     </form:content>
                                 </form:SimpleForm>
                                 
@@ -105,7 +119,8 @@
                                     expanded="true">
                                     <RadioButtonGroup 
                                         selectedIndex="{viz>/colorBy}"
-                                        select=".onColorModeChange">
+                                        select=".onColorModeChange"
+                                        ariaLabel="Select color coding mode">
                                         <RadioButton text="None (Single Color)"/>
                                         <RadioButton text="Clusters"/>
                                         <RadioButton text="Similarity"/>
@@ -114,7 +129,8 @@
                                     
                                     <Select 
                                         selectedKey="{viz>/metadataField}"
-                                        visible="{= ${viz>/colorBy} === 3 }">
+                                        visible="{= ${viz>/colorBy} === 3 }"
+                                        ariaLabel="Select metadata field for coloring">
                                         <items>
                                             <core:Item key="category" text="Category"/>
                                             <core:Item key="source" text="Source"/>
@@ -141,12 +157,13 @@
                                     headerText="Selected Point"
                                     visible="{viz>/selectedPoint}">
                                     <VBox>
-                                        <Text text="ID: {viz>/selectedPoint/id}"/>
-                                        <Text text="Content: {viz>/selectedPoint/content}"/>
-                                        <Text text="Cluster: {viz>/selectedPoint/cluster}"/>
+                                        <Text text="ID: {path: 'viz>/selectedPoint/id', formatter: '.formatSecureText'}"/>
+                                        <Text text="Content: {path: 'viz>/selectedPoint/content', formatter: '.formatSecureText'}"/>
+                                        <Text text="Cluster: {path: 'viz>/selectedPoint/cluster', formatter: '.formatSecureText'}"/>
                                         <Button 
                                             text="Find Similar"
-                                            press=".onFindSimilar"/>
+                                            press=".onFindSimilar"
+                                            ariaLabel="Find similar vectors"/>
                                     </VBox>
                                 </Panel>
                             </VBox>
@@ -157,11 +174,18 @@
         </content>
         
         <beginButton>
-            <Button text="Export View" icon="sap-icon://download" press=".onExport3DView"/>
+            <Button 
+                text="Export View" 
+                icon="sap-icon://download" 
+                press=".onExport3DView"
+                ariaLabel="Export 3D view as image"/>
         </beginButton>
         
         <endButton>
-            <Button text="Close" press=".onClose3DVisualization"/>
+            <Button 
+                text="Close" 
+                press=".onClose3DVisualization"
+                ariaLabel="Close 3D visualization dialog"/>
         </endButton>
         
     </Dialog>

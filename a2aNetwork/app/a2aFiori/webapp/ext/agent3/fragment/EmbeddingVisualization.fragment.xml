@@ -20,7 +20,8 @@
                             <Label text="Reduction Method"/>
                             <Select 
                                 selectedKey="{visualization>/method}"
-                                change=".onVisualizationMethodChange">
+                                change=".onVisualizationMethodChange"
+                                ariaLabel="Dimensionality reduction method">
                                 <items>
                                     <core:Item key="TSNE" text="t-SNE"/>
                                     <core:Item key="UMAP" text="UMAP"/>
@@ -32,14 +33,18 @@
                         </VBox>
                         <VBox class="sapUiMediumMarginEnd">
                             <Label text="Dimensions"/>
-                            <RadioButtonGroup selectedIndex="{visualization>/dimensions}">
+                            <RadioButtonGroup 
+                                selectedIndex="{visualization>/dimensions}"
+                                ariaLabel="Select visualization dimensions">
                                 <RadioButton text="2D"/>
                                 <RadioButton text="3D"/>
                             </RadioButtonGroup>
                         </VBox>
                         <VBox class="sapUiMediumMarginEnd">
                             <Label text="Sample Size"/>
-                            <Select selectedKey="{visualization>/sampleSize}">
+                            <Select 
+                                selectedKey="{visualization>/sampleSize}"
+                                ariaLabel="Number of vectors to sample">
                                 <items>
                                     <core:Item key="500" text="500 vectors"/>
                                     <core:Item key="1000" text="1,000 vectors"/>
@@ -51,7 +56,9 @@
                         </VBox>
                         <VBox class="sapUiMediumMarginEnd">
                             <Label text="Color By"/>
-                            <Select selectedKey="{visualization>/colorBy}">
+                            <Select 
+                                selectedKey="{visualization>/colorBy}"
+                                ariaLabel="Color points by attribute">
                                 <items>
                                     <core:Item key="cluster" text="Cluster"/>
                                     <core:Item key="content_type" text="Content Type"/>
@@ -66,7 +73,8 @@
                             <Button 
                                 text="Generate"
                                 type="Emphasized"
-                                press=".onGenerateVisualization"/>
+                                press=".onGenerateVisualization"
+                                ariaLabel="Generate visualization"/>
                         </VBox>
                     </HBox>
                     
@@ -82,7 +90,7 @@
                                     max="100"
                                     step="5"
                                     width="200px"/>
-                                <Text text="{visualization>/perplexity}"/>
+                                <Text text="{path: 'visualization>/perplexity', formatter: '.formatSecureText'}"/>
                             </VBox>
                             <VBox class="sapUiMediumMarginEnd">
                                 <Label text="Learning Rate"/>
@@ -92,7 +100,7 @@
                                     max="1000"
                                     step="10"
                                     width="200px"/>
-                                <Text text="{visualization>/learningRate}"/>
+                                <Text text="{path: 'visualization>/learningRate', formatter: '.formatSecureText'}"/>
                             </VBox>
                             <VBox>
                                 <Label text="Iterations"/>
@@ -115,7 +123,7 @@
                                     max="200"
                                     step="5"
                                     width="200px"/>
-                                <Text text="{visualization>/neighbors}"/>
+                                <Text text="{path: 'visualization>/neighbors', formatter: '.formatSecureText'}"/>
                             </VBox>
                             <VBox class="sapUiMediumMarginEnd">
                                 <Label text="Min Distance"/>
@@ -125,7 +133,7 @@
                                     max="1.0"
                                     step="0.1"
                                     width="200px"/>
-                                <Text text="{visualization>/minDistance}"/>
+                                <Text text="{path: 'visualization>/minDistance', formatter: '.formatSecureText'}"/>
                             </VBox>
                             <VBox>
                                 <Label text="Metric"/>
@@ -255,10 +263,10 @@
                                         <ObjectNumber 
                                             number="{clusterId}"
                                             state="None"/>
-                                        <Text text="{size}"/>
-                                        <Text text="{centroid}"/>
-                                        <Text text="{inertia}"/>
-                                        <Text text="{topTerms}"/>
+                                        <Text text="{path: 'size', formatter: '.formatSecureText'}"/>
+                                        <Text text="{path: 'centroid', formatter: '.formatSecureText'}"/>
+                                        <Text text="{path: 'inertia', formatter: '.formatSecureText'}"/>
+                                        <Text text="{path: 'topTerms', formatter: '.formatSecureText'}"/>
                                     </cells>
                                 </ColumnListItem>
                             </items>
@@ -277,13 +285,13 @@
                         <VBox visible="{= !!${visualization>/selectedPoint}}">
                             <Title text="Selected Point" level="H4"/>
                             <VBox class="sapUiMediumMargin">
-                                <Text text="Vector ID: {visualization>/selectedPoint/id}"/>
-                                <Text text="Cluster: {visualization>/selectedPoint/cluster}"/>
-                                <Text text="Content Type: {visualization>/selectedPoint/contentType}"/>
-                                <Text text="Coordinates: ({visualization>/selectedPoint/x}, {visualization>/selectedPoint/y})"/>
+                                <Text text="Vector ID: {path: 'visualization>/selectedPoint/id', formatter: '.formatSecureText'}"/>
+                                <Text text="Cluster: {path: 'visualization>/selectedPoint/cluster', formatter: '.formatSecureText'}"/>
+                                <Text text="Content Type: {path: 'visualization>/selectedPoint/contentType', formatter: '.formatSecureText'}"/>
+                                <Text text="Coordinates: ({path: 'visualization>/selectedPoint/x', formatter: '.formatSecureText'}, {path: 'visualization>/selectedPoint/y', formatter: '.formatSecureText'})"/>
                                 <Text text="Content Preview:"/>
                                 <Text 
-                                    text="{visualization>/selectedPoint/content}"
+                                    text="{path: 'visualization>/selectedPoint/content', formatter: '.formatSecureText'}"
                                     maxLines="3"/>
                                 
                                 <HBox class="sapUiMediumMarginTop">
@@ -338,14 +346,17 @@
             <Button 
                 text="Export Image"
                 icon="sap-icon://camera"
-                press=".onExportVisualization"/>
+                press=".onExportVisualization"
+                ariaLabel="Export visualization as image"/>
             <Button 
                 text="Save Configuration"
                 icon="sap-icon://save"
-                press=".onSaveVisualizationConfig"/>
+                press=".onSaveVisualizationConfig"
+                ariaLabel="Save visualization settings"/>
             <Button 
                 text="Close"
-                press=".onCloseVisualization"/>
+                press=".onCloseVisualization"
+                ariaLabel="Close visualization dialog"/>
         </buttons>
         
     </Dialog>

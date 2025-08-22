@@ -1,0 +1,373 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="performanceAnalyzerDialog"
+        title="Agent Performance Analyzer"
+        contentWidth="95%"
+        contentHeight="90%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Performance Overview -->
+                <Panel headerText="Performance Overview" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="System Performance" level="H4"/>
+                                <mc:RadialMicroChart
+                                    size="L"
+                                    percentage="{performance>/systemPerformance}"
+                                    valueColor="{= ${performance>/systemPerformance} >= 90 ? 'Good' : ${performance>/systemPerformance} >= 70 ? 'Critical' : 'Error'}"/>
+                                <Text text="{performance>/systemPerformance}%" class="sapUiLargeMarginTop"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Avg Response Time" level="H4"/>
+                                <ObjectNumber 
+                                    number="{performance>/avgResponseTime}"
+                                    unit="ms"
+                                    state="{= ${performance>/avgResponseTime} < 500 ? 'Success' : ${performance>/avgResponseTime} < 1000 ? 'Warning' : 'Error'}"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Throughput" level="H4"/>
+                                <ObjectNumber 
+                                    number="{performance>/throughput}"
+                                    unit="req/sec"
+                                    state="Success"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="Error Rate" level="H4"/>
+                                <ObjectNumber 
+                                    number="{performance>/errorRate}"
+                                    unit="%"
+                                    state="{= ${performance>/errorRate} < 1 ? 'Success' : ${performance>/errorRate} < 5 ? 'Warning' : 'Error'}"
+                                    emphasized="true"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Time Range:" class="sapUiContentLabelColor"/>
+                                <Select selectedKey="{performance>/timeRange}" change=".onTimeRangeChange">
+                                    <items>
+                                        <core:Item key="1h" text="Last Hour"/>
+                                        <core:Item key="6h" text="Last 6 Hours"/>
+                                        <core:Item key="24h" text="Last 24 Hours"/>
+                                        <core:Item key="7d" text="Last 7 Days"/>
+                                        <core:Item key="30d" text="Last 30 Days"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                            <VBox>
+                                <Text text="Agent Filter:" class="sapUiContentLabelColor"/>
+                                <MultiComboBox 
+                                    selectedKeys="{performance>/selectedAgents}"
+                                    items="{performance>/availableAgents}"
+                                    selectionChange=".onAgentFilterChange">
+                                    <core:Item key="{agentId}" text="{agentName}"/>
+                                </MultiComboBox>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Performance Metrics Chart -->
+                <Panel headerText="Performance Metrics" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <core:HTML 
+                            id="performanceMetricsChart"
+                            content='<div id="performanceMetricsChartDiv" style="width: 100%; height: 400px;"></div>'
+                            preferDOM="true"/>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <Button 
+                                text="Response Time"
+                                press=".onShowResponseTime"
+                                type="{= ${performance>/activeMetric} === 'responseTime' ? 'Emphasized' : 'Default'}"
+                                class="sapUiTinyMarginEnd"/>
+                            <Button 
+                                text="Throughput"
+                                press=".onShowThroughput"
+                                type="{= ${performance>/activeMetric} === 'throughput' ? 'Emphasized' : 'Default'}"
+                                class="sapUiTinyMarginEnd"/>
+                            <Button 
+                                text="Error Rate"
+                                press=".onShowErrorRate"
+                                type="{= ${performance>/activeMetric} === 'errorRate' ? 'Emphasized' : 'Default'}"
+                                class="sapUiTinyMarginEnd"/>
+                            <Button 
+                                text="CPU Usage"
+                                press=".onShowCpuUsage"
+                                type="{= ${performance>/activeMetric} === 'cpuUsage' ? 'Emphasized' : 'Default'}"
+                                class="sapUiTinyMarginEnd"/>
+                            <Button 
+                                text="Memory Usage"
+                                press=".onShowMemoryUsage"
+                                type="{= ${performance>/activeMetric} === 'memoryUsage' ? 'Emphasized' : 'Default'}"/>
+                        </HBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Agent Performance Comparison -->
+                <Panel headerText="Agent Performance Comparison" class="sapUiResponsiveMargin">
+                    <Table items="{performance>/agentMetrics}">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Agent Metrics"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Benchmark"
+                                    icon="sap-icon://compare"
+                                    press=".onRunBenchmark"/>
+                                <Button 
+                                    text="Optimize"
+                                    icon="sap-icon://settings"
+                                    press=".onOptimizePerformance"/>
+                            </Toolbar>
+                        </headerToolbar>
+                        <columns>
+                            <Column>
+                                <Text text="Agent"/>
+                            </Column>
+                            <Column>
+                                <Text text="Response Time"/>
+                            </Column>
+                            <Column>
+                                <Text text="Throughput"/>
+                            </Column>
+                            <Column>
+                                <Text text="Success Rate"/>
+                            </Column>
+                            <Column>
+                                <Text text="Resource Usage"/>
+                            </Column>
+                            <Column>
+                                <Text text="Performance Score"/>
+                            </Column>
+                            <Column>
+                                <Text text="Trend"/>
+                            </Column>
+                            <Column>
+                                <Text text="Actions"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <VBox>
+                                        <Text text="{agentName}"/>
+                                        <Text text="{agentType}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <VBox>
+                                        <Text text="{responseTime} ms"/>
+                                        <mc:LineMicroChart
+                                            size="S"
+                                            points="{responseTimeHistory}"
+                                            color="{= ${responseTime} > 1000 ? 'Error' : ${responseTime} > 500 ? 'Critical' : 'Good'}">
+                                            <mc:points>
+                                                <mc:LineMicroChartPoint 
+                                                    x="{x}"
+                                                    y="{y}"/>
+                                            </mc:points>
+                                        </mc:LineMicroChart>
+                                    </VBox>
+                                    <VBox>
+                                        <Text text="{throughput} req/s"/>
+                                        <ProgressIndicator 
+                                            percentValue="{throughputPercentage}"
+                                            state="Success"
+                                            width="80px"/>
+                                    </VBox>
+                                    <VBox>
+                                        <Text text="{successRate}%"/>
+                                        <mc:RadialMicroChart
+                                            size="S"
+                                            percentage="{successRate}"
+                                            valueColor="{= ${successRate} >= 95 ? 'Good' : ${successRate} >= 90 ? 'Critical' : 'Error'}"/>
+                                    </VBox>
+                                    <VBox>
+                                        <HBox>
+                                            <VBox class="sapUiTinyMarginEnd">
+                                                <Text text="CPU: {cpuUsage}%"/>
+                                                <ProgressIndicator 
+                                                    percentValue="{cpuUsage}"
+                                                    state="{= ${cpuUsage} > 80 ? 'Error' : ${cpuUsage} > 60 ? 'Warning' : 'Success'}"
+                                                    width="60px"/>
+                                            </VBox>
+                                            <VBox>
+                                                <Text text="Mem: {memoryUsage}%"/>
+                                                <ProgressIndicator 
+                                                    percentValue="{memoryUsage}"
+                                                    state="{= ${memoryUsage} > 80 ? 'Error' : ${memoryUsage} > 60 ? 'Warning' : 'Success'}"
+                                                    width="60px"/>
+                                            </VBox>
+                                        </HBox>
+                                    </VBox>
+                                    <VBox>
+                                        <ObjectNumber 
+                                            number="{performanceScore}"
+                                            unit="/100"
+                                            state="{= ${performanceScore} >= 90 ? 'Success' : ${performanceScore} >= 70 ? 'Warning' : 'Error'}"
+                                            emphasized="true"/>
+                                        <RatingIndicator 
+                                            value="{= ${performanceScore} / 20}"
+                                            maxValue="5"
+                                            displayOnly="true"/>
+                                    </VBox>
+                                    <ObjectStatus 
+                                        text="{trend}"
+                                        state="{= ${trend} === 'IMPROVING' ? 'Success' : ${trend} === 'STABLE' ? 'Warning' : 'Error'}"
+                                        icon="{= ${trend} === 'IMPROVING' ? 'sap-icon://trend-up' : ${trend} === 'STABLE' ? 'sap-icon://horizontal-bar-chart' : 'sap-icon://trend-down'}"/>
+                                    <HBox>
+                                        <Button 
+                                            icon="sap-icon://detail-view"
+                                            tooltip="View Details"
+                                            press=".onViewPerformanceDetails"/>
+                                        <Button 
+                                            icon="sap-icon://restart"
+                                            tooltip="Restart Agent"
+                                            press=".onRestartAgent"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Performance Bottlenecks -->
+                <Panel 
+                    headerText="Performance Bottlenecks"
+                    visible="{= ${performance>/bottlenecks}.length > 0}"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <MessageStrip 
+                            text="Performance bottlenecks detected. Review the analysis below for optimization recommendations."
+                            type="Warning"
+                            showIcon="true"
+                            class="sapUiMediumMarginBottom"/>
+                        
+                        <List items="{performance>/bottlenecks}">
+                            <CustomListItem>
+                                <VBox class="sapUiMediumMargin">
+                                    <HBox>
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Title text="{agent}" level="H5"/>
+                                            <Text text="{bottleneckType}"/>
+                                        </VBox>
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Text text="Impact:" class="sapUiContentLabelColor"/>
+                                            <ObjectStatus 
+                                                text="{impact}"
+                                                state="{= ${impact} === 'HIGH' ? 'Error' : ${impact} === 'MEDIUM' ? 'Warning' : 'Success'}"/>
+                                        </VBox>
+                                        <VBox>
+                                            <Text text="Severity:" class="sapUiContentLabelColor"/>
+                                            <RatingIndicator 
+                                                value="{severity}"
+                                                maxValue="5"
+                                                displayOnly="true"/>
+                                        </VBox>
+                                    </HBox>
+                                    <Text text="{description}" class="sapUiMediumMarginTop"/>
+                                    <Text text="Recommendation: {recommendation}" class="sapThemeHighlight-AsTextColor"/>
+                                </VBox>
+                            </CustomListItem>
+                        </List>
+                    </VBox>
+                </Panel>
+                
+                <!-- Performance Recommendations -->
+                <Panel 
+                    headerText="Optimization Recommendations"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <List items="{performance>/recommendations}">
+                            <StandardListItem
+                                title="{title}"
+                                description="{description}"
+                                info="{expectedImprovement}% improvement"
+                                infoState="{= ${priority} === 'HIGH' ? 'Error' : ${priority} === 'MEDIUM' ? 'Warning' : 'Success'}"
+                                icon="sap-icon://lightbulb"
+                                press=".onApplyRecommendation"/>
+                        </List>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <Button 
+                                text="Apply All High Priority"
+                                icon="sap-icon://activate"
+                                press=".onApplyHighPriorityRecommendations"/>
+                            <Button 
+                                text="Generate Report"
+                                icon="sap-icon://document"
+                                press=".onGeneratePerformanceReport"
+                                class="sapUiMediumMarginBegin"/>
+                        </HBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Benchmark Comparison -->
+                <Panel 
+                    headerText="Benchmark Comparison"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <core:HTML 
+                            id="benchmarkChart"
+                            content='<div id="benchmarkChartDiv" style="width: 100%; height: 300px;"></div>'
+                            preferDOM="true"/>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="vs Industry Standard:" class="sapUiContentLabelColor"/>
+                                <ObjectStatus 
+                                    text="{performance>/benchmark/industryComparison}"
+                                    state="{= ${performance>/benchmark/industryComparison} === 'ABOVE' ? 'Success' : ${performance>/benchmark/industryComparison} === 'AVERAGE' ? 'Warning' : 'Error'}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Text text="Performance Percentile:" class="sapUiContentLabelColor"/>
+                                <Text text="{performance>/benchmark/percentile}th"/>
+                            </VBox>
+                            <VBox>
+                                <Text text="Improvement Potential:" class="sapUiContentLabelColor"/>
+                                <Text text="{performance>/benchmark/improvementPotential}%"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Export Analysis"
+                icon="sap-icon://download"
+                press=".onExportPerformanceAnalysis"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Auto-Refresh"
+                    icon="{= ${performance>/autoRefresh} ? 'sap-icon://pause' : 'sap-icon://play'}"
+                    press=".onTogglePerformanceAutoRefresh"
+                    type="{= ${performance>/autoRefresh} ? 'Emphasized' : 'Default'}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onClosePerformanceAnalyzer"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

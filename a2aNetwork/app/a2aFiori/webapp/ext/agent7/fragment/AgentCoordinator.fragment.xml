@@ -1,0 +1,484 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:nglayout="sap.ui.layout"
+    xmlns:viz="sap.viz">
+    
+    <Dialog
+        id="agentCoordinatorDialog"
+        title="Agent Coordination & Orchestration"
+        contentWidth="95%"
+        contentHeight="90%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox>
+                <!-- Coordination Overview -->
+                <Panel headerText="Coordination Overview" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Active Coordinations" level="H4"/>
+                                <ObjectNumber 
+                                    number="{coordination>/activeCoordinations}"
+                                    state="Success"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Total Workflows" level="H4"/>
+                                <ObjectNumber 
+                                    number="{coordination>/totalWorkflows}"
+                                    state="Information"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Success Rate" level="H4"/>
+                                <ObjectNumber 
+                                    number="{coordination>/successRate}"
+                                    unit="%"
+                                    state="{= ${coordination>/successRate} >= 95 ? 'Success' : ${coordination>/successRate} >= 90 ? 'Warning' : 'Error'}"
+                                    emphasized="true"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="Current Load" level="H4"/>
+                                <ObjectNumber 
+                                    number="{coordination>/currentLoad}"
+                                    unit="%"
+                                    state="{= ${coordination>/currentLoad} < 70 ? 'Success' : ${coordination>/currentLoad} < 90 ? 'Warning' : 'Error'}"
+                                    emphasized="true"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <MessageStrip 
+                            text="{coordination>/systemStatus}"
+                            type="{coordination>/systemStatusType}"
+                            showIcon="true"
+                            class="sapUiMediumMarginTop"/>
+                    </VBox>
+                </Panel>
+                
+                <!-- Network Topology -->
+                <Panel headerText="Agent Network Topology" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <core:HTML 
+                            id="networkTopologyChart"
+                            content='<div id="networkTopologyChartDiv" style="width: 100%; height: 400px; border: 1px solid #ccc;"></div>'
+                            preferDOM="true"/>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <Button 
+                                text="Layout: Force"
+                                press=".onSetForceLayout"
+                                type="{= ${coordination>/layout} === 'force' ? 'Emphasized' : 'Default'}"
+                                class="sapUiTinyMarginEnd"/>
+                            <Button 
+                                text="Layout: Hierarchical"
+                                press=".onSetHierarchicalLayout"
+                                type="{= ${coordination>/layout} === 'hierarchical' ? 'Emphasized' : 'Default'}"
+                                class="sapUiTinyMarginEnd"/>
+                            <Button 
+                                text="Layout: Circular"
+                                press=".onSetCircularLayout"
+                                type="{= ${coordination>/layout} === 'circular' ? 'Emphasized' : 'Default'}"
+                                class="sapUiTinyMarginEnd"/>
+                            <ToolbarSpacer/>
+                            <Button 
+                                text="Zoom Fit"
+                                icon="sap-icon://zoom-in"
+                                press=".onZoomFit"/>
+                            <Button 
+                                text="Reset View"
+                                icon="sap-icon://refresh"
+                                press=".onResetNetworkView"/>
+                        </HBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Active Coordinations -->
+                <Panel headerText="Active Coordinations" class="sapUiResponsiveMargin">
+                    <Table 
+                        items="{coordination>/activeCoordinations}"
+                        mode="SingleSelect"
+                        selectionChange=".onCoordinationSelectionChange">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Coordinations"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Create Coordination"
+                                    icon="sap-icon://add"
+                                    press=".onCreateCoordination"/>
+                                <Button 
+                                    text="Import Workflow"
+                                    icon="sap-icon://upload"
+                                    press=".onImportWorkflow"/>
+                            </Toolbar>
+                        </headerToolbar>
+                        <columns>
+                            <Column>
+                                <Text text="Coordination"/>
+                            </Column>
+                            <Column>
+                                <Text text="Type"/>
+                            </Column>
+                            <Column>
+                                <Text text="Status"/>
+                            </Column>
+                            <Column>
+                                <Text text="Participating Agents"/>
+                            </Column>
+                            <Column>
+                                <Text text="Success Rate"/>
+                            </Column>
+                            <Column>
+                                <Text text="Avg Duration"/>
+                            </Column>
+                            <Column>
+                                <Text text="Last Execution"/>
+                            </Column>
+                            <Column>
+                                <Text text="Actions"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <VBox>
+                                        <Text text="{coordinationName}"/>
+                                        <Text text="ID: {ID}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <ObjectStatus 
+                                        text="{coordinationType}"
+                                        state="Information"/>
+                                    <ObjectStatus 
+                                        text="{status}"
+                                        state="{= ${status} === 'ACTIVE' ? 'Success' : ${status} === 'PAUSED' ? 'Warning' : 'Error'}"
+                                        icon="{= ${status} === 'ACTIVE' ? 'sap-icon://play' : ${status} === 'PAUSED' ? 'sap-icon://pause' : 'sap-icon://stop'}"/>
+                                    <VBox>
+                                        <Text text="{participatingAgentsCount} agents"/>
+                                        <Button 
+                                            text="View Agents"
+                                            type="Transparent"
+                                            press=".onViewParticipatingAgents"/>
+                                    </VBox>
+                                    <ProgressIndicator 
+                                        percentValue="{successRate}"
+                                        displayValue="{successRate}%"
+                                        state="{= ${successRate} >= 95 ? 'Success' : ${successRate} >= 90 ? 'Warning' : 'Error'}"
+                                        width="100px"/>
+                                    <Text text="{averageDuration} ms"/>
+                                    <Text text="{lastExecution}"/>
+                                    <HBox>
+                                        <Button 
+                                            icon="sap-icon://play"
+                                            tooltip="Start/Resume"
+                                            press=".onStartCoordination"
+                                            enabled="{= ${status} !== 'ACTIVE'}"/>
+                                        <Button 
+                                            icon="sap-icon://pause"
+                                            tooltip="Pause"
+                                            press=".onPauseCoordination"
+                                            enabled="{= ${status} === 'ACTIVE'}"/>
+                                        <Button 
+                                            icon="sap-icon://settings"
+                                            tooltip="Configure"
+                                            press=".onConfigureCoordination"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Agent Connections -->
+                <Panel headerText="Agent Connections" class="sapUiResponsiveMargin">
+                    <Table items="{coordination>/connections}">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Network Connections"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Test All Connections"
+                                    icon="sap-icon://test"
+                                    press=".onTestAllConnections"/>
+                                <Button 
+                                    text="Optimize Routes"
+                                    icon="sap-icon://routing-settings"
+                                    press=".onOptimizeRoutes"/>
+                            </Toolbar>
+                        </headerToolbar>
+                        <columns>
+                            <Column>
+                                <Text text="Source Agent"/>
+                            </Column>
+                            <Column>
+                                <Text text="Target Agent"/>
+                            </Column>
+                            <Column>
+                                <Text text="Connection Status"/>
+                            </Column>
+                            <Column>
+                                <Text text="Latency"/>
+                            </Column>
+                            <Column>
+                                <Text text="Bandwidth"/>
+                            </Column>
+                            <Column>
+                                <Text text="Protocol"/>
+                            </Column>
+                            <Column>
+                                <Text text="Last Test"/>
+                            </Column>
+                            <Column>
+                                <Text text="Actions"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <VBox>
+                                        <Text text="{sourceAgent}"/>
+                                        <Text text="{sourceType}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <VBox>
+                                        <Text text="{targetAgent}"/>
+                                        <Text text="{targetType}" class="sapThemeTextSecondary"/>
+                                    </VBox>
+                                    <ObjectStatus 
+                                        text="{connectionStatus}"
+                                        state="{= ${connectionStatus} === 'CONNECTED' ? 'Success' : ${connectionStatus} === 'DEGRADED' ? 'Warning' : 'Error'}"
+                                        icon="{= ${connectionStatus} === 'CONNECTED' ? 'sap-icon://connected' : 'sap-icon://disconnected'}"/>
+                                    <HBox>
+                                        <Text text="{latency} ms"/>
+                                        <ObjectStatus 
+                                            text="{= ${latency} < 100 ? 'Excellent' : ${latency} < 500 ? 'Good' : 'Poor'}"
+                                            state="{= ${latency} < 100 ? 'Success' : ${latency} < 500 ? 'Warning' : 'Error'}"
+                                            class="sapUiTinyMarginBegin"/>
+                                    </HBox>
+                                    <Text text="{bandwidth} Mbps"/>
+                                    <ObjectStatus 
+                                        text="{protocol}"
+                                        state="Information"/>
+                                    <Text text="{lastTest}"/>
+                                    <HBox>
+                                        <Button 
+                                            icon="sap-icon://test"
+                                            tooltip="Test Connection"
+                                            press=".onTestConnection"/>
+                                        <Button 
+                                            icon="sap-icon://detail-view"
+                                            tooltip="View Details"
+                                            press=".onViewConnectionDetails"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Load Balancing -->
+                <Panel 
+                    headerText="Load Balancing Configuration"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Load Balance Strategy"/>
+                                <Select selectedKey="{coordination>/loadBalanceStrategy}">
+                                    <items>
+                                        <core:Item key="ROUND_ROBIN" text="Round Robin"/>
+                                        <core:Item key="WEIGHTED" text="Weighted"/>
+                                        <core:Item key="LEAST_CONNECTIONS" text="Least Connections"/>
+                                        <core:Item key="PERFORMANCE_BASED" text="Performance Based"/>
+                                        <core:Item key="ADAPTIVE" text="Adaptive"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Health Check Interval (sec)"/>
+                                <Input 
+                                    value="{coordination>/healthCheckInterval}"
+                                    type="Number"/>
+                            </VBox>
+                            <VBox>
+                                <Label text="Failover Timeout (sec)"/>
+                                <Input 
+                                    value="{coordination>/failoverTimeout}"
+                                    type="Number"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <Table 
+                            items="{coordination>/loadBalanceWeights}"
+                            class="sapUiMediumMarginTop">
+                            <headerToolbar>
+                                <Toolbar>
+                                    <Title text="Agent Load Distribution"/>
+                                </Toolbar>
+                            </headerToolbar>
+                            <columns>
+                                <Column>
+                                    <Text text="Agent"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Current Weight"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Recommended Weight"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Current Load"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Capacity"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Efficiency"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{agentName}"/>
+                                        <Slider 
+                                            value="{currentWeight}"
+                                            min="0"
+                                            max="100"
+                                            step="5"
+                                            width="100px"
+                                            change=".onWeightChange"/>
+                                        <Text text="{recommendedWeight}%"/>
+                                        <ProgressIndicator 
+                                            percentValue="{currentLoad}"
+                                            displayValue="{currentLoad}%"
+                                            state="{= ${currentLoad} < 70 ? 'Success' : ${currentLoad} < 90 ? 'Warning' : 'Error'}"
+                                            width="80px"/>
+                                        <Text text="{capacity}%"/>
+                                        <RatingIndicator 
+                                            value="{= ${efficiency} / 20}"
+                                            maxValue="5"
+                                            displayOnly="true"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <Button 
+                                text="Apply Recommended Weights"
+                                icon="sap-icon://accept"
+                                press=".onApplyRecommendedWeights"/>
+                            <Button 
+                                text="Auto-Balance"
+                                icon="sap-icon://settings"
+                                press=".onEnableAutoBalance"
+                                class="sapUiMediumMarginBegin"/>
+                            <Button 
+                                text="Save Configuration"
+                                icon="sap-icon://save"
+                                press=".onSaveLoadBalanceConfig"
+                                class="sapUiMediumMarginBegin"/>
+                        </HBox>
+                    </VBox>
+                </Panel>
+                
+                <!-- Workflow Editor -->
+                <Panel 
+                    headerText="Workflow Editor"
+                    expandable="true"
+                    expanded="false"
+                    class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Workflow Name"/>
+                                <Input value="{coordination>/newWorkflow/name}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Type"/>
+                                <Select selectedKey="{coordination>/newWorkflow/type}">
+                                    <items>
+                                        <core:Item key="SEQUENTIAL" text="Sequential"/>
+                                        <core:Item key="PARALLEL" text="Parallel"/>
+                                        <core:Item key="CONDITIONAL" text="Conditional"/>
+                                        <core:Item key="LOOP" text="Loop"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                            <VBox>
+                                <Label text="Priority"/>
+                                <Select selectedKey="{coordination>/newWorkflow/priority}">
+                                    <items>
+                                        <core:Item key="LOW" text="Low"/>
+                                        <core:Item key="NORMAL" text="Normal"/>
+                                        <core:Item key="HIGH" text="High"/>
+                                        <core:Item key="CRITICAL" text="Critical"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                        </HBox>
+                        
+                        <core:HTML 
+                            id="workflowEditor"
+                            content='<div id="workflowEditorDiv" style="width: 100%; height: 300px; border: 1px solid #ccc; background: #f9f9f9;"></div>'
+                            preferDOM="true"
+                            class="sapUiMediumMarginTop"/>
+                        
+                        <HBox class="sapUiMediumMarginTop">
+                            <Button 
+                                text="Add Agent Step"
+                                icon="sap-icon://add"
+                                press=".onAddAgentStep"/>
+                            <Button 
+                                text="Add Condition"
+                                icon="sap-icon://branch"
+                                press=".onAddCondition"
+                                class="sapUiMediumMarginBegin"/>
+                            <Button 
+                                text="Add Parallel Block"
+                                icon="sap-icon://parallel"
+                                press=".onAddParallelBlock"
+                                class="sapUiMediumMarginBegin"/>
+                            <ToolbarSpacer/>
+                            <Button 
+                                text="Validate Workflow"
+                                icon="sap-icon://validate"
+                                press=".onValidateWorkflow"/>
+                            <Button 
+                                text="Save Workflow"
+                                icon="sap-icon://save"
+                                press=".onSaveWorkflow"
+                                class="sapUiMediumMarginBegin"/>
+                        </HBox>
+                    </VBox>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Export Configuration"
+                icon="sap-icon://download"
+                press=".onExportCoordinationConfig"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Real-time View"
+                    icon="{= ${coordination>/realtimeView} ? 'sap-icon://pause' : 'sap-icon://play'}"
+                    press=".onToggleRealtimeView"
+                    type="{= ${coordination>/realtimeView} ? 'Emphasized' : 'Default'}"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseAgentCoordinator"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

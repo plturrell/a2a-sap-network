@@ -21,8 +21,11 @@
                         <Panel headerText="Model Selection" class="sapUiResponsiveMargin">
                             <HBox class="sapUiMediumMargin">
                                 <VBox class="sapUiMediumMarginEnd">
-                                    <Label text="Primary Model"/>
-                                    <Select selectedKey="{comparison>/primaryModel}">
+                                    <Label text="Primary Model" labelFor="primaryModelSelect"/>
+                                    <Select 
+                                        id="primaryModelSelect"
+                                        selectedKey="{comparison>/primaryModel}"
+                                        ariaLabel="Select primary embedding model">
                                         <items>
                                             <core:Item key="text-embedding-ada-002" text="OpenAI Ada-002"/>
                                             <core:Item key="text-embedding-3-small" text="OpenAI v3 Small"/>
@@ -35,8 +38,11 @@
                                     </Select>
                                 </VBox>
                                 <VBox class="sapUiMediumMarginEnd">
-                                    <Label text="Comparison Model"/>
-                                    <Select selectedKey="{comparison>/comparisonModel}">
+                                    <Label text="Comparison Model" labelFor="comparisonModelSelect"/>
+                                    <Select 
+                                        id="comparisonModelSelect"
+                                        selectedKey="{comparison>/comparisonModel}"
+                                        ariaLabel="Select comparison embedding model">
                                         <items>
                                             <core:Item key="text-embedding-ada-002" text="OpenAI Ada-002"/>
                                             <core:Item key="text-embedding-3-small" text="OpenAI v3 Small"/>
@@ -53,7 +59,8 @@
                                     <Button 
                                         text="Compare Models"
                                         type="Emphasized"
-                                        press=".onCompareModels"/>
+                                        press=".onCompareModels"
+                                        ariaLabel="Execute model comparison"/>
                                 </VBox>
                             </HBox>
                         </Panel>
@@ -67,9 +74,9 @@
                                     percentage="{comparison>/primaryPerformance}">
                                     <suite:centerLabel>Performance</suite:centerLabel>
                                 </suite:RadialMicroChart>
-                                <Text text="Avg Latency: {comparison>/primaryLatency}ms"/>
-                                <Text text="Cost: ${comparison>/primaryCost}/1k tokens"/>
-                                <Text text="Dimensions: {comparison>/primaryDimensions}"/>
+                                <Text text="Avg Latency: {path: 'comparison>/primaryLatency', formatter: '.formatSecureText'}ms"/>
+                                <Text text="Cost: ${path: 'comparison>/primaryCost', formatter: '.formatSecureText'}/1k tokens"/>
+                                <Text text="Dimensions: {path: 'comparison>/primaryDimensions', formatter: '.formatSecureText'}"/>
                             </VBox>
                             <VBox class="sapUiMediumMarginEnd">
                                 <Title text="Comparison Model" level="H3"/>
@@ -78,14 +85,14 @@
                                     percentage="{comparison>/comparisonPerformance}">
                                     <suite:centerLabel>Performance</suite:centerLabel>
                                 </suite:RadialMicroChart>
-                                <Text text="Avg Latency: {comparison>/comparisonLatency}ms"/>
-                                <Text text="Cost: ${comparison>/comparisonCost}/1k tokens"/>
-                                <Text text="Dimensions: {comparison>/comparisonDimensions}"/>
+                                <Text text="Avg Latency: {path: 'comparison>/comparisonLatency', formatter: '.formatSecureText'}ms"/>
+                                <Text text="Cost: ${path: 'comparison>/comparisonCost', formatter: '.formatSecureText'}/1k tokens"/>
+                                <Text text="Dimensions: {path: 'comparison>/comparisonDimensions', formatter: '.formatSecureText'}"/>
                             </VBox>
                             <VBox>
                                 <Title text="Recommendation" level="H3"/>
                                 <MessageStrip 
-                                    text="{comparison>/recommendation}"
+                                    text="{path: 'comparison>/recommendation', formatter: '.formatSecureText'}"
                                     type="{comparison>/recommendationType}"/>
                             </VBox>
                         </HBox>
@@ -186,11 +193,11 @@
                             <items>
                                 <ColumnListItem>
                                     <cells>
-                                        <Text text="{metricName}"/>
-                                        <ObjectNumber number="{primaryScore}" unit="{unit}"/>
-                                        <ObjectNumber number="{comparisonScore}" unit="{unit}"/>
+                                        <Text text="{path: 'metricName', formatter: '.formatSecureText'}"/>
+                                        <ObjectNumber number="{path: 'primaryScore', formatter: '.formatSecureText'}" unit="{unit}"/>
+                                        <ObjectNumber number="{path: 'comparisonScore', formatter: '.formatSecureText'}" unit="{unit}"/>
                                         <ObjectNumber 
-                                            number="{difference}" 
+                                            number="{path: 'difference', formatter: '.formatSecureText'}" 
                                             unit="{unit}"
                                             state="{differenceState}"/>
                                         <Icon 
@@ -211,7 +218,7 @@
                             <VBox class="sapUiMediumMarginEnd">
                                 <Title text="Monthly Cost Estimate" level="H3"/>
                                 <ObjectNumber 
-                                    number="{comparison>/primaryMonthlyCost}" 
+                                    number="{path: 'comparison>/primaryMonthlyCost', formatter: '.formatSecureText'}" 
                                     unit="USD"
                                     state="None"
                                     emphasized="true"/>
@@ -224,7 +231,7 @@
                             <VBox class="sapUiMediumMarginEnd">
                                 <Title text="Projected Savings" level="H3"/>
                                 <ObjectNumber 
-                                    number="{comparison>/monthlySavings}" 
+                                    number="{path: 'comparison>/monthlySavings', formatter: '.formatSecureText'}" 
                                     unit="USD"
                                     state="{comparison>/savingsState}"
                                     emphasized="true"/>
@@ -233,7 +240,7 @@
                             <VBox>
                                 <Title text="ROI Timeline" level="H3"/>
                                 <ObjectNumber 
-                                    number="{comparison>/roiMonths}" 
+                                    number="{path: 'comparison>/roiMonths', formatter: '.formatSecureText'}" 
                                     unit="months"
                                     state="Success"/>
                                 <Text text="Break-even period"/>
@@ -265,9 +272,9 @@
                         <Panel headerText="Cost Factors" expandable="true" expanded="false">
                             <List items="{comparison>/costFactors}">
                                 <StandardListItem 
-                                    title="{factor}"
-                                    description="{description}"
-                                    info="{impact}"
+                                    title="{path: 'factor', formatter: '.formatSecureText'}"
+                                    description="{path: 'description', formatter: '.formatSecureText'}"
+                                    info="{path: 'impact', formatter: '.formatSecureText'}"
                                     infoState="{impactState}"/>
                             </List>
                         </Panel>
@@ -282,8 +289,11 @@
                             <Title text="Use Case Assessment" level="H3"/>
                             <HBox class="sapUiMediumMargin">
                                 <VBox class="sapUiMediumMarginEnd">
-                                    <Label text="Primary Use Case"/>
-                                    <Select selectedKey="{comparison>/useCase}">
+                                    <Label text="Primary Use Case" labelFor="useCaseSelect"/>
+                                    <Select 
+                                        id="useCaseSelect"
+                                        selectedKey="{comparison>/useCase}"
+                                        ariaLabel="Select primary use case">
                                         <items>
                                             <core:Item key="SEMANTIC_SEARCH" text="Semantic Search"/>
                                             <core:Item key="DOCUMENT_SIMILARITY" text="Document Similarity"/>
@@ -295,8 +305,11 @@
                                     </Select>
                                 </VBox>
                                 <VBox class="sapUiMediumMarginEnd">
-                                    <Label text="Data Volume"/>
-                                    <Select selectedKey="{comparison>/dataVolume}">
+                                    <Label text="Data Volume" labelFor="dataVolumeSelect"/>
+                                    <Select 
+                                        id="dataVolumeSelect"
+                                        selectedKey="{comparison>/dataVolume}"
+                                        ariaLabel="Select data volume range">
                                         <items>
                                             <core:Item key="SMALL" text="< 10K documents"/>
                                             <core:Item key="MEDIUM" text="10K - 100K documents"/>
@@ -309,7 +322,8 @@
                                     <Label text=" "/>
                                     <Button 
                                         text="Assess Fit"
-                                        press=".onAssessUseCaseFit"/>
+                                        press=".onAssessUseCaseFit"
+                                        ariaLabel="Assess use case fit scores"/>
                                 </VBox>
                             </HBox>
                         </VBox>
@@ -324,7 +338,7 @@
                                         percentage="{comparison>/primaryUseCaseFit}">
                                         <suite:centerLabel>Fit Score</suite:centerLabel>
                                     </suite:RadialMicroChart>
-                                    <Text text="{comparison>/primaryFitReason}"/>
+                                    <Text text="{path: 'comparison>/primaryFitReason', formatter: '.formatSecureText'}"/>
                                 </VBox>
                                 <VBox class="sapUiMediumMarginEnd">
                                     <Title text="Comparison Model Fit" level="H4"/>
@@ -333,12 +347,12 @@
                                         percentage="{comparison>/comparisonUseCaseFit}">
                                         <suite:centerLabel>Fit Score</suite:centerLabel>
                                     </suite:RadialMicroChart>
-                                    <Text text="{comparison>/comparisonFitReason}"/>
+                                    <Text text="{path: 'comparison>/comparisonFitReason', formatter: '.formatSecureText'}"/>
                                 </VBox>
                                 <VBox>
                                     <Title text="Recommendation" level="H4"/>
                                     <MessageStrip 
-                                        text="{comparison>/useCaseRecommendation}"
+                                        text="{path: 'comparison>/useCaseRecommendation', formatter: '.formatSecureText'}"
                                         type="{comparison>/useCaseRecommendationType}"/>
                                 </VBox>
                             </HBox>
@@ -368,12 +382,12 @@
                             <items>
                                 <ColumnListItem>
                                     <cells>
-                                        <Text text="{aspect}"/>
+                                        <Text text="{path: 'aspect', formatter: '.formatSecureText'}"/>
                                         <ObjectStatus 
-                                            text="{primaryRating}" 
+                                            text="{path: 'primaryRating', formatter: '.formatSecureText'}" 
                                             state="{primaryState}"/>
                                         <ObjectStatus 
-                                            text="{comparisonRating}" 
+                                            text="{path: 'comparisonRating', formatter: '.formatSecureText'}" 
                                             state="{comparisonState}"/>
                                         <Icon 
                                             src="{winnerIcon}" 
@@ -391,14 +405,17 @@
             <Button 
                 text="Generate Report"
                 icon="sap-icon://download"
-                press=".onGenerateComparisonReport"/>
+                press=".onGenerateComparisonReport"
+                ariaLabel="Generate comparison report"/>
             <Button 
                 text="Save Comparison"
                 icon="sap-icon://save"
-                press=".onSaveComparison"/>
+                press=".onSaveComparison"
+                ariaLabel="Save model comparison"/>
             <Button 
                 text="Close"
-                press=".onCloseModelComparison"/>
+                press=".onCloseModelComparison"
+                ariaLabel="Close comparison dialog"/>
         </buttons>
         
     </Dialog>

@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form">
+    
+    <Dialog
+        title="{i18n>dialog.createEmbeddingModel.title}"
+        class="sapUiMediumMargin"
+        contentWidth="80vw"
+        contentHeight="85vh"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <Page showHeader="false">
+                <content>
+                    
+                    <IconTabBar id="createModelTabBar" class="sapUiNoContentPadding">
+                        
+                        <!-- Basic Information Tab -->
+                        <items>
+                            <IconTabFilter text="{i18n>tab.general}" key="basic" icon="sap-icon://detail-view">
+                                <content>
+                                    <f:SimpleForm
+                                        editable="true"
+                                        layout="ResponsiveGridLayout"
+                                        class="sapUiMediumMargin">
+                                        
+                                        <f:content>
+                                            
+                                            <!-- Model Name -->
+                                            <Label text="{i18n>field.modelName}" required="true"/>
+                                            <Input id="modelNameInput" value="" placeholder="{i18n>placeholder.modelName}" required="true"/>
+                                            
+                                            <!-- Description -->
+                                            <Label text="{i18n>field.description}"/>
+                                            <TextArea id="descriptionInput" value="" rows="3" placeholder="{i18n>placeholder.description}"/>
+                                            
+                                            <!-- Model Type -->
+                                            <Label text="{i18n>field.modelType}" required="true"/>
+                                            <ComboBox
+                                                id="modelTypeCombo"
+                                                selectedKey=""
+                                                placeholder="{i18n>placeholder.modelType}"
+                                                required="true">
+                                                <core:Item key="bert" text="{i18n>model.bert}"/>
+                                                <core:Item key="roberta" text="{i18n>model.roberta}"/>
+                                                <core:Item key="distilbert" text="{i18n>model.distilbert}"/>
+                                                <core:Item key="albert" text="{i18n>model.albert}"/>
+                                                <core:Item key="sentence_bert" text="{i18n>model.sentence_bert}"/>
+                                                <core:Item key="clip" text="{i18n>model.clip}"/>
+                                                <core:Item key="gpt" text="{i18n>model.gpt}"/>
+                                                <core:Item key="word2vec" text="{i18n>model.word2vec}"/>
+                                                <core:Item key="glove" text="{i18n>model.glove}"/>
+                                                <core:Item key="fasttext" text="{i18n>model.fasttext}"/>
+                                                <core:Item key="custom" text="{i18n>model.custom}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Base Model -->
+                                            <Label text="{i18n>field.baseModel}" required="true"/>
+                                            <ComboBox
+                                                id="baseModelCombo"
+                                                selectedKey=""
+                                                placeholder="{i18n>placeholder.baseModel}"
+                                                required="true">
+                                                <core:Item key="bert_base" text="{i18n>base.bert_base}"/>
+                                                <core:Item key="bert_large" text="{i18n>base.bert_large}"/>
+                                                <core:Item key="roberta_base" text="{i18n>base.roberta_base}"/>
+                                                <core:Item key="roberta_large" text="{i18n>base.roberta_large}"/>
+                                                <core:Item key="mpnet_base" text="{i18n>base.mpnet_base}"/>
+                                                <core:Item key="minilm" text="{i18n>base.minilm}"/>
+                                                <core:Item key="all_minilm" text="{i18n>base.all_minilm}"/>
+                                                <core:Item key="all_mpnet" text="{i18n>base.all_mpnet}"/>
+                                                <core:Item key="multilingual" text="{i18n>base.multilingual}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Embedding Dimension -->
+                                            <Label text="{i18n>field.embeddingDimension}"/>
+                                            <StepInput id="embeddingDimensionInput" value="768" min="64" max="4096" step="64"/>
+                                            
+                                        </f:content>
+                                    </f:SimpleForm>
+                                </content>
+                            </IconTabFilter>
+                            
+                            <!-- Model Configuration Tab -->
+                            <IconTabFilter text="{i18n>tab.modelConfig}" key="config" icon="sap-icon://settings">
+                                <content>
+                                    <f:SimpleForm
+                                        editable="true"
+                                        layout="ResponsiveGridLayout"
+                                        class="sapUiMediumMargin">
+                                        
+                                        <f:content>
+                                            
+                                            <!-- Architecture -->
+                                            <Label text="{i18n>field.architecture}"/>
+                                            <Input id="architectureInput" value="" placeholder="{i18n>placeholder.architecture}"/>
+                                            
+                                            <!-- Layer Count -->
+                                            <Label text="{i18n>field.layerCount}"/>
+                                            <StepInput id="layerCountInput" value="12" min="1" max="48" step="1"/>
+                                            
+                                            <!-- Hidden Size -->
+                                            <Label text="{i18n>field.hiddenSize}"/>
+                                            <StepInput id="hiddenSizeInput" value="768" min="128" max="4096" step="128"/>
+                                            
+                                            <!-- Attention Heads -->
+                                            <Label text="{i18n>field.attentionHeads}"/>
+                                            <StepInput id="attentionHeadsInput" value="12" min="1" max="64" step="1"/>
+                                            
+                                            <!-- Vocabulary Size -->
+                                            <Label text="{i18n>field.vocabularySize}"/>
+                                            <Input id="vocabularySizeInput" value="30522" placeholder="{i18n>placeholder.vocabularySize}"/>
+                                            
+                                            <!-- Max Sequence Length -->
+                                            <Label text="{i18n>field.maxSequenceLength}"/>
+                                            <StepInput id="maxSequenceLengthInput" value="512" min="64" max="4096" step="64"/>
+                                            
+                                            <!-- Tokenizer -->
+                                            <Label text="{i18n>field.tokenizer}"/>
+                                            <ComboBox id="tokenizerCombo" selectedKey="wordpiece">
+                                                <core:Item key="wordpiece" text="{i18n>tokenizer.wordpiece}"/>
+                                                <core:Item key="sentencepiece" text="{i18n>tokenizer.sentencepiece}"/>
+                                                <core:Item key="bpe" text="{i18n>tokenizer.bpe}"/>
+                                                <core:Item key="unigram" text="{i18n>tokenizer.unigram}"/>
+                                                <core:Item key="char" text="{i18n>tokenizer.char}"/>
+                                                <core:Item key="whitespace" text="{i18n>tokenizer.whitespace}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Normalization -->
+                                            <Label text="{i18n>field.normalization}"/>
+                                            <Switch id="normalizationSwitch" state="true"/>
+                                            
+                                        </f:content>
+                                    </f:SimpleForm>
+                                </content>
+                            </IconTabFilter>
+                            
+                            <!-- Training Settings Tab -->
+                            <IconTabFilter text="{i18n>tab.training}" key="training" icon="sap-icon://learning-assistant">
+                                <content>
+                                    <f:SimpleForm
+                                        editable="true"
+                                        layout="ResponsiveGridLayout"
+                                        class="sapUiMediumMargin">
+                                        
+                                        <f:content>
+                                            
+                                            <!-- Learning Rate -->
+                                            <Label text="{i18n>field.learningRate}"/>
+                                            <Input id="learningRateInput" value="0.00002" placeholder="{i18n>placeholder.learningRate}"/>
+                                            
+                                            <!-- Batch Size -->
+                                            <Label text="{i18n>field.batchSize}"/>
+                                            <StepInput id="batchSizeInput" value="32" min="1" max="512" step="1"/>
+                                            
+                                            <!-- Epochs -->
+                                            <Label text="{i18n>field.epochs}"/>
+                                            <StepInput id="epochsInput" value="10" min="1" max="100" step="1"/>
+                                            
+                                            <!-- Optimizer -->
+                                            <Label text="{i18n>field.optimizer}"/>
+                                            <ComboBox id="optimizerCombo" selectedKey="adamw">
+                                                <core:Item key="adam" text="{i18n>optimizer.adam}"/>
+                                                <core:Item key="adamw" text="{i18n>optimizer.adamw}"/>
+                                                <core:Item key="sgd" text="{i18n>optimizer.sgd}"/>
+                                                <core:Item key="rmsprop" text="{i18n>optimizer.rmsprop}"/>
+                                                <core:Item key="adagrad" text="{i18n>optimizer.adagrad}"/>
+                                                <core:Item key="lamb" text="{i18n>optimizer.lamb}"/>
+                                                <core:Item key="radam" text="{i18n>optimizer.radam}"/>
+                                                <core:Item key="lookahead" text="{i18n>optimizer.lookahead}"/>
+                                                <core:Item key="ranger" text="{i18n>optimizer.ranger}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Loss Function -->
+                                            <Label text="{i18n>field.lossFunction}"/>
+                                            <ComboBox id="lossFunctionCombo" selectedKey="cosine">
+                                                <core:Item key="cosine" text="{i18n>loss.cosine}"/>
+                                                <core:Item key="triplet" text="{i18n>loss.triplet}"/>
+                                                <core:Item key="contrastive" text="{i18n>loss.contrastive}"/>
+                                                <core:Item key="infonce" text="{i18n>loss.infonce}"/>
+                                                <core:Item key="mse" text="{i18n>loss.mse}"/>
+                                                <core:Item key="mae" text="{i18n>loss.mae}"/>
+                                                <core:Item key="huber" text="{i18n>loss.huber}"/>
+                                                <core:Item key="custom" text="{i18n>loss.custom}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Regularization -->
+                                            <Label text="{i18n>field.regularization}"/>
+                                            <Input id="regularizationInput" value="0.01" placeholder="{i18n>placeholder.regularization}"/>
+                                            
+                                            <!-- Dropout -->
+                                            <Label text="{i18n>field.dropout}"/>
+                                            <Slider id="dropoutSlider" value="0.1" min="0" max="0.5" step="0.05" enableTickmarks="true"/>
+                                            
+                                            <!-- Warmup Steps -->
+                                            <Label text="{i18n>field.warmupSteps}"/>
+                                            <StepInput id="warmupStepsInput" value="500" min="0" max="10000" step="100"/>
+                                            
+                                            <!-- Gradient Clipping -->
+                                            <Label text="{i18n>field.gradientClipping}"/>
+                                            <Input id="gradientClippingInput" value="1.0" placeholder="{i18n>placeholder.gradientClipping}"/>
+                                            
+                                        </f:content>
+                                    </f:SimpleForm>
+                                </content>
+                            </IconTabFilter>
+                            
+                            <!-- Optimization Settings Tab -->
+                            <IconTabFilter text="{i18n>tab.optimization}" key="optimization" icon="sap-icon://performance">
+                                <content>
+                                    <f:SimpleForm
+                                        editable="true"
+                                        layout="ResponsiveGridLayout"
+                                        class="sapUiMediumMargin">
+                                        
+                                        <f:content>
+                                            
+                                            <!-- Quantization -->
+                                            <Label text="{i18n>field.quantization}"/>
+                                            <Switch id="quantizationSwitch" state="false"/>
+                                            
+                                            <!-- Pruning -->
+                                            <Label text="{i18n>field.pruning}"/>
+                                            <Switch id="pruningSwitch" state="false"/>
+                                            
+                                            <!-- Distillation -->
+                                            <Label text="{i18n>field.distillation}"/>
+                                            <Switch id="distillationSwitch" state="false"/>
+                                            
+                                            <!-- Compression Ratio -->
+                                            <Label text="{i18n>field.compressionRatio}"/>
+                                            <Slider id="compressionRatioSlider" value="2" min="1" max="10" step="0.5" enableTickmarks="true"/>
+                                            
+                                            <!-- Optimization Target -->
+                                            <Label text="{i18n>field.optimizationTarget}"/>
+                                            <SegmentedButton id="optimizationTargetSegmented" selectedKey="balanced">
+                                                <items>
+                                                    <SegmentedButtonItem key="speed" text="Speed"/>
+                                                    <SegmentedButtonItem key="balanced" text="Balanced"/>
+                                                    <SegmentedButtonItem key="accuracy" text="Accuracy"/>
+                                                </items>
+                                            </SegmentedButton>
+                                            
+                                            <!-- Hardware Target -->
+                                            <Label text="{i18n>field.hardwareTarget}"/>
+                                            <ComboBox id="hardwareTargetCombo" selectedKey="gpu">
+                                                <core:Item key="cpu" text="{i18n>hardware.cpu}"/>
+                                                <core:Item key="gpu" text="{i18n>hardware.gpu}"/>
+                                                <core:Item key="tpu" text="{i18n>hardware.tpu}"/>
+                                                <core:Item key="edge" text="{i18n>hardware.edge}"/>
+                                                <core:Item key="mobile" text="{i18n>hardware.mobile}"/>
+                                                <core:Item key="server" text="{i18n>hardware.server}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Auto Optimization -->
+                                            <Label text="{i18n>field.autoOptimization}"/>
+                                            <Switch id="autoOptimizationSwitch" state="true"/>
+                                            
+                                            <!-- Mixed Precision -->
+                                            <Label text="{i18n>field.mixedPrecision}"/>
+                                            <Switch id="mixedPrecisionSwitch" state="true"/>
+                                            
+                                        </f:content>
+                                    </f:SimpleForm>
+                                </content>
+                            </IconTabFilter>
+                            
+                            <!-- Dataset Configuration Tab -->
+                            <IconTabFilter text="{i18n>tab.dataset}" key="dataset" icon="sap-icon://database">
+                                <content>
+                                    <f:SimpleForm
+                                        editable="true"
+                                        layout="ResponsiveGridLayout"
+                                        class="sapUiMediumMargin">
+                                        
+                                        <f:content>
+                                            
+                                            <!-- Dataset Name -->
+                                            <Label text="{i18n>field.datasetName}" required="true"/>
+                                            <Input id="datasetNameInput" value="" placeholder="{i18n>placeholder.datasetPath}" required="true"/>
+                                            
+                                            <!-- Dataset Size -->
+                                            <Label text="{i18n>field.datasetSize}"/>
+                                            <Text id="datasetSizeText" text="0 samples"/>
+                                            
+                                            <!-- Training Samples -->
+                                            <Label text="{i18n>field.trainingSamples}"/>
+                                            <StepInput id="trainingSamplesInput" value="10000" min="100" max="10000000" step="1000"/>
+                                            
+                                            <!-- Validation Samples -->
+                                            <Label text="{i18n>field.validationSamples}"/>
+                                            <StepInput id="validationSamplesInput" value="2000" min="10" max="1000000" step="100"/>
+                                            
+                                            <!-- Test Samples -->
+                                            <Label text="{i18n>field.testSamples}"/>
+                                            <StepInput id="testSamplesInput" value="2000" min="10" max="1000000" step="100"/>
+                                            
+                                            <!-- Data Augmentation -->
+                                            <Label text="{i18n>field.dataAugmentation}"/>
+                                            <MultiComboBox id="dataAugmentationMultiCombo">
+                                                <core:Item key="synonym" text="{i18n>aug.synonym}"/>
+                                                <core:Item key="backtranslation" text="{i18n>aug.backtranslation}"/>
+                                                <core:Item key="paraphrase" text="{i18n>aug.paraphrase}"/>
+                                                <core:Item key="noise" text="{i18n>aug.noise}"/>
+                                                <core:Item key="dropout" text="{i18n>aug.dropout}"/>
+                                                <core:Item key="mixup" text="{i18n>aug.mixup}"/>
+                                                <core:Item key="cutmix" text="{i18n>aug.cutmix}"/>
+                                            </MultiComboBox>
+                                            
+                                            <!-- Sampling Strategy -->
+                                            <Label text="{i18n>field.samplingStrategy}"/>
+                                            <ComboBox id="samplingStrategyCombo" selectedKey="stratified">
+                                                <core:Item key="random" text="{i18n>sampling.random}"/>
+                                                <core:Item key="stratified" text="{i18n>sampling.stratified}"/>
+                                                <core:Item key="balanced" text="{i18n>sampling.balanced}"/>
+                                                <core:Item key="weighted" text="{i18n>sampling.weighted}"/>
+                                                <core:Item key="active" text="{i18n>sampling.active}"/>
+                                                <core:Item key="hard_negative" text="{i18n>sampling.hard_negative}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Class Balance -->
+                                            <Label text="{i18n>field.classBalance}"/>
+                                            <Switch id="classBalanceSwitch" state="true"/>
+                                            
+                                        </f:content>
+                                    </f:SimpleForm>
+                                </content>
+                            </IconTabFilter>
+                            
+                        </items>
+                    </IconTabBar>
+                    
+                </content>
+            </Page>
+        </content>
+        
+        <beginButton>
+            <Button text="{i18n>btn.createModel}" press="onCreateModel" type="Emphasized"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>btn.cancel}" press="onCancelCreateModel"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

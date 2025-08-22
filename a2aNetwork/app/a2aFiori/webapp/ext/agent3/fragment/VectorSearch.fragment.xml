@@ -159,7 +159,7 @@
                             <items>
                                 <ColumnListItem>
                                     <cells>
-                                        <Text text="{search>rank}"/>
+                                        <Text text="{path: 'search>rank', formatter: '.formatSecureText'}"/>
                                         <ProgressIndicator
                                             percentValue="{= ${search>similarity} * 100 }"
                                             displayValue="{path: 'search>similarity', formatter: '.formatSimilarityScore'}"

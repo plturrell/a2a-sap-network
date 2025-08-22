@@ -280,7 +280,7 @@ class A2ABlockchainClient:
                 capability_hashes
             ).build_transaction({
                 'from': self.agent_identity.address,
-                'gas': int(os.getenv('BLOCKCHAIN_GAS_LIMIT', '500000')),
+                'gas': int(os.getenv('BLOCKCHAIN_GAS_LIMIT', '2000000')),
                 'gasPrice': int(float(os.getenv('BLOCKCHAIN_GAS_PRICE_GWEI', str(self.web3.eth.gas_price))) * 1e9) if os.getenv('BLOCKCHAIN_GAS_PRICE_GWEI') else self.web3.eth.gas_price
             })
             
@@ -310,11 +310,27 @@ class A2ABlockchainClient:
                         # Try to get revert reason
                         try:
                             tx = self.web3.eth.get_transaction(tx_hash)
-                            self.web3.eth.call(tx, tx_receipt.blockNumber - 1)
+                            # Create a call transaction from the failed transaction
+                            call_tx = {
+                                'from': tx['from'],
+                                'to': tx['to'],
+                                'data': tx['input'],
+                                'value': tx.get('value', 0)
+                            }
+                            self.web3.eth.call(call_tx, tx_receipt.blockNumber - 1)
                         except Exception as revert_error:
+                            error_msg = str(revert_error)
                             logger.error(f"Revert reason: {revert_error}")
+                            # Handle specific case where agent is already registered
+                            if "Agent already registered" in error_msg:
+                                logger.info("Agent is already registered on blockchain")
+                                return True
                 except Exception as e:
                     logger.error(f"Could not get revert reason: {e}")
+                    # Check if the error message contains "already registered"
+                    if "Agent already registered" in str(e):
+                        logger.info("Agent is already registered on blockchain")
+                        return True
                 return False
                 
         except Exception as e:

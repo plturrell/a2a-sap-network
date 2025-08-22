@@ -257,7 +257,8 @@ cds.on('bootstrap', async (app) => {
             '/a2a/agent3/v1',
             '/a2a/agent4/v1',
             '/a2a/agent5/v1',
-            '/a2a/agent6/v1'
+            '/a2a/agent6/v1',
+            '/a2a/agent7/v1'
         ];
         
         const shouldBypass = bypassPaths.some(path => req.path.startsWith(path));
@@ -1167,6 +1168,257 @@ cds.on('bootstrap', async (app) => {
     });
     
     log.info('Agent 6 API proxy routes initialized');
+    
+    // ===== AGENT 7 PROXY ROUTES =====
+    // Agent Management & Orchestration System
+    const AGENT7_BASE_URL = process.env.AGENT7_BASE_URL || 'http://localhost:8006';
+    
+    // Helper function to proxy Agent 7 requests
+    async function proxyAgent7Request(req, res, endpoint, method = 'GET') {
+        try {
+            const config = {
+                method,
+                url: `${AGENT7_BASE_URL}/api/v1${endpoint}`,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...req.headers
+                },
+                timeout: 30000
+            };
+            
+            if (method !== 'GET' && req.body) {
+                config.data = req.body;
+            }
+            
+            const response = await axios(config);
+            
+            // Add CORS headers
+            res.header('Access-Control-Allow-Origin', '*');
+            res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+            
+            res.status(response.status).json(response.data);
+        } catch (error) {
+            log.error('Agent 7 proxy error:', error.message);
+            
+            if (error.response) {
+                res.status(error.response.status).json(error.response.data);
+            } else {
+                res.status(503).json({
+                    error: {
+                        code: "SERVICE_UNAVAILABLE",
+                        message: "Agent 7 backend not available"
+                    }
+                });
+            }
+        }
+    }
+    
+    // Registered Agents endpoints
+    app.get('/a2a/agent7/v1/registered-agents', (req, res) => proxyAgent7Request(req, res, '/registered-agents'));
+    app.post('/a2a/agent7/v1/registered-agents', (req, res) => proxyAgent7Request(req, res, '/registered-agents', 'POST'));
+    app.get('/a2a/agent7/v1/registered-agents/:id', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}`));
+    app.put('/a2a/agent7/v1/registered-agents/:id', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}`, 'PUT'));
+    app.delete('/a2a/agent7/v1/registered-agents/:id', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}`, 'DELETE'));
+    
+    // Agent registration and management
+    app.post('/a2a/agent7/v1/register-agent', (req, res) => proxyAgent7Request(req, res, '/register-agent', 'POST'));
+    app.post('/a2a/agent7/v1/registered-agents/:id/update-status', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}/update-status`, 'POST'));
+    app.post('/a2a/agent7/v1/registered-agents/:id/health-check', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}/health-check`, 'POST'));
+    app.post('/a2a/agent7/v1/registered-agents/:id/update-config', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}/update-config`, 'POST'));
+    app.post('/a2a/agent7/v1/registered-agents/:id/deactivate', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}/deactivate`, 'POST'));
+    app.post('/a2a/agent7/v1/registered-agents/:id/schedule-task', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}/schedule-task`, 'POST'));
+    app.post('/a2a/agent7/v1/registered-agents/:id/assign-workload', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}/assign-workload`, 'POST'));
+    
+    // Management Tasks endpoints
+    app.get('/a2a/agent7/v1/management-tasks', (req, res) => proxyAgent7Request(req, res, '/management-tasks'));
+    app.post('/a2a/agent7/v1/management-tasks', (req, res) => proxyAgent7Request(req, res, '/management-tasks', 'POST'));
+    app.get('/a2a/agent7/v1/management-tasks/:id', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}`));
+    app.put('/a2a/agent7/v1/management-tasks/:id', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}`, 'PUT'));
+    app.delete('/a2a/agent7/v1/management-tasks/:id', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}`, 'DELETE'));
+    
+    // Management task actions
+    app.post('/a2a/agent7/v1/management-tasks/:id/execute', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}/execute`, 'POST'));
+    app.post('/a2a/agent7/v1/management-tasks/:id/pause', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}/pause`, 'POST'));
+    app.post('/a2a/agent7/v1/management-tasks/:id/resume', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}/resume`, 'POST'));
+    app.post('/a2a/agent7/v1/management-tasks/:id/cancel', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}/cancel`, 'POST'));
+    app.post('/a2a/agent7/v1/management-tasks/:id/retry', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}/retry`, 'POST'));
+    app.post('/a2a/agent7/v1/management-tasks/:id/rollback', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}/rollback`, 'POST'));
+    
+    // Health Check endpoints
+    app.get('/a2a/agent7/v1/health-checks', (req, res) => proxyAgent7Request(req, res, '/health-checks'));
+    app.get('/a2a/agent7/v1/health-status', (req, res) => proxyAgent7Request(req, res, '/health-status'));
+    app.get('/a2a/agent7/v1/health-status/:agentId', (req, res) => proxyAgent7Request(req, res, `/health-status/${req.params.agentId}`));
+    app.get('/a2a/agent7/v1/health-stream', (req, res) => {
+        // Server-Sent Events for real-time health monitoring
+        res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*'
+        });
+        
+        proxyAgent7Request(req, res, '/health-stream').catch(error => {
+            res.write(`data: ${JSON.stringify({error: error.message})}\\n\\n`);
+            res.end();
+        });
+    });
+    
+    // Performance Metrics endpoints
+    app.get('/a2a/agent7/v1/performance-metrics', (req, res) => proxyAgent7Request(req, res, '/performance-metrics'));
+    app.get('/a2a/agent7/v1/performance-analysis/:agentId', (req, res) => proxyAgent7Request(req, res, `/performance-analysis/${req.params.agentId}`));
+    app.get('/a2a/agent7/v1/performance-benchmarks', (req, res) => proxyAgent7Request(req, res, '/performance-benchmarks'));
+    
+    // Agent Coordination endpoints
+    app.get('/a2a/agent7/v1/coordination', (req, res) => proxyAgent7Request(req, res, '/coordination'));
+    app.post('/a2a/agent7/v1/coordination', (req, res) => proxyAgent7Request(req, res, '/coordination', 'POST'));
+    app.get('/a2a/agent7/v1/coordination/:id', (req, res) => proxyAgent7Request(req, res, `/coordination/${req.params.id}`));
+    app.put('/a2a/agent7/v1/coordination/:id', (req, res) => proxyAgent7Request(req, res, `/coordination/${req.params.id}`, 'PUT'));
+    app.delete('/a2a/agent7/v1/coordination/:id', (req, res) => proxyAgent7Request(req, res, `/coordination/${req.params.id}`, 'DELETE'));
+    
+    // Coordination actions
+    app.post('/a2a/agent7/v1/coordination/:id/activate', (req, res) => proxyAgent7Request(req, res, `/coordination/${req.params.id}/activate`, 'POST'));
+    app.post('/a2a/agent7/v1/coordination/:id/pause', (req, res) => proxyAgent7Request(req, res, `/coordination/${req.params.id}/pause`, 'POST'));
+    app.post('/a2a/agent7/v1/coordination/:id/update-rules', (req, res) => proxyAgent7Request(req, res, `/coordination/${req.params.id}/update-rules`, 'POST'));
+    app.post('/a2a/agent7/v1/coordination/:id/add-agent', (req, res) => proxyAgent7Request(req, res, `/coordination/${req.params.id}/add-agent`, 'POST'));
+    app.post('/a2a/agent7/v1/coordination/:id/remove-agent', (req, res) => proxyAgent7Request(req, res, `/coordination/${req.params.id}/remove-agent`, 'POST'));
+    
+    // Coordination status and management
+    app.get('/a2a/agent7/v1/coordination-status', (req, res) => proxyAgent7Request(req, res, '/coordination-status'));
+    app.get('/a2a/agent7/v1/network-topology', (req, res) => proxyAgent7Request(req, res, '/network-topology'));
+    app.get('/a2a/agent7/v1/load-balancing', (req, res) => proxyAgent7Request(req, res, '/load-balancing'));
+    app.post('/a2a/agent7/v1/load-balancing/optimize', (req, res) => proxyAgent7Request(req, res, '/load-balancing/optimize', 'POST'));
+    
+    // Bulk Operations endpoints
+    app.get('/a2a/agent7/v1/bulk-operations', (req, res) => proxyAgent7Request(req, res, '/bulk-operations'));
+    app.post('/a2a/agent7/v1/bulk-operations', (req, res) => proxyAgent7Request(req, res, '/bulk-operations', 'POST'));
+    app.get('/a2a/agent7/v1/bulk-operations/:id', (req, res) => proxyAgent7Request(req, res, `/bulk-operations/${req.params.id}`));
+    app.put('/a2a/agent7/v1/bulk-operations/:id', (req, res) => proxyAgent7Request(req, res, `/bulk-operations/${req.params.id}`, 'PUT'));
+    app.delete('/a2a/agent7/v1/bulk-operations/:id', (req, res) => proxyAgent7Request(req, res, `/bulk-operations/${req.params.id}`, 'DELETE'));
+    
+    // Bulk operation actions
+    app.post('/a2a/agent7/v1/bulk-operations/:id/execute', (req, res) => proxyAgent7Request(req, res, `/bulk-operations/${req.params.id}/execute`, 'POST'));
+    app.post('/a2a/agent7/v1/bulk-operations/:id/rollback', (req, res) => proxyAgent7Request(req, res, `/bulk-operations/${req.params.id}/rollback`, 'POST'));
+    app.post('/a2a/agent7/v1/bulk-operations/:id/pause', (req, res) => proxyAgent7Request(req, res, `/bulk-operations/${req.params.id}/pause`, 'POST'));
+    app.post('/a2a/agent7/v1/bulk-operations/:id/resume', (req, res) => proxyAgent7Request(req, res, `/bulk-operations/${req.params.id}/resume`, 'POST'));
+    
+    // Agent Management Functions
+    app.get('/a2a/agent7/v1/agent-types', (req, res) => proxyAgent7Request(req, res, '/agent-types'));
+    app.get('/a2a/agent7/v1/dashboard', (req, res) => proxyAgent7Request(req, res, '/dashboard'));
+    app.get('/a2a/agent7/v1/agent-capabilities/:type', (req, res) => proxyAgent7Request(req, res, `/agent-capabilities/${req.params.type}`));
+    app.post('/a2a/agent7/v1/validate-configuration', (req, res) => proxyAgent7Request(req, res, '/validate-configuration', 'POST'));
+    app.get('/a2a/agent7/v1/load-balancing-recommendations', (req, res) => proxyAgent7Request(req, res, '/load-balancing-recommendations'));
+    
+    // Real-time updates and streaming
+    app.get('/a2a/agent7/v1/realtime-updates', (req, res) => {
+        // Server-Sent Events for real-time agent updates
+        res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*'
+        });
+        
+        proxyAgent7Request(req, res, '/realtime-updates').catch(error => {
+            res.write(`data: ${JSON.stringify({error: error.message})}\\n\\n`);
+            res.end();
+        });
+    });
+    
+    // Agent 7 OData Service Proxy - Convert REST to OData format
+    app.get('/a2a/agent7/v1/odata/RegisteredAgents', async (req, res) => {
+        try {
+            const response = await axios.get(`${AGENT7_BASE_URL}/api/v1/registered-agents`);
+            
+            // Convert to OData format
+            const odataResponse = {
+                "@odata.context": "$metadata#RegisteredAgents",
+                "value": response.data.map(agent => ({
+                    ID: agent.id,
+                    agentName: agent.agent_name,
+                    agentType: agent.agent_type?.toUpperCase(),
+                    agentVersion: agent.agent_version,
+                    endpointUrl: agent.endpoint_url,
+                    status: agent.status?.toUpperCase() || 'REGISTERING',
+                    healthStatus: agent.health_status?.toUpperCase() || 'UNKNOWN',
+                    capabilities: JSON.stringify(agent.capabilities || {}),
+                    configuration: JSON.stringify(agent.configuration || {}),
+                    performanceScore: agent.performance_score || 0,
+                    responseTime: agent.response_time,
+                    throughput: agent.throughput,
+                    errorRate: agent.error_rate || 0,
+                    lastHealthCheck: agent.last_health_check,
+                    registrationDate: agent.registration_date,
+                    deactivationDate: agent.deactivation_date,
+                    loadBalanceWeight: agent.load_balance_weight || 50,
+                    priority: agent.priority || 5,
+                    tags: JSON.stringify(agent.tags || []),
+                    notes: agent.notes,
+                    createdAt: agent.created_at,
+                    createdBy: agent.created_by,
+                    modifiedAt: agent.modified_at,
+                    modifiedBy: agent.modified_by
+                }))
+            };
+            
+            res.json(odataResponse);
+        } catch (error) {
+            res.status(503).json({
+                error: {
+                    code: "SERVICE_UNAVAILABLE",
+                    message: "Agent 7 backend not available"
+                }
+            });
+        }
+    });
+    
+    app.get('/a2a/agent7/v1/odata/ManagementTasks', async (req, res) => {
+        try {
+            const response = await axios.get(`${AGENT7_BASE_URL}/api/v1/management-tasks`);
+            
+            // Convert to OData format
+            const odataResponse = {
+                "@odata.context": "$metadata#ManagementTasks",
+                "value": response.data.map(task => ({
+                    ID: task.id,
+                    taskName: task.task_name,
+                    taskType: task.task_type?.toUpperCase(),
+                    status: task.status?.toUpperCase() || 'SCHEDULED',
+                    priority: task.priority?.toUpperCase() || 'NORMAL',
+                    targetAgents: JSON.stringify(task.target_agents || []),
+                    parameters: JSON.stringify(task.parameters || {}),
+                    scheduleType: task.schedule_type?.toUpperCase() || 'IMMEDIATE',
+                    scheduledTime: task.scheduled_time,
+                    recurrencePattern: task.recurrence_pattern,
+                    startTime: task.start_time,
+                    endTime: task.end_time,
+                    duration: task.duration,
+                    progress: task.progress || 0,
+                    result: JSON.stringify(task.result || {}),
+                    errorMessage: task.error_message,
+                    retryCount: task.retry_count || 0,
+                    maxRetries: task.max_retries || 3,
+                    notificationSent: task.notification_sent !== false,
+                    rollbackAvailable: task.rollback_available !== false,
+                    createdAt: task.created_at,
+                    createdBy: task.created_by,
+                    modifiedAt: task.modified_at,
+                    modifiedBy: task.modified_by
+                }))
+            };
+            
+            res.json(odataResponse);
+        } catch (error) {
+            res.status(503).json({
+                error: {
+                    code: "SERVICE_UNAVAILABLE",
+                    message: "Agent 7 backend not available"
+                }
+            });
+        }
+    });
+    
+    log.info('Agent 7 API proxy routes initialized');
     
     // Agent 3 OData Service Proxy - Convert REST to OData format
     app.get('/a2a/agent3/v1/odata/VectorProcessingTasks', async (req, res) => {

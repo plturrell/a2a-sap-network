@@ -598,6 +598,33 @@ sap.ui.define([
             });
         },
 
+        validateEmbedding: function(oEmbeddingData) {
+            // Secure embedding data validation
+            if (!oEmbeddingData || typeof oEmbeddingData !== 'object') {
+                return { isValid: false, message: "Invalid embedding data structure" };
+            }
+
+            // Validate embedding vector dimensions
+            if (oEmbeddingData.vector && Array.isArray(oEmbeddingData.vector)) {
+                var sVectorString = JSON.stringify(oEmbeddingData.vector);
+                var oValidation = this._validateInput(sVectorString, "embedding");
+                if (!oValidation.isValid) {
+                    return oValidation;
+                }
+            }
+
+            // Validate metadata
+            if (oEmbeddingData.metadata) {
+                var sMetadata = JSON.stringify(oEmbeddingData.metadata);
+                var oMetadataValidation = this._validateInput(sMetadata, "metadata");
+                if (!oMetadataValidation.isValid) {
+                    return oMetadataValidation;
+                }
+            }
+
+            return { isValid: true, sanitized: oEmbeddingData };
+        },
+
         _render3DEmbeddings: function(data) {
             // Performance-optimized 3D rendering
             var oContainer = this.byId("embeddingVisualizationContainer");

@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form">
+    
+    <Dialog
+        title="{i18n>dialog.workflowCreator.title}"
+        class="sapUiMediumMargin"
+        contentWidth="85vw"
+        contentHeight="90vh"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <Page showHeader="false">
+                <content>
+                    
+                    <IconTabBar id="workflowCreatorTabBar" class="sapUiNoContentPadding">
+                        
+                        <!-- Basic Information Tab -->
+                        <items>
+                            <IconTabFilter text="{i18n>tab.general}" key="basic" icon="sap-icon://detail-view">
+                                <content>
+                                    <f:SimpleForm
+                                        editable="true"
+                                        layout="ResponsiveGridLayout"
+                                        class="sapUiMediumMargin">
+                                        
+                                        <f:content>
+                                            
+                                            <!-- Workflow Name -->
+                                            <Label text="{i18n>field.workflowName}" required="true"/>
+                                            <Input id="workflowNameInput" value="" placeholder="{i18n>placeholder.workflowName}" required="true"/>
+                                            
+                                            <!-- Description -->
+                                            <Label text="{i18n>field.description}"/>
+                                            <TextArea id="descriptionInput" value="" rows="3" placeholder="{i18n>placeholder.description}"/>
+                                            
+                                            <!-- Workflow Type -->
+                                            <Label text="{i18n>field.workflowType}" required="true"/>
+                                            <ComboBox
+                                                id="workflowTypeCombo"
+                                                selectedKey=""
+                                                placeholder="{i18n>placeholder.selectWorkflowType}"
+                                                required="true">
+                                                <core:Item key="sequential" text="{i18n>workflowType.sequential}"/>
+                                                <core:Item key="parallel" text="{i18n>workflowType.parallel}"/>
+                                                <core:Item key="conditional" text="{i18n>workflowType.conditional}"/>
+                                                <core:Item key="eventDriven" text="{i18n>workflowType.eventDriven}"/>
+                                                <core:Item key="stateMachine" text="{i18n>workflowType.stateMachine}"/>
+                                                <core:Item key="dag" text="{i18n>workflowType.dag}"/>
+                                                <core:Item key="pipeline" text="{i18n>workflowType.pipeline}"/>
+                                                <core:Item key="microservice" text="{i18n>workflowType.microservice}"/>
+                                                <core:Item key="serverless" text="{i18n>workflowType.serverless}"/>
+                                                <core:Item key="batch" text="{i18n>workflowType.batch}"/>
+                                                <core:Item key="streaming" text="{i18n>workflowType.streaming}"/>
+                                                <core:Item key="hybrid" text="{i18n>workflowType.hybrid}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Priority -->
+                                            <Label text="{i18n>field.priority}"/>
+                                            <ComboBox id="priorityCombo" selectedKey="medium">
+                                                <core:Item key="low" text="{i18n>priority.low}"/>
+                                                <core:Item key="medium" text="{i18n>priority.medium}"/>
+                                                <core:Item key="high" text="{i18n>priority.high}"/>
+                                                <core:Item key="critical" text="{i18n>priority.critical}"/>
+                                                <core:Item key="urgent" text="{i18n>priority.urgent}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Version -->
+                                            <Label text="{i18n>field.version}"/>
+                                            <Input id="versionInput" value="1.0.0" placeholder="{i18n>placeholder.version}"/>
+                                            
+                                        </f:content>
+                                    </f:SimpleForm>
+                                </content>
+                            </IconTabFilter>
+                            
+                            <!-- Orchestration Configuration Tab -->
+                            <IconTabFilter text="{i18n>tab.orchestrationConfig}" key="orchestration" icon="sap-icon://workflow-tasks">
+                                <content>
+                                    <f:SimpleForm
+                                        editable="true"
+                                        layout="ResponsiveGridLayout"
+                                        class="sapUiMediumMargin">
+                                        
+                                        <f:content>
+                                            
+                                            <!-- Orchestration Mode -->
+                                            <Label text="{i18n>field.orchestrationMode}" required="true"/>
+                                            <ComboBox
+                                                id="orchestrationModeCombo"
+                                                selectedKey="centralized"
+                                                required="true">
+                                                <core:Item key="centralized" text="{i18n>orchestrationMode.centralized}"/>
+                                                <core:Item key="distributed" text="{i18n>orchestrationMode.distributed}"/>
+                                                <core:Item key="federated" text="{i18n>orchestrationMode.federated}"/>
+                                                <core:Item key="hierarchical" text="{i18n>orchestrationMode.hierarchical}"/>
+                                                <core:Item key="autonomous" text="{i18n>orchestrationMode.autonomous}"/>
+                                                <core:Item key="collaborative" text="{i18n>orchestrationMode.collaborative}"/>
+                                                <core:Item key="adaptive" text="{i18n>orchestrationMode.adaptive}"/>
+                                                <core:Item key="selfOrganizing" text="{i18n>orchestrationMode.selfOrganizing}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Execution Strategy -->
+                                            <Label text="{i18n>field.executionStrategy}"/>
+                                            <ComboBox id="executionStrategyCombo" selectedKey="sequential">
+                                                <core:Item key="sequential" text="{i18n>executionStrategy.sequential}"/>
+                                                <core:Item key="parallel" text="{i18n>executionStrategy.parallel}"/>
+                                                <core:Item key="adaptive" text="{i18n>executionStrategy.adaptive}"/>
+                                                <core:Item key="failfast" text="{i18n>executionStrategy.failfast}"/>
+                                                <core:Item key="resilient" text="{i18n>executionStrategy.resilient}"/>
+                                                <core:Item key="optimistic" text="{i18n>executionStrategy.optimistic}"/>
+                                                <core:Item key="pessimistic" text="{i18n>executionStrategy.pessimistic}"/>
+                                                <core:Item key="bestEffort" text="{i18n>executionStrategy.bestEffort}"/>
+                                                <core:Item key="guaranteedDelivery" text="{i18n>executionStrategy.guaranteedDelivery}"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Parallelization -->
+                                            <Label text="{i18n>field.parallelization}"/>
+                                            <Switch id="parallelizationSwitch" state="false"/>
+                                            
+                                            <!-- Max Concurrency -->
+                                            <Label text="{i18n>field.maxConcurrency}"/>
+                                            <StepInput id="maxConcurrencyInput" value="4" min="1" max="64" step="1"/>
+                                            
+                                            <!-- Task Distribution -->
+                                            <Label text="{i18n>field.taskDistribution}"/>
+                                            <ComboBox id="taskDistributionCombo" selectedKey="roundRobin">
+                                                <core:Item key="roundRobin" text="Round Robin"/>
+                                                <core:Item key="leastLoaded" text="Least Loaded"/>
+                                                <core:Item key="weighted" text="Weighted"/>
+                                                <core:Item key="random" text="Random"/>
+                                                <core:Item key="locality" text="Locality Aware"/>
+                                                <core:Item key="performance" text="Performance Based"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Load Balancing -->
+                                            <Label text="{i18n>field.loadBalancing}"/>
+                                            <Switch id="loadBalancingSwitch" state="true"/>
+                                            
+                                            <!-- Failover Strategy -->
+                                            <Label text="{i18n>field.failoverStrategy}"/>
+                                            <ComboBox id="failoverStrategyCombo" selectedKey="immediate">
+                                                <core:Item key="immediate" text="Immediate"/>
+                                                <core:Item key="graceful" text="Graceful"/>
+                                                <core:Item key="manual" text="Manual"/>
+                                                <core:Item key="disabled" text="Disabled"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Retry Policy -->
+                                            <Label text="{i18n>field.retryPolicy}"/>
+                                            <ComboBox id="retryPolicyCombo" selectedKey="exponential">
+                                                <core:Item key="none" text="None"/>
+                                                <core:Item key="immediate" text="Immediate"/>
+                                                <core:Item key="fixed" text="Fixed Delay"/>
+                                                <core:Item key="exponential" text="Exponential Backoff"/>
+                                                <core:Item key="linear" text="Linear Backoff"/>
+                                                <core:Item key="custom" text="Custom"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Circuit Breaker -->
+                                            <Label text="{i18n>field.circuitBreaker}"/>
+                                            <Switch id="circuitBreakerSwitch" state="true"/>
+                                            
+                                        </f:content>
+                                    </f:SimpleForm>
+                                </content>
+                            </IconTabFilter>
+                            
+                            <!-- Execution Settings Tab -->
+                            <IconTabFilter text="{i18n>tab.executionSettings}" key="execution" icon="sap-icon://settings">
+                                <content>
+                                    <f:SimpleForm
+                                        editable="true"
+                                        layout="ResponsiveGridLayout"
+                                        class="sapUiMediumMargin">
+                                        
+                                        <f:content>
+                                            
+                                            <!-- Trigger Type -->
+                                            <Label text="{i18n>field.triggerType}"/>
+                                            <ComboBox id="triggerTypeCombo" selectedKey="manual">
+                                                <core:Item key="manual" text="Manual"/>
+                                                <core:Item key="scheduled" text="Scheduled"/>
+                                                <core:Item key="event" text="Event-Driven"/>
+                                                <core:Item key="webhook" text="Webhook"/>
+                                                <core:Item key="message" text="Message Queue"/>
+                                                <core:Item key="file" text="File Watch"/>
+                                                <core:Item key="api" text="API Call"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Schedule -->
+                                            <Label text="{i18n>field.schedule}"/>
+                                            <Input id="scheduleInput" value="" placeholder="{i18n>placeholder.enterSchedule}"/>
+                                            
+                                            <!-- Timeout -->
+                                            <Label text="{i18n>field.timeout}"/>
+                                            <StepInput id="timeoutInput" value="300" min="30" max="3600" step="30"/>
+                                            
+                                            <!-- Max Duration -->
+                                            <Label text="{i18n>field.maxDuration}"/>
+                                            <StepInput id="maxDurationInput" value="3600" min="300" max="86400" step="300"/>
+                                            
+                                            <!-- Checkpoint Enabled -->
+                                            <Label text="{i18n>field.checkpointEnabled}"/>
+                                            <Switch id="checkpointEnabledSwitch" state="true"/>
+                                            
+                                            <!-- Rollback Enabled -->
+                                            <Label text="{i18n>field.rollbackEnabled}"/>
+                                            <Switch id="rollbackEnabledSwitch" state="true"/>
+                                            
+                                            <!-- Compensation Enabled -->
+                                            <Label text="{i18n>field.compensationEnabled}"/>
+                                            <Switch id="compensationEnabledSwitch" state="false"/>
+                                            
+                                            <!-- Transactional -->
+                                            <Label text="{i18n>field.transactional}"/>
+                                            <Switch id="transactionalSwitch" state="false"/>
+                                            
+                                        </f:content>
+                                    </f:SimpleForm>
+                                </content>
+                            </IconTabFilter>
+                            
+                            <!-- Agent Coordination Tab -->
+                            <IconTabFilter text="{i18n>tab.agentCoordination}" key="coordination" icon="sap-icon://partner-network">
+                                <content>
+                                    <f:SimpleForm
+                                        editable="true"
+                                        layout="ResponsiveGridLayout"
+                                        class="sapUiMediumMargin">
+                                        
+                                        <f:content>
+                                            
+                                            <!-- Agent Selection Mode -->
+                                            <Label text="{i18n>field.agentSelectionMode}"/>
+                                            <ComboBox id="agentSelectionModeCombo" selectedKey="automatic">
+                                                <core:Item key="automatic" text="Automatic"/>
+                                                <core:Item key="manual" text="Manual"/>
+                                                <core:Item key="capability" text="Capability-Based"/>
+                                                <core:Item key="performance" text="Performance-Based"/>
+                                                <core:Item key="availability" text="Availability-Based"/>
+                                                <core:Item key="cost" text="Cost-Optimized"/>
+                                                <core:Item key="hybrid" text="Hybrid"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Communication Protocol -->
+                                            <Label text="{i18n>field.communicationProtocol}"/>
+                                            <ComboBox id="communicationProtocolCombo" selectedKey="websocket">
+                                                <core:Item key="websocket" text="WebSocket"/>
+                                                <core:Item key="http" text="HTTP/REST"/>
+                                                <core:Item key="grpc" text="gRPC"/>
+                                                <core:Item key="mqtt" text="MQTT"/>
+                                                <core:Item key="amqp" text="AMQP"/>
+                                                <core:Item key="kafka" text="Apache Kafka"/>
+                                                <core:Item key="redis" text="Redis Pub/Sub"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Message Queuing -->
+                                            <Label text="{i18n>field.messageQueuing}"/>
+                                            <Switch id="messageQueuingSwitch" state="true"/>
+                                            
+                                            <!-- Event Bus -->
+                                            <Label text="{i18n>field.eventBus}"/>
+                                            <Switch id="eventBusSwitch" state="true"/>
+                                            
+                                            <!-- Coordination Pattern -->
+                                            <Label text="{i18n>field.coordinationPattern}"/>
+                                            <ComboBox id="coordinationPatternCombo" selectedKey="masterSlave">
+                                                <core:Item key="masterSlave" text="Master-Slave"/>
+                                                <core:Item key="peer2peer" text="Peer-to-Peer"/>
+                                                <core:Item key="publish" text="Publish-Subscribe"/>
+                                                <core:Item key="request" text="Request-Response"/>
+                                                <core:Item key="pipeline" text="Pipeline"/>
+                                                <core:Item key="scatter" text="Scatter-Gather"/>
+                                                <core:Item key="chain" text="Chain of Responsibility"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Consensus Algorithm -->
+                                            <Label text="{i18n>field.consensusAlgorithm}"/>
+                                            <ComboBox id="consensusAlgorithmCombo" selectedKey="raft">
+                                                <core:Item key="none" text="None"/>
+                                                <core:Item key="raft" text="Raft"/>
+                                                <core:Item key="paxos" text="Paxos"/>
+                                                <core:Item key="pbft" text="PBFT"/>
+                                                <core:Item key="gossip" text="Gossip"/>
+                                                <core:Item key="blockchain" text="Blockchain"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Conflict Resolution -->
+                                            <Label text="{i18n>field.conflictResolution}"/>
+                                            <ComboBox id="conflictResolutionCombo" selectedKey="priority">
+                                                <core:Item key="priority" text="Priority-Based"/>
+                                                <core:Item key="timestamp" text="Timestamp-Based"/>
+                                                <core:Item key="voting" text="Voting"/>
+                                                <core:Item key="manual" text="Manual"/>
+                                                <core:Item key="first" text="First-Wins"/>
+                                                <core:Item key="last" text="Last-Wins"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Data Consistency -->
+                                            <Label text="{i18n>field.dataConsistency}"/>
+                                            <ComboBox id="dataConsistencyCombo" selectedKey="eventual">
+                                                <core:Item key="strong" text="Strong Consistency"/>
+                                                <core:Item key="eventual" text="Eventual Consistency"/>
+                                                <core:Item key="weak" text="Weak Consistency"/>
+                                                <core:Item key="causal" text="Causal Consistency"/>
+                                                <core:Item key="session" text="Session Consistency"/>
+                                            </ComboBox>
+                                            
+                                        </f:content>
+                                    </f:SimpleForm>
+                                </content>
+                            </IconTabFilter>
+                            
+                            <!-- Monitoring Configuration Tab -->
+                            <IconTabFilter text="{i18n>tab.monitoringConfig}" key="monitoring" icon="sap-icon://monitor-system">
+                                <content>
+                                    <f:SimpleForm
+                                        editable="true"
+                                        layout="ResponsiveGridLayout"
+                                        class="sapUiMediumMargin">
+                                        
+                                        <f:content>
+                                            
+                                            <!-- Monitoring Enabled -->
+                                            <Label text="{i18n>field.monitoringEnabled}"/>
+                                            <Switch id="monitoringEnabledSwitch" state="true"/>
+                                            
+                                            <!-- Metrics Collection -->
+                                            <Label text="{i18n>field.metricsCollection}"/>
+                                            <Switch id="metricsCollectionSwitch" state="true"/>
+                                            
+                                            <!-- Tracing Enabled -->
+                                            <Label text="{i18n>field.tracingEnabled}"/>
+                                            <Switch id="tracingEnabledSwitch" state="true"/>
+                                            
+                                            <!-- Logging Level -->
+                                            <Label text="{i18n>field.loggingLevel}"/>
+                                            <ComboBox id="loggingLevelCombo" selectedKey="info">
+                                                <core:Item key="trace" text="Trace"/>
+                                                <core:Item key="debug" text="Debug"/>
+                                                <core:Item key="info" text="Info"/>
+                                                <core:Item key="warn" text="Warning"/>
+                                                <core:Item key="error" text="Error"/>
+                                                <core:Item key="fatal" text="Fatal"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Alerting Enabled -->
+                                            <Label text="{i18n>field.alertingEnabled}"/>
+                                            <Switch id="alertingEnabledSwitch" state="true"/>
+                                            
+                                            <!-- Health Check Interval -->
+                                            <Label text="{i18n>field.healthCheckInterval}"/>
+                                            <StepInput id="healthCheckIntervalInput" value="30" min="5" max="300" step="5"/>
+                                            
+                                            <!-- Performance Thresholds -->
+                                            <Label text="{i18n>field.performanceThresholds}"/>
+                                            <Input id="performanceThresholdsInput" value="" placeholder="{i18n>placeholder.enterThreshold}"/>
+                                            
+                                            <!-- Anomaly Detection -->
+                                            <Label text="{i18n>field.anomalyDetection}"/>
+                                            <Switch id="anomalyDetectionSwitch" state="false"/>
+                                            
+                                        </f:content>
+                                    </f:SimpleForm>
+                                </content>
+                            </IconTabFilter>
+                            
+                        </items>
+                    </IconTabBar>
+                    
+                </content>
+            </Page>
+        </content>
+        
+        <beginButton>
+            <Button text="{i18n>btn.createWorkflow}" press="onCreateWorkflow" type="Emphasized"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>btn.cancel}" press="onCancelCreateWorkflow"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>
