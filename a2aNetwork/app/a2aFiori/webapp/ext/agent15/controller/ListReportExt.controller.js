@@ -2,8 +2,9 @@ sap.ui.define([
     "sap/ui/core/mvc/ControllerExtension",
     "sap/m/MessageToast",
     "sap/m/MessageBox",
-    "sap/ui/core/Fragment"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment) {
+    "sap/ui/core/Fragment",
+    "a2a/network/agent15/ext/utils/SecurityUtils"
+], function(ControllerExtension, MessageToast, MessageBox, Fragment, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent15.ext.controller.ListReportExt", {
@@ -232,16 +233,22 @@ sap.ui.define([
             if (this._ws) return;
 
             try {
-                this._ws = new WebSocket('ws://localhost:8015/orchestrator/updates');
+                this._ws = SecurityUtils.createSecureWebSocket('wss://localhost:8015/orchestrator/updates', {
+                    onmessage: function(event) {
+                        const data = JSON.parse(event.data);
+                        this._handleOrchestrationUpdate(data);
+                    }.bind(this),
+                    onerror: function(error) {
+                        console.warn("Secure WebSocket error:", error);
+                        this._initializePolling();
+                    }.bind(this)
+                });
                 
-                this._ws.onmessage = function(event) {
-                    const data = JSON.parse(event.data);
-                    this._handleOrchestrationUpdate(data);
-                }.bind(this);
-
-                this._ws.onclose = function() {
-                    setTimeout(() => this._initializeWebSocket(), 5000);
-                }.bind(this);
+                if (this._ws) {
+                    this._ws.onclose = function() {
+                        setTimeout(() => this._initializeWebSocket(), 5000);
+                    }.bind(this);
+                }
 
             } catch (error) {
                 console.warn("WebSocket connection failed, falling back to polling");
@@ -289,7 +296,7 @@ sap.ui.define([
         _loadOrchestrationData: function() {
             const oModel = this.getView().getModel();
             
-            oModel.callFunction("/GetOrchestrationMetrics", {
+            SecurityUtils.secureCallFunction(oModel, "/GetOrchestrationMetrics", {
                 success: function(data) {
                     this._updateOrchestrationDashboard(data);
                 }.bind(this),
@@ -305,7 +312,7 @@ sap.ui.define([
             
             MessageToast.show(this.getResourceBundle().getText("msg.workflowsStarting"));
             
-            oModel.callFunction("/ExecuteWorkflows", {
+            SecurityUtils.secureCallFunction(oModel, "/ExecuteWorkflows", {
                 urlParameters: {
                     workflowIds: aWorkflowIds.join(',')
                 },
@@ -323,7 +330,7 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const aWorkflowIds = aWorkflows.map(wf => wf.workflowId);
             
-            oModel.callFunction("/PauseWorkflows", {
+            SecurityUtils.secureCallFunction(oModel, "/PauseWorkflows", {
                 urlParameters: {
                     workflowIds: aWorkflowIds.join(',')
                 },
@@ -341,7 +348,7 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const aWorkflowIds = aWorkflows.map(wf => wf.workflowId);
             
-            oModel.callFunction("/StopWorkflows", {
+            SecurityUtils.secureCallFunction(oModel, "/StopWorkflows", {
                 urlParameters: {
                     workflowIds: aWorkflowIds.join(',')
                 },
@@ -358,7 +365,7 @@ sap.ui.define([
         _loadAgentNetworkData: function() {
             const oModel = this.getView().getModel();
             
-            oModel.callFunction("/GetAgentNetworkStatus", {
+            SecurityUtils.secureCallFunction(oModel, "/GetAgentNetworkStatus", {
                 success: function(data) {
                     this._updateAgentCoordinator(data);
                 }.bind(this),
@@ -371,7 +378,7 @@ sap.ui.define([
         _analyzeSystemPerformance: function() {
             const oModel = this.getView().getModel();
             
-            oModel.callFunction("/AnalyzeSystemPerformance", {
+            SecurityUtils.secureCallFunction(oModel, "/AnalyzeSystemPerformance", {
                 success: function(data) {
                     this._displayPerformanceAnalysis(data);
                 }.bind(this),
@@ -384,7 +391,7 @@ sap.ui.define([
         _loadPipelineData: function() {
             const oModel = this.getView().getModel();
             
-            oModel.callFunction("/GetPipelineDefinitions", {
+            SecurityUtils.secureCallFunction(oModel, "/GetPipelineDefinitions", {
                 success: function(data) {
                     this._updatePipelineManager(data);
                 }.bind(this),
@@ -397,7 +404,7 @@ sap.ui.define([
         _loadQueueData: function() {
             const oModel = this.getView().getModel();
             
-            oModel.callFunction("/GetTaskQueues", {
+            SecurityUtils.secureCallFunction(oModel, "/GetTaskQueues", {
                 success: function(data) {
                     this._updateQueueManager(data);
                 }.bind(this),
@@ -410,7 +417,7 @@ sap.ui.define([
         _loadEventStream: function() {
             const oModel = this.getView().getModel();
             
-            oModel.callFunction("/GetOrchestrationEvents", {
+            SecurityUtils.secureCallFunction(oModel, "/GetOrchestrationEvents", {
                 success: function(data) {
                     this._updateEventStream(data);
                 }.bind(this),

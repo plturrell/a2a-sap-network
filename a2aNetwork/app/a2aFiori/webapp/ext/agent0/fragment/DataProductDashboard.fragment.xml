@@ -1,0 +1,122 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz.ui5.controls"
+    xmlns:viz.data="sap.viz.ui5.data"
+    xmlns:viz.feeds="sap.viz.ui5.controls.common.feeds">
+    
+    <Dialog
+        id="dashboardDialog"
+        title="{i18n>dashboard.title}"
+        contentWidth="90%"
+        contentHeight="600px"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <ScrollContainer height="100%" width="100%" vertical="true">
+                <VBox class="sapUiMediumMargin">
+                    <!-- Key Metrics -->
+                    <HBox justifyContent="SpaceAround" class="sapUiMediumMarginBottom">
+                        <VBox alignItems="Center" class="sapUiSmallMargin">
+                            <NumericContent
+                                value="{viewModel>/dashboardData/totalProducts}"
+                                icon="sap-icon://database"
+                                withMargin="false"
+                                truncateValueTo="4"/>
+                            <Title text="{i18n>dashboard.totalProducts}" level="H5"/>
+                        </VBox>
+                        
+                        <VBox alignItems="Center" class="sapUiSmallMargin">
+                            <NumericContent
+                                value="{viewModel>/dashboardData/activeProducts}"
+                                icon="sap-icon://accept"
+                                valueColor="Good"
+                                withMargin="false"
+                                truncateValueTo="4"/>
+                            <Title text="{i18n>dashboard.activeProducts}" level="H5"/>
+                        </VBox>
+                        
+                        <VBox alignItems="Center" class="sapUiSmallMargin">
+                            <NumericContent
+                                value="{viewModel>/dashboardData/averageQuality}"
+                                scale="%"
+                                icon="sap-icon://quality-issue"
+                                valueColor="Good"
+                                withMargin="false"/>
+                            <Title text="{i18n>dashboard.qualityAverage}" level="H5"/>
+                        </VBox>
+                    </HBox>
+                    
+                    <!-- Products by Type Chart -->
+                    <VBox class="sapUiMediumMarginTop">
+                        <Title text="{i18n>dashboard.productsByType}" level="H4"/>
+                        <viz:VizFrame
+                            id="productTypeChart"
+                            uiConfig="{applicationSet:'fiori'}"
+                            height="300px"
+                            width="100%"
+                            vizType="donut">
+                            <viz:dataset>
+                                <viz.data:FlattenedDataset data="{/productsByType}">
+                                    <viz.data:dimensions>
+                                        <viz.data:DimensionDefinition name="Type" value="{type}"/>
+                                    </viz.data:dimensions>
+                                    <viz.data:measures>
+                                        <viz.data:MeasureDefinition name="Count" value="{count}"/>
+                                    </viz.data:measures>
+                                </viz.data:FlattenedDataset>
+                            </viz:dataset>
+                            
+                            <viz:feeds>
+                                <viz.feeds:FeedItem uid="size" type="Measure" values="Count"/>
+                                <viz.feeds:FeedItem uid="color" type="Dimension" values="Type"/>
+                            </viz:feeds>
+                        </viz:VizFrame>
+                    </VBox>
+                    
+                    <!-- Recent Activity -->
+                    <VBox class="sapUiMediumMarginTop">
+                        <Title text="{i18n>dashboard.recentActivity}" level="H4"/>
+                        <Table
+                            items="{viewModel>/dashboardData/recentActivity}"
+                            mode="None">
+                            <columns>
+                                <Column>
+                                    <Text text="Action"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Product"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Timestamp"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <ObjectStatus text="{action}" state="Information"/>
+                                        <Text text="{product}"/>
+                                        <Text text="{
+                                            path: 'timestamp',
+                                            type: 'sap.ui.model.type.DateTime',
+                                            formatOptions: {
+                                                style: 'medium'
+                                            }
+                                        }"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </VBox>
+            </ScrollContainer>
+        </content>
+        
+        <buttons>
+            <Button text="Refresh" type="Ghost" icon="sap-icon://refresh" press="onRefreshDashboard"/>
+            <Button text="Export" type="Ghost" icon="sap-icon://download" press="onExportDashboard"/>
+            <Button text="Close" press="onCloseDashboard"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

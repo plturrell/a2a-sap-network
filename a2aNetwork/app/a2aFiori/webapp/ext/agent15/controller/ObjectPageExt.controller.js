@@ -2,8 +2,9 @@ sap.ui.define([
     "sap/ui/core/mvc/ControllerExtension",
     "sap/m/MessageToast",
     "sap/m/MessageBox",
-    "sap/ui/core/Fragment"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment) {
+    "sap/ui/core/Fragment",
+    "a2a/network/agent15/ext/utils/SecurityUtils"
+], function(ControllerExtension, MessageToast, MessageBox, Fragment, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent15.ext.controller.ObjectPageExt", {
@@ -252,32 +253,30 @@ sap.ui.define([
             }
 
             try {
-                this._eventSource = new EventSource(`http://localhost:8015/orchestrator/workflow/${workflowId}/stream`);
+                this._eventSource = SecurityUtils.createSecureEventSource(`https://localhost:8015/orchestrator/workflow/${workflowId}/stream`, {
+                    'workflow-progress': (event) => {
+                        const data = JSON.parse(event.data);
+                        this._updateWorkflowProgress(data);
+                    },
+                    'step-completed': (event) => {
+                        const data = JSON.parse(event.data);
+                        this._handleStepCompleted(data);
+                    },
+                    'agent-status': (event) => {
+                        const data = JSON.parse(event.data);
+                        this._updateAgentStatus(data);
+                    },
+                    'coordination-event': (event) => {
+                        const data = JSON.parse(event.data);
+                        this._handleCoordinationEvent(data);
+                    },
+                    'performance-alert': (event) => {
+                        const data = JSON.parse(event.data);
+                        this._handlePerformanceAlert(data);
+                    }
+                });
                 
-                this._eventSource.addEventListener('workflow-progress', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._updateWorkflowProgress(data);
-                });
-
-                this._eventSource.addEventListener('step-completed', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._handleStepCompleted(data);
-                });
-
-                this._eventSource.addEventListener('agent-status', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._updateAgentStatus(data);
-                });
-
-                this._eventSource.addEventListener('coordination-event', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._handleCoordinationEvent(data);
-                });
-
-                this._eventSource.addEventListener('performance-alert', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._handlePerformanceAlert(data);
-                });
+                // Event handlers configured in createSecureEventSource
 
             } catch (error) {
                 console.warn("Server-Sent Events not available, using polling");

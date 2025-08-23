@@ -1,0 +1,12 @@
+# Docker Buildx configuration for cloud builds
+[worker.oci]
+  max-parallelism = 4
+
+[registry."docker.io"]
+  mirrors = ["mirror.gcr.io"]
+
+# Cache configuration
+[cache]
+  # Use registry cache for better performance
+  export-cache-type = "registry"
+  import-cache-type = "registry"

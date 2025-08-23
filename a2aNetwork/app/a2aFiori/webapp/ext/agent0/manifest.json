@@ -1,137 +1,67 @@
 {
-    "_version": "1.60.0",
-    "sap.app": {
-        "id": "a2a.network.agent0",
-        "type": "application",
-        "i18n": "i18n/i18n.properties",
-        "title": "{{agent0Title}}",
-        "description": "{{agent0Description}}",
-        "applicationVersion": {
-            "version": "1.0.0"
-        },
-        "dataSources": {
-            "mainService": {
-                "uri": "/a2a/agent0/v1/odata/",
-                "type": "OData",
-                "settings": {
-                    "odataVersion": "4.0"
-                }
-            }
-        }
-    },
-    "sap.ui5": {
-        "dependencies": {
-            "minUI5Version": "1.120.0",
-            "libs": {
-                "sap.fe.templates": {},
-                "sap.f": {},
-                "sap.m": {},
-                "sap.ui.core": {}
-            }
-        },
-        "models": {
-            "": {
-                "dataSource": "mainService",
-                "preload": true,
-                "settings": {
-                    "operationMode": "Server",
-                    "autoExpandSelect": true,
-                    "earlyRequests": true
+    "id": "a2a.agent0",
+    "type": "extension",
+    "i18n": "i18n/i18n.properties",
+    "name": "Agent 0 - Data Product Agent",
+    "description": "Entry point agent for data product management with Dublin Core metadata",
+    
+    "extends": {
+        "component": "a2a.Component",
+        "extensions": {
+            "sap.ui.controllerExtensions": {
+                "sap.fe.templates.ListReport.ListReportController": {
+                    "controllerName": "a2a.ext.agent0.controller.ListReportExt"
+                },
+                "sap.fe.templates.ObjectPage.ObjectPageController": {
+                    "controllerName": "a2a.ext.agent0.controller.ObjectPageExt"
                 }
             },
-            "@i18n": {
-                "type": "sap.ui.model.resource.ResourceModel",
-                "uri": "i18n/i18n.properties"
-            }
-        },
-        "routing": {
-            "routes": [
-                {
-                    "name": "DataProductsList",
-                    "pattern": ":?query:",
-                    "target": {
-                        "type": "Component",
-                        "name": "DataProductsList",
-                        "options": {
-                            "settings": {
-                                "entitySet": "DataProducts",
-                                "variantManagement": "Page",
-                                "initialLoad": true,
-                                "enhanceLoad": true,
-                                "controlConfiguration": {
-                                    "@com.sap.vocabularies.UI.v1.LineItem": {
-                                        "tableSettings": {
-                                            "type": "ResponsiveTable",
-                                            "selectionMode": "Multi",
-                                            "condensedTableLayout": true
-                                        },
-                                        "actions": {
-                                            "DataProductCreate": {
-                                                "press": ".extension.a2a.network.agent0.ext.controller.ListReportExt.onCreateDataProduct",
-                                                "visible": true,
-                                                "enabled": true,
-                                                "requiresSelection": false,
-                                                "text": "Create Data Product"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+            "sap.ui.viewExtensions": {
+                "sap.fe.templates.ListReport.ListReport": {
+                    "ResponsiveTableColumnsExtension|DataProducts": {
+                        "className": "sap.ui.core.Fragment",
+                        "fragmentName": "a2a.ext.agent0.fragment.DataProductColumns",
+                        "type": "XML"
                     }
                 },
-                {
-                    "name": "DataProductsDetails",
-                    "pattern": "DataProducts({key}):?query:",
-                    "target": {
-                        "type": "Component",
-                        "name": "DataProductsDetails",
-                        "options": {
-                            "settings": {
-                                "entitySet": "DataProducts",
-                                "editableHeaderContent": true,
-                                "controlConfiguration": {
-                                    "@com.sap.vocabularies.UI.v1.HeaderInfo": {
-                                        "actions": {
-                                            "ValidateQuality": {
-                                                "press": ".extension.a2a.network.agent0.ext.controller.ObjectPageExt.onValidateQuality",
-                                                "visible": true,
-                                                "enabled": true,
-                                                "text": "Validate Quality"
-                                            },
-                                            "RegisterORD": {
-                                                "press": ".extension.a2a.network.agent0.ext.controller.ObjectPageExt.onRegisterORD",
-                                                "visible": true,
-                                                "enabled": "{= ${status} === 'VALIDATED' }",
-                                                "text": "Register in ORD"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "extends": {
-            "extensions": {
-                "sap.ui.controllerExtensions": {
-                    "sap.fe.templates.ListReport.ListReportController": {
-                        "controllerName": "a2a.network.agent0.ext.controller.ListReportExt"
+                "sap.fe.templates.ObjectPage.ObjectPage": {
+                    "ReplaceFacet|DublinCoreMetadata": {
+                        "className": "sap.ui.core.Fragment",
+                        "fragmentName": "a2a.ext.agent0.fragment.DublinCoreMetadata",
+                        "type": "XML"
                     },
-                    "sap.fe.templates.ObjectPage.ObjectPageController": {
-                        "controllerName": "a2a.network.agent0.ext.controller.ObjectPageExt"
+                    "ReplaceFacet|DataLineage": {
+                        "className": "sap.ui.core.Fragment",
+                        "fragmentName": "a2a.ext.agent0.fragment.DataLineage",
+                        "type": "XML"
+                    },
+                    "ReplaceFacet|QualityMetrics": {
+                        "className": "sap.ui.core.Fragment",
+                        "fragmentName": "a2a.ext.agent0.fragment.QualityMetrics",
+                        "type": "XML"
                     }
                 }
             }
         }
     },
-    "sap.fiori": {
-        "registrationIds": ["F0001A0"],
-        "archeType": "transactional"
+    
+    "contentDensities": {
+        "compact": true,
+        "cozy": true
     },
-    "sap.fe": {
-        "type": "default"
+    
+    "models": {
+        "i18n": {
+            "type": "sap.ui.model.resource.ResourceModel",
+            "settings": {
+                "bundleName": "a2a.ext.agent0.i18n.i18n"
+            }
+        }
+    },
+    
+    "resources": {
+        "css": [{
+            "uri": "css/style.css"
+        }]
     }
 }

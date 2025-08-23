@@ -140,15 +140,16 @@
                                             type="sql"
                                             height="400px"
                                             width="100%"
-                                            value=""
-                                            class="sapUiSmallMarginBottom"/>
+                                            value="{create>/sqlStatement}"
+                                            class="sapUiSmallMarginBottom"
+                                            change=".onSQLStatementChange"/>
                                         
                                         <HBox class="sapUiSmallMarginBottom">
                                             <VBox class="sapUiMediumMarginEnd" width="50%">
                                                 
                                                 <!-- Query Language -->
                                                 <Label text="{i18n>field.queryLanguage}" class="sapUiSmallMarginBottom"/>
-                                                <ComboBox id="queryLanguageCombo" selectedKey="sql">
+                                                <ComboBox id="queryLanguageCombo" selectedKey="{create>/queryLanguage}" selectionChange=".onQueryLanguageChange">
                                                     <core:Item key="sql" text="SQL"/>
                                                     <core:Item key="tsql" text="T-SQL"/>
                                                     <core:Item key="plsql" text="PL/SQL"/>
@@ -159,7 +160,7 @@
                                                 
                                                 <!-- Dialect Version -->
                                                 <Label text="{i18n>field.dialectVersion}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                                <Input id="dialectVersionInput" value="" placeholder="{i18n>placeholder.dialectVersion}"/>
+                                                <Input id="dialectVersionInput" value="{create>/dialectVersion}" placeholder="{i18n>placeholder.dialectVersion}"/>
                                                 
                                             </VBox>
                                             
@@ -167,11 +168,11 @@
                                                 
                                                 <!-- Estimated Cost -->
                                                 <Label text="{i18n>field.estimatedCost}" class="sapUiSmallMarginBottom"/>
-                                                <Input id="estimatedCostInput" value="" placeholder="{i18n>placeholder.estimatedCost}"/>
+                                                <Input id="estimatedCostInput" value="{create>/estimatedCost}" placeholder="{i18n>placeholder.estimatedCost}" editable="false"/>
                                                 
                                                 <!-- Index Usage -->
                                                 <Label text="{i18n>field.indexUsage}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                                <ComboBox id="indexUsageCombo" selectedKey="auto">
+                                                <ComboBox id="indexUsageCombo" selectedKey="{create>/indexUsage}">
                                                     <core:Item key="auto" text="{i18n>indexUsage.auto}"/>
                                                     <core:Item key="force" text="{i18n>indexUsage.force}"/>
                                                     <core:Item key="hint" text="{i18n>indexUsage.hint}"/>
@@ -216,29 +217,29 @@
                                             
                                             <!-- Connection String -->
                                             <Label text="{i18n>field.connectionString}"/>
-                                            <Input id="connectionStringInput" value="" placeholder="{i18n>placeholder.connectionString}" type="Password"/>
+                                            <Input id="connectionStringInput" value="{create>/connectionString}" placeholder="{i18n>placeholder.connectionString}" type="Password"/>
                                             
                                             <!-- Schema Name -->
                                             <Label text="{i18n>field.schemaName}"/>
-                                            <ComboBox id="schemaNameCombo" selectedKey="" placeholder="{i18n>placeholder.schemaName}">
+                                            <ComboBox id="schemaNameCombo" selectedKey="{create>/schemaName}" placeholder="{i18n>placeholder.schemaName}">
                                                 <!-- Schema options will be loaded dynamically -->
                                             </ComboBox>
                                             
                                             <!-- Database Version -->
                                             <Label text="{i18n>field.databaseVersion}"/>
-                                            <Input id="databaseVersionInput" value="" placeholder="{i18n>placeholder.databaseVersion}"/>
+                                            <Input id="databaseVersionInput" value="{create>/databaseVersion}" placeholder="{i18n>placeholder.databaseVersion}"/>
                                             
                                             <!-- Connection Pool -->
                                             <Label text="{i18n>field.connectionPool}"/>
-                                            <StepInput id="connectionPoolInput" value="10" min="1" max="100" step="1"/>
+                                            <StepInput id="connectionPoolInput" value="{create>/connectionPool}" min="1" max="100" step="1"/>
                                             
                                             <!-- Timeout Settings -->
                                             <Label text="{i18n>field.timeoutSettings}"/>
-                                            <StepInput id="timeoutSettingsInput" value="30" min="5" max="300" step="5"/>
+                                            <StepInput id="timeoutSettingsInput" value="{create>/timeoutSettings}" min="5" max="300" step="5"/>
                                             
                                             <!-- Transaction Mode -->
                                             <Label text="{i18n>field.transactionMode}"/>
-                                            <ComboBox id="transactionModeCombo" selectedKey="auto">
+                                            <ComboBox id="transactionModeCombo" selectedKey="{create>/transactionMode}">
                                                 <core:Item key="auto" text="{i18n>transaction.auto}"/>
                                                 <core:Item key="manual" text="{i18n>transaction.manual}"/>
                                                 <core:Item key="read_only" text="{i18n>transaction.read_only}"/>
@@ -247,7 +248,7 @@
                                             
                                             <!-- Isolation Level -->
                                             <Label text="{i18n>field.isolationLevel}"/>
-                                            <ComboBox id="isolationLevelCombo" selectedKey="read_committed">
+                                            <ComboBox id="isolationLevelCombo" selectedKey="{create>/isolationLevel}">
                                                 <core:Item key="read_uncommitted" text="{i18n>isolation.read_uncommitted}"/>
                                                 <core:Item key="read_committed" text="{i18n>isolation.read_committed}"/>
                                                 <core:Item key="repeatable_read" text="{i18n>isolation.repeatable_read}"/>
@@ -256,7 +257,7 @@
                                             
                                             <!-- Auto Commit -->
                                             <Label text="{i18n>field.autoCommit}"/>
-                                            <Switch id="autoCommitSwitch" state="true"/>
+                                            <Switch id="autoCommitSwitch" state="{create>/autoCommit}"/>
                                             
                                         </f:content>
                                     </f:SimpleForm>
@@ -351,7 +352,7 @@
                                         
                                         <!-- Data Classification -->
                                         <Label text="{i18n>field.dataClassification}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                        <ComboBox id="dataClassificationCombo" selectedKey="internal">
+                                        <ComboBox id="dataClassificationCombo" selectedKey="{create>/dataClassification}">
                                             <core:Item key="public" text="Public"/>
                                             <core:Item key="internal" text="Internal"/>
                                             <core:Item key="confidential" text="Confidential"/>

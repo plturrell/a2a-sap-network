@@ -5,12 +5,16 @@
     xmlns:f="sap.ui.layout.form">
     
     <Dialog
+        id="createCatalogEntryDialog"
         title="{i18n>dialog.createCatalogEntry.title}"
         class="sapUiMediumMargin"
-        contentWidth="80vw"
+        contentWidth="75rem"
         contentHeight="85vh"
         resizable="true"
-        draggable="true">
+        draggable="true"
+        stretch="{device>/system/phone}"
+        afterOpen=".onCreateDialogAfterOpen"
+        afterClose=".onCreateDialogAfterClose">
         
         <content>
             <Page showHeader="false">
@@ -31,19 +35,36 @@
                                             
                                             <!-- Resource Name -->
                                             <Label text="{i18n>field.resourceName}" required="true"/>
-                                            <Input id="resourceNameInput" value="" placeholder="{i18n>placeholder.resourceName}" required="true"/>
+                                            <Input 
+                                                id="resourceNameInput" 
+                                                value="{create>/resourceName}" 
+                                                placeholder="{i18n>placeholder.resourceName}" 
+                                                required="true"
+                                                valueState="{create>/resourceNameState}"
+                                                valueStateText="{create>/resourceNameStateText}"
+                                                liveChange=".onResourceNameChange"
+                                                ariaLabelledBy="resourceNameLabel"/>
                                             
                                             <!-- Description -->
                                             <Label text="{i18n>field.description}"/>
-                                            <TextArea id="descriptionInput" value="" rows="3" placeholder="{i18n>placeholder.description}"/>
+                                            <TextArea 
+                                                id="descriptionInput" 
+                                                value="{create>/description}" 
+                                                rows="3" 
+                                                placeholder="{i18n>placeholder.description}"
+                                                maxLength="500"
+                                                showExceededText="true"/>
                                             
                                             <!-- Catalog Type -->
                                             <Label text="{i18n>field.catalogType}" required="true"/>
                                             <ComboBox
                                                 id="catalogTypeCombo"
-                                                selectedKey=""
+                                                selectedKey="{create>/catalogType}"
                                                 placeholder="{i18n>placeholder.catalogType}"
-                                                required="true">
+                                                required="true"
+                                                valueState="{create>/catalogTypeState}"
+                                                valueStateText="{create>/catalogTypeStateText}"
+                                                selectionChange=".onCatalogTypeChange">
                                                 <core:Item key="service" text="{i18n>catalog.service}"/>
                                                 <core:Item key="api" text="{i18n>catalog.api}"/>
                                                 <core:Item key="data" text="{i18n>catalog.data}"/>
@@ -58,9 +79,12 @@
                                             <Label text="{i18n>field.resourceType}" required="true"/>
                                             <ComboBox
                                                 id="resourceTypeCombo"
-                                                selectedKey=""
+                                                selectedKey="{create>/resourceType}"
                                                 placeholder="{i18n>placeholder.resourceType}"
-                                                required="true">
+                                                required="true"
+                                                valueState="{create>/resourceTypeState}"
+                                                valueStateText="{create>/resourceTypeStateText}"
+                                                selectionChange=".onResourceTypeChange">
                                                 <core:Item key="rest_api" text="{i18n>resource.rest_api}"/>
                                                 <core:Item key="soap_service" text="{i18n>resource.soap_service}"/>
                                                 <core:Item key="graphql" text="{i18n>resource.graphql}"/>
@@ -79,15 +103,23 @@
                                             <Label text="{i18n>field.category}" required="true"/>
                                             <ComboBox
                                                 id="categoryCombo"
-                                                selectedKey=""
+                                                selectedKey="{create>/category}"
                                                 placeholder="{i18n>placeholder.category}"
-                                                required="true">
-                                                <!-- Categories will be loaded dynamically -->
+                                                required="true"
+                                                valueState="{create>/categoryState}"
+                                                valueStateText="{create>/categoryStateText}"
+                                                items="{create>/categories}"
+                                                selectionChange=".onCategoryChange">
+                                                <core:ListItem 
+                                                    key="{create>categoryId}"
+                                                    text="{create>categoryName}"/>
                                             </ComboBox>
                                             
                                             <!-- Visibility -->
                                             <Label text="{i18n>field.visibility}"/>
-                                            <SegmentedButton id="visibilitySegmented" selectedKey="internal">
+                                            <SegmentedButton 
+                                                id="visibilitySegmented" 
+                                                selectedKey="{create>/visibility}">
                                                 <items>
                                                     <SegmentedButtonItem key="public" text="{i18n>visibility.public}"/>
                                                     <SegmentedButtonItem key="internal" text="{i18n>visibility.internal}"/>
@@ -113,19 +145,27 @@
                                             
                                             <!-- Resource URL -->
                                             <Label text="{i18n>field.resourceUrl}" required="true"/>
-                                            <Input id="resourceUrlInput" value="" type="Url" placeholder="{i18n>placeholder.resourceUrl}" required="true"/>
+                                            <Input 
+                                                id="resourceUrlInput" 
+                                                value="{create>/resourceUrl}" 
+                                                type="Url" 
+                                                placeholder="{i18n>placeholder.resourceUrl}" 
+                                                required="true"
+                                                valueState="{create>/resourceUrlState}"
+                                                valueStateText="{create>/resourceUrlStateText}"
+                                                liveChange=".onResourceUrlChange"/>
                                             
                                             <!-- Version -->
                                             <Label text="{i18n>field.version}"/>
-                                            <Input id="versionInput" value="" placeholder="{i18n>placeholder.version}"/>
+                                            <Input id="versionInput" value="{create>/version}" placeholder="{i18n>placeholder.version}"/>
                                             
                                             <!-- API Version -->
                                             <Label text="{i18n>field.apiVersion}"/>
-                                            <Input id="apiVersionInput" value="" placeholder="{i18n>placeholder.apiVersion}"/>
+                                            <Input id="apiVersionInput" value="{create>/apiVersion}" placeholder="{i18n>placeholder.apiVersion}"/>
                                             
                                             <!-- Protocol -->
                                             <Label text="{i18n>field.protocol}"/>
-                                            <ComboBox id="protocolCombo" selectedKey="https">
+                                            <ComboBox id="protocolCombo" selectedKey="{create>/protocol}">
                                                 <core:Item key="http" text="{i18n>protocol.http}"/>
                                                 <core:Item key="https" text="{i18n>protocol.https}"/>
                                                 <core:Item key="tcp" text="{i18n>protocol.tcp}"/>
@@ -138,7 +178,7 @@
                                             
                                             <!-- Authentication Method -->
                                             <Label text="{i18n>field.authenticationMethod}"/>
-                                            <ComboBox id="authMethodCombo" selectedKey="bearer">
+                                            <ComboBox id="authMethodCombo" selectedKey="{create>/authenticationMethod}">
                                                 <core:Item key="none" text="{i18n>auth.none}"/>
                                                 <core:Item key="basic" text="{i18n>auth.basic}"/>
                                                 <core:Item key="bearer" text="{i18n>auth.bearer}"/>
@@ -151,7 +191,7 @@
                                             
                                             <!-- Content Type -->
                                             <Label text="{i18n>field.contentType}"/>
-                                            <ComboBox id="contentTypeCombo" selectedKey="json">
+                                            <ComboBox id="contentTypeCombo" selectedKey="{create>/contentType}">
                                                 <core:Item key="json" text="{i18n>content.json}"/>
                                                 <core:Item key="xml" text="{i18n>content.xml}"/>
                                                 <core:Item key="yaml" text="{i18n>content.yaml}"/>
@@ -164,15 +204,15 @@
                                             
                                             <!-- Documentation URL -->
                                             <Label text="{i18n>field.documentation}"/>
-                                            <Input id="documentationInput" value="" type="Url" placeholder="{i18n>placeholder.documentation}"/>
+                                            <Input id="documentationInput" value="{create>/documentation}" type="Url" placeholder="{i18n>placeholder.documentation}" liveChange=".onDocumentationUrlChange"/>
                                             
                                             <!-- Health Check URL -->
                                             <Label text="{i18n>field.healthCheckUrl}"/>
-                                            <Input id="healthCheckUrlInput" value="" type="Url" placeholder="{i18n>placeholder.healthCheckUrl}"/>
+                                            <Input id="healthCheckUrlInput" value="{create>/healthCheckUrl}" type="Url" placeholder="{i18n>placeholder.healthCheckUrl}" liveChange=".onHealthCheckUrlChange"/>
                                             
                                             <!-- Swagger URL -->
                                             <Label text="{i18n>field.swaggerUrl}"/>
-                                            <Input id="swaggerUrlInput" value="" type="Url" placeholder="{i18n>placeholder.swaggerUrl}"/>
+                                            <Input id="swaggerUrlInput" value="{create>/swaggerUrl}" type="Url" placeholder="{i18n>placeholder.swaggerUrl}" liveChange=".onSwaggerUrlChange"/>
                                             
                                         </f:content>
                                     </f:SimpleForm>
@@ -186,7 +226,7 @@
                                         
                                         <!-- Metadata Schema -->
                                         <Label text="{i18n>field.metadataSchema}" class="sapUiSmallMarginBottom"/>
-                                        <ComboBox id="metadataSchemaCombo" selectedKey="dublincore">
+                                        <ComboBox id="metadataSchemaCombo" selectedKey="{create>/metadataSchema}" selectionChange=".onMetadataSchemaChange">
                                             <core:Item key="dublincore" text="Dublin Core"/>
                                             <core:Item key="schema_org" text="Schema.org"/>
                                             <core:Item key="openapi" text="OpenAPI"/>
@@ -198,19 +238,19 @@
                                                 
                                                 <!-- Keywords -->
                                                 <Label text="{i18n>field.keywords}" class="sapUiSmallMarginBottom"/>
-                                                <Input id="keywordsInput" value="" placeholder="{i18n>placeholder.keywords}"/>
+                                                <Input id="keywordsInput" value="{create>/keywords}" placeholder="{i18n>placeholder.keywords}"/>
                                                 
                                                 <!-- Tags -->
                                                 <Label text="{i18n>field.tags}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                                <Input id="tagsInput" value="" placeholder="{i18n>placeholder.tags}"/>
+                                                <Input id="tagsInput" value="{create>/tags}" placeholder="{i18n>placeholder.tags}"/>
                                                 
                                                 <!-- Owner -->
                                                 <Label text="{i18n>field.owner}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                                <Input id="ownerInput" value="" placeholder="{i18n>placeholder.owner}"/>
+                                                <Input id="ownerInput" value="{create>/owner}" placeholder="{i18n>placeholder.owner}"/>
                                                 
                                                 <!-- Maintainer -->
                                                 <Label text="{i18n>field.maintainer}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                                <Input id="maintainerInput" value="" placeholder="{i18n>placeholder.maintainer}"/>
+                                                <Input id="maintainerInput" value="{create>/maintainer}" placeholder="{i18n>placeholder.maintainer}"/>
                                                 
                                             </VBox>
                                             
@@ -218,7 +258,7 @@
                                                 
                                                 <!-- License -->
                                                 <Label text="{i18n>field.license}" class="sapUiSmallMarginBottom"/>
-                                                <ComboBox id="licenseCombo">
+                                                <ComboBox id="licenseCombo" selectedKey="{create>/license}">
                                                     <core:Item key="mit" text="MIT License"/>
                                                     <core:Item key="apache2" text="Apache License 2.0"/>
                                                     <core:Item key="gpl3" text="GPL v3"/>
@@ -229,7 +269,7 @@
                                                 
                                                 <!-- Compliance -->
                                                 <Label text="{i18n>field.compliance}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                                <MultiComboBox id="complianceMultiCombo">
+                                                <MultiComboBox id="complianceMultiCombo" selectedKeys="{create>/compliance}" selectionChange=".onComplianceChange">
                                                     <core:Item key="gdpr" text="{i18n>compliance.gdpr}"/>
                                                     <core:Item key="hipaa" text="{i18n>compliance.hipaa}"/>
                                                     <core:Item key="sox" text="{i18n>compliance.sox}"/>
@@ -240,7 +280,7 @@
                                                 
                                                 <!-- Data Classification -->
                                                 <Label text="{i18n>field.dataClassification}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                                <ComboBox id="dataClassificationCombo" selectedKey="internal">
+                                                <ComboBox id="dataClassificationCombo" selectedKey="{create>/dataClassification}" selectionChange=".onDataClassificationChange">
                                                     <core:Item key="public" text="{i18n>classification.public}"/>
                                                     <core:Item key="internal" text="{i18n>classification.internal}"/>
                                                     <core:Item key="confidential" text="{i18n>classification.confidential}"/>
@@ -250,19 +290,19 @@
                                                 
                                                 <!-- Retention Period -->
                                                 <Label text="{i18n>field.retentionPeriod}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                                <StepInput id="retentionPeriodInput" value="365" min="1" max="3650" step="1"/>
+                                                <StepInput id="retentionPeriodInput" value="{create>/retentionPeriod}" min="1" max="3650" step="1"/>
                                                 
                                             </VBox>
                                         </HBox>
                                         
                                         <!-- Custom Metadata Properties -->
                                         <Label text="{i18n>section.customMetadata}" class="sapUiMediumMarginTop sapUiSmallMarginBottom"/>
-                                        <Table id="metadataPropertiesTable" mode="Delete">
+                                        <Table id="metadataPropertiesTable" mode="Delete" items="{create>/metadataProperties}" delete=".onDeleteMetadataProperty">
                                             <headerToolbar>
                                                 <Toolbar>
                                                     <Title text="{i18n>section.metadataProperties}"/>
                                                     <ToolbarSpacer/>
-                                                    <Button text="{i18n>btn.addProperty}" icon="sap-icon://add" press="onAddMetadataProperty" type="Transparent"/>
+                                                    <Button text="{i18n>btn.addProperty}" icon="sap-icon://add" press=".onAddMetadataProperty" type="Transparent"/>
                                                 </Toolbar>
                                             </headerToolbar>
                                             
@@ -284,16 +324,16 @@
                                             <items>
                                                 <ColumnListItem>
                                                     <cells>
-                                                        <Input value="{propertyName}" placeholder="{i18n>placeholder.propertyName}"/>
-                                                        <ComboBox selectedKey="{propertyType}">
+                                                        <Input value="{create>propertyName}" placeholder="{i18n>placeholder.propertyName}"/>
+                                                        <ComboBox selectedKey="{create>propertyType}">
                                                             <core:Item key="string" text="String"/>
                                                             <core:Item key="number" text="Number"/>
                                                             <core:Item key="boolean" text="Boolean"/>
                                                             <core:Item key="date" text="Date"/>
                                                             <core:Item key="url" text="URL"/>
                                                         </ComboBox>
-                                                        <Input value="{propertyValue}" placeholder="{i18n>placeholder.propertyValue}"/>
-                                                        <CheckBox selected="{isSearchable}"/>
+                                                        <Input value="{create>propertyValue}" placeholder="{i18n>placeholder.propertyValue}"/>
+                                                        <CheckBox selected="{create>isSearchable}"/>
                                                     </cells>
                                                 </ColumnListItem>
                                             </items>
@@ -315,23 +355,23 @@
                                             
                                             <!-- Searchable -->
                                             <Label text="{i18n>field.searchable}"/>
-                                            <Switch id="searchableSwitch" state="true"/>
+                                            <Switch id="searchableSwitch" state="{create>/searchable}" change=".onSearchableChange"/>
                                             
                                             <!-- Search Tags -->
                                             <Label text="{i18n>field.searchTags}"/>
-                                            <Input id="searchTagsInput" value="" placeholder="{i18n>placeholder.searchTags}"/>
+                                            <Input id="searchTagsInput" value="{create>/searchTags}" placeholder="{i18n>placeholder.searchTags}"/>
                                             
                                             <!-- Search Weight -->
                                             <Label text="{i18n>field.searchWeight}"/>
-                                            <Slider id="searchWeightSlider" value="50" min="0" max="100" step="5" enableTickmarks="true"/>
+                                            <Slider id="searchWeightSlider" value="{create>/searchWeight}" min="0" max="100" step="5" enableTickmarks="true"/>
                                             
                                             <!-- Auto Discovery -->
                                             <Label text="{i18n>field.autoDiscovery}"/>
-                                            <Switch id="autoDiscoverySwitch" state="false"/>
+                                            <Switch id="autoDiscoverySwitch" state="{create>/autoDiscovery}" change=".onAutoDiscoveryChange"/>
                                             
                                             <!-- Discovery Frequency -->
                                             <Label text="{i18n>field.discoveryFrequency}"/>
-                                            <ComboBox id="discoveryFrequencyCombo" selectedKey="daily">
+                                            <ComboBox id="discoveryFrequencyCombo" selectedKey="{create>/discoveryFrequency}" selectionChange=".onDiscoveryFrequencyChange">
                                                 <core:Item key="hourly" text="Hourly"/>
                                                 <core:Item key="daily" text="Daily"/>
                                                 <core:Item key="weekly" text="Weekly"/>
@@ -352,10 +392,16 @@
         </content>
         
         <beginButton>
-            <Button text="{i18n>btn.createEntry}" press="onCreateEntry" type="Emphasized"/>
+            <Button 
+                text="{i18n>btn.cancel}" 
+                press=".onCancelCreateCatalogEntry"/>
         </beginButton>
         <endButton>
-            <Button text="{i18n>btn.cancel}" press="onCancelCreateEntry"/>
+            <Button 
+                text="{i18n>btn.create}" 
+                press=".onConfirmCreateCatalogEntry" 
+                type="Emphasized"
+                enabled="{= ${create>/resourceName} &amp;&amp; ${create>/catalogType} &amp;&amp; ${create>/resourceType} &amp;&amp; ${create>/category} &amp;&amp; ${create>/resourceUrl} &amp;&amp; !${create>/resourceNameState} &amp;&amp; !${create>/catalogTypeState} &amp;&amp; !${create>/resourceTypeState} &amp;&amp; !${create>/categoryState} }"/>
         </endButton>
         
     </Dialog>

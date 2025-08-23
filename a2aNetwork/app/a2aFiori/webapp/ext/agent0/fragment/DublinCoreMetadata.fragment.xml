@@ -1,0 +1,151 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:l="sap.ui.layout">
+    
+    <VBox class="sapUiResponsiveMargin">
+        <Toolbar>
+            <Title text="Dublin Core Metadata" level="H3"/>
+            <ToolbarSpacer/>
+            <Button icon="sap-icon://edit" text="Edit" press="onEditMetadata"/>
+            <Button icon="sap-icon://validate" text="Validate" press="onValidateSchema"/>
+            <Button icon="sap-icon://generate-shortcut" text="Generate" press="onGenerateDublinCore"/>
+        </Toolbar>
+        
+        <Panel expandable="true" expanded="true" headerText="Core Elements">
+            <form:SimpleForm
+                editable="false"
+                layout="ResponsiveGridLayout"
+                labelSpanXL="3"
+                labelSpanL="3"
+                labelSpanM="3"
+                labelSpanS="12"
+                adjustLabelSpan="false"
+                emptySpanXL="4"
+                emptySpanL="4"
+                emptySpanM="4"
+                emptySpanS="0"
+                columnsXL="2"
+                columnsL="2"
+                columnsM="1"
+                singleContainerFullSize="false">
+                
+                <form:content>
+                    <Label text="{i18n>dc.title}"/>
+                    <Text text="{title}"/>
+                    
+                    <Label text="{i18n>dc.creator}"/>
+                    <Text text="{creator}"/>
+                    
+                    <Label text="{i18n>dc.subject}"/>
+                    <Text text="{subject}"/>
+                    
+                    <Label text="{i18n>dc.description}"/>
+                    <Text text="{description}" renderWhitespace="true"/>
+                    
+                    <Label text="{i18n>dc.publisher}"/>
+                    <Text text="{publisher}"/>
+                    
+                    <Label text="{i18n>dc.contributor}"/>
+                    <Text text="{contributor}"/>
+                    
+                    <Label text="{i18n>dc.date}"/>
+                    <Text text="{
+                        path: 'date',
+                        type: 'sap.ui.model.type.Date',
+                        formatOptions: {
+                            style: 'medium'
+                        }
+                    }"/>
+                    
+                    <Label text="{i18n>dc.type}"/>
+                    <ObjectStatus text="{type}" state="Information"/>
+                </form:content>
+            </form:SimpleForm>
+        </Panel>
+        
+        <Panel expandable="true" expanded="false" headerText="Additional Elements" class="sapUiSmallMarginTop">
+            <form:SimpleForm
+                editable="false"
+                layout="ResponsiveGridLayout"
+                labelSpanXL="3"
+                labelSpanL="3"
+                labelSpanM="3"
+                labelSpanS="12"
+                adjustLabelSpan="false"
+                emptySpanXL="4"
+                emptySpanL="4"
+                emptySpanM="4"
+                emptySpanS="0"
+                columnsXL="2"
+                columnsL="2"
+                columnsM="1"
+                singleContainerFullSize="false">
+                
+                <form:content>
+                    <Label text="{i18n>dc.format}"/>
+                    <Text text="{format}"/>
+                    
+                    <Label text="{i18n>dc.identifier}"/>
+                    <Text text="{identifier}"/>
+                    
+                    <Label text="{i18n>dc.source}"/>
+                    <Text text="{source}"/>
+                    
+                    <Label text="{i18n>dc.language}"/>
+                    <Text text="{language}"/>
+                    
+                    <Label text="{i18n>dc.relation}"/>
+                    <Text text="{relation}"/>
+                    
+                    <Label text="{i18n>dc.coverage}"/>
+                    <Text text="{coverage}"/>
+                    
+                    <Label text="{i18n>dc.rights}"/>
+                    <Text text="{rights}" renderWhitespace="true"/>
+                </form:content>
+            </form:SimpleForm>
+        </Panel>
+        
+        <Panel expandable="true" expanded="false" headerText="Metadata Quality" class="sapUiSmallMarginTop">
+            <VBox class="sapUiSmallMargin">
+                <HBox justifyContent="SpaceBetween" alignItems="Center">
+                    <Label text="Completeness:"/>
+                    <ProgressIndicator
+                        percentValue="{objectView>/qualityMetrics/completeness}"
+                        displayValue="{objectView>/qualityMetrics/completeness}%"
+                        showValue="true"
+                        state="{
+                            path: 'objectView>/qualityMetrics/completeness',
+                            formatter: '.formatQualityState'
+                        }"/>
+                </HBox>
+                
+                <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginTop">
+                    <Label text="Accuracy:"/>
+                    <ProgressIndicator
+                        percentValue="{objectView>/qualityMetrics/accuracy}"
+                        displayValue="{objectView>/qualityMetrics/accuracy}%"
+                        showValue="true"
+                        state="{
+                            path: 'objectView>/qualityMetrics/accuracy',
+                            formatter: '.formatQualityState'
+                        }"/>
+                </HBox>
+                
+                <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginTop">
+                    <Label text="Consistency:"/>
+                    <ProgressIndicator
+                        percentValue="{objectView>/qualityMetrics/consistency}"
+                        displayValue="{objectView>/qualityMetrics/consistency}%"
+                        showValue="true"
+                        state="{
+                            path: 'objectView>/qualityMetrics/consistency',
+                            formatter: '.formatQualityState'
+                        }"/>
+                </HBox>
+            </VBox>
+        </Panel>
+    </VBox>
+</core:FragmentDefinition>

@@ -3,12 +3,347 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/MessageBox",
     "sap/ui/core/Fragment",
+    "sap/ui/model/json/JSONModel",
     "a2a/network/agent11/ext/utils/SecurityUtils"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment, SecurityUtils) {
+], function(ControllerExtension, MessageToast, MessageBox, Fragment, JSONModel, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent11.ext.controller.ObjectPageExt", {
+
+        override: {
+            onInit: function () {
+                this._initializeCreateModel();
+            }
+        },
+
+        _initializeCreateModel: function() {
+            var oCreateData = {
+                queryName: "",
+                description: "",
+                queryType: "",
+                databaseType: "",
+                priority: "medium",
+                complexity: "moderate",
+                queryNameState: "",
+                queryNameStateText: "",
+                queryTypeState: "",
+                queryTypeStateText: "",
+                databaseTypeState: "",
+                databaseTypeStateText: "",
+                sqlStatement: "",
+                queryLanguage: "sql",
+                dialectVersion: "",
+                estimatedCost: "",
+                indexUsage: "auto",
+                connectionString: "",
+                schemaName: "",
+                databaseVersion: "",
+                connectionPool: 10,
+                timeoutSettings: 30,
+                transactionMode: "auto",
+                isolationLevel: "read_committed",
+                autoCommit: true,
+                dataClassification: "internal"
+            };
+            var oCreateModel = new JSONModel(oCreateData);
+            this.getView().setModel(oCreateModel, "create");
+        },
+
+        onCreateSQLQuery: function() {
+            var oView = this.getView();
+            
+            if (!this._oCreateDialog) {
+                Fragment.load({
+                    id: oView.getId(),
+                    name: "a2a.network.agent11.ext.fragment.CreateSQLQuery",
+                    controller: this
+                }).then(function(oDialog) {
+                    this._oCreateDialog = oDialog;
+                    oView.addDependent(this._oCreateDialog);
+                    this._oCreateDialog.open();
+                }.bind(this));
+            } else {
+                this._oCreateDialog.open();
+            }
+        },
+
+        onQueryNameChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            if (!sValue || sValue.length < 3) {
+                oData.queryNameState = "Error";
+                oData.queryNameStateText = "Query name must be at least 3 characters";
+            } else if (sValue.length > 100) {
+                oData.queryNameState = "Error";
+                oData.queryNameStateText = "Query name must not exceed 100 characters";
+            } else {
+                oData.queryNameState = "Success";
+                oData.queryNameStateText = "Valid query name";
+            }
+            
+            oCreateModel.setData(oData);
+        },
+
+        onQueryTypeChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            if (sValue) {
+                oData.queryTypeState = "Success";
+                oData.queryTypeStateText = "Query type selected";
+                
+                // Smart suggestions based on query type
+                switch (sValue) {
+                    case "select":
+                        oData.transactionMode = "read_only";
+                        oData.autoCommit = true;
+                        oData.isolationLevel = "read_committed";
+                        break;
+                    case "insert":
+                    case "update":
+                    case "delete":
+                        oData.transactionMode = "read_write";
+                        oData.autoCommit = false;
+                        oData.isolationLevel = "repeatable_read";
+                        break;
+                    case "create":
+                    case "alter":
+                    case "drop":
+                        oData.transactionMode = "manual";
+                        oData.autoCommit = false;
+                        oData.isolationLevel = "serializable";
+                        break;
+                    case "procedure":
+                    case "function":
+                        oData.complexity = "complex";
+                        oData.timeoutSettings = 60;
+                        break;
+                }
+            } else {
+                oData.queryTypeState = "Error";
+                oData.queryTypeStateText = "Please select a query type";
+            }
+            
+            oCreateModel.setData(oData);
+        },
+
+        onDatabaseTypeChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            if (sValue) {
+                oData.databaseTypeState = "Success";
+                oData.databaseTypeStateText = "Database type selected";
+                
+                // Set dialect version based on database type
+                switch (sValue) {
+                    case "mysql":
+                        oData.dialectVersion = "MySQL 8.0";
+                        oData.queryLanguage = "mysql";
+                        break;
+                    case "postgresql":
+                        oData.dialectVersion = "PostgreSQL 14";
+                        oData.queryLanguage = "postgresql";
+                        break;
+                    case "oracle":
+                        oData.dialectVersion = "Oracle 19c";
+                        oData.queryLanguage = "plsql";
+                        break;
+                    case "sqlserver":
+                        oData.dialectVersion = "SQL Server 2019";
+                        oData.queryLanguage = "tsql";
+                        break;
+                    case "hana":
+                        oData.dialectVersion = "HANA 2.0";
+                        oData.queryLanguage = "sql";
+                        oData.connectionPool = 20;
+                        break;
+                    default:
+                        oData.queryLanguage = "sql";
+                }
+            } else {
+                oData.databaseTypeState = "Error";
+                oData.databaseTypeStateText = "Please select a database type";
+            }
+            
+            oCreateModel.setData(oData);
+        },
+
+        onSQLStatementChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            // Basic SQL validation
+            if (sValue && sValue.trim().length > 0) {
+                // Validate SQL with SecurityUtils
+                var validation = SecurityUtils.validateSQL(sValue);
+                if (!validation.isValid) {
+                    MessageToast.show("SQL validation warning: " + validation.errors.join(", "));
+                }
+                
+                // Estimate complexity based on SQL content
+                var upperSQL = sValue.toUpperCase();
+                if (upperSQL.includes("JOIN") && upperSQL.includes("SUBQUERY")) {
+                    oData.complexity = "very_complex";
+                } else if (upperSQL.includes("JOIN") || upperSQL.includes("UNION")) {
+                    oData.complexity = "complex";
+                } else if (upperSQL.includes("WHERE") || upperSQL.includes("GROUP BY")) {
+                    oData.complexity = "moderate";
+                } else {
+                    oData.complexity = "simple";
+                }
+                
+                // Estimate cost (simplified)
+                oData.estimatedCost = this._estimateQueryCost(sValue);
+            }
+            
+            oCreateModel.setData(oData);
+        },
+
+        onQueryLanguageChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            // Update code editor type based on language
+            var oCodeEditor = this.getView().byId("sqlEditor");
+            if (oCodeEditor) {
+                oCodeEditor.setType(sValue === "nosql" ? "javascript" : "sql");
+            }
+            
+            oCreateModel.setData(oData);
+        },
+
+        _estimateQueryCost: function(sql) {
+            // Simplified cost estimation
+            var cost = 10;
+            var upperSQL = sql.toUpperCase();
+            
+            if (upperSQL.includes("JOIN")) cost += 20;
+            if (upperSQL.includes("SUBQUERY") || upperSQL.includes("IN (")) cost += 30;
+            if (upperSQL.includes("ORDER BY")) cost += 10;
+            if (upperSQL.includes("GROUP BY")) cost += 15;
+            if (upperSQL.includes("DISTINCT")) cost += 10;
+            if (upperSQL.includes("UNION")) cost += 25;
+            
+            return cost.toString();
+        },
+
+        onCancelCreateSQLQuery: function() {
+            this._oCreateDialog.close();
+            this._resetCreateModel();
+        },
+
+        onConfirmCreateSQLQuery: function() {
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            // Final validation
+            if (!this._validateCreateData(oData)) {
+                return;
+            }
+            
+            this._oCreateDialog.setBusy(true);
+            
+            // Sanitize data for security
+            var oSanitizedData = {
+                queryName: SecurityUtils.sanitizeSQLParameter(oData.queryName),
+                description: SecurityUtils.sanitizeSQLParameter(oData.description),
+                queryType: oData.queryType,
+                databaseType: oData.databaseType,
+                priority: oData.priority,
+                complexity: oData.complexity,
+                sqlStatement: oData.sqlStatement, // Already validated by SecurityUtils
+                queryLanguage: oData.queryLanguage,
+                dialectVersion: oData.dialectVersion,
+                estimatedCost: oData.estimatedCost,
+                indexUsage: oData.indexUsage,
+                connectionString: oData.connectionString,
+                schemaName: oData.schemaName,
+                databaseVersion: oData.databaseVersion,
+                connectionPool: parseInt(oData.connectionPool) || 10,
+                timeoutSettings: parseInt(oData.timeoutSettings) || 30,
+                transactionMode: oData.transactionMode,
+                isolationLevel: oData.isolationLevel,
+                autoCommit: !!oData.autoCommit,
+                dataClassification: oData.dataClassification
+            };
+            
+            SecurityUtils.secureCallFunction(this.getView().getModel(), "/CreateSQLQuery", {
+                urlParameters: oSanitizedData,
+                success: function(data) {
+                    this._oCreateDialog.setBusy(false);
+                    this._oCreateDialog.close();
+                    MessageToast.show(this.getResourceBundle().getText("msg.queryCreated"));
+                    this._refreshQueryData();
+                    this._resetCreateModel();
+                }.bind(this),
+                error: function(error) {
+                    this._oCreateDialog.setBusy(false);
+                    var errorMsg = SecurityUtils.escapeHTML(error.message || "Unknown error");
+                    MessageBox.error(this.getResourceBundle().getText("error.createQueryFailed") + ": " + errorMsg);
+                }.bind(this)
+            });
+        },
+
+        _validateCreateData: function(oData) {
+            if (!oData.queryName || oData.queryName.length < 3) {
+                MessageBox.error(this.getResourceBundle().getText("validation.queryNameRequired"));
+                return false;
+            }
+            
+            if (!oData.queryType) {
+                MessageBox.error(this.getResourceBundle().getText("validation.queryTypeRequired"));
+                return false;
+            }
+            
+            if (!oData.databaseType) {
+                MessageBox.error(this.getResourceBundle().getText("validation.databaseTypeRequired"));
+                return false;
+            }
+            
+            if (!oData.sqlStatement || oData.sqlStatement.trim() === "") {
+                MessageBox.error(this.getResourceBundle().getText("validation.sqlStatementRequired"));
+                return false;
+            }
+            
+            // Validate SQL with SecurityUtils
+            var validation = SecurityUtils.validateSQL(oData.sqlStatement);
+            if (!validation.isValid) {
+                MessageBox.error(this.getResourceBundle().getText("error.sqlValidationFailed", [validation.errors.join(", ")]));
+                return false;
+            }
+            
+            return true;
+        },
+
+        _resetCreateModel: function() {
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.queryName = "";
+            oData.description = "";
+            oData.queryType = "";
+            oData.databaseType = "";
+            oData.priority = "medium";
+            oData.complexity = "moderate";
+            oData.queryNameState = "";
+            oData.queryNameStateText = "";
+            oData.queryTypeState = "";
+            oData.queryTypeStateText = "";
+            oData.databaseTypeState = "";
+            oData.databaseTypeStateText = "";
+            oData.sqlStatement = "";
+            
+            oCreateModel.setData(oData);
+        },
         
+
         // Execute Query Action
         onExecuteQuery: function() {
             SecurityUtils.checkSQLAuth('execute', 'query').then(function(authorized) {
