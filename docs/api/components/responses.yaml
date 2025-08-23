@@ -1,0 +1,75 @@
+# Reusable Responses
+
+Success:
+  description: Operation completed successfully
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          message:
+            type: string
+            example: "Operation completed successfully"
+          timestamp:
+            type: string
+            format: date-time
+
+BadRequest:
+  description: Invalid request parameters
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/common.yaml#/ErrorResponse'
+      example:
+        error: "INVALID_REQUEST"
+        message: "Invalid request parameters"
+        timestamp: "2024-01-15T10:30:00Z"
+        requestId: "req_123456789"
+
+Unauthorized:
+  description: Authentication required
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/common.yaml#/ErrorResponse'
+      example:
+        error: "UNAUTHORIZED"
+        message: "Valid authentication token required"
+        timestamp: "2024-01-15T10:30:00Z"
+        requestId: "req_123456789"
+
+Forbidden:
+  description: Insufficient permissions
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/common.yaml#/ErrorResponse'
+      example:
+        error: "FORBIDDEN"
+        message: "Insufficient permissions to access this resource"
+        timestamp: "2024-01-15T10:30:00Z"
+        requestId: "req_123456789"
+
+NotFound:
+  description: Resource not found
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/common.yaml#/ErrorResponse'
+      example:
+        error: "NOT_FOUND"
+        message: "Requested resource not found"
+        timestamp: "2024-01-15T10:30:00Z"
+        requestId: "req_123456789"
+
+InternalServerError:
+  description: Internal server error
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/common.yaml#/ErrorResponse'
+      example:
+        error: "INTERNAL_ERROR"
+        message: "An unexpected error occurred"
+        timestamp: "2024-01-15T10:30:00Z"
+        requestId: "req_123456789"

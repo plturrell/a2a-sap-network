@@ -393,46 +393,9 @@ cds.on('bootstrap', async (app) => {
     
     // Agent 8 OData Service Proxy - Migrated to CAP service
     
-        try {
-            const response = await axios.get(`${AGENT8_BASE_URL}/api/v1/storage-backends`);
-            
-            const odataResponse = {
-                "@odata.context": "$metadata#StorageBackends",
-                "value": response.data.map(backend => ({
-                    ID: backend.id,
-                    backendName: backend.backend_name,
-                    backendType: backend.backend_type?.toUpperCase() || 'HANA',
-                    connectionString: backend.connection_string,
-                    status: backend.status?.toUpperCase() || 'ACTIVE',
-                    healthScore: backend.health_score || 100,
-                    totalCapacity: backend.total_capacity || 0,
-                    usedCapacity: backend.used_capacity || 0,
-                    availableCapacity: backend.available_capacity || 0,
-                    compressionEnabled: backend.compression_enabled !== false,
-                    encryptionEnabled: backend.encryption_enabled !== false,
-                    replicationFactor: backend.replication_factor || 1,
-                    lastHealthCheck: backend.last_health_check,
-                    configuration: JSON.stringify(backend.configuration || {}),
-                    credentials: JSON.stringify(backend.credentials || {}),
-                    createdAt: backend.created_at,
-                    createdBy: backend.created_by,
-                    modifiedAt: backend.modified_at,
-                    modifiedBy: backend.modified_by
-                }))
-            };
-            
-            res.json(odataResponse);
-        } catch (error) {
-            res.status(503).json({
-                error: {
-                    code: "SERVICE_UNAVAILABLE",
-                    message: "Agent 8 backend not available"
-                }
-            });
-        }
-    });
+    // Agent 8 storage backends - migrated to CAP service
     
-    log.info('Agent 8 API proxy routes initialized');
+    log.info('Agent 8 API proxy routes migrated to CAP services');
     
     // ===== AGENT 9 PROXY ROUTES - Advanced Logical Reasoning and Decision-Making Agent =====
     
@@ -452,88 +415,11 @@ cds.on('bootstrap', async (app) => {
     
     // Health Check
     
-    // Agent 9 OData Service Proxy - Convert REST to OData format
-        try {
-            // This would be handled by the CAP service, but we provide a fallback
-            const response = await axios.get(`${AGENT9_BASE_URL}/api/agent9/v1/reasoning-tasks`);
-            
-            // Convert to OData format
-            const odataResponse = {
-                "@odata.context": "$metadata#ReasoningTasks",
-                "value": response.data.map(task => ({
-                    ID: task.id,
-                    taskName: task.task_name,
-                    description: task.description,
-                    reasoningType: task.reasoning_type?.toUpperCase() || 'DEDUCTIVE',
-                    problemDomain: task.problem_domain?.toUpperCase() || 'GENERAL',
-                    reasoningEngine: task.reasoning_engine?.toUpperCase() || 'FORWARD_CHAINING',
-                    status: task.status?.toUpperCase() || 'PENDING',
-                    priority: task.priority?.toUpperCase() || 'MEDIUM',
-                    confidenceScore: task.confidence_score || 0.0,
-                    factsProcessed: task.facts_processed || 0,
-                    inferencesGenerated: task.inferences_generated || 0,
-                    conclusionsReached: task.conclusions_reached || 0,
-                    processingTime: task.processing_time || 0,
-                    confidenceThreshold: task.confidence_threshold || 0.5,
-                    maxInferenceDepth: task.max_inference_depth || 5,
-                    chainingStrategy: task.chaining_strategy?.toUpperCase() || 'BREADTH_FIRST',
-                    uncertaintyHandling: task.uncertainty_handling?.toUpperCase() || 'CRISP',
-                    probabilisticModel: task.probabilistic_model?.toUpperCase() || 'BAYESIAN',
-                    logicalFramework: task.logical_framework?.toUpperCase() || 'FIRST_ORDER',
-                    parallelReasoning: task.parallel_reasoning || false,
-                    explanationDepth: task.explanation_depth || 3,
-                    validationStatus: task.validation_status?.toUpperCase() || 'PENDING',
-                    createdAt: task.created_at,
-                    modifiedAt: task.modified_at
-                }))
-            };
-            
-            res.set('Content-Type', 'application/json');
-            res.json(odataResponse);
-        } catch (error) {
-            log.error('Agent 9 OData proxy error:', error.message);
-            res.status(500).json({
-                error: 'Failed to fetch Agent 9 reasoning tasks',
-                message: error.message
-            });
-        }
-    });
+    // Agent 9 OData Service Proxy - migrated to CAP service
     
-        try {
-            const response = await axios.get(`${AGENT9_BASE_URL}/api/agent9/v1/knowledge-base`);
-            
-            const odataResponse = {
-                "@odata.context": "$metadata#KnowledgeBaseElements", 
-                "value": response.data.map(element => ({
-                    ID: element.id,
-                    elementName: element.element_name,
-                    elementType: element.element_type?.toUpperCase() || 'FACT',
-                    content: element.content,
-                    domain: element.domain?.toUpperCase() || 'GENERAL',
-                    confidenceLevel: element.confidence_level || 3,
-                    priorityWeight: element.priority_weight || 0.5,
-                    source: element.source,
-                    isActive: element.is_active !== false,
-                    usageCount: element.usage_count || 0,
-                    lastUsed: element.last_used,
-                    tags: element.tags,
-                    createdAt: element.created_at,
-                    modifiedAt: element.modified_at
-                }))
-            };
-            
-            res.set('Content-Type', 'application/json');
-            res.json(odataResponse);
-        } catch (error) {
-            log.error('Agent 9 OData knowledge base proxy error:', error.message);
-            res.status(500).json({
-                error: 'Failed to fetch Agent 9 knowledge base elements',
-                message: error.message
-            });
-        }
-    });
+    // Agent 9 knowledge base - migrated to CAP service
     
-    log.info('Agent 9 API proxy routes initialized');
+    log.info('Agent 9 API proxy routes migrated to CAP services');
     
     // ===== AGENT 10 PROXY ROUTES - Calculation Engine =====
     
@@ -553,56 +439,9 @@ cds.on('bootstrap', async (app) => {
     
     // Health Check
     
-    // Agent 10 OData Service Proxy - Convert REST to OData format
-        try {
-            const response = await axios.get(`${AGENT10_BASE_URL}/api/agent10/v1/calculation-tasks`);
-            
-            const odataResponse = {
-                "@odata.context": "$metadata#CalculationTasks",
-                "value": response.data.map(task => ({
-                    ID: task.id,
-                    taskName: task.task_name,
-                    description: task.description,
-                    calculationType: task.calculation_type?.toUpperCase(),
-                    formula: task.formula,
-                    inputParameters: JSON.stringify(task.input_parameters || {}),
-                    calculationMethod: task.calculation_method?.toUpperCase(),
-                    precisionType: task.precision_type || 'DECIMAL64',
-                    requiredAccuracy: task.required_accuracy || 0.000001,
-                    maxIterations: task.max_iterations || 1000,
-                    timeout: task.timeout || 60000,
-                    enableSelfHealing: task.enable_self_healing !== false,
-                    verificationRounds: task.verification_rounds || 3,
-                    useParallelProcessing: task.use_parallel_processing !== false,
-                    cacheResults: task.cache_results !== false,
-                    priority: task.priority?.toUpperCase() || 'MEDIUM',
-                    status: task.status?.toUpperCase() || 'PENDING',
-                    progress: task.progress || 0,
-                    startTime: task.start_time,
-                    endTime: task.end_time,
-                    executionTime: task.execution_time,
-                    result: JSON.stringify(task.result || {}),
-                    errorMessage: task.error_message,
-                    selfHealingLog: JSON.stringify(task.self_healing_log || {}),
-                    performanceMetrics: JSON.stringify(task.performance_metrics || {}),
-                    metadata: JSON.stringify(task.metadata || {}),
-                    createdAt: task.created_at,
-                    modifiedAt: task.modified_at
-                }))
-            };
-            
-            res.json(odataResponse);
-        } catch (error) {
-            res.status(503).json({
-                error: {
-                    code: "SERVICE_UNAVAILABLE",
-                    message: "Agent 10 backend not available"
-                }
-            });
-        }
-    });
+    // Agent 10 OData Service Proxy - migrated to CAP service
     
-    log.info('Agent 10 API proxy routes initialized');
+    log.info('Agent 10 API proxy routes migrated to CAP services');
     
     // ===== AGENT 11 PROXY ROUTES - SQL Engine =====
     
@@ -628,61 +467,9 @@ cds.on('bootstrap', async (app) => {
     
     // Health Check
     
-    // Agent 11 OData Service Proxy - Convert REST to OData format
-        try {
-            const response = await axios.get(`${AGENT11_BASE_URL}/api/agent11/v1/sql-queries`);
-            
-            const odataResponse = {
-                "@odata.context": "$metadata#SQLQueryTasks",
-                "value": response.data.map(query => ({
-                    ID: query.id,
-                    queryName: query.query_name,
-                    description: query.description,
-                    queryType: query.query_type?.toUpperCase(),
-                    naturalLanguageQuery: query.natural_language_query,
-                    generatedSQL: query.generated_sql,
-                    originalSQL: query.original_sql,
-                    optimizedSQL: query.optimized_sql,
-                    databaseConnection: query.database_connection,
-                    sqlDialect: query.sql_dialect?.toUpperCase() || 'HANA',
-                    queryParameters: JSON.stringify(query.query_parameters || {}),
-                    executionContext: JSON.stringify(query.execution_context || {}),
-                    priority: query.priority?.toUpperCase() || 'MEDIUM',
-                    status: query.status?.toUpperCase() || 'DRAFT',
-                    executionTime: query.execution_time,
-                    rowsAffected: query.rows_affected,
-                    resultRowCount: query.result_row_count,
-                    isOptimized: query.is_optimized !== false,
-                    autoGenerated: query.auto_generated !== false,
-                    requiresApproval: query.requires_approval !== false,
-                    isApproved: query.is_approved !== false,
-                    approvedBy: query.approved_by,
-                    approvalTimestamp: query.approval_timestamp,
-                    startTime: query.start_time,
-                    endTime: query.end_time,
-                    errorMessage: query.error_message,
-                    queryResults: JSON.stringify(query.query_results || {}),
-                    executionPlan: JSON.stringify(query.execution_plan || {}),
-                    performanceMetrics: JSON.stringify(query.performance_metrics || {}),
-                    securityContext: JSON.stringify(query.security_context || {}),
-                    metadata: JSON.stringify(query.metadata || {}),
-                    createdAt: query.created_at,
-                    modifiedAt: query.modified_at
-                }))
-            };
-            
-            res.json(odataResponse);
-        } catch (error) {
-            res.status(503).json({
-                error: {
-                    code: "SERVICE_UNAVAILABLE",
-                    message: "Agent 11 backend not available"
-                }
-            });
-        }
-    });
+    // Agent 11 OData Service Proxy - migrated to CAP service
     
-    log.info('Agent 11 API proxy routes initialized');
+    log.info('Agent 11 API proxy routes migrated to CAP services');
     
     // ===== AGENT 12 PROXY ROUTES - Catalog Manager =====
     

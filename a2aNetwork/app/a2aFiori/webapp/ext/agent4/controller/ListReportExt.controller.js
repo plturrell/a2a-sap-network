@@ -636,7 +636,7 @@ sap.ui.define([
         onFormulaBuilder: function() {
             // Permission check
             if (!this._checkPermission("FORMULA_BUILDER")) {
-                MessageBox.error("Insufficient permissions to access formula builder");
+                MessageBox.error(this.getResourceBundle().getText("error.insufficientPermissions.formulaBuilder"));
                 return;
             }
 
@@ -676,7 +676,7 @@ sap.ui.define([
         onBatchValidation: function() {
             // Permission check
             if (!this._checkPermission("BATCH_VALIDATION")) {
-                MessageBox.error("Insufficient permissions for batch validation");
+                MessageBox.error(this.getResourceBundle().getText("error.insufficientPermissions.batchValidation"));
                 return;
             }
 
@@ -684,18 +684,18 @@ sap.ui.define([
             var aSelectedContexts = oTable.getSelectedContexts();
             
             if (aSelectedContexts.length === 0) {
-                MessageBox.warning("Please select tasks for batch validation.");
+                MessageBox.warning(this.getResourceBundle().getText("error.validation.selectTasks"));
                 return;
             }
 
             // Validate selection limit for security
             if (aSelectedContexts.length > 100) {
-                MessageBox.error("Maximum 100 tasks can be validated in batch for security reasons.");
+                MessageBox.error(this.getResourceBundle().getText("error.validation.maxTasks"));
                 return;
             }
             
             MessageBox.confirm(
-                "Start batch validation for " + aSelectedContexts.length + " tasks?",
+                this.getResourceBundle().getText("confirm.batchValidation", [aSelectedContexts.length]),
                 {
                     onClose: function(oAction) {
                         if (oAction === MessageBox.Action.OK) {
@@ -732,15 +732,13 @@ sap.ui.define([
             }).then(function(data) {
                 this.base.getView().setBusy(false);
                 MessageBox.success(
-                    "Batch validation started!\n" +
-                    "Job ID: " + this.formatSecureText(data.jobId) + "\n" +
-                    "Estimated formulas: " + this.formatCalculationResult(data.totalFormulas)
+                    this.getResourceBundle().getText("success.batchValidationComplete", [this.formatCalculationResult(data.totalFormulas)])
                 );
                 this._extensionAPI.refresh();
                 this._logAuditEvent("BATCH_VALIDATION", "Batch validation started", { taskCount: aTaskIds.length });
             }.bind(this)).catch(function(xhr) {
                 this.base.getView().setBusy(false);
-                MessageBox.error("Batch validation failed: " + this.formatSecureText(xhr.responseText));
+                MessageBox.error(this.getResourceBundle().getText("error.operation.batchValidationFailed", [this.formatSecureText(xhr.responseText)]));
                 this._logAuditEvent("BATCH_VALIDATION_ERROR", "Batch validation failed", xhr.responseText);
             }.bind(this));
         },
@@ -755,7 +753,7 @@ sap.ui.define([
         onValidationAnalytics: function() {
             // Permission check
             if (!this._checkPermission("VIEW_ANALYTICS")) {
-                MessageBox.error("Insufficient permissions to view analytics");
+                MessageBox.error(this.getResourceBundle().getText("error.insufficientPermissions.analytics"));
                 return;
             }
 
@@ -798,7 +796,7 @@ sap.ui.define([
                 this._createAnalyticsCharts(oSanitizedData);
             }.bind(this)).catch(function(xhr) {
                 this._oAnalyticsDialog.setBusy(false);
-                MessageBox.error("Failed to load analytics: " + this.formatSecureText(xhr.responseText));
+                MessageBox.error(this.getResourceBundle().getText("error.operation.analyticsLoadFailed", [this.formatSecureText(xhr.responseText)]));
             }.bind(this));
         },
 
@@ -838,23 +836,23 @@ sap.ui.define([
             // Comprehensive validation
             var oTaskNameValidation = this._validateInput(oData.taskName, "taskName");
             if (!oTaskNameValidation.isValid) {
-                MessageBox.error("Invalid task name: " + oTaskNameValidation.message);
+                MessageBox.error(this.getResourceBundle().getText("error.validation.invalidTaskName", [oTaskNameValidation.message]));
                 return;
             }
 
             var oDescValidation = this._validateInput(oData.description, "description");
             if (!oDescValidation.isValid) {
-                MessageBox.error("Invalid description: " + oDescValidation.message);
+                MessageBox.error(this.getResourceBundle().getText("error.validation.invalidDescription", [oDescValidation.message]));
                 return;
             }
             
             if (!oData.calculationType) {
-                MessageBox.error("Please select a calculation type");
+                MessageBox.error(this.getResourceBundle().getText("error.validation.selectCalculationType"));
                 return;
             }
             
             if (oData.formulas.length === 0) {
-                MessageBox.error("Please add at least one formula to validate");
+                MessageBox.error(this.getResourceBundle().getText("error.validation.addFormulas"));
                 return;
             }
 
@@ -862,7 +860,7 @@ sap.ui.define([
             for (var i = 0; i < oData.formulas.length; i++) {
                 var oFormulaValidation = this._validateFormulaSecurity(oData.formulas[i].expression);
                 if (!oFormulaValidation.isValid) {
-                    MessageBox.error("Invalid formula at position " + (i + 1) + ": " + oFormulaValidation.message);
+                    MessageBox.error(this.getResourceBundle().getText("error.validation.invalidFormulaPosition", [(i + 1), oFormulaValidation.message]));
                     return;
                 }
             }
@@ -897,12 +895,12 @@ sap.ui.define([
             }).then(function(data) {
                 this._oCreateDialog.setBusy(false);
                 this._oCreateDialog.close();
-                MessageToast.show("Validation task created successfully");
+                MessageToast.show(this.getResourceBundle().getText("success.taskCreated"));
                 this._extensionAPI.refresh();
                 this._logAuditEvent("TASK_CREATED", "Validation task created", { taskName: oSanitizedData.taskName });
             }.bind(this)).catch(function(xhr) {
                 this._oCreateDialog.setBusy(false);
-                MessageBox.error("Failed to create task: " + this.formatSecureText(xhr.responseText));
+                MessageBox.error(this.getResourceBundle().getText("error.operation.taskCreateFailed", [this.formatSecureText(xhr.responseText)]));
                 this._logAuditEvent("TASK_CREATE_ERROR", "Failed to create task", xhr.responseText);
             }.bind(this));
         },
@@ -945,7 +943,7 @@ sap.ui.define([
             
             // Check formula length limit
             if ((sCurrentFormula + sText).length > 5000) {
-                MessageBox.error("Formula too long. Maximum 5000 characters allowed.");
+                MessageBox.error(this.getResourceBundle().getText("error.validation.formulaTooLong"));
                 return;
             }
             
@@ -996,12 +994,12 @@ sap.ui.define([
             var sFormula = oModel.getProperty("/currentFormula");
             
             if (!sFormula) {
-                MessageBox.error("Please enter a formula to test");
+                MessageBox.error(this.getResourceBundle().getText("error.validation.enterFormula"));
                 return;
             }
 
             if (!oModel.getProperty("/securityChecked")) {
-                MessageBox.error("Formula security validation required before testing");
+                MessageBox.error(this.getResourceBundle().getText("error.validation.formulaSecurityRequired"));
                 return;
             }
             
@@ -1046,7 +1044,7 @@ sap.ui.define([
             // Validate test data
             var oTestDataValidation = this._validateInput(oData.testData, "calculation");
             if (!oTestDataValidation.isValid) {
-                MessageBox.error("Invalid test data format");
+                MessageBox.error(this.getResourceBundle().getText("error.validation.invalidTestData"));
                 return;
             }
 
@@ -1055,11 +1053,11 @@ sap.ui.define([
                 var nExpectedResult = parseFloat(oData.expectedResult);
                 
                 if (!isFinite(nExpectedResult)) {
-                    MessageBox.error("Invalid expected result format");
+                    MessageBox.error(this.getResourceBundle().getText("error.validation.invalidExpectedResult"));
                     return;
                 }
             } catch (e) {
-                MessageBox.error("Invalid test data JSON format");
+                MessageBox.error(this.getResourceBundle().getText("error.validation.invalidTestDataJson"));
                 return;
             }
             
@@ -1082,9 +1080,9 @@ sap.ui.define([
                 oModel.setProperty("/variance", this.formatCalculationResult(data.variance));
                 
                 if (data.passed) {
-                    MessageToast.show("Formula test passed!");
+                    MessageToast.show(this.getResourceBundle().getText("success.formulaTestPassed"));
                 } else {
-                    MessageBox.warning("Formula test failed. Check variance: " + this.formatCalculationResult(data.variance));
+                    MessageBox.warning(this.getResourceBundle().getText("warning.formulaTestFailed", [this.formatCalculationResult(data.variance)]));
                 }
                 
                 this._logAuditEvent("FORMULA_TEST", "Formula test executed", { 
@@ -1093,7 +1091,7 @@ sap.ui.define([
                 });
             }.bind(this)).catch(function(xhr) {
                 this._oTestDialog.setBusy(false);
-                MessageBox.error("Formula test failed: " + this.formatSecureText(xhr.responseText));
+                MessageBox.error(this.getResourceBundle().getText("error.operation.formulaTestFailed", [this.formatSecureText(xhr.responseText)]));
             }.bind(this));
         }
     });

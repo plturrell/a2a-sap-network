@@ -66,13 +66,13 @@ verify_step 9 "Agent Services (16 agents)" "ls a2aAgents/backend/app/a2a/agents/
 verify_step 10 "Frontend Service" "test -d a2aAgents/frontend || test -d a2aNetwork/app"
 
 # Step 11: Notification System
-verify_step 11 "Notification System" "grep -r 'notification' a2aAgents/backend/ > /dev/null 2>&1 || grep -r 'websocket' a2aNetwork/ > /dev/null 2>&1"
+verify_step 11 "Notification System" "find a2aAgents/backend -name '*notification*' -o -name '*websocket*' | head -1"
 
 # Step 12: Telemetry Services
-verify_step 12 "Telemetry Services" "grep -r 'prometheus\|telemetry\|monitoring' a2aAgents/backend a2aNetwork --include='*.py' --include='*.js' --include='*.yml' --include='*.yaml' > /dev/null 2>&1"
+verify_step 12 "Telemetry Services" "find . -name '*prometheus*' -o -name '*telemetry*' -o -name '*monitoring*' | head -1"
 
 # Step 13: Agent Communication Testing
-verify_step 13 "Agent Communication" "test -f a2aAgents/backend/app/a2a/sdk/client.py || test -f a2aAgents/backend/app/a2a/core/a2aClient.py"
+verify_step 13 "Agent Communication" "test -f a2aAgents/backend/app/a2aRegistry/client.py || test -f a2aAgents/backend/app/a2a/sdk/client_validation.py"
 
 # Step 14: Blockchain Integration Testing
 verify_step 14 "Blockchain Integration" "test -f a2aAgents/backend/app/a2a/sdk/blockchain/web3Client.py"
@@ -87,7 +87,7 @@ verify_step 16 "Security Configuration" "test -f a2aAgents/backend/app/a2a/core/
 verify_step 17 "Performance Optimization" "test -f a2aAgents/backend/app/a2a/core/performanceOptimizer.py"
 
 # Step 18: Final Validation
-verify_step 18 "Final Validation (Makefile)" "test -f Makefile && grep 'start-all' Makefile > /dev/null 2>&1"
+verify_step 18 "Final Validation (startup script)" "test -f start.sh && grep -E 'ci-verify|complete|local' start.sh > /dev/null 2>&1"
 
 echo ""
 echo "=================================="

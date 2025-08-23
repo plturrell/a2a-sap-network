@@ -31,19 +31,18 @@ class Agent7SecurityScanner {
     async scanAllFiles() {
         console.log('🔍 Starting comprehensive security scan for Agent 7 - Agent Manager...\n');
         
-        // Scan management controller files
-        await this.scanFile('controller/AgentManager.controller.js');
-        await this.scanFile('controller/MainView.controller.js');
-        await this.scanFile('controller/BaseController.js');
+        // Scan actual controller files that exist
+        await this.scanFile('controller/ListReportExt.controller.js');
+        await this.scanFile('controller/ObjectPageExt.controller.js');
         
-        // Scan views for privilege escalation issues
-        await this.scanFile('view/AgentManager.view.xml');
-        await this.scanFile('view/AgentList.view.xml');
-        await this.scanFile('view/AgentDetails.view.xml');
-        
-        // Scan fragments
-        await this.scanFile('fragment/CreateAgent.fragment.xml');
-        await this.scanFile('fragment/EditAgent.fragment.xml');
+        // Scan fragment files
+        await this.scanFile('fragment/AgentCoordinator.fragment.xml');
+        await this.scanFile('fragment/AgentDashboard.fragment.xml');
+        await this.scanFile('fragment/BulkOperations.fragment.xml');
+        await this.scanFile('fragment/CreateManagementTask.fragment.xml');
+        await this.scanFile('fragment/HealthMonitor.fragment.xml');
+        await this.scanFile('fragment/PerformanceAnalyzer.fragment.xml');
+        await this.scanFile('fragment/RegisterAgent.fragment.xml');
         
         // Scan configuration and i18n files
         await this.scanFile('manifest.json');
@@ -75,6 +74,10 @@ class Agent7SecurityScanner {
             this.checkConfigurationSecurity(content, relativePath);
             this.checkAuditLogging(content, relativePath);
             this.checkSessionElevation(content, relativePath);
+            this.checkPublicManagementInterface(content, relativePath);
+            this.checkMissingAuthenticationChecks(content, relativePath);
+            this.checkWeakInputValidation(content, relativePath);
+            this.checkUnsecuredAPIEndpoints(content, relativePath);
             
             // Standard security checks
             this.checkXSSVulnerabilities(content, relativePath);
@@ -449,6 +452,155 @@ class Agent7SecurityScanner {
                     filePath, this.getLineNumber(content, match.index), match[0]);
             }
         });
+    }
+
+    checkPublicManagementInterface(content, filePath) {
+        if (filePath.includes('manifest.json')) {
+            try {
+                const config = JSON.parse(content);
+                
+                // Check if management interface lacks proper access controls
+                if (config['sap.cloud'] && config['sap.cloud'].public === true) {
+                    this.addIssue('critical', 'MANAGEMENT_INTERFACE_PUBLIC', 
+                        'CRITICAL: Management interface is publicly accessible without authentication',
+                        filePath, 1);
+                }
+                
+                // Check for missing RBAC configuration
+                if (config['sap.platform.cf'] && config['sap.platform.cf'].oAuthScopes) {
+                    const scopes = config['sap.platform.cf'].oAuthScopes;
+                    const hasAdminScope = scopes.some(scope => 
+                        scope.includes('admin') || scope.includes('manage') || scope.includes('Admin'));
+                    
+                    if (!hasAdminScope) {
+                        this.addIssue('high', 'MISSING_ADMIN_OAUTH_SCOPES', 
+                            'Management interface lacks proper administrative OAuth scopes',
+                            filePath, 1);
+                    }
+                }
+                
+                // Check security headers
+                if (!config['sap.security'] || !config['sap.security'].headers) {
+                    this.addIssue('high', 'MISSING_SECURITY_HEADERS', 
+                        'Critical security headers are not configured',
+                        filePath, 1);
+                }
+                
+            } catch (e) {
+                // JSON parsing error already handled elsewhere
+            }
+        }
+    }
+
+    checkMissingAuthenticationChecks(content, filePath) {
+        if (filePath.includes('.controller.js')) {
+            // Check for management operations without authentication
+            const managementOperations = [
+                'onStartAgent', 'onStopAgent', 'onRestartAgent', 'onUpdateAgent',
+                'onDeleteAgent', 'onCreateAgent', 'onConfigureAgent',
+                'onBulkOperations', 'onCoordination', 'onHealthCheck'
+            ];
+            
+            managementOperations.forEach(operation => {
+                const operationPattern = new RegExp(`${operation}\\s*[:=]\\s*function`, 'g');
+                const matches = content.matchAll(operationPattern);
+                
+                for (let match of matches) {
+                    const functionStart = match.index;
+                    const functionEnd = this.findFunctionEnd(content, functionStart);
+                    const functionBody = content.slice(functionStart, functionEnd);
+                    
+                    // Check if function has role/permission checks
+                    if (!functionBody.includes('_hasRole') && 
+                        !functionBody.includes('_authorizeOperation') &&
+                        !functionBody.includes('checkPermission') &&
+                        !functionBody.includes('authorize')) {
+                        this.addIssue('critical', 'MISSING_AUTHENTICATION_CHECK', 
+                            `CRITICAL: Management operation '${operation}' lacks authentication/authorization checks`,
+                            filePath, this.getLineNumber(content, functionStart));
+                    }
+                }
+            });
+        }
+    }
+
+    checkWeakInputValidation(content, filePath) {
+        if (filePath.includes('.controller.js')) {
+            // Check for weak input validation patterns
+            const weakValidationPatterns = [
+                // Direct property access without validation
+                /getProperty\([^)]*\)[^;]*(?!.*validate|sanitize)/g,
+                // User input directly used in API calls
+                /ajax.*getProperty/g,
+                // Missing input sanitization
+                /innerHTML.*getProperty/g
+            ];
+            
+            weakValidationPatterns.forEach(pattern => {
+                const matches = content.matchAll(pattern);
+                for (let match of matches) {
+                    this.addIssue('high', 'WEAK_INPUT_VALIDATION', 
+                        'User input is processed without proper validation/sanitization',
+                        filePath, this.getLineNumber(content, match.index), match[0]);
+                }
+            });
+            
+            // Check for SQL injection vulnerabilities (even in OData context)
+            const sqlInjectionPatterns = [
+                /\$filter.*getProperty/g,
+                /\$select.*getProperty/g,
+                /oDataModel\.read.*getProperty/g
+            ];
+            
+            sqlInjectionPatterns.forEach(pattern => {
+                const matches = content.matchAll(pattern);
+                for (let match of matches) {
+                    this.addIssue('critical', 'SQL_INJECTION_RISK', 
+                        'CRITICAL: User input may be vulnerable to SQL injection in OData queries',
+                        filePath, this.getLineNumber(content, match.index), match[0]);
+                }
+            });
+        }
+    }
+
+    checkUnsecuredAPIEndpoints(content, filePath) {
+        if (filePath.includes('.controller.js')) {
+            // Check for API endpoints without proper security
+            const apiEndpointPatterns = [
+                /\/a2a\/agent7\/v1\/[^"']*(?!.*csrf|auth|token)/g,
+                /jQuery\.ajax.*url.*\/a2a\/agent7/g
+            ];
+            
+            apiEndpointPatterns.forEach(pattern => {
+                const matches = content.matchAll(pattern);
+                for (let match of matches) {
+                    const context = content.slice(Math.max(0, match.index - 100), match.index + 200);
+                    
+                    // Check if the API call has security headers
+                    if (!context.includes('X-CSRF-Token') && 
+                        !context.includes('Authorization') && 
+                        !context.includes('_secureAjaxCall')) {
+                        this.addIssue('critical', 'UNSECURED_API_ENDPOINT', 
+                            'CRITICAL: Management API endpoint lacks CSRF protection and authentication headers',
+                            filePath, this.getLineNumber(content, match.index), match[0]);
+                    }
+                }
+            });
+            
+            // Check for EventSource without validation
+            const eventSourcePattern = /new EventSource\([^)]*\)/g;
+            const matches = content.matchAll(eventSourcePattern);
+            
+            for (let match of matches) {
+                const context = content.slice(Math.max(0, match.index - 50), match.index + 100);
+                if (!context.includes('_validateEventSourceUrl') && 
+                    !context.includes('validateUrl')) {
+                    this.addIssue('high', 'UNVALIDATED_EVENTSOURCE_URL', 
+                        'EventSource URL is not validated, potential for SSRF attacks',
+                        filePath, this.getLineNumber(content, match.index), match[0]);
+                }
+            }
+        }
     }
 
     // Helper methods

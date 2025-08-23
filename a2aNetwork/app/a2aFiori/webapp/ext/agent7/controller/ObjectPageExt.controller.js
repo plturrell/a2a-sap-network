@@ -143,6 +143,26 @@ sap.ui.define([
                 this._operationEventSource.close();
                 this._operationEventSource = null;
             }
+            if (this._streamMetricsEventSource) {
+                this._streamMetricsEventSource.close();
+                this._streamMetricsEventSource = null;
+            }
+            if (this._streamMonitoringEventSource) {
+                this._streamMonitoringEventSource.close();
+                this._streamMonitoringEventSource = null;
+            }
+            
+            // Clean up cached dialogs
+            if (this._dialogCache) {
+                Object.keys(this._dialogCache).forEach(function(key) {
+                    if (this._dialogCache[key]) {
+                        this._dialogCache[key].destroy();
+                    }
+                }.bind(this));
+                this._dialogCache = {};
+            }
+            
+            // Clean up legacy dialog references
             if (this._oUpdateDialog) {
                 this._oUpdateDialog.destroy();
                 this._oUpdateDialog = null;
@@ -1159,6 +1179,635 @@ sap.ui.define([
             if (oOperationTypeValidation.state === "Error") bValid = false;
             
             return bValid;
+        },
+
+        /**
+         * @function onStartStreamProcessing
+         * @description Starts real-time stream processing for current task.
+         * @public
+         * @memberof a2a.network.agent7.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        onStartStreamProcessing: function() {
+            var oContext = this._extensionAPI.getBindingContext();
+            var sTaskId = this._sanitizeInput(oContext.getProperty("ID"));
+            var sTaskName = this._sanitizeInput(oContext.getProperty("taskName"));
+            
+            if (!this._hasRole("StreamProcessor")) {
+                MessageBox.error("Access denied: Insufficient privileges for starting stream processing");
+                this._auditLogger.log("START_STREAM_ACCESS_DENIED", { taskId: sTaskId });
+                return;
+            }
+            
+            MessageBox.confirm("Start stream processing for task '" + sTaskName + "'?", {
+                onClose: function(oAction) {
+                    if (oAction === MessageBox.Action.OK) {
+                        this._executeStreamOperation(sTaskId, "START_PROCESSING");
+                    }
+                }.bind(this)
+            });
+        },
+
+        /**
+         * @function onStopStreamProcessing
+         * @description Stops real-time stream processing for current task.
+         * @public
+         * @memberof a2a.network.agent7.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        onStopStreamProcessing: function() {
+            var oContext = this._extensionAPI.getBindingContext();
+            var sTaskId = this._sanitizeInput(oContext.getProperty("ID"));
+            var sTaskName = this._sanitizeInput(oContext.getProperty("taskName"));
+            
+            if (!this._hasRole("StreamProcessor")) {
+                MessageBox.error("Access denied: Insufficient privileges for stopping stream processing");
+                this._auditLogger.log("STOP_STREAM_ACCESS_DENIED", { taskId: sTaskId });
+                return;
+            }
+            
+            MessageBox.confirm("Stop stream processing for task '" + sTaskName + "'?", {
+                onClose: function(oAction) {
+                    if (oAction === MessageBox.Action.OK) {
+                        this._executeStreamOperation(sTaskId, "STOP_PROCESSING");
+                    }
+                }.bind(this)
+            });
+        },
+
+        /**
+         * @function onViewRealTimeMetrics
+         * @description Opens real-time metrics viewer for current stream processing task.
+         * @public
+         * @memberof a2a.network.agent7.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        onViewRealTimeMetrics: function() {
+            var oContext = this._extensionAPI.getBindingContext();
+            var sTaskId = this._sanitizeInput(oContext.getProperty("ID"));
+            
+            this._getOrCreateDialog("realTimeMetrics", "a2a.network.agent7.ext.fragment.RealTimeMetrics")
+                .then(function(oDialog) {
+                    oDialog.open();
+                    this._loadStreamMetrics(sTaskId, oDialog);
+                    this._startStreamMetricsMonitoring(sTaskId, oDialog);
+                    
+                    this._auditLogger.log("REALTIME_METRICS_VIEWED", { taskId: sTaskId });
+                }.bind(this));
+        },
+
+        /**
+         * @function onExportStreamData
+         * @description Exports processed stream data for current task.
+         * @public
+         * @memberof a2a.network.agent7.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        onExportStreamData: function() {
+            var oContext = this._extensionAPI.getBindingContext();
+            var sTaskId = this._sanitizeInput(oContext.getProperty("ID"));
+            
+            if (!this._hasRole("StreamProcessor")) {
+                MessageBox.error("Access denied: Insufficient privileges for exporting stream data");
+                this._auditLogger.log("EXPORT_STREAM_ACCESS_DENIED", { taskId: sTaskId });
+                return;
+            }
+            
+            this._getOrCreateDialog("exportStream", "a2a.network.agent7.ext.fragment.ExportStreamData")
+                .then(function(oDialog) {
+                    var oModel = new JSONModel({
+                        taskId: sTaskId,
+                        exportFormat: "JSON",
+                        dateRange: {
+                            from: new Date(Date.now() - 24 * 60 * 60 * 1000), // 24 hours ago
+                            to: new Date()
+                        },
+                        includeMetadata: true,
+                        compressOutput: true,
+                        maxRecords: 10000
+                    });
+                    oDialog.setModel(oModel, "export");
+                    oDialog.open();
+                    
+                    this._auditLogger.log("EXPORT_STREAM_DIALOG_OPENED", { taskId: sTaskId });
+                }.bind(this));
+        },
+
+        /**
+         * @function _executeStreamOperation
+         * @description Executes stream processing operation.
+         * @param {string} sTaskId - Task ID
+         * @param {string} sOperation - Operation type
+         * @private
+         */
+        _executeStreamOperation: function(sTaskId, sOperation) {
+            this.base.getView().setBusy(true);
+            
+            const requestData = {
+                operation: sOperation,
+                timestamp: new Date().toISOString()
+            };
+            
+            this._secureAjaxCall({
+                url: "/a2a/agent7/v1/stream-processing/" + encodeURL(sTaskId) + "/operations",
+                type: "POST",
+                data: JSON.stringify(requestData)
+            }).then(result => {
+                this.base.getView().setBusy(false);
+                
+                const data = result.data;
+                var sMessage = sOperation.replace("_", " ").toLowerCase() + " operation initiated successfully";
+                if (data.estimatedStartTime) {
+                    sMessage += "\nEstimated start: " + this._sanitizeInput(data.estimatedStartTime);
+                }
+                
+                MessageToast.show(sMessage);
+                this._extensionAPI.refresh();
+                
+                if (data.monitoringUrl && sOperation === "START_PROCESSING") {
+                    this._startStreamMonitoring(data.processingId);
+                }
+                
+                this._auditLogger.log("STREAM_OPERATION_EXECUTED", {
+                    taskId: sTaskId,
+                    operation: sOperation,
+                    processingId: data.processingId
+                });
+            }).catch(error => {
+                this.base.getView().setBusy(false);
+                const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
+                MessageBox.error("Stream operation failed: " + errorMsg);
+                this._auditLogger.log("STREAM_OPERATION_FAILED", {
+                    taskId: sTaskId,
+                    operation: sOperation,
+                    error: errorMsg
+                });
+            });
+        },
+
+        /**
+         * @function _loadStreamMetrics
+         * @description Loads stream processing metrics for a task.
+         * @param {string} sTaskId - Task ID
+         * @param {sap.m.Dialog} oDialog - Target dialog
+         * @private
+         */
+        _loadStreamMetrics: function(sTaskId, oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
+            if (!oTargetDialog) return;
+            
+            oTargetDialog.setBusy(true);
+            
+            this._secureAjaxCall({
+                url: "/a2a/agent7/v1/stream-processing/" + encodeURL(sTaskId) + "/metrics",
+                type: "GET"
+            }).then(result => {
+                oTargetDialog.setBusy(false);
+                
+                var oModel = new JSONModel({
+                    taskId: sTaskId,
+                    metrics: this._sanitizeObject(result.data.metrics),
+                    throughput: this._sanitizeObject(result.data.throughput),
+                    latency: this._sanitizeObject(result.data.latency),
+                    errorRates: this._sanitizeObject(result.data.errorRates),
+                    resourceUtilization: this._sanitizeObject(result.data.resourceUtilization)
+                });
+                oTargetDialog.setModel(oModel, "metrics");
+                
+                this._createStreamMetricsCharts(result.data, oTargetDialog);
+                this._auditLogger.log("STREAM_METRICS_LOADED", { taskId: sTaskId });
+            }).catch(error => {
+                oTargetDialog.setBusy(false);
+                const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
+                MessageBox.error("Failed to load stream metrics: " + errorMsg);
+                this._auditLogger.log("STREAM_METRICS_LOAD_FAILED", { taskId: sTaskId, error: errorMsg });
+            });
+        },
+
+        /**
+         * @function _startStreamMetricsMonitoring
+         * @description Starts real-time monitoring of stream metrics.
+         * @param {string} sTaskId - Task ID
+         * @param {sap.m.Dialog} oDialog - Target dialog
+         * @private
+         */
+        _startStreamMetricsMonitoring: function(sTaskId, oDialog) {
+            if (this._streamMetricsEventSource) {
+                this._streamMetricsEventSource.close();
+            }
+            
+            const streamUrl = "/a2a/agent7/v1/stream-processing/" + encodeURL(sTaskId) + "/metrics-stream";
+            
+            if (!this._validateEventSourceUrl(streamUrl)) {
+                MessageBox.error("Invalid metrics stream URL");
+                return;
+            }
+            
+            this._streamMetricsEventSource = new EventSource(streamUrl);
+            
+            this._streamMetricsEventSource.onmessage = function(event) {
+                try {
+                    var data = JSON.parse(event.data);
+                    this._updateStreamMetricsDisplay(data, oDialog);
+                } catch (e) {
+                    Log.error("Invalid data received from stream metrics: " + e.message);
+                }
+            }.bind(this);
+            
+            this._streamMetricsEventSource.onerror = function() {
+                if (this._streamMetricsEventSource) {
+                    this._streamMetricsEventSource.close();
+                    this._streamMetricsEventSource = null;
+                }
+                MessageToast.show("Stream metrics connection lost");
+            }.bind(this);
+        },
+
+        /**
+         * @function _startStreamMonitoring
+         * @description Starts real-time monitoring of stream processing.
+         * @param {string} sProcessingId - Processing ID
+         * @private
+         */
+        _startStreamMonitoring: function(sProcessingId) {
+            const streamUrl = "/a2a/agent7/v1/stream-processing/monitoring/" + encodeURL(sProcessingId);
+            
+            if (!this._validateEventSourceUrl(streamUrl)) {
+                MessageBox.error("Invalid stream monitoring URL");
+                return;
+            }
+            
+            this._streamMonitoringEventSource = new EventSource(streamUrl);
+            
+            this._streamMonitoringEventSource.onmessage = function(event) {
+                try {
+                    var data = JSON.parse(event.data);
+                    
+                    if (data.type === "processing_started") {
+                        MessageToast.show("Stream processing started successfully");
+                        this._extensionAPI.refresh();
+                    } else if (data.type === "processing_stopped") {
+                        this._streamMonitoringEventSource.close();
+                        MessageBox.success("Stream processing completed successfully!");
+                        this._extensionAPI.refresh();
+                    } else if (data.type === "processing_error") {
+                        this._streamMonitoringEventSource.close();
+                        const errorMsg = this._sanitizeInput(data.error || "Unknown error");
+                        MessageBox.error("Stream processing failed: " + errorMsg);
+                    } else if (data.type === "throughput_update") {
+                        const throughput = this._sanitizeInput(data.recordsPerSecond) || "0";
+                        MessageToast.show("Processing rate: " + throughput + " records/sec");
+                    }
+                } catch (e) {
+                    this._streamMonitoringEventSource.close();
+                    MessageBox.error("Invalid data received from stream monitoring");
+                }
+            }.bind(this);
+            
+            this._streamMonitoringEventSource.onerror = function() {
+                if (this._streamMonitoringEventSource) {
+                    this._streamMonitoringEventSource.close();
+                    this._streamMonitoringEventSource = null;
+                }
+                MessageBox.error("Lost connection to stream monitoring");
+            }.bind(this);
+        },
+
+        /**
+         * @function _updateStreamMetricsDisplay
+         * @description Updates stream metrics display with real-time data.
+         * @param {Object} metricsData - Real-time metrics data
+         * @param {sap.m.Dialog} oDialog - Target dialog
+         * @private
+         */
+        _updateStreamMetricsDisplay: function(metricsData, oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
+            if (!oTargetDialog) return;
+            
+            var oModel = oTargetDialog.getModel("metrics");
+            if (!oModel) return;
+            
+            var oData = oModel.getData();
+            
+            if (metricsData.type === "throughput_update") {
+                oData.throughput = this._sanitizeObject(metricsData.data);
+                oModel.setData(oData);
+                this._updateThroughputChart(metricsData.data, oTargetDialog);
+            } else if (metricsData.type === "latency_update") {
+                oData.latency = this._sanitizeObject(metricsData.data);
+                oModel.setData(oData);
+                this._updateLatencyChart(metricsData.data, oTargetDialog);
+            } else if (metricsData.type === "error_rate_update") {
+                oData.errorRates = this._sanitizeObject(metricsData.data);
+                oModel.setData(oData);
+                this._updateErrorRateChart(metricsData.data, oTargetDialog);
+            }
+        },
+
+        /**
+         * @function _createStreamMetricsCharts
+         * @description Creates visualization charts for stream metrics.
+         * @param {Object} data - Metrics data
+         * @param {sap.m.Dialog} oDialog - Target dialog
+         * @private
+         */
+        _createStreamMetricsCharts: function(data, oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
+            if (!oTargetDialog) return;
+            
+            this._createThroughputChart(data.throughput, oTargetDialog);
+            this._createLatencyChart(data.latency, oTargetDialog);
+            this._createErrorRateChart(data.errorRates, oTargetDialog);
+        },
+
+        /**
+         * @function _createThroughputChart
+         * @description Creates throughput visualization chart.
+         * @param {Object} throughputData - Throughput data
+         * @param {sap.m.Dialog} oDialog - Target dialog
+         * @private
+         */
+        _createThroughputChart: function(throughputData, oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
+            if (!oTargetDialog) return;
+            
+            var oChart = oTargetDialog.byId("throughputChart");
+            if (!oChart || !throughputData) return;
+            
+            var aChartData = (throughputData.timeSeries || []).map(function(point) {
+                return {
+                    Time: new Date(point.timestamp).toLocaleTimeString(),
+                    RecordsPerSecond: point.recordsPerSecond,
+                    BytesPerSecond: point.bytesPerSecond
+                };
+            });
+            
+            var oChartModel = new JSONModel({
+                throughputData: aChartData
+            });
+            oChart.setModel(oChartModel);
+        },
+
+        /**
+         * @function _updateThroughputChart
+         * @description Updates throughput chart with new data.
+         * @param {Object} data - New throughput data
+         * @param {sap.m.Dialog} oDialog - Target dialog
+         * @private
+         */
+        _updateThroughputChart: function(data, oDialog) {
+            this._createThroughputChart(data, oDialog);
+        },
+
+        /**
+         * @function _createLatencyChart
+         * @description Creates latency visualization chart.
+         * @param {Object} latencyData - Latency data
+         * @param {sap.m.Dialog} oDialog - Target dialog
+         * @private
+         */
+        _createLatencyChart: function(latencyData, oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
+            if (!oTargetDialog) return;
+            
+            var oChart = oTargetDialog.byId("latencyChart");
+            if (!oChart || !latencyData) return;
+            
+            var aChartData = (latencyData.timeSeries || []).map(function(point) {
+                return {
+                    Time: new Date(point.timestamp).toLocaleTimeString(),
+                    P50Latency: point.p50LatencyMs,
+                    P95Latency: point.p95LatencyMs,
+                    P99Latency: point.p99LatencyMs
+                };
+            });
+            
+            var oChartModel = new JSONModel({
+                latencyData: aChartData
+            });
+            oChart.setModel(oChartModel);
+        },
+
+        /**
+         * @function _updateLatencyChart
+         * @description Updates latency chart with new data.
+         * @param {Object} data - New latency data
+         * @param {sap.m.Dialog} oDialog - Target dialog
+         * @private
+         */
+        _updateLatencyChart: function(data, oDialog) {
+            this._createLatencyChart(data, oDialog);
+        },
+
+        /**
+         * @function _createErrorRateChart
+         * @description Creates error rate visualization chart.
+         * @param {Object} errorData - Error rate data
+         * @param {sap.m.Dialog} oDialog - Target dialog
+         * @private
+         */
+        _createErrorRateChart: function(errorData, oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["realTimeMetrics"];
+            if (!oTargetDialog) return;
+            
+            var oChart = oTargetDialog.byId("errorRateChart");
+            if (!oChart || !errorData) return;
+            
+            var aChartData = (errorData.timeSeries || []).map(function(point) {
+                return {
+                    Time: new Date(point.timestamp).toLocaleTimeString(),
+                    ErrorRate: point.errorRate,
+                    TotalErrors: point.totalErrors
+                };
+            });
+            
+            var oChartModel = new JSONModel({
+                errorData: aChartData
+            });
+            oChart.setModel(oChartModel);
+        },
+
+        /**
+         * @function _updateErrorRateChart
+         * @description Updates error rate chart with new data.
+         * @param {Object} data - New error rate data
+         * @param {sap.m.Dialog} oDialog - Target dialog
+         * @private
+         */
+        _updateErrorRateChart: function(data, oDialog) {
+            this._createErrorRateChart(data, oDialog);
+        },
+
+        /**
+         * @function _getOrCreateDialog
+         * @description Gets cached dialog or creates new one for performance.
+         * @param {string} sDialogId - Dialog identifier
+         * @param {string} sFragmentName - Fragment name to load
+         * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog
+         * @private
+         */
+        _getOrCreateDialog: function(sDialogId, sFragmentName) {
+            var that = this;
+            
+            if (this._dialogCache && this._dialogCache[sDialogId]) {
+                return Promise.resolve(this._dialogCache[sDialogId]);
+            }
+            
+            // Initialize dialog cache if not exists
+            if (!this._dialogCache) {
+                this._dialogCache = {};
+            }
+            
+            return Fragment.load({
+                id: this.base.getView().getId(),
+                name: sFragmentName,
+                controller: this
+            }).then(function(oDialog) {
+                that._dialogCache[sDialogId] = oDialog;
+                that.base.getView().addDependent(oDialog);
+                
+                // Enable accessibility
+                that._enableDialogAccessibility(oDialog);
+                
+                // Optimize for mobile
+                that._optimizeDialogForDevice(oDialog);
+                
+                return oDialog;
+            });
+        },
+
+        /**
+         * @function _enableDialogAccessibility
+         * @description Adds accessibility features to dialog.
+         * @param {sap.m.Dialog} oDialog - Dialog to enhance
+         * @private
+         */
+        _enableDialogAccessibility: function(oDialog) {
+            oDialog.addEventDelegate({
+                onAfterRendering: function() {
+                    var $dialog = oDialog.$();
+                    
+                    // Set tabindex for focusable elements
+                    $dialog.find("input, button, select, textarea").attr("tabindex", "0");
+                    
+                    // Handle escape key
+                    $dialog.on("keydown", function(e) {
+                        if (e.key === "Escape") {
+                            oDialog.close();
+                        }
+                    });
+                    
+                    // Focus first input on open
+                    setTimeout(function() {
+                        $dialog.find("input:visible:first").focus();
+                    }, 100);
+                }
+            });
+        },
+
+        /**
+         * @function _optimizeDialogForDevice
+         * @description Optimizes dialog for current device type.
+         * @param {sap.m.Dialog} oDialog - Dialog to optimize
+         * @private
+         */
+        _optimizeDialogForDevice: function(oDialog) {
+            if (sap.ui.Device.system.phone) {
+                oDialog.setStretch(true);
+                oDialog.setContentWidth("100%");
+                oDialog.setContentHeight("100%");
+            } else if (sap.ui.Device.system.tablet) {
+                oDialog.setContentWidth("95%");
+                oDialog.setContentHeight("90%");
+            }
+            
+            // Add resize handler
+            sap.ui.Device.resize.attachHandler(function() {
+                if (sap.ui.Device.system.phone) {
+                    oDialog.setStretch(true);
+                } else {
+                    oDialog.setStretch(false);
+                }
+            });
+        },
+
+        /**
+         * @function onConfirmExportStreamData
+         * @description Confirms and starts stream data export.
+         * @public
+         */
+        onConfirmExportStreamData: function() {
+            var oDialog = this._dialogCache["exportStream"];
+            if (!oDialog) return;
+            
+            var oModel = oDialog.getModel("export");
+            var oData = oModel.getData();
+            
+            // Validate export parameters
+            if (!oData.dateRange.from || !oData.dateRange.to) {
+                MessageBox.error("Please specify valid date range for export");
+                return;
+            }
+            
+            if (oData.dateRange.from >= oData.dateRange.to) {
+                MessageBox.error("Start date must be before end date");
+                return;
+            }
+            
+            oDialog.setBusy(true);
+            
+            const requestData = {
+                taskId: this._sanitizeInput(oData.taskId),
+                format: this._sanitizeInput(oData.exportFormat),
+                startDate: oData.dateRange.from.toISOString(),
+                endDate: oData.dateRange.to.toISOString(),
+                includeMetadata: Boolean(oData.includeMetadata),
+                compressOutput: Boolean(oData.compressOutput),
+                maxRecords: Math.max(1, Math.min(100000, parseInt(oData.maxRecords) || 10000))
+            };
+            
+            this._secureAjaxCall({
+                url: "/a2a/agent7/v1/stream-processing/export",
+                type: "POST",
+                data: JSON.stringify(requestData)
+            }).then(result => {
+                oDialog.setBusy(false);
+                oDialog.close();
+                
+                const data = result.data;
+                MessageBox.success(
+                    "Export initiated successfully!\n" +
+                    "Export ID: " + this._sanitizeInput(data.exportId) + "\n" +
+                    "Estimated time: " + this._sanitizeInput(data.estimatedTime) + " minutes\n" +
+                    "You will be notified when the export is ready for download."
+                );
+                
+                this._auditLogger.log("STREAM_EXPORT_STARTED", {
+                    taskId: requestData.taskId,
+                    exportId: data.exportId,
+                    format: requestData.format
+                });
+            }).catch(error => {
+                oDialog.setBusy(false);
+                const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
+                MessageBox.error("Export failed: " + errorMsg);
+                this._auditLogger.log("STREAM_EXPORT_FAILED", {
+                    taskId: requestData.taskId,
+                    error: errorMsg
+                });
+            });
+        },
+
+        /**
+         * @function onCancelExportStreamData
+         * @description Cancels stream data export dialog.
+         * @public
+         */
+        onCancelExportStreamData: function() {
+            var oDialog = this._dialogCache["exportStream"];
+            if (oDialog) {
+                oDialog.close();
+            }
         }
     });
 });

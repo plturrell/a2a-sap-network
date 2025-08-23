@@ -1,0 +1,88 @@
+# Workflow-related Schemas
+
+Workflow:
+  type: object
+  description: Automated workflow definition
+  required:
+    - id
+    - name
+    - status
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique workflow identifier
+    name:
+      type: string
+      description: Workflow name
+      maxLength: 100
+    description:
+      type: string
+      description: Workflow description
+      maxLength: 500
+    status:
+      type: string
+      enum: [draft, active, paused, completed, failed]
+      description: Current workflow status
+    steps:
+      type: array
+      description: Ordered list of workflow steps
+      items:
+        $ref: '#/WorkflowStep'
+    schedule:
+      $ref: '#/Schedule'
+    metadata:
+      $ref: './common.yaml#/BaseMetadata'
+
+WorkflowStep:
+  type: object
+  description: Individual step in a workflow
+  required:
+    - id
+    - agentId
+    - order
+  properties:
+    id:
+      type: string
+      description: Step identifier
+    agentId:
+      type: string
+      format: uuid
+      description: Agent responsible for this step
+    order:
+      type: integer
+      description: Step execution order
+      minimum: 1
+    parameters:
+      type: object
+      description: Step-specific parameters
+      additionalProperties: true
+    conditions:
+      type: object
+      description: Execution conditions and dependencies
+      additionalProperties: true
+
+Schedule:
+  type: object
+  description: Workflow execution schedule
+  properties:
+    type:
+      type: string
+      enum: [once, recurring, cron]
+      description: Schedule type
+    cronExpression:
+      type: string
+      description: Cron expression for recurring schedules
+      example: "0 0 12 * * ?"
+    startTime:
+      type: string
+      format: date-time
+      description: Schedule start time
+    endTime:
+      type: string
+      format: date-time
+      description: Schedule end time (optional)
+    timezone:
+      type: string
+      description: Timezone for schedule execution
+      example: "UTC"

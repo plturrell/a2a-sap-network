@@ -1,0 +1,145 @@
+openapi: 3.1.0
+info:
+  title: A2A Agent Platform API
+  description: |
+    # A2A (Agent-to-Agent) Platform REST API
+    
+    Enterprise-grade API for managing AI agents, workflows, and data processing pipelines.
+    Built on SAP Business Technology Platform with OAuth2 security and multi-tenant support.
+    
+    ## Key Features
+    - **Agent Management**: Create, configure, and orchestrate AI agents
+    - **Workflow Automation**: Design and execute complex data processing workflows  
+    - **Service Marketplace**: Discover and consume agent services
+    - **Network Analytics**: Monitor performance and track metrics
+    - **Security & Audit**: Enterprise-grade security with comprehensive audit trails
+    
+    ## Authentication
+    All API endpoints require OAuth2 Bearer token authentication via SAP XSUAA.
+    Scopes are enforced based on user roles and permissions defined in xs-security.json.
+    
+    ## Rate Limiting
+    - Standard users: 1000 requests/hour
+    - Premium users: 10000 requests/hour
+    - Enterprise users: Unlimited
+    
+    ## Support
+    - Documentation: https://docs.a2a-platform.com
+    - Support: support@a2a-platform.com
+    - Status Page: https://status.a2a-platform.com
+    
+  version: 1.0.0
+  contact:
+    name: A2A Platform Support
+    email: support@a2a-platform.com
+    url: https://docs.a2a-platform.com
+  license:
+    name: Enterprise License
+    url: https://a2a-platform.com/license
+  termsOfService: https://a2a-platform.com/terms
+
+servers:
+  - url: https://api.a2a-platform.com/v1
+    description: Production Server
+  - url: https://staging-api.a2a-platform.com/v1
+    description: Staging Server
+  - url: http://localhost:4004/api/v1
+    description: Local Development Server
+
+security:
+  - OAuth2: []
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: SAP XSUAA OAuth2 authentication with role-based access control
+      flows:
+        authorizationCode:
+          authorizationUrl: https://your-tenant.authentication.sap.hana.ondemand.com/oauth/authorize
+          tokenUrl: https://your-tenant.authentication.sap.hana.ondemand.com/oauth/token
+          scopes:
+            a2a-agents.Admin: Full administrative access to all platform functions
+            a2a-agents.AgentOperator: Operate agents and manage workflows
+            a2a-agents.DataViewer: View data products and reports
+            a2a-agents.Agent0.Execute: Execute Agent 0 (Data Product Registration)
+            a2a-agents.Agent1.Execute: Execute Agent 1 (Data Standardization)
+            a2a-agents.Agent2.Execute: Execute Agent 2 (AI Data Preparation)
+            a2a-agents.Agent3.Execute: Execute Agent 3 (Vector Processing)
+            a2a-agents.Agent4.Execute: Execute Agent 4 (Calculation & Validation)
+            a2a-agents.Agent5.Execute: Execute Agent 5 (Quality Assurance)
+
+  schemas:
+    # Import common schemas
+    Agent:
+      $ref: './schemas/common.yaml#/Agent'
+    BaseMetadata:
+      $ref: './schemas/common.yaml#/BaseMetadata'
+    PaginationResponse:
+      $ref: './schemas/common.yaml#/PaginationResponse'
+    ErrorResponse:
+      $ref: './schemas/common.yaml#/ErrorResponse'
+    
+    # Import workflow schemas
+    Workflow:
+      $ref: './schemas/workflow.yaml#/Workflow'
+    WorkflowStep:
+      $ref: './schemas/workflow.yaml#/WorkflowStep'
+    Schedule:
+      $ref: './schemas/workflow.yaml#/Schedule'
+
+  parameters:
+    # Import common parameters
+    Limit:
+      $ref: './components/parameters.yaml#/Limit'
+    Offset:
+      $ref: './components/parameters.yaml#/Offset'
+    AgentId:
+      $ref: './components/parameters.yaml#/AgentId'
+    WorkflowId:
+      $ref: './components/parameters.yaml#/WorkflowId'
+    StatusFilter:
+      $ref: './components/parameters.yaml#/StatusFilter'
+    TypeFilter:
+      $ref: './components/parameters.yaml#/TypeFilter'
+
+  responses:
+    # Import common responses
+    Success:
+      $ref: './components/responses.yaml#/Success'
+    BadRequest:
+      $ref: './components/responses.yaml#/BadRequest'
+    Unauthorized:
+      $ref: './components/responses.yaml#/Unauthorized'
+    Forbidden:
+      $ref: './components/responses.yaml#/Forbidden'
+    NotFound:
+      $ref: './components/responses.yaml#/NotFound'
+    InternalServerError:
+      $ref: './components/responses.yaml#/InternalServerError'
+
+# API Paths - Import modular path definitions
+paths:
+  # Agent Management
+  /agents:
+    $ref: './paths/agents.yaml#/~1agents'
+  /agents/{agentId}:
+    $ref: './paths/agents.yaml#/~1agents~1{agentId}'
+  
+  # Workflow Management  
+  /workflows:
+    $ref: './paths/workflows.yaml#/~1workflows'
+  /workflows/{workflowId}:
+    $ref: './paths/workflows.yaml#/~1workflows~1{workflowId}'
+
+# Note: This is the refactored modular version of the OpenAPI specification.
+# The original monolithic file has been split into:
+# - schemas/ - Reusable data schemas
+# - components/ - Reusable parameters and responses  
+# - paths/ - API endpoint definitions
+#
+# Benefits:
+# - Reduced duplication through $ref usage
+# - Better organization and maintainability
+# - Easier to manage and update individual components
+# - Improved readability and collaboration

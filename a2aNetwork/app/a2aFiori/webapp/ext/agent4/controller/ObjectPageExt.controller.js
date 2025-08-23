@@ -225,7 +225,7 @@ sap.ui.define([
                     break;
                 case "CUSTOM":
                     // Show custom rules text area
-                    MessageToast.show("Configure custom validation rules in the Advanced tab");
+                    MessageToast.show(this.getResourceBundle().getText("message.configureCustomRules"));
                     break;
             }
         },
@@ -497,7 +497,7 @@ sap.ui.define([
 
         onStartValidation: function() {
             if (!this._checkPermission("START_VALIDATION")) {
-                MessageBox.error("Insufficient permissions to start validation");
+                MessageBox.error(this.getResourceBundle().getText("error.insufficientPermissions.validation"));
                 return;
             }
 
@@ -508,11 +508,11 @@ sap.ui.define([
             // Validate task ID
             var oTaskIdValidation = this._validateInput(sTaskId, "taskId");
             if (!oTaskIdValidation.isValid) {
-                MessageBox.error("Invalid task ID: " + oTaskIdValidation.message);
+                MessageBox.error(this.getResourceBundle().getText("error.validation.invalidTaskName", [oTaskIdValidation.message]));
                 return;
             }
             
-            MessageBox.confirm("Start calculation validation for '" + this.formatSecureText(sTaskName) + "'?", {
+            MessageBox.confirm(this.getResourceBundle().getText("confirm.startValidation", [this.formatSecureText(sTaskName)]), {
                 onClose: function(oAction) {
                     if (oAction === MessageBox.Action.OK) {
                         this._startValidationProcess(oTaskIdValidation.sanitized);
@@ -536,7 +536,7 @@ sap.ui.define([
                 })
             }).then(function(data) {
                 this._extensionAPI.getView().setBusy(false);
-                MessageToast.show("Validation process started");
+                MessageToast.show(this.getResourceBundle().getText("message.validationStarted"));
                 this._extensionAPI.refresh();
                 
                 // Start secure progress monitoring
@@ -544,7 +544,7 @@ sap.ui.define([
                 this._logAuditEvent("VALIDATION_STARTED", "Validation process started", { taskId: sTaskId });
             }.bind(this)).catch(function(xhr) {
                 this._extensionAPI.getView().setBusy(false);
-                MessageBox.error("Failed to start validation: " + this.formatSecureText(xhr.responseText));
+                MessageBox.error(this.getResourceBundle().getText("error.operation.validationStartFailed", [this.formatSecureText(xhr.responseText)]));
                 this._logAuditEvent("VALIDATION_START_ERROR", "Failed to start validation", xhr.responseText);
             }.bind(this));
         },
@@ -559,7 +559,7 @@ sap.ui.define([
                 
                 if (nPollCount > nMaxPolls) {
                     clearInterval(this._validationInterval);
-                    MessageBox.warning("Validation monitoring timeout. Please refresh to check status.");
+                    MessageBox.warning(this.getResourceBundle().getText("warning.validationTimeout"));
                     return;
                 }
                 
@@ -580,14 +580,15 @@ sap.ui.define([
                         
                         if (data.status === "COMPLETED") {
                             MessageBox.success(
-                                "Validation completed!\n" +
-                                "Formulas validated: " + this.formatCalculationResult(data.formulasValidated) + "\n" +
-                                "Accuracy: " + this.formatPercentage(data.accuracy) + "\n" +
-                                "Errors found: " + this.formatCalculationResult(data.errorCount)
+                                this.getResourceBundle().getText("success.validationComplete", [
+                                    this.formatCalculationResult(data.formulasValidated),
+                                    this.formatPercentage(data.accuracy),
+                                    this.formatCalculationResult(data.errorCount)
+                                ])
                             );
                             this._logAuditEvent("VALIDATION_COMPLETED", "Validation completed successfully", data);
                         } else {
-                            MessageBox.error("Validation failed: " + this.formatSecureText(data.error));
+                            MessageBox.error(this.getResourceBundle().getText("message.validationFailed", [this.formatSecureText(data.error)]));
                             this._logAuditEvent("VALIDATION_FAILED", "Validation failed", data.error);
                         }
                     } else {
@@ -629,7 +630,7 @@ sap.ui.define([
 
         onValidateFormulas: function() {
             if (!this._checkPermission("VALIDATE_FORMULAS")) {
-                MessageBox.error("Insufficient permissions to validate formulas");
+                MessageBox.error(this.getResourceBundle().getText("error.insufficientPermissions.formulaValidation"));
                 return;
             }
 
@@ -638,7 +639,7 @@ sap.ui.define([
             
             var oTaskIdValidation = this._validateInput(sTaskId, "taskId");
             if (!oTaskIdValidation.isValid) {
-                MessageBox.error("Invalid task ID");
+                MessageBox.error(this.getResourceBundle().getText("error.validation.invalidTaskId"));
                 return;
             }
             
@@ -685,7 +686,7 @@ sap.ui.define([
                 this._oFormulaValidationDialog.setModel(oModel, "validation");
             }.bind(this)).catch(function(xhr) {
                 this._oFormulaValidationDialog.setBusy(false);
-                MessageBox.error("Failed to load formulas: " + this.formatSecureText(xhr.responseText));
+                MessageBox.error(this.getResourceBundle().getText("error.operation.formulaLoadFailed", [this.formatSecureText(xhr.responseText)]));
             }.bind(this));
         },
 
@@ -719,13 +720,13 @@ sap.ui.define([
             });
             
             if (aSelectedFormulas.length === 0) {
-                MessageBox.error("Please select formulas to validate");
+                MessageBox.error(this.getResourceBundle().getText("error.validation.selectFormulas"));
                 return;
             }
 
             // Limit batch size for security
             if (aSelectedFormulas.length > 50) {
-                MessageBox.error("Maximum 50 formulas can be validated at once for security reasons");
+                MessageBox.error(this.getResourceBundle().getText("error.validation.maxFormulas"));
                 return;
             }
             
@@ -804,7 +805,7 @@ sap.ui.define([
             
             var oTaskIdValidation = this._validateInput(sTaskId, "taskId");
             if (!oTaskIdValidation.isValid) {
-                MessageBox.error("Invalid task ID");
+                MessageBox.error(this.getResourceBundle().getText("error.validation.invalidTaskId"));
                 return;
             }
             
@@ -871,7 +872,7 @@ sap.ui.define([
             
             var oTaskIdValidation = this._validateInput(sTaskId, "taskId");
             if (!oTaskIdValidation.isValid) {
-                MessageBox.error("Invalid task ID");
+                MessageBox.error(this.getResourceBundle().getText("error.validation.invalidTaskId"));
                 return;
             }
             
@@ -981,7 +982,7 @@ sap.ui.define([
             
             var oTaskIdValidation = this._validateInput(sTaskId, "taskId");
             if (!oTaskIdValidation.isValid) {
-                MessageBox.error("Invalid task ID");
+                MessageBox.error(this.getResourceBundle().getText("error.validation.invalidTaskId"));
                 return;
             }
             
@@ -1112,7 +1113,7 @@ sap.ui.define([
                     confirmSafe: true
                 })
             }).then(function(data) {
-                MessageToast.show("Optimization applied successfully");
+                MessageToast.show(this.getResourceBundle().getText("success.optimizationApplied"));
                 this._extensionAPI.refresh();
                 this._logAuditEvent("OPTIMIZATION_APPLIED", "Optimization applied", { 
                     optimizationId: oOptimization.id,

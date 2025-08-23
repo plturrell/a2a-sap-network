@@ -1,0 +1,129 @@
+# Workflow Management Endpoints
+
+/workflows:
+  get:
+    tags:
+      - Workflow Management
+    summary: List workflows
+    description: Retrieve a paginated list of workflows with optional filtering
+    operationId: listWorkflows
+    security:
+      - OAuth2: [a2a-agents.DataViewer]
+    parameters:
+      - $ref: '../components/parameters.yaml#/Limit'
+      - $ref: '../components/parameters.yaml#/Offset'
+      - name: status
+        in: query
+        description: Filter by workflow status
+        schema:
+          type: string
+          enum: [draft, active, paused, completed, failed]
+    responses:
+      '200':
+        description: Workflows retrieved successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/PaginationResponse'
+                - type: object
+                  properties:
+                    workflows:
+                      type: array
+                      items:
+                        $ref: '../schemas/workflow.yaml#/Workflow'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '500':
+        $ref: '../components/responses.yaml#/InternalServerError'
+        
+  post:
+    tags:
+      - Workflow Management
+    summary: Create workflow
+    description: Create a new workflow definition
+    operationId: createWorkflow
+    security:
+      - OAuth2: [a2a-agents.AgentOperator]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/workflow.yaml#/Workflow'
+    responses:
+      '201':
+        description: Workflow created successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/workflow.yaml#/Workflow'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '500':
+        $ref: '../components/responses.yaml#/InternalServerError'
+
+/workflows/{workflowId}:
+  get:
+    tags:
+      - Workflow Management
+    summary: Get workflow by ID
+    description: Retrieve detailed workflow information
+    operationId: getWorkflow
+    security:
+      - OAuth2: [a2a-agents.DataViewer]
+    parameters:
+      - $ref: '../components/parameters.yaml#/WorkflowId'
+    responses:
+      '200':
+        description: Workflow retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/workflow.yaml#/Workflow'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '500':
+        $ref: '../components/responses.yaml#/InternalServerError'
+        
+  put:
+    tags:
+      - Workflow Management
+    summary: Update workflow
+    description: Update workflow definition and configuration
+    operationId: updateWorkflow
+    security:
+      - OAuth2: [a2a-agents.AgentOperator]
+    parameters:
+      - $ref: '../components/parameters.yaml#/WorkflowId'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/workflow.yaml#/Workflow'
+    responses:
+      '200':
+        description: Workflow updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/workflow.yaml#/Workflow'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '500':
+        $ref: '../components/responses.yaml#/InternalServerError'

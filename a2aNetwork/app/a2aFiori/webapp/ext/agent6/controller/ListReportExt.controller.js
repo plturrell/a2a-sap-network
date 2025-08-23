@@ -839,6 +839,132 @@ sap.ui.define([
                     return item;
                 }
             });
+        },
+
+        /**
+         * @function onRunQualityChecks
+         * @description Runs quality checks for selected tasks with comprehensive validation.
+         * @public
+         * @memberof a2a.network.agent6.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
+        onRunQualityChecks: function() {
+            var oTable = this._extensionAPI.getTable();
+            var aSelectedContexts = oTable.getSelectedContexts();
+            
+            if (aSelectedContexts.length === 0) {
+                MessageBox.warning("Please select at least one quality task to run checks.");
+                return;
+            }
+            
+            if (!this._hasRole("QualityManager")) {
+                MessageBox.error("Access denied: Insufficient privileges for running quality checks");
+                this._auditLogger.log("RUN_QUALITY_CHECKS_ACCESS_DENIED", { action: "run_quality_checks" });
+                return;
+            }
+            
+            var aTaskNames = aSelectedContexts.map(function(oContext) {
+                return this._sanitizeInput(oContext.getProperty("taskName"));
+            }.bind(this));
+            
+            MessageBox.confirm(
+                "Run quality checks for " + aSelectedContexts.length + " selected task(s)?\n\n" +
+                "Tasks: " + aTaskNames.join(", "),
+                {
+                    onClose: function(oAction) {
+                        if (oAction === MessageBox.Action.OK) {
+                            this._executeQualityChecks(aSelectedContexts);
+                        }
+                    }.bind(this)
+                }
+            );
+        },
+
+        /**
+         * @function onGenerateReport
+         * @description Generates comprehensive quality assurance reports.
+         * @public
+         * @memberof a2a.network.agent6.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
+        onGenerateReport: function() {
+            if (!this._hasRole("QualityManager")) {
+                MessageBox.error("Access denied: Insufficient privileges for generating reports");
+                this._auditLogger.log("GENERATE_REPORT_ACCESS_DENIED", { action: "generate_report" });
+                return;
+            }
+            
+            this._getOrCreateDialog("reportGenerator", "a2a.network.agent6.ext.fragment.ReportGenerator")
+                .then(function(oDialog) {
+                    var oModel = new JSONModel({
+                        reportType: "comprehensive",
+                        dateRange: {
+                            from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+                            to: new Date()
+                        },
+                        includeMetrics: true,
+                        includeCharts: true,
+                        includeRecommendations: true,
+                        format: "PDF"
+                    });
+                    oDialog.setModel(oModel, "report");
+                    oDialog.open();
+                    
+                    this._auditLogger.log("REPORT_GENERATION_INITIATED", { action: "generate_report" });
+                }.bind(this));
+        },
+
+        /**
+         * @function _executeQualityChecks
+         * @description Executes quality checks for provided task contexts.
+         * @param {Array<sap.ui.model.Context>} aContexts - Array of selected task contexts
+         * @private
+         * @memberof a2a.network.agent6.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
+        _executeQualityChecks: function(aContexts) {
+            var aTaskIds = aContexts.map(function(oContext) {
+                return this._sanitizeInput(oContext.getProperty("ID"));
+            }.bind(this));
+            
+            // Show busy indicator
+            this.base.getView().setBusy(true);
+            
+            this._securityUtils.secureAjaxRequest({
+                url: "/a2a/agent6/v1/quality-checks",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    taskIds: aTaskIds,
+                    checkTypes: ["compliance", "performance", "security", "reliability"],
+                    priority: "HIGH"
+                }),
+                success: function(data) {
+                    this.base.getView().setBusy(false);
+                    
+                    if (data.success) {
+                        MessageBox.success(
+                            "Quality checks initiated successfully!\n" +
+                            "Job ID: " + this._sanitizeInput(data.jobId) + "\n" +
+                            "Processing " + data.taskCount + " task(s)"
+                        );
+                        this._extensionAPI.refresh();
+                        this._auditLogger.log("QUALITY_CHECKS_STARTED", { 
+                            jobId: data.jobId, 
+                            taskCount: data.taskCount 
+                        });
+                    } else {
+                        MessageBox.warning("Some quality checks could not be initiated: " + 
+                                         this._sanitizeInput(data.message));
+                    }
+                }.bind(this),
+                error: function(xhr) {
+                    this.base.getView().setBusy(false);
+                    var errorMsg = this._sanitizeInput(xhr.responseText || "Unknown error");
+                    MessageBox.error("Quality checks failed: " + errorMsg);
+                    this._auditLogger.log("QUALITY_CHECKS_FAILED", { error: errorMsg });
+                }.bind(this)
+            });
         }
     });
 });

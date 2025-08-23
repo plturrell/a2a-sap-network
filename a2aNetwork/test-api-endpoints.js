@@ -24,7 +24,7 @@ class APIEndpointTester {
      * Make HTTP request
      */
     async makeRequest(method, endpoint, headers = {}, body = null) {
-        return new Promise((resolve, reject) => {
+        const handleMakeRequest = (resolve, reject) => {
             const url = new URL(endpoint, this.baseUrl);
             const isHttps = url.protocol === 'https:';
             const httpModule = isHttps ? https : http;
@@ -48,14 +48,15 @@ class APIEndpointTester {
                 options.headers['Content-Length'] = Buffer.byteLength(bodyString);
             }
 
-            const req = httpModule.request(options, (res) => {
+            const handleHttpResponse = (res) => {
                 let data = '';
                 
-                res.on('data', (chunk) => {
+                const handleDataChunk = (chunk) => {
                     data += chunk;
-                });
+                };
+                res.on('data', handleDataChunk);
                 
-                res.on('end', () => {
+                const handleResponseEnd = () => {
                     try {
                         const parsedData = data ? JSON.parse(data) : {};
                         resolve({
@@ -73,24 +74,31 @@ class APIEndpointTester {
                             parseError: error.message
                         });
                     }
-                });
-            });
+                };
+                res.on('end', handleResponseEnd);
+            };
+            
+            const req = httpModule.request(options, handleHttpResponse);
 
-            req.on('error', (error) => {
+            const handleRequestError = (error) => {
                 reject(error);
-            });
+            };
+            req.on('error', handleRequestError);
 
-            req.on('timeout', () => {
+            const handleRequestTimeout = () => {
                 req.destroy();
                 reject(new Error('Request timeout'));
-            });
+            };
+            req.on('timeout', handleRequestTimeout);
 
             if (body && typeof body === 'object') {
                 req.write(JSON.stringify(body));
             }
 
             req.end();
-        });
+        };
+        
+        return new Promise(handleMakeRequest);
     }
 
     /**
@@ -241,7 +249,8 @@ class APIEndpointTester {
         for (const test of tileTests) {
             await this.testEndpoint(test.name, test.method, test.endpoint);
             // Add small delay between requests
-            await new Promise(resolve => setTimeout(resolve, 100));
+            const delayBetweenTileRequests = (resolve) => setTimeout(resolve, 100);
+            await new Promise(delayBetweenTileRequests);
         }
     }
 
@@ -286,7 +295,8 @@ class APIEndpointTester {
         
         for (const test of systemTests) {
             await this.testEndpoint(test.name, test.method, test.endpoint);
-            await new Promise(resolve => setTimeout(resolve, 100));
+            const delayBetweenSystemRequests = (resolve) => setTimeout(resolve, 100);
+            await new Promise(delayBetweenSystemRequests);
         }
     }
 
@@ -321,7 +331,8 @@ class APIEndpointTester {
         
         for (const test of versionTests) {
             await this.testEndpoint(test.name, test.method, test.endpoint);
-            await new Promise(resolve => setTimeout(resolve, 100));
+            const delayBetweenVersionRequests = (resolve) => setTimeout(resolve, 100);
+            await new Promise(delayBetweenVersionRequests);
         }
     }
 
@@ -354,7 +365,8 @@ class APIEndpointTester {
         
         for (const test of versionedTests) {
             await this.testEndpoint(test.name, test.method, test.endpoint, 200, test.headers);
-            await new Promise(resolve => setTimeout(resolve, 100));
+            const delayBetweenVersionedRequests = (resolve) => setTimeout(resolve, 100);
+            await new Promise(delayBetweenVersionedRequests);
         }
     }
 
@@ -385,7 +397,8 @@ class APIEndpointTester {
         
         for (const test of securityTests) {
             await this.testEndpoint(test.name, test.method, test.endpoint);
-            await new Promise(resolve => setTimeout(resolve, 100));
+            const delayBetweenSecurityRequests = (resolve) => setTimeout(resolve, 100);
+            await new Promise(delayBetweenSecurityRequests);
         }
     }
 
@@ -405,31 +418,39 @@ class APIEndpointTester {
         
         if (this.errorCount > 0) {
             console.log(`\n❌ Failed Tests:`);
+            const filterFailedResults = (r) => !r.success;
+            const logFailedResult = (result) => {
+                console.log(`   • ${result.name}: ${result.error || `HTTP ${result.actualStatus}`}`);
+            };
             this.results
-                .filter(r => !r.success)
-                .forEach(result => {
-                    console.log(`   • ${result.name}: ${result.error || `HTTP ${result.actualStatus}`}`);
-                });
+                .filter(filterFailedResults)
+                .forEach(logFailedResult);
         }
         
         console.log(`\n⏱️  Performance:`);
-        const avgDuration = this.results.reduce((sum, r) => sum + r.duration, 0) / this.results.length;
-        const maxDuration = Math.max(...this.results.map(r => r.duration));
-        const minDuration = Math.min(...this.results.map(r => r.duration));
+        const calculateTotalDuration = (sum, r) => sum + r.duration;
+        const avgDuration = this.results.reduce(calculateTotalDuration, 0) / this.results.length;
+        const getDurationValue = (r) => r.duration;
+        const maxDuration = Math.max(...this.results.map(getDurationValue));
+        const minDuration = Math.min(...this.results.map(getDurationValue));
         
         console.log(`   Average Response Time: ${avgDuration.toFixed(1)}ms`);
         console.log(`   Fastest Response: ${minDuration}ms`);
         console.log(`   Slowest Response: ${maxDuration}ms`);
         
         // Group by endpoint type
-        const tileEndpoints = this.results.filter(r => r.name.includes('Stats') || r.name.includes('Agents') || r.name.includes('Services') || r.name.includes('Notifications'));
-        const systemEndpoints = this.results.filter(r => r.name.includes('Metrics') || r.name.includes('Status') || r.name.includes('Operations'));
-        const versionEndpoints = this.results.filter(r => r.name.includes('Version') || r.name.includes('Migration'));
+        const isTileEndpoint = (r) => r.name.includes('Stats') || r.name.includes('Agents') || r.name.includes('Services') || r.name.includes('Notifications');
+        const isSystemEndpoint = (r) => r.name.includes('Metrics') || r.name.includes('Status') || r.name.includes('Operations');
+        const isVersionEndpoint = (r) => r.name.includes('Version') || r.name.includes('Migration');
+        const tileEndpoints = this.results.filter(isTileEndpoint);
+        const systemEndpoints = this.results.filter(isSystemEndpoint);
+        const versionEndpoints = this.results.filter(isVersionEndpoint);
         
         console.log(`\n📋 Results by Category:`);
-        console.log(`   🎯 Tile Endpoints: ${tileEndpoints.filter(r => r.success).length}/${tileEndpoints.length} successful`);
-        console.log(`   🔧 System Endpoints: ${systemEndpoints.filter(r => r.success).length}/${systemEndpoints.length} successful`);
-        console.log(`   📝 Version Endpoints: ${versionEndpoints.filter(r => r.success).length}/${versionEndpoints.length} successful`);
+        const isSuccessful = (r) => r.success;
+        console.log(`   🎯 Tile Endpoints: ${tileEndpoints.filter(isSuccessful).length}/${tileEndpoints.length} successful`);
+        console.log(`   🔧 System Endpoints: ${systemEndpoints.filter(isSuccessful).length}/${systemEndpoints.length} successful`);
+        console.log(`   📝 Version Endpoints: ${versionEndpoints.filter(isSuccessful).length}/${versionEndpoints.length} successful`);
         
         console.log('\n' + '='.repeat(80));
         
@@ -468,15 +489,19 @@ class APIEndpointTester {
 // Run tests if this file is executed directly
 if (require.main === module) {
     const tester = new APIEndpointTester();
+    const handleTestSuccess = (report) => {
+        console.log('\n✅ Test suite completed');
+        process.exit(report.failed > 0 ? 1 : 0);
+    };
+    
+    const handleTestError = (error) => {
+        console.error('💥 Test suite failed:', error);
+        process.exit(1);
+    };
+    
     tester.runAllTests()
-        .then(report => {
-            console.log('\n✅ Test suite completed');
-            process.exit(report.failed > 0 ? 1 : 0);
-        })
-        .catch(error => {
-            console.error('💥 Test suite failed:', error);
-            process.exit(1);
-        });
+        .then(handleTestSuccess)
+        .catch(handleTestError);
 }
 
 module.exports = { APIEndpointTester };

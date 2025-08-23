@@ -2,43 +2,19 @@
   "scanMetadata": {
     "agent": "Agent 5 - QA Validation Agent",
     "scanType": "QA Validation Security Scan",
-    "timestamp": "2025-08-23T10:12:29.748Z",
-    "duration": 47,
+    "timestamp": "2025-08-23T10:20:51.981Z",
+    "duration": 49,
     "filesScanned": 14,
-    "totalVulnerabilities": 14
+    "totalVulnerabilities": 12
   },
   "summary": {
     "critical": 0,
-    "high": 2,
+    "high": 0,
     "medium": 9,
     "low": 3,
     "warning": 0
   },
   "vulnerabilities": [
-    {
-      "file": "../app/a2aFiori/webapp/ext/agent5/controller/ObjectPageExt.controller.js",
-      "line": 866,
-      "severity": "HIGH",
-      "category": "XSS_VULNERABILITY",
-      "message": "Cross-Site Scripting (XSS) vulnerability in QA data",
-      "impact": "Could allow execution of malicious scripts in QA interfaces, reports, or test descriptions",
-      "pattern": "/\\bon(load|click|error|focus|blur|submit|change|keyup|keydown|mouseover|mouseout)\\s*=/gi",
-      "match": "onerror =",
-      "isPositive": false,
-      "timestamp": "2025-08-23T10:12:29.717Z"
-    },
-    {
-      "file": "../app/a2aFiori/webapp/ext/agent5/utils/SecurityUtils.js",
-      "line": 356,
-      "severity": "HIGH",
-      "category": "HARDCODED_CREDENTIALS",
-      "message": "Hardcoded credentials in QA test files",
-      "impact": "Could expose test credentials leading to unauthorized access",
-      "pattern": "/token\\s*[:=]\\s*['\"][^'\"]*['\"]/gi",
-      "match": "TOKEN=\")) {\n                    return cookie.subs...",
-      "isPositive": false,
-      "timestamp": "2025-08-23T10:12:29.746Z"
-    },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/manifest.json",
       "line": 223,
@@ -49,7 +25,7 @@
       "pattern": "/X-Frame-Options/gi",
       "match": "X-Frame-Options",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:12:29.744Z"
+      "timestamp": "2025-08-23T10:20:51.976Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/manifest.json",
@@ -61,7 +37,7 @@
       "pattern": "/X-Content-Type-Options/gi",
       "match": "X-Content-Type-Options",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:12:29.744Z"
+      "timestamp": "2025-08-23T10:20:51.976Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/manifest.json",
@@ -73,7 +49,7 @@
       "pattern": "/X-XSS-Protection/gi",
       "match": "X-XSS-Protection",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:12:29.744Z"
+      "timestamp": "2025-08-23T10:20:51.976Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/manifest.json",
@@ -85,7 +61,7 @@
       "pattern": "/Content-Security-Policy/gi",
       "match": "Content-Security-Policy",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:12:29.744Z"
+      "timestamp": "2025-08-23T10:20:51.976Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/manifest.json",
@@ -97,7 +73,7 @@
       "pattern": "/Strict-Transport-Security/gi",
       "match": "Strict-Transport-Security",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:12:29.744Z"
+      "timestamp": "2025-08-23T10:20:51.976Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/utils/SecurityUtils.js",
@@ -109,7 +85,7 @@
       "pattern": "/http:\\/\\/(?!localhost|127\\.0\\.0\\.1)/gi",
       "match": "http://",
       "isPositive": false,
-      "timestamp": "2025-08-23T10:12:29.745Z"
+      "timestamp": "2025-08-23T10:20:51.978Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/utils/SecurityUtils.js",
@@ -121,7 +97,7 @@
       "pattern": "/X-Frame-Options/gi",
       "match": "X-Frame-Options",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:12:29.746Z"
+      "timestamp": "2025-08-23T10:20:51.978Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/utils/SecurityUtils.js",
@@ -133,7 +109,7 @@
       "pattern": "/X-Content-Type-Options/gi",
       "match": "X-Content-Type-Options",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:12:29.746Z"
+      "timestamp": "2025-08-23T10:20:51.978Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/utils/SecurityUtils.js",
@@ -145,7 +121,7 @@
       "pattern": "/X-XSS-Protection/gi",
       "match": "X-XSS-Protection",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:12:29.746Z"
+      "timestamp": "2025-08-23T10:20:51.978Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/controller/ObjectPageExt.controller.js",
@@ -157,7 +133,7 @@
       "pattern": "/getText\\s*\\(\\s*['\"][^'\"]*['\"]\\s*\\)/gi",
       "match": "getText(\"validation.taskNameRequired\")",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:12:29.719Z"
+      "timestamp": "2025-08-23T10:20:51.951Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/controller/ObjectPageExt.controller.js",
@@ -169,7 +145,7 @@
       "pattern": "/this\\._oResourceBundle\\.getText/gi",
       "match": "this._oResourceBundle.getText",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:12:29.719Z"
+      "timestamp": "2025-08-23T10:20:51.951Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent5/fragment/CreateQATask.fragment.xml",
@@ -181,7 +157,7 @@
       "pattern": "/i18n\\s*>\\s*[^{]*\\{/gi",
       "match": "i18n>title.createQATask}\"\n        contentWidth=\"75rem\"\n        contentHeight=\"auto\"\n        resizable=\"true\"\n        draggable=\"true\"\n        stretch=\"{",
       "isPositive": true,
-      "timestamp": "2025-08-23T10:12:29.728Z"
+      "timestamp": "2025-08-23T10:20:51.960Z"
     }
   ],
   "recommendations": [

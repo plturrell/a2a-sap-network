@@ -1,0 +1,57 @@
+# Reusable Parameters
+
+Limit:
+  name: limit
+  in: query
+  description: Maximum number of items to return
+  schema:
+    type: integer
+    minimum: 1
+    maximum: 100
+    default: 20
+  example: 20
+
+Offset:
+  name: offset
+  in: query
+  description: Number of items to skip
+  schema:
+    type: integer
+    minimum: 0
+    default: 0
+  example: 0
+
+AgentId:
+  name: agentId
+  in: path
+  required: true
+  description: Unique agent identifier
+  schema:
+    type: string
+    format: uuid
+  example: "550e8400-e29b-41d4-a716-446655440000"
+
+WorkflowId:
+  name: workflowId
+  in: path
+  required: true
+  description: Unique workflow identifier
+  schema:
+    type: string
+    format: uuid
+
+StatusFilter:
+  name: status
+  in: query
+  description: Filter by status
+  schema:
+    type: string
+    enum: [active, inactive, maintenance, error]
+
+TypeFilter:
+  name: type
+  in: query
+  description: Filter by type
+  schema:
+    type: string
+    enum: [data_product, standardization, ai_preparation, vector_processing, calculation, quality_assurance]

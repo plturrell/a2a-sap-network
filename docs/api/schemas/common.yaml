@@ -1,0 +1,104 @@
+# Common Schemas for A2A Platform API
+
+Agent:
+  type: object
+  description: AI Agent entity with capabilities and configuration
+  required:
+    - id
+    - name
+    - type
+    - status
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique identifier for the agent
+      example: "550e8400-e29b-41d4-a716-446655440000"
+    name:
+      type: string
+      description: Human-readable agent name
+      example: "Data Standardization Agent"
+      maxLength: 100
+    type:
+      type: string
+      enum: [data_product, standardization, ai_preparation, vector_processing, calculation, quality_assurance]
+      description: Agent type determining its capabilities and role
+    status:
+      type: string
+      enum: [active, inactive, maintenance, error]
+      description: Current operational status
+    capabilities:
+      type: array
+      description: List of agent capabilities
+      items:
+        type: string
+    configuration:
+      type: object
+      description: Agent-specific configuration parameters
+      additionalProperties: true
+    metadata:
+      $ref: '#/BaseMetadata'
+    
+BaseMetadata:
+  type: object
+  description: Common metadata fields
+  properties:
+    createdAt:
+      type: string
+      format: date-time
+      description: Creation timestamp
+    updatedAt:
+      type: string
+      format: date-time  
+      description: Last update timestamp
+    createdBy:
+      type: string
+      description: User who created the resource
+    updatedBy:
+      type: string
+      description: User who last updated the resource
+
+PaginationResponse:
+  type: object
+  description: Standard pagination wrapper
+  properties:
+    total:
+      type: integer
+      description: Total number of items
+    limit:
+      type: integer
+      description: Items per page
+    offset:
+      type: integer
+      description: Current offset
+    hasMore:
+      type: boolean
+      description: Whether more items are available
+
+ErrorResponse:
+  type: object
+  description: Standard error response
+  required:
+    - error
+    - message
+    - timestamp
+  properties:
+    error:
+      type: string
+      description: Error code
+      example: "AGENT_NOT_FOUND"
+    message:
+      type: string
+      description: Human-readable error message
+      example: "Agent with ID 123 not found"
+    details:
+      type: object
+      description: Additional error details
+      additionalProperties: true
+    timestamp:
+      type: string
+      format: date-time
+    requestId:
+      type: string
+      description: Unique request identifier for tracking
+      example: "req_123456789"

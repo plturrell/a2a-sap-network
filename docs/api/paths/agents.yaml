@@ -1,0 +1,149 @@
+# Agent Management Endpoints
+
+/agents:
+  get:
+    tags:
+      - Agent Management
+    summary: List all agents
+    description: |
+      Retrieve a paginated list of all agents in the platform.
+      Supports filtering by status, type, and other criteria.
+    operationId: listAgents
+    security:
+      - OAuth2: [a2a-agents.DataViewer]
+    parameters:
+      - $ref: '../components/parameters.yaml#/Limit'
+      - $ref: '../components/parameters.yaml#/Offset'
+      - $ref: '../components/parameters.yaml#/StatusFilter'
+      - $ref: '../components/parameters.yaml#/TypeFilter'
+    responses:
+      '200':
+        description: List of agents retrieved successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../schemas/common.yaml#/PaginationResponse'
+                - type: object
+                  properties:
+                    agents:
+                      type: array
+                      items:
+                        $ref: '../schemas/common.yaml#/Agent'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '500':
+        $ref: '../components/responses.yaml#/InternalServerError'
+        
+  post:
+    tags:
+      - Agent Management
+    summary: Create new agent
+    description: Create a new agent with specified configuration
+    operationId: createAgent
+    security:
+      - OAuth2: [a2a-agents.Admin]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/Agent'
+    responses:
+      '201':
+        description: Agent created successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Agent'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '500':
+        $ref: '../components/responses.yaml#/InternalServerError'
+
+/agents/{agentId}:
+  get:
+    tags:
+      - Agent Management
+    summary: Get agent by ID
+    description: Retrieve detailed information about a specific agent
+    operationId: getAgent
+    security:
+      - OAuth2: [a2a-agents.DataViewer]
+    parameters:
+      - $ref: '../components/parameters.yaml#/AgentId'
+    responses:
+      '200':
+        description: Agent retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Agent'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '500':
+        $ref: '../components/responses.yaml#/InternalServerError'
+        
+  put:
+    tags:
+      - Agent Management
+    summary: Update agent
+    description: Update agent configuration and properties
+    operationId: updateAgent
+    security:
+      - OAuth2: [a2a-agents.Admin]
+    parameters:
+      - $ref: '../components/parameters.yaml#/AgentId'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/Agent'
+    responses:
+      '200':
+        description: Agent updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/Agent'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '500':
+        $ref: '../components/responses.yaml#/InternalServerError'
+        
+  delete:
+    tags:
+      - Agent Management
+    summary: Delete agent
+    description: Delete an agent and all associated data
+    operationId: deleteAgent
+    security:
+      - OAuth2: [a2a-agents.Admin]
+    parameters:
+      - $ref: '../components/parameters.yaml#/AgentId'
+    responses:
+      '204':
+        description: Agent deleted successfully
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '500':
+        $ref: '../components/responses.yaml#/InternalServerError'

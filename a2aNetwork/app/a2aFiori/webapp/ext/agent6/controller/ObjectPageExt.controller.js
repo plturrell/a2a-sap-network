@@ -1096,6 +1096,276 @@ sap.ui.define([
             if (oQualityGateValidation.state === "Error") bValid = false;
             
             return bValid;
+        },
+
+        /**
+         * @function onStartQualityCheck
+         * @description Starts quality check for the current task with confirmation.
+         * @public
+         * @memberof a2a.network.agent6.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        onStartQualityCheck: function() {
+            var oContext = this._extensionAPI.getBindingContext();
+            if (!oContext) {
+                MessageBox.error("No quality task selected");
+                return;
+            }
+
+            var sTaskId = oContext.getProperty("ID");
+            var sTaskName = oContext.getProperty("taskName");
+            
+            MessageBox.confirm("Start quality check for '" + this._securityUtils.escapeHTML(sTaskName) + "'?", {
+                onClose: function(oAction) {
+                    if (oAction === MessageBox.Action.OK) {
+                        this._startQualityCheckProcess(sTaskId);
+                    }
+                }.bind(this)
+            });
+        },
+
+        /**
+         * @function onPauseQualityCheck
+         * @description Pauses the currently running quality check.
+         * @public
+         * @memberof a2a.network.agent6.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        onPauseQualityCheck: function() {
+            var oContext = this._extensionAPI.getBindingContext();
+            if (!oContext) {
+                MessageBox.error("No quality task selected");
+                return;
+            }
+
+            var sTaskId = oContext.getProperty("ID");
+            
+            MessageBox.confirm("Pause the quality check process?", {
+                onClose: function(oAction) {
+                    if (oAction === MessageBox.Action.OK) {
+                        this._pauseQualityCheck(sTaskId);
+                    }
+                }.bind(this)
+            });
+        },
+
+        /**
+         * @function onViewResults
+         * @description Views quality check results with detailed analysis.
+         * @public
+         * @memberof a2a.network.agent6.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        onViewResults: function() {
+            var oContext = this._extensionAPI.getBindingContext();
+            if (!oContext) {
+                MessageBox.error("No quality task selected");
+                return;
+            }
+
+            var sTaskId = oContext.getProperty("ID");
+            this._showQualityResults(sTaskId);
+        },
+
+        /**
+         * @function onExportReport
+         * @description Exports quality check report in various formats.
+         * @public
+         * @memberof a2a.network.agent6.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        onExportReport: function() {
+            var oContext = this._extensionAPI.getBindingContext();
+            if (!oContext) {
+                MessageBox.error("No quality task selected");
+                return;
+            }
+
+            var sTaskId = oContext.getProperty("ID");
+            var sTaskName = oContext.getProperty("taskName");
+            
+            this._showExportDialog(sTaskId, sTaskName);
+        },
+
+        /**
+         * @function _startQualityCheckProcess
+         * @description Starts the quality check process for given task ID.
+         * @param {string} sTaskId - Task ID to start quality check for
+         * @private
+         * @memberof a2a.network.agent6.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        _startQualityCheckProcess: function(sTaskId) {
+            this._extensionAPI.getView().setBusy(true);
+            
+            this._securityUtils.secureAjaxRequest({
+                url: "/a2a/agent6/v1/tasks/" + encodeURIComponent(sTaskId) + "/start",
+                type: "POST",
+                contentType: "application/json",
+                success: function(data) {
+                    this._extensionAPI.getView().setBusy(false);
+                    MessageToast.show("Quality check process started");
+                    this._extensionAPI.refresh();
+                    
+                    // Start monitoring progress
+                    this._startProgressMonitoring(sTaskId);
+                }.bind(this),
+                error: function(xhr) {
+                    this._extensionAPI.getView().setBusy(false);
+                    MessageBox.error("Failed to start quality check: " + this._securityUtils.escapeHTML(xhr.responseText || "Unknown error"));
+                }.bind(this)
+            });
+        },
+
+        /**
+         * @function _pauseQualityCheck
+         * @description Pauses the quality check process for given task ID.
+         * @param {string} sTaskId - Task ID to pause quality check for
+         * @private
+         * @memberof a2a.network.agent6.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        _pauseQualityCheck: function(sTaskId) {
+            this._securityUtils.secureAjaxRequest({
+                url: "/a2a/agent6/v1/tasks/" + encodeURIComponent(sTaskId) + "/pause",
+                type: "POST",
+                success: function() {
+                    MessageToast.show("Quality check process paused");
+                    this._extensionAPI.refresh();
+                }.bind(this),
+                error: function(xhr) {
+                    MessageBox.error("Failed to pause quality check: " + this._securityUtils.escapeHTML(xhr.responseText || "Unknown error"));
+                }.bind(this)
+            });
+        },
+
+        /**
+         * @function _showQualityResults
+         * @description Shows detailed quality check results in a dialog.
+         * @param {string} sTaskId - Task ID to show results for
+         * @private
+         * @memberof a2a.network.agent6.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        _showQualityResults: function(sTaskId) {
+            var oView = this.base.getView();
+            
+            if (!this._oResultsDialog) {
+                Fragment.load({
+                    id: oView.getId(),
+                    name: "a2a.network.agent6.ext.fragment.QualityResults",
+                    controller: this
+                }).then(function(oDialog) {
+                    this._oResultsDialog = oDialog;
+                    oView.addDependent(this._oResultsDialog);
+                    this._loadQualityResults(sTaskId);
+                    this._oResultsDialog.open();
+                }.bind(this));
+            } else {
+                this._loadQualityResults(sTaskId);
+                this._oResultsDialog.open();
+            }
+        },
+
+        /**
+         * @function _showExportDialog
+         * @description Shows export options dialog for quality reports.
+         * @param {string} sTaskId - Task ID to export
+         * @param {string} sTaskName - Task name for display
+         * @private
+         * @memberof a2a.network.agent6.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        _showExportDialog: function(sTaskId, sTaskName) {
+            var oView = this.base.getView();
+            
+            if (!this._oExportDialog) {
+                Fragment.load({
+                    id: oView.getId(),
+                    name: "a2a.network.agent6.ext.fragment.ExportQualityReport",
+                    controller: this
+                }).then(function(oDialog) {
+                    this._oExportDialog = oDialog;
+                    oView.addDependent(this._oExportDialog);
+                    
+                    var oModel = new JSONModel({
+                        taskId: sTaskId,
+                        taskName: this._securityUtils.escapeHTML(sTaskName),
+                        format: "PDF",
+                        includeCharts: true,
+                        includeDetails: true,
+                        includeRecommendations: true
+                    });
+                    this._oExportDialog.setModel(oModel, "export");
+                    this._oExportDialog.open();
+                }.bind(this));
+            } else {
+                var oModel = new JSONModel({
+                    taskId: sTaskId,
+                    taskName: this._securityUtils.escapeHTML(sTaskName),
+                    format: "PDF",
+                    includeCharts: true,
+                    includeDetails: true,
+                    includeRecommendations: true
+                });
+                this._oExportDialog.setModel(oModel, "export");
+                this._oExportDialog.open();
+            }
+        },
+
+        /**
+         * @function _loadQualityResults
+         * @description Loads quality check results from backend.
+         * @param {string} sTaskId - Task ID to load results for
+         * @private
+         * @memberof a2a.network.agent6.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        _loadQualityResults: function(sTaskId) {
+            this._securityUtils.secureAjaxRequest({
+                url: "/a2a/agent6/v1/tasks/" + encodeURIComponent(sTaskId) + "/results",
+                type: "GET",
+                success: function(data) {
+                    var oModel = new JSONModel(data);
+                    this._oResultsDialog.setModel(oModel, "results");
+                }.bind(this),
+                error: function(xhr) {
+                    MessageBox.error("Failed to load quality results: " + this._securityUtils.escapeHTML(xhr.responseText || "Unknown error"));
+                }.bind(this)
+            });
+        },
+
+        /**
+         * @function _startProgressMonitoring
+         * @description Starts monitoring quality check progress with real-time updates.
+         * @param {string} sTaskId - Task ID to monitor
+         * @private
+         * @memberof a2a.network.agent6.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        _startProgressMonitoring: function(sTaskId) {
+            // Poll for progress updates every 2 seconds
+            this._progressInterval = setInterval(function() {
+                this._securityUtils.secureAjaxRequest({
+                    url: "/a2a/agent6/v1/tasks/" + encodeURIComponent(sTaskId) + "/progress",
+                    type: "GET",
+                    success: function(data) {
+                        if (data.status === "COMPLETED" || data.status === "FAILED") {
+                            clearInterval(this._progressInterval);
+                            this._extensionAPI.refresh();
+                            
+                            if (data.status === "COMPLETED") {
+                                MessageBox.success("Quality check completed successfully!");
+                            } else {
+                                MessageBox.error("Quality check failed: " + this._securityUtils.escapeHTML(data.error || "Unknown error"));
+                            }
+                        }
+                    }.bind(this),
+                    error: function() {
+                        clearInterval(this._progressInterval);
+                    }.bind(this)
+                });
+            }.bind(this), 2000);
         }
     });
 });
