@@ -1,0 +1,15 @@
+{
+  "files_processed": 89,
+  "issues_fixed": 1119,
+  "issues_remaining": 0,
+  "files_modified": [],
+  "fix_summary": {
+    "var_to_let_const": 684,
+    "sap_globals_added": 0,
+    "jquery_globals_added": 0,
+    "console_wrapped": 475,
+    "missing_braces_added": 0,
+    "total_fixes": 1119
+  },
+  "duration": 2.191296100616455
+}

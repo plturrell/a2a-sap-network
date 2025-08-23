@@ -1,0 +1,71 @@
+<mvc:View
+    controllerName="a2a.portal.controller.App"
+    xmlns:mvc="sap.ui.core.mvc"
+    displayBlock="true"
+    xmlns="sap.m"
+    xmlns:tnt="sap.tnt"
+    xmlns:core="sap.ui.core">
+    <tnt:ToolPage id="app" class="sapUiSizeCompact a2a-tablet-page" busyIndicatorDelay="0">
+        <tnt:header>
+            <tnt:ToolHeader>
+                <Image src="https://ui5.sap.com/resources/sap/ui/documentation/sdk/images/logo_sap.png" 
+                       height="32px" 
+                       class="sapUiSmallMarginBegin sapUiSmallMarginEnd"/>
+                <Title text="{i18n>appTitle}" level="H4" class="sapUiMediumMarginEnd"/>
+                <ToolbarSpacer/>
+                <Button icon="sap-icon://notification" 
+                       type="Transparent" 
+                       press="onNotificationPress" 
+                       tooltip="Notifications"
+                       ariaLabel="{i18n>notifications} ({notifications>/stats/unread})"
+                       text="{= ${notifications>/stats/unread} > 0 ? ${notifications>/stats/unread} : '' }">
+                    <customData>
+                        <core:CustomData key="badge" value="{notifications>/stats/unread}" writeToDom="true"/>
+                    </customData>
+                </Button>
+                <Button icon="sap-icon://action-settings" type="Transparent" press="onSettingsPress"/>
+                <Button icon="sap-icon://person-placeholder" type="Transparent" press="onUserProfilePress" tooltip="User Profile"/>
+                <Button icon="sap-icon://log" type="Transparent" press="onLogPress" tooltip="Application Logs"/>
+            </tnt:ToolHeader>
+        </tnt:header>
+
+        <tnt:sideContent>
+            <tnt:SideNavigation id="sideNavigation" 
+                               itemSelect="onItemSelect" 
+                               selectedKey="projects"
+                               ariaLabel="{i18n>mainNavigation}">
+                <tnt:NavigationList>
+                    <tnt:NavigationListItem text="{i18n>navProjects}" 
+                                          icon="sap-icon://folder" 
+                                          key="projects"/>
+                    <tnt:NavigationListItem text="{i18n>navTemplates}" 
+                                          icon="sap-icon://template" 
+                                          key="templates"/>
+                    <tnt:NavigationListItem text="{i18n>navAgentBuilder}" 
+                                          icon="sap-icon://create" 
+                                          key="agentBuilder"/>
+                    <tnt:NavigationListItem text="{i18n>navBPMNDesigner}" 
+                                          icon="sap-icon://process" 
+                                          key="bpmnDesigner"/>
+                    <tnt:NavigationListItem text="{i18n>navTesting}" 
+                                          icon="sap-icon://test" 
+                                          key="testing"/>
+                    <tnt:NavigationListItem text="{i18n>navDeployment}" 
+                                          icon="sap-icon://upload" 
+                                          key="deployment"/>
+                    <tnt:NavigationListItem text="{i18n>navMonitoring}" 
+                                          icon="sap-icon://line-charts" 
+                                          key="monitoring"/>
+                    <tnt:NavigationListItem text="{i18n>navA2ANetwork}" 
+                                          icon="sap-icon://chain-link" 
+                                          key="a2aNetwork"
+                                          class="sapUiSmallMarginTop"/>
+                </tnt:NavigationList>
+            </tnt:SideNavigation>
+        </tnt:sideContent>
+
+        <tnt:mainContents>
+            <!-- Router will place views here -->
+        </tnt:mainContents>
+    </tnt:ToolPage>
+</mvc:View>

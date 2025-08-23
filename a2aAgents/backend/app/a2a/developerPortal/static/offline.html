@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAP A2A Developer Portal - Offline</title>
+    <style>
+        body {
+            font-family: "72", Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+        
+        .offline-container {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 3rem;
+            max-width: 500px;
+            margin: 2rem;
+        }
+        
+        .offline-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 2rem;
+            opacity: 0.6;
+        }
+        
+        h1 {
+            color: #0a6ed1;
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 1rem;
+        }
+        
+        p {
+            color: #666;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 2rem 0;
+            padding: 1rem;
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 0.25rem;
+            color: #856404;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #dc7633;
+        }
+        
+        .retry-btn {
+            background-color: #0a6ed1;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.25rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .retry-btn:hover {
+            background-color: #0854a0;
+        }
+        
+        .offline-features {
+            margin-top: 2rem;
+            text-align: left;
+        }
+        
+        .offline-features h3 {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .offline-features ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .offline-features li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .offline-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .check-icon {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .footer {
+            margin-top: 2rem;
+            font-size: 0.875rem;
+            color: #999;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1e1e1e;
+                color: #fff;
+            }
+            
+            .offline-container {
+                background: #2d2d2d;
+                color: #fff;
+            }
+            
+            .status {
+                background-color: #3d3d3d;
+                border-color: #666;
+                color: #ffc107;
+            }
+            
+            .offline-features li {
+                border-bottom-color: #444;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <!-- Offline Icon -->
+        <svg class="offline-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M23.64 7c-.45-.34-4.93-4-11.64-4-1.5 0-2.89.19-4.15.48L18.18 13.8 23.64 7zm-6.6 8.22L3.27 1.44 2 2.72l2.05 2.06C1.91 5.76.59 6.82.36 7l11.63 14.49.01.01.01-.01L16.17 16l1.6 1.6 1.27-1.27zM12 13.5l-3-3.73L12 6.5l3 3.73-3 3.27z"/>
+        </svg>
+        
+        <h1>You're Currently Offline</h1>
+        
+        <p>
+            The SAP A2A Developer Portal is currently unavailable due to network connectivity issues.
+            Don't worry - you can still access some features while offline.
+        </p>
+        
+        <div class="status">
+            <span class="status-indicator"></span>
+            <span>Network Connection Lost</span>
+        </div>
+        
+        <button class="retry-btn" onclick="location.reload()">
+            Try Again
+        </button>
+        
+        <div class="offline-features">
+            <h3>Available Offline Features</h3>
+            <ul>
+                <li>
+                    <span class="check-icon">✓</span>
+                    View previously loaded projects and agents
+                </li>
+                <li>
+                    <span class="check-icon">✓</span>
+                    Access cached workflow templates
+                </li>
+                <li>
+                    <span class="check-icon">✓</span>
+                    Review documentation and help content
+                </li>
+                <li>
+                    <span class="check-icon">✓</span>
+                    Make changes that sync when connection returns
+                </li>
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <p>
+                Changes will be automatically synchronized when your connection is restored.
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // Check for network connectivity and redirect when online
+        function checkConnection() {
+            if (navigator.onLine) {
+                // Try to make a simple request to check if we're actually online
+                fetch('/api/health', { 
+                    method: 'HEAD',
+                    cache: 'no-cache'
+                }).then(() => {
+                    // Connection is restored, redirect to home page
+                    window.location.href = '/';
+                }).catch(() => {
+                    // Still offline, check again in 5 seconds
+                    setTimeout(checkConnection, 5000);
+                });
+            } else {
+                // Still offline, check again in 5 seconds
+                setTimeout(checkConnection, 5000);
+            }
+        }
+        
+        // Start checking for connection
+        setTimeout(checkConnection, 2000);
+        
+        // Listen for online events
+        window.addEventListener('online', function() {
+            checkConnection();
+        });
+        
+        // Update status indicator
+        function updateStatus() {
+            const indicator = document.querySelector('.status-indicator');
+            const text = document.querySelector('.status span:last-child');
+            
+            if (navigator.onLine) {
+                indicator.style.backgroundColor = '#28a745';
+                text.textContent = 'Checking Connection...';
+            } else {
+                indicator.style.backgroundColor = '#dc7633';
+                text.textContent = 'Network Connection Lost';
+            }
+        }
+        
+        // Update status on load and network events
+        updateStatus();
+        window.addEventListener('online', updateStatus);
+        window.addEventListener('offline', updateStatus);
+    </script>
+</body>
+</html>

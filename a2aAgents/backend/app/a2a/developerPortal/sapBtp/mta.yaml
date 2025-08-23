@@ -1,0 +1,315 @@
+_schema-version: "3.3"
+ID: sap-a2a-developer-portal
+description: SAP A2A Enterprise Developer Portal - Multi-Agent Business Process Platform
+version: 2.1.0
+author: SAP SE
+copyright: "© 2024 SAP SE or an SAP affiliate company. All rights reserved."
+
+parameters:
+  enable-parallel-deployments: true
+  keep-existing-routes: true
+  deploy_mode: html5-repo
+  enable-parallel-deployments: true
+
+global-parameters:
+  - name: backend-url
+    value: "~{srv-binding/srv-url}"
+  - name: sap-cloud-service
+    value: "sap.a2a.developerportal"
+
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci --production
+        - npm run build:ui5
+        - npm run eslint
+        - npm run test:unit
+
+modules:
+  # SAP Application Router Module with Enterprise Security
+  - name: sap-a2a-portal-approuter
+    type: approuter.nodejs
+    path: approuter
+    parameters:
+      keep-existing-routes: true
+      disk-quota: 512M
+      memory: 1024M
+      buildpack: nodejs_buildpack
+      stack: cflinuxfs4
+    build-parameters:
+      builder: npm-ci
+      ignore: ["node_modules/", "coverage/", "test/"]
+      supported-platforms: []
+    requires:
+      - name: sap-a2a-portal-xsuaa
+        parameters:
+          ENV_TYPE: XSUAA
+      - name: sap-a2a-portal-destination
+        parameters:
+          ENV_TYPE: DESTINATION
+      - name: sap-a2a-portal-connectivity
+        parameters:
+          ENV_TYPE: CONNECTIVITY
+      - name: sap-a2a-portal-html5-repo-runtime
+        parameters:
+          ENV_TYPE: HTML5_APPS_REPO
+      - name: sap-a2a-portal-logging
+        parameters:
+          ENV_TYPE: APPLICATION_LOGS
+    provides:
+      - name: srv-binding
+        properties:
+          srv-url: ${default-url}
+    properties:
+      TENANT_HOST_PATTERN: "^(.*)-${default-uri}"
+
+  # SAP UI5 Enterprise Application Module
+  - name: sap-a2a-portal-ui5
+    type: html5
+    path: cap/app/a2a.portal
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+        - npm run lint:fix
+        - npm run test:coverage
+      supported-platforms: []
+    requires:
+      - name: sap-a2a-portal-html5-repo-host
+        parameters:
+          content-target: true
+          content-zip: true
+          service-key-name: html5-repo-runtime-key
+
+  # SAP CAP Backend Service Module
+  - name: sap-a2a-portal-srv
+    type: nodejs
+    path: cap
+    parameters:
+      memory: 2048M
+      disk-quota: 2048M
+      buildpack: nodejs_buildpack
+      stack: cflinuxfs4
+    build-parameters:
+      builder: npm-ci
+      ignore: ["node_modules/", "coverage/", "test/"]
+      supported-platforms: []
+    properties:
+      NODE_ENV: production
+      SAP_JWT_TRUST_ACL: "[{\"clientid\":\"*\",\"identityzone\":\"*\"}]"
+      CDS_MULTITENANCY_SECURITY_SUBSCRIPTIONSCOPE: "$XSAPPNAME.Callback"
+    requires:
+      - name: sap-a2a-portal-xsuaa
+        parameters:
+          credential-type: x509
+          x509: 
+            key-length: 2048
+            validity: 365
+      - name: sap-a2a-portal-destination
+      - name: sap-a2a-portal-db
+      - name: sap-a2a-portal-connectivity
+      - name: sap-a2a-portal-logging
+      - name: sap-a2a-portal-service-manager
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+
+  # SAP HANA Database Deployer Module
+  - name: sap-a2a-portal-db-deployer
+    type: hdb
+    path: cap/db
+    parameters:
+      memory: 512M
+      disk-quota: 1024M
+      buildpack: nodejs_buildpack
+    requires:
+      - name: sap-a2a-portal-db
+        properties:
+          TARGET_CONTAINER: ~{hdi-container-name}
+    build-parameters:
+      ignore: ["node_modules/", ".env"]
+
+resources:
+  # SAP Authorization and Trust Management Service (XSUAA)
+  - name: sap-a2a-portal-xsuaa
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: broker
+      path: ./xs-security.json
+      config:
+        xsappname: sap-a2a-developer-portal-${org}-${space}
+        tenant-mode: shared
+        foreign-scope-references:
+          - "uaa.user"
+        oauth2-configuration:
+          credential-types:
+            - "x509"
+          token-validity: 3600
+          refresh-token-validity: 86400
+          system-attributes:
+            - "xs.rolecollections"
+            - "xs.user.attributes"
+
+  # SAP Destination Service with Enterprise Endpoints
+  - name: sap-a2a-portal-destination
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+      config:
+        HTML5Runtime_enabled: true
+        version: "1.0.0"
+        init_data:
+          instance:
+            destinations:
+              - Name: sap-a2a-backend-srv
+                Description: SAP A2A Backend CAP Service
+                URL: ~{srv-api/srv-url}
+                Type: HTTP
+                ProxyType: Internet
+                Authentication: OAuth2UserTokenExchange
+                tokenServiceInstanceName: sap-a2a-portal-xsuaa
+                tokenServiceKeyName: sap-a2a-portal-xsuaa-key
+                HTML5.DynamicDestination: true
+                HTML5.Timeout: 60000
+              - Name: sap-s4hana-cloud
+                Description: SAP S/4HANA Cloud System
+                URL: ${S4HANA_CLOUD_API_URL}
+                Type: HTTP
+                ProxyType: Internet
+                Authentication: OAuth2SAMLBearerAssertion
+                audience: ${S4HANA_CLOUD_API_URL}
+                authnContextClassRef: urn:oasis:names:tc:SAML:2.0:ac:classes:PreviousSession
+              - Name: sap-analytics-cloud
+                Description: SAP Analytics Cloud API
+                URL: https://tenant.sapanalytics.cloud
+                Type: HTTP
+                ProxyType: Internet
+                Authentication: OAuth2ClientCredentials
+                tokenServiceURL: https://tenant.authentication.sap.hana.ondemand.com/oauth/token
+              - Name: sap-workflow-service
+                Description: SAP Workflow Service
+                URL: https://api.workflow-sap.cfapps.sap.hana.ondemand.com
+                Type: HTTP
+                ProxyType: Internet
+                Authentication: OAuth2ClientCredentials
+
+  # SAP Cloud Connectivity Service
+  - name: sap-a2a-portal-connectivity
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: connectivity
+      service-plan: lite
+      config:
+        version: "1.0.0"
+
+  # SAP HTML5 Application Repository (Host)
+  - name: sap-a2a-portal-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+      config:
+        sizeLimit: 500
+
+  # SAP HTML5 Application Repository (Runtime)
+  - name: sap-a2a-portal-html5-repo-runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-runtime
+      config:
+        version: "1.0.0"
+
+  # SAP HANA Database Service
+  - name: sap-a2a-portal-db
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+      config:
+        database_id: "a2a-portal-db-${org}-${space}"
+        schema: "A2A_PORTAL"
+    properties:
+      hdi-container-name: ${service-name}
+
+  # SAP Application Logging Service
+  - name: sap-a2a-portal-logging
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: application-logs
+      service-plan: lite
+      config:
+        retention-period: 7
+
+  # SAP Service Manager
+  - name: sap-a2a-portal-service-manager
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: service-manager
+      service-plan: container
+      config:
+        polling:
+          enable_synchronous_mode: true
+          max_parallel_operations: 10
+
+  # SAP Redis Cache Service
+  - name: sap-a2a-portal-redis
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: redis
+      service-plan: standard
+      config:
+        engine_version: "6.2"
+        maxmemory-policy: "allkeys-lru"
+
+  # SAP Job Scheduling Service
+  - name: sap-a2a-portal-jobscheduler
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: jobscheduler
+      service-plan: lite
+      config:
+        enable-xsuaa-support: true
+
+  # SAP AI Core Service
+  - name: sap-a2a-portal-aicore
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: aicore
+      service-plan: extended
+      config:
+        version: "1.0"
+
+  # SAP Event Mesh Service
+  - name: sap-a2a-portal-enterprise-messaging
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: enterprise-messaging
+      service-plan: default
+      config:
+        emname: a2a-portal-messaging
+        namespace: sap/a2a/portal
+        version: "1.1.0"
+        options:
+          management: true
+          messagingrest: true
+
+  # SAP Business Rules Service
+  - name: sap-a2a-portal-business-rules
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: business-rules
+      service-plan: lite
+
+  # SAP Audit Log Service
+  - name: sap-a2a-portal-auditlog
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: auditlog
+      service-plan: premium

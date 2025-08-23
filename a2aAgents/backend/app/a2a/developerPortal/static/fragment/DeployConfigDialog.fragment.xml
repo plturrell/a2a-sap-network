@@ -1,0 +1,136 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:f="sap.ui.layout.form">
+    <Dialog title="{i18n>deploymentConfiguration}" 
+            contentWidth="700px" 
+            contentHeight="600px"
+            resizable="true"
+            draggable="true"
+            class="a2a-deploy-config-dialog">
+        <content>
+            <IconTabBar class="sapUiNoContentPadding">
+                <items>
+                    <!-- Basic Configuration -->
+                    <IconTabFilter text="{i18n>basicConfig}" icon="sap-icon://settings">
+                        <VBox class="sapUiMediumMargin">
+                            <f:SimpleForm editable="true"
+                                         layout="ResponsiveGridLayout"
+                                         labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12"
+                                         adjustLabelSpan="false"
+                                         columnsXL="1" columnsL="1" columnsM="1">
+                                <f:content>
+                                    <Label text="{i18n>targetEnvironment}" required="true"/>
+                                    <Select selectedKey="{deployConfig>/targetEnvironment}" width="100%">
+                                        <items>
+                                            <core:Item key="development" text="Development"/>
+                                            <core:Item key="staging" text="Staging"/>
+                                            <core:Item key="production" text="Production"/>
+                                        </items>
+                                    </Select>
+                                    
+                                    <Label text="{i18n>deploymentStrategy}"/>
+                                    <RadioButtonGroup selectedIndex="{= ${deployConfig>/deploymentStrategy} === 'rolling' ? 0 : 1 }">
+                                        <buttons>
+                                            <RadioButton text="Rolling Deployment" select="onStrategyChange"/>
+                                            <RadioButton text="Blue-Green Deployment" select="onStrategyChange"/>
+                                        </buttons>
+                                    </RadioButtonGroup>
+                                    
+                                    <Label text="{i18n>replicas}"/>
+                                    <StepInput value="{deployConfig>/replicas}" 
+                                              min="1" max="10" 
+                                              description="Number of instances"/>
+                                    
+                                    <Label text="{i18n>healthCheckPath}"/>
+                                    <Input value="{deployConfig>/healthCheckPath}" 
+                                           placeholder="/health"
+                                           description="Endpoint for health checks"/>
+                                </f:content>
+                            </f:SimpleForm>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Auto Scaling -->
+                    <IconTabFilter text="{i18n>autoScaling}" icon="sap-icon://line-chart">
+                        <VBox class="sapUiMediumMargin">
+                            <f:SimpleForm editable="true"
+                                         layout="ResponsiveGridLayout">
+                                <f:content>
+                                    <Label text="{i18n>enableAutoScaling}"/>
+                                    <Switch state="{deployConfig>/enableAutoScaling}" 
+                                           customTextOn="ON" 
+                                           customTextOff="OFF"/>
+                                    
+                                    <Label text="{i18n>minInstances}"/>
+                                    <StepInput value="{deployConfig>/minInstances}" 
+                                              min="1" max="5"
+                                              enabled="{deployConfig>/enableAutoScaling}"/>
+                                    
+                                    <Label text="{i18n>maxInstances}"/>
+                                    <StepInput value="{deployConfig>/maxInstances}" 
+                                              min="2" max="20"
+                                              enabled="{deployConfig>/enableAutoScaling}"/>
+                                    
+                                    <Label text="{i18n>cpuThreshold}"/>
+                                    <Slider value="{deployConfig>/cpuThreshold}" 
+                                           min="50" max="90" 
+                                           step="5"
+                                           showHandleTooltip="true"
+                                           enabled="{deployConfig>/enableAutoScaling}"
+                                           class="sapUiMediumMarginBottom">
+                                        <customTooltips>
+                                            <SliderTooltip>
+                                                <Label text="{deployConfig>/cpuThreshold}%"/>
+                                            </SliderTooltip>
+                                        </customTooltips>
+                                    </Slider>
+                                    
+                                    <Label text="{i18n>memoryLimit}"/>
+                                    <Select selectedKey="{deployConfig>/memoryLimit}"
+                                           enabled="{deployConfig>/enableAutoScaling}">
+                                        <items>
+                                            <core:Item key="256Mi" text="256 MB"/>
+                                            <core:Item key="512Mi" text="512 MB"/>
+                                            <core:Item key="1Gi" text="1 GB"/>
+                                            <core:Item key="2Gi" text="2 GB"/>
+                                        </items>
+                                    </Select>
+                                </f:content>
+                            </f:SimpleForm>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Advanced Options -->
+                    <IconTabFilter text="{i18n>advanced}" icon="sap-icon://customize">
+                        <VBox class="sapUiMediumMargin">
+                            <Label text="{i18n>preDeploymentScript}" class="sapUiSmallMarginTop"/>
+                            <TextArea value="{deployConfig>/preDeploymentScript}"
+                                     placeholder="npm run pre-deploy"
+                                     rows="3"
+                                     width="100%"/>
+                            
+                            <Label text="{i18n>postDeploymentScript}" class="sapUiSmallMarginTop"/>
+                            <TextArea value="{deployConfig>/postDeploymentScript}"
+                                     placeholder="npm run post-deploy"
+                                     rows="3"
+                                     width="100%"/>
+                            
+                            <CheckBox text="{i18n>rollbackOnFailure}" 
+                                     selected="{deployConfig>/rollbackOnFailure}"
+                                     class="sapUiMediumMarginTop"/>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        <beginButton>
+            <Button text="{i18n>deploy}" 
+                    type="Emphasized" 
+                    press="onConfirmDeployProject"
+                    icon="sap-icon://upload-to-cloud"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>cancel}" 
+                    press="onCancelDeployConfig"
+                    icon="sap-icon://cancel"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

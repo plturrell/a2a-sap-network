@@ -1,0 +1,32 @@
+apiVersion: v2
+name: a2a-agents
+description: A Helm chart for A2A Agents with performance monitoring, error handling, and security hardening
+type: application
+version: 1.0.0
+appVersion: "4.0.0"
+
+maintainers:
+  - name: A2A Team
+    email: team@a2a.com
+
+keywords:
+  - a2a
+  - agents
+  - performance-monitoring
+  - error-handling
+  - security
+  - microservices
+
+dependencies:
+  - name: redis
+    version: "17.15.6"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled
+  - name: prometheus
+    version: "25.6.0"
+    repository: "https://prometheus-community.github.io/helm-charts"
+    condition: monitoring.prometheus.enabled
+  - name: grafana
+    version: "7.0.19"
+    repository: "https://grafana.github.io/helm-charts"
+    condition: monitoring.grafana.enabled

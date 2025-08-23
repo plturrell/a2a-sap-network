@@ -1,0 +1,204 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        title="PDF Export Settings"
+        resizable="true"
+        draggable="true"
+        contentWidth="600px"
+        contentHeight="500px"
+        type="Message">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- PDF Export Options -->
+                <Panel headerText="PDF Export Options" expandable="false">
+                    <content>
+                        <l:Grid defaultSpan="L6 M12 S12" class="sapUiSmallMargin">
+                            
+                            <!-- Document Title -->
+                            <VBox>
+                                <Label text="Document Title:" required="true" class="sapMTextBold"/>
+                                <Input value="{pdfExport>/title}" 
+                                      placeholder="Enter PDF document title"
+                                      maxLength="100"/>
+                            </VBox>
+                            
+                            <!-- Author -->
+                            <VBox>
+                                <Label text="Author:" class="sapMTextBold"/>
+                                <Input value="{pdfExport>/author}" 
+                                      placeholder="Document author name"/>
+                            </VBox>
+                            
+                            <!-- Subject -->
+                            <VBox>
+                                <Label text="Subject:" class="sapMTextBold"/>
+                                <Input value="{pdfExport>/subject}" 
+                                      placeholder="Document subject"/>
+                            </VBox>
+                            
+                            <!-- Keywords -->
+                            <VBox>
+                                <Label text="Keywords:" class="sapMTextBold"/>
+                                <Input value="{pdfExport>/keywords}" 
+                                      placeholder="Comma-separated keywords"/>
+                            </VBox>
+                            
+                        </l:Grid>
+                    </content>
+                </Panel>
+                
+                <!-- Page Settings -->
+                <Panel headerText="Page Settings" expandable="true" expanded="true" class="sapUiSmallMarginTop">
+                    <content>
+                        <l:Grid defaultSpan="L6 M12 S12" class="sapUiSmallMargin">
+                            
+                            <!-- Page Size -->
+                            <VBox>
+                                <Label text="Page Size:" class="sapMTextBold"/>
+                                <Select selectedKey="{pdfExport>/pageSize}">
+                                    <core:Item key="A4" text="A4 (210 × 297 mm)"/>
+                                    <core:Item key="Letter" text="Letter (8.5 × 11 in)"/>
+                                    <core:Item key="Legal" text="Legal (8.5 × 14 in)"/>
+                                    <core:Item key="A3" text="A3 (297 × 420 mm)"/>
+                                </Select>
+                            </VBox>
+                            
+                            <!-- Orientation -->
+                            <VBox>
+                                <Label text="Orientation:" class="sapMTextBold"/>
+                                <RadioButtonGroup selectedIndex="{= ${pdfExport>/orientation} === 'portrait' ? 0 : 1 }">
+                                    <RadioButton text="Portrait"/>
+                                    <RadioButton text="Landscape"/>
+                                </RadioButtonGroup>
+                            </VBox>
+                            
+                            <!-- Margins -->
+                            <VBox>
+                                <Label text="Margins:" class="sapMTextBold"/>
+                                <Select selectedKey="{pdfExport>/margins}">
+                                    <core:Item key="normal" text="Normal (2.5 cm)"/>
+                                    <core:Item key="narrow" text="Narrow (1.25 cm)"/>
+                                    <core:Item key="wide" text="Wide (3.8 cm)"/>
+                                </Select>
+                            </VBox>
+                            
+                            <!-- Page Numbers -->
+                            <VBox>
+                                <Label text="Page Numbers:" class="sapMTextBold"/>
+                                <CheckBox text="Include page numbers" selected="{pdfExport>/includePageNumbers}"/>
+                                <Select selectedKey="{pdfExport>/pageNumberPosition}"
+                                       visible="{pdfExport>/includePageNumbers}">
+                                    <core:Item key="bottom-center" text="Bottom Center"/>
+                                    <core:Item key="bottom-right" text="Bottom Right"/>
+                                    <core:Item key="top-right" text="Top Right"/>
+                                </Select>
+                            </VBox>
+                            
+                        </l:Grid>
+                    </content>
+                </Panel>
+                
+                <!-- Content Selection -->
+                <Panel headerText="Content Selection" expandable="true" expanded="false" class="sapUiSmallMarginTop">
+                    <content>
+                        <VBox class="sapUiSmallMargin">
+                            <CheckBox text="Include Cover Page" selected="{pdfExport>/includeCoverPage}"/>
+                            <CheckBox text="Include Table of Contents" selected="{pdfExport>/includeTOC}"/>
+                            <CheckBox text="Include Header with Logo" selected="{pdfExport>/includeHeader}"/>
+                            <CheckBox text="Include Footer with Timestamp" selected="{pdfExport>/includeFooter}"/>
+                            <CheckBox text="Include KPI Summary" selected="{pdfExport>/includeKPIs}"/>
+                            <CheckBox text="Include Filter Information" selected="{pdfExport>/includeFilters}"/>
+                            <CheckBox text="Include Data Table" selected="{pdfExport>/includeTable}"/>
+                            <CheckBox text="Include Charts/Visualizations" selected="{pdfExport>/includeCharts}"/>
+                        </VBox>
+                    </content>
+                </Panel>
+                
+                <!-- Advanced Options -->
+                <Panel headerText="Advanced Options" expandable="true" expanded="false" class="sapUiSmallMarginTop">
+                    <content>
+                        <l:Grid defaultSpan="L6 M12 S12" class="sapUiSmallMargin">
+                            
+                            <!-- Compression -->
+                            <VBox>
+                                <Label text="Compression:" class="sapMTextBold"/>
+                                <Select selectedKey="{pdfExport>/compression}">
+                                    <core:Item key="none" text="None (Largest file)"/>
+                                    <core:Item key="fast" text="Fast (Good quality)"/>
+                                    <core:Item key="slow" text="Best (Smallest file)"/>
+                                </Select>
+                            </VBox>
+                            
+                            <!-- Security -->
+                            <VBox>
+                                <Label text="Security:" class="sapMTextBold"/>
+                                <CheckBox text="Encrypt PDF" selected="{pdfExport>/encrypt}"/>
+                                <CheckBox text="Allow Printing" selected="{pdfExport>/allowPrint}" 
+                                         enabled="{pdfExport>/encrypt}"/>
+                                <CheckBox text="Allow Copying" selected="{pdfExport>/allowCopy}"
+                                         enabled="{pdfExport>/encrypt}"/>
+                            </VBox>
+                            
+                            <!-- Watermark -->
+                            <VBox>
+                                <Label text="Watermark:" class="sapMTextBold"/>
+                                <CheckBox text="Add Watermark" selected="{pdfExport>/addWatermark}"/>
+                                <Input value="{pdfExport>/watermarkText}" 
+                                      placeholder="Watermark text"
+                                      enabled="{pdfExport>/addWatermark}"/>
+                            </VBox>
+                            
+                            <!-- Font Embedding -->
+                            <VBox>
+                                <Label text="Font Options:" class="sapMTextBold"/>
+                                <CheckBox text="Embed Fonts" selected="{pdfExport>/embedFonts}"/>
+                                <CheckBox text="Subset Fonts" selected="{pdfExport>/subsetFonts}"
+                                         enabled="{pdfExport>/embedFonts}"/>
+                            </VBox>
+                            
+                        </l:Grid>
+                    </content>
+                </Panel>
+                
+                <!-- Export Progress -->
+                <Panel headerText="Export Progress" visible="{pdfExport>/exporting}" class="sapUiSmallMarginTop">
+                    <content>
+                        <VBox alignItems="Center" class="sapUiMediumMargin">
+                            <ProgressIndicator
+                                percentValue="{pdfExport>/progress}"
+                                displayValue="{pdfExport>/progressText}"
+                                showValue="true"
+                                state="Information"
+                                width="100%"/>
+                            <Text text="{pdfExport>/statusMessage}" class="sapUiSmallMarginTop"/>
+                        </VBox>
+                    </content>
+                </Panel>
+                
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button text="Export PDF" 
+                    icon="sap-icon://pdf-attachment"
+                    type="Emphasized"
+                    press=".onExecutePDFExport"
+                    enabled="{= !${pdfExport>/exporting} }"/>
+            <Button text="Preview" 
+                    icon="sap-icon://document"
+                    type="Default"
+                    press=".onPDFPreview"
+                    enabled="{= !${pdfExport>/exporting} }"/>
+            <Button text="Cancel" 
+                    icon="sap-icon://decline"
+                    type="Default"
+                    press=".onClosePDFExport"
+                    enabled="{= !${pdfExport>/exporting} }"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

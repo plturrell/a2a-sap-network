@@ -1,0 +1,416 @@
+<mvc:View
+    controllerName="a2a.portal.controller.Deployment"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:card="sap.f.cards"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    displayBlock="true">
+    
+    <f:DynamicPage id="deploymentPage" 
+                   class="a2a-tablet-page"
+                   headerExpanded="true" 
+                   showFooter="false">
+        
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>deploymentPageTitle}" level="H2"/>
+                </f:heading>
+                <f:actions>
+                    <Button text="{i18n>deployAgent}" 
+                           type="Emphasized" 
+                           icon="sap-icon://upload" 
+                           press="onDeployAgent"/>
+                    <Button text="{i18n>createPipeline}" 
+                           icon="sap-icon://pipeline-analysis" 
+                           press="onCreatePipeline"/>
+                    <Button icon="sap-icon://refresh" 
+                           tooltip="{i18n>refresh}"
+                           press="onRefresh"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <MessageStrip text="{i18n>deploymentDescription}" 
+                            type="Information" 
+                            showIcon="true" 
+                            class="sapUiMediumMarginBottom"/>
+                
+                <Panel headerText="{i18n>quickActions}" 
+                       expandable="true" 
+                       expanded="false"
+                       class="sapUiResponsiveMargin">
+                    <content>
+                        <HBox class="sapUiMediumMargin">
+                            <Button text="{i18n>deployToStaging}" 
+                                   icon="sap-icon://share" 
+                                   press="onDeployToStaging"
+                                   class="sapUiTinyMarginEnd"/>
+                            <Button text="{i18n>promoteToProduction}" 
+                                   icon="sap-icon://up" 
+                                   press="onPromoteToProduction"
+                                   class="sapUiTinyMarginEnd"/>
+                            <Button text="{i18n>rollbackRelease}" 
+                                   icon="sap-icon://undo" 
+                                   press="onRollbackRelease"/>
+                        </HBox>
+                    </content>
+                </Panel>
+            </f:DynamicPageHeader>
+        </f:header>
+
+        <f:content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Search and Filter Bar -->
+                <Panel class="sapUiNoContentPadding">
+                    <Toolbar>
+                        <SearchField id="searchField" 
+                                   width="20rem" 
+                                   placeholder="{i18n>searchDeployments}"
+                                   search="onSearch"/>
+                        <ToolbarSpacer/>
+                        <SegmentedButton selectedKey="{view>/viewMode}" 
+                                       selectionChange="onViewChange">
+                            <items>
+                                <SegmentedButtonItem key="overview" 
+                                                   icon="sap-icon://overview-chart" 
+                                                   tooltip="{i18n>overviewView}"/>
+                                <SegmentedButtonItem key="environments" 
+                                                   icon="sap-icon://multiple-radar-chart" 
+                                                   tooltip="{i18n>environmentsView}"/>
+                                <SegmentedButtonItem key="pipelines" 
+                                                   icon="sap-icon://pipeline-analysis" 
+                                                   tooltip="{i18n>pipelinesView}"/>
+                                <SegmentedButtonItem key="releases" 
+                                                   icon="sap-icon://product" 
+                                                   tooltip="{i18n>releasesView}"/>
+                            </items>
+                        </SegmentedButton>
+                        <Button icon="sap-icon://filter" 
+                               tooltip="{i18n>filter}"
+                               press="onOpenFilterDialog"/>
+                        <Button icon="sap-icon://sort" 
+                               tooltip="{i18n>sort}"
+                               press="onOpenSortDialog"/>
+                    </Toolbar>
+                </Panel>
+
+                <!-- Deployment Content -->
+                <Panel class="sapUiMediumMarginTop">
+                    
+                    <!-- Overview Dashboard -->
+                    <VBox visible="{= ${view>/viewMode} === 'overview' }">
+                        <l:Grid defaultSpan="L3 M6 S12" class="sapUiSmallMarginTop">
+                            <f:Card class="sapUiTinyMargin">
+                                <f:header>
+                                    <card:NumericHeader
+                                        title="{i18n>activeDeployments}"
+                                        subtitle="{i18n>acrossAllEnvironments}"
+                                        value="{view>/stats/activeDeployments}"
+                                        state="Good"/>
+                                </f:header>
+                            </f:Card>
+                            <f:Card class="sapUiTinyMargin">
+                                <f:header>
+                                    <card:NumericHeader
+                                        title="{i18n>successRate}"
+                                        subtitle="{i18n>last30Days}"
+                                        value="{view>/stats/successRate}"
+                                        unit="%"
+                                        state="Good"
+                                        trend="Up"/>
+                                </f:header>
+                            </f:Card>
+                            <f:Card class="sapUiTinyMargin">
+                                <f:header>
+                                    <card:NumericHeader
+                                        title="{i18n>pendingReleases}"
+                                        subtitle="{i18n>awaitingApproval}"
+                                        value="{view>/stats/pendingReleases}"
+                                        state="Critical"/>
+                                </f:header>
+                            </f:Card>
+                            <f:Card class="sapUiTinyMargin">
+                                <f:header>
+                                    <card:NumericHeader
+                                        title="{i18n>avgDeployTime}"
+                                        subtitle="{i18n>minutes}"
+                                        value="{view>/stats/avgDeployTime}"
+                                        unit="min"
+                                        state="Neutral"/>
+                                </f:header>
+                            </f:Card>
+                        </l:Grid>
+                    </VBox>
+                    
+                    <!-- Environments View -->
+                    <Table id="environmentsTable" 
+                           items="{
+                               path: 'view>/environments',
+                               sorter: {
+                                   path: 'lastDeployment',
+                                   descending: true
+                               }
+                           }"
+                           visible="{= ${view>/viewMode} === 'environments' }"
+                           growing="true"
+                           growingThreshold="20"
+                           mode="MultiSelect"
+                           itemPress="onEnvironmentPress">
+                        
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="{i18n>environmentsList} ({= ${view>/environments}.length })"/>
+                                <ToolbarSpacer/>
+                                <Button text="{i18n>addEnvironment}" 
+                                       icon="sap-icon://add" 
+                                       press="onCreateEnvironment"/>
+                                <Button text="{i18n>export}" 
+                                       icon="sap-icon://download" 
+                                       press="onExportSelected"/>
+                            </Toolbar>
+                        </headerToolbar>
+
+                        <columns>
+                            <Column>
+                                <Text text="{i18n>environmentName}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>type}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>activeAgents}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>lastDeployment}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>status}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>actions}"/>
+                            </Column>
+                        </columns>
+
+                        <items>
+                            <ColumnListItem press="onEnvironmentPress">
+                                <cells>
+                                    <VBox>
+                                        <Link text="{name}" press="onEnvironmentPress"/>
+                                        <Text text="{description}" class="sapUiSmallMarginTop"/>
+                                    </VBox>
+                                    <Text text="{type}"/>
+                                    <ObjectNumber number="{activeAgents}" 
+                                                unit="agents"/>
+                                    <Text text="{path: 'lastDeployment', formatter: '.formatDate'}"/>
+                                    <ObjectStatus text="{status}" 
+                                                state="{path: 'status', formatter: '.formatStatusState'}"/>
+                                    <HBox>
+                                        <Button icon="sap-icon://settings" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>manage}"
+                                               press="onManageEnvironment"/>
+                                        <Button icon="sap-icon://document" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>logs}"
+                                               press="onViewLogs"/>
+                                        <Button icon="sap-icon://delete" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>delete}"
+                                               press="onDeleteEnvironment"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+
+                    <!-- Pipelines View -->
+                    <Table id="pipelinesTable" 
+                           items="{
+                               path: 'view>/pipelines',
+                               sorter: {
+                                   path: 'lastRun',
+                                   descending: true
+                               }
+                           }"
+                           visible="{= ${view>/viewMode} === 'pipelines' }"
+                           growing="true"
+                           growingThreshold="20"
+                           mode="MultiSelect"
+                           itemPress="onPipelinePress">
+                        
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="{i18n>pipelinesList} ({= ${view>/pipelines}.length })"/>
+                                <ToolbarSpacer/>
+                                <Button text="{i18n>runSelected}" 
+                                       icon="sap-icon://play" 
+                                       press="onRunSelected"/>
+                                <Button text="{i18n>export}" 
+                                       icon="sap-icon://download" 
+                                       press="onExportSelected"/>
+                            </Toolbar>
+                        </headerToolbar>
+
+                        <columns>
+                            <Column>
+                                <Text text="{i18n>pipelineName}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>trigger}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>lastRun}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>duration}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>status}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>actions}"/>
+                            </Column>
+                        </columns>
+
+                        <items>
+                            <ColumnListItem press="onPipelinePress">
+                                <cells>
+                                    <VBox>
+                                        <Link text="{name}" press="onPipelinePress"/>
+                                        <Text text="{description}" class="sapUiSmallMarginTop"/>
+                                    </VBox>
+                                    <Text text="{trigger}"/>
+                                    <Text text="{path: 'lastRun', formatter: '.formatDate'}"/>
+                                    <Text text="{duration} min"/>
+                                    <ObjectStatus text="{status}" 
+                                                state="{path: 'status', formatter: '.formatStatusState'}"/>
+                                    <HBox>
+                                        <Button icon="sap-icon://play" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>run}"
+                                               press="onRunPipeline"/>
+                                        <Button icon="sap-icon://edit" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>edit}"
+                                               press="onEditPipeline"/>
+                                        <Button icon="sap-icon://history" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>history}"
+                                               press="onViewHistory"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+
+                    <!-- Releases View -->
+                    <Table id="releasesTable" 
+                           items="{
+                               path: 'view>/releases',
+                               sorter: {
+                                   path: 'creationDate',
+                                   descending: true
+                               }
+                           }"
+                           visible="{= ${view>/viewMode} === 'releases' }"
+                           growing="true"
+                           growingThreshold="20"
+                           itemPress="onReleasePress">
+                        
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="{i18n>releasesList} ({= ${view>/releases}.length })"/>
+                                <ToolbarSpacer/>
+                                <Button text="{i18n>createRelease}" 
+                                       icon="sap-icon://add" 
+                                       type="Emphasized"
+                                       press="onCreateRelease"/>
+                            </Toolbar>
+                        </headerToolbar>
+
+                        <columns>
+                            <Column>
+                                <Text text="{i18n>version}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>agent}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>changes}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>createdBy}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>creationDate}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>status}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>actions}"/>
+                            </Column>
+                        </columns>
+
+                        <items>
+                            <ColumnListItem press="onReleasePress">
+                                <cells>
+                                    <VBox>
+                                        <Link text="{version}" press="onReleasePress"/>
+                                        <Text text="{codename}" class="sapUiSmallMarginTop"/>
+                                    </VBox>
+                                    <Text text="{agentName}"/>
+                                    <ObjectNumber number="{changeCount}" 
+                                                unit="changes"/>
+                                    <Text text="{createdBy}"/>
+                                    <Text text="{path: 'creationDate', formatter: '.formatDate'}"/>
+                                    <ObjectStatus text="{status}" 
+                                                state="{path: 'status', formatter: '.formatStatusState'}"/>
+                                    <HBox>
+                                        <Button text="{i18n>deploy}" 
+                                               icon="sap-icon://upload" 
+                                               type="Accept"
+                                               enabled="{= ${status} === 'approved' }"
+                                               press="onDeployRelease"/>
+                                        <Button icon="sap-icon://detail-view" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>details}"
+                                               press="onViewReleaseDetails"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+
+                    <!-- Empty State -->
+                    <VBox alignItems="Center" 
+                          justifyContent="Center" 
+                          height="20rem"
+                          visible="{= ${view>/viewMode} !== 'overview' && (!${view>/environments} || ${view>/environments}.length === 0) && (!${view>/pipelines} || ${view>/pipelines}.length === 0) && (!${view>/releases} || ${view>/releases}.length === 0) }">
+                        <core:Icon src="sap-icon://upload" 
+                                 size="4rem" 
+                                 color="Neutral"
+                                 class="sapUiMediumMarginBottom"/>
+                        <Title text="{i18n>noDeploymentData}" 
+                              level="H3" 
+                              textAlign="Center"/>
+                        <Text text="{i18n>noDeploymentDataDescription}" 
+                             textAlign="Center" 
+                             class="sapUiMediumMarginBottom"/>
+                        <Button text="{i18n>createFirstDeployment}" 
+                               type="Emphasized" 
+                               icon="sap-icon://add" 
+                               press="onDeployAgent"/>
+                    </VBox>
+
+                </Panel>
+            </VBox>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

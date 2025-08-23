@@ -1,0 +1,102 @@
+# Dublin Core Metadata Mappings Configuration
+# This file replaces hardcoded values with configurable mappings
+
+default_values:
+  publisher: "FinSight CIB Data Platform"
+  language: "en"
+  rights: "Internal Use Only - FinSight CIB Proprietary Data"
+  type: "Dataset"
+
+field_mappings:
+  title:
+    template: "Financial Data Products - {name}"
+    fallback: "Untitled Data Product"
+  
+  creator:
+    values:
+      - "FinSight CIB"
+      - "Data Product Registration Agent"
+      - "A2A System"
+    allow_override: true
+  
+  subject:
+    default_tags:
+      - "financial-data"
+      - "enterprise-data"
+    auto_extract: true
+    additional_tags:
+      - "banking"
+      - "transactions"
+      - "analytics"
+  
+  description:
+    template: "Data product containing {record_count} records of {data_type}"
+    max_length: 500
+  
+  contributor:
+    optional: true
+    default_values:
+      - "Data Engineering Team"
+  
+  coverage:
+    optional: true
+    auto_detect: true
+    patterns:
+      temporal: "YYYY-MM-DD to YYYY-MM-DD"
+      spatial: "Global"
+  
+  relation:
+    optional: true
+    link_to_parent: true
+  
+  source:
+    optional: true
+    include_system_info: true
+    
+  catalog:
+    optional: true
+    mappings:
+      name: "title"
+      description: "description"
+      owner: "creator"
+      created_date: "date"
+      catalog_type: "type"
+      domain: "subject"
+      business_area: "subject"
+      classification: "rights"
+      access_level: "rights"
+      governance_tier: "relation"
+      compliance_framework: "coverage"
+    template: "Data Catalog - {catalog_type} for {domain}"
+    default_type: "Catalog"
+
+compliance:
+  iso_15836: true          # Dublin Core Metadata Element Set
+  rfc_5013: true          # Dublin Core Metadata Initiative
+  ansi_niso_z39_85: true  # ANSI/NISO Standard
+  dcmi_terms: true        # DCMI Metadata Terms
+
+validation:
+  required_fields:
+    - title
+    - creator
+    - date
+    - type
+    - identifier
+  
+  field_constraints:
+    title:
+      min_length: 5
+      max_length: 200
+    description:
+      max_length: 1000
+    creator:
+      min_items: 1
+      max_items: 10
+
+quality_scoring:
+  weights:
+    completeness: 0.4
+    accuracy: 0.3
+    consistency: 0.2
+    timeliness: 0.1

@@ -1,0 +1,229 @@
+<mvc:View
+    controllerName="a2a.portal.controller.Templates"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:card="sap.f.cards"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    displayBlock="true">
+    
+    <f:DynamicPage id="templatesPage" 
+                   class="a2a-tablet-page"
+                   headerExpanded="true" 
+                   showFooter="false">
+        
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>templatesPageTitle}" level="H2"/>
+                </f:heading>
+                <f:actions>
+                    <Button text="{i18n>createTemplate}" 
+                           type="Emphasized" 
+                           icon="sap-icon://add" 
+                           press="onCreateTemplate"/>
+                    <Button text="{i18n>importTemplate}" 
+                           icon="sap-icon://upload" 
+                           press="onImportTemplate"/>
+                    <Button icon="sap-icon://refresh" 
+                           tooltip="{i18n>refresh}"
+                           press="onRefresh"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <MessageStrip text="{i18n>templatesDescription}" 
+                            type="Information" 
+                            showIcon="true" 
+                            class="sapUiMediumMarginBottom"/>
+                
+                <Panel headerText="{i18n>quickActions}" 
+                       expandable="true" 
+                       expanded="false"
+                       class="sapUiResponsiveMargin">
+                    <content>
+                        <HBox class="sapUiMediumMargin">
+                            <Button text="{i18n>browseMarketplace}" 
+                                   icon="sap-icon://globe" 
+                                   press="onBrowseMarketplace"
+                                   class="sapUiTinyMarginEnd"/>
+                            <Button text="{i18n>myTemplates}" 
+                                   icon="sap-icon://user-settings" 
+                                   press="onViewMyTemplates"
+                                   class="sapUiTinyMarginEnd"/>
+                            <Button text="{i18n>templateTutorials}" 
+                                   icon="sap-icon://learning-assistant" 
+                                   press="onViewTutorials"/>
+                        </HBox>
+                    </content>
+                </Panel>
+            </f:DynamicPageHeader>
+        </f:header>
+
+        <f:content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Search and Filter Bar -->
+                <Panel class="sapUiNoContentPadding">
+                    <Toolbar>
+                        <SearchField id="searchField" 
+                                   width="20rem" 
+                                   placeholder="{i18n>searchTemplates}"
+                                   search="onSearch"/>
+                        <ToolbarSpacer/>
+                        <SegmentedButton selectedKey="{view>/viewMode}" 
+                                       selectionChange="onViewChange">
+                            <items>
+                                <SegmentedButtonItem key="cards" 
+                                                   icon="sap-icon://grid" 
+                                                   tooltip="{i18n>cardsView}"/>
+                                <SegmentedButtonItem key="table" 
+                                                   icon="sap-icon://table-view" 
+                                                   tooltip="{i18n>tableView}"/>
+                            </items>
+                        </SegmentedButton>
+                        <Button icon="sap-icon://filter" 
+                               tooltip="{i18n>filter}"
+                               press="onOpenFilterDialog"/>
+                        <Button icon="sap-icon://sort" 
+                               tooltip="{i18n>sort}"
+                               press="onOpenSortDialog"/>
+                    </Toolbar>
+                </Panel>
+        
+                <!-- Templates Content -->
+                <Panel class="sapUiMediumMarginTop">
+                    
+                    <!-- Cards View -->
+                    <f:GridContainer id="cardsContainer"
+                                   snapToRow="true"
+                                   visible="{= ${view>/viewMode} === 'cards' }">
+                        <f:layout>
+                            <f:GridContainerSettings rowSize="5rem" columnSize="20rem" gap="1rem"/>
+                        </f:layout>
+                        <f:layoutData>
+                            <f:GridContainerItemLayoutData minRows="8" columns="4"/>
+                        </f:layoutData>
+                        
+                        <!-- Template cards will be added here dynamically -->
+                    </f:GridContainer>
+
+                    <!-- Table View -->
+                    <Table id="templatesTable" 
+                           items="{
+                               path: 'view>/templates',
+                               sorter: {
+                                   path: 'lastModified',
+                                   descending: true
+                               }
+                           }"
+                           visible="{= ${view>/viewMode} === 'table' }"
+                           growing="true"
+                           growingThreshold="20"
+                           mode="MultiSelect"
+                           itemPress="onTemplatePress">
+                        
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="{i18n>templatesList} ({= ${view>/templates}.length })"/>
+                                <ToolbarSpacer/>
+                                <Button text="{i18n>export}" 
+                                       icon="sap-icon://download" 
+                                       press="onExportSelected"/>
+                                <Button text="{i18n>delete}" 
+                                       icon="sap-icon://delete" 
+                                       type="Transparent"
+                                       press="onDeleteSelected"/>
+                            </Toolbar>
+                        </headerToolbar>
+
+                        <columns>
+                            <Column>
+                                <Text text="{i18n>name}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>description}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>category}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>author}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>version}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>lastModified}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>actions}"/>
+                            </Column>
+                        </columns>
+
+                        <items>
+                            <ColumnListItem press="onTemplatePress">
+                                <cells>
+                                    <VBox>
+                                        <Link text="{name}" press="onTemplatePress"/>
+                                        <Text text="{id}" class="sapUiSmallMarginTop"/>
+                                    </VBox>
+                                    <Text text="{description}" 
+                                          maxLines="2"/>
+                                    <ObjectStatus text="{category}" 
+                                                state="{path: 'category', formatter: '.formatCategoryState'}"/>
+                                    <Text text="{author}"/>
+                                    <Text text="{version}"/>
+                                    <Text text="{path: 'lastModified', formatter: '.formatDate'}"/>
+                                    <HBox>
+                                        <Button icon="sap-icon://download" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>download}"
+                                               press="onDownloadTemplate"/>
+                                        <Button icon="sap-icon://copy" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>clone}"
+                                               press="onCloneTemplate"/>
+                                        <Button icon="sap-icon://edit" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>edit}"
+                                               press="onEditTemplate"/>
+                                        <Button icon="sap-icon://delete" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>delete}"
+                                               press="onDeleteTemplate"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+
+                    <!-- Empty State -->
+                    <VBox alignItems="Center" 
+                          justifyContent="Center" 
+                          height="20rem"
+                          visible="{= !${view>/templates} || ${view>/templates}.length === 0 }">
+                        <core:Icon src="sap-icon://template" 
+                                 size="4rem" 
+                                 color="Neutral"
+                                 class="sapUiMediumMarginBottom"/>
+                        <Title text="{i18n>noTemplates}" 
+                              level="H3" 
+                              textAlign="Center"/>
+                        <Text text="{i18n>noTemplatesDescription}" 
+                             textAlign="Center" 
+                             class="sapUiMediumMarginBottom"/>
+                        <Button text="{i18n>createFirstTemplate}" 
+                               type="Emphasized" 
+                               icon="sap-icon://add" 
+                               press="onCreateTemplate"/>
+                    </VBox>
+
+                </Panel>
+            </VBox>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

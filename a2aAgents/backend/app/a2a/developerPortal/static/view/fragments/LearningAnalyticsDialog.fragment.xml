@@ -1,0 +1,297 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.f">
+    
+    <Dialog
+        title="AI Learning Analytics Dashboard"
+        resizable="true"
+        draggable="true"
+        contentWidth="900px"
+        contentHeight="700px"
+        type="Message">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Learning Analytics Header -->
+                <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                    <core:Icon src="sap-icon://learning-assistant" color="#007bff" size="1.5rem" class="sapUiTinyMarginEnd"/>
+                    <Title text="Learning Performance Dashboard" level="H2"/>
+                    <ToolbarSpacer/>
+                    <Text text="Last updated: {= ${view>/learningAnalytics/lastUpdated}.toLocaleTimeString() }" 
+                          class="sapUiTinyText sapMTextColorSecondary"/>
+                </HBox>
+                
+                <!-- Key Metrics Cards -->
+                <HBox class="sapUiMediumMarginBottom">
+                    <f:Card class="sapUiTinyMarginEnd" width="180px">
+                        <f:header>
+                            <f:cards.NumericHeader
+                                title="Learning Score"
+                                number="{view>/learningAnalytics/learningScore}"
+                                unitOfMeasurement="%"
+                                state="{= ${view>/learningAnalytics/learningScore} >= 80 ? 'Good' : 
+                                           ${view>/learningAnalytics/learningScore} >= 60 ? 'Critical' : 'Error' }"/>
+                        </f:header>
+                    </f:Card>
+                    <f:Card class="sapUiTinyMarginEnd" width="180px">
+                        <f:header>
+                            <f:cards.NumericHeader
+                                title="Acceptance Rate"
+                                number="{view>/learningAnalytics/acceptanceRate}"
+                                unitOfMeasurement="%"
+                                state="{= ${view>/learningAnalytics/acceptanceRate} >= 70 ? 'Good' : 
+                                           ${view>/learningAnalytics/acceptanceRate} >= 50 ? 'Critical' : 'Error' }"/>
+                        </f:header>
+                    </f:Card>
+                    <f:Card class="sapUiTinyMarginEnd" width="180px">
+                        <f:header>
+                            <f:cards.NumericHeader
+                                title="Total Interactions"
+                                number="{view>/learningAnalytics/totalInteractions}"
+                                state="Neutral"/>
+                        </f:header>
+                    </f:Card>
+                    <f:Card width="180px">
+                        <f:header>
+                            <f:cards.NumericHeader
+                                title="System Confidence"
+                                number="{view>/learningAnalytics/confidence}"
+                                unitOfMeasurement="%"
+                                state="{= ${view>/learningAnalytics/confidence} >= 80 ? 'Good' : 
+                                           ${view>/learningAnalytics/confidence} >= 60 ? 'Critical' : 'Error' }"/>
+                        </f:header>
+                    </f:Card>
+                </HBox>
+                
+                <!-- Analytics Tabs -->
+                <IconTabBar selectedKey="overview" class="sapUiMediumMarginBottom">
+                    <items>
+                        
+                        <!-- Overview Tab -->
+                        <IconTabFilter key="overview" icon="sap-icon://overview-chart" text="Overview">
+                            <content>
+                                <VBox class="sapUiSmallMargin">
+                                    
+                                    <!-- User Engagement -->
+                                    <Panel headerText="User Engagement Analysis" expandable="true" expanded="true">
+                                        <content>
+                                            <HBox class="sapUiSmallMargin">
+                                                <VBox class="sapUiMediumMarginEnd" width="50%">
+                                                    <Label text="Engagement Level" class="sapMTextBold"/>
+                                                    <ObjectStatus text="{view>/learningAnalytics/engagement/engagementLevel}"
+                                                                state="{= ${view>/learningAnalytics/engagement/engagementLevel} === 'expert' ? 'Success' :
+                                                                         ${view>/learningAnalytics/engagement/engagementLevel} === 'high' ? 'Success' :
+                                                                         ${view>/learningAnalytics/engagement/engagementLevel} === 'moderate' ? 'Warning' : 'Error' }"/>
+                                                    
+                                                    <Label text="User Type" class="sapMTextBold sapUiSmallMarginTop"/>
+                                                    <ObjectStatus text="{view>/learningAnalytics/engagement/userType}"
+                                                                state="{= ${view>/learningAnalytics/engagement/userType} === 'accepter' ? 'Success' :
+                                                                         ${view>/learningAnalytics/engagement/userType} === 'balanced' ? 'Warning' : 'Error' }"/>
+                                                    
+                                                    <Label text="Applied Suggestions" class="sapMTextBold sapUiSmallMarginTop"/>
+                                                    <Text text="{view>/learningAnalytics/appliedSuggestions}"/>
+                                                </VBox>
+                                                
+                                                <VBox width="50%">
+                                                    <Label text="Session Statistics" class="sapMTextBold"/>
+                                                    <Text text="Total Sessions: {view>/learningAnalytics/engagement/sessions/totalSessions}"/>
+                                                    <Text text="Avg Interactions/Session: {view>/learningAnalytics/engagement/avgInteractionsPerSession}"/>
+                                                    <Text text="Avg Session Length: {view>/learningAnalytics/engagement/sessions/avgSessionLength} min"/>
+                                                </VBox>
+                                            </HBox>
+                                        </content>
+                                    </Panel>
+                                    
+                                    <!-- Learning Evolution -->
+                                    <Panel headerText="Learning Evolution" expandable="true" expanded="false" class="sapUiSmallMarginTop">
+                                        <content>
+                                            <VBox class="sapUiSmallMargin">
+                                                <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                                                    <Label text="Overall Trend:" class="sapUiTinyMarginEnd"/>
+                                                    <ObjectStatus text="{view>/learningAnalytics/evolution/overallTrend}"
+                                                                state="{= ${view>/learningAnalytics/evolution/overallTrend} === 'improving' ? 'Success' :
+                                                                         ${view>/learningAnalytics/evolution/overallTrend} === 'declining' ? 'Error' : 'Warning' }"/>
+                                                    <ToolbarSpacer/>
+                                                    <Text text="Current Performance: {view>/learningAnalytics/evolution/currentPerformance}%"/>
+                                                </HBox>
+                                                
+                                                <Text text="Improvement Periods: {= ${view>/learningAnalytics/evolution/improvementPeriods}.length }" 
+                                                      class="sapUiSmallMarginBottom"/>
+                                                      
+                                                <Text text="{= ${view>/learningAnalytics/evolution/dataPoints}.length > 0 ? 
+                                                           'Learning tracked over ' + ${view>/learningAnalytics/evolution/dataPoints}.length + ' data points' :
+                                                           'Insufficient data for trend analysis' }" 
+                                                      class="sapUiTinyText sapMTextColorSecondary"/>
+                                            </VBox>
+                                        </content>
+                                    </Panel>
+                                </VBox>
+                            </content>
+                        </IconTabFilter>
+                        
+                        <!-- Rejection Analysis Tab -->
+                        <IconTabFilter key="rejections" icon="sap-icon://decline" iconColor="Negative" text="Rejection Analysis">
+                            <content>
+                                <VBox class="sapUiSmallMargin">
+                                    
+                                    <!-- Rejection Breakdown -->
+                                    <Panel headerText="Rejection Patterns" expandable="true" expanded="true">
+                                        <content>
+                                            <VBox class="sapUiSmallMargin">
+                                                <HBox class="sapUiSmallMarginBottom">
+                                                    <VBox class="sapUiMediumMarginEnd" width="50%">
+                                                        <Label text="Most Rejected Reason" class="sapMTextBold"/>
+                                                        <Text text="{view>/learningAnalytics/rejectionAnalysis/mostRejectedReason}"/>
+                                                        
+                                                        <Label text="Most Problematic Field" class="sapMTextBold sapUiSmallMarginTop"/>
+                                                        <Text text="{view>/learningAnalytics/rejectionAnalysis/mostProblematicField}"/>
+                                                        
+                                                        <Label text="Most Rejected Type" class="sapMTextBold sapUiSmallMarginTop"/>
+                                                        <Text text="{view>/learningAnalytics/rejectionAnalysis/mostRejectedType}"/>
+                                                    </VBox>
+                                                    
+                                                    <VBox width="50%">
+                                                        <Label text="Total Rejections" class="sapMTextBold"/>
+                                                        <Text text="{view>/learningAnalytics/rejectionAnalysis/totalRejections}"/>
+                                                        
+                                                        <Label text="Rejection Rate" class="sapMTextBold sapUiSmallMarginTop"/>
+                                                        <ObjectStatus text="{view>/learningAnalytics/rejectionRate}%"
+                                                                    state="{= ${view>/learningAnalytics/rejectionRate} < 30 ? 'Success' :
+                                                                             ${view>/learningAnalytics/rejectionRate} < 50 ? 'Warning' : 'Error' }"/>
+                                                    </VBox>
+                                                </HBox>
+                                                
+                                                <!-- Time Patterns -->
+                                                <Label text="Rejection Time Patterns" class="sapMTextBold sapUiSmallMarginTop"/>
+                                                <HBox class="sapUiSmallMarginTop">
+                                                    <Text text="Morning: {= ${view>/learningAnalytics/rejectionAnalysis/timePatterns/morning} || 0 }" class="sapUiTinyMarginEnd"/>
+                                                    <Text text="Afternoon: {= ${view>/learningAnalytics/rejectionAnalysis/timePatterns/afternoon} || 0 }" class="sapUiTinyMarginEnd"/>
+                                                    <Text text="Evening: {= ${view>/learningAnalytics/rejectionAnalysis/timePatterns/evening} || 0 }"/>
+                                                </HBox>
+                                            </VBox>
+                                        </content>
+                                    </Panel>
+                                </VBox>
+                            </content>
+                        </IconTabFilter>
+                        
+                        <!-- Acceptance Analysis Tab -->
+                        <IconTabFilter key="acceptances" icon="sap-icon://accept" iconColor="Good" text="Acceptance Analysis">
+                            <content>
+                                <VBox class="sapUiSmallMargin">
+                                    
+                                    <!-- Acceptance Breakdown -->
+                                    <Panel headerText="Success Patterns" expandable="true" expanded="true">
+                                        <content>
+                                            <VBox class="sapUiSmallMargin">
+                                                <HBox class="sapUiSmallMarginBottom">
+                                                    <VBox class="sapUiMediumMarginEnd" width="50%">
+                                                        <Label text="Most Accepted Field" class="sapMTextBold"/>
+                                                        <Text text="{view>/learningAnalytics/acceptanceAnalysis/mostAcceptedField}"/>
+                                                        
+                                                        <Label text="Most Accepted Type" class="sapMTextBold sapUiSmallMarginTop"/>
+                                                        <Text text="{view>/learningAnalytics/acceptanceAnalysis/mostAcceptedType}"/>
+                                                        
+                                                        <Label text="Preferred Time" class="sapMTextBold sapUiSmallMarginTop"/>
+                                                        <Text text="{view>/learningAnalytics/acceptanceAnalysis/preferredTime}"/>
+                                                    </VBox>
+                                                    
+                                                    <VBox width="50%">
+                                                        <Label text="Total Acceptances" class="sapMTextBold"/>
+                                                        <Text text="{view>/learningAnalytics/acceptanceAnalysis/totalAcceptances}"/>
+                                                        
+                                                        <Label text="Confidence Distribution" class="sapMTextBold sapUiSmallMarginTop"/>
+                                                        <HBox class="sapUiSmallMarginTop">
+                                                            <Text text="High: {view>/learningAnalytics/acceptanceAnalysis/confidenceRanges/high}" class="sapUiTinyMarginEnd"/>
+                                                            <Text text="Medium: {view>/learningAnalytics/acceptanceAnalysis/confidenceRanges/medium}" class="sapUiTinyMarginEnd"/>
+                                                            <Text text="Low: {view>/learningAnalytics/acceptanceAnalysis/confidenceRanges/low}"/>
+                                                        </HBox>
+                                                    </VBox>
+                                                </HBox>
+                                            </VBox>
+                                        </content>
+                                    </Panel>
+                                </VBox>
+                            </content>
+                        </IconTabFilter>
+                        
+                        <!-- Improvements Tab -->
+                        <IconTabFilter key="improvements" icon="sap-icon://course-book" text="Recommendations">
+                            <content>
+                                <VBox class="sapUiSmallMargin">
+                                    
+                                    <!-- Improvement Recommendations -->
+                                    <Panel headerText="AI Improvement Recommendations" expandable="true" expanded="true">
+                                        <content>
+                                            <List items="{view>/learningAnalytics/improvements}" mode="None">
+                                                <CustomListItem class="sapUiSmallMargin">
+                                                    <VBox>
+                                                        <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                                                            <core:Icon src="sap-icon://lightbulb" 
+                                                                      color="{= ${view>priority} === 'high' ? '#dc3545' : 
+                                                                               ${view>priority} === 'medium' ? '#ffc107' : 
+                                                                               '#17a2b8' }" 
+                                                                      class="sapUiTinyMarginEnd"/>
+                                                            <Title text="{view>title}" level="H4" class="sapUiTinyMarginEnd"/>
+                                                            <ObjectStatus text="{view>priority}" 
+                                                                        state="{= ${view>priority} === 'high' ? 'Error' : 
+                                                                                 ${view>priority} === 'medium' ? 'Warning' : 
+                                                                                 'Information' }"/>
+                                                            <ToolbarSpacer/>
+                                                            <Text text="{view>impact} impact" class="sapUiTinyText"/>
+                                                        </HBox>
+                                                        
+                                                        <Text text="{view>description}" 
+                                                              class="sapUiSmallMarginBottom"
+                                                              wrapping="true"/>
+                                                              
+                                                        <HBox alignItems="Center">
+                                                            <Label text="Category:" class="sapUiTinyMarginEnd"/>
+                                                            <Text text="{view>category}" class="sapUiTinyMarginEnd"/>
+                                                            <core:Icon src="{= ${view>actionable} ? 'sap-icon://accept' : 'sap-icon://information' }"
+                                                                      color="{= ${view>actionable} ? '#28a745' : '#6c757d' }"
+                                                                      class="sapUiTinyMarginStart"/>
+                                                        </HBox>
+                                                    </VBox>
+                                                </CustomListItem>
+                                            </List>
+                                            
+                                            <!-- Empty State -->
+                                            <VBox alignItems="Center" 
+                                                  visible="{= ${view>/learningAnalytics/improvements}.length === 0 }"
+                                                  class="sapUiLargeMarginTop">
+                                                <core:Icon src="sap-icon://course-book" size="2rem" color="#c0c0c0"/>
+                                                <Title text="No Recommendations" level="H4" class="sapUiSmallMarginTop"/>
+                                                <Text text="More interactions needed to generate improvement suggestions" 
+                                                      class="sapMTextColorSecondary"/>
+                                            </VBox>
+                                        </content>
+                                    </Panel>
+                                </VBox>
+                            </content>
+                        </IconTabFilter>
+                        
+                    </items>
+                </IconTabBar>
+                
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button text="Export Learning Data" 
+                    icon="sap-icon://download"
+                    type="Default"
+                    press="onExportLearningData"/>
+            <Button text="Reset Learning Data" 
+                    icon="sap-icon://refresh"
+                    type="Reject"
+                    press="onResetLearningData"/>
+            <Button text="Close" 
+                    icon="sap-icon://decline"
+                    type="Default"
+                    press="onCloseLearningAnalytics"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

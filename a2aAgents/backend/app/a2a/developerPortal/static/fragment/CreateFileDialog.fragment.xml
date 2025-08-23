@@ -1,0 +1,62 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <Dialog title="{i18n>createNewFile}" 
+            contentWidth="500px" 
+            contentHeight="400px"
+            resizable="true"
+            draggable="true"
+            class="a2a-create-file-dialog">
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <Label text="{i18n>fileName}" required="true" 
+                       class="sapUiMediumMarginBottom"/>
+                <Input value="{createFile>/fileName}" 
+                       placeholder="{i18n>enterFileName}"
+                       valueState="{= ${createFile>/fileName} ? 'None' : 'Error' }"
+                       valueStateText="{i18n>fileNameRequired}"
+                       maxLength="255"
+                       class="sapUiMediumMarginBottom"/>
+                
+                <Label text="{i18n>fileType}" 
+                       class="sapUiMediumMarginBottom"/>
+                <Select selectedKey="{createFile>/fileType}"
+                       class="sapUiMediumMarginBottom">
+                    <items>
+                        <core:Item key="txt" text="Text File (.txt)"/>
+                        <core:Item key="js" text="JavaScript (.js)"/>
+                        <core:Item key="json" text="JSON (.json)"/>
+                        <core:Item key="xml" text="XML (.xml)"/>
+                        <core:Item key="html" text="HTML (.html)"/>
+                        <core:Item key="css" text="CSS (.css)"/>
+                        <core:Item key="md" text="Markdown (.md)"/>
+                        <core:Item key="yaml" text="YAML (.yaml)"/>
+                    </items>
+                </Select>
+                
+                <Label text="{i18n>parentPath}" 
+                       class="sapUiMediumMarginBottom"/>
+                <Input value="{createFile>/parentPath}" 
+                       placeholder="{i18n>enterParentPath}"
+                       class="sapUiMediumMarginBottom"/>
+                
+                <Label text="{i18n>initialContent}" 
+                       class="sapUiMediumMarginBottom"/>
+                <TextArea value="{createFile>/fileContent}" 
+                          placeholder="{i18n>enterInitialContent}"
+                          rows="6"
+                          maxLength="10000"/>
+            </VBox>
+        </content>
+        <beginButton>
+            <Button text="{i18n>create}" 
+                    type="Emphasized" 
+                    press="onConfirmCreateFile"
+                    icon="sap-icon://add-document"
+                    enabled="{= !!${createFile>/fileName} }"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>cancel}" 
+                    press="onCancelCreateFile"
+                    icon="sap-icon://cancel"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

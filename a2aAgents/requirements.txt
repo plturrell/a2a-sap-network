@@ -1,0 +1,52 @@
+# A2A SAP Network - Python Dependencies
+# Core dependencies
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.5.0
+sqlalchemy==2.0.23
+alembic==1.13.1
+psycopg2-binary==2.9.9
+
+# SAP BTP Integration
+requests==2.31.0
+python-jose[cryptography]==3.3.0
+python-multipart==0.0.6
+
+# Blockchain Integration
+web3==6.15.1
+eth-account==0.10.0
+eth-utils==2.3.1
+eth-typing==4.0.0
+
+# AI/ML Models
+torch==2.0.1 --extra-index-url https://download.pytorch.org/whl/cpu
+sentence-transformers
+
+# Data Processing
+pandas==2.1.4
+numpy==1.25.2
+python-dateutil==2.8.2
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+httpx==0.25.2
+
+# Development
+black==23.11.0
+flake8==6.1.0
+pylint==3.0.3
+mypy==1.7.1
+
+# Security
+bandit==1.7.5
+safety>=3.0.0
+
+# Logging and Monitoring
+structlog==23.2.0
+prometheus-client==0.19.0
+
+# Redis for session management
+redis==5.0.1
+hiredis==2.2.3

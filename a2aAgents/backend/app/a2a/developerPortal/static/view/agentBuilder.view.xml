@@ -1,0 +1,635 @@
+<mvc:View
+    controllerName="a2a.portal.controller.AgentBuilder"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:l="sap.ui.layout"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:core="sap.ui.core">
+    
+    <f:DynamicPage id="agentBuilderPage" 
+                   class="a2a-tablet-page"
+                   headerExpanded="true" 
+                   showFooter="true">
+        
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>agentBuilder}" level="H2"/>
+                </f:heading>
+                <f:breadcrumbs>
+                    <Breadcrumbs>
+                        <Link text="{i18n>navProjects}" press="onNavToProjects"/>
+                        <Link text="{/projectName}" press="onNavToProject"/>
+                    </Breadcrumbs>
+                </f:breadcrumbs>
+                <f:actions>
+                    <Button text="{i18n>saveAgent}" 
+                           type="Emphasized" 
+                           icon="sap-icon://save" 
+                           press="onSaveAgent"/>
+                    <Button text="{i18n>generateCode}" 
+                           icon="sap-icon://source-code" 
+                           press="onGenerateCode"/>
+                    <Button text="Build Agent" 
+                           icon="sap-icon://provision" 
+                           press="onBuildAgent"
+                           tooltip="Compile and build agent artifacts"/>
+                    <Button icon="sap-icon://simulate" 
+                           tooltip="{i18n>testAgent}"
+                           press="onTestAgent"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <f:content>
+            <l:Splitter id="agentBuilderSplitter" height="100%">
+                <!-- Left Panel: Agent Configuration -->
+                <Panel headerText="{i18n>agentConfiguration}" width="50%">
+                    <IconTabBar id="configTabBar" class="sapUiNoContentPadding">
+                        <items>
+                            <!-- Basic Info Tab -->
+                            <IconTabFilter text="{i18n>basicInfo}" 
+                                          icon="sap-icon://hint"
+                                          key="basic">
+                                <form:SimpleForm editable="true" 
+                                               layout="ResponsiveGridLayout"
+                                               class="sapUiMediumMargin">
+                                    <form:content>
+                                        <Label text="{i18n>agentName}" required="true"/>
+                                        <Input id="agentNameInput"
+                                              value="{agent>/name}" 
+                                              placeholder="{i18n>enterAgentName}"
+                                              liveChange=".onAgentNameChange"
+                                              maxLength="50"
+                                              showValueHelp="true"
+                                              valueHelpRequest=".onCheckUniqueness"
+                                              valueState="{= ${agent>/nameValid} === false ? 'Error' : 'None' }"/>
+                                        
+                                        <Label text="{i18n>agentId}" required="true"/>
+                                        <HBox>
+                                            <Input id="agentIdInput"
+                                                  value="{agent>/id}" 
+                                                  placeholder="{i18n>enterAgentId}"
+                                                  liveChange=".onAgentIdChange"
+                                                  maxLength="30"
+                                                  width="70%"
+                                                  valueState="{= ${agent>/idValid} === false ? 'Error' : 'None' }"/>
+                                            <Button text="Check Uniqueness"
+                                                   icon="sap-icon://validate"
+                                                   press=".onCheckUniqueness"
+                                                   class="sapUiSmallMarginBegin"/>
+                                        </HBox>
+                                        
+                                        <Label text="{i18n>agentType}"/>
+                                        <Select selectedKey="{agent>/type}">
+                                            <items>
+                                                <core:Item key="reactive" text="{i18n>reactiveAgent}"/>
+                                                <core:Item key="proactive" text="{i18n>proactiveAgent}"/>
+                                                <core:Item key="collaborative" text="{i18n>collaborativeAgent}"/>
+                                                <core:Item key="specialized" text="{i18n>specializedAgent}"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="{i18n>description}"/>
+                                        <TextArea value="{agent>/description}" 
+                                                 rows="4"
+                                                 placeholder="{i18n>enterDescription}"/>
+                                        
+                                        <Label text="{i18n>template}"/>
+                                        <Select id="templateSelect"
+                                               selectedKey="{agent>/template}" 
+                                               change="onTemplateChange">
+                                            <items>
+                                                <core:Item key="blank" text="{i18n>blankTemplate}"/>
+                                                <core:Item key="data-processor" text="{i18n>dataProcessorTemplate}"/>
+                                                <core:Item key="api-integrator" text="{i18n>apiIntegratorTemplate}"/>
+                                                <core:Item key="ml-analyzer" text="{i18n>mlAnalyzerTemplate}"/>
+                                                <core:Item key="workflow-coordinator" text="{i18n>workflowCoordinatorTemplate}"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Agent Icon"/>
+                                        <VBox>
+                                            <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                                                <Avatar id="agentIconPreview"
+                                                       src="{agent>/icon/src}"
+                                                       displaySize="L" 
+                                                       imageFitType="Cover"
+                                                       class="sapUiMediumMarginEnd"/>
+                                                <VBox>
+                                                    <Text text="Current Icon" class="sapMTextBold"/>
+                                                    <Text text="{= ${agent>/icon/name} || 'No icon selected' }" 
+                                                         class="sapThemeTextColorSecondary"/>
+                                                    <Text text="{= ${agent>/icon/size} ? 'Size: ' + Math.round(${agent>/icon/size} / 1024) + ' KB' : '' }" 
+                                                         class="sapThemeTextColorSecondary"/>
+                                                </VBox>
+                                            </HBox>
+                                            <HBox wrap="Wrap">
+                                                <Button text="Upload Icon" 
+                                                       icon="sap-icon://upload-to-cloud"
+                                                       press=".onUploadIcon"
+                                                       class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                                <Button text="Choose Default" 
+                                                       icon="sap-icon://palette"
+                                                       press=".onChooseDefaultIcon"
+                                                       class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                                <Button text="Generate AI Icon" 
+                                                       icon="sap-icon://learning-assistant"
+                                                       press=".onGenerateAIIcon"
+                                                       class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                                <Button text="Remove Icon" 
+                                                       icon="sap-icon://delete"
+                                                       type="Transparent"
+                                                       press=".onRemoveIcon"
+                                                       enabled="{= !!${agent>/icon/src} }"
+                                                       class="sapUiTinyMarginBottom"/>
+                                            </HBox>
+                                            <Text text="Supported formats: PNG, JPG, SVG (max 2MB, recommended 256x256px)" 
+                                                 class="sapUiTinyText sapThemeTextColorSecondary sapUiSmallMarginTop"/>
+                                        </VBox>
+                                    </form:content>
+                                </form:SimpleForm>
+                            </IconTabFilter>
+                            
+                            <!-- Skills Tab -->
+                            <IconTabFilter text="{i18n>skills}" 
+                                          icon="sap-icon://activities"
+                                          key="skills">
+                                <VBox class="sapUiMediumMargin">
+                                    <Toolbar>
+                                        <Title text="{i18n>availableSkills}"/>
+                                        <ToolbarSpacer/>
+                                        <Button text="{i18n>addSkill}" 
+                                               icon="sap-icon://add" 
+                                               press="onAddSkill"/>
+                                    </Toolbar>
+                                    
+                                    <List items="{agent>/skills}" 
+                                          mode="Delete"
+                                          delete="onDeleteSkill">
+                                        <StandardListItem title="{name}" 
+                                                        description="{description}"
+                                                        icon="{icon}"
+                                                        type="Active"
+                                                        press="onConfigureSkill"/>
+                                    </List>
+                                </VBox>
+                            </IconTabFilter>
+                            
+                            <!-- Handlers Tab -->
+                            <IconTabFilter text="{i18n>handlers}" 
+                                          icon="sap-icon://action"
+                                          key="handlers">
+                                <VBox class="sapUiMediumMargin">
+                                    <Toolbar>
+                                        <Title text="{i18n>eventHandlers}"/>
+                                        <ToolbarSpacer/>
+                                        <Button text="{i18n>addHandler}" 
+                                               icon="sap-icon://add" 
+                                               press="onAddHandler"/>
+                                    </Toolbar>
+                                    
+                                    <Table items="{agent>/handlers}">
+                                        <columns>
+                                            <Column><Text text="{i18n>event}"/></Column>
+                                            <Column><Text text="{i18n>handler}"/></Column>
+                                            <Column><Text text="{i18n>priority}"/></Column>
+                                            <Column width="100px"><Text text="{i18n>actions}"/></Column>
+                                        </columns>
+                                        <items>
+                                            <ColumnListItem>
+                                                <cells>
+                                                    <Text text="{event}"/>
+                                                    <Text text="{handler}"/>
+                                                    <ObjectNumber number="{priority}"/>
+                                                    <HBox>
+                                                        <Button icon="sap-icon://edit" 
+                                                               type="Transparent"
+                                                               press="onEditHandler"/>
+                                                        <Button icon="sap-icon://delete" 
+                                                               type="Transparent"
+                                                               press="onDeleteHandler"/>
+                                                    </HBox>
+                                                </cells>
+                                            </ColumnListItem>
+                                        </items>
+                                    </Table>
+                                </VBox>
+                            </IconTabFilter>
+                            
+                            <!-- Communication Tab -->
+                            <IconTabFilter text="{i18n>communication}" 
+                                          icon="sap-icon://discussion"
+                                          key="communication">
+                                <form:SimpleForm editable="true" 
+                                               layout="ResponsiveGridLayout"
+                                               class="sapUiMediumMargin">
+                                    <form:content>
+                                        <Label text="{i18n>communicationProtocol}"/>
+                                        <Select selectedKey="{agent>/protocol}">
+                                            <items>
+                                                <core:Item key="mqtt" text="MQTT"/>
+                                                <core:Item key="amqp" text="AMQP"/>
+                                                <core:Item key="http" text="HTTP/REST"/>
+                                                <core:Item key="websocket" text="WebSocket"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="{i18n>messageFormat}"/>
+                                        <RadioButtonGroup selectedIndex="{agent>/messageFormat}">
+                                            <RadioButton text="JSON"/>
+                                            <RadioButton text="XML"/>
+                                            <RadioButton text="Protobuf"/>
+                                        </RadioButtonGroup>
+                                        
+                                        <Label text="{i18n>subscribedTopics}"/>
+                                        <TextArea value="{agent>/subscribedTopics}" 
+                                                 rows="3"
+                                                 placeholder="{i18n>enterTopicsCommaSeparated}"/>
+                                        
+                                        <Label text="{i18n>publishTopics}"/>
+                                        <TextArea value="{agent>/publishTopics}" 
+                                                 rows="3"
+                                                 placeholder="{i18n>enterTopicsCommaSeparated}"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                            </IconTabFilter>
+                            
+                            <!-- Metadata Tab -->
+                            <IconTabFilter text="Metadata" 
+                                          icon="sap-icon://tags"
+                                          key="metadata">
+                                <form:SimpleForm editable="true" 
+                                               layout="ResponsiveGridLayout"
+                                               class="sapUiMediumMargin">
+                                    <form:content>
+                                        
+                                        <!-- Classification Section -->
+                                        <core:Title text="Classification"/>
+                                        
+                                        <Label text="Category" required="true"/>
+                                        <Select selectedKey="{agent>/metadata/category}">
+                                            <items>
+                                                <core:Item key="data-processing" text="Data Processing"/>
+                                                <core:Item key="communication" text="Communication"/>
+                                                <core:Item key="integration" text="Integration"/>
+                                                <core:Item key="ai-ml" text="AI/Machine Learning"/>
+                                                <core:Item key="automation" text="Process Automation"/>
+                                                <core:Item key="monitoring" text="Monitoring &amp; Analytics"/>
+                                                <core:Item key="security" text="Security"/>
+                                                <core:Item key="utilities" text="Utilities"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Tags"/>
+                                        <MultiInput value="{agent>/metadata/tagsString}" 
+                                                   tokens="{agent>/metadata/tags}"
+                                                   tokenUpdate=".onUpdateTags"
+                                                   suggestionItems="{/suggestedTags}"
+                                                   placeholder="Enter tags separated by commas">
+                                            <suggestionItems>
+                                                <core:Item key="{key}" text="{text}"/>
+                                            </suggestionItems>
+                                            <tokens>
+                                                <Token key="{key}" text="{text}" delete=".onDeleteTag"/>
+                                            </tokens>
+                                        </MultiInput>
+                                        
+                                        <Label text="Priority"/>
+                                        <Select selectedKey="{agent>/metadata/priority}">
+                                            <items>
+                                                <core:Item key="low" text="Low"/>
+                                                <core:Item key="medium" text="Medium"/>
+                                                <core:Item key="high" text="High"/>
+                                                <core:Item key="critical" text="Critical"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <!-- Authoring Section -->
+                                        <core:Title text="Authoring Information"/>
+                                        
+                                        <Label text="Author"/>
+                                        <Input value="{agent>/metadata/author}" 
+                                               placeholder="Agent author name"/>
+                                        
+                                        <Label text="Organization"/>
+                                        <Input value="{agent>/metadata/organization}" 
+                                               placeholder="Organization or team"/>
+                                        
+                                        <Label text="Contact Email"/>
+                                        <Input value="{agent>/metadata/contactEmail}" 
+                                               type="Email"
+                                               placeholder="contact@example.com"/>
+                                        
+                                        <Label text="License"/>
+                                        <Select selectedKey="{agent>/metadata/license}">
+                                            <items>
+                                                <core:Item key="proprietary" text="Proprietary"/>
+                                                <core:Item key="mit" text="MIT License"/>
+                                                <core:Item key="apache2" text="Apache License 2.0"/>
+                                                <core:Item key="gpl3" text="GPL v3"/>
+                                                <core:Item key="bsd3" text="BSD 3-Clause"/>
+                                                <core:Item key="custom" text="Custom License"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <!-- Technical Section -->
+                                        <core:Title text="Technical Metadata"/>
+                                        
+                                        <Label text="Performance Profile"/>
+                                        <Select selectedKey="{agent>/metadata/performance}">
+                                            <items>
+                                                <core:Item key="light" text="Light (Low resource usage)"/>
+                                                <core:Item key="moderate" text="Moderate (Medium resource usage)"/>
+                                                <core:Item key="intensive" text="Intensive (High resource usage)"/>
+                                                <core:Item key="variable" text="Variable (Depends on workload)"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Supported Platforms"/>
+                                        <CheckBox text="Linux" selected="{agent>/metadata/platforms/linux}"/>
+                                        <CheckBox text="Windows" selected="{agent>/metadata/platforms/windows}"/>
+                                        <CheckBox text="macOS" selected="{agent>/metadata/platforms/macos}"/>
+                                        <CheckBox text="Docker" selected="{agent>/metadata/platforms/docker}"/>
+                                        <CheckBox text="Kubernetes" selected="{agent>/metadata/platforms/kubernetes}"/>
+                                        
+                                        <Label text="Dependencies"/>
+                                        <TextArea value="{agent>/metadata/dependencies}" 
+                                                 rows="3"
+                                                 placeholder="List external dependencies (e.g., databases, APIs, libraries)"/>
+                                        
+                                        <Label text="Resource Requirements"/>
+                                        <VBox>
+                                            <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                                                <Label text="Memory (MB):" width="100px"/>
+                                                <Input value="{agent>/metadata/resources/memory}" 
+                                                       type="Number"
+                                                       width="100px"
+                                                       placeholder="256"/>
+                                            </HBox>
+                                            <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                                                <Label text="CPU (cores):" width="100px"/>
+                                                <Input value="{agent>/metadata/resources/cpu}" 
+                                                       type="Number"
+                                                       width="100px"
+                                                       placeholder="1"/>
+                                            </HBox>
+                                            <HBox alignItems="Center">
+                                                <Label text="Storage (MB):" width="100px"/>
+                                                <Input value="{agent>/metadata/resources/storage}" 
+                                                       type="Number"
+                                                       width="100px"
+                                                       placeholder="100"/>
+                                            </HBox>
+                                        </VBox>
+                                        
+                                        <!-- Documentation Section -->
+                                        <core:Title text="Documentation"/>
+                                        
+                                        <Label text="Documentation URL"/>
+                                        <Input value="{agent>/metadata/documentationUrl}" 
+                                               placeholder="https://docs.example.com/agent"/>
+                                        
+                                        <Label text="Repository URL"/>
+                                        <Input value="{agent>/metadata/repositoryUrl}" 
+                                               placeholder="https://github.com/org/agent"/>
+                                        
+                                        <Label text="Release Notes"/>
+                                        <TextArea value="{agent>/metadata/releaseNotes}" 
+                                                 rows="4"
+                                                 placeholder="Describe what's new in this version"/>
+                                        
+                                        <!-- Timestamps -->
+                                        <core:Title text="Timestamps"/>
+                                        
+                                        <Label text="Created"/>
+                                        <Text text="{= ${agent>/metadata/createdAt} ? new Date(${agent>/metadata/createdAt}).toLocaleString() : 'Not set' }"/>
+                                        
+                                        <Label text="Last Modified"/>
+                                        <Text text="{= ${agent>/metadata/lastModified} ? new Date(${agent>/metadata/lastModified}).toLocaleString() : 'Not set' }"/>
+                                        
+                                        <Label text="Last Deployed"/>
+                                        <Text text="{= ${agent>/metadata/lastDeployed} ? new Date(${agent>/metadata/lastDeployed}).toLocaleString() : 'Never deployed' }"/>
+                                        
+                                    </form:content>
+                                </form:SimpleForm>
+                            </IconTabFilter>
+                        </items>
+                    </IconTabBar>
+                </Panel>
+                
+                <!-- Right Panel: Visual Designer / Code Preview -->
+                <Panel headerText="{i18n>visualDesigner}" width="50%">
+                    <IconTabBar id="designTabBar" class="sapUiNoContentPadding">
+                        <items>
+                            <!-- Visual Designer Tab -->
+                            <IconTabFilter text="{i18n>designer}" 
+                                          icon="sap-icon://org-chart"
+                                          key="designer">
+                                <VBox height="600px" class="sapUiMediumMargin">
+                                    <MessageStrip text="{i18n>dragDropComponents}" 
+                                                type="Information" 
+                                                showIcon="true"/>
+                                    <FlexBox id="designCanvas" 
+                                            height="100%" 
+                                            width="100%"
+                                            class="a2aBpmnCanvas sapUiMediumMarginTop"
+                                            alignItems="Center"
+                                            justifyContent="Center">
+                                        <Text text="{i18n>visualDesignerPlaceholder}"/>
+                                    </FlexBox>
+                                </VBox>
+                            </IconTabFilter>
+                            
+                            <!-- Code Preview Tab -->
+                            <IconTabFilter text="{i18n>codePreview}" 
+                                          icon="sap-icon://source-code"
+                                          key="code">
+                                <VBox height="600px" class="sapUiMediumMargin">
+                                    <Toolbar>
+                                        <Label text="{i18n>language}:"/>
+                                        <Select selectedKey="{/codeLanguage}" width="150px">
+                                            <items>
+                                                <core:Item key="python" text="Python"/>
+                                                <core:Item key="javascript" text="JavaScript"/>
+                                                <core:Item key="java" text="Java"/>
+                                            </items>
+                                        </Select>
+                                        <ToolbarSpacer/>
+                                        <Button icon="sap-icon://copy" 
+                                               tooltip="{i18n>copyCode}"
+                                               press="onCopyCode"/>
+                                        <Button icon="sap-icon://download" 
+                                               tooltip="{i18n>downloadCode}"
+                                               press="onDownloadCode"/>
+                                    </Toolbar>
+                                    <TextArea id="codePreview" 
+                                             value="{/generatedCode}" 
+                                             rows="30"
+                                             editable="false"
+                                             width="100%"
+                                             class="sapUiTinyMarginTop"/>
+                                </VBox>
+                            </IconTabFilter>
+                            
+                            <!-- Test Console Tab -->
+                            <IconTabFilter text="{i18n>testConsole}" 
+                                          icon="sap-icon://simulate"
+                                          key="test">
+                                <VBox height="600px" class="sapUiMediumMargin">
+                                    <Toolbar>
+                                        <Button text="{i18n>startTest}" 
+                                               icon="sap-icon://play" 
+                                               type="Emphasized"
+                                               press="onStartTest"/>
+                                        <Button text="{i18n>stopTest}" 
+                                               icon="sap-icon://stop" 
+                                               press="onStopTest"/>
+                                        <ToolbarSeparator/>
+                                        <Button text="Debug Mode" 
+                                               icon="sap-icon://bug" 
+                                               type="{= ${/debugMode} ? 'Emphasized' : 'Default' }"
+                                               press="onToggleDebugMode"
+                                               tooltip="Enable/disable debug mode for detailed agent testing"/>
+                                        <Button text="Step" 
+                                               icon="sap-icon://step" 
+                                               press="onDebugStep"
+                                               enabled="{= ${/debugMode} &amp;&amp; ${/debugPaused} }"
+                                               tooltip="Execute next debug step"/>
+                                        <Button text="Breakpoint" 
+                                               icon="sap-icon://circle-task-2" 
+                                               press="onSetBreakpoint"
+                                               enabled="{/debugMode}"
+                                               tooltip="Set breakpoint for debugging"/>
+                                        <ToolbarSpacer/>
+                                        <Button icon="sap-icon://clear-all" 
+                                               tooltip="{i18n>clearConsole}"
+                                               press="onClearConsole"/>
+                                    </Toolbar>
+                                    <TextArea id="testConsole" 
+                                             value="{/testOutput}" 
+                                             rows="25"
+                                             editable="false"
+                                             width="100%"
+                                             class="sapUiTinyMarginTop"/>
+                                    <Input placeholder="{i18n>enterTestMessage}" 
+                                          submit="onSendTestMessage"
+                                          class="sapUiTinyMarginTop"/>
+                                </VBox>
+                            </IconTabFilter>
+                            
+                            <!-- Build Output Tab -->
+                            <IconTabFilter text="Build Output" 
+                                          icon="sap-icon://provision"
+                                          key="build">
+                                <VBox height="600px" class="sapUiMediumMargin">
+                                    <Toolbar>
+                                        <Button text="Build Agent" 
+                                               icon="sap-icon://provision" 
+                                               type="Emphasized"
+                                               press="onBuildAgent"/>
+                                        <Button text="Clean Build" 
+                                               icon="sap-icon://restart" 
+                                               press="onCleanBuild"/>
+                                        <ToolbarSpacer/>
+                                        <Button text="Download Artifacts" 
+                                               icon="sap-icon://download" 
+                                               press="onDownloadArtifacts"
+                                               enabled="{= ${/buildStatus} === 'success' }"/>
+                                        <Button icon="sap-icon://clear-all" 
+                                               tooltip="Clear Build Output"
+                                               press="onClearBuildOutput"/>
+                                    </Toolbar>
+                                    
+                                    <!-- Build Progress -->
+                                    <Panel headerText="Build Progress" 
+                                           visible="{= ${/buildStatus} === 'building' }"
+                                           class="sapUiSmallMarginTop">
+                                        <content>
+                                            <VBox class="sapUiSmallMargin">
+                                                <ProgressIndicator percentValue="{/buildProgress}" 
+                                                                 displayValue="{/buildProgressText}"
+                                                                 state="{= ${/buildStatus} === 'error' ? 'Error' : 'None' }"/>
+                                                <Text text="{/buildCurrentStep}" 
+                                                     class="sapUiTinyMarginTop sapThemeTextColorSecondary"/>
+                                            </VBox>
+                                        </content>
+                                    </Panel>
+                                    
+                                    <!-- Build Status Summary -->
+                                    <Panel headerText="Build Status" 
+                                           visible="{= ${/buildStatus} !== 'building' && ${/buildStatus} !== 'idle' }"
+                                           class="sapUiSmallMarginTop">
+                                        <content>
+                                            <VBox class="sapUiSmallMargin">
+                                                <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                                                    <ObjectStatus text="{= ${/buildStatus} === 'success' ? 'Build Successful' : 'Build Failed' }" 
+                                                                state="{= ${/buildStatus} === 'success' ? 'Success' : 'Error' }"
+                                                                icon="{= ${/buildStatus} === 'success' ? 'sap-icon://accept' : 'sap-icon://error' }"/>
+                                                    <Text text="{= 'Duration: ' + ${/buildDuration} + 's' }" 
+                                                         class="sapUiMediumMarginBegin sapThemeTextColorSecondary"/>
+                                                </HBox>
+                                                <HBox wrap="Wrap" class="sapUiSmallMarginBottom">
+                                                    <VBox class="sapUiMediumMarginEnd">
+                                                        <Label text="Artifacts Generated:" class="sapMTextBold"/>
+                                                        <Text text="{= ${/buildArtifacts/length} + ' files' }"/>
+                                                    </VBox>
+                                                    <VBox class="sapUiMediumMarginEnd">
+                                                        <Label text="Warnings:" class="sapMTextBold"/>
+                                                        <Text text="{/buildWarnings}"/>
+                                                    </VBox>
+                                                    <VBox>
+                                                        <Label text="Errors:" class="sapMTextBold"/>
+                                                        <Text text="{/buildErrors}"/>
+                                                    </VBox>
+                                                </HBox>
+                                            </VBox>
+                                        </content>
+                                    </Panel>
+                                    
+                                    <!-- Build Output Log -->
+                                    <TextArea id="buildOutput" 
+                                             value="{/buildOutput}" 
+                                             rows="20"
+                                             editable="false"
+                                             width="100%"
+                                             class="sapUiTinyMarginTop"/>
+                                             
+                                    <!-- Artifact List -->
+                                    <Panel headerText="Generated Artifacts ({/buildArtifacts/length})" 
+                                           visible="{= ${/buildArtifacts/length} > 0 }"
+                                           expandable="true"
+                                           expanded="false"
+                                           class="sapUiSmallMarginTop">
+                                        <content>
+                                            <List items="{/buildArtifacts}" mode="None">
+                                                <StandardListItem title="{name}" 
+                                                                description="{description}"
+                                                                icon="{icon}"
+                                                                info="{size}"
+                                                                type="Active"
+                                                                press=".onViewArtifact"/>
+                                            </List>
+                                        </content>
+                                    </Panel>
+                                </VBox>
+                            </IconTabFilter>
+                        </items>
+                    </IconTabBar>
+                </Panel>
+            </l:Splitter>
+        </f:content>
+        
+        <f:footer>
+            <OverflowToolbar>
+                <ToolbarSpacer/>
+                <Button text="{i18n>cancel}" press="onCancel"/>
+                <Button text="{i18n>saveAsDraft}" press="onSaveAsDraft"/>
+                <Button text="{i18n>saveAndDeploy}" 
+                       type="Emphasized" 
+                       press="onSaveAndDeploy"/>
+            </OverflowToolbar>
+        </f:footer>
+    </f:DynamicPage>
+</mvc:View>

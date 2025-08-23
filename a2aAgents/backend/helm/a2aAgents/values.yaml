@@ -1,0 +1,284 @@
+# Default values for a2a-agents
+replicaCount: 3
+
+image:
+  repository: a2a/agents
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Service Account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod Security Context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+# Container Security Context
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+    - ALL
+
+# Service Configuration
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+  annotations: {}
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: a2a-agents.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: a2a-agents-tls
+      hosts:
+        - a2a-agents.example.com
+
+# Resource Configuration
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 200m
+    memory: 512Mi
+
+# Autoscaling
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Node Selection
+nodeSelector: {}
+tolerations: []
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - a2a-agents
+        topologyKey: kubernetes.io/hostname
+
+# Environment Configuration
+environment: production
+
+# Application Configuration
+config:
+  logLevel: INFO
+  enablePerformanceMonitoring: true
+  enableErrorHandling: true
+  enableSecurityHardening: true
+  maxRequestSize: "50MB"
+  sessionTimeout: 3600
+  rateLimit:
+    default: 100
+    authentication: 10
+    highSecurity: 5
+
+# Performance Monitoring
+monitoring:
+  enabled: true
+  metricsPort: 8080
+  
+  prometheus:
+    enabled: true
+    port: 9090
+    scrapeInterval: 30s
+    
+  grafana:
+    enabled: true
+    port: 3000
+    adminPassword: "secure_admin_password"
+    
+  alerts:
+    enabled: true
+    cpuThreshold: 80
+    memoryThreshold: 85
+    errorRateThreshold: 5
+    responseTimeThreshold: 2000
+
+# Error Handling Configuration
+errorHandling:
+  enabled: true
+  maxRetries: 3
+  retryDelay: 1.0
+  exponentialBackoff: true
+  circuitBreakerThreshold: 5
+  circuitBreakerTimeout: 300
+
+# Security Configuration
+security:
+  enabled: true
+  strictMode: false
+  requireHTTPS: true
+  enableAuditLogging: true
+  enableThreatDetection: true
+  trustedAgents:
+    - agent_manager
+    - catalog_manager
+    - data_manager
+  rateLimiting:
+    enabled: true
+    requests: 100
+    window: 60
+
+# Persistence for data and logs
+persistence:
+  enabled: true
+  storageClass: "gp3"
+  accessMode: ReadWriteOnce
+  size: 10Gi
+  dataPath: /app/data
+  logPath: /app/logs
+
+# Redis Configuration (for caching and sessions)
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: "redis_secure_password"
+  master:
+    persistence:
+      enabled: true
+      size: 8Gi
+  replica:
+    replicaCount: 2
+
+# Health Checks
+healthcheck:
+  enabled: true
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: 8000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Network Policies
+networkPolicy:
+  enabled: true
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+  egress:
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+
+# Service Mesh (Istio) Configuration
+serviceMesh:
+  enabled: false
+  istio:
+    enabled: false
+    mtls: STRICT
+    trafficPolicy:
+      loadBalancer:
+        simple: LEAST_CONN
+
+# Backup Configuration
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention: "7d"
+  destinations:
+    - type: s3
+      bucket: a2a-agents-backups
+      region: us-west-2
+
+# Secrets Management
+secrets:
+  external:
+    enabled: false
+    secretStore: aws-secretsmanager
+  encryption:
+    enabled: true
+    key: ""
+
+# Observability
+observability:
+  tracing:
+    enabled: true
+    jaeger:
+      endpoint: "http://jaeger-collector:14268/api/traces"
+  logging:
+    level: INFO
+    format: json
+    elasticsearch:
+      enabled: true
+      endpoint: "http://elasticsearch:9200"
+
+# Development/Testing Overrides
+dev:
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  autoscaling:
+    enabled: false
+  monitoring:
+    grafana:
+      adminPassword: "dev_password"
+  security:
+    strictMode: false

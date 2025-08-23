@@ -1,0 +1,445 @@
+/* 
+ * SAP Fiori 3.0 Compliant Styles
+ * Using SAP Theme Parameters and Semantic Colors
+ */
+
+/* Import SAP Theme Parameters */
+@import "sap/ui/core/themes/base/base.less";
+@import "sap/ui/core/themes/sap_horizon/global.less";
+
+/* Import shared components */
+@import "./shared-components.css";
+
+/* ========================================
+   Notification Items - Fiori Compliant
+   ======================================== */
+
+.sapUiNotificationItem {
+    border-left: 0.25rem solid transparent;
+    transition: background-color 0.2s ease;
+}
+
+.sapUiNotificationItem:hover {
+    background-color: var(--sapList_Hover_Background);
+}
+
+/* Use semantic colors for priority */
+.sapUiNotificationItem[data-priority="critical"] {
+    border-left-color: var(--sapErrorBorderColor);
+}
+
+.sapUiNotificationItem[data-priority="high"] {
+    border-left-color: var(--sapWarningBorderColor);
+}
+
+.sapUiNotificationItem[data-priority="medium"] {
+    border-left-color: var(--sapSuccessBorderColor);
+}
+
+.sapUiNotificationItem[data-priority="low"] {
+    border-left-color: var(--sapInformationBorderColor);
+}
+
+/* Unread notification state */
+.sapUiNotificationItem.sapUiNotificationUnread {
+    background-color: var(--sapList_Highlight_Background);
+    font-weight: var(--sapFontBoldWeight);
+}
+
+/* ========================================
+   Card Enhancements - Fiori Compliant
+   ======================================== */
+
+/* Subtle hover effect for cards */
+.sapFCard:hover {
+    box-shadow: var(--sapContent_Shadow1);
+    transition: box-shadow 0.3s ease;
+}
+
+/* Active card state */
+.sapFCard:active {
+    box-shadow: var(--sapContent_Shadow0);
+}
+
+/* ========================================
+   Agent Status Indicators - Fiori Compliant
+   ======================================== */
+
+/* Use semantic color variables */
+.sapUiAgentStatusActive {
+    color: var(--sapPositiveTextColor);
+}
+
+.sapUiAgentStatusInactive {
+    color: var(--sapNeutralTextColor);
+}
+
+.sapUiAgentStatusError {
+    color: var(--sapNegativeTextColor);
+}
+
+.sapUiAgentStatusWarning {
+    color: var(--sapCriticalTextColor);
+}
+
+/* ========================================
+   Process Flow Enhancements - Fiori Compliant
+   ======================================== */
+
+/* Custom node highlighting */
+.sapSuiteUiProcessFlowNode.sapUiAgentNode {
+    border-color: var(--sapBrandColor);
+}
+
+.sapSuiteUiProcessFlowNode.sapUiAgentNode:hover {
+    background-color: var(--sapList_Hover_Background);
+}
+
+/* ========================================
+   Chart Enhancements - Fiori Compliant
+   ======================================== */
+
+/* Ensure charts use theme colors */
+.sapVizFrame {
+    font-family: var(--sapFontFamily);
+}
+
+.sapSuiteMicroChart {
+    color: var(--sapTextColor);
+}
+
+/* ========================================
+   Responsive Helpers - Fiori Compliant
+   ======================================== */
+
+/* Use SAP responsive margins */
+@media (max-width: 599px) {
+    .sapUiResponsiveContentPadding > * {
+        padding: var(--sapContent_PaddingSmall);
+    }
+}
+
+/* Tablet-specific optimizations */
+@media (min-width: 600px) and (max-width: 1023px) {
+    .sapUiResponsiveContentPadding > * {
+        padding: var(--sapContent_Padding);
+    }
+    
+    /* Tablet navigation enhancements */
+    .sapTntToolPage .sapTntSideNavigation {
+        width: 15rem;
+    }
+    
+    .sapTntNavigationListItem {
+        min-height: 2.75rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    /* Card layouts for tablet screens */
+    .sapFCard {
+        min-height: 12rem;
+        margin: 0.5rem;
+    }
+    
+    /* Enhanced touch targets */
+    .sapMBtn {
+        min-height: 2.75rem;
+        min-width: 2.75rem;
+    }
+    
+    /* Tablet-optimized tables */
+    .sapMTable .sapMListTblRow .sapMListTblCell {
+        padding: 0.75rem 0.5rem;
+        min-height: 3rem;
+    }
+    
+    /* Hide less important table columns on tablet */
+    .sapMTable .sapMListTblRow .sapMListTblCell:nth-child(n+6) {
+        display: none;
+    }
+    
+    /* Grid optimizations */
+    .sapUiLayoutCSSGrid {
+        grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+        gap: 1rem;
+    }
+    
+    /* Dynamic Page optimizations for tablets */
+    .sapFDynamicPageHeader {
+        padding: 1rem;
+    }
+    
+    .sapFDynamicPageTitle .sapFDynamicPageTitleWrapper {
+        padding: 0.75rem 0;
+    }
+}
+
+/* Tablet portrait specific */
+@media (min-width: 600px) and (max-width: 1023px) and (orientation: portrait) {
+    .sapTntToolPage .sapTntSideNavigation {
+        width: 18rem;
+    }
+    
+    .sapUiLayoutCSSGrid {
+        grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+    }
+    
+    /* More vertical spacing in portrait */
+    .sapFCard {
+        margin: 1rem 0.5rem;
+    }
+}
+
+/* Tablet landscape specific */
+@media (min-width: 600px) and (max-width: 1023px) and (orientation: landscape) {
+    .sapTntToolPage .sapTntSideNavigation {
+        width: 12rem;
+    }
+    
+    .sapUiLayoutCSSGrid {
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    }
+    
+    /* Compact layout for landscape */
+    .sapFCard {
+        min-height: 10rem;
+        margin: 0.25rem;
+    }
+    
+    .sapFDynamicPageTitle .sapFDynamicPageTitleWrapper {
+        padding: 0.5rem 0;
+    }
+}
+
+/* A2A Agents Frontend specific tablet classes */
+@media (min-width: 600px) and (max-width: 1023px) {
+    /* Tablet shell bar optimizations */
+    .a2a-tablet-shell {
+        touch-action: manipulation;
+    }
+    
+    .a2a-tablet-shell .sapFShellBarTitleWrapper {
+        min-height: 3rem;
+    }
+    
+    /* Tablet navigation enhancements */
+    .a2a-tablet-navigation {
+        width: 15rem;
+    }
+    
+    .a2a-tablet-navigation .sapTntNavLI {
+        min-height: 2.75rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    /* Tablet page optimizations */
+    .a2a-tablet-page {
+        touch-action: manipulation;
+    }
+    
+    .a2a-tablet-page .sapTntToolPageContent {
+        padding: 1rem;
+    }
+    
+    /* Enhanced buttons for tablets */
+    .sapFShellBar .sapMBtn {
+        min-height: 2.75rem;
+        min-width: 2.75rem;
+    }
+    
+    /* Tablet search field in shell bar */
+    .sapFShellBar .sapMSearchField {
+        min-height: 2.5rem;
+    }
+    
+    /* Avatar enhancements for tablet */
+    .sapFAvatar {
+        width: 2.75rem;
+        height: 2.75rem;
+    }
+}
+
+/* Tablet portrait specific for A2A Agents */
+@media (min-width: 600px) and (max-width: 1023px) and (orientation: portrait) {
+    .a2a-tablet-navigation {
+        width: 18rem;
+    }
+    
+    .a2a-tablet-shell .sapFShellBarSearch {
+        width: 60%;
+    }
+}
+
+/* Tablet landscape specific for A2A Agents */
+@media (min-width: 600px) and (max-width: 1023px) and (orientation: landscape) {
+    .a2a-tablet-navigation {
+        width: 12rem;
+    }
+    
+    .a2a-tablet-shell .sapFShellBarSearch {
+        width: 40%;
+    }
+}
+
+@media (min-width: 1024px) {
+    .sapUiResponsiveContentPadding > * {
+        padding: var(--sapContent_PaddingLarge);
+    }
+}
+
+/* ========================================
+   Loading States - Fiori Compliant
+   ======================================== */
+
+/* Use SAP busy indicator styling */
+.sapUiLocalBusyIndicator {
+    background-color: var(--sapContent_Background);
+}
+
+.sapUiLocalBusyIndicatorAnimation {
+    border-color: var(--sapBrandColor);
+}
+
+/* ========================================
+   Focus Indication - Accessibility
+   ======================================== */
+
+/* Ensure proper focus indication */
+.sapMFocusable:focus {
+    outline: 0.0625rem dotted var(--sapContent_FocusColor);
+    outline-offset: -0.0625rem;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .sapMFocusable:focus {
+        outline-width: 0.125rem;
+        outline-style: solid;
+    }
+}
+
+/* ========================================
+   Dark Theme Support
+   ======================================== */
+
+/* Automatic dark theme adjustments */
+[data-sap-ui-theme="sap_horizon_dark"] {
+    /* Dark theme specific adjustments if needed */
+    .sapFCard {
+        background-color: var(--sapTile_Background);
+    }
+}
+
+/* ========================================
+   Agent Flow Diagram - Fiori Compliant
+   ======================================== */
+
+.sapUiAgentFlowDiagram {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--sapBackgroundColor);
+    border: 1px solid var(--sapGroup_ContentBorderColor);
+    border-radius: var(--sapElement_BorderCornerRadius);
+}
+
+/* Zoom controls positioning */
+.sapUiAgentFlowZoomControls {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+    display: flex;
+    gap: 0.5rem;
+    background-color: var(--sapGroup_ContentBackground);
+    padding: 0.5rem;
+    border-radius: var(--sapElement_BorderCornerRadius);
+    box-shadow: var(--sapContent_Shadow0);
+}
+
+.sapUiAgentFlowZoomControls button {
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--sapButton_Background);
+    border: 1px solid var(--sapButton_BorderColor);
+    border-radius: var(--sapButton_BorderCornerRadius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sapUiAgentFlowZoomControls button:hover {
+    background-color: var(--sapButton_Hover_Background);
+    border-color: var(--sapButton_Hover_BorderColor);
+}
+
+.sapUiAgentFlowZoomControls button:active {
+    background-color: var(--sapButton_Active_Background);
+}
+
+/* ========================================
+   Agent Status Indicator - Fiori Compliant
+   ======================================== */
+
+.sapUiAgentStatusIndicator {
+    padding: 1rem;
+    background-color: var(--sapTile_Background);
+    border: 1px solid var(--sapTile_BorderColor);
+    border-radius: var(--sapTile_BorderCornerRadius);
+    transition: all 0.3s ease;
+}
+
+.sapUiAgentStatusIndicator:hover {
+    box-shadow: var(--sapContent_Shadow1);
+    transform: translateY(-2px);
+}
+
+.sapUiAgentStatusIndicatorCompact {
+    padding: 0.5rem;
+}
+
+/* Status-specific styling using semantic colors */
+.sapUiAgentStatusIndicator[data-status="active"] {
+    border-left: 4px solid var(--sapPositiveColor);
+}
+
+.sapUiAgentStatusIndicator[data-status="error"] {
+    border-left: 4px solid var(--sapNegativeColor);
+}
+
+.sapUiAgentStatusIndicator[data-status="warning"] {
+    border-left: 4px solid var(--sapCriticalColor);
+}
+
+.sapUiAgentStatusIndicator[data-status="inactive"] {
+    border-left: 4px solid var(--sapNeutralColor);
+}
+
+/* ========================================
+   Print Styles - Fiori Compliant
+   ======================================== */
+
+@media print {
+    /* Hide non-essential elements */
+    .sapMIBar,
+    .sapMPageFooter,
+    .sapUiHidden-print,
+    .sapUiAgentFlowZoomControls {
+        display: none !important;
+    }
+    
+    /* Ensure readable print output */
+    body {
+        font-size: 10pt;
+        color: var(--sapTextColor);
+        background: var(--sapBackgroundColor);
+    }
+    
+    /* Ensure diagrams are visible */
+    .sapUiAgentFlowDiagram {
+        border: 1px solid var(--sapGroup_ContentBorderColor);
+        page-break-inside: avoid;
+    }
+}

@@ -1,0 +1,61 @@
+{
+  "date": "2025-08-21T13:14:30.945964",
+  "statistics": {
+    "files_analyzed": 86,
+    "total_issues": 7221,
+    "average_per_file": 83.96511627906976
+  },
+  "by_severity": {
+    "medium": 5197,
+    "high": 2024
+  },
+  "top_files": [
+    [
+      "unknown",
+      7221
+    ]
+  ],
+  "top_issues": [
+    [
+      "Unexpected var, use let or const instead.",
+      1906
+    ],
+    [
+      "'const' is available in ES6 (use 'esversion: 6'...",
+      1461
+    ],
+    [
+      "'arrow function syntax (=>)' is only available ...",
+      498
+    ],
+    [
+      "'sap' is not defined.",
+      488
+    ],
+    [
+      "Unexpected console statement.",
+      451
+    ],
+    [
+      "'template literal syntax' is only available in ...",
+      314
+    ],
+    [
+      "'async functions' is only available in ES8 (use...",
+      203
+    ],
+    [
+      "'jQuery' is not defined.",
+      184
+    ],
+    [
+      "'object short notation' is available in ES6 (us...",
+      174
+    ],
+    [
+      "Expected { after 'if' condition.",
+      110
+    ]
+  ],
+  "by_directory": []
+}

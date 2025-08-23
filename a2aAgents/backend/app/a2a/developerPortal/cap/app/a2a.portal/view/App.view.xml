@@ -1,0 +1,86 @@
+<mvc:View
+    controllerName="a2a.portal.controller.App"
+    xmlns:mvc="sap.ui.core.mvc"
+    displayBlock="true"
+    xmlns="sap.m"
+    xmlns:tnt="sap.tnt"
+    xmlns:core="sap.ui.core">
+    <tnt:ToolPage id="app" class="sapUiSizeCompact a2a-tablet-page" busyIndicatorDelay="0">
+        <tnt:header>
+            <tnt:ToolHeader>
+                <Image src="https://ui5.sap.com/resources/sap/ui/documentation/sdk/images/logo_sap.png" 
+                       height="32px" 
+                       class="sapUiSmallMarginBegin sapUiSmallMarginEnd"/>
+                <Title text="{i18n>appTitle}" level="H4" class="sapUiMediumMarginEnd"/>
+                <ToolbarSpacer/>
+                <!-- SAP Fiori compliant notification button -->
+                <Button icon="sap-icon://notification" 
+                       type="Transparent" 
+                       press="onNotificationPress" 
+                       tooltip="{i18n>notificationButtonTooltip}"
+                       ariaLabelledBy="notificationButtonLabel"
+                       ariaDescribedBy="notificationCount"
+                       text="{= ${notifications>/stats/unread} > 0 ? ${notifications>/stats/unread} : '' }"
+                       class="{= ${notifications>/stats/unread} > 0 ? 'sapMBtnHasText' : '' }">
+                </Button>
+                <Button icon="sap-icon://action-settings" 
+                       type="Transparent" 
+                       press="onSettingsPress"
+                       tooltip="{i18n>settingsButtonTooltip}"
+                       ariaLabelledBy="settingsButtonLabel"/>
+                <!-- User Profile is intentionally header-only following SAP Fiori design guidelines -->
+                <!-- See NAVIGATION_GUIDE.md for detailed navigation architecture -->
+                <Button icon="sap-icon://person-placeholder" 
+                       type="Transparent" 
+                       press="onUserProfilePress" 
+                       tooltip="{i18n>userProfileButtonTooltip}"
+                       ariaLabelledBy="userProfileButtonLabel"/>
+                <Button icon="sap-icon://log" 
+                       type="Transparent" 
+                       press="onLogPress" 
+                       tooltip="{i18n>applicationLogsButtonTooltip}"
+                       ariaLabelledBy="applicationLogsButtonLabel"/>
+            </tnt:ToolHeader>
+        </tnt:header>
+
+        <tnt:sideContent>
+            <tnt:SideNavigation id="sideNavigation" 
+                               itemSelect="onItemSelect" 
+                               selectedKey="projects"
+                               ariaLabelledBy="sideNavigationLabel">
+                <tnt:NavigationList role="navigation" ariaLabel="{i18n>mainNavigation}">
+                    <tnt:NavigationListItem text="{i18n>navProjects}" 
+                                          icon="sap-icon://folder" 
+                                          key="projects"/>
+                    <tnt:NavigationListItem text="{i18n>navTemplates}" 
+                                          icon="sap-icon://template" 
+                                          key="templates"/>
+                    <!-- Agent Builder and BPMN Designer are context-dependent - accessible from within projects -->
+                    <tnt:NavigationListItem text="{i18n>navTesting}" 
+                                          icon="sap-icon://test" 
+                                          key="testing"/>
+                    <tnt:NavigationListItem text="{i18n>navDeployment}" 
+                                          icon="sap-icon://upload" 
+                                          key="deployment"/>
+                    <tnt:NavigationListItem text="{i18n>navMonitoring}" 
+                                          icon="sap-icon://line-charts" 
+                                          key="monitoring"/>
+                    <tnt:NavigationListItem text="{i18n>navA2ANetwork}" 
+                                          icon="sap-icon://chain-link" 
+                                          key="a2aNetwork"
+                                          class="sapUiSmallMarginTop"/>
+                </tnt:NavigationList>
+            </tnt:SideNavigation>
+        </tnt:sideContent>
+
+        <tnt:mainContents>
+            <core:InvisibleText id="notificationButtonLabel" text="{i18n>notificationButtonLabel}"/>
+            <core:InvisibleText id="notificationCount" text="{i18n>notificationCountDescription}"/>
+            <core:InvisibleText id="settingsButtonLabel" text="{i18n>settingsButtonLabel}"/>
+            <core:InvisibleText id="userProfileButtonLabel" text="{i18n>userProfileButtonLabel}"/>
+            <core:InvisibleText id="applicationLogsButtonLabel" text="{i18n>applicationLogsButtonLabel}"/>
+            <core:InvisibleText id="sideNavigationLabel" text="{i18n>sideNavigationLabel}"/>
+            <!-- Router will place views here -->
+        </tnt:mainContents>
+    </tnt:ToolPage>
+</mvc:View>

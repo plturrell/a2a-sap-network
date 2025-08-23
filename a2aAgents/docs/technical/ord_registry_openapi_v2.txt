@@ -1,0 +1,1077 @@
+openapi: 3.0.3
+info:
+  title: ORD Registry API
+  description: Object Resource Discovery Registry Service API with Dublin Core metadata integration
+  version: ${API_VERSION}
+  contact:
+    name: ORD Registry Support
+    email: ${SUPPORT_EMAIL}
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: ${PRODUCTION_BASE_URL}/api/v1
+    description: Production server
+  - url: ${STAGING_BASE_URL}/api/v1
+    description: Staging server
+
+security:
+  - bearerAuth: []
+
+paths:
+  /ord/register:
+    post:
+      summary: Register ORD Document with Dublin Core
+      description: Register a new ORD document with optional Dublin Core metadata in the registry
+      operationId: registerORDDocument
+      tags:
+        - Registration
+      requestBody:
+        required: true
+        content:
+          application/ord+json:
+            schema:
+              $ref: '#/components/schemas/ORDDocumentWithDublinCore'
+      responses:
+        '201':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationResponse'
+        '400':
+          description: Invalid ORD document or Dublin Core metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: ORD ID already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+
+  /ord/register/{registrationId}:
+    get:
+      summary: Get Registration Details with Dublin Core
+      description: Retrieve details of a specific registration including Dublin Core metadata
+      operationId: getRegistration
+      tags:
+        - Registration
+      parameters:
+        - name: registrationId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Registration ID
+        - name: includeDublinCore
+          in: query
+          schema:
+            type: boolean
+            default: true
+          description: Include Dublin Core metadata in response
+      responses:
+        '200':
+          description: Registration details with Dublin Core metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationDetailsWithDublinCore'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update ORD Document with Dublin Core
+      description: Update an existing ORD document and Dublin Core metadata
+      operationId: updateORDDocument
+      tags:
+        - Registration
+      parameters:
+        - name: registrationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/ord+json:
+            schema:
+              $ref: '#/components/schemas/ORDDocumentWithDublinCore'
+      responses:
+        '200':
+          description: Update successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateResponse'
+        '400':
+          description: Invalid update request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      summary: Delete Registration
+      description: Remove a registration from the registry
+      operationId: deleteRegistration
+      tags:
+        - Registration
+      parameters:
+        - name: registrationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Registration deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /ord/search:
+    get:
+      summary: Search Resources with Dublin Core
+      description: Search for resources in the ORD registry including Dublin Core metadata fields
+      operationId: searchResources
+      tags:
+        - Discovery
+      parameters:
+        - name: q
+          in: query
+          description: Search query
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Resource type filter
+          schema:
+            type: string
+            enum: [dataProduct, api, event, entityType]
+        - name: tags
+          in: query
+          description: Tags filter (comma-separated)
+          schema:
+            type: string
+        - name: domain
+          in: query
+          description: Domain filter
+          schema:
+            type: string
+        - name: creator
+          in: query
+          description: Dublin Core creator filter
+          schema:
+            type: string
+        - name: subject
+          in: query
+          description: Dublin Core subject filter (comma-separated)
+          schema:
+            type: string
+        - name: publisher
+          in: query
+          description: Dublin Core publisher filter
+          schema:
+            type: string
+        - name: format
+          in: query
+          description: Dublin Core format filter
+          schema:
+            type: string
+        - name: language
+          in: query
+          description: Dublin Core language filter
+          schema:
+            type: string
+        - name: rights
+          in: query
+          description: Dublin Core rights filter
+          schema:
+            type: string
+        - name: dateFrom
+          in: query
+          description: Dublin Core date range start (ISO 8601)
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          description: Dublin Core date range end (ISO 8601)
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          description: Page size
+          schema:
+            type: integer
+            minimum: 1
+            maximum: ${MAX_PAGE_SIZE}
+            default: ${DEFAULT_PAGE_SIZE}
+        - name: includeDublinCore
+          in: query
+          description: Include Dublin Core metadata in search results
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Search results with optional Dublin Core metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponseWithDublinCore'
+        '400':
+          description: Invalid search parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+
+  /ord/resources/{ordId}:
+    get:
+      summary: Get Resource by ORD ID with Dublin Core
+      description: Retrieve a specific resource by its ORD ID including Dublin Core metadata
+      operationId: getResourceByOrdId
+      tags:
+        - Discovery
+      parameters:
+        - name: ordId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ORD ID of the resource
+        - name: includeDublinCore
+          in: query
+          schema:
+            type: boolean
+            default: true
+          description: Include Dublin Core metadata in response
+      responses:
+        '200':
+          description: Resource details with Dublin Core metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceDetailsWithDublinCore'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /ord/browse:
+    get:
+      summary: Browse Resources with Dublin Core Facets
+      description: Browse resources by category, domain, and Dublin Core facets
+      operationId: browseResources
+      tags:
+        - Discovery
+      parameters:
+        - name: category
+          in: query
+          description: Resource category
+          schema:
+            type: string
+        - name: domain
+          in: query
+          description: Business domain
+          schema:
+            type: string
+        - name: facets
+          in: query
+          description: Include Dublin Core facets in response
+          schema:
+            type: boolean
+            default: true
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: ${DEFAULT_PAGE_SIZE}
+      responses:
+        '200':
+          description: Browse results with Dublin Core facets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrowseResponseWithDublinCore'
+
+  /ord/dublincore/validate:
+    post:
+      summary: Validate Dublin Core Metadata
+      description: Validate Dublin Core metadata against standards
+      operationId: validateDublinCore
+      tags:
+        - Validation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DublinCoreMetadata'
+      responses:
+        '200':
+          description: Dublin Core validation results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DublinCoreValidationResults'
+
+  /ord/analytics/{registrationId}:
+    get:
+      summary: Get Analytics with Dublin Core Insights
+      description: Retrieve usage analytics for a registration including Dublin Core metadata insights
+      operationId: getAnalytics
+      tags:
+        - Analytics
+      parameters:
+        - name: registrationId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: includeDublinCoreInsights
+          in: query
+          schema:
+            type: boolean
+            default: true
+          description: Include Dublin Core metadata analytics
+      responses:
+        '200':
+          description: Analytics data with Dublin Core insights
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponseWithDublinCore'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /health:
+    get:
+      summary: Health Check
+      description: Check service health status
+      operationId: healthCheck
+      tags:
+        - Monitoring
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    DublinCoreMetadata:
+      type: object
+      description: Dublin Core metadata elements (ISO 15836, ANSI/NISO Z39.85, RFC 5013)
+      properties:
+        title:
+          type: string
+          description: "DC.Title - Name given to the resource"
+          maxLength: ${MAX_TITLE_LENGTH}
+        creator:
+          type: array
+          items:
+            type: string
+          description: "DC.Creator - Entity primarily responsible for creating content"
+          maxItems: ${MAX_CREATORS}
+        subject:
+          type: array
+          items:
+            type: string
+          description: "DC.Subject - Topic keywords or phrases describing the resource"
+          maxItems: ${MAX_SUBJECTS}
+        description:
+          type: string
+          description: "DC.Description - Textual description of the content"
+          maxLength: ${MAX_DESCRIPTION_LENGTH}
+        publisher:
+          type: string
+          description: "DC.Publisher - Entity responsible for making resource available"
+          maxLength: ${MAX_PUBLISHER_LENGTH}
+        contributor:
+          type: array
+          items:
+            type: string
+          description: "DC.Contributor - Entity making significant secondary contributions"
+          maxItems: ${MAX_CONTRIBUTORS}
+        date:
+          type: string
+          format: date
+          description: "DC.Date - Date associated with creation or availability (ISO 8601)"
+        type:
+          type: string
+          description: "DC.Type - Category of the resource"
+          enum: [Text, Image, Sound, Dataset, Software, Service, Collection, Event, InteractiveResource, MovingImage, PhysicalObject, StillImage]
+        format:
+          type: string
+          description: "DC.Format - Physical or digital manifestation format"
+          maxLength: ${MAX_FORMAT_LENGTH}
+        identifier:
+          type: string
+          description: "DC.Identifier - Unambiguous reference to the resource"
+          maxLength: ${MAX_IDENTIFIER_LENGTH}
+        source:
+          type: string
+          description: "DC.Source - Resource from which this resource is derived"
+          maxLength: ${MAX_SOURCE_LENGTH}
+        language:
+          type: string
+          description: "DC.Language - Language of the intellectual content (ISO 639)"
+          pattern: "^[a-z]{2,3}(-[A-Z]{2})?$"
+        relation:
+          type: array
+          items:
+            type: string
+          description: "DC.Relation - Reference to related resources"
+          maxItems: ${MAX_RELATIONS}
+        coverage:
+          type: string
+          description: "DC.Coverage - Spatial or temporal scope of the resource"
+          maxLength: ${MAX_COVERAGE_LENGTH}
+        rights:
+          type: string
+          description: "DC.Rights - Rights held in and over the resource"
+          maxLength: ${MAX_RIGHTS_LENGTH}
+
+    ORDDocumentWithDublinCore:
+      allOf:
+        - $ref: '#/components/schemas/ORDDocument'
+        - type: object
+          properties:
+            dublinCore:
+              $ref: '#/components/schemas/DublinCoreMetadata'
+
+    ORDDocument:
+      type: object
+      required:
+        - openResourceDiscovery
+        - description
+      properties:
+        openResourceDiscovery:
+          type: string
+          pattern: "^\\d+\\.\\d+\\.\\d+$"
+          description: ORD specification version
+        description:
+          type: string
+          description: Overall description of the ORD document
+          maxLength: ${MAX_DOCUMENT_DESCRIPTION_LENGTH}
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceWithDublinCore'
+          maxItems: ${MAX_RESOURCES_PER_DOCUMENT}
+        apiResources:
+          type: array
+          items:
+            $ref: '#/components/schemas/APIResourceWithDublinCore'
+          maxItems: ${MAX_API_RESOURCES_PER_DOCUMENT}
+        entityTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityTypeWithDublinCore'
+          maxItems: ${MAX_ENTITY_TYPES_PER_DOCUMENT}
+
+    ResourceWithDublinCore:
+      allOf:
+        - $ref: '#/components/schemas/Resource'
+        - type: object
+          properties:
+            dublinCore:
+              $ref: '#/components/schemas/DublinCoreMetadata'
+
+    Resource:
+      type: object
+      required:
+        - ordId
+        - title
+        - shortDescription
+        - version
+      properties:
+        ordId:
+          type: string
+          pattern: "^[a-zA-Z0-9._-]+:[a-zA-Z0-9._-]+:[a-zA-Z0-9._-]+$"
+          description: Unique ORD identifier
+        title:
+          type: string
+          description: Resource title
+          maxLength: ${MAX_RESOURCE_TITLE_LENGTH}
+        shortDescription:
+          type: string
+          description: Brief description of the resource
+          maxLength: ${MAX_SHORT_DESCRIPTION_LENGTH}
+        description:
+          type: string
+          description: Detailed description of the resource
+          maxLength: ${MAX_RESOURCE_DESCRIPTION_LENGTH}
+        version:
+          type: string
+          pattern: "^\\d+\\.\\d+\\.\\d+$"
+          description: Semantic version of the resource
+        tags:
+          type: array
+          items:
+            type: string
+          description: Resource tags for categorization
+          maxItems: ${MAX_TAGS_PER_RESOURCE}
+        labels:
+          type: object
+          description: Key-value pairs for resource metadata
+          additionalProperties:
+            type: string
+
+    APIResourceWithDublinCore:
+      allOf:
+        - $ref: '#/components/schemas/APIResource'
+        - type: object
+          properties:
+            dublinCore:
+              $ref: '#/components/schemas/DublinCoreMetadata'
+
+    APIResource:
+      type: object
+      required:
+        - ordId
+        - title
+        - shortDescription
+        - version
+        - apiProtocol
+      properties:
+        ordId:
+          type: string
+          pattern: "^[a-zA-Z0-9._-]+:[a-zA-Z0-9._-]+:[a-zA-Z0-9._-]+$"
+        title:
+          type: string
+          maxLength: ${MAX_API_TITLE_LENGTH}
+        shortDescription:
+          type: string
+          maxLength: ${MAX_SHORT_DESCRIPTION_LENGTH}
+        description:
+          type: string
+          maxLength: ${MAX_API_DESCRIPTION_LENGTH}
+        version:
+          type: string
+          pattern: "^\\d+\\.\\d+\\.\\d+$"
+        apiProtocol:
+          type: string
+          enum: [rest, odata, graphql, soap, grpc, websocket]
+
+    EntityTypeWithDublinCore:
+      allOf:
+        - $ref: '#/components/schemas/EntityType'
+        - type: object
+          properties:
+            dublinCore:
+              $ref: '#/components/schemas/DublinCoreMetadata'
+
+    EntityType:
+      type: object
+      required:
+        - ordId
+        - title
+        - version
+      properties:
+        ordId:
+          type: string
+          pattern: "^[a-zA-Z0-9._-]+:[a-zA-Z0-9._-]+:[a-zA-Z0-9._-]+$"
+        title:
+          type: string
+          maxLength: ${MAX_ENTITY_TITLE_LENGTH}
+        shortDescription:
+          type: string
+          maxLength: ${MAX_SHORT_DESCRIPTION_LENGTH}
+        description:
+          type: string
+          maxLength: ${MAX_ENTITY_DESCRIPTION_LENGTH}
+        version:
+          type: string
+          pattern: "^\\d+\\.\\d+\\.\\d+$"
+
+    RegistrationResponse:
+      type: object
+      properties:
+        registration_id:
+          type: string
+          description: Unique registration identifier
+        status:
+          type: string
+          enum: [registered, pending, failed]
+        validation_results:
+          $ref: '#/components/schemas/ValidationResults'
+        dublincore_validation:
+          $ref: '#/components/schemas/DublinCoreValidationResults'
+        registered_at:
+          type: string
+          format: date-time
+        registry_url:
+          type: string
+          format: uri
+
+    ValidationResults:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        warnings:
+          type: array
+          items:
+            type: string
+        errors:
+          type: array
+          items:
+            type: string
+        compliance_score:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    DublinCoreValidationResults:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        iso15836_compliant:
+          type: boolean
+          description: Compliance with ISO 15836 standard
+        rfc5013_compliant:
+          type: boolean
+          description: Compliance with RFC 5013 standard
+        warnings:
+          type: array
+          items:
+            type: string
+        errors:
+          type: array
+          items:
+            type: string
+        quality_score:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Overall Dublin Core metadata quality score
+
+    SearchResponseWithDublinCore:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResultWithDublinCore'
+        total_count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        facets:
+          $ref: '#/components/schemas/DublinCoreFacets'
+
+    SearchResultWithDublinCore:
+      allOf:
+        - $ref: '#/components/schemas/SearchResult'
+        - type: object
+          properties:
+            dublinCore:
+              $ref: '#/components/schemas/DublinCoreMetadata'
+
+    SearchResult:
+      type: object
+      properties:
+        ord_id:
+          type: string
+        title:
+          type: string
+        type:
+          type: string
+        description:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        registry_url:
+          type: string
+        last_updated:
+          type: string
+          format: date-time
+
+    DublinCoreFacets:
+      type: object
+      properties:
+        creators:
+          type: array
+          items:
+            type: object
+            properties:
+              value:
+                type: string
+              count:
+                type: integer
+        subjects:
+          type: array
+          items:
+            type: object
+            properties:
+              value:
+                type: string
+              count:
+                type: integer
+        publishers:
+          type: array
+          items:
+            type: object
+            properties:
+              value:
+                type: string
+              count:
+                type: integer
+        types:
+          type: array
+          items:
+            type: object
+            properties:
+              value:
+                type: string
+              count:
+                type: integer
+        formats:
+          type: array
+          items:
+            type: object
+            properties:
+              value:
+                type: string
+              count:
+                type: integer
+        languages:
+          type: array
+          items:
+            type: object
+            properties:
+              value:
+                type: string
+              count:
+                type: integer
+        rights:
+          type: array
+          items:
+            type: object
+            properties:
+              value:
+                type: string
+              count:
+                type: integer
+
+    ResourceDetailsWithDublinCore:
+      allOf:
+        - $ref: '#/components/schemas/ResourceDetails'
+        - type: object
+          properties:
+            dublinCore:
+              $ref: '#/components/schemas/DublinCoreMetadata'
+
+    ResourceDetails:
+      type: object
+      properties:
+        ord_id:
+          type: string
+        registration_id:
+          type: string
+        resource_type:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        version:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        labels:
+          type: object
+        access_strategies:
+          type: array
+          items:
+            type: object
+        compliance_info:
+          type: object
+
+    RegistrationDetailsWithDublinCore:
+      allOf:
+        - $ref: '#/components/schemas/RegistrationDetails'
+        - type: object
+          properties:
+            dublincore_analytics:
+              $ref: '#/components/schemas/DublinCoreAnalytics'
+
+    RegistrationDetails:
+      type: object
+      properties:
+        registration_id:
+          type: string
+        ord_document:
+          $ref: '#/components/schemas/ORDDocumentWithDublinCore'
+        metadata:
+          type: object
+        validation:
+          $ref: '#/components/schemas/ValidationResults'
+        governance:
+          type: object
+
+    DublinCoreAnalytics:
+      type: object
+      properties:
+        metadata_completeness:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Percentage of Dublin Core fields populated
+        standards_compliance:
+          type: object
+          properties:
+            iso15836:
+              type: boolean
+            rfc5013:
+              type: boolean
+            ansi_niso:
+              type: boolean
+        quality_metrics:
+          type: object
+          properties:
+            title_quality:
+              type: number
+            description_quality:
+              type: number
+            subject_richness:
+              type: number
+            relation_depth:
+              type: number
+
+    UpdateResponse:
+      type: object
+      properties:
+        registration_id:
+          type: string
+        version:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+        validation_results:
+          $ref: '#/components/schemas/ValidationResults'
+        dublincore_validation:
+          $ref: '#/components/schemas/DublinCoreValidationResults'
+
+    BrowseResponseWithDublinCore:
+      allOf:
+        - $ref: '#/components/schemas/BrowseResponse'
+        - type: object
+          properties:
+            dublincore_facets:
+              $ref: '#/components/schemas/DublinCoreFacets'
+
+    BrowseResponse:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            type: object
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResultWithDublinCore'
+        pagination:
+          type: object
+
+    AnalyticsResponseWithDublinCore:
+      allOf:
+        - $ref: '#/components/schemas/AnalyticsResponse'
+        - type: object
+          properties:
+            dublincore_insights:
+              $ref: '#/components/schemas/DublinCoreAnalytics'
+
+    AnalyticsResponse:
+      type: object
+      properties:
+        registration_id:
+          type: string
+        access_count:
+          type: integer
+        last_accessed:
+          type: string
+          format: date-time
+        popular_resources:
+          type: array
+          items:
+            type: object
+        usage_trends:
+          type: object
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+        services:
+          type: object
+          properties:
+            database:
+              type: string
+            search_engine:
+              type: string
+            dublincore_validator:
+              type: string
+        metrics:
+          type: object
+          properties:
+            total_registrations:
+              type: integer
+            active_resources:
+              type: integer
+            dublincore_enabled_resources:
+              type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    ValidationError:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "error"
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "VALIDATION_FAILED"
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+                  value:
+                    type: string
+
+    ConflictError:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "error"
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "ORD_ID_EXISTS"
+            message:
+              type: string
+
+    BadRequestError:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "error"
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "INVALID_PARAMETERS"
+            message:
+              type: string
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "error"
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "UNAUTHORIZED"
+                  message:
+                    type: string
+                    example: "Authentication required"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "error"
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "NOT_FOUND"
+                  message:
+                    type: string
+                    example: "Resource not found"
+
+tags:
+  - name: Registration
+    description: ORD document registration operations with Dublin Core metadata
+  - name: Discovery
+    description: Resource discovery and search operations with Dublin Core facets
+  - name: Validation
+    description: Dublin Core metadata validation operations
+  - name: Analytics
+    description: Usage analytics and Dublin Core metadata insights
+  - name: Monitoring
+    description: Service monitoring and health checks

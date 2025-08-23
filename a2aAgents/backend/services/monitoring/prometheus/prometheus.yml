@@ -1,0 +1,115 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    network: 'a2a'
+    protocol_version: '0.2.9'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# Load rules
+rule_files:
+  - "a2a_rules.yml"
+
+# A2A Agent scrape configurations
+scrape_configs:
+  # Agent 0 - Data Product
+  - job_name: 'agent0-data-product'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - a2a-network
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: agent0-data-product
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: instance
+      - source_labels: [__meta_kubernetes_pod_label_agent_id]
+        action: replace
+        target_label: agent_id
+
+  # Agent 1 - Standardization
+  - job_name: 'agent1-standardization'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - a2a-network
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: agent1-standardization
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: instance
+      - source_labels: [__meta_kubernetes_pod_label_agent_id]
+        action: replace
+        target_label: agent_id
+
+  # Agent 2 - AI Preparation
+  - job_name: 'agent2-ai-preparation'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - a2a-network
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: agent2-ai-preparation
+
+  # Agent 3 - Vector Processing
+  - job_name: 'agent3-vector-processing'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - a2a-network
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: agent3-vector-processing
+
+  # Agent Manager
+  - job_name: 'agent-manager'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - a2a-network
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: agent-manager
+
+  # Data Manager
+  - job_name: 'data-manager'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - a2a-network
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: data-manager
+
+  # Catalog Manager
+  - job_name: 'catalog-manager'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - a2a-network
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: catalog-manager

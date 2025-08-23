@@ -1,0 +1,49 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    
+    <Dialog
+        title="Send Message to {message>/recipientName}"
+        contentWidth="90%"
+        maxWidth="35rem"
+        class="a2a-tablet-dialog">
+        
+        <content>
+            <VBox class="sapUiSmallMargin">
+                <Label text="Message Type:" />
+                <Select
+                    selectedKey="{message>/messageType}"
+                    width="100%">
+                    <items>
+                        <core:Item key="text" text="Text Message" />
+                        <core:Item key="request" text="Request" />
+                        <core:Item key="response" text="Response" />
+                        <core:Item key="notification" text="Notification" />
+                    </items>
+                </Select>
+                
+                <Label text="Message Content:" class="sapUiSmallMarginTop" />
+                <TextArea
+                    value="{message>/content}"
+                    rows="6"
+                    width="100%"
+                    placeholder="Enter your message..."
+                    valueLiveUpdate="true" />
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button
+                text="Send"
+                type="Emphasized"
+                icon="sap-icon://paper-plane"
+                press=".onSendMessageConfirm" />
+        </beginButton>
+        
+        <endButton>
+            <Button
+                text="Cancel"
+                press=".onSendMessageCancel" />
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

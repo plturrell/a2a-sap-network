@@ -1,0 +1,92 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:f="sap.ui.layout.form">
+    <Dialog title="{i18n>runConfiguration}" 
+            contentWidth="600px" 
+            contentHeight="500px"
+            resizable="true"
+            draggable="true"
+            class="a2a-run-config-dialog">
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <f:SimpleForm editable="true"
+                             layout="ResponsiveGridLayout"
+                             labelSpanXL="4"
+                             labelSpanL="4"
+                             labelSpanM="4"
+                             labelSpanS="12"
+                             adjustLabelSpan="false"
+                             emptySpanXL="0"
+                             emptySpanL="0"
+                             emptySpanM="0"
+                             emptySpanS="0"
+                             columnsXL="1"
+                             columnsL="1"
+                             columnsM="1"
+                             singleContainerFullSize="false">
+                    <f:content>
+                        <Label text="{i18n>environment}" required="true"/>
+                        <Select selectedKey="{runConfig>/environment}" width="100%">
+                            <items>
+                                <core:Item key="development" text="Development"/>
+                                <core:Item key="staging" text="Staging"/>
+                                <core:Item key="production" text="Production"/>
+                                <core:Item key="test" text="Test"/>
+                            </items>
+                        </Select>
+                        
+                        <Label text="{i18n>port}"/>
+                        <Input value="{runConfig>/port}" 
+                               type="Number"
+                               placeholder="3000"
+                               description="Default: 3000"/>
+                        
+                        <Label text="{i18n>debugMode}"/>
+                        <Switch state="{runConfig>/debugMode}" 
+                               customTextOn="ON" 
+                               customTextOff="OFF"/>
+                        
+                        <Label text="{i18n>watchFiles}"/>
+                        <Switch state="{runConfig>/watchFiles}" 
+                               customTextOn="ON" 
+                               customTextOff="OFF"
+                               tooltip="{i18n>watchFilesTooltip}"/>
+                        
+                        <Label text="{i18n>environmentVariables}"/>
+                        <VBox>
+                            <Button text="{i18n>addVariable}" 
+                                   icon="sap-icon://add" 
+                                   press="onAddEnvVariable"
+                                   class="sapUiSmallMarginBottom"/>
+                            <Table items="{runConfig>/envVariables}"
+                                   mode="Delete"
+                                   delete="onDeleteEnvVariable">
+                                <columns>
+                                    <Column><Text text="{i18n>variableName}"/></Column>
+                                    <Column><Text text="{i18n>variableValue}"/></Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Input value="{runConfig>name}" placeholder="VARIABLE_NAME"/>
+                                            <Input value="{runConfig>value}" placeholder="value"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </f:content>
+                </f:SimpleForm>
+            </VBox>
+        </content>
+        <beginButton>
+            <Button text="{i18n>run}" 
+                    type="Emphasized" 
+                    press="onConfirmRunProject"
+                    icon="sap-icon://media-play"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>cancel}" 
+                    press="onCancelRunProject"
+                    icon="sap-icon://cancel"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

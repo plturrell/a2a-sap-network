@@ -1,0 +1,555 @@
+/* 
+ * A2A Developer Portal - SAP Fiori 3.0 Compliant Styles
+ * Consolidated styles for both CAP and static portal implementations
+ * All styles use SAP theme parameters for consistency
+ */
+
+/* Import shared components */
+@import "../../../frontend/webapp/css/shared-components.css";
+
+/* ========================================
+   SAP Fiori 3 Base Styling
+   ======================================== */
+.sapUiSizeCompact .sapTntToolPage .sapTntToolHeader {
+    height: 3rem;
+}
+
+/* ========================================
+   Project Tiles - Fiori Compliant
+   ======================================== */
+.a2aProjectTile {
+    transition: all var(--sapAnimationDuration_Default) ease;
+    cursor: pointer;
+}
+
+.a2aProjectTile:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sapContent_Shadow2);
+}
+
+.a2aProjectTile:active {
+    box-shadow: var(--sapContent_Shadow0);
+}
+
+.a2aProjectTile .sapMGT {
+    border: 1px solid var(--sapTile_BorderColor);
+}
+
+/* ========================================
+   Code Editor Container
+   ======================================== */
+.a2aCodeEditor {
+    height: 100%;
+    width: 100%;
+    border: 1px solid var(--sapField_BorderColor);
+}
+
+/* ========================================
+   File Tree Custom Styling
+   ======================================== */
+.a2aFileTree .sapMTree {
+    border: none;
+}
+
+.a2aFileTree .sapMTreeItemBase {
+    border-bottom: 1px solid var(--sapList_BorderColor);
+}
+
+/* ========================================
+   BPMN Designer Canvas
+   ======================================== */
+.a2aBpmnCanvas {
+    height: 100%;
+    width: 100%;
+    background: var(--sapGroup_ContentBackground);
+    border: 1px solid var(--sapGroup_ContentBorderColor);
+}
+
+/* ========================================
+   Agent Builder Form Styling
+   ======================================== */
+.a2aAgentBuilderForm .sapMPanel {
+    margin-bottom: 1rem;
+}
+
+/* ========================================
+   Monitoring Dashboard Widgets
+   ======================================== */
+.a2aMonitoringWidget {
+    height: 200px;
+    margin-bottom: 1rem;
+}
+
+/* ========================================
+   Agent Visualization - Enhanced
+   ======================================== */
+.a2aAgentVisualization {
+    background-color: var(--sapBackgroundColor);
+    border: 1px solid var(--sapGroup_ContentBorderColor);
+    border-radius: var(--sapElement_BorderCornerRadius);
+}
+
+.a2aAgentNode {
+    background-color: var(--sapTile_Background);
+    border: 2px solid var(--sapBrandColor);
+    border-radius: var(--sapTile_BorderCornerRadius);
+    transition: all var(--sapAnimationDuration_Default) ease;
+}
+
+.a2aAgentNode:hover {
+    box-shadow: var(--sapContent_Shadow1);
+    transform: scale(1.02);
+}
+
+.a2aAgentNode.active {
+    border-color: var(--sapPositiveColor);
+    background-color: var(--sapSuccessBackground);
+}
+
+.a2aAgentNode.error {
+    border-color: var(--sapNegativeColor);
+    background-color: var(--sapErrorBackground);
+}
+
+.a2aAgentNode.warning {
+    border-color: var(--sapCriticalColor);
+    background-color: var(--sapWarningBackground);
+}
+
+.a2aConnection {
+    stroke: var(--sapNeutralColor);
+    stroke-width: 2;
+    transition: stroke var(--sapAnimationDuration_Default) ease;
+}
+
+.a2aConnection.active {
+    stroke: var(--sapBrandColor);
+    stroke-width: 3;
+}
+
+.a2aConnectionLabel {
+    background-color: var(--sapBackgroundColor);
+    border: 1px solid var(--sapNeutralBorderColor);
+    border-radius: var(--sapElement_BorderCornerRadius);
+    padding: 0.25rem 0.5rem;
+    font-size: var(--sapFontSmallSize);
+    color: var(--sapContent_LabelColor);
+}
+
+/* ========================================
+   Health Indicators
+   ======================================== */
+.a2aHealthIndicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--sapElement_BorderCornerRadius);
+    font-size: var(--sapFontSmallSize);
+    font-weight: var(--sapFontSemiboldWeight);
+}
+
+.a2aHealthIndicator.healthy {
+    background-color: var(--sapSuccessBackground);
+    color: var(--sapPositiveTextColor);
+}
+
+.a2aHealthIndicator.warning {
+    background-color: var(--sapWarningBackground);
+    color: var(--sapCriticalTextColor);
+}
+
+.a2aHealthIndicator.error {
+    background-color: var(--sapErrorBackground);
+    color: var(--sapNegativeTextColor);
+}
+
+/* ========================================
+   Enhanced mobile responsiveness
+   ======================================== */
+@media (max-width: 599px) {
+    .sapTntToolPage .sapTntSideNavigation {
+        width: 100%;
+    }
+    
+    .a2aProjectTile {
+        margin-bottom: 1rem;
+    }
+    
+    /* Mobile-optimized table layouts */
+    .sapMListTblRow .sapMListTblCell:nth-child(n+3) {
+        display: none;
+    }
+    
+    .sapMListTblRow .sapMListTblCell:first-child {
+        width: 60%;
+    }
+    
+    .sapMListTblRow .sapMListTblCell:nth-child(2) {
+        width: 40%;
+    }
+    
+    /* Stack table content vertically on mobile */
+    .a2aTable.mobile-stacked .sapMListTblRow {
+        display: block;
+        border: 1px solid var(--sapList_BorderColor);
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+    }
+    
+    .a2aTable.mobile-stacked .sapMListTblCell {
+        display: block;
+        width: 100% !important;
+        text-align: left;
+        padding: 0.25rem 0;
+        border: none;
+    }
+    
+    .a2aTable.mobile-stacked .sapMListTblCell:before {
+        content: attr(data-label) ": ";
+        font-weight: var(--sapFontSemiboldWeight);
+    }
+    
+    /* Hide table headers on mobile when stacked */
+    .a2aTable.mobile-stacked .sapMListTblHeaderRow {
+        display: none;
+    }
+}
+
+/* ========================================
+   Tablet-specific optimizations
+   ======================================== */
+@media (min-width: 600px) and (max-width: 1023px) {
+    /* Tablet layout optimizations */
+    .sapTntToolPage .sapTntSideNavigation {
+        width: 15rem;
+    }
+    
+    /* Tablet-optimized project tiles */
+    .a2aProjectTile {
+        margin-bottom: 1rem;
+        min-height: 8rem;
+    }
+    
+    /* Enhanced touch targets for tablets */
+    .sapMBtn {
+        min-height: 2.75rem;
+        min-width: 2.75rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    .sapMBtn.sapMBtnCompact {
+        min-height: 2.25rem;
+        min-width: 2.25rem;
+    }
+    
+    /* Card layouts optimized for tablet */
+    .sapFCard {
+        min-height: 12rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Tablet-friendly form layouts */
+    .sapUiFormResGrid > .sapUiRGLContainer {
+        grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+        gap: 1rem;
+    }
+    
+    /* Navigation adjustments for tablet */
+    .sapTntNavigationListItem {
+        padding: 0.75rem 1rem;
+        min-height: 3rem;
+    }
+    
+    /* Tablet-optimized toolbar spacing */
+    .sapMIBar .sapMIBarMiddle {
+        padding: 0 1rem;
+    }
+    
+    /* Grid container optimizations for tablet screens */
+    .sapFGridContainer {
+        grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+        gap: 1rem;
+    }
+    
+    /* Agent Builder tablet optimizations */
+    .a2aTabletOptimizedSplitter {
+        min-height: calc(100vh - 8rem);
+    }
+    
+    .a2aAgentConfigPanel .sapMIconTabBar {
+        background-color: var(--sapObjectHeader_Background);
+    }
+    
+    .a2aDesignerCanvas,
+    .a2aCodePreviewContainer,
+    .a2aTestConsoleContainer {
+        min-height: 25rem;
+        touch-action: pan-x pan-y;
+    }
+    
+    /* Enhanced form layouts for tablets */
+    .sapUiFormResGrid .sapUiRGLContainer {
+        padding: 1rem;
+    }
+    
+    .sapUiFormResGrid .sapMLabel {
+        padding-bottom: 0.5rem;
+        font-weight: var(--sapFontSemiboldWeight);
+    }
+    
+    /* Better spacing for tablets */
+    .sapMInput,
+    .sapMTextArea,
+    .sapMSelect {
+        min-height: 2.75rem;
+        font-size: 1rem;
+    }
+    
+    /* Enhanced IconTabBar for tablets */
+    .sapMIconTabBar .sapMITBHeader .sapMITBTab {
+        min-height: 3rem;
+        min-width: 8rem;
+    }
+    
+    /* Pull-to-refresh enhancements */
+    .a2a-pull-to-refresh {
+        touch-action: pan-y;
+    }
+    
+    .a2a-pull-to-refresh-indicator {
+        font-size: 1rem;
+        font-weight: var(--sapFontSemiboldWeight);
+    }
+    
+    /* Swipe action enhancements */
+    .a2a-swipe-container {
+        touch-action: pan-x;
+    }
+    
+    .a2a-swipe-actions .sapMBtn {
+        margin-left: 0.5rem;
+        min-height: 2.5rem;
+    }
+    
+    /* Tablet dialog optimizations */
+    .a2a-tablet-dialog {
+        touch-action: manipulation;
+    }
+    
+    .a2a-tablet-dialog .sapMDialogScrollCont {
+        padding: 2rem;
+    }
+    
+    .a2a-tablet-dialog .sapMInput,
+    .a2a-tablet-dialog .sapMTextArea,
+    .a2a-tablet-dialog .sapMSelect,
+    .a2a-tablet-dialog .sapMComboBox {
+        min-height: 2.75rem;
+        font-size: 1rem;
+    }
+    
+    .a2a-tablet-dialog .sapMBtn {
+        min-height: 2.75rem;
+        min-width: 5rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    .a2a-tablet-dialog .sapMLabel {
+        font-size: 1rem;
+        font-weight: var(--sapFontSemiboldWeight);
+        margin-bottom: 0.5rem;
+    }
+    
+    .a2a-tablet-dialog .sapMCheckBox {
+        min-height: 2.75rem;
+    }
+}
+
+/* ========================================
+   Tablet portrait orientation
+   ======================================== */
+@media (min-width: 600px) and (max-width: 1023px) and (orientation: portrait) {
+    .sapTntToolPage .sapTntSideNavigation {
+        width: 18rem;
+    }
+    
+    .sapFGridContainer {
+        grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+    }
+    
+    /* Compact toolbar for portrait tablets */
+    .sapMIBar.sapMTB {
+        min-height: 3rem;
+    }
+    
+    /* Larger text for better readability */
+    .sapMText {
+        font-size: 1rem;
+    }
+    
+    /* Agent Builder tablet optimizations for portrait */
+    .a2aTabletOptimizedSplitter .a2aAgentConfigPanel {
+        min-width: 28rem;
+    }
+    
+    .a2aTabletOptimizedSplitter .a2aVisualDesignerPanel {
+        min-width: 32rem;
+    }
+}
+
+/* ========================================
+   Tablet landscape orientation
+   ======================================== */
+@media (min-width: 600px) and (max-width: 1023px) and (orientation: landscape) {
+    .sapTntToolPage .sapTntSideNavigation {
+        width: 12rem;
+    }
+    
+    .sapFGridContainer {
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    }
+    
+    /* More compact layout for landscape */
+    .sapFCard {
+        min-height: 10rem;
+    }
+    
+    /* Optimize header for landscape */
+    .sapFDynamicPageTitle .sapFDynamicPageTitleWrapper {
+        padding: 0.5rem 0;
+    }
+    
+    /* Agent Builder tablet optimizations for landscape */
+    .a2aTabletOptimizedSplitter .a2aAgentConfigPanel {
+        min-width: 25rem;
+    }
+    
+    .a2aTabletOptimizedSplitter .a2aVisualDesignerPanel {
+        min-width: 30rem;
+    }
+}
+
+/* ========================================
+   Touch-friendly interactions
+   ======================================== */
+@media (hover: none) and (pointer: coarse) {
+    /* Remove hover effects on touch devices */
+    .a2aProjectTile:hover,
+    .sapFCard:hover,
+    .a2aAgentNode:hover {
+        transform: none;
+        box-shadow: initial;
+    }
+    
+    /* Touch feedback for interactive elements */
+    .a2aProjectTile:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
+    }
+    
+    .sapMBtn:active {
+        transform: scale(0.95);
+        transition: transform 0.1s ease;
+    }
+    
+    .sapFCard:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
+    }
+    
+    /* Enhanced touch targets */
+    .sapMListItem {
+        min-height: 3rem;
+    }
+    
+    .sapMListItemBase .sapMLIBContent {
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* ========================================
+   Focus indicators for accessibility
+   ======================================== */
+.sapMBtn:focus,
+.sapMLink:focus,
+.sapMInput:focus,
+.sapMSelect:focus {
+    outline: 2px solid var(--sapContent_FocusColor);
+    outline-offset: 1px;
+}
+
+/* Enhanced focus for touch devices */
+@media (hover: none) and (pointer: coarse) {
+    .sapMBtn:focus,
+    .sapMLink:focus {
+        outline-width: 3px;
+        outline-offset: 2px;
+    }
+}
+
+/* ========================================
+   High contrast improvements
+   ======================================== */
+@media (prefers-contrast: high) {
+    .a2aProjectTile .sapMGT {
+        border-width: 2px;
+    }
+    
+    .a2aAgentNode {
+        border-width: 3px;
+    }
+}
+
+/* ========================================
+   Dark theme support
+   ======================================== */
+.sapUiTheme-sap_horizon_dark .a2aCodeEditor {
+    border-color: var(--sapField_BorderColor);
+}
+
+.sapUiTheme-sap_horizon_dark .a2aBpmnCanvas {
+    background: var(--sapGroup_ContentBackground);
+    border-color: var(--sapGroup_ContentBorderColor);
+}
+
+/* ========================================
+   High contrast theme support
+   ======================================== */
+.sapUiTheme-sap_horizon_hc_black .a2aProjectTile,
+.sapUiTheme-sap_horizon_hc_white .a2aProjectTile {
+    border: 2px solid;
+}
+
+/* ========================================
+   SAP Standard Animations
+   ======================================== */
+.a2aFadeIn {
+    animation: sapUiFadeIn var(--sapContent_AnimationDuration) var(--sapContent_Transition_TimingFunction);
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.a2aFadeIn.sapUiAnimatedElement {
+    opacity: 0;
+    transform: translateY(1rem);
+}
+
+/* ========================================
+   Component customizations
+   ======================================== */
+.a2aToolbar {
+    border-bottom: 1px solid var(--sapGroup_TitleBorderColor);
+}
+
+.a2aPanel .sapMPanelHdr {
+    background: var(--sapGroup_TitleBackground);
+}
+
+.a2aForm .sapMLabel {
+    font-weight: var(--sapFontSemiboldWeight);
+}
+
+.a2aTable .sapMListTblHeaderCell {
+    font-weight: var(--sapFontHeaderWeight);
+}

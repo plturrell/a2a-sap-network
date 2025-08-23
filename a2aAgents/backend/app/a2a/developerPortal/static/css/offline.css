@@ -1,0 +1,572 @@
+/**
+ * Offline Support CSS for SAP A2A Developer Portal
+ * Provides visual indicators and styling for offline functionality
+ */
+
+/* =========================================================== */
+/* Global Offline States                                      */
+/* =========================================================== */
+
+/* Body states for offline/online */
+body.offline {
+    --network-status-color: var(--sapCriticalColor);
+    --network-indicator: "●";
+}
+
+body.online {
+    --network-status-color: var(--sapPositiveColor);
+    --network-indicator: "●";
+}
+
+/* Network status indicator in top bar */
+.sapMShell .sapMShellHeader::before {
+    content: var(--network-indicator, "");
+    color: var(--network-status-color, var(--sapPositiveColor));
+    font-size: 0.75rem;
+    position: absolute;
+    top: 0.5rem;
+    right: 1rem;
+    z-index: 1000;
+}
+
+/* =========================================================== */
+/* Offline Status Bar                                         */
+/* =========================================================== */
+
+/* Offline status panel styling */
+#offlineStatusPanel {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    background: var(--sapShell_Background);
+    border-bottom: 1px solid var(--sapList_BorderColor);
+    box-shadow: var(--sapContent_Shadow0);
+}
+
+/* Status message strips */
+.offline-status-strip {
+    border-radius: 0.25rem;
+    margin: 0.25rem 0;
+}
+
+.offline-status-strip.online {
+    background-color: var(--sapSuccessBackground);
+    border-left: 4px solid var(--sapSuccessColor);
+}
+
+.offline-status-strip.offline {
+    background-color: var(--sapWarningBackground);
+    border-left: 4px solid var(--sapWarningColor);
+    animation: offline-pulse 2s infinite;
+}
+
+/* Pulse animation for offline status */
+@keyframes offline-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Sync progress indicator styling */
+#syncProgressIndicator {
+    height: 0.25rem;
+    border-radius: 0.125rem;
+}
+
+#syncProgressIndicator .sapMPIBar {
+    background: linear-gradient(90deg, 
+        var(--sapInformationColor) 0%, 
+        var(--sapInformationColor) 50%, 
+        transparent 50%, 
+        transparent 100%);
+    background-size: 2rem 100%;
+    animation: sync-progress 1.5s linear infinite;
+}
+
+@keyframes sync-progress {
+    0% { background-position: -2rem 0; }
+    100% { background-position: 100% 0; }
+}
+
+/* Network quality indicator */
+.network-quality-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    background-color: var(--sapNeutralBackground);
+}
+
+.network-quality-good {
+    color: var(--sapSuccessColor);
+}
+
+.network-quality-poor {
+    color: var(--sapWarningColor);
+}
+
+.network-quality-offline {
+    color: var(--sapErrorColor);
+}
+
+/* =========================================================== */
+/* Offline Data Indicators                                    */
+/* =========================================================== */
+
+/* Offline entity indicators */
+.offline-entity {
+    position: relative;
+}
+
+.offline-entity::before {
+    content: "";
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background-color: var(--sapWarningColor);
+    border-radius: 50%;
+    border: 2px solid var(--sapBackgroundColor);
+    z-index: 10;
+}
+
+.offline-entity.temp-entity::before {
+    background-color: var(--sapInformationColor);
+    animation: temp-entity-pulse 1.5s infinite;
+}
+
+.offline-entity.modified-entity::before {
+    background-color: var(--sapCriticalColor);
+}
+
+.offline-entity.synced-entity::before {
+    background-color: var(--sapSuccessColor);
+}
+
+@keyframes temp-entity-pulse {
+    0%, 100% { 
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 0.6;
+        transform: scale(1.2);
+    }
+}
+
+/* Offline data badges */
+.offline-badge {
+    display: inline-block;
+    padding: 0.125rem 0.25rem;
+    font-size: 0.625rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-radius: 0.25rem;
+    margin-left: 0.25rem;
+}
+
+.offline-badge.temp {
+    background-color: var(--sapInformationBackground);
+    color: var(--sapInformationColor);
+}
+
+.offline-badge.modified {
+    background-color: var(--sapCriticalBackground);
+    color: var(--sapCriticalColor);
+}
+
+.offline-badge.conflict {
+    background-color: var(--sapErrorBackground);
+    color: var(--sapErrorColor);
+    animation: conflict-blink 1s infinite;
+}
+
+@keyframes conflict-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* =========================================================== */
+/* Conflict Resolution Dialog                                  */
+/* =========================================================== */
+
+/* Conflict resolution dialog styling */
+#conflictResolutionDialog .sapMDialogSection {
+    padding: 1rem;
+}
+
+/* Conflict data comparison panels */
+.conflict-data-panel {
+    border: 1px solid var(--sapList_BorderColor);
+    border-radius: 0.25rem;
+    background-color: var(--sapList_Background);
+    margin: 0.5rem 0;
+}
+
+.conflict-data-panel.client-version {
+    border-left: 4px solid var(--sapInformationColor);
+}
+
+.conflict-data-panel.server-version {
+    border-left: 4px solid var(--sapSuccessColor);
+}
+
+/* Conflict data display */
+.conflict-data-display {
+    font-family: var(--sapFontMonospaceFamily);
+    font-size: 0.75rem;
+    background-color: var(--sapField_Background);
+    border: 1px solid var(--sapField_BorderColor);
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    max-height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* JSON syntax highlighting */
+.conflict-data-display .json-key {
+    color: var(--sapInformationColor);
+    font-weight: bold;
+}
+
+.conflict-data-display .json-string {
+    color: var(--sapSuccessColor);
+}
+
+.conflict-data-display .json-number {
+    color: var(--sapCriticalColor);
+}
+
+.conflict-data-display .json-boolean {
+    color: var(--sapWarningColor);
+    font-weight: bold;
+}
+
+.conflict-data-display .json-null {
+    color: var(--sapNegativeColor);
+    font-style: italic;
+}
+
+/* Conflict resolution buttons */
+.conflict-resolution-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+.conflict-resolution-buttons .sapMBtn {
+    min-width: 8rem;
+}
+
+/* =========================================================== */
+/* Sync Queue and Management                                  */
+/* =========================================================== */
+
+/* Sync queue table styling */
+.sync-queue-table {
+    margin-top: 1rem;
+}
+
+.sync-queue-item {
+    position: relative;
+}
+
+.sync-queue-item.pending {
+    background-color: var(--sapWarningBackground);
+}
+
+.sync-queue-item.in-progress {
+    background-color: var(--sapInformationBackground);
+    animation: sync-in-progress 2s infinite;
+}
+
+.sync-queue-item.completed {
+    background-color: var(--sapSuccessBackground);
+}
+
+.sync-queue-item.failed {
+    background-color: var(--sapErrorBackground);
+}
+
+@keyframes sync-in-progress {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+/* Sync operation type icons */
+.sync-operation-icon.create {
+    color: var(--sapSuccessColor);
+}
+
+.sync-operation-icon.update {
+    color: var(--sapWarningColor);
+}
+
+.sync-operation-icon.delete {
+    color: var(--sapErrorColor);
+}
+
+/* =========================================================== */
+/* Loading and Busy States                                   */
+/* =========================================================== */
+
+/* Offline loading state */
+.offline-loading {
+    position: relative;
+    opacity: 0.7;
+}
+
+.offline-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1rem;
+    height: 1rem;
+    margin: -0.5rem 0 0 -0.5rem;
+    border: 2px solid var(--sapInformationColor);
+    border-radius: 50%;
+    border-top: 2px solid transparent;
+    animation: offline-loading-spin 1s linear infinite;
+    z-index: 100;
+}
+
+@keyframes offline-loading-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* =========================================================== */
+/* Responsive Design for Mobile                              */
+/* =========================================================== */
+
+@media (max-width: 599px) {
+    /* Compact offline status bar for mobile */
+    #offlineStatusPanel {
+        padding: 0.25rem;
+    }
+    
+    #offlineStatusPanel .sapMHBox {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    /* Stack conflict resolution vertically on mobile */
+    .conflict-data-comparison {
+        flex-direction: column;
+    }
+    
+    .conflict-data-panel {
+        width: 100% !important;
+        margin: 0.25rem 0;
+    }
+    
+    /* Smaller sync queue items on mobile */
+    .sync-queue-item {
+        padding: 0.5rem;
+    }
+}
+
+/* =========================================================== */
+/* Tablet-specific optimizations                             */
+/* =========================================================== */
+
+@media (min-width: 600px) and (max-width: 1023px) {
+    /* Tablet offline status bar optimizations */
+    #offlineStatusPanel {
+        padding: 0.75rem 1rem;
+    }
+    
+    #offlineStatusPanel .sapMHBox {
+        gap: 1rem;
+    }
+    
+    /* Tablet conflict resolution dialog */
+    #conflictResolutionDialog {
+        contentWidth: 90%;
+        maxWidth: 35rem;
+    }
+    
+    .conflict-data-comparison {
+        gap: 1rem;
+    }
+    
+    .conflict-data-panel {
+        flex: 1;
+        min-width: 20rem;
+    }
+    
+    .conflict-data-display {
+        max-height: 250px;
+        font-size: 0.875rem;
+    }
+    
+    /* Enhanced touch targets for tablets */
+    .conflict-resolution-buttons .sapMBtn {
+        min-width: 10rem;
+        min-height: 2.75rem;
+    }
+    
+    /* Tablet sync queue optimizations */
+    .sync-queue-item {
+        padding: 0.75rem;
+        min-height: 3rem;
+    }
+    
+    /* Larger offline indicators for tablet */
+    .offline-entity::before {
+        width: 10px;
+        height: 10px;
+        border-width: 3px;
+    }
+    
+    .offline-badge {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        min-height: 2rem;
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    /* Network quality indicator tablet optimizations */
+    .network-quality-indicator {
+        padding: 0.5rem 0.75rem;
+        min-height: 2.5rem;
+    }
+    
+    /* Tablet-optimized progress indicators */
+    #syncProgressIndicator {
+        height: 0.5rem;
+        border-radius: 0.25rem;
+    }
+}
+
+/* Tablet portrait orientation */
+@media (min-width: 600px) and (max-width: 1023px) and (orientation: portrait) {
+    .conflict-data-comparison {
+        flex-direction: column;
+    }
+    
+    .conflict-data-panel {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    #conflictResolutionDialog {
+        maxWidth: 90%;
+    }
+}
+
+/* Tablet landscape orientation */
+@media (min-width: 600px) and (max-width: 1023px) and (orientation: landscape) {
+    .conflict-data-comparison {
+        flex-direction: row;
+    }
+    
+    .conflict-data-panel {
+        flex: 1;
+        min-width: 15rem;
+    }
+}
+
+/* Touch-friendly interactions for tablets */
+@media (hover: none) and (pointer: coarse) {
+    .conflict-resolution-buttons .sapMBtn:active {
+        transform: scale(0.95);
+        transition: transform 0.1s ease;
+    }
+    
+    .sync-queue-item {
+        min-height: 3.5rem;
+        padding: 1rem;
+    }
+    
+    .offline-entity::before {
+        width: 12px;
+        height: 12px;
+    }
+}
+
+/* =========================================================== */
+/* Dark Mode Support                                         */
+/* =========================================================== */
+
+@media (prefers-color-scheme: dark) {
+    body.offline {
+        --network-status-color: var(--sapCriticalColor);
+    }
+    
+    body.online {
+        --network-status-color: var(--sapPositiveColor);
+    }
+    
+    .conflict-data-display {
+        background-color: var(--sapField_Background);
+        color: var(--sapField_TextColor);
+    }
+    
+    .offline-entity::before {
+        border-color: var(--sapBackgroundColor);
+    }
+}
+
+/* =========================================================== */
+/* Accessibility Enhancements                               */
+/* =========================================================== */
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .offline-entity::before {
+        border-width: 3px;
+    }
+    
+    .offline-badge {
+        border: 2px solid currentColor;
+    }
+    
+    .conflict-data-panel {
+        border-width: 2px;
+    }
+}
+
+/* Focus indicators for keyboard navigation */
+.offline-controls *:focus {
+    outline: 2px solid var(--sapContent_FocusColor);
+    outline-offset: 2px;
+}
+
+/* Screen reader only content */
+.sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* =========================================================== */
+/* Print Styles                                              */
+/* =========================================================== */
+
+@media print {
+    #offlineStatusPanel {
+        display: none !important;
+    }
+    
+    .offline-entity::before {
+        display: none !important;
+    }
+    
+    .offline-badge {
+        border: 1px solid var(--sapTextColor);
+        background: transparent !important;
+        color: var(--sapTextColor) !important;
+    }
+}

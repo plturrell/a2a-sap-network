@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<core:FragmentDefinition 
+    xmlns="sap.m" 
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.f">
+
+    <!-- Offline Status Bar Fragment -->
+    <Panel id="offlineStatusPanel" 
+           visible="{offline>/showOfflineMessage}"
+           class="sapUiTinyMargin sapUiResponsiveContentPadding"
+           backgroundDesign="Transparent">
+        
+        <!-- Online Status Bar -->
+        <MessageStrip id="onlineStatusStrip"
+                      text="{i18n>offline.connected}"
+                      type="Success"
+                      showIcon="true"
+                      showCloseButton="false"
+                      visible="{offline>/isOnline}"
+                      class="sapUiTinyMarginBottom">
+            <customData>
+                <core:CustomData key="status" value="online"/>
+            </customData>
+        </MessageStrip>
+        
+        <!-- Offline Status Bar -->
+        <MessageStrip id="offlineStatusStrip"
+                      text="{parts: ['offline>/pendingChanges', 'i18n>offline.workingOfflineWithChanges', 'i18n>offline.workingOffline'], formatter: '.formatOfflineMessage'}"
+                      type="Warning"
+                      showIcon="true"
+                      showCloseButton="false"
+                      visible="{= !${offline>/isOnline}}"
+                      class="sapUiTinyMarginBottom">
+            <customData>
+                <core:CustomData key="status" value="offline"/>
+            </customData>
+        </MessageStrip>
+        
+        <!-- Sync Status Information -->
+        <HBox alignItems="Center" 
+              justifyContent="SpaceBetween"
+              visible="{= ${offline>/pendingChanges} > 0 || ${offline>/conflicts} > 0}"
+              class="sapUiTinyMarginTop">
+            
+            <!-- Left side: Status information -->
+            <VBox>
+                <!-- Pending Changes -->
+                <HBox alignItems="Center" 
+                      visible="{= ${offline>/pendingChanges} > 0}">
+                    <core:Icon src="sap-icon://pending" 
+                             color="Warning" 
+                             class="sapUiTinyMarginEnd"/>
+                    <Text text="{parts: ['offline>/pendingChanges', 'i18n>offline.pendingChanges'], formatter: '.formatPendingChanges'}" 
+                          class="sapThemeTextColorSecondary"/>
+                </HBox>
+                
+                <!-- Conflicts -->
+                <HBox alignItems="Center" 
+                      visible="{= ${offline>/conflicts} > 0}"
+                      class="sapUiTinyMarginTop">
+                    <core:Icon src="sap-icon://alert" 
+                             color="Critical" 
+                             class="sapUiTinyMarginEnd"/>
+                    <Text text="{parts: ['offline>/conflicts', 'i18n>offline.conflicts'], formatter: '.formatConflicts'}" 
+                          class="sapThemeTextColorCritical"/>
+                </HBox>
+                
+                <!-- Last Sync Time -->
+                <HBox alignItems="Center" 
+                      visible="{= !!${offline>/lastSync}}"
+                      class="sapUiTinyMarginTop">
+                    <core:Icon src="sap-icon://synchronize" 
+                             color="Neutral" 
+                             class="sapUiTinyMarginEnd"/>
+                    <Text text="{parts: ['offline>/lastSync', 'i18n>offline.lastSync'], formatter: '.formatLastSync'}" 
+                          class="sapThemeTextColorSecondary"/>
+                </HBox>
+            </VBox>
+            
+            <!-- Right side: Action buttons -->
+            <HBox alignItems="Center">
+                <!-- Sync Now Button -->
+                <Button id="syncNowButton"
+                        text="{i18n>offline.syncNow}"
+                        icon="sap-icon://synchronize"
+                        type="Emphasized"
+                        enabled="{offline>/isOnline}"
+                        press="onSyncNow"
+                        class="sapUiTinyMarginEnd"/>
+                
+                <!-- Offline Settings Menu -->
+                <MenuButton id="offlineSettingsButton"
+                           icon="sap-icon://action-settings"
+                           tooltip="{i18n>offline.settings}"
+                           type="Transparent">
+                    <menu>
+                        <Menu>
+                            <MenuItem text="{i18n>offline.viewQueue}" 
+                                     icon="sap-icon://list" 
+                                     press="onViewSyncQueue"/>
+                            <MenuItem text="{i18n>offline.resolveConflicts}" 
+                                     icon="sap-icon://alert" 
+                                     enabled="{= ${offline>/conflicts} > 0}"
+                                     press="onResolveConflicts"/>
+                            <MenuItem text="{i18n>offline.clearData}" 
+                                     icon="sap-icon://delete" 
+                                     press="onClearOfflineData"
+                                     startsSection="true"/>
+                            <MenuItem text="{i18n>offline.settings}" 
+                                     icon="sap-icon://settings" 
+                                     press="onOfflineSettings"/>
+                        </Menu>
+                    </menu>
+                </MenuButton>
+                
+                <!-- Close Button -->
+                <Button id="closeOfflineBarButton"
+                        icon="sap-icon://decline"
+                        tooltip="{i18n>common.close}"
+                        type="Transparent"
+                        press="onCloseOfflineBar"/>
+            </HBox>
+        </HBox>
+        
+        <!-- Sync Progress Indicator -->
+        <ProgressIndicator id="syncProgressIndicator"
+                          visible="{offline>/syncStatus/syncInProgress}"
+                          state="Information"
+                          showValue="false"
+                          displayValue="{i18n>offline.syncing}"
+                          class="sapUiTinyMarginTop"/>
+        
+        <!-- Network Quality Indicator -->
+        <HBox alignItems="Center" 
+              justifyContent="Center"
+              visible="{offline>/isOnline}"
+              class="sapUiTinyMarginTop">
+            <core:Icon id="networkQualityIcon"
+                     src="sap-icon://connected"
+                     color="Good"
+                     class="sapUiTinyMarginEnd"/>
+            <Text id="networkQualityText"
+                  text="{i18n>offline.networkGood}"
+                  class="sapThemeTextColorSecondary"/>
+        </HBox>
+    </Panel>
+</core:FragmentDefinition>

@@ -1,0 +1,167 @@
+# SAP API Management Gateway Configuration
+# Enterprise API Gateway Pattern Implementation
+
+apiVersion: gateway.sap.com/v1
+kind: APIGateway
+metadata:
+  name: a2a-api-gateway
+  namespace: a2a-platform
+  labels:
+    app: a2a-developer-portal
+    tier: api-gateway
+    
+spec:
+  # Gateway Configuration
+  gateway:
+    type: "SAP API Management"
+    tier: "enterprise"
+    replicas: 3
+    
+  # API Definitions
+  apis:
+    - name: "A2A Registry API"
+      version: "v1"
+      basePath: "/api/v1/registry"
+      backend:
+        service: "a2a-registry-service"
+        port: 8080
+      rateLimit:
+        requests: 1000
+        period: "1m"
+      authentication:
+        type: "oauth2"
+        provider: "xsuaa"
+        
+    - name: "A2A Agent API"
+      version: "v1"
+      basePath: "/api/v1/agents"
+      backend:
+        service: "a2a-agent-service"
+        port: 8081
+      rateLimit:
+        requests: 500
+        period: "1m"
+      authentication:
+        type: "oauth2"
+        provider: "xsuaa"
+        
+    - name: "A2A Orchestration API"
+      version: "v1"
+      basePath: "/api/v1/orchestration"
+      backend:
+        service: "a2a-orchestration-service"
+        port: 8082
+      rateLimit:
+        requests: 200
+        period: "1m"
+      authentication:
+        type: "oauth2"
+        provider: "xsuaa"
+        
+  # Security Policies
+  security:
+    cors:
+      enabled: true
+      allowedOrigins:
+        - "https://*.sap.com"
+        - "https://*.hana.ondemand.com"
+      allowedMethods:
+        - "GET"
+        - "POST"
+        - "PUT"
+        - "DELETE"
+        - "OPTIONS"
+      allowedHeaders:
+        - "Content-Type"
+        - "Authorization"
+        - "X-Request-ID"
+        - "X-Correlation-ID"
+        
+    headers:
+      requestHeaders:
+        add:
+          - name: "X-Gateway-Request-ID"
+            value: "${request.id}"
+          - name: "X-Gateway-Timestamp"
+            value: "${request.timestamp}"
+      responseHeaders:
+        add:
+          - name: "X-Content-Type-Options"
+            value: "nosniff"
+          - name: "X-Frame-Options"
+            value: "DENY"
+          - name: "X-XSS-Protection"
+            value: "1; mode=block"
+          - name: "Strict-Transport-Security"
+            value: "max-age=31536000; includeSubDomains"
+            
+  # Traffic Management
+  trafficManagement:
+    loadBalancing:
+      algorithm: "round-robin"
+      healthCheck:
+        path: "/health"
+        interval: "30s"
+        timeout: "10s"
+        
+    circuitBreaker:
+      enabled: true
+      threshold: 5
+      timeout: "60s"
+      
+    retry:
+      attempts: 3
+      backoff: "exponential"
+      
+  # Monitoring & Analytics
+  monitoring:
+    metrics:
+      enabled: true
+      provider: "prometheus"
+      
+    logging:
+      enabled: true
+      level: "info"
+      format: "json"
+      
+    tracing:
+      enabled: true
+      provider: "opentelemetry"
+      samplingRate: 0.1
+      
+  # API Documentation
+  documentation:
+    openapi:
+      enabled: true
+      path: "/api-docs"
+      
+    developer:
+      portal: "https://api.a2a-platform.sap.com"
+      
+  # Quota Management
+  quotas:
+    - name: "basic"
+      requests: 10000
+      period: "1d"
+      
+    - name: "standard"
+      requests: 100000
+      period: "1d"
+      
+    - name: "premium"
+      requests: 1000000
+      period: "1d"
+      
+  # Transformation Policies
+  transformations:
+    request:
+      - type: "header"
+        action: "remove"
+        name: "X-Internal-Token"
+        
+    response:
+      - type: "body"
+        action: "filter"
+        fields:
+          - "internal_id"
+          - "debug_info"

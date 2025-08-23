@@ -1,0 +1,407 @@
+<mvc:View
+    controllerName="a2a.portal.controller.Projects"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core">
+    
+    <f:DynamicPage id="projectsPage" 
+                   headerExpanded="true" 
+                   showFooter="false"
+                   class="a2a-tablet-page">
+        
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>projectsTitle}" level="H2"/>
+                </f:heading>
+                <f:actions>
+                    <Button text="{i18n>createProject}" 
+                           type="Emphasized" 
+                           icon="sap-icon://add" 
+                           tooltip="{i18n>createProjectTooltip}"
+                           press="onCreateProject"/>
+                    <Button text="{i18n>importProject}" 
+                           icon="sap-icon://upload" 
+                           tooltip="{i18n>importProjectTooltip}"
+                           press="onImportProject"/>
+                    <MenuButton text="{i18n>export}" 
+                               icon="sap-icon://download" 
+                               tooltip="{i18n>exportOptionsTooltip}"
+                               buttonMode="Split">
+                        <menu>
+                            <Menu>
+                                <MenuItem text="{i18n>exportAll}" 
+                                        icon="sap-icon://download"
+                                        press="onExportAll"/>
+                                <MenuItem text="{i18n>exportFiltered}" 
+                                        icon="sap-icon://filter"
+                                        press="onExportWithFilters"/>
+                                <MenuItem text="{i18n>exportTemplate}" 
+                                        icon="sap-icon://document"
+                                        press="onExportTemplateDownload"/>
+                            </Menu>
+                        </menu>
+                    </MenuButton>
+                    <Button icon="sap-icon://refresh" 
+                           tooltip="{i18n>refreshProjectsTooltip}"
+                           press="onRefresh"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <MessageStrip text="{i18n>projectsDescription}" 
+                            type="Information" 
+                            showIcon="true" 
+                            class="sapUiMediumMarginBottom"
+                            ariaLabelledBy="projectsDescriptionLabel"/>
+                
+                <Panel headerText="{i18n>quickActions}" 
+                       expandable="true" 
+                       expanded="false"
+                       class="sapUiResponsiveMargin">
+                    <content>
+                        <HBox class="sapUiMediumMargin">
+                            <Button text="{i18n>createFromTemplate}" 
+                                   icon="sap-icon://template" 
+                                   tooltip="{i18n>createFromTemplateTooltip}"
+                                   press="onCreateFromTemplate"
+                                   class="sapUiTinyMarginEnd"/>
+                            <Button text="{i18n>cloneProject}" 
+                                   icon="sap-icon://copy" 
+                                   tooltip="{i18n>cloneProjectTooltip}"
+                                   press="onCloneProject"
+                                   class="sapUiTinyMarginEnd"/>
+                            <Button text="{i18n>viewTutorials}" 
+                                   icon="sap-icon://learning-assistant" 
+                                   tooltip="{i18n>viewTutorialsTooltip}"
+                                   press="onViewTutorials"/>
+                        </HBox>
+                    </content>
+                </Panel>
+            </f:DynamicPageHeader>
+        </f:header>
+
+        <f:content>
+            <VBox class="sapUiMediumMargin a2a-pull-to-refresh" id="projectsContainer">
+                <!-- Pull-to-refresh indicator -->
+                <HBox class="a2a-pull-to-refresh-indicator" visible="false" id="pullToRefreshIndicator">
+                    <BusyIndicator size="1rem" class="sapUiTinyMarginEnd"/>
+                    <Text text="{i18n>pullToRefresh}"/>
+                </HBox>
+                
+                <!-- Search and Filter Bar -->
+                <Panel class="sapUiNoContentPadding">
+                    <Toolbar>
+                        <SearchField id="searchField" 
+                                   width="20rem" 
+                                   placeholder="{i18n>searchProjects}"
+                                   tooltip="{i18n>searchProjectsTooltip}"
+                                   search="onSearch"
+                                   ariaLabelledBy="searchFieldLabel"
+                                   ariaDescribedBy="searchFieldDescription"/>
+                        <ToolbarSpacer/>
+                        <SegmentedButton selectedKey="tiles" 
+                                       selectionChange="onViewChange">
+                            <items>
+                                <SegmentedButtonItem key="tiles" 
+                                                   icon="sap-icon://grid" 
+                                                   tooltip="{i18n>tilesViewTooltip}"/>
+                                <SegmentedButtonItem key="table" 
+                                                   icon="sap-icon://table-view" 
+                                                   tooltip="{i18n>tableViewTooltip}"/>
+                            </items>
+                        </SegmentedButton>
+                        <Button id="filterButton"
+                               icon="sap-icon://filter" 
+                               tooltip="{i18n>filterProjectsTooltip}"
+                               press="onOpenFilterDialog"/>
+                        <Button icon="sap-icon://sort" 
+                               tooltip="{i18n>sortProjectsTooltip}"
+                               press="onOpenSortDialog"/>
+                        <Button icon="sap-icon://action-settings" 
+                               tooltip="{i18n>configureColumnsTooltip}"
+                               press="onOpenColumnConfigDialog"/>
+                        <MenuButton icon="sap-icon://customize" 
+                                   tooltip="{i18n>densitySettingsTooltip}"
+                                   text=""
+                                   buttonMode="Split">
+                            <menu>
+                                <Menu>
+                                    <MenuItem text="{i18n>cozyDensity}" 
+                                            icon="sap-icon://detail-view"
+                                            press="onSetDensity"
+                                            customData="{\"key\": \"cozy\"}"/>
+                                    <MenuItem text="{i18n>compactDensity}" 
+                                            icon="sap-icon://list"
+                                            press="onSetDensity"
+                                            customData="{\"key\": \"compact\"}"/>
+                                    <MenuItem text="{i18n>condensedDensity}" 
+                                            icon="sap-icon://grid"
+                                            press="onSetDensity"
+                                            customData="{\"key\": \"condensed\"}"/>
+                                </Menu>
+                            </menu>
+                        </MenuButton>
+                        <MenuButton icon="sap-icon://save" 
+                                   tooltip="{i18n>savedViewsTooltip}"
+                                   text=""
+                                   buttonMode="Split">
+                            <menu>
+                                <Menu id="savedViewsMenu">
+                                    <MenuItem text="{i18n>saveCurrentView}" 
+                                            icon="sap-icon://save"
+                                            press="onSaveCurrentView"/>
+                                    <MenuItem text="{i18n>manageViews}" 
+                                            icon="sap-icon://edit"
+                                            press="onManageSavedViews"/>
+                                </Menu>
+                            </menu>
+                        </MenuButton>
+                    </Toolbar>
+                </Panel>
+
+                <!-- Projects Content -->
+                <Panel class="sapUiMediumMarginTop">
+                    
+                    <!-- Tiles View -->
+                    <f:GridContainer id="tilesContainer"
+                                   snapToRow="true"
+                                   visible="{= ${view>/viewMode} === 'tiles' }">
+                        <f:layout>
+                            <f:GridContainerSettings rowSize="5rem" columnSize="20rem" gap="1rem"/>
+                        </f:layout>
+                        <f:layoutData>
+                            <f:GridContainerItemLayoutData minRows="6" columns="4"/>
+                        </f:layoutData>
+                        
+                        <!-- Project tiles will be added here dynamically -->
+                    </f:GridContainer>
+
+                    <!-- Table View -->
+                    <Table id="projectsTable" 
+                           items="{
+                               path: 'view>/projects',
+                               sorter: {
+                                   path: 'last_modified',
+                                   descending: true
+                               }
+                           }"
+                           visible="{= ${view>/viewMode} === 'table' }"
+                           growing="true"
+                           growingThreshold="20"
+                           mode="MultiSelect"
+                           itemPress="onProjectPress"
+                           selectionChange="onSelectionChange"
+                           swipeContent="{path: 'view>/swipeContent'}"
+                           class="a2a-tablet-table"
+                           ariaLabelledBy="projectsTableTitle"
+                           ariaDescribedBy="projectsTableDescription">
+                        
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="{i18n>projectsList} ({= ${view>/projects}.length })"/>
+                                <ToolbarSpacer/>
+                                <Button id="selectAllButton"
+                                       text="{i18n>selectAll}" 
+                                       icon="sap-icon://multi-select" 
+                                       tooltip="{i18n>selectAllTooltip}"
+                                       press="onSelectAll"
+                                       type="Transparent"/>
+                                <Button id="deselectAllButton"
+                                       text="{i18n>deselectAll}" 
+                                       icon="sap-icon://clear-all" 
+                                       tooltip="{i18n>deselectAllTooltip}"
+                                       press="onDeselectAll"
+                                       type="Transparent"/>
+                                <Button id="exportSelectedButton"
+                                       text="{i18n>export}" 
+                                       icon="sap-icon://download" 
+                                       tooltip="{i18n>exportSelectedTooltip}"
+                                       press="onExportSelected"
+                                       enabled="false"/>
+                                <Button id="archiveSelectedButton"
+                                       text="{i18n>archive}" 
+                                       icon="sap-icon://inbox" 
+                                       tooltip="{i18n>archiveSelectedTooltip}"
+                                       press="onArchiveSelected"
+                                       enabled="false"
+                                       type="Transparent"/>
+                                <Button id="bulkStatusButton"
+                                       text="{i18n>changeStatus}" 
+                                       icon="sap-icon://status-positive" 
+                                       tooltip="{i18n>changeStatusTooltip}"
+                                       press="onBulkStatusChange"
+                                       enabled="false"
+                                       type="Transparent"/>
+                                <Button id="deleteSelectedButton"
+                                       text="{i18n>delete}" 
+                                       icon="sap-icon://delete" 
+                                       type="Transparent"
+                                       tooltip="{i18n>deleteSelectedTooltip}"
+                                       press="onDeleteSelected"
+                                       enabled="false"/>
+                            </Toolbar>
+                        </headerToolbar>
+
+                        <columns>
+                            <Column>
+                                <Text text="{i18n>name}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>description}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>agents}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>lastModified}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>status}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>actions}"/>
+                            </Column>
+                        </columns>
+
+                        <items>
+                            <ColumnListItem press="onProjectPress"
+                                          type="Active"
+                                          ariaLabelledBy="projectNameLink"
+                                          ariaDescribedBy="projectDescription"
+                                          class="a2a-project-row"
+                                          customData="{
+                                              path: '',
+                                              templateShareable: false
+                                          }"
+                                <cells>
+                                    <VBox>
+                                        <!-- Editable project name -->
+                                        <Input value="{name}" 
+                                               visible="{= ${view>/editMode} === ${project_id} }"
+                                               submit="onProjectNameSubmit"
+                                               change="onProjectNameChange"
+                                               class="a2a-inline-edit-name"/>
+                                        <Link text="{name}" 
+                                              press="onProjectPress"
+                                              visible="{= ${view>/editMode} !== ${project_id} }"/>
+                                        <Text text="{project_id}" class="sapUiSmallMarginTop"/>
+                                    </VBox>
+                                    <!-- Editable project description -->
+                                    <VBox>
+                                        <TextArea value="{description}" 
+                                                  visible="{= ${view>/editMode} === ${project_id} }"
+                                                  rows="2"
+                                                  submit="onProjectDescriptionSubmit"
+                                                  change="onProjectDescriptionChange"
+                                                  class="a2a-inline-edit-description"/>
+                                        <Text text="{description}" 
+                                              maxLines="2"
+                                              visible="{= ${view>/editMode} !== ${project_id} }"/>
+                                    </VBox>
+                                    <ObjectNumber number="{= ${agents}.length }" 
+                                                unit="{i18n>agentsUnit}"/>
+                                    <Text text="{path: 'last_modified', formatter: '.formatDate'}"/>
+                                    <ObjectStatus text="{status}" 
+                                                state="{path: 'status', formatter: '.formatStatusState'}"/>
+                                    <!-- Regular actions (when not in edit mode) -->
+                                    <HBox class="a2a-project-actions" 
+                                          visible="{= (${view>/showRowActions} || false) && ${view>/editMode} !== ${project_id} }">
+                                        <Button icon="sap-icon://edit" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>quickEdit}"
+                                               press="onQuickEditProject"
+                                               ariaLabel="{i18n>quickEditProject}"
+                                               class="a2a-hover-action"/>
+                                        <Button icon="sap-icon://copy" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>clone}"
+                                               press="onCloneProject"
+                                               ariaLabel="{i18n>cloneProject}"
+                                               class="a2a-hover-action"/>
+                                        <Button icon="sap-icon://inbox" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>archive}"
+                                               press="onArchiveProject"
+                                               ariaLabel="{i18n>archiveProject}"
+                                               class="a2a-hover-action"/>
+                                        <Button icon="sap-icon://delete" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>delete}"
+                                               press="onDeleteProject"
+                                               ariaLabel="{i18n>deleteProject}"
+                                               class="a2a-hover-action a2a-danger-action"/>
+                                    </HBox>
+                                    <!-- Edit mode actions -->
+                                    <HBox class="a2a-edit-actions" 
+                                          visible="{= ${view>/editMode} === ${project_id} }">
+                                        <Button icon="sap-icon://accept" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>saveChanges}"
+                                               press="onSaveQuickEdit"
+                                               ariaLabel="{i18n>saveChanges}"
+                                               class="a2a-edit-action a2a-success-action"/>
+                                        <Button icon="sap-icon://cancel" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>cancelEdit}"
+                                               press="onCancelQuickEdit"
+                                               ariaLabel="{i18n>cancelEdit}"
+                                               class="a2a-edit-action a2a-neutral-action"/>
+                                    </HBox>
+                                    <!-- Quick action overlay for hover -->
+                                    <HBox class="a2a-quick-actions" visible="false">
+                                        <Button icon="sap-icon://open-folder" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>quickOpen}"
+                                               press="onQuickOpenProject"
+                                               ariaLabel="{i18n>quickOpenProject}"
+                                               class="a2a-quick-action"/>
+                                        <Button icon="sap-icon://favorite" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>addToFavorites}"
+                                               press="onToggleFavorite"
+                                               ariaLabel="{i18n>toggleFavorite}"
+                                               class="a2a-quick-action"/>
+                                        <Button icon="sap-icon://share" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>share}"
+                                               press="onShareProject"
+                                               ariaLabel="{i18n>shareProject}"
+                                               class="a2a-quick-action"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+
+                    <!-- Empty State -->
+                    <VBox alignItems="Center" 
+                          justifyContent="Center" 
+                          height="20rem"
+                          visible="{= !${view>/projects} || ${view>/projects}.length === 0 }"
+                          role="status"
+                          ariaLive="polite">
+                        <core:Icon src="sap-icon://folder" 
+                                 size="4rem" 
+                                 color="Neutral"
+                                 class="sapUiMediumMarginBottom"/>
+                        <Title text="{i18n>noProjects}" 
+                              level="H3" 
+                              textAlign="Center"/>
+                        <Text text="{i18n>noProjectsDescription}" 
+                             textAlign="Center" 
+                             class="sapUiMediumMarginBottom"/>
+                        <Button text="{i18n>createFirstProject}" 
+                               type="Emphasized" 
+                               icon="sap-icon://add" 
+                               press="onCreateProject"/>
+                    </VBox>
+
+                </Panel>
+            </VBox>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

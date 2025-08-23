@@ -1,0 +1,83 @@
+# Cloud Foundry deployment ignore file
+# Files and directories listed here will not be uploaded to BTP
+
+# Dependencies (will be installed on BTP)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Development files
+.env
+.env.local
+.env.development
+*.env
+
+# Test files
+test/
+tests/
+spec/
+__tests__/
+coverage/
+.nyc_output/
+*.test.js
+*.spec.js
+testBothEnvironments.js
+validateIntegration.js
+
+# Documentation
+*.md
+docs/
+README*
+DEPLOYMENT*
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build artifacts
+dist/
+build/
+*.log
+logs/
+tmp/
+temp/
+
+# Development scripts
+deploy-local.sh
+start.sh
+package-minimal.json
+package-full.json
+
+# MTA build archives (will be deployed separately)
+mta_archives/
+*.mtar
+
+# Database development files
+db/src/.hdiconfig
+db/src/.hdinamespace
+
+# Python files (not needed for Node.js deployment)
+*.py
+__pycache__/
+*.pyc
+
+# Backup files
+*.backup
+*.bak
+*-backup.js
+*-corrected.js
+*-minimal.js
+
+# Local configuration
+default-env.json
+.hdiconfig
+.che/

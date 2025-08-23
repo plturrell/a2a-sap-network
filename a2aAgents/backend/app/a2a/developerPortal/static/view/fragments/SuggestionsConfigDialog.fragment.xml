@@ -1,0 +1,121 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        title="Configure AI Suggestions"
+        resizable="true"
+        draggable="true"
+        contentWidth="500px"
+        contentHeight="400px"
+        type="Message">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Main Settings -->
+                <form:SimpleForm
+                    maxContainerCols="1"
+                    editable="true"
+                    layout="ResponsiveGridLayout"
+                    labelSpanXL="4"
+                    labelSpanL="4"
+                    labelSpanM="4"
+                    labelSpanS="12"
+                    adjustLabelSpan="false"
+                    emptySpanXL="0"
+                    emptySpanL="0"
+                    emptySpanM="0"
+                    emptySpanS="0"
+                    columnsXL="1"
+                    columnsL="1"
+                    columnsM="1"
+                    class="sapUiMediumMarginBottom">
+                    
+                    <form:content>
+                        <core:Title text="General Settings"/>
+                        
+                        <Label text="Enable AI Suggestions"/>
+                        <Switch state="{view>/suggestions/userPreferences/enableAI}"
+                               change="onSuggestionsSettingChange"/>
+                        
+                        <Label text="Show Delay (ms)"/>
+                        <StepInput value="{view>/suggestions/showDelay}"
+                                  min="500"
+                                  max="5000"
+                                  step="250"
+                                  width="150px"/>
+                        
+                        <Label text="Max Suggestions"/>
+                        <StepInput value="{view>/suggestions/maxSuggestions}"
+                                  min="1"
+                                  max="10"
+                                  step="1"
+                                  width="100px"/>
+                        
+                        <core:Title text="Suggestion Types"/>
+                        
+                        <Label text="Validation Suggestions"/>
+                        <Switch state="{view>/suggestions/userPreferences/showValidationSuggestions}"
+                               tooltip="Show tips for field validation and best practices"/>
+                        
+                        <Label text="Auto-completion"/>  
+                        <Switch state="{view>/suggestions/userPreferences/showCompletionSuggestions}"
+                               tooltip="Suggest completions based on common patterns"/>
+                        
+                        <Label text="Optimization Tips"/>
+                        <Switch state="{view>/suggestions/userPreferences/showOptimizationSuggestions}"
+                               tooltip="Provide suggestions for better project setup"/>
+                        
+                        <Label text="Context Awareness"/>
+                        <Switch state="{view>/suggestions/contextAware}"
+                               tooltip="Generate suggestions based on other field values"/>
+                    </form:content>
+                </form:SimpleForm>
+                
+                <!-- Feedback Statistics -->
+                <Panel headerText="Learning Statistics" expandable="true" expanded="false">
+                    <content>
+                        <VBox class="sapUiSmallMargin">
+                            <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                                <Text text="Accepted Suggestions: " class="sapUiTinyMarginEnd"/>
+                                <ObjectNumber number="{= ${view>/suggestions/feedback/accepted}.length }"
+                                            state="Success"/>
+                            </HBox>
+                            <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                                <Text text="Rejected Suggestions: " class="sapUiTinyMarginEnd"/>
+                                <ObjectNumber number="{= ${view>/suggestions/feedback/rejected}.length }"
+                                            state="Error"/>
+                            </HBox>
+                            <HBox alignItems="Center">
+                                <Text text="Success Rate: " class="sapUiTinyMarginEnd"/>
+                                <ObjectNumber 
+                                    number="{= Math.round((${view>/suggestions/feedback/accepted}.length / 
+                                           (${view>/suggestions/feedback/accepted}.length + ${view>/suggestions/feedback/rejected}.length || 1)) * 100) }"
+                                    unit="%"
+                                    state="Indication01"/>
+                            </HBox>
+                        </VBox>
+                    </content>
+                </Panel>
+                
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button text="Reset to Defaults" 
+                    icon="sap-icon://refresh"
+                    type="Default"
+                    press="onResetSuggestionsConfig"/>
+            <Button text="Save Configuration" 
+                    icon="sap-icon://save"
+                    type="Emphasized"
+                    press="onSaveSuggestionsConfig"/>
+            <Button text="Cancel" 
+                    icon="sap-icon://cancel"
+                    type="Default"
+                    press="onCancelSuggestionsConfig"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

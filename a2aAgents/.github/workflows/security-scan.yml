@@ -1,0 +1,103 @@
+name: Security Scanning
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'  # Run every Monday at 2 AM
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  security-scan:
+    name: Security Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  dependency-check:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          cd a2a_network && npm install
+          cd ../a2a_agents/backend/app/a2a/developer_portal/cap && npm install
+
+      - name: Run npm audit
+        run: |
+          cd a2a_network
+          npm audit --audit-level high --production
+          cd ../a2a_agents/backend/app/a2a/developer_portal/cap
+          npm audit --audit-level high --production
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Python security tools
+        run: |
+          pip install safety bandit
+
+      - name: Run Python security checks
+        run: |
+          # Check for known security vulnerabilities in Python packages
+          safety check --json || echo "Safety check completed"
+          
+          # Run bandit security linter for Python code
+          find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*" | xargs bandit -r || echo "Bandit scan completed"
+
+  smart-contract-security:
+    name: Smart Contract Security Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Setup Python for Slither
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Slither
+        run: |
+          pip install slither-analyzer
+
+      - name: Run Slither Analysis
+        run: |
+          cd a2a_network
+          slither . --exclude-dependencies --json slither-report.json || echo "Slither analysis completed"
+
+      - name: Upload Slither Results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: slither-security-report
+          path: a2a_network/slither-report.json

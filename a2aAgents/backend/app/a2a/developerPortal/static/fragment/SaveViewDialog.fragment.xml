@@ -1,0 +1,61 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <Dialog title="{i18n>saveView}" 
+            contentWidth="450px" 
+            contentHeight="350px"
+            resizable="true"
+            draggable="true"
+            class="a2a-save-view-dialog">
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <Label text="{i18n>viewName}" required="true" 
+                       class="sapUiMediumMarginBottom"/>
+                <Input value="{saveView>/name}" 
+                       placeholder="{i18n>enterViewName}"
+                       valueState="{= ${saveView>/name} ? 'None' : 'Error' }"
+                       valueStateText="{i18n>viewNameRequired}"
+                       maxLength="50"
+                       class="sapUiMediumMarginBottom"/>
+                       
+                <Label text="{i18n>description}" 
+                       class="sapUiMediumMarginBottom"/>
+                <TextArea value="{saveView>/description}" 
+                          placeholder="{i18n>enterViewDescription}"
+                          rows="3"
+                          maxLength="200"
+                          class="sapUiMediumMarginBottom"/>
+                
+                <CheckBox selected="{saveView>/setAsDefault}" 
+                          text="{i18n>setAsDefaultView}"
+                          class="sapUiMediumMarginBottom"/>
+                
+                <!-- View State Summary -->
+                <Panel headerText="{i18n>viewStateSummary}" 
+                       class="sapUiMediumMarginTop"
+                       expandable="true"
+                       expanded="false">
+                    <content>
+                        <VBox class="sapUiSmallMargin">
+                            <Text text="{i18n>viewMode}: {saveView>/currentState/viewMode}"/>
+                            <Text text="{i18n>density}: {saveView>/currentState/density}"/>
+                            <Text text="{i18n>searchFilter}: {saveView>/currentState/filters/search}"/>
+                            <Text text="{i18n>sortingField}: {saveView>/currentState/sorting/field}"/>
+                            <Text text="{i18n>sortingOrder}: {= ${saveView>/currentState/sorting/descending} ? 'Descending' : 'Ascending' }"/>
+                        </VBox>
+                    </content>
+                </Panel>
+            </VBox>
+        </content>
+        <beginButton>
+            <Button text="{i18n>save}" 
+                    type="Emphasized" 
+                    press="onConfirmSaveView"
+                    icon="sap-icon://save"
+                    enabled="{= !!${saveView>/name} }"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>cancel}" 
+                    press="onCancelSaveView"
+                    icon="sap-icon://cancel"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

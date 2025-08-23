@@ -1,0 +1,373 @@
+<mvc:View
+    controllerName="a2a.portal.controller.Testing"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:card="sap.f.cards"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:viz="sap.viz.ui5.controls"
+    displayBlock="true">
+    
+    <f:DynamicPage id="testingPage" 
+                   class="a2a-tablet-page"
+                   headerExpanded="true" 
+                   showFooter="false">
+        
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>testingPageTitle}" level="H2"/>
+                </f:heading>
+                <f:actions>
+                    <Button text="{i18n>runAllTests}" 
+                           type="Emphasized" 
+                           icon="sap-icon://play" 
+                           press="onRunAllTests"/>
+                    <Button text="{i18n>createTestSuite}" 
+                           icon="sap-icon://add" 
+                           press="onCreateTestSuite"/>
+                    <Button icon="sap-icon://refresh" 
+                           tooltip="{i18n>refresh}"
+                           press="onRefresh"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <MessageStrip text="{i18n>testingDescription}" 
+                            type="Information" 
+                            showIcon="true" 
+                            class="sapUiMediumMarginBottom"/>
+                
+                <Panel headerText="{i18n>quickActions}" 
+                       expandable="true" 
+                       expanded="false"
+                       class="sapUiResponsiveMargin">
+                    <content>
+                        <HBox class="sapUiMediumMargin">
+                            <Button text="{i18n>validateContracts}" 
+                                   icon="sap-icon://shield" 
+                                   press="onValidateContracts"
+                                   class="sapUiTinyMarginEnd"/>
+                            <Button text="{i18n>performanceTests}" 
+                                   icon="sap-icon://performance" 
+                                   press="onRunPerformanceTests"
+                                   class="sapUiTinyMarginEnd"/>
+                            <Button text="{i18n>securityScans}" 
+                                   icon="sap-icon://locked" 
+                                   press="onRunSecurityScans"/>
+                        </HBox>
+                    </content>
+                </Panel>
+            </f:DynamicPageHeader>
+        </f:header>
+
+        <f:content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Search and Filter Bar -->
+                <Panel class="sapUiNoContentPadding">
+                    <Toolbar>
+                        <SearchField id="searchField" 
+                                   width="20rem" 
+                                   placeholder="{i18n>searchTestSuites}"
+                                   search="onSearch"/>
+                        <ToolbarSpacer/>
+                        <SegmentedButton selectedKey="{view>/viewMode}" 
+                                       selectionChange="onViewChange">
+                            <items>
+                                <SegmentedButtonItem key="overview" 
+                                                   icon="sap-icon://chart-table-view" 
+                                                   tooltip="{i18n>overviewView}"/>
+                                <SegmentedButtonItem key="suites" 
+                                                   icon="sap-icon://list" 
+                                                   tooltip="{i18n>suitesView}"/>
+                                <SegmentedButtonItem key="results" 
+                                                   icon="sap-icon://history" 
+                                                   tooltip="{i18n>resultsView}"/>
+                            </items>
+                        </SegmentedButton>
+                        <Button icon="sap-icon://filter" 
+                               tooltip="{i18n>filter}"
+                               press="onOpenFilterDialog"/>
+                        <Button icon="sap-icon://sort" 
+                               tooltip="{i18n>sort}"
+                               press="onOpenSortDialog"/>
+                    </Toolbar>
+                </Panel>
+
+                <!-- Testing Content -->
+                <Panel class="sapUiMediumMarginTop">
+                    
+                    <!-- Test Overview Dashboard -->
+                    <VBox visible="{= ${view>/viewMode} === 'overview' }">
+                        
+                        <l:Grid
+                            defaultSpan="L3 M6 S12"
+                            class="sapUiSmallMarginTop">
+                            
+                            <f:Card class="sapUiTinyMargin">
+                                <f:header>
+                                    <card:NumericHeader
+                                        title="{i18n>totalTests}"
+                                        subtitle="{i18n>acrossAllSuites}"
+                                        value="{view>/stats/totalTests}"
+                                        state="Neutral"/>
+                                </f:header>
+                            </f:Card>
+                            
+                            <f:Card class="sapUiTinyMargin">
+                                <f:header>
+                                    <card:NumericHeader
+                                        title="{i18n>passRate}"
+                                        subtitle="{i18n>last30Days}"
+                                        value="{view>/stats/passRate}"
+                                        unit="%"
+                                        state="Good"
+                                        trend="Up"/>
+                                </f:header>
+                            </f:Card>
+                            
+                            <f:Card class="sapUiTinyMargin">
+                                <f:header>
+                                    <card:NumericHeader
+                                        title="{i18n>failedTests}"
+                                        subtitle="{i18n>requireAttention}"
+                                        value="{view>/stats/failedTests}"
+                                        state="Error"/>
+                                </f:header>
+                            </f:Card>
+                            
+                            <f:Card class="sapUiTinyMargin">
+                                <f:header>
+                                    <card:NumericHeader
+                                        title="{i18n>avgDuration}"
+                                        subtitle="{i18n>perTestSuite}"
+                                        value="{view>/stats/avgDuration}"
+                                        unit="min"
+                                        state="Neutral"/>
+                                </f:header>
+                            </f:Card>
+                        </l:Grid>
+                        
+                        <!-- Test Coverage Chart -->
+                        <VBox class="sapUiMediumMarginTop">
+                            <Title text="{i18n>testCoverage}" level="H3"/>
+                            <ProgressIndicator
+                                percentValue="{view>/coverage/overall}"
+                                displayValue="{view>/coverage/overall}%"
+                                showValue="true"
+                                state="Success"
+                                class="sapUiSmallMarginBottom"/>
+                            
+                            <HBox>
+                                <VBox class="sapUiSmallMarginEnd">
+                                    <Label text="{i18n>unitTests}:"/>
+                                    <ProgressIndicator
+                                        percentValue="{view>/coverage/unit}"
+                                        displayValue="{view>/coverage/unit}%"
+                                        showValue="true"
+                                        width="200px"/>
+                                </VBox>
+                                <VBox class="sapUiSmallMarginEnd">
+                                    <Label text="{i18n>integrationTests}:"/>
+                                    <ProgressIndicator
+                                        percentValue="{view>/coverage/integration}"
+                                        displayValue="{view>/coverage/integration}%"
+                                        showValue="true"
+                                        width="200px"/>
+                                </VBox>
+                                <VBox>
+                                    <Label text="{i18n>e2eTests}:"/>
+                                    <ProgressIndicator
+                                        percentValue="{view>/coverage/e2e}"
+                                        displayValue="{view>/coverage/e2e}%"
+                                        showValue="true"
+                                        width="200px"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+                    
+                    <!-- Test Suites View -->
+                    <Table id="testSuitesTable" 
+                           items="{
+                               path: 'view>/testSuites',
+                               sorter: {
+                                   path: 'lastRun',
+                                   descending: true
+                               }
+                           }"
+                           visible="{= ${view>/viewMode} === 'suites' }"
+                           growing="true"
+                           growingThreshold="20"
+                           mode="MultiSelect"
+                           itemPress="onTestSuitePress">
+                        
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="{i18n>testSuitesList} ({= ${view>/testSuites}.length })"/>
+                                <ToolbarSpacer/>
+                                <Button text="{i18n>runSelected}" 
+                                       icon="sap-icon://play" 
+                                       press="onRunSelected"/>
+                                <Button text="{i18n>export}" 
+                                       icon="sap-icon://download" 
+                                       press="onExportSelected"/>
+                            </Toolbar>
+                        </headerToolbar>
+
+                        <columns>
+                            <Column>
+                                <Text text="{i18n>suiteName}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>agentType}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>testCount}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>lastRun}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>status}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>actions}"/>
+                            </Column>
+                        </columns>
+
+                        <items>
+                            <ColumnListItem press="onTestSuitePress">
+                                <cells>
+                                    <VBox>
+                                        <Link text="{name}" press="onTestSuitePress"/>
+                                        <Text text="{description}" class="sapUiSmallMarginTop"/>
+                                    </VBox>
+                                    <Text text="{agentType}"/>
+                                    <ObjectNumber number="{testCount}" 
+                                                unit="tests"
+                                                state="{= ${failedCount} > 0 ? 'Error' : 'Success' }"/>
+                                    <Text text="{path: 'lastRun', formatter: '.formatDate'}"/>
+                                    <ObjectStatus text="{status}" 
+                                                state="{path: 'status', formatter: '.formatStatusState'}"/>
+                                    <HBox>
+                                        <Button icon="sap-icon://play" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>run}"
+                                               press="onRunTestSuite"/>
+                                        <Button icon="sap-icon://edit" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>edit}"
+                                               press="onEditTestSuite"/>
+                                        <Button icon="sap-icon://document" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>report}"
+                                               press="onViewTestReport"/>
+                                        <Button icon="sap-icon://delete" 
+                                               type="Transparent" 
+                                               tooltip="{i18n>delete}"
+                                               press="onDeleteTestSuite"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                    
+                    <!-- Test Results View -->
+                    <Table id="testResultsTable" 
+                           items="{
+                               path: 'view>/testResults',
+                               sorter: {
+                                   path: 'startTime',
+                                   descending: true
+                               }
+                           }"
+                           visible="{= ${view>/viewMode} === 'results' }"
+                           growing="true"
+                           growingThreshold="20"
+                           itemPress="onTestResultPress">
+                        
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="{i18n>testResultsList} ({= ${view>/testResults}.length })"/>
+                                <ToolbarSpacer/>
+                                <DateRangeSelection id="dateRangeSelection" 
+                                                   change="onDateRangeChange"/>
+                                <Button text="{i18n>export}" 
+                                       icon="sap-icon://excel-attachment" 
+                                       press="onExportResults"/>
+                            </Toolbar>
+                        </headerToolbar>
+
+                        <columns>
+                            <Column>
+                                <Text text="{i18n>executionId}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>testSuite}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>startTime}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>duration}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>passed}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>failed}"/>
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>result}"/>
+                            </Column>
+                        </columns>
+
+                        <items>
+                            <ColumnListItem press="onTestResultPress">
+                                <cells>
+                                    <Link text="{executionId}" press="onTestResultPress"/>
+                                    <Text text="{suiteName}"/>
+                                    <Text text="{path: 'startTime', formatter: '.formatDate'}"/>
+                                    <Text text="{duration} s"/>
+                                    <ObjectNumber number="{passed}" 
+                                                state="Success"/>
+                                    <ObjectNumber number="{failed}" 
+                                                state="{= ${failed} > 0 ? 'Error' : 'Success' }"/>
+                                    <ObjectStatus text="{= ${failed} > 0 ? 'Failed' : 'Passed' }" 
+                                                state="{= ${failed} > 0 ? 'Error' : 'Success' }"/>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+
+                    <!-- Empty State -->
+                    <VBox alignItems="Center" 
+                          justifyContent="Center" 
+                          height="20rem"
+                          visible="{= ${view>/viewMode} !== 'overview' && (!${view>/testSuites} || ${view>/testSuites}.length === 0) && (!${view>/testResults} || ${view>/testResults}.length === 0) }">
+                        <core:Icon src="sap-icon://quality-issue" 
+                                 size="4rem" 
+                                 color="Neutral"
+                                 class="sapUiMediumMarginBottom"/>
+                        <Title text="{i18n>noTestData}" 
+                              level="H3" 
+                              textAlign="Center"/>
+                        <Text text="{i18n>noTestDataDescription}" 
+                             textAlign="Center" 
+                             class="sapUiMediumMarginBottom"/>
+                        <Button text="{i18n>createFirstTestSuite}" 
+                               type="Emphasized" 
+                               icon="sap-icon://add" 
+                               press="onCreateTestSuite"/>
+                    </VBox>
+
+                </Panel>
+            </VBox>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

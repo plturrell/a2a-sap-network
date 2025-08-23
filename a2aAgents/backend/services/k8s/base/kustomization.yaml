@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: a2a-network
+
+resources:
+  - namespace.yaml
+  - agent0_deployment.yaml
+  - agent1_deployment.yaml
+  - agent2_deployment.yaml
+  - agent3_deployment.yaml
+  - agent_manager_deployment.yaml
+  - data_manager_deployment.yaml
+  - catalog_manager_deployment.yaml
+  - configmap.yaml
+  - secrets.yaml
+  - network_policy.yaml
+  - service_monitor.yaml
+
+commonLabels:
+  protocol: a2a
+  version: "0.2.9"
+
+images:
+  - name: a2a-network/agent0-data-product
+    newTag: latest
+  - name: a2a-network/agent1-standardization
+    newTag: latest
+  - name: a2a-network/agent2-ai-preparation
+    newTag: latest
+  - name: a2a-network/agent3-vector-processing
+    newTag: latest
+  - name: a2a-network/agent-manager
+    newTag: latest
+  - name: a2a-network/data-manager
+    newTag: latest
+  - name: a2a-network/catalog-manager
+    newTag: latest

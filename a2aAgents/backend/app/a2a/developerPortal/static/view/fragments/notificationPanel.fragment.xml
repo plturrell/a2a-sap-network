@@ -1,0 +1,192 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form">
+    
+    <Dialog id="notificationDialog"
+            title="Notifications ({notifications>/stats/unread} unread)"
+            contentWidth="90%"
+            maxWidth="35rem"
+            contentHeight="90%"
+            maxHeight="35rem"
+            resizable="true"
+            draggable="true"
+            class="sapUiResponsiveContentPadding a2a-tablet-dialog">
+        
+        <customHeader>
+            <Toolbar>
+                <Title text="Notifications ({notifications>/stats/unread} unread)" level="H4"/>
+                <ToolbarSpacer/>
+                <Button icon="sap-icon://refresh" 
+                        type="Transparent" 
+                        press="onRefreshNotifications"
+                        tooltip="Refresh"/>
+                <Button icon="sap-icon://accept" 
+                        type="Transparent" 
+                        press="onMarkAllAsRead"
+                        tooltip="Mark All as Read"
+                        visible="{= ${notifications>/stats/unread} > 0}"/>
+                <Button icon="sap-icon://decline" 
+                        type="Transparent" 
+                        press="onCloseNotificationPanel"
+                        tooltip="Close"/>
+            </Toolbar>
+        </customHeader>
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Filter Bar -->
+                <Panel headerText="Filters" expandable="true" expanded="false" class="sapUiSmallMarginBottom">
+                    <content>
+                        <HBox class="sapUiSmallMargin">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Status:" class="sapUiTinyMarginBottom"/>
+                                <ComboBox id="statusFilter" 
+                                         selectedKey="{notifications>/filters/status}"
+                                         selectionChange="onFilterChange"
+                                         width="120px">
+                                    <core:Item key="" text="All"/>
+                                    <core:Item key="unread" text="Unread"/>
+                                    <core:Item key="read" text="Read"/>
+                                    <core:Item key="dismissed" text="Dismissed"/>
+                                </ComboBox>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Label text="Type:" class="sapUiTinyMarginBottom"/>
+                                <ComboBox id="typeFilter" 
+                                         selectedKey="{notifications>/filters/type}"
+                                         selectionChange="onFilterChange"
+                                         width="120px">
+                                    <core:Item key="" text="All"/>
+                                    <core:Item key="info" text="Info"/>
+                                    <core:Item key="success" text="Success"/>
+                                    <core:Item key="warning" text="Warning"/>
+                                    <core:Item key="error" text="Error"/>
+                                    <core:Item key="system" text="System"/>
+                                </ComboBox>
+                            </VBox>
+                        </HBox>
+                    </content>
+                </Panel>
+                
+                <!-- Notification List -->
+                <ScrollContainer height="350px" vertical="true" horizontal="false">
+                    <List id="notificationList" 
+                          items="{notifications>/notifications}"
+                          noDataText="No notifications found"
+                          growing="true"
+                          growingThreshold="10"
+                          growingTriggerText="Load More Notifications"
+                          updateFinished="onNotificationListUpdateFinished">
+                        
+                        <CustomListItem class="sapUiMediumMarginBottom" press="onNotificationPress">
+                            <content>
+                                <VBox class="sapUiSmallMargin">
+                                    
+                                    <!-- Notification Header -->
+                                    <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
+                                        <HBox alignItems="Center">
+                                            <!-- Priority/Type Icon -->
+                                            <core:Icon src="{
+                                                path: 'notifications>type',
+                                                formatter: '.formatNotificationIcon'
+                                            }" 
+                                            color="{
+                                                path: 'notifications>type',
+                                                formatter: '.formatNotificationColor'
+                                            }" 
+                                            class="sapUiTinyMarginEnd"/>
+                                            
+                                            <!-- Title -->
+                                            <Text text="{notifications>title}" 
+                                                  class="sapMH5FontSize sapUiTextBold"/>
+                                            
+                                            <!-- Unread Indicator -->
+                                            <core:Icon src="sap-icon://circle-task-2" 
+                                                      color="Accent6"
+                                                      class="sapUiTinyMarginBegin"
+                                                      visible="{= ${notifications>status} === 'unread'}"/>
+                                        </HBox>
+                                        
+                                        <!-- Actions -->
+                                        <HBox>
+                                            <Button icon="sap-icon://accept" 
+                                                    type="Transparent" 
+                                                    press="onMarkNotificationAsRead"
+                                                    tooltip="Mark as Read"
+                                                    visible="{= ${notifications>status} === 'unread'}"
+                                                    class="sapUiTinyMarginEnd"/>
+                                            <Button icon="sap-icon://sys-cancel" 
+                                                    type="Transparent" 
+                                                    press="onDismissNotification"
+                                                    tooltip="Dismiss"
+                                                    class="sapUiTinyMarginEnd"/>
+                                            <Button icon="sap-icon://delete" 
+                                                    type="Transparent" 
+                                                    press="onDeleteNotification"
+                                                    tooltip="Delete"/>
+                                        </HBox>
+                                    </HBox>
+                                    
+                                    <!-- Notification Message -->
+                                    <Text text="{notifications>message}" 
+                                          class="sapUiSmallMarginBottom"
+                                          maxLines="3"/>
+                                    
+                                    <!-- Notification Actions -->
+                                    <HBox visible="{= ${notifications>actions}.length > 0}" class="sapUiTinyMarginBottom">
+                                        <core:Fragment fragmentName="a2a.portal.view.fragments.NotificationActions" type="XML"/>
+                                    </HBox>
+                                    
+                                    <!-- Notification Metadata -->
+                                    <HBox justifyContent="SpaceBetween" alignItems="Center">
+                                        <HBox alignItems="Center">
+                                            <Text text="{
+                                                path: 'notifications>created_at',
+                                                formatter: '.formatRelativeTime'
+                                            }" 
+                                            class="sapUiContentLabelColor sapUiTinyText"/>
+                                            <Text text="•" class="sapUiContentLabelColor sapUiTinyText sapUiTinyMarginBegin sapUiTinyMarginEnd"/>
+                                            <Text text="{notifications>source}" class="sapUiContentLabelColor sapUiTinyText"/>
+                                        </HBox>
+                                        
+                                        <HBox alignItems="Center">
+                                            <!-- Priority Badge -->
+                                            <ObjectStatus text="{notifications>priority}" 
+                                                         state="{
+                                                             path: 'notifications>priority',
+                                                             formatter: '.formatPriorityState'
+                                                         }"
+                                                         class="sapUiTinyMarginEnd"/>
+                                            
+                                            <!-- Category -->
+                                            <Text text="{notifications>category}" 
+                                                  class="sapUiContentLabelColor sapUiTinyText"/>
+                                        </HBox>
+                                    </HBox>
+                                </VBox>
+                            </content>
+                        </CustomListItem>
+                    </List>
+                </ScrollContainer>
+                
+                <!-- Load More Button -->
+                <Button text="Load More Notifications" 
+                        type="Ghost" 
+                        press="onLoadMoreNotifications"
+                        visible="{notifications>/hasMore}"
+                        enabled="{= !${notifications>/loading}}"
+                        class="sapUiMediumMarginTop"/>
+                
+                <!-- Loading Indicator -->
+                <BusyIndicator visible="{notifications>/loading}" 
+                              class="sapUiMediumMarginTop"/>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button text="Close" press="onCloseNotificationPanel"/>
+        </beginButton>
+    </Dialog>
+</core:FragmentDefinition>

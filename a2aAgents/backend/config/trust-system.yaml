@@ -1,0 +1,100 @@
+# A2A Trust System Configuration
+trust_system:
+  # Trust contract configuration
+  blockchain:
+    network_url: ${A2A_BLOCKCHAIN_URL:-http://localhost:8545}
+    chain_id: ${A2A_CHAIN_ID:-1337}
+    contract_address: ${A2A_TRUST_CONTRACT:-0x}
+    gas_limit: 500000
+    gas_price: 20000000000  # 20 gwei
+    
+  # Trust levels and thresholds
+  trust_levels:
+    verified: 0.9      # Highly trusted, verified agents
+    high: 0.7          # Well-established agents
+    medium: 0.5        # Default trust level
+    low: 0.3           # New or questionable agents
+    untrusted: 0.0     # Explicitly untrusted agents
+    
+  # Trust evaluation parameters
+  evaluation:
+    initial_trust: 0.5                    # Starting trust for new agents
+    min_interactions_for_rating: 5        # Minimum interactions before trust adjustment
+    trust_decay_period_days: 30           # Time period for trust decay
+    trust_decay_rate: 0.05                # Rate of trust decay per period
+    consensus_threshold: 0.67             # Threshold for consensus decisions
+    
+  # Agent delegation settings
+  delegation:
+    enable_delegation: true
+    max_delegation_depth: 3               # Maximum delegation chain length
+    delegation_trust_threshold: 0.7       # Minimum trust required to delegate
+    delegation_attestation_required: true # Require attestation for delegation
+    
+  # Trust metrics collection
+  metrics:
+    track_interaction_history: true
+    track_performance_metrics: true
+    track_consensus_participation: true
+    history_retention_days: 90
+    
+  # Security settings
+  security:
+    require_signature_verification: true
+    enable_reputation_slashing: true      # Reduce trust for bad behavior
+    slash_amount: 0.1                     # Amount to reduce trust for violations
+    enable_trust_challenges: true         # Allow trust challenges between agents
+    challenge_resolution_timeout_hours: 24
+
+# Agent trust policies
+agent_policies:
+  # Workflow participation requirements
+  workflow_participation:
+    minimum_trust_level: 0.6              # Minimum trust to participate in workflows
+    critical_workflows_trust_level: 0.8   # Trust level for critical workflows
+    consensus_workflows_trust_level: 0.7  # Trust level for consensus workflows
+    
+  # Inter-agent communication policies
+  communication:
+    allow_untrusted_messages: false       # Block messages from untrusted agents
+    require_message_signing: true         # Require cryptographic signatures
+    message_verification_timeout_ms: 5000 # Timeout for message verification
+    
+  # Resource access policies
+  resource_access:
+    high_value_operations_trust_level: 0.8  # Trust required for high-value operations
+    data_access_trust_level: 0.6            # Trust required for data access
+    system_operations_trust_level: 0.9      # Trust required for system operations
+
+# Trust monitoring and alerting
+monitoring:
+  # Real-time monitoring
+  enable_real_time_monitoring: true
+  monitoring_interval_seconds: 30
+  
+  # Alerting thresholds
+  alerts:
+    trust_drop_threshold: 0.2             # Alert when trust drops by this amount
+    consensus_failure_threshold: 3        # Alert after this many consensus failures
+    delegation_abuse_threshold: 5         # Alert after this many delegation violations
+    
+  # Logging configuration
+  logging:
+    log_level: INFO
+    log_trust_changes: true
+    log_consensus_decisions: true
+    log_delegation_events: true
+    
+  # Integration with monitoring systems
+  prometheus:
+    enable_metrics_export: true
+    metrics_port: 9091
+    metrics_path: "/metrics"
+    
+  # Notification settings
+  notifications:
+    enable_slack_notifications: false     # Set to true and configure webhook
+    slack_webhook_url: ${SLACK_WEBHOOK_URL:-}
+    enable_email_notifications: false     # Set to true and configure SMTP
+    email_smtp_host: ${SMTP_HOST:-}
+    email_from: ${EMAIL_FROM:-trust-system@a2a.local}

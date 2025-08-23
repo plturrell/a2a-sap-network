@@ -1,0 +1,191 @@
+/* 
+ * Shared A2A Components - SAP Fiori Compliant
+ * Common UI components used across all A2A applications
+ */
+
+/* ========================================
+   Notification Badge - SAP Fiori Compliant
+   ======================================== */
+
+/* Use SAP semantic colors and theme parameters */
+.sapMBtn[data-badge]:not([data-badge=""]):not([data-badge="0"])::after {
+    content: attr(data-badge);
+    position: absolute;
+    top: -0.125rem;
+    right: -0.125rem;
+    background-color: var(--sapButton_Negative_Background);
+    color: var(--sapButton_Negative_TextColor);
+    border-radius: 0.5rem;
+    min-width: 1.125rem;
+    height: 1.125rem;
+    font-size: 0.6875rem;
+    font-weight: var(--sapFontBoldWeight);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.25rem;
+    box-shadow: var(--sapContent_Shadow0);
+    z-index: 1;
+    font-family: var(--sapFontFamily);
+}
+
+/* Subtle animation using SAP motion principles */
+@keyframes sapNotificationPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.9;
+    }
+}
+
+.sapMBtn[data-badge]:not([data-badge=""]):not([data-badge="0"]).sapUiNotificationPulse::after {
+    animation: sapNotificationPulse 2s ease-in-out infinite;
+}
+
+/* SAP Standard Animation Timing */
+.sapMBtn.sapMBtnHasText {
+    transition: all var(--sapContent_Transition_Duration) var(--sapContent_Transition_TimingFunction);
+}
+
+/* ========================================
+   Status Indicators - SAP Fiori Compliant
+   ======================================== */
+
+/* Use semantic color variables */
+.sapUiAgentStatusActive {
+    color: var(--sapPositiveTextColor);
+}
+
+.sapUiAgentStatusInactive {
+    color: var(--sapNeutralTextColor);
+}
+
+.sapUiAgentStatusError {
+    color: var(--sapNegativeTextColor);
+}
+
+.sapUiAgentStatusWarning {
+    color: var(--sapCriticalTextColor);
+}
+
+/* Status indicators with consistent styling */
+.a2aStatusSuccess {
+    color: var(--sapPositiveTextColor);
+}
+
+.a2aStatusWarning {
+    color: var(--sapCriticalTextColor);
+}
+
+.a2aStatusError {
+    color: var(--sapNegativeTextColor);
+}
+
+.a2aStatusNeutral {
+    color: var(--sapNeutralTextColor);
+}
+
+/* ========================================
+   Common Notification Items
+   ======================================== */
+
+.sapUiNotificationItem {
+    border-left: 0.25rem solid transparent;
+    transition: background-color 0.2s ease;
+}
+
+.sapUiNotificationItem:hover {
+    background-color: var(--sapList_Hover_Background);
+}
+
+/* Use semantic colors for priority */
+.sapUiNotificationItem[data-priority="critical"] {
+    border-left-color: var(--sapErrorBorderColor);
+}
+
+.sapUiNotificationItem[data-priority="high"] {
+    border-left-color: var(--sapWarningBorderColor);
+}
+
+.sapUiNotificationItem[data-priority="medium"] {
+    border-left-color: var(--sapSuccessBorderColor);
+}
+
+.sapUiNotificationItem[data-priority="low"] {
+    border-left-color: var(--sapInformationBorderColor);
+}
+
+/* Unread notification state */
+.sapUiNotificationItem.sapUiNotificationUnread {
+    background-color: var(--sapList_Highlight_Background);
+    font-weight: var(--sapFontBoldWeight);
+}
+
+/* ========================================
+   Common Dialog Enhancements
+   ======================================== */
+
+/* Notification Panel Custom Styling */
+.sapMDialog .sapMDialogSection {
+    padding: 0;
+}
+
+.notification-item {
+    border-left: 4px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.notification-item:hover {
+    background-color: var(--sapList_Hover_Background);
+}
+
+.notification-item[data-priority="critical"] {
+    border-left-color: var(--sapNegativeColor);
+}
+
+.notification-item[data-priority="high"] {
+    border-left-color: var(--sapCriticalColor);
+}
+
+.notification-item[data-priority="medium"] {
+    border-left-color: var(--sapPositiveColor);
+}
+
+.notification-item[data-priority="low"] {
+    border-left-color: var(--sapInformationColor);
+}
+
+.notification-unread {
+    background-color: var(--sapList_SelectionBackgroundColor);
+    font-weight: var(--sapFontSemiboldWeight);
+}
+
+/* Notification Action Buttons */
+.notification-actions .sapMBtn {
+    margin-right: 0.5rem;
+}
+
+.notification-actions .sapMBtn:last-child {
+    margin-right: 0;
+}
+
+/* ========================================
+   Common Loading States
+   ======================================== */
+
+/* Loading indicators */
+.a2aLoadingOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--sapBlockLayer_Background);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--sapContent_ZIndex_BusyIndicator);
+}

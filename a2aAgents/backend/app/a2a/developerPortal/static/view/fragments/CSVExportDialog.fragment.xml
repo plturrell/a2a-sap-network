@@ -1,0 +1,158 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        title="CSV Export Options"
+        resizable="true"
+        draggable="true"
+        contentWidth="500px"
+        contentHeight="400px"
+        type="Message">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Basic Settings -->
+                <Panel headerText="CSV Export Settings" expandable="false">
+                    <content>
+                        <l:Grid defaultSpan="L12 M12 S12" class="sapUiSmallMargin">
+                            
+                            <!-- File Name -->
+                            <VBox>
+                                <Label text="File Name:" required="true" class="sapMTextBold"/>
+                                <Input value="{csvExport>/fileName}" 
+                                      placeholder="Enter file name (without .csv extension)"
+                                      liveChange=".onCSVFileNameChange"/>
+                                <Text text="Preview: {csvExport>/fileNamePreview}.csv" 
+                                     class="sapUiTinyText sapMTextColorSecondary"/>
+                            </VBox>
+                            
+                            <!-- Delimiter -->
+                            <VBox class="sapUiSmallMarginTop">
+                                <Label text="Field Delimiter:" class="sapMTextBold"/>
+                                <RadioButtonGroup selectedIndex="{csvExport>/delimiterIndex}">
+                                    <RadioButton text="Comma (,) - Standard CSV"/>
+                                    <RadioButton text="Semicolon (;) - Excel friendly"/>
+                                    <RadioButton text="Tab - TSV format"/>
+                                    <RadioButton text="Pipe (|) - Database friendly"/>
+                                </RadioButtonGroup>
+                            </VBox>
+                            
+                            <!-- Text Qualifier -->
+                            <VBox class="sapUiSmallMarginTop">
+                                <Label text="Text Qualifier:" class="sapMTextBold"/>
+                                <RadioButtonGroup selectedIndex="{csvExport>/qualifierIndex}">
+                                    <RadioButton text='Double quotes (") - Standard'/>
+                                    <RadioButton text="Single quotes (') - Alternative"/>
+                                    <RadioButton text="None - Raw values"/>
+                                </RadioButtonGroup>
+                            </VBox>
+                            
+                            <!-- Line Ending -->
+                            <VBox class="sapUiSmallMarginTop">
+                                <Label text="Line Ending:" class="sapMTextBold"/>
+                                <Select selectedKey="{csvExport>/lineEnding}">
+                                    <core:Item key="CRLF" text="Windows (CRLF)"/>
+                                    <core:Item key="LF" text="Unix/Mac (LF)"/>
+                                    <core:Item key="CR" text="Classic Mac (CR)"/>
+                                </Select>
+                            </VBox>
+                            
+                            <!-- Encoding -->
+                            <VBox class="sapUiSmallMarginTop">
+                                <Label text="Character Encoding:" class="sapMTextBold"/>
+                                <Select selectedKey="{csvExport>/encoding}">
+                                    <core:Item key="UTF-8" text="UTF-8 (Recommended)"/>
+                                    <core:Item key="UTF-8-BOM" text="UTF-8 with BOM (Excel)"/>
+                                    <core:Item key="ISO-8859-1" text="ISO-8859-1 (Latin-1)"/>
+                                    <core:Item key="Windows-1252" text="Windows-1252"/>
+                                </Select>
+                            </VBox>
+                            
+                        </l:Grid>
+                    </content>
+                </Panel>
+                
+                <!-- Content Options -->
+                <Panel headerText="Content Options" expandable="true" expanded="true" class="sapUiSmallMarginTop">
+                    <content>
+                        <VBox class="sapUiSmallMargin">
+                            <CheckBox text="Include column headers" selected="{csvExport>/includeHeaders}"/>
+                            <CheckBox text="Include hidden columns" selected="{csvExport>/includeHidden}"/>
+                            <CheckBox text="Export formatted values" selected="{csvExport>/useFormattedValues}"/>
+                            <CheckBox text="Include row numbers" selected="{csvExport>/includeRowNumbers}"/>
+                            <CheckBox text="Add summary row" selected="{csvExport>/includeSummary}"/>
+                            <CheckBox text="Include export metadata" selected="{csvExport>/includeMetadata}"/>
+                        </VBox>
+                    </content>
+                </Panel>
+                
+                <!-- Data Range -->
+                <Panel headerText="Data Range" expandable="true" expanded="false" class="sapUiSmallMarginTop">
+                    <content>
+                        <VBox class="sapUiSmallMargin">
+                            <RadioButtonGroup selectedIndex="{csvExport>/dataRange}">
+                                <RadioButton text="Export visible data only"/>
+                                <RadioButton text="Export selected rows"/>
+                                <RadioButton text="Export filtered data"/>
+                                <RadioButton text="Export all data"/>
+                            </RadioButtonGroup>
+                            <HBox alignItems="Center" class="sapUiSmallMarginTop">
+                                <Label text="Row limit:" class="sapUiSmallMarginEnd"/>
+                                <Input value="{csvExport>/rowLimit}" 
+                                      type="Number"
+                                      width="100px"
+                                      placeholder="No limit"/>
+                                <Text text="(leave empty for no limit)" 
+                                     class="sapUiSmallMarginBegin sapUiTinyText sapMTextColorSecondary"/>
+                            </HBox>
+                        </VBox>
+                    </content>
+                </Panel>
+                
+                <!-- Advanced Options -->
+                <Panel headerText="Advanced Options" expandable="true" expanded="false" class="sapUiSmallMarginTop">
+                    <content>
+                        <VBox class="sapUiSmallMargin">
+                            <CheckBox text="Escape special characters" selected="{csvExport>/escapeSpecial}"/>
+                            <CheckBox text="Convert null to empty string" selected="{csvExport>/nullToEmpty}"/>
+                            <CheckBox text="Trim whitespace" selected="{csvExport>/trimWhitespace}"/>
+                            <CheckBox text="Use locale-specific formatting" selected="{csvExport>/useLocale}"/>
+                            
+                            <VBox class="sapUiSmallMarginTop">
+                                <Label text="Date Format:" class="sapMTextBold"/>
+                                <Select selectedKey="{csvExport>/dateFormat}">
+                                    <core:Item key="ISO" text="ISO 8601 (YYYY-MM-DD)"/>
+                                    <core:Item key="US" text="US Format (MM/DD/YYYY)"/>
+                                    <core:Item key="EU" text="EU Format (DD/MM/YYYY)"/>
+                                    <core:Item key="CUSTOM" text="Custom Format"/>
+                                </Select>
+                                <Input value="{csvExport>/customDateFormat}" 
+                                      placeholder="e.g., DD.MM.YYYY"
+                                      visible="{= ${csvExport>/dateFormat} === 'CUSTOM' }"/>
+                            </VBox>
+                        </VBox>
+                    </content>
+                </Panel>
+                
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button text="Export" 
+                    icon="sap-icon://download"
+                    type="Emphasized"
+                    press=".onExecuteCSVExport"/>
+            <Button text="Preview" 
+                    icon="sap-icon://document"
+                    type="Default"
+                    press=".onCSVPreview"/>
+            <Button text="Cancel" 
+                    icon="sap-icon://decline"
+                    type="Default"
+                    press=".onCloseCSVExport"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

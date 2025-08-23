@@ -1,0 +1,142 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.f">
+    
+    <Dialog
+        title="Validation Details"
+        resizable="true"
+        draggable="true"
+        contentWidth="700px"
+        contentHeight="500px"
+        type="Message">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Validation Summary -->
+                <f:Card class="sapUiMediumMarginBottom">
+                    <f:header>
+                        <f:Header title="Validation Summary"/>
+                    </f:header>
+                    <f:content>
+                        <VBox class="sapUiSmallMargin">
+                            <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                                <core:Icon src="sap-icon://status-positive" color="#28a745" class="sapUiTinyMarginEnd"/>
+                                <Text text="Valid Fields: {validation>/summary/validFields}/{validation>/summary/totalFields}"/>
+                                <ToolbarSpacer/>
+                                <ProgressIndicator 
+                                    percentValue="{= (${validation>/summary/validFields} / ${validation>/summary/totalFields}) * 100 }"
+                                    width="100px" 
+                                    state="Success"/>
+                            </HBox>
+                            <HBox alignItems="Center" class="sapUiSmallMarginBottom" visible="{= ${validation>/summary/totalErrors} > 0 }">
+                                <core:Icon src="sap-icon://status-negative" color="#dc3545" class="sapUiTinyMarginEnd"/>
+                                <Text text="Total Errors: {validation>/summary/totalErrors}" class="sapMTextColorError"/>
+                            </HBox>
+                            <HBox alignItems="Center" visible="{= ${validation>/summary/totalWarnings} > 0 }">
+                                <core:Icon src="sap-icon://status-critical" color="#ffc107" class="sapUiTinyMarginEnd"/>
+                                <Text text="Total Warnings: {validation>/summary/totalWarnings}" class="sapMTextColorCritical"/>
+                            </HBox>
+                        </VBox>
+                    </f:content>
+                </f:Card>
+                
+                <!-- Field-Level Validation Results -->
+                <Panel headerText="Field Validation Results" expandable="true" expanded="true" class="sapUiMediumMarginBottom">
+                    <content>
+                        <Table items="{validation>/fieldValidation}" class="sapUiSizeCompact">
+                            <columns>
+                                <Column width="3rem">
+                                    <Text text="Status"/>
+                                </Column>
+                                <Column width="8rem">
+                                    <Text text="Field"/>
+                                </Column>
+                                <Column width="15rem">
+                                    <Text text="Current Value"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Validation Messages"/>
+                                </Column>
+                            </columns>
+                            
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <core:Icon src="{= ${validation>severity} === 'Error' ? 'sap-icon://status-negative' : 
+                                                         ${validation>severity} === 'Warning' ? 'sap-icon://status-critical' : 
+                                                         'sap-icon://status-positive' }"
+                                                  color="{= ${validation>severity} === 'Error' ? '#dc3545' : 
+                                                           ${validation>severity} === 'Warning' ? '#ffc107' : 
+                                                           '#28a745' }"/>
+                                        
+                                        <Text text="{= ${validation>field} === 'name' ? 'Project Name' :
+                                                      ${validation>field} === 'description' ? 'Description' :
+                                                      ${validation>field} === 'startDate' ? 'Start Date' :
+                                                      ${validation>field} === 'endDate' ? 'End Date' :
+                                                      ${validation>field} === 'budget' ? 'Budget' :
+                                                      ${validation>field} === 'costCenter' ? 'Cost Center' :
+                                                      ${validation>field} }"/>
+                                        
+                                        <Text text="{validation>value}" 
+                                              maxLines="2" 
+                                              wrapping="true"
+                                              class="sapUiTinyText"/>
+                                        
+                                        <VBox>
+                                            <List items="{validation>errors}" visible="{= ${validation>errors}.length > 0 }">
+                                                <StandardListItem 
+                                                    title="{validation>}" 
+                                                    icon="sap-icon://error"
+                                                    type="Inactive"
+                                                    class="sapMTextColorError"/>
+                                            </List>
+                                            <List items="{validation>warnings}" visible="{= ${validation>warnings}.length > 0 }">
+                                                <StandardListItem 
+                                                    title="{validation>}" 
+                                                    icon="sap-icon://alert"
+                                                    type="Inactive"
+                                                    class="sapMTextColorCritical"/>
+                                            </List>
+                                        </VBox>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </content>
+                </Panel>
+                
+                <!-- Cross-Field Validation Rules -->
+                <Panel headerText="Business Rules Validation" 
+                       expandable="true" 
+                       expanded="false" 
+                       visible="{= ${validation>/errors}.length > 0 || ${validation>/warnings}.length > 0 }">
+                    <content>
+                        <VBox class="sapUiSmallMargin">
+                            <List items="{validation>/errors}" visible="{= ${validation>/errors}.length > 0 }">
+                                <StandardListItem 
+                                    title="{validation>}" 
+                                    icon="sap-icon://error"
+                                    type="Inactive"
+                                    class="sapMTextColorError"/>
+                            </List>
+                            <List items="{validation>/warnings}" visible="{= ${validation>/warnings}.length > 0 }">
+                                <StandardListItem 
+                                    title="{validation>}" 
+                                    icon="sap-icon://alert"
+                                    type="Inactive"
+                                    class="sapMTextColorCritical"/>
+                            </List>
+                        </VBox>
+                    </content>
+                </Panel>
+                
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button text="Close" type="Default" press="onCloseValidationDetails"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

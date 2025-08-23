@@ -1,0 +1,78 @@
+# A2A ChatAgent CLI Configuration - Development Environment
+# This configuration is optimized for local development and testing
+
+# Basic settings
+base_url: "http://localhost:8000"
+environment: "development"
+log_level: "DEBUG"
+timeout: 30
+max_retries: 3
+
+# Database configuration (SQLite for development)
+database:
+  type: "sqlite"
+  connection_string: "sqlite+aiosqlite:///dev_chatagent.db"
+  echo_sql: true
+
+# Authentication settings
+auth:
+  jwt_secret: "dev-secret-key-change-in-production"
+  jwt_algorithm: "HS256"
+  jwt_expiry_hours: 24
+  enable_jwt: true
+  enable_api_key: true
+  environment: "development"
+
+# Redis configuration (optional for development)
+redis:
+  url: "redis://localhost:6379/0"
+  enabled: false
+
+# Test agent subset for faster development testing
+test_agents:
+  - "data-processor"
+  - "nlp-agent"
+  - "crypto-trader"
+  - "file-manager"
+  - "web-scraper"
+
+# Development agent endpoints (using localhost)
+agent_endpoints:
+  data-processor: "http://localhost:8001"
+  nlp-agent: "http://localhost:8002"
+  crypto-trader: "http://localhost:8003"
+  file-manager: "http://localhost:8004"
+  web-scraper: "http://localhost:8005"
+  image-processor: "http://localhost:8006"
+  code-reviewer: "http://localhost:8007"
+  database-agent: "http://localhost:8008"
+  api-manager: "http://localhost:8009"
+  workflow-engine: "http://localhost:8010"
+  security-auditor: "http://localhost:8011"
+  performance-optimizer: "http://localhost:8012"
+  integration-agent: "http://localhost:8013"
+  ai-coordinator: "http://localhost:8014"
+  blockchain-agent: "http://localhost:8015"
+  monitoring-agent: "http://localhost:8016"
+
+# CLI specific settings
+cli:
+  interactive_prompt: "A2A> "
+  show_timestamps: true
+  show_agent_routing: true
+  color_output: true
+  progress_bars: true
+
+# Monitoring settings (disabled for development)
+monitoring:
+  enable_metrics: false
+  enable_tracing: false
+  enable_health_checks: true
+
+# Network settings
+network:
+  connection_timeout: 10
+  read_timeout: 30
+  max_connections: 100
+  retry_attempts: 3
+  retry_delay: 1

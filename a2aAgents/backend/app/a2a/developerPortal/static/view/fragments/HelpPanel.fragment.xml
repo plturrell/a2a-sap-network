@@ -1,0 +1,205 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.ui.layout.form">
+    
+    <Panel
+        id="helpPanel"
+        headerText="{i18nHelp>helpPanelTitle}"
+        expandable="true"
+        expanded="false"
+        width="400px"
+        class="sapUiResponsiveMargin">
+        
+        <headerToolbar>
+            <Toolbar>
+                <Title text="{i18nHelp>helpPanelTitle}" />
+                <ToolbarSpacer />
+                <SearchField
+                    id="helpSearchField"
+                    placeholder="{i18nHelp>searchHelpPlaceholder}"
+                    search=".onSearchHelp"
+                    width="200px" />
+                <Button
+                    icon="sap-icon://decline"
+                    press=".onToggleHelpPanel"
+                    tooltip="{i18nHelp>closeHelpPanel}" />
+            </Toolbar>
+        </headerToolbar>
+        
+        <content>
+            <l:VerticalLayout width="100%">
+                
+                <!-- Quick Actions Section -->
+                <Panel
+                    headerText="{i18nHelp>quickActionsTitle}"
+                    expandable="true"
+                    expanded="true">
+                    <content>
+                        <l:Grid
+                            defaultSpan="L6 M6 S12"
+                            vSpacing="1"
+                            hSpacing="1">
+                            <Button
+                                text="{i18nHelp>startGuidedTour}"
+                                icon="sap-icon://learning-assistant"
+                                press=".onStartGuidedTour"
+                                type="Emphasized"
+                                width="100%" />
+                            <Button
+                                text="{i18nHelp>viewShortcuts}"
+                                icon="sap-icon://keyboard-and-mouse"
+                                press=".onShowShortcuts"
+                                width="100%" />
+                            <Button
+                                text="{i18nHelp>contextualHelp}"
+                                icon="sap-icon://sys-help"
+                                press=".onShowContextualHelp"
+                                width="100%" />
+                            <Button
+                                text="{i18nHelp>videoTutorials}"
+                                icon="sap-icon://media-play"
+                                press=".onShowVideoTutorials"
+                                width="100%" />
+                        </l:Grid>
+                    </content>
+                </Panel>
+                
+                <!-- Context-Specific Help -->
+                <Panel
+                    headerText="{i18nHelp>contextSpecificHelpTitle}"
+                    expandable="true"
+                    expanded="true"
+                    visible="{= ${help>/contextualHelp/content} !== ''}">
+                    <content>
+                        <VBox>
+                            <Title
+                                text="{help>/contextualHelp/title}"
+                                level="H4"
+                                class="sapUiSmallMarginBottom" />
+                            <Text
+                                text="{help>/contextualHelp/content}"
+                                class="sapUiSmallMarginBottom" />
+                            <HBox justifyContent="End">
+                                <Button
+                                    icon="sap-icon://thumb-up"
+                                    text="{i18nHelp>helpful}"
+                                    press=".onHelpFeedback(true)"
+                                    type="Accept"
+                                    class="sapUiTinyMarginEnd" />
+                                <Button
+                                    icon="sap-icon://thumb-down"
+                                    text="{i18nHelp>notHelpful}"
+                                    press=".onHelpFeedback(false)"
+                                    type="Reject" />
+                            </HBox>
+                        </VBox>
+                    </content>
+                </Panel>
+                
+                <!-- Keyboard Shortcuts -->
+                <Panel
+                    id="shortcutsPanel"
+                    headerText="{i18nHelp>keyboardShortcutsTitle}"
+                    expandable="true"
+                    expanded="false">
+                    <content>
+                        <Table
+                            items="{help>/shortcuts}"
+                            growing="false"
+                            mode="None">
+                            <columns>
+                                <Column width="30%">
+                                    <Text text="{i18nHelp>shortcutKey}" />
+                                </Column>
+                                <Column>
+                                    <Text text="{i18nHelp>shortcutDescription}" />
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{help>key}" class="sapUiMediumMarginEnd" />
+                                        <Text text="{help>description}" />
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </content>
+                </Panel>
+                
+                <!-- Related Topics -->
+                <Panel
+                    headerText="{i18nHelp>relatedTopicsTitle}"
+                    expandable="true"
+                    expanded="false">
+                    <content>
+                        <List
+                            id="relatedTopicsList"
+                            mode="Navigation"
+                            itemPress=".onRelatedTopicPress">
+                            <StandardListItem
+                                title="{i18nHelp>agentCreationGuide}"
+                                description="{i18nHelp>agentCreationGuideDesc}"
+                                icon="sap-icon://create"
+                                type="Navigation" />
+                            <StandardListItem
+                                title="{i18nHelp>workflowDesignGuide}"
+                                description="{i18nHelp>workflowDesignGuideDesc}"
+                                icon="sap-icon://workflow-tasks"
+                                type="Navigation" />
+                            <StandardListItem
+                                title="{i18nHelp>apiDocumentation}"
+                                description="{i18nHelp>apiDocumentationDesc}"
+                                icon="sap-icon://developer-settings"
+                                type="Navigation" />
+                            <StandardListItem
+                                title="{i18nHelp>troubleshootingGuide}"
+                                description="{i18nHelp>troubleshootingGuideDesc}"
+                                icon="sap-icon://wrench"
+                                type="Navigation" />
+                        </List>
+                    </content>
+                </Panel>
+                
+                <!-- Support Contact -->
+                <Panel
+                    headerText="{i18nHelp>supportContactTitle}"
+                    expandable="true"
+                    expanded="false">
+                    <content>
+                        <VBox>
+                            <MessageStrip
+                                text="{i18nHelp>supportAvailabilityMessage}"
+                                type="Information"
+                                showIcon="true"
+                                class="sapUiSmallMarginBottom" />
+                            <f:SimpleForm
+                                editable="false"
+                                layout="ResponsiveGridLayout">
+                                <f:content>
+                                    <Label text="{i18nHelp>emailSupport}" />
+                                    <Link
+                                        text="support@a2a-platform.com"
+                                        href="mailto:support@a2a-platform.com" />
+                                    <Label text="{i18nHelp>slackChannel}" />
+                                    <Link
+                                        text="#a2a-developer-support"
+                                        target="_blank" />
+                                    <Label text="{i18nHelp>documentation}" />
+                                    <Link
+                                        text="{i18nHelp>onlineDocumentation}"
+                                        href="/docs"
+                                        target="_blank" />
+                                </f:content>
+                            </f:SimpleForm>
+                        </VBox>
+                    </content>
+                </Panel>
+                
+            </l:VerticalLayout>
+        </content>
+    </Panel>
+    
+</core:FragmentDefinition>

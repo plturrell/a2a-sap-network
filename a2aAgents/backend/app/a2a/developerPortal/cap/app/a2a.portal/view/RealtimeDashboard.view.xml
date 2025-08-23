@@ -1,0 +1,318 @@
+<mvc:View
+    controllerName="a2a.portal.controller.RealtimeDashboard"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:card="sap.f.cards"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:suite="sap.suite.ui.microchart"
+    xmlns:viz="sap.viz.ui5.controls"
+    xmlns:vbm="sap.ui.vbm"
+    displayBlock="true">
+    
+    <f:DynamicPage id="realtimeDashboardPage" 
+                   class="a2a-dashboard-page"
+                   headerExpanded="false" 
+                   showFooter="false">
+        
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="A2A Real-Time Operations Dashboard" level="H2"/>
+                </f:heading>
+                <f:expandedContent>
+                    <Label text="Live monitoring of all A2A agents, blockchain networks, and system performance"/>
+                </f:expandedContent>
+                <f:snappedContent>
+                    <HBox>
+                        <core:Icon src="sap-icon://radar-chart" class="sapUiSmallMarginEnd"/>
+                        <Text text="Live Operations"/>
+                    </HBox>
+                </f:snappedContent>
+                <f:actions>
+                    <ToggleButton text="Auto Refresh" 
+                                 pressed="{view>/autoRefresh}"
+                                 icon="sap-icon://synchronize"/>
+                    <Button text="Full Screen" 
+                           icon="sap-icon://full-screen" 
+                           press="onToggleFullScreen"/>
+                    <Button text="Export Report" 
+                           icon="sap-icon://excel-attachment" 
+                           press="onExportReport"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <f:content>
+            <l:ResponsiveSplitter defaultPane="pane1">
+                <!-- Main Dashboard Content -->
+                <l:PaneContainer>
+                    <l:SplitPane id="pane1" requiredParentWidth="400">
+                        <ScrollContainer height="100%" width="100%" vertical="true">
+                            <VBox class="sapUiMediumMargin">
+                                
+                                <!-- Critical System Metrics Row -->
+                                <l:Grid defaultSpan="L3 M6 S12" class="sapUiSmallMarginBottom">
+                                    <f:Card class="sapUiTinyMargin">
+                                        <f:header>
+                                            <card:NumericHeader
+                                                title="System Health Score"
+                                                subtitle="Overall A2A Network"
+                                                value="{view>/systemHealth/score}"
+                                                unit="%"
+                                                state="{= ${view>/systemHealth/score} > 90 ? 'Good' : ${view>/systemHealth/score} > 70 ? 'Critical' : 'Error' }"
+                                                trend="{view>/systemHealth/trend}"/>
+                                        </f:header>
+                                        <f:content>
+                                            <suite:RadialMicroChart 
+                                                percentage="{view>/systemHealth/score}"
+                                                size="XS"
+                                                class="sapUiSmallMargin"/>
+                                        </f:content>
+                                    </f:Card>
+                                    
+                                    <f:Card class="sapUiTinyMargin">
+                                        <f:header>
+                                            <card:NumericHeader
+                                                title="Active Agents"
+                                                subtitle="Real-time Status"
+                                                value="{view>/agents/active}"
+                                                unit="/ {view>/agents/total}"
+                                                state="{= ${view>/agents/active} === ${view>/agents/total} ? 'Good' : 'Critical' }"/>
+                                        </f:header>
+                                        <f:content>
+                                            <FlexBox direction="Row" class="sapUiSmallMargin">
+                                                <suite:HarveyBallMicroChart 
+                                                    total="{view>/agents/total}"
+                                                    totalScale="agents"
+                                                    showTotal="false"
+                                                    size="S">
+                                                    <suite:items>
+                                                        <suite:HarveyBallMicroChartItem 
+                                                            value="{view>/agents/active}"
+                                                            color="Good"/>
+                                                    </suite:items>
+                                                </suite:HarveyBallMicroChart>
+                                            </FlexBox>
+                                        </f:content>
+                                    </f:Card>
+                                    
+                                    <f:Card class="sapUiTinyMargin">
+                                        <f:header>
+                                            <card:NumericHeader
+                                                title="Blockchain TPS"
+                                                subtitle="Transactions/Second"
+                                                value="{view>/blockchain/totalTps}"
+                                                trend="Up"
+                                                state="Neutral"/>
+                                        </f:header>
+                                        <f:content>
+                                            <suite:LineMicroChart
+                                                size="S"
+                                                class="sapUiSmallMargin"
+                                                points="{view>/blockchain/tpsHistory}">
+                                                <suite:LineMicroChartLine
+                                                    points="{view>/blockchain/tpsHistory}">
+                                                    <suite:LineMicroChartPoint
+                                                        x="{x}"
+                                                        y="{y}"/>
+                                                </suite:LineMicroChartLine>
+                                            </suite:LineMicroChart>
+                                        </f:content>
+                                    </f:Card>
+                                    
+                                    <f:Card class="sapUiTinyMargin">
+                                        <f:header>
+                                            <card:NumericHeader
+                                                title="Error Rate"
+                                                subtitle="Last 5 Minutes"
+                                                value="{view>/errors/rate}"
+                                                unit="%"
+                                                state="{= ${view>/errors/rate} < 1 ? 'Good' : ${view>/errors/rate} < 5 ? 'Critical' : 'Error' }"/>
+                                        </f:header>
+                                        <f:content>
+                                            <suite:BulletMicroChart
+                                                targetValue="1"
+                                                actualValue="{view>/errors/rate}"
+                                                maxValue="10"
+                                                size="S"
+                                                class="sapUiSmallMargin">
+                                                <suite:thresholds>
+                                                    <suite:BulletMicroChartData value="1" color="Good"/>
+                                                    <suite:BulletMicroChartData value="5" color="Critical"/>
+                                                    <suite:BulletMicroChartData value="10" color="Error"/>
+                                                </suite:thresholds>
+                                            </suite:BulletMicroChart>
+                                        </f:content>
+                                    </f:Card>
+                                </l:Grid>
+
+                                <!-- Agent Communication Matrix -->
+                                <Panel headerText="Agent Communication Matrix" expandable="true" expanded="true">
+                                    <VBox id="communicationMatrixContainer" height="400px">
+                                        <!-- D3.js Sankey diagram will be rendered here -->
+                                    </VBox>
+                                </Panel>
+
+                                <!-- Real-time Performance Metrics -->
+                                <Panel headerText="Real-Time Performance Metrics" expandable="true" expanded="true" class="sapUiMediumMarginTop">
+                                    <l:Grid defaultSpan="L6 M12 S12">
+                                        <viz:VizFrame id="responseTimeChart"
+                                                     height="300px"
+                                                     vizType="timeseries_line"
+                                                     uiConfig="{applicationSet:'fiori'}">
+                                            <viz:dataset>
+                                                <viz:FlattenedDataset data="{view>/performance/responseTimeData}">
+                                                    <viz:dimensions>
+                                                        <viz:DimensionDefinition name="Timestamp" value="{timestamp}"/>
+                                                    </viz:dimensions>
+                                                    <viz:measures>
+                                                        <viz:MeasureDefinition name="Avg Response Time" value="{avgResponseTime}"/>
+                                                        <viz:MeasureDefinition name="P95" value="{p95}"/>
+                                                        <viz:MeasureDefinition name="P99" value="{p99}"/>
+                                                    </viz:measures>
+                                                </viz:FlattenedDataset>
+                                            </viz:dataset>
+                                            <viz:feeds>
+                                                <viz:FeedItem uid="valueAxis" type="Measure" values="Avg Response Time,P95,P99"/>
+                                                <viz:FeedItem uid="timeAxis" type="Dimension" values="Timestamp"/>
+                                            </viz:feeds>
+                                        </viz:VizFrame>
+                                        
+                                        <viz:VizFrame id="throughputChart"
+                                                     height="300px"
+                                                     vizType="timeseries_area"
+                                                     uiConfig="{applicationSet:'fiori'}">
+                                            <viz:dataset>
+                                                <viz:FlattenedDataset data="{view>/performance/throughputData}">
+                                                    <viz:dimensions>
+                                                        <viz:DimensionDefinition name="Timestamp" value="{timestamp}"/>
+                                                    </viz:dimensions>
+                                                    <viz:measures>
+                                                        <viz:MeasureDefinition name="Messages/Sec" value="{throughput}"/>
+                                                    </viz:measures>
+                                                </viz:FlattenedDataset>
+                                            </viz:dataset>
+                                            <viz:feeds>
+                                                <viz:FeedItem uid="valueAxis" type="Measure" values="Messages/Sec"/>
+                                                <viz:FeedItem uid="timeAxis" type="Dimension" values="Timestamp"/>
+                                            </viz:feeds>
+                                        </viz:VizFrame>
+                                    </l:Grid>
+                                </Panel>
+
+                                <!-- Blockchain Network Status -->
+                                <Panel headerText="Blockchain Network Status" expandable="true" expanded="true" class="sapUiMediumMarginTop">
+                                    <Table items="{view>/blockchain/networks}">
+                                        <columns>
+                                            <Column><Text text="Network"/></Column>
+                                            <Column><Text text="Block Height"/></Column>
+                                            <Column><Text text="Gas Price"/></Column>
+                                            <Column><Text text="TPS"/></Column>
+                                            <Column><Text text="Congestion"/></Column>
+                                            <Column><Text text="Status"/></Column>
+                                        </columns>
+                                        <items>
+                                            <ColumnListItem>
+                                                <cells>
+                                                    <HBox>
+                                                        <core:Icon src="{icon}" class="sapUiSmallMarginEnd"/>
+                                                        <Text text="{name}"/>
+                                                    </HBox>
+                                                    <ObjectNumber number="{blockHeight}" emphasized="false"/>
+                                                    <ObjectNumber number="{gasPrice}" unit="gwei" state="{= ${gasPrice} > 50 ? 'Error' : 'Success' }"/>
+                                                    <Text text="{tps}"/>
+                                                    <ProgressIndicator 
+                                                        percentValue="{congestion}"
+                                                        displayValue="{congestion}%"
+                                                        state="{= ${congestion} > 80 ? 'Error' : ${congestion} > 50 ? 'Warning' : 'Success' }"/>
+                                                    <ObjectStatus text="{status}" state="{statusState}"/>
+                                                </cells>
+                                            </ColumnListItem>
+                                        </items>
+                                    </Table>
+                                </Panel>
+
+                                <!-- Data Quality Metrics -->
+                                <Panel headerText="Data Quality Metrics" expandable="true" expanded="false" class="sapUiMediumMarginTop">
+                                    <l:Grid defaultSpan="L6 M12 S12">
+                                        <f:Card>
+                                            <f:header>
+                                                <card:Header title="Validation Metrics" subtitle="From QA Agent"/>
+                                            </f:header>
+                                            <f:content>
+                                                <VBox class="sapUiSmallMargin">
+                                                    <Text text="Success Rate: {view>/dataQuality/validationSuccessRate}%"/>
+                                                    <Text text="Standardization: {view>/dataQuality/standardizationAccuracy}%"/>
+                                                    <Text text="Completeness: {view>/dataQuality/completenessScore}%"/>
+                                                </VBox>
+                                            </f:content>
+                                        </f:Card>
+                                        
+                                        <f:Card>
+                                            <f:header>
+                                                <card:Header title="System Uptime" subtitle="Service Level"/>
+                                            </f:header>
+                                            <f:content>
+                                                <VBox class="sapUiSmallMargin">
+                                                    <Text text="Uptime: {view>/systemHealth/score}%"/>
+                                                    <ObjectStatus text="Health Status: {= ${view>/systemHealth/score} > 90 ? 'Healthy' : 'Degraded' }" 
+                                                                state="{= ${view>/systemHealth/score} > 90 ? 'Success' : 'Error' }"/>
+                                                </VBox>
+                                            </f:content>
+                                        </f:Card>
+                                    </l:Grid>
+                                </Panel>
+                            </VBox>
+                        </ScrollContainer>
+                    </l:SplitPane>
+                    
+                    <!-- Right Panel - Live Alerts and Events -->
+                    <l:SplitPane id="pane2" requiredParentWidth="800" width="400px">
+                        <VBox class="sapUiSmallMargin" height="100%">
+                            <Title text="Live Events & Alerts" level="H3"/>
+                            
+                            <!-- Alert Summary -->
+                            <HBox class="sapUiSmallMarginBottom">
+                                <VBox class="sapUiSmallMarginEnd">
+                                    <Text text="Critical" class="sapUiTinyMarginBottom"/>
+                                    <ObjectNumber number="{view>/alerts/critical}" state="Error" emphasized="true"/>
+                                </VBox>
+                                <VBox class="sapUiSmallMarginEnd">
+                                    <Text text="Warning" class="sapUiTinyMarginBottom"/>
+                                    <ObjectNumber number="{view>/alerts/warning}" state="Warning" emphasized="true"/>
+                                </VBox>
+                                <VBox>
+                                    <Text text="Info" class="sapUiTinyMarginBottom"/>
+                                    <ObjectNumber number="{view>/alerts/info}" state="Information" emphasized="true"/>
+                                </VBox>
+                            </HBox>
+                            
+                            <!-- Live Event Stream -->
+                            <List id="eventStreamList"
+                                  headerText="Event Stream"
+                                  items="{
+                                      path: 'view>/eventStream',
+                                      sorter: {
+                                          path: 'timestamp',
+                                          descending: true
+                                      }
+                                  }"
+                                  growing="true"
+                                  growingThreshold="50">
+                                <StandardListItem
+                                    title="{title}"
+                                    description="{description}"
+                                    info="{path: 'timestamp', formatter: '.formatTimestamp'}"
+                                    infoState="{= ${severity} === 'critical' ? 'Error' : ${severity} === 'warning' ? 'Warning' : 'None' }"
+                                    type="Active"
+                                    press="onEventPress"/>
+                            </List>
+                        </VBox>
+                    </l:SplitPane>
+                </l:PaneContainer>
+            </l:ResponsiveSplitter>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

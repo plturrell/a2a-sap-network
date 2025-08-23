@@ -1,0 +1,253 @@
+<core:FragmentDefinition 
+    xmlns="sap.m" 
+    xmlns:core="sap.ui.core"
+    xmlns:layout="sap.ui.layout">
+    
+    <Dialog id="buildOutputDialog"
+           title="{i18n>buildOutput}"
+           contentWidth="90%"
+           maxWidth="50rem"
+           contentHeight="70vh"
+           class="a2a-tablet-dialog"
+           resizable="true"
+           draggable="true">
+        
+        <content>
+            <VBox class="sapUiMediumMargin" height="100%">
+                <!-- Build Status Header -->
+                <Panel headerText="{i18n>buildStatus}" class="sapUiMediumMarginBottom">
+                    <HBox alignItems="Center" class="sapUiSmallMargin">
+                        <core:Icon src="{/statusIcon}" 
+                                  color="{/statusColor}"
+                                  size="2rem"
+                                  class="sapUiMediumMarginEnd"/>
+                        <VBox>
+                            <HBox alignItems="Center">
+                                <Title text="{/buildStatus}" level="H4" class="sapUiMediumMarginEnd"/>
+                                <Text text="{i18n>build} #{/buildNumber}" class="sapUiSmallText"/>
+                            </HBox>
+                            <Text text="{i18n>started}: {/startTime}" class="sapUiSmallText"/>
+                            <Text text="{i18n>duration}: {/duration}" class="sapUiSmallText"/>
+                        </VBox>
+                        <ToolbarSpacer/>
+                        <VBox alignItems="End">
+                            <Button icon="sap-icon://refresh" 
+                                   tooltip="{i18n>refresh}"
+                                   press="onRefreshBuild"
+                                   type="Transparent"/>
+                            <Button icon="sap-icon://stop" 
+                                   tooltip="{i18n>cancelBuild}"
+                                   press="onCancelBuild"
+                                   type="Attention"
+                                   visible="{/isRunning}"/>
+                        </VBox>
+                    </HBox>
+                    
+                    <!-- Build Progress -->
+                    <ProgressIndicator percentValue="{/progressPercent}"
+                                      displayValue="{/progressText}"
+                                      visible="{/isRunning}"
+                                      class="sapUiSmallMarginTop"/>
+                </Panel>
+                
+                <!-- Build Stages -->
+                <Panel headerText="{i18n>buildStages}" class="sapUiMediumMarginBottom">
+                    <List items="{/buildStages}" class="sapUiSmallMargin">
+                        <CustomListItem>
+                            <HBox alignItems="Center">
+                                <core:Icon src="{stageIcon}" 
+                                          color="{stageColor}"
+                                          class="sapUiTinyMarginEnd"/>
+                                <VBox class="sapUiMediumMarginEnd" width="200px">
+                                    <Text text="{stageName}"/>
+                                    <Text text="{stageDescription}" class="sapUiSmallText"/>
+                                </VBox>
+                                <Text text="{stageStatus}" class="sapUiMediumMarginEnd"/>
+                                <Text text="{stageDuration}" class="sapUiSmallText"/>
+                                <ToolbarSpacer/>
+                                <Button icon="sap-icon://detail-view" 
+                                       tooltip="{i18n>viewDetails}"
+                                       press="onViewStageDetails"
+                                       type="Transparent"/>
+                            </HBox>
+                        </CustomListItem>
+                    </List>
+                </Panel>
+                
+                <!-- Output Tabs -->
+                <IconTabBar selectedKey="{/selectedTab}" 
+                           select="onTabSelect"
+                           height="100%"
+                           expandable="false">
+                    <items>
+                        <IconTabFilter key="console" 
+                                      text="{i18n>console}"
+                                      icon="sap-icon://terminal"
+                                      count="{/consoleLineCount}"/>
+                        <IconTabFilter key="errors" 
+                                      text="{i18n>errors}"
+                                      icon="sap-icon://error"
+                                      iconColor="Negative"
+                                      count="{/errorCount}"/>
+                        <IconTabFilter key="warnings" 
+                                      text="{i18n>warnings}"
+                                      icon="sap-icon://warning2"
+                                      iconColor="Critical"
+                                      count="{/warningCount}"/>
+                        <IconTabFilter key="artifacts" 
+                                      text="{i18n>artifacts}"
+                                      icon="sap-icon://attachment"
+                                      count="{/artifactCount}"/>
+                        <IconTabFilter key="tests" 
+                                      text="{i18n>tests}"
+                                      icon="sap-icon://validate"
+                                      count="{/testCount}"/>
+                    </items>
+                    <content>
+                        <!-- Console Output -->
+                        <VBox visible="{= ${/selectedTab} === 'console'}" height="100%">
+                            <Toolbar>
+                                <Title text="{i18n>consoleOutput}"/>
+                                <ToolbarSpacer/>
+                                <Button icon="sap-icon://clear-all" 
+                                       tooltip="{i18n>clearConsole}"
+                                       press="onClearConsole"
+                                       type="Transparent"/>
+                                <Button icon="sap-icon://download" 
+                                       tooltip="{i18n>downloadLogs}"
+                                       press="onDownloadConsole"
+                                       type="Transparent"/>
+                                <ToggleButton icon="sap-icon://pause" 
+                                            tooltip="{i18n>autoScroll}"
+                                            pressed="{/autoScroll}"
+                                            press="onToggleAutoScroll"/>
+                            </Toolbar>
+                            
+                            <!-- Console Text Area -->
+                            <ScrollContainer height="100%" 
+                                           horizontal="true" 
+                                           vertical="true"
+                                           class="a2a-console-container">
+                                <core:HTML content="{/consoleOutput}" 
+                                          class="a2a-console-output"/>
+                            </ScrollContainer>
+                        </VBox>
+                        
+                        <!-- Errors -->
+                        <VBox visible="{= ${/selectedTab} === 'errors'}">
+                            <List items="{/errors}">
+                                <StandardListItem title="{message}"
+                                                description="{file}:{line}:{column}"
+                                                info="{severity}"
+                                                infoState="Error"
+                                                icon="sap-icon://error"
+                                                press="onErrorPress"/>
+                            </List>
+                        </VBox>
+                        
+                        <!-- Warnings -->
+                        <VBox visible="{= ${/selectedTab} === 'warnings'}">
+                            <List items="{/warnings}">
+                                <StandardListItem title="{message}"
+                                                description="{file}:{line}:{column}"
+                                                info="{severity}"
+                                                infoState="Warning"
+                                                icon="sap-icon://warning2"
+                                                press="onWarningPress"/>
+                            </List>
+                        </VBox>
+                        
+                        <!-- Build Artifacts -->
+                        <VBox visible="{= ${/selectedTab} === 'artifacts'}">
+                            <Toolbar>
+                                <Title text="{i18n>buildArtifacts}"/>
+                                <ToolbarSpacer/>
+                                <Text text="{i18n>totalSize}: {/totalArtifactSize}"/>
+                            </Toolbar>
+                            
+                            <Table items="{/artifacts}">
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>fileName}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>size}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>type}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>actions}"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{fileName}"/>
+                                            <Text text="{fileSize}"/>
+                                            <Text text="{fileType}"/>
+                                            <HBox>
+                                                <Button icon="sap-icon://download" 
+                                                       tooltip="{i18n>download}"
+                                                       press="onDownloadArtifact"
+                                                       type="Transparent"/>
+                                                <Button icon="sap-icon://preview" 
+                                                       tooltip="{i18n>preview}"
+                                                       press="onPreviewArtifact"
+                                                       type="Transparent"
+                                                       visible="{previewable}"/>
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                        
+                        <!-- Test Results -->
+                        <VBox visible="{= ${/selectedTab} === 'tests'}">
+                            <Toolbar>
+                                <Title text="{i18n>testResults}"/>
+                                <ToolbarSpacer/>
+                                <Text text="{/testSummary}"/>
+                            </Toolbar>
+                            
+                            <List items="{/testResults}">
+                                <StandardListItem title="{testName}"
+                                                description="{testFile}"
+                                                info="{duration}ms"
+                                                infoState="{testState}"
+                                                icon="{testIcon}"
+                                                press="onTestPress"/>
+                            </List>
+                        </VBox>
+                    </content>
+                </IconTabBar>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button text="{i18n>rebuild}"
+                   type="Emphasized"
+                   icon="sap-icon://restart"
+                   press="onRebuild"
+                   enabled="{path: '/isRunning', formatter: '.invertBoolean'}"/>
+        </beginButton>
+        
+        <buttons>
+            <Button text="{i18n>copyOutput}"
+                   icon="sap-icon://copy"
+                   press="onCopyOutput"/>
+            <Button text="{i18n>downloadAll}"
+                   icon="sap-icon://download"
+                   press="onDownloadAllLogs"/>
+            <Button text="{i18n>clearAll}"
+                   icon="sap-icon://clear-all"
+                   press="onClearAllOutput"/>
+        </buttons>
+        
+        <endButton>
+            <Button text="{i18n>close}"
+                   press="onBuildOutputClose"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

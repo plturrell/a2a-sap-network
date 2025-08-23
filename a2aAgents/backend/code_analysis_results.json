@@ -1,0 +1,349 @@
+[
+  {
+    "directory": "app/a2a/agents/calculationAgent",
+    "files_analyzed": 15,
+    "total_lines": 8728,
+    "total_issues": 26,
+    "quality_score": 84.67,
+    "file_results": [
+      {
+        "file": "app/a2a/agents/calculationAgent/__init__.py",
+        "lines": 8,
+        "empty_lines": 2,
+        "comment_lines": 0,
+        "functions": 0,
+        "classes": 0,
+        "issues": [],
+        "complexity": 0,
+        "quality_score": 100
+      },
+      {
+        "file": "app/a2a/agents/calculationAgent/active/calculationRouter.py",
+        "lines": 591,
+        "empty_lines": 110,
+        "comment_lines": 8,
+        "functions": 0,
+        "classes": 0,
+        "issues": [],
+        "complexity": 0,
+        "quality_score": 100
+      },
+      {
+        "file": "app/a2a/agents/calculationAgent/active/calculationAgentSdk.py",
+        "lines": 34,
+        "empty_lines": 7,
+        "comment_lines": 1,
+        "functions": 1,
+        "classes": 1,
+        "issues": [
+          "Missing docstring in function '__init__'"
+        ],
+        "complexity": 2,
+        "quality_score": 95
+      },
+      {
+        "file": "app/a2a/agents/calculationAgent/active/quantlibSkills.py",
+        "lines": 344,
+        "empty_lines": 54,
+        "comment_lines": 32,
+        "functions": 6,
+        "classes": 1,
+        "issues": [
+          "Long function 'price_bond' (68 lines)",
+          "Long function 'price_option' (86 lines)",
+          "Long function 'price_swap' (81 lines)",
+          "Missing docstring in function '__init__'"
+        ],
+        "complexity": 7,
+        "quality_score": 80
+      },
+      {
+        "file": "app/a2a/agents/calculationAgent/active/intelligentDispatchSkill.py",
+        "lines": 444,
+        "empty_lines": 73,
+        "comment_lines": 30,
+        "functions": 6,
+        "classes": 1,
+        "issues": [
+          "Long function '__init__' (99 lines)",
+          "Missing docstring in function '__init__'"
+        ],
+        "complexity": 7,
+        "quality_score": 90
+      },
+      {
+        "file": "app/a2a/agents/calculationAgent/active/enhancedCalculationAgentSdk.py",
+        "lines": 1314,
+        "empty_lines": 165,
+        "comment_lines": 72,
+        "functions": 3,
+        "classes": 3,
+        "issues": [
+          "Long function '__init__' (84 lines)",
+          "Missing docstring in function '__init__'"
+        ],
+        "complexity": 6,
+        "quality_score": 90
+      },
+      {
+        "file": "app/a2a/agents/calculationAgent/active/test_comprehensive_calculation.py",
+        "lines": 389,
+        "empty_lines": 64,
+        "comment_lines": 38,
+        "functions": 1,
+        "classes": 0,
+        "issues": [
+          "Missing docstring in function 'test_func'"
+        ],
+        "complexity": 1,
+        "quality_score": 95
+      },
+      {
+        "file": "app/a2a/agents/calculationAgent/active/__init__.py",
+        "lines": 7,
+        "empty_lines": 2,
+        "comment_lines": 0,
+        "functions": 0,
+        "classes": 0,
+        "issues": [],
+        "complexity": 0,
+        "quality_score": 100
+      },
+      {
+        "file": "app/a2a/agents/calculationAgent/active/conversationalCalculationInterface.py",
+        "lines": 537,
+        "empty_lines": 91,
+        "comment_lines": 34,
+        "functions": 8,
+        "classes": 3,
+        "issues": [
+          "Missing docstring in function '__init__'"
+        ],
+        "complexity": 11,
+        "quality_score": 95
+      },
+      {
+        "file": "app/a2a/agents/calculationAgent/active/enhancedCalculationSkills.py",
+        "lines": 1693,
+        "empty_lines": 261,
+        "comment_lines": 112,
+        "functions": 14,
+        "classes": 3,
+        "issues": [
+          "Missing docstring in function '__init__'",
+          "Missing docstring in function 'to_dict'",
+          "Missing docstring in function '__init__'",
+          "Missing docstring in function 'to_dict'",
+          "Missing docstring in function '__init__'",
+          "Missing docstring in function 'eval_expr'"
+        ],
+        "complexity": 17,
+        "quality_score": 70
+      },
+      {
+        "file": "app/a2a/agents/calculationAgent/active/intelligentDispatchSkillEnhanced.py",
+        "lines": 427,
+        "empty_lines": 63,
+        "comment_lines": 25,
+        "functions": 8,
+        "classes": 1,
+        "issues": [
+          "Missing docstring in function '__init__'"
+        ],
+        "complexity": 9,
+        "quality_score": 95
+      },
+      {
+        "file": "app/a2a/agents/calculationAgent/active/naturalLanguageParser.py",
+        "lines": 572,
+        "empty_lines": 86,
+        "comment_lines": 32,
+        "functions": 19,
+        "classes": 4,
+        "issues": [
+          "Long function '_initialize_patterns' (68 lines)",
+          "Long function '_extract_expression_and_parameters' (70 lines)",
+          "Missing docstring in function '__init__'",
+          "Missing docstring in function '__init__'"
+        ],
+        "complexity": 23,
+        "quality_score": 80
+      },
+      {
+        "file": "app/a2a/agents/calculationAgent/active/comprehensiveCalculationAgentSdk.py",
+        "lines": 1596,
+        "error": "Syntax error: invalid syntax (<unknown>, line 1193)",
+        "quality_score": 0
+      },
+      {
+        "file": "app/a2a/agents/calculationAgent/active/intelligentDispatcherSkill.py",
+        "lines": 381,
+        "empty_lines": 55,
+        "comment_lines": 29,
+        "functions": 5,
+        "classes": 1,
+        "issues": [
+          "Long function '__init__' (77 lines)",
+          "Long function '_extract_basic_parameters' (66 lines)",
+          "Missing docstring in function '__init__'"
+        ],
+        "complexity": 6,
+        "quality_score": 85
+      },
+      {
+        "file": "app/a2a/agents/calculationAgent/active/grok_time_validator.py",
+        "lines": 391,
+        "empty_lines": 70,
+        "comment_lines": 24,
+        "functions": 4,
+        "classes": 1,
+        "issues": [
+          "Missing docstring in function '__init__'"
+        ],
+        "complexity": 5,
+        "quality_score": 95
+      }
+    ]
+  },
+  {
+    "directory": "app/a2a/agents/dataManager",
+    "files_analyzed": 6,
+    "total_lines": 3041,
+    "total_issues": 13,
+    "quality_score": 89.17,
+    "file_results": [
+      {
+        "file": "app/a2a/agents/dataManager/__init__.py",
+        "lines": 1,
+        "empty_lines": 1,
+        "comment_lines": 0,
+        "functions": 0,
+        "classes": 0,
+        "issues": [],
+        "complexity": 0,
+        "quality_score": 100
+      },
+      {
+        "file": "app/a2a/agents/dataManager/active/__init__.py",
+        "lines": 1,
+        "empty_lines": 1,
+        "comment_lines": 0,
+        "functions": 0,
+        "classes": 0,
+        "issues": [],
+        "complexity": 0,
+        "quality_score": 100
+      },
+      {
+        "file": "app/a2a/agents/dataManager/active/dataManagerAgentSdk.py",
+        "lines": 81,
+        "empty_lines": 12,
+        "comment_lines": 10,
+        "functions": 4,
+        "classes": 0,
+        "issues": [
+          "Missing docstring in function 'initialize_agent_trust'",
+          "Missing docstring in function 'get_trust_contract'",
+          "Missing docstring in function 'verify_a2a_message'",
+          "Missing docstring in function 'sign_a2a_message'"
+        ],
+        "complexity": 4,
+        "quality_score": 80
+      },
+      {
+        "file": "app/a2a/agents/dataManager/active/comprehensiveDataManagerSdk.py",
+        "lines": 1600,
+        "empty_lines": 267,
+        "comment_lines": 149,
+        "functions": 6,
+        "classes": 5,
+        "issues": [
+          "Long function '__init__' (108 lines)",
+          "Missing docstring in function '__init__'"
+        ],
+        "complexity": 11,
+        "quality_score": 90
+      },
+      {
+        "file": "app/a2a/agents/dataManager/active/enhancedDataManagerAgentSdk.py",
+        "lines": 1035,
+        "empty_lines": 172,
+        "comment_lines": 102,
+        "functions": 8,
+        "classes": 5,
+        "issues": [
+          "Long function '__init__' (71 lines)",
+          "Missing docstring in function '__init__'",
+          "Missing docstring in function 'initialize_agent_trust'",
+          "Missing docstring in function 'get_trust_contract'",
+          "Missing docstring in function 'verify_a2a_message'",
+          "Missing docstring in function 'sign_a2a_message'",
+          "Missing docstring in class 'StorageBackend'"
+        ],
+        "complexity": 13,
+        "quality_score": 65
+      },
+      {
+        "file": "app/a2a/agents/dataManager/active/test_comprehensive_data_manager.py",
+        "lines": 323,
+        "empty_lines": 56,
+        "comment_lines": 31,
+        "functions": 0,
+        "classes": 0,
+        "issues": [],
+        "complexity": 0,
+        "quality_score": 100
+      }
+    ]
+  },
+  {
+    "directory": "app/a2a/common",
+    "files_analyzed": 3,
+    "total_lines": 3041,
+    "total_issues": 5,
+    "quality_score": 91.67,
+    "file_results": [
+      {
+        "file": "app/a2a/common/mcpQualityAssessmentTools.py",
+        "lines": 947,
+        "empty_lines": 134,
+        "comment_lines": 40,
+        "functions": 5,
+        "classes": 1,
+        "issues": [
+          "Missing docstring in function '__init__'"
+        ],
+        "complexity": 6,
+        "quality_score": 95
+      },
+      {
+        "file": "app/a2a/common/mcpValidationTools.py",
+        "lines": 1392,
+        "empty_lines": 190,
+        "comment_lines": 80,
+        "functions": 10,
+        "classes": 1,
+        "issues": [
+          "Long function '_generate_executive_summary' (57 lines)",
+          "Long function '_generate_technical_details' (59 lines)",
+          "Missing docstring in function '__init__'"
+        ],
+        "complexity": 11,
+        "quality_score": 85
+      },
+      {
+        "file": "app/a2a/common/mcpPerformanceTools.py",
+        "lines": 702,
+        "empty_lines": 78,
+        "comment_lines": 45,
+        "functions": 2,
+        "classes": 1,
+        "issues": [
+          "Missing docstring in function '__init__'"
+        ],
+        "complexity": 3,
+        "quality_score": 95
+      }
+    ]
+  }
+]

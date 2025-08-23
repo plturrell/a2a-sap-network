@@ -1,0 +1,141 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    
+    <Dialog id="errorDialog"
+            title="Error Details" 
+            contentWidth="800px"
+            contentHeight="600px"
+            resizable="true"
+            draggable="true">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Error Statistics -->
+                <Panel headerText="Error Summary" class="sapUiMediumMarginBottom">
+                    <Grid defaultSpan="L6 M6 S12" class="sapUiMediumMargin">
+                        <VBox>
+                            <Label text="Total Errors:"/>
+                            <ObjectNumber number="{errorDialog>/statistics/totalErrors}" 
+                                         state="{= ${errorDialog>/statistics/totalErrors} > 0 ? 'Error' : 'Success' }"/>
+                        </VBox>
+                        <VBox>
+                            <Label text="Network Errors:"/>
+                            <ObjectNumber number="{errorDialog>/statistics/networkErrors}" 
+                                         state="Warning"/>
+                        </VBox>
+                        <VBox>
+                            <Label text="Server Errors:"/>
+                            <ObjectNumber number="{errorDialog>/statistics/serverErrors}" 
+                                         state="Error"/>
+                        </VBox>
+                        <VBox>
+                            <Label text="Validation Errors:"/>
+                            <ObjectNumber number="{errorDialog>/statistics/validationErrors}" 
+                                         state="Warning"/>
+                        </VBox>
+                    </Grid>
+                </Panel>
+                
+                <!-- Error List -->
+                <Panel headerText="Recent Errors ({= ${errorDialog>/errors}.length })" 
+                       class="sapUiMediumMarginBottom">
+                    
+                    <Table items="{errorDialog>/errors}" 
+                           growing="true" 
+                           growingThreshold="10"
+                           class="sapUiSizeCompact">
+                        
+                        <columns>
+                            <Column width="12em">
+                                <Text text="Time"/>
+                            </Column>
+                            <Column width="8em">
+                                <Text text="Type"/>
+                            </Column>
+                            <Column>
+                                <Text text="Message"/>
+                            </Column>
+                            <Column width="10em">
+                                <Text text="Status"/>
+                            </Column>
+                            <Column width="12em">
+                                <Text text="Actions"/>
+                            </Column>
+                        </columns>
+                        
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <Text text="{path: 'errorDialog>timestamp', formatter: '.formatErrorTime'}"/>
+                                    
+                                    <ObjectStatus text="{errorDialog>category}" 
+                                                  state="{path: 'errorDialog>category', formatter: '.formatErrorState'}"/>
+                                    
+                                    <VBox>
+                                        <Text text="{errorDialog>message}" 
+                                              maxLines="2"/>
+                                        <Text text="ID: {errorDialog>id}" 
+                                              class="sapUiTinyText"/>
+                                    </VBox>
+                                    
+                                    <Text text="{errorDialog>context/status} {errorDialog>context/statusText}"/>
+                                    
+                                    <HBox>
+                                        <Button icon="sap-icon://refresh" 
+                                               tooltip="Retry Operation"
+                                               type="Transparent"
+                                               press="onRetryError"/>
+                                        <Button icon="sap-icon://warning" 
+                                               tooltip="Report Error"
+                                               type="Transparent"
+                                               press="onReportError"/>
+                                    </HBox>
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Error Details Expansion Panel -->
+                <Panel headerText="Error Details" 
+                       expandable="true"
+                       expanded="false"
+                       visible="{= ${errorDialog>/errors}.length > 0 }">
+                    
+                    <VBox class="sapUiMediumMargin">
+                        <Text text="Last Error Details:" 
+                              class="sapUiMediumMarginBottom"/>
+                        
+                        <FormattedText htmlText="{path: 'errorDialog>/statistics/lastError', formatter: '.formatErrorDetails'}"
+                                       class="sapUiMediumMarginBottom"/>
+                        
+                        <Text text="Browser Information:" 
+                              class="sapUiMediumMarginTop sapUiTinyMarginBottom"/>
+                        <Text text="User Agent: {= navigator.userAgent }" 
+                              class="sapUiTinyText"/>
+                        <Text text="URL: {= window.location.href }" 
+                              class="sapUiTinyText"/>
+                        <Text text="Timestamp: {= new Date().toISOString() }" 
+                              class="sapUiTinyText"/>
+                    </VBox>
+                </Panel>
+                
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button text="Clear All Errors" 
+                    icon="sap-icon://clear-all"
+                    press="onClearAllErrors"/>
+        </beginButton>
+        
+        <endButton>
+            <Button text="Close" 
+                    type="Emphasized"
+                    press="onCloseErrorDialog"/>
+        </endButton>
+        
+    </Dialog>
+</core:FragmentDefinition>

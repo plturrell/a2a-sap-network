@@ -1,0 +1,78 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['${PROMETHEUS_HOST:-prometheus}:${PROMETHEUS_PORT:-9090}']
+
+  # A2A Agents monitoring
+  - job_name: 'a2a-main-api'
+    static_configs:
+      - targets: ['a2a-agents:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Individual A2A Agents
+  - job_name: 'a2a-agent0'
+    static_configs:
+      - targets: ['a2a-agents:8001']
+    metrics_path: '/health'
+    scrape_interval: 15s
+
+  - job_name: 'a2a-agent1'
+    static_configs:
+      - targets: ['a2a-agents:8002']
+    metrics_path: '/health'
+    scrape_interval: 15s
+
+  - job_name: 'a2a-agent2'
+    static_configs:
+      - targets: ['a2a-agents:8003']
+    metrics_path: '/health'
+    scrape_interval: 15s
+
+  - job_name: 'a2a-agent3'
+    static_configs:
+      - targets: ['a2a-agents:8004']
+    metrics_path: '/health'
+    scrape_interval: 15s
+
+  - job_name: 'a2a-agent4'
+    static_configs:
+      - targets: ['a2a-agents:8005']
+    metrics_path: '/health'
+    scrape_interval: 15s
+
+  - job_name: 'a2a-agent5'
+    static_configs:
+      - targets: ['a2a-agents:8006']
+    metrics_path: '/health'
+    scrape_interval: 15s
+
+  - job_name: 'a2a-agent6'
+    static_configs:
+      - targets: ['a2a-agents:8007']
+    metrics_path: '/health'
+    scrape_interval: 15s
+
+  # System metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['elasticsearch:9200']
+    metrics_path: '/_prometheus/metrics'
+
+  # Node exporter (if available)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['${NODE_EXPORTER_HOST:-node-exporter}:${NODE_EXPORTER_PORT:-9100}']

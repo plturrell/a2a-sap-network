@@ -1,0 +1,255 @@
+<core:FragmentDefinition 
+    xmlns="sap.m" 
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form">
+    
+    <Dialog id="shareProjectDialog"
+           title="{i18n>shareProject}"
+           contentWidth="90%"
+           maxWidth="35rem"
+           contentHeight="auto"
+           class="a2a-tablet-dialog"
+           resizable="true">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <!-- Project Info -->
+                <Panel headerText="{i18n>projectDetails}" class="sapUiMediumMarginBottom">
+                    <HBox alignItems="Center" class="sapUiSmallMargin">
+                        <core:Icon src="sap-icon://folder" 
+                                  size="2rem"
+                                  class="sapUiMediumMarginEnd"/>
+                        <VBox>
+                            <Title text="{/projectName}" level="H4"/>
+                            <Text text="{/projectDescription}" class="sapUiSmallText"/>
+                            <Text text="{i18n>owner}: {/projectOwner}" class="sapUiTinyText"/>
+                        </VBox>
+                    </HBox>
+                </Panel>
+                
+                <!-- Sharing Options -->
+                <Panel headerText="{i18n>shareWith}">
+                    <IconTabBar selectedKey="{/shareMode}" 
+                               select="onShareModeSelect"
+                               class="sapUiMediumMarginBottom">
+                        <items>
+                            <IconTabFilter key="users" 
+                                          text="{i18n>specificUsers}"
+                                          icon="sap-icon://person-placeholder"/>
+                            <IconTabFilter key="link" 
+                                          text="{i18n>shareLink}"
+                                          icon="sap-icon://chain-link"/>
+                            <IconTabFilter key="public" 
+                                          text="{i18n>makePublic}"
+                                          icon="sap-icon://world"/>
+                        </items>
+                        <content>
+                            <!-- Share with Specific Users -->
+                            <VBox visible="{= ${/shareMode} === 'users'}">
+                                <f:SimpleForm editable="true" layout="ResponsiveGridLayout">
+                                    <f:content>
+                                        <Label text="{i18n>addCollaborators}:" required="true"/>
+                                        <MultiInput value=""
+                                                   placeholder="{i18n>enterEmailOrUsername}"
+                                                   suggestionItems="{/userSuggestions}"
+                                                   tokens="{/selectedUsers}"
+                                                   tokenUpdate="onTokenUpdate">
+                                            <suggestionItems>
+                                                <core:Item text="{email}" key="{id}"/>
+                                            </suggestionItems>
+                                            <tokens>
+                                                <Token text="{name}" key="{id}"/>
+                                            </tokens>
+                                        </MultiInput>
+                                        
+                                        <Label text="{i18n>permission}:"/>
+                                        <Select selectedKey="{/defaultPermission}">
+                                            <core:Item key="view" text="{i18n>viewOnly}"/>
+                                            <core:Item key="comment" text="{i18n>canComment}"/>
+                                            <core:Item key="edit" text="{i18n>canEdit}"/>
+                                            <core:Item key="admin" text="{i18n>admin}"/>
+                                        </Select>
+                                        
+                                        <Label text="{i18n>message}:"/>
+                                        <TextArea value="{/shareMessage}"
+                                                 placeholder="{i18n>optionalMessage}"
+                                                 rows="3"/>
+                                    </f:content>
+                                </f:SimpleForm>
+                                
+                                <!-- Current Collaborators -->
+                                <Panel headerText="{i18n>currentCollaborators}" 
+                                      visible="{= ${/collaborators}.length > 0}"
+                                      class="sapUiSmallMarginTop">
+                                    <Table items="{/collaborators}" mode="Delete" delete="onRemoveCollaborator">
+                                        <columns>
+                                            <Column>
+                                                <Text text="{i18n>user}"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>permission}"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>added}"/>
+                                            </Column>
+                                        </columns>
+                                        <items>
+                                            <ColumnListItem>
+                                                <cells>
+                                                    <HBox alignItems="Center">
+                                                        <core:Icon src="sap-icon://person-placeholder" 
+                                                                  class="sapUiTinyMarginEnd"/>
+                                                        <VBox>
+                                                            <Text text="{name}"/>
+                                                            <Text text="{email}" class="sapUiSmallText"/>
+                                                        </VBox>
+                                                    </HBox>
+                                                    <Select selectedKey="{permission}" change="onPermissionChange">
+                                                        <core:Item key="view" text="{i18n>viewOnly}"/>
+                                                        <core:Item key="comment" text="{i18n>canComment}"/>
+                                                        <core:Item key="edit" text="{i18n>canEdit}"/>
+                                                        <core:Item key="admin" text="{i18n>admin}"/>
+                                                    </Select>
+                                                    <Text text="{addedDate}"/>
+                                                </cells>
+                                            </ColumnListItem>
+                                        </items>
+                                    </Table>
+                                </Panel>
+                            </VBox>
+                            
+                            <!-- Share Link -->
+                            <VBox visible="{= ${/shareMode} === 'link'}">
+                                <f:SimpleForm editable="true" layout="ResponsiveGridLayout">
+                                    <f:content>
+                                        <Label text="{i18n>linkAccess}:"/>
+                                        <Select selectedKey="{/linkPermission}">
+                                            <core:Item key="view" text="{i18n>viewOnly}"/>
+                                            <core:Item key="comment" text="{i18n>canComment}"/>
+                                            <core:Item key="edit" text="{i18n>canEdit}"/>
+                                        </Select>
+                                        
+                                        <Label text="{i18n>linkExpiration}:"/>
+                                        <Select selectedKey="{/linkExpiration}">
+                                            <core:Item key="never" text="{i18n>neverExpires}"/>
+                                            <core:Item key="1day" text="{i18n>1day}"/>
+                                            <core:Item key="1week" text="{i18n>1week}"/>
+                                            <core:Item key="1month" text="{i18n>1month}"/>
+                                            <core:Item key="custom" text="{i18n>customDate}"/>
+                                        </Select>
+                                        
+                                        <Label text="{i18n>customExpiration}:" 
+                                              visible="{= ${/linkExpiration} === 'custom'}"/>
+                                        <DateTimePicker value="{/customExpiration}"
+                                                       visible="{= ${/linkExpiration} === 'custom'}"/>
+                                        
+                                        <Label text="{i18n>requirePassword}:"/>
+                                        <Switch state="{/requirePassword}"/>
+                                        
+                                        <Label text="{i18n>password}:" 
+                                              visible="{/requirePassword}"/>
+                                        <Input value="{/linkPassword}"
+                                              type="Password"
+                                              visible="{/requirePassword}"/>
+                                    </f:content>
+                                </f:SimpleForm>
+                                
+                                <!-- Generated Link -->
+                                <Panel headerText="{i18n>shareableLink}" 
+                                      visible="{/linkGenerated}"
+                                      class="sapUiSmallMarginTop">
+                                    <VBox class="sapUiSmallMargin">
+                                        <HBox alignItems="Center">
+                                            <Input value="{/generatedLink}" 
+                                                  width="100%" 
+                                                  editable="false"
+                                                  class="sapUiMediumMarginEnd"/>
+                                            <Button icon="sap-icon://copy" 
+                                                   tooltip="{i18n>copyLink}"
+                                                   press="onCopyLink"/>
+                                        </HBox>
+                                        
+                                        <HBox class="sapUiSmallMarginTop">
+                                            <Button text="{i18n>generateQR}" 
+                                                   icon="sap-icon://qr-code"
+                                                   press="onGenerateQR"
+                                                   class="sapUiTinyMarginEnd"/>
+                                            <Button text="{i18n>previewLink}" 
+                                                   icon="sap-icon://preview"
+                                                   press="onPreviewLink"/>
+                                        </HBox>
+                                    </VBox>
+                                </Panel>
+                            </VBox>
+                            
+                            <!-- Make Public -->
+                            <VBox visible="{= ${/shareMode} === 'public'}">
+                                <MessageStrip text="{i18n>publicWarning}"
+                                            type="Warning"
+                                            showIcon="true"
+                                            class="sapUiMediumMarginBottom"/>
+                                
+                                <f:SimpleForm editable="true" layout="ResponsiveGridLayout">
+                                    <f:content>
+                                        <Label text="{i18n>publicAccess}:"/>
+                                        <Select selectedKey="{/publicPermission}">
+                                            <core:Item key="view" text="{i18n>viewOnly}"/>
+                                            <core:Item key="comment" text="{i18n>canComment}"/>
+                                            <core:Item key="fork" text="{i18n>canFork}"/>
+                                        </Select>
+                                        
+                                        <Label text="{i18n>license}:"/>
+                                        <Select selectedKey="{/license}">
+                                            <core:Item key="mit" text="MIT License"/>
+                                            <core:Item key="apache" text="Apache 2.0"/>
+                                            <core:Item key="gpl" text="GPL v3"/>
+                                            <core:Item key="proprietary" text="{i18n>proprietary}"/>
+                                        </Select>
+                                        
+                                        <Label text="{i18n>tags}:"/>
+                                        <MultiInput tokens="{/publicTags}"
+                                                   placeholder="{i18n>addTags}">
+                                            <tokens>
+                                                <Token text="{text}" key="{key}"/>
+                                            </tokens>
+                                        </MultiInput>
+                                    </f:content>
+                                </f:SimpleForm>
+                                
+                                <CheckBox text="{i18n>allowFeedback}"
+                                         selected="{/allowPublicFeedback}"
+                                         class="sapUiSmallMarginTop"/>
+                                <CheckBox text="{i18n>allowDiscussions}"
+                                         selected="{/allowDiscussions}"/>
+                            </VBox>
+                        </content>
+                    </IconTabBar>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button text="{/primaryButtonText}"
+                   type="Emphasized"
+                   icon="{/primaryButtonIcon}"
+                   press="onConfirmShare"/>
+        </beginButton>
+        
+        <buttons>
+            <Button text="{i18n>generateLink}"
+                   icon="sap-icon://chain-link"
+                   press="onGenerateLink"
+                   visible="{= ${/shareMode} === 'link' && !${/linkGenerated}}"/>
+            <Button text="{i18n>revokeAccess}"
+                   icon="sap-icon://decline"
+                   type="Attention"
+                   press="onRevokeAccess"
+                   visible="{/hasSharedAccess}"/>
+        </buttons>
+        
+        <endButton>
+            <Button text="{i18n>close}"
+                   press="onShareDialogClose"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

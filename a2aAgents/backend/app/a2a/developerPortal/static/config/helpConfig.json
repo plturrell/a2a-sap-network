@@ -1,0 +1,784 @@
+{
+  "helpConfiguration": {
+    "version": "1.0.0",
+    "lastUpdated": "2024-01-01",
+    "sapDigitalAssistant": {
+      "enabled": false,
+      "apiEndpoint": "/api/v1/digital-assistant",
+      "apiKey": "${SAP_DIGITAL_ASSISTANT_KEY}"
+    },
+    "views": {
+      "dashboard": {
+        "title": "Dashboard Help",
+        "description": "Monitor agent activities and system health",
+        "tooltips": {
+          "activeAgents": "Number of agents currently running and processing tasks",
+          "taskQueue": "Total tasks waiting to be processed by agents",
+          "systemHealth": "Overall system performance and availability status",
+          "refreshRate": "How often the dashboard updates with new data"
+        },
+        "contextualHelp": {
+          "metrics": {
+            "title": "Understanding Metrics",
+            "content": "Dashboard metrics provide real-time insights into your A2A system performance. Active agents show current processing capacity, while task queue indicates workload.",
+            "links": [
+              {
+                "text": "Metrics Guide",
+                "url": "/docs/metrics-guide"
+              }
+            ]
+          },
+          "alerts": {
+            "title": "System Alerts",
+            "content": "Alerts notify you of important system events, errors, or performance issues that require attention.",
+            "tips": [
+              "Click on alerts to view details",
+              "Configure alert thresholds in settings",
+              "Export alerts for analysis"
+            ]
+          }
+        },
+        "guidedTour": {
+          "enabled": true,
+          "steps": [
+            {
+              "target": ".dashboard-header",
+              "title": "Welcome to A2A Dashboard",
+              "content": "This is your central hub for monitoring all agent activities."
+            },
+            {
+              "target": ".agent-metrics",
+              "title": "Agent Metrics",
+              "content": "View real-time statistics about agent performance and status."
+            },
+            {
+              "target": ".task-queue",
+              "title": "Task Queue",
+              "content": "Monitor pending tasks and their processing status."
+            },
+            {
+              "target": ".system-health",
+              "title": "System Health",
+              "content": "Check overall system performance and availability."
+            }
+          ]
+        }
+      },
+      "agents": {
+        "title": "Agent Management Help",
+        "description": "Create, configure, and manage A2A agents",
+        "tooltips": {
+          "agentStatus": "Current operational state of the agent (Active, Inactive, Error)",
+          "agentType": "The specific role and capabilities of this agent",
+          "lastActivity": "Time since the agent last processed a task",
+          "configuration": "Agent-specific settings and parameters"
+        },
+        "contextualHelp": {
+          "registration": {
+            "title": "Agent Registration",
+            "content": "Register new agents by providing required metadata and capabilities. Each agent must have a unique ID and defined skill set.",
+            "requirements": [
+              "Unique agent identifier",
+              "Agent type and capabilities",
+              "API endpoint configuration",
+              "Authentication credentials"
+            ]
+          },
+          "lifecycle": {
+            "title": "Agent Lifecycle",
+            "content": "Agents go through various states: Registration → Initialization → Active → Inactive. Monitor and manage these states effectively.",
+            "states": {
+              "registered": "Agent is registered but not yet initialized",
+              "initializing": "Agent is starting up and loading configurations",
+              "active": "Agent is ready to process tasks",
+              "processing": "Agent is currently handling a task",
+              "inactive": "Agent is temporarily disabled",
+              "error": "Agent encountered an error and needs attention"
+            }
+          }
+        },
+        "guidedTour": {
+          "enabled": true,
+          "steps": [
+            {
+              "target": ".agent-list",
+              "title": "Agent List",
+              "content": "View all registered agents and their current status."
+            },
+            {
+              "target": ".register-agent-btn",
+              "title": "Register New Agent",
+              "content": "Click here to add a new agent to your system."
+            },
+            {
+              "target": ".agent-actions",
+              "title": "Agent Actions",
+              "content": "Manage individual agents - start, stop, or configure them."
+            }
+          ]
+        }
+      },
+      "skills": {
+        "title": "Skills Management Help",
+        "description": "Configure and manage agent skills and capabilities",
+        "tooltips": {
+          "skillName": "Unique identifier for the skill",
+          "skillType": "Category of skill (Data Processing, API Integration, etc.)",
+          "requiredParameters": "Input parameters needed to execute this skill",
+          "outputFormat": "Expected format of skill execution results"
+        },
+        "contextualHelp": {
+          "creation": {
+            "title": "Creating Skills",
+            "content": "Skills define what agents can do. Each skill should have a clear purpose, defined inputs/outputs, and error handling.",
+            "bestPractices": [
+              "Use descriptive skill names",
+              "Define clear input/output schemas",
+              "Include comprehensive error handling",
+              "Document skill limitations"
+            ]
+          },
+          "assignment": {
+            "title": "Skill Assignment",
+            "content": "Assign skills to agents based on their capabilities and role in the workflow.",
+            "considerations": [
+              "Agent processing capacity",
+              "Skill complexity and resource requirements",
+              "Workflow dependencies",
+              "Load balancing across agents"
+            ]
+          }
+        }
+      },
+      "workflows": {
+        "title": "Workflow Management Help",
+        "description": "Design and orchestrate agent workflows",
+        "tooltips": {
+          "workflowStatus": "Current state of workflow execution",
+          "executionTime": "Total time taken to complete the workflow",
+          "stepProgress": "Number of completed steps vs total steps",
+          "errorRate": "Percentage of failed executions"
+        },
+        "contextualHelp": {
+          "design": {
+            "title": "Workflow Design",
+            "content": "Create workflows by connecting agents and defining task sequences. Use the visual designer for complex workflows.",
+            "components": {
+              "trigger": "Initiates workflow execution",
+              "task": "Individual processing step",
+              "condition": "Branching logic based on outcomes",
+              "parallel": "Execute multiple tasks simultaneously",
+              "loop": "Repeat tasks based on conditions"
+            }
+          },
+          "monitoring": {
+            "title": "Workflow Monitoring",
+            "content": "Track workflow execution in real-time, identify bottlenecks, and optimize performance.",
+            "metrics": [
+              "Execution time per step",
+              "Success/failure rates",
+              "Resource utilization",
+              "Queue depth at each step"
+            ]
+          }
+        },
+        "guidedTour": {
+          "enabled": true,
+          "steps": [
+            {
+              "target": ".workflow-designer",
+              "title": "Workflow Designer",
+              "content": "Drag and drop agents to create workflows visually."
+            },
+            {
+              "target": ".workflow-templates",
+              "title": "Templates",
+              "content": "Start with pre-built templates for common scenarios."
+            },
+            {
+              "target": ".workflow-execution",
+              "title": "Execution Monitor",
+              "content": "Track workflow progress in real-time."
+            }
+          ]
+        }
+      },
+      "logs": {
+        "title": "Logs and Monitoring Help",
+        "description": "View system logs and debug issues",
+        "tooltips": {
+          "logLevel": "Severity of log entry (DEBUG, INFO, WARN, ERROR)",
+          "timestamp": "When the log entry was created",
+          "source": "Component or agent that generated the log",
+          "correlationId": "ID to track related log entries across services"
+        },
+        "contextualHelp": {
+          "filtering": {
+            "title": "Log Filtering",
+            "content": "Use filters to find specific log entries quickly. Combine multiple filters for precise results.",
+            "filters": {
+              "timeRange": "Select start and end time for logs",
+              "logLevel": "Filter by severity level",
+              "agent": "Show logs from specific agents",
+              "keyword": "Search for specific terms",
+              "correlationId": "Track related events"
+            }
+          },
+          "analysis": {
+            "title": "Log Analysis",
+            "content": "Analyze logs to identify patterns, errors, and performance issues.",
+            "tools": [
+              "Export logs for external analysis",
+              "Create custom dashboards",
+              "Set up automated alerts",
+              "Generate reports"
+            ]
+          }
+        }
+      },
+      "settings": {
+        "title": "Settings Help",
+        "description": "Configure system preferences and parameters",
+        "tooltips": {
+          "apiTimeout": "Maximum time to wait for API responses",
+          "retryAttempts": "Number of times to retry failed operations",
+          "notificationPreferences": "How you want to receive system notifications",
+          "dataRetention": "How long to keep historical data"
+        },
+        "contextualHelp": {
+          "general": {
+            "title": "General Settings",
+            "content": "Configure system-wide preferences that affect all components.",
+            "categories": {
+              "performance": "Timeout, retry, and caching settings",
+              "security": "Authentication and authorization",
+              "notifications": "Alert and notification preferences",
+              "data": "Storage and retention policies"
+            }
+          },
+          "advanced": {
+            "title": "Advanced Configuration",
+            "content": "Fine-tune system behavior for optimal performance.",
+            "warning": "Changes to advanced settings can impact system stability. Test in non-production environment first.",
+            "options": [
+              "Thread pool configuration",
+              "Memory allocation limits",
+              "Network buffer sizes",
+              "Custom middleware settings"
+            ]
+          }
+        }
+      },
+      "bpmnDesigner": {
+        "title": "BPMN Workflow Designer Advanced Features",
+        "description": "Advanced workflow design with BPMN 2.0 notation",
+        "tooltips": {
+          "subProcess": "Create modular workflows with embedded sub-processes",
+          "eventBasedGateway": "React to multiple events with conditional branching",
+          "compensationActivity": "Define rollback actions for failed transactions",
+          "multiInstance": "Execute activities in parallel for collections",
+          "callActivity": "Reuse existing workflows as building blocks"
+        },
+        "contextualHelp": {
+          "advancedPatterns": {
+            "title": "Advanced BPMN Patterns",
+            "content": "Master complex workflow patterns for enterprise-grade automation.",
+            "patterns": {
+              "saga": "Implement distributed transactions with compensating actions",
+              "scatterGather": "Distribute work across multiple agents and aggregate results",
+              "circuitBreaker": "Prevent cascading failures with automatic fallbacks",
+              "retryWithBackoff": "Handle transient failures with exponential backoff",
+              "deadlineHandling": "Enforce time constraints with escalation paths"
+            }
+          },
+          "optimization": {
+            "title": "Workflow Optimization",
+            "content": "Optimize workflow performance and resource utilization.",
+            "techniques": [
+              "Identify and eliminate bottlenecks using execution analytics",
+              "Implement parallel processing where possible",
+              "Use caching for expensive operations",
+              "Configure appropriate timeout values",
+              "Monitor and adjust resource allocation"
+            ]
+          },
+          "errorHandling": {
+            "title": "Advanced Error Handling",
+            "content": "Build resilient workflows with comprehensive error management.",
+            "strategies": {
+              "boundaryEvents": "Attach error handlers to specific activities",
+              "compensationFlow": "Define rollback procedures for each step",
+              "errorPropagation": "Control how errors bubble up through sub-processes",
+              "customErrors": "Create domain-specific error types and handlers",
+              "recoveryStrategies": "Implement automatic recovery mechanisms"
+            }
+          }
+        }
+      },
+      "agentOrchestration": {
+        "title": "Agent Orchestration Patterns",
+        "description": "Advanced patterns for coordinating multiple agents",
+        "tooltips": {
+          "loadBalancer": "Distribute work across agents based on capacity",
+          "healthCheck": "Monitor agent health and automatically failover",
+          "priorityQueue": "Process high-priority tasks first",
+          "rateLimiting": "Control request rates to prevent overload",
+          "bulkheading": "Isolate agent failures to prevent system-wide impact"
+        },
+        "contextualHelp": {
+          "patterns": {
+            "title": "Orchestration Patterns",
+            "content": "Implement sophisticated agent coordination strategies.",
+            "implementations": {
+              "masterSlave": "Centralized control with worker agents",
+              "peerToPeer": "Decentralized coordination between equals",
+              "publishSubscribe": "Event-driven agent communication",
+              "requestReply": "Synchronous agent interactions",
+              "fireAndForget": "Asynchronous task delegation"
+            }
+          },
+          "scaling": {
+            "title": "Scaling Strategies",
+            "content": "Scale agent deployments to handle varying workloads.",
+            "approaches": [
+              "Horizontal scaling: Add more agent instances",
+              "Vertical scaling: Increase agent resources",
+              "Auto-scaling based on metrics",
+              "Predictive scaling using ML models",
+              "Geographic distribution for latency optimization"
+            ]
+          }
+        }
+      },
+      "multiAgentCollaboration": {
+        "title": "Multi-Agent Collaboration",
+        "description": "Enable complex agent interactions and negotiations",
+        "tooltips": {
+          "negotiationProtocol": "Define rules for agent negotiations",
+          "consensusAlgorithm": "Achieve agreement among multiple agents",
+          "taskDecomposition": "Break complex tasks into agent-sized pieces",
+          "resultAggregation": "Combine outputs from multiple agents",
+          "conflictResolution": "Handle disagreements between agents"
+        },
+        "contextualHelp": {
+          "collaboration": {
+            "title": "Collaboration Mechanisms",
+            "content": "Enable agents to work together effectively.",
+            "mechanisms": {
+              "sharedMemory": "Common data store for agent coordination",
+              "blackboard": "Shared workspace for collaborative problem-solving",
+              "contractNet": "Task allocation through bidding",
+              "teamFormation": "Dynamic agent team creation",
+              "roleAssignment": "Assign specialized roles to agents"
+            }
+          },
+          "communication": {
+            "title": "Inter-Agent Communication",
+            "content": "Establish reliable communication channels between agents.",
+            "protocols": [
+              "FIPA-ACL for standardized messaging",
+              "Custom protocols for specific domains",
+              "Encrypted channels for sensitive data",
+              "Multicast for group communications",
+              "Priority messaging for critical updates"
+            ]
+          }
+        }
+      },
+      "performanceOptimization": {
+        "title": "Performance Optimization",
+        "description": "Tune system performance for maximum efficiency",
+        "tooltips": {
+          "cacheStrategy": "Configure caching for frequently accessed data",
+          "connectionPooling": "Manage database connections efficiently",
+          "batchProcessing": "Process multiple items in single operations",
+          "asyncProcessing": "Use non-blocking operations where possible",
+          "resourceLimits": "Set appropriate memory and CPU limits"
+        },
+        "contextualHelp": {
+          "profiling": {
+            "title": "Performance Profiling",
+            "content": "Identify and resolve performance bottlenecks.",
+            "tools": [
+              "Built-in profiler for execution analysis",
+              "Distributed tracing with OpenTelemetry",
+              "Memory profiling for leak detection",
+              "Database query optimization",
+              "Network latency analysis"
+            ]
+          },
+          "optimization": {
+            "title": "Optimization Techniques",
+            "content": "Apply proven techniques to improve performance.",
+            "techniques": {
+              "indexing": "Create appropriate database indexes",
+              "denormalization": "Trade storage for query speed",
+              "materialized_views": "Pre-compute expensive queries",
+              "compression": "Reduce data transfer overhead",
+              "lazy_loading": "Load data only when needed"
+            }
+          }
+        }
+      },
+      "securityConfiguration": {
+        "title": "Security Configuration",
+        "description": "Configure advanced security features",
+        "tooltips": {
+          "mTLS": "Mutual TLS for agent-to-agent communication",
+          "rbac": "Role-based access control for fine-grained permissions",
+          "auditLogging": "Comprehensive audit trail of all operations",
+          "secretsManagement": "Secure storage and rotation of credentials",
+          "zeroTrust": "Verify every interaction, trust nothing"
+        },
+        "contextualHelp": {
+          "authentication": {
+            "title": "Advanced Authentication",
+            "content": "Implement robust authentication mechanisms.",
+            "methods": [
+              "OAuth 2.0 with PKCE flow",
+              "SAML 2.0 for enterprise SSO",
+              "API key management with rotation",
+              "Certificate-based authentication",
+              "Multi-factor authentication (MFA)"
+            ]
+          },
+          "encryption": {
+            "title": "Data Encryption",
+            "content": "Protect sensitive data at rest and in transit.",
+            "strategies": {
+              "atRest": "AES-256 encryption for stored data",
+              "inTransit": "TLS 1.3 for network communication",
+              "fieldLevel": "Encrypt specific sensitive fields",
+              "keyManagement": "HSM integration for key storage",
+              "tokenization": "Replace sensitive data with tokens"
+            }
+          }
+        }
+      },
+      "apiIntegrations": {
+        "title": "API Integrations",
+        "description": "Connect with external systems and services",
+        "tooltips": {
+          "openAPI": "Import/export OpenAPI specifications",
+          "graphQL": "GraphQL endpoint configuration",
+          "webhooks": "Real-time event notifications",
+          "apiGateway": "Centralized API management",
+          "rateLimiting": "Protect APIs from abuse"
+        },
+        "contextualHelp": {
+          "integration": {
+            "title": "Integration Patterns",
+            "content": "Implement reliable integrations with external systems.",
+            "patterns": [
+              "Adapter pattern for protocol translation",
+              "Facade pattern for simplified interfaces",
+              "Proxy pattern for controlled access",
+              "Bridge pattern for platform independence",
+              "Decorator pattern for enhanced functionality"
+            ]
+          },
+          "resilience": {
+            "title": "Resilient Integrations",
+            "content": "Build fault-tolerant API integrations.",
+            "features": {
+              "retry": "Automatic retry with exponential backoff",
+              "circuitBreaker": "Fail fast when services are down",
+              "fallback": "Graceful degradation strategies",
+              "timeout": "Prevent hanging requests",
+              "bulkhead": "Isolate failures between integrations"
+            }
+          }
+        }
+      },
+      "dataTransformation": {
+        "title": "Data Transformation Pipelines",
+        "description": "Build complex data processing pipelines",
+        "tooltips": {
+          "etlPipeline": "Extract, Transform, Load operations",
+          "streamProcessing": "Real-time data stream processing",
+          "dataValidation": "Ensure data quality and consistency",
+          "schemaEvolution": "Handle changing data formats",
+          "dataLineage": "Track data origin and transformations"
+        },
+        "contextualHelp": {
+          "transformations": {
+            "title": "Transformation Types",
+            "content": "Apply various data transformations in your pipelines.",
+            "types": [
+              "Format conversion (JSON, XML, CSV)",
+              "Data enrichment from external sources",
+              "Aggregation and summarization",
+              "Filtering and deduplication",
+              "Normalization and standardization"
+            ]
+          },
+          "pipeline": {
+            "title": "Pipeline Design",
+            "content": "Design efficient data processing pipelines.",
+            "bestPractices": {
+              "idempotency": "Ensure operations can be safely retried",
+              "checkpointing": "Save progress for recovery",
+              "parallelization": "Process data in parallel",
+              "backpressure": "Handle varying data rates",
+              "monitoring": "Track pipeline health and performance"
+            }
+          }
+        }
+      },
+      "customSkillDevelopment": {
+        "title": "Custom Skill Development",
+        "description": "Create custom skills for specialized tasks",
+        "tooltips": {
+          "skillSDK": "Software development kit for skill creation",
+          "skillTesting": "Test harness for skill validation",
+          "skillDeployment": "Deploy skills to agent runtime",
+          "skillVersioning": "Manage skill versions and updates",
+          "skillMarketplace": "Share skills with the community"
+        },
+        "contextualHelp": {
+          "development": {
+            "title": "Skill Development Guide",
+            "content": "Build custom skills using the A2A SDK.",
+            "steps": [
+              "Define skill interface and parameters",
+              "Implement skill logic with error handling",
+              "Add comprehensive unit tests",
+              "Document skill usage and limitations",
+              "Package and deploy to agents"
+            ]
+          },
+          "bestPractices": {
+            "title": "Skill Development Best Practices",
+            "content": "Follow these guidelines for robust skill development.",
+            "guidelines": {
+              "singleResponsibility": "Each skill should do one thing well",
+              "errorHandling": "Handle all possible error scenarios",
+              "performance": "Optimize for speed and resource usage",
+              "security": "Validate all inputs and outputs",
+              "documentation": "Provide clear usage examples"
+            }
+          }
+        }
+      },
+      "monitoringAnalytics": {
+        "title": "Monitoring and Analytics",
+        "description": "Advanced monitoring and analytics capabilities",
+        "tooltips": {
+          "customDashboards": "Create personalized monitoring dashboards",
+          "alerting": "Configure intelligent alerting rules",
+          "anomalyDetection": "ML-based anomaly detection",
+          "performanceBaselines": "Establish performance baselines",
+          "predictiveAnalytics": "Forecast future system behavior"
+        },
+        "contextualHelp": {
+          "metrics": {
+            "title": "Advanced Metrics",
+            "content": "Track detailed metrics for deep insights.",
+            "categories": [
+              "Business metrics: Task completion, SLA compliance",
+              "Technical metrics: Latency, throughput, errors",
+              "Resource metrics: CPU, memory, network usage",
+              "Custom metrics: Domain-specific measurements",
+              "Derived metrics: Calculated from raw data"
+            ]
+          },
+          "analysis": {
+            "title": "Analytics Tools",
+            "content": "Use built-in analytics for system optimization.",
+            "tools": {
+              "trendsAnalysis": "Identify patterns over time",
+              "correlationAnalysis": "Find relationships between metrics",
+              "rootCauseAnalysis": "Diagnose system issues",
+              "capacityPlanning": "Plan for future growth",
+              "costAnalysis": "Optimize resource spending"
+            }
+          }
+        }
+      },
+      "troubleshooting": {
+        "title": "Advanced Troubleshooting",
+        "description": "Diagnose and resolve complex issues",
+        "tooltips": {
+          "diagnosticMode": "Enable detailed diagnostic logging",
+          "traceAnalysis": "Analyze distributed traces",
+          "heapDump": "Capture memory snapshots",
+          "threadDump": "Analyze thread states",
+          "performanceProfile": "Generate performance profiles"
+        },
+        "contextualHelp": {
+          "scenarios": {
+            "title": "Complex Troubleshooting Scenarios",
+            "content": "Solutions for challenging problems.",
+            "issues": {
+              "deadlock": "Detect and resolve agent deadlocks",
+              "memoryLeak": "Identify and fix memory leaks",
+              "raceCondition": "Debug timing-related issues",
+              "networkPartition": "Handle split-brain scenarios",
+              "dataInconsistency": "Resolve data synchronization issues"
+            }
+          },
+          "tools": {
+            "title": "Diagnostic Tools",
+            "content": "Advanced tools for deep system analysis.",
+            "available": [
+              "Distributed tracing viewer",
+              "Log correlation engine",
+              "Performance flamegraphs",
+              "Database query analyzer",
+              "Network packet capture"
+            ]
+          }
+        }
+      }
+    },
+    "globalHelp": {
+      "shortcuts": {
+        "title": "Keyboard Shortcuts",
+        "shortcuts": [
+          {
+            "key": "Ctrl+K",
+            "description": "Open command palette"
+          },
+          {
+            "key": "Ctrl+/",
+            "description": "Toggle help panel"
+          },
+          {
+            "key": "Ctrl+S",
+            "description": "Save current configuration"
+          },
+          {
+            "key": "Esc",
+            "description": "Close dialogs and panels"
+          },
+          {
+            "key": "Ctrl+Shift+D",
+            "description": "Open debug console"
+          },
+          {
+            "key": "Ctrl+Shift+P",
+            "description": "Open performance profiler"
+          },
+          {
+            "key": "Ctrl+Alt+W",
+            "description": "Open workflow designer"
+          },
+          {
+            "key": "Ctrl+Alt+A",
+            "description": "Open agent manager"
+          },
+          {
+            "key": "Ctrl+Shift+L",
+            "description": "Open log viewer with filters"
+          },
+          {
+            "key": "F1",
+            "description": "Context-sensitive help"
+          }
+        ]
+      },
+      "glossary": {
+        "agent": "Autonomous component that performs specific tasks",
+        "skill": "Capability or function that an agent can execute",
+        "workflow": "Sequence of tasks performed by one or more agents",
+        "task": "Unit of work assigned to an agent",
+        "orchestration": "Coordination of multiple agents to achieve a goal",
+        "telemetry": "Performance and usage data collected from the system",
+        "bpmn": "Business Process Model and Notation - standard for workflow design",
+        "saga": "Pattern for managing distributed transactions with compensating actions",
+        "circuit_breaker": "Pattern that prevents cascading failures in distributed systems",
+        "bulkhead": "Isolation pattern to contain failures within boundaries",
+        "backpressure": "Flow control mechanism to handle varying processing rates",
+        "idempotency": "Property ensuring operations can be safely repeated",
+        "consensus": "Agreement protocol for distributed agent decisions",
+        "federation": "Linking multiple A2A systems for cross-organization collaboration",
+        "sharding": "Distributing data across multiple agents for scalability",
+        "vector_embedding": "Numerical representation of data for ML processing",
+        "semantic_routing": "Intelligent task routing based on content understanding",
+        "trust_score": "Measure of agent reliability based on past performance",
+        "delegation_contract": "Formal agreement for task delegation between agents",
+        "compensation": "Rollback mechanism for failed transactions",
+        "dead_letter_queue": "Storage for messages that cannot be processed"
+      },
+      "troubleshooting": {
+        "commonIssues": [
+          {
+            "issue": "Agent not responding",
+            "solution": "Check agent status, restart if necessary, verify network connectivity",
+            "advanced": "Enable diagnostic mode, check thread dumps, analyze heap memory"
+          },
+          {
+            "issue": "Workflow execution fails",
+            "solution": "Review workflow logs, check agent availability, verify input data",
+            "advanced": "Analyze distributed traces, check for deadlocks, verify transaction consistency"
+          },
+          {
+            "issue": "Performance degradation",
+            "solution": "Monitor resource usage, check for bottlenecks, scale agents if needed",
+            "advanced": "Profile hot paths, optimize database queries, implement caching strategies"
+          },
+          {
+            "issue": "Memory leak in agent",
+            "solution": "Monitor memory usage patterns, restart agent periodically",
+            "advanced": "Analyze heap dumps, identify object retention, fix resource cleanup"
+          },
+          {
+            "issue": "High latency in agent communication",
+            "solution": "Check network connectivity, verify firewall rules",
+            "advanced": "Analyze packet traces, optimize serialization, implement connection pooling"
+          },
+          {
+            "issue": "Data inconsistency across agents",
+            "solution": "Verify data synchronization, check for race conditions",
+            "advanced": "Implement distributed locks, use event sourcing, ensure idempotency"
+          },
+          {
+            "issue": "Circuit breaker constantly open",
+            "solution": "Check downstream service health, review error thresholds",
+            "advanced": "Analyze failure patterns, implement fallback strategies, tune timeout values"
+          },
+          {
+            "issue": "Workflow compensation failures",
+            "solution": "Review compensation logic, check for side effects",
+            "advanced": "Implement saga patterns, ensure compensation idempotency, add retry logic"
+          },
+          {
+            "issue": "Agent trust score declining",
+            "solution": "Review agent error rates, check for consistent failures",
+            "advanced": "Analyze trust metrics, implement self-healing, review delegation contracts"
+          },
+          {
+            "issue": "Message queue overflow",
+            "solution": "Increase queue size, add more consumers",
+            "advanced": "Implement backpressure, use priority queues, consider sharding strategy"
+          }
+        ],
+        "diagnosticCommands": {
+          "title": "Diagnostic Commands",
+          "commands": [
+            {
+              "command": "a2a agent health --detailed",
+              "description": "Get detailed health status of all agents"
+            },
+            {
+              "command": "a2a workflow trace --id <workflow-id>",
+              "description": "Trace execution path of a specific workflow"
+            },
+            {
+              "command": "a2a system profile --duration 60",
+              "description": "Profile system performance for 60 seconds"
+            },
+            {
+              "command": "a2a debug enable --agent <agent-id>",
+              "description": "Enable debug logging for specific agent"
+            },
+            {
+              "command": "a2a metrics export --format prometheus",
+              "description": "Export system metrics in Prometheus format"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

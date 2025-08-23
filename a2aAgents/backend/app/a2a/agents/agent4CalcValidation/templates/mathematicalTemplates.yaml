@@ -1,0 +1,115 @@
+templates:
+  - template_id: "math_basic_arithmetic_addition"
+    computation_type: "mathematical"
+    complexity_level: "easy"
+    pattern_category: "arithmetic"
+    input_generator:
+      type: "random_numbers"
+      parameters:
+        range: [-1000, 1000]
+        count: 2
+        data_type: "integer"
+    expected_behavior:
+      operation: "addition"
+      accuracy_threshold: 0.999999
+      performance_bounds:
+        max_execution_time: 0.1
+        max_memory_usage: 10
+    validation:
+      method: "exact"
+      tolerance: 0
+    metadata:
+      builtin: true
+      version: "1.0"
+      description: "Basic addition of two integers"
+
+  - template_id: "math_floating_point_precision"
+    computation_type: "mathematical"
+    complexity_level: "medium"
+    pattern_category: "precision"
+    input_generator:
+      type: "precision_values"
+      parameters:
+        decimal_places: 10
+        count: 2
+        range: [-100.0, 100.0]
+    expected_behavior:
+      operation: "multiplication"
+      accuracy_threshold: 0.99999
+      performance_bounds:
+        max_execution_time: 0.5
+        max_memory_usage: 20
+    validation:
+      method: "approximate"
+      tolerance: 1e-8
+    metadata:
+      builtin: true
+      version: "1.0"
+      description: "High-precision floating point multiplication"
+
+  - template_id: "math_edge_case_overflow"
+    computation_type: "mathematical"
+    complexity_level: "hard"
+    pattern_category: "edge_cases"
+    input_generator:
+      type: "edge_case_values"
+      parameters:
+        values: [2147483647, 1, -2147483648, 0]
+        operations: ["add", "multiply"]
+    expected_behavior:
+      operation: "edge_case_handling"
+      accuracy_threshold: 1.0
+      error_handling: true
+    validation:
+      method: "pattern_match"
+      expected_patterns: ["overflow", "underflow", "error"]
+    metadata:
+      builtin: true
+      version: "1.0"
+      description: "Integer overflow and underflow edge cases"
+
+  - template_id: "math_statistical_operations"
+    computation_type: "mathematical"
+    complexity_level: "medium"
+    pattern_category: "statistical"
+    input_generator:
+      type: "statistical_data"
+      parameters:
+        distribution: "normal"
+        mean: 50
+        std_dev: 15
+        sample_size: 100
+    expected_behavior:
+      operation: "statistical_calculation"
+      accuracy_threshold: 0.95
+      operations: ["mean", "std_dev", "variance"]
+    validation:
+      method: "approximate"
+      tolerance: 0.01
+    metadata:
+      builtin: true
+      version: "1.0"
+      description: "Statistical operations on normal distribution"
+
+  - template_id: "math_matrix_operations"
+    computation_type: "mathematical"
+    complexity_level: "hard"
+    pattern_category: "linear_algebra"
+    input_generator:
+      type: "matrix_generator"
+      parameters:
+        dimensions: [3, 3]
+        value_range: [-10, 10]
+        matrix_type: "dense"
+    expected_behavior:
+      operation: "matrix_multiplication"
+      accuracy_threshold: 0.999
+      performance_bounds:
+        max_execution_time: 2.0
+    validation:
+      method: "approximate"
+      tolerance: 1e-6
+    metadata:
+      builtin: true
+      version: "1.0"
+      description: "3x3 matrix multiplication operations"

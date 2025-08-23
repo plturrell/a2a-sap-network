@@ -1,0 +1,61 @@
+{
+  "services": [
+    {
+      "service": "data_standardization",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/mcp/servers/data_standardization_mcp_server.py",
+      "port": 8101,
+      "tools": 12
+    },
+    {
+      "service": "vector_similarity",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/mcp/servers/vector_similarity_mcp_server.py",
+      "port": 8102,
+      "tools": 5
+    },
+    {
+      "service": "vector_ranking",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/mcp/servers/vector_ranking_mcp_server.py",
+      "port": 8103,
+      "tools": 5
+    },
+    {
+      "service": "transport_layer",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/mcp/servers/transport_layer_mcp_server.py",
+      "port": 8104,
+      "tools": 2
+    },
+    {
+      "service": "reasoning_agent",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/mcp/servers/reasoning_agent_mcp_server.py",
+      "port": 8105,
+      "tools": 9
+    },
+    {
+      "service": "session_management",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/mcp/servers/session_management_mcp_server.py",
+      "port": 8106,
+      "tools": 3
+    },
+    {
+      "service": "resource_streaming",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/mcp/servers/resource_streaming_mcp_server.py",
+      "port": 8107,
+      "tools": 2
+    },
+    {
+      "service": "confidence_calculator",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/mcp/servers/confidence_calculator_mcp_server.py",
+      "port": 8108,
+      "tools": 6
+    },
+    {
+      "service": "semantic_similarity",
+      "file": "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/mcp/servers/semantic_similarity_mcp_server.py",
+      "port": 8109,
+      "tools": 7
+    }
+  ],
+  "total_servers": 9,
+  "port_range": "8101-8109",
+  "generated_at": "1755619936.5732934"
+}

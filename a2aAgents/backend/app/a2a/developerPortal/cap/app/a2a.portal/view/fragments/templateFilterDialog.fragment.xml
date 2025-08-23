@@ -1,0 +1,74 @@
+<Dialog 
+    xmlns="sap.m"
+    title="Filter Templates"
+    contentWidth="90%"
+    maxWidth="35rem"
+    contentHeight="500px"
+    class="a2a-tablet-dialog">
+    <content>
+        <VBox class="sapUiSmallMargin">
+            <Label text="Category:" />
+            <MultiComboBox
+                id="filterCategory"
+                placeholder="Select categories..."
+                width="100%">
+                <items>
+                    <core:Item xmlns:core="sap.ui.core" key="data-product" text="Data Product" />
+                    <core:Item xmlns:core="sap.ui.core" key="standardization" text="Standardization" />
+                    <core:Item xmlns:core="sap.ui.core" key="ai-processing" text="AI Processing" />
+                    <core:Item xmlns:core="sap.ui.core" key="validation" text="Validation" />
+                    <core:Item xmlns:core="sap.ui.core" key="integration" text="Integration" />
+                    <core:Item xmlns:core="sap.ui.core" key="custom" text="Custom" />
+                </items>
+            </MultiComboBox>
+            
+            <Label text="Status:" class="sapUiSmallMarginTop" />
+            <MultiComboBox
+                id="filterStatus"
+                placeholder="Select status..."
+                width="100%">
+                <items>
+                    <core:Item xmlns:core="sap.ui.core" key="published" text="Published" />
+                    <core:Item xmlns:core="sap.ui.core" key="draft" text="Draft" />
+                    <core:Item xmlns:core="sap.ui.core" key="deprecated" text="Deprecated" />
+                </items>
+            </MultiComboBox>
+            
+            <Label text="Author Type:" class="sapUiSmallMarginTop" />
+            <RadioButtonGroup id="filterAuthorType" columns="1">
+                <RadioButton text="All" selected="true" />
+                <RadioButton text="SAP Official" />
+                <RadioButton text="Community" />
+                <RadioButton text="My Templates" />
+            </RadioButtonGroup>
+            
+            <Label text="Version:" class="sapUiSmallMarginTop" />
+            <Select id="filterVersion" width="100%">
+                <core:Item xmlns:core="sap.ui.core" key="all" text="All Versions" />
+                <core:Item xmlns:core="sap.ui.core" key="latest" text="Latest Only" />
+                <core:Item xmlns:core="sap.ui.core" key="stable" text="Stable Versions" />
+            </Select>
+            
+            <Label text="Downloads:" class="sapUiSmallMarginTop" />
+            <RangeSlider 
+                id="filterDownloads"
+                min="0" 
+                max="10000" 
+                value="0" 
+                value2="10000"
+                showHandleTooltip="true"
+                width="100%" />
+            
+            <CheckBox 
+                id="filterCertified" 
+                text="SAP Certified Only" 
+                class="sapUiSmallMarginTop" />
+        </VBox>
+    </content>
+    <beginButton>
+        <Button text="Apply" type="Emphasized" press=".onFilterConfirm" />
+    </beginButton>
+    <endButton>
+        <Button text="Cancel" press=".onFilterCancel" />
+    </endButton>
+</Dialog>

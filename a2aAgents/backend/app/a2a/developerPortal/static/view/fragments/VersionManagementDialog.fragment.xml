@@ -1,0 +1,235 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        title="Agent Version Management"
+        resizable="true"
+        draggable="true"
+        contentWidth="800px"
+        contentHeight="600px"
+        type="Message">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Current Version Info -->
+                <Panel headerText="Current Version Information" expandable="false">
+                    <content>
+                        <l:Grid defaultSpan="L6 M12 S12" class="sapUiSmallMargin">
+                            
+                            <!-- Current Version Display -->
+                            <VBox>
+                                <Label text="Current Version:" class="sapMTextBold"/>
+                                <ObjectStatus text="{agent>/version/full}"
+                                            state="Information"
+                                            icon="sap-icon://tag"/>
+                            </VBox>
+                            
+                            <!-- Compatibility Version -->
+                            <VBox>
+                                <Label text="Compatibility Version:" class="sapMTextBold"/>
+                                <Text text="{agent>/compatibilityVersion}"/>
+                            </VBox>
+                            
+                            <!-- Last Modified -->
+                            <VBox>
+                                <Label text="Last Updated:" class="sapMTextBold"/>
+                                <Text text="{= ${agent>/versionHistory/length} > 0 ? new Date(${agent>/versionHistory}[${agent>/versionHistory/length} - 1].date).toLocaleDateString() : 'Never' }"/>
+                            </VBox>
+                            
+                            <!-- Total Versions -->
+                            <VBox>
+                                <Label text="Total Versions:" class="sapMTextBold"/>
+                                <ObjectNumber number="{agent>/versionHistory/length}"/>
+                            </VBox>
+                            
+                        </l:Grid>
+                    </content>
+                </Panel>
+                
+                <!-- New Version Configuration -->
+                <Panel headerText="Create New Version" expandable="false" class="sapUiSmallMarginTop">
+                    <content>
+                        <form:SimpleForm editable="true" 
+                                       layout="ResponsiveGridLayout"
+                                       class="sapUiSmallMargin">
+                            <form:content>
+                                
+                                <!-- Version Type Selection -->
+                                <Label text="Version Type:" required="true" class="sapMTextBold"/>
+                                <Select selectedKey="{version>/selectedVersionType}"
+                                       items="{version>/versionTypes}"
+                                       change=".onVersionTypeChange">
+                                    <core:Item key="{key}" text="{text}"/>
+                                </Select>
+                                <Text text="{= ${version>/versionTypes}.find(function(type) { return type.key === ${version>/selectedVersionType}; }).description }"
+                                     class="sapUiTinyText sapThemeTextColorSecondary"/>
+                                
+                                <!-- Auto/Manual Version Toggle -->
+                                <Label text="Version Calculation:" class="sapMTextBold"/>
+                                <Switch state="{version>/autoIncrement}"
+                                       customTextOn="Auto"
+                                       customTextOff="Manual"
+                                       change=".onCustomVersionToggle"
+                                       tooltip="Auto: Calculate next version automatically, Manual: Set custom version"/>
+                                
+                                <!-- Manual Version Input -->
+                                <Label text="Version Numbers:" 
+                                      visible="{= !${version>/autoIncrement} }"
+                                      class="sapMTextBold"/>
+                                <HBox visible="{= !${version>/autoIncrement} }"
+                                     alignItems="Center">
+                                    <Input value="{version>/customMajor}"
+                                          type="Number"
+                                          width="60px"
+                                          liveChange=".onVersionNumberChange"
+                                          class="sapUiTinyMarginEnd"/>
+                                    <Text text="." class="sapUiTinyMarginEnd"/>
+                                    <Input value="{version>/customMinor}"
+                                          type="Number"
+                                          width="60px"
+                                          liveChange=".onVersionNumberChange"
+                                          class="sapUiTinyMarginEnd"/>
+                                    <Text text="." class="sapUiTinyMarginEnd"/>
+                                    <Input value="{version>/customPatch}"
+                                          type="Number"
+                                          width="60px"
+                                          liveChange=".onVersionNumberChange"/>
+                                </HBox>
+                                
+                                <!-- Prerelease Identifier -->
+                                <Label text="Prerelease (optional):" class="sapMTextBold"/>
+                                <Input value="{version>/prerelease}"
+                                      placeholder="alpha, beta, rc.1, etc."
+                                      liveChange=".onVersionNumberChange"/>
+                                <Text text="For development versions (e.g., alpha, beta, rc.1)"
+                                     class="sapUiTinyText sapThemeTextColorSecondary"/>
+                                
+                                <!-- Build Metadata -->
+                                <Label text="Build Metadata (optional):" class="sapMTextBold"/>
+                                <Input value="{version>/buildMetadata}"
+                                      placeholder="20240101, commit.sha, build.123"
+                                      liveChange=".onVersionNumberChange"/>
+                                <Text text="Build information (e.g., timestamp, commit hash)"
+                                     class="sapUiTinyText sapThemeTextColorSecondary"/>
+                                
+                                <!-- Version Preview -->
+                                <Label text="New Version Preview:" class="sapMTextBold"/>
+                                <ObjectStatus text="{version>/versionPreview}"
+                                            state="Success"
+                                            icon="sap-icon://tag"/>
+                                
+                                <!-- Changelog Entry -->
+                                <Label text="Changelog Entry:" required="true" class="sapMTextBold"/>
+                                <TextArea value="{version>/changelogEntry}"
+                                         rows="3"
+                                         maxLength="500"
+                                         placeholder="Describe the changes in this version (required)"
+                                         showExceededText="true"/>
+                                
+                            </form:content>
+                        </form:SimpleForm>
+                    </content>
+                </Panel>
+                
+                <!-- Version History -->
+                <Panel headerText="Version History ({version>/versionHistory/length})" 
+                       expandable="true" 
+                       expanded="false"
+                       class="sapUiSmallMarginTop">
+                    <content>
+                        <Table items="{version>/versionHistory}"
+                               mode="None"
+                               growing="true"
+                               growingThreshold="10">
+                            <columns>
+                                <Column width="120px">
+                                    <Text text="Version"/>
+                                </Column>
+                                <Column width="100px">
+                                    <Text text="Type"/>
+                                </Column>
+                                <Column width="120px">
+                                    <Text text="Date"/>
+                                </Column>
+                                <Column width="100px">
+                                    <Text text="Author"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Changes"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <ObjectStatus text="{version>version}"
+                                                state="{= ${version>type} === 'major' ? 'Error' : ${version>type} === 'minor' ? 'Warning' : 'Success' }"
+                                                icon="sap-icon://tag"/>
+                                    <ObjectStatus text="{= ${version>type}.charAt(0).toUpperCase() + ${version>type}.slice(1) }"
+                                                state="{= ${version>type} === 'major' ? 'Error' : ${version>type} === 'minor' ? 'Warning' : 'Success' }"/>
+                                    <Text text="{= new Date(${version>date}).toLocaleDateString() }"/>
+                                    <Text text="{version>author}"/>
+                                    <VBox>
+                                        <Text text="{= ${version>changes}.join('; ') }"
+                                             maxLines="2"/>
+                                    </VBox>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </content>
+                </Panel>
+                
+                <!-- Semantic Versioning Guidelines -->
+                <Panel headerText="Semantic Versioning Guidelines" 
+                       expandable="true" 
+                       expanded="false"
+                       class="sapUiSmallMarginTop">
+                    <content>
+                        <VBox class="sapUiSmallMargin">
+                            <MessageStrip text="This agent follows Semantic Versioning (SemVer) guidelines"
+                                        type="Information"
+                                        showIcon="true"/>
+                            
+                            <List class="sapUiSmallMarginTop">
+                                <StandardListItem title="MAJOR version"
+                                                description="Increment when you make incompatible changes that break existing functionality"
+                                                icon="sap-icon://error"
+                                                iconInset="false"/>
+                                <StandardListItem title="MINOR version"
+                                                description="Increment when you add functionality in a backwards compatible manner"
+                                                icon="sap-icon://warning"
+                                                iconInset="false"/>
+                                <StandardListItem title="PATCH version"
+                                                description="Increment when you make backwards compatible bug fixes"
+                                                icon="sap-icon://accept"
+                                                iconInset="false"/>
+                            </List>
+                            
+                            <Text text="Additional labels for pre-release and build metadata are available as extensions (e.g., 1.0.0-alpha+build.1)"
+                                 class="sapUiSmallMarginTop sapUiTinyText sapThemeTextColorSecondary"/>
+                        </VBox>
+                    </content>
+                </Panel>
+                
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button text="Apply Version" 
+                    icon="sap-icon://save"
+                    type="Emphasized"
+                    press=".onApplyVersion"
+                    enabled="{= ${version>/changelogEntry}.length > 0 }"/>
+            <Button text="Reset Form" 
+                    icon="sap-icon://reset"
+                    type="Default"
+                    press=".onResetVersionForm"/>
+            <Button text="Cancel" 
+                    icon="sap-icon://decline"
+                    type="Default"
+                    press=".onCloseVersionDialog"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>
