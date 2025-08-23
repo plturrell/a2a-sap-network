@@ -92,12 +92,18 @@ class SecurityConfig:
             raise ConfigValidationError("JWT_SECRET must be at least 32 characters")
 
 
+def _default_methods():
+    return ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+
+def _default_headers():
+    return ["Content-Type", "Authorization", "X-Requested-With"]
+
 @dataclass
 class CorsConfig:
     """CORS configuration"""
     origins: List[str] = field(default_factory=list)
-    methods: List[str] = field(default_factory=lambda: ["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-    headers: List[str] = field(default_factory=lambda: ["Content-Type", "Authorization", "X-Requested-With"])
+    methods: List[str] = field(default_factory=_default_methods)
+    headers: List[str] = field(default_factory=_default_headers)
     credentials: bool = True
     max_age: int = 3600
     

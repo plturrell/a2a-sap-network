@@ -7,8 +7,9 @@ sap.ui.define([
     "sap/base/security/encodeXML",
     "sap/base/strings/escapeRegExp",
     "sap/base/security/sanitizeHTML",
-    "sap/base/Log"
-], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log) {
+    "sap/base/Log",
+    "../utils/SecurityUtils"
+], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent5.ext.controller.ListReportExt", {
@@ -16,6 +17,7 @@ sap.ui.define([
         override: {
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
+                this._securityUtils = SecurityUtils;
                 // Initialize debounced validation for performance
                 this._debouncedValidation = this._debounce(this._validateTestData.bind(this), 300);
                 
@@ -119,15 +121,10 @@ sap.ui.define([
                     }
                     break;
                 case "testCase":
-                    if (sSanitized.length > 500) {
-                        return { isValid: false, message: "Test case description too long" };
-                    }
-                    // Check for dangerous test patterns
-                    var aDangerousPatterns = [/system\s*\(/i, /exec\s*\(/i, /import\s+os/i, /subprocess/i];
-                    for (var j = 0; j < aDangerousPatterns.length; j++) {
-                        if (aDangerousPatterns[j].test(sSanitized)) {
-                            return { isValid: false, message: "Potentially dangerous test pattern" };
-                        }
+                    // Use SecurityUtils for test case validation
+                    var oValidation = this._securityUtils.validateTestCase(sSanitized);
+                    if (!oValidation.isValid) {
+                        return { isValid: false, message: oValidation.errors.join(", ") };
                     }
                     break;
                 case "taskName":
@@ -147,7 +144,7 @@ sap.ui.define([
 
         _getCSRFToken: function() {
             return new Promise(function(resolve, reject) {
-                jQuery.ajax({
+                this._securityUtils.secureAjaxRequest({
                     url: "/a2a/agent5/v1/csrf-token",
                     type: "GET",
                     success: function(data) {
@@ -172,7 +169,7 @@ sap.ui.define([
                     oOptions.headers["Authorization"] = "Bearer " + sAuthToken;
                 }
 
-                return jQuery.ajax(oOptions);
+                return this._securityUtils.secureAjaxRequest(oOptions);
             });
         },
 
@@ -195,7 +192,7 @@ sap.ui.define([
             };
 
             // Enhanced audit service logging
-            jQuery.ajax({
+            this._securityUtils.secureAjaxRequest({
                 url: "/a2a/common/v1/audit",
                 type: "POST",
                 contentType: "application/json",

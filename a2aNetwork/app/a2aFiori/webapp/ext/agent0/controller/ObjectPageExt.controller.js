@@ -479,6 +479,238 @@ sap.ui.define([
             const aVersions = await this._fetchVersionHistory(sProductId);
             const oViewModel = this.getView().getModel("objectView");
             oViewModel.setProperty("/versions", aVersions);
+        },
+
+        /**
+         * Refresh dashboard data
+         * @public
+         */
+        onRefreshDashboard: function() {
+            const oBinding = this.getView().getBindingContext();
+            if (!oBinding) {
+                MessageToast.show("No data product selected");
+                return;
+            }
+            
+            const sProductId = oBinding.getObject().ID;
+            const oViewModel = this.getView().getModel("objectView");
+            
+            oViewModel.setProperty("/busy", true);
+            MessageToast.show("Refreshing dashboard data...");
+            
+            Promise.all([
+                this._fetchLineageData(sProductId),
+                this._fetchQualityMetrics(sProductId),
+                this._fetchVersionHistory(sProductId)
+            ]).then(function (aResults) {
+                oViewModel.setProperty("/lineageData", aResults[0]);
+                oViewModel.setProperty("/qualityMetrics", aResults[1]);
+                oViewModel.setProperty("/versions", aResults[2]);
+                
+                const oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
+                MessageToast.show(oResourceBundle.getText("msg.dashboardRefreshed") || "Dashboard refreshed successfully");
+                
+                // Refresh the binding to get latest data
+                oBinding.refresh();
+            }).catch(function(error) {
+                const oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
+                MessageBox.error(oResourceBundle.getText("error.dashboardRefreshFailed") || "Failed to refresh dashboard data");
+            }).finally(function () {
+                oViewModel.setProperty("/busy", false);
+            });
+        },
+
+        /**
+         * Export dashboard data
+         * @public
+         */
+        onExportDashboard: function() {
+            const oBinding = this.getView().getBindingContext();
+            if (!oBinding) {
+                MessageToast.show("No data product selected");
+                return;
+            }
+            
+            const oProductData = oBinding.getObject();
+            const oViewModel = this.getView().getModel("objectView");
+            const oViewData = oViewModel.getData();
+            
+            // Prepare export data
+            const oExportData = {
+                product: {
+                    id: oProductData.ID,
+                    title: oProductData.title,
+                    description: oProductData.description,
+                    createdAt: oProductData.createdAt,
+                    modifiedAt: oProductData.modifiedAt
+                },
+                lineage: oViewData.lineageData,
+                qualityMetrics: oViewData.qualityMetrics,
+                versions: oViewData.versions,
+                dublinCore: oProductData.dublinCore,
+                exportedAt: new Date().toISOString(),
+                exportedBy: this.getOwnerComponent().getModel("user")?.getProperty("/name") || "Unknown"
+            };
+            
+            // Validate export data for security
+            const validation = SecurityUtils.validateExportData ? SecurityUtils.validateExportData(oExportData) : { valid: true, sanitized: oExportData };
+            
+            if (!validation.valid) {
+                MessageBox.error("Export data validation failed: " + validation.error);
+                return;
+            }
+            
+            try {
+                // Create and download JSON file
+                const sJsonData = JSON.stringify(validation.sanitized, null, 2);
+                const oBlob = new Blob([sJsonData], { type: "application/json" });
+                const sUrl = URL.createObjectURL(oBlob);
+                
+                const oLink = document.createElement("a");
+                oLink.href = sUrl;
+                oLink.download = `data-product-${oProductData.ID}-dashboard-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(oLink);
+                oLink.click();
+                document.body.removeChild(oLink);
+                URL.revokeObjectURL(sUrl);
+                
+                const oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
+                MessageToast.show(oResourceBundle.getText("msg.dashboardExported") || "Dashboard data exported successfully");
+                
+            } catch (error) {
+                const oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
+                MessageBox.error(oResourceBundle.getText("error.dashboardExportFailed") || "Failed to export dashboard data");
+            }
+        },
+
+        /**
+         * Complete wizard process
+         * @public
+         */
+        onWizardComplete: function() {
+            const oView = this.getView();
+            const oWizardModel = oView.getModel("wizard");
+            
+            if (!oWizardModel) {
+                MessageBox.error("Wizard data not found");
+                return;
+            }
+            
+            const oWizardData = oWizardModel.getData();
+            
+            // Validate wizard data
+            const validation = SecurityUtils.validateWizardData ? SecurityUtils.validateWizardData(oWizardData) : { valid: true, sanitized: oWizardData };
+            
+            if (!validation.valid) {
+                MessageBox.error("Wizard validation failed: " + validation.error);
+                return;
+            }
+            
+            MessageBox.confirm("Complete the data product creation process?", {
+                onClose: function(oAction) {
+                    if (oAction === MessageBox.Action.OK) {
+                        this._processWizardCompletion(validation.sanitized);
+                    }
+                }.bind(this)
+            });
+        },
+
+        /**
+         * Process wizard completion
+         * @private
+         */
+        _processWizardCompletion: async function(oWizardData) {
+            const oModel = this.getView().getModel();
+            const oView = this.getView();
+            
+            oView.setBusy(true);
+            
+            try {
+                // Create new data product
+                const oNewProduct = {
+                    title: oWizardData.basicInfo?.title || "",
+                    description: oWizardData.basicInfo?.description || "",
+                    format: oWizardData.basicInfo?.format || "",
+                    schema: oWizardData.schema || {},
+                    dublinCore: oWizardData.metadata || {},
+                    qualityRules: oWizardData.qualityRules || [],
+                    transformationRules: oWizardData.transformationRules || [],
+                    status: "DRAFT",
+                    createdAt: new Date().toISOString()
+                };
+                
+                // Call backend service to create product
+                await SecurityUtils.secureCallFunction(oModel, "/DataProducts", oNewProduct,
+                    function(oResult) {
+                        const oCreatedProduct = oResult.getBoundContext().getObject();
+                        const oResourceBundle = oView.getModel("i18n").getResourceBundle();
+                        
+                        MessageBox.success(oResourceBundle.getText("msg.productCreated") || "Data product created successfully", {
+                            onClose: function() {
+                                // Navigate to the created product
+                                const oRouter = this.getOwnerComponent().getRouter();
+                                oRouter.navTo("object", {
+                                    productId: oCreatedProduct.ID
+                                });
+                                
+                                // Close wizard dialog if it exists
+                                if (this._oWizardDialog) {
+                                    this._oWizardDialog.close();
+                                }
+                            }.bind(this)
+                        });
+                    }.bind(this),
+                    function(error) {
+                        throw new Error("Product creation failed: " + error.message);
+                    }
+                );
+                
+            } catch (error) {
+                const oResourceBundle = oView.getModel("i18n").getResourceBundle();
+                MessageBox.error(oResourceBundle.getText("error.productCreationFailed") || "Failed to create data product: " + error.message);
+            } finally {
+                oView.setBusy(false);
+            }
+        },
+
+        /**
+         * Cancel wizard
+         * @public
+         */
+        onWizardCancel: function() {
+            MessageBox.confirm("Cancel the data product creation process? All entered data will be lost.", {
+                onClose: function(oAction) {
+                    if (oAction === MessageBox.Action.OK) {
+                        // Reset wizard model
+                        const oView = this.getView();
+                        const oWizardModel = new JSONModel({
+                            basicInfo: {},
+                            metadata: {},
+                            schema: {},
+                            qualityRules: [],
+                            transformationRules: []
+                        });
+                        oView.setModel(oWizardModel, "wizard");
+                        
+                        // Close wizard dialog if it exists
+                        if (this._oWizardDialog) {
+                            this._oWizardDialog.close();
+                        }
+                        
+                        MessageToast.show("Wizard cancelled");
+                    }
+                }.bind(this)
+            });
+        },
+
+        /**
+         * Close dashboard dialog
+         * @public
+         */
+        onCloseDashboard: function() {
+            if (this._oDashboardDialog) {
+                this._oDashboardDialog.close();
+            }
         }
     };
 });

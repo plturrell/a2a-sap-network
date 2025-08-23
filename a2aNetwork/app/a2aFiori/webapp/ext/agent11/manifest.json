@@ -1,150 +1,189 @@
 {
-    "_version": "1.49.0",
+    "_version": "1.60.0",
     "sap.app": {
-        "id": "a2a.network.agent11.ext",
+        "id": "a2a.network.agent11",
         "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "title": "{{agent11Title}}",
+        "description": "{{agent11Description}}",
         "applicationVersion": {
             "version": "1.0.0"
         },
-        "crossNavigation": {
-            "inbounds": {
-                "agent11-display": {
-                    "semanticObject": "SQLAgent",
-                    "action": "display",
-                    "title": "{{agent.name}}",
-                    "signature": {
-                        "parameters": {},
-                        "additionalParameters": "allowed"
-                    }
-                }
-            }
-        },
         "dataSources": {
             "mainService": {
-                "uri": "/sap/opu/odata/sap/ZA2A_AGENT11_SRV/",
+                "uri": "https://a2a/agent11/v1/odata/",
                 "type": "OData",
                 "settings": {
-                    "annotations": [],
-                    "localUri": "localService/metadata.xml",
-                    "odataVersion": "2.0"
+                    "odataVersion": "4.0"
                 }
-            },
-            "i18n": {
-                "type": "sap.ui.model.resource.ResourceModel",
-                "uri": "i18n/i18n.properties"
             }
-        }
-    },
-    "sap.ui": {
-        "technology": "UI5",
-        "icons": {
-            "icon": "sap-icon://database",
-            "favIcon": "",
-            "phone": "",
-            "phone@2": "",
-            "tablet": "",
-            "tablet@2": ""
-        },
-        "deviceTypes": {
-            "desktop": true,
-            "tablet": true,
-            "phone": true
         }
     },
     "sap.ui5": {
         "dependencies": {
             "minUI5Version": "1.120.0",
             "libs": {
+                "sap.fe.templates": {},
+                "sap.f": {},
                 "sap.m": {},
                 "sap.ui.core": {},
-                "sap.ui.layout": {},
-                "sap.f": {},
-                "sap.suite.ui.commons": {},
-                "sap.suite.ui.microchart": {},
-                "sap.viz": {},
-                "sap.ui.table": {},
-                "sap.ui.codeeditor": {},
-                "sap.ui.unified": {},
-                "sap.base": {}
+                "sap.uxap": {},
+                "sap.viz": {}
             }
         },
-        "contentDensities": {
-            "compact": true,
-            "cozy": true
-        },
-        "flexEnabled": false,
-        "handleValidation": true,
         "models": {
-            "i18n": {
-                "dataSource": "i18n",
-                "type": "sap.ui.model.resource.ResourceModel",
-                "settings": {
-                    "bundleName": "a2a.network.agent11.ext.i18n.i18n",
-                    "supportedLocales": ["en", "de", "fr", "es"],
-                    "fallbackLocale": "en"
-                }
-            },
             "": {
                 "dataSource": "mainService",
-                "type": "sap.ui.model.odata.v2.ODataModel",
+                "preload": true,
                 "settings": {
-                    "defaultOperationMode": "Server",
-                    "defaultBindingMode": "TwoWay",
-                    "defaultCountMode": "Request",
-                    "refreshAfterChange": false,
-                    "metadataUrlParams": {
-                        "sap-value-list": "none"
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
+                }
+            },
+            "@i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "uri": "i18n/i18n.properties"
+            }
+        },
+        "routing": {
+            "routes": [
+                {
+                    "name": "ComplianceList",
+                    "pattern": ":?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "ComplianceList",
+                        "options": {
+                            "settings": {
+                                "entitySet": "ComplianceTasks",
+                                "variantManagement": "Page",
+                                "initialLoad": true,
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.LineItem": {
+                                        "tableSettings": {
+                                            "type": "ResponsiveTable",
+                                            "selectionMode": "Multi"
+                                        },
+                                        "actions": {
+                                            "RunCompliance": {
+                                                "press": ".extension.a2a.network.agent11.ext.controller.ListReportExt.onRunCompliance",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": true,
+                                                "text": "Run Compliance Check"
+                                            },
+                                            "ConfigureRules": {
+                                                "press": ".extension.a2a.network.agent11.ext.controller.ListReportExt.onConfigureRules",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Configure Rules"
+                                            },
+                                            "GenerateReport": {
+                                                "press": ".extension.a2a.network.agent11.ext.controller.ListReportExt.onGenerateReport",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Generate Report"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "ComplianceDetails",
+                    "pattern": "ComplianceTasks({key}):?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "ComplianceDetails",
+                        "options": {
+                            "settings": {
+                                "entitySet": "ComplianceTasks",
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.HeaderInfo": {
+                                        "actions": {
+                                            "ViewAudit": {
+                                                "press": ".extension.a2a.network.agent11.ext.controller.ObjectPageExt.onViewAudit",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "View Audit Trail"
+                                            },
+                                            "ExportComplianceReport": {
+                                                "press": ".extension.a2a.network.agent11.ext.controller.ObjectPageExt.onExportComplianceReport",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Export Compliance Report"
+                                            },
+                                            "ScheduleCompliance": {
+                                                "press": ".extension.a2a.network.agent11.ext.controller.ObjectPageExt.onScheduleCompliance",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Schedule Compliance Check"
+                                            },
+                                            "ReviewViolations": {
+                                                "press": ".extension.a2a.network.agent11.ext.controller.ObjectPageExt.onReviewViolations",
+                                                "visible": "{= ${violationCount} > 0 }",
+                                                "enabled": true,
+                                                "text": "Review Violations"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "extends": {
+            "extensions": {
+                "sap.ui.controllerExtensions": {
+                    "sap.fe.templates.ListReport.ListReportController": {
+                        "controllerName": "a2a.network.agent11.ext.controller.ListReportExt"
                     },
-                    "headers": {
-                        "X-Requested-With": "XMLHttpRequest",
-                        "X-Content-Type-Options": "nosniff",
-                        "X-Frame-Options": "DENY",
-                        "X-XSS-Protection": "1; mode=block",
-                        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-                        "Cache-Control": "no-store, no-cache, must-revalidate",
-                        "Pragma": "no-cache"
+                    "sap.fe.templates.ObjectPage.ObjectPageController": {
+                        "controllerName": "a2a.network.agent11.ext.controller.ObjectPageExt"
                     }
                 }
             }
         }
     },
-    "sap.fe": {
-        "type": "extension"
-    },
     "sap.fiori": {
-        "_version": "1.1.0",
-        "registrationIds": [],
+        "registrationIds": ["F0001A11"],
         "archeType": "transactional"
     },
-    "sap.platform.abap": {
-        "uri": "/sap/bc/ui5_ui5/sap/za2a_agent11/"
+    "sap.fe": {
+        "template": "sap.fe.templates.ListReport.ObjectPage"
     },
-    "sap.platform.hcp": {
-        "uri": ""
+    "sap.platform.cf": {
+        "oAuthScopes": [
+            "$XSAPPNAME.compliance.user",
+            "$XSAPPNAME.compliance.admin"
+        ]
     },
-    "sap.cloud": {
-        "public": false,
-        "service": "a2aAgents"
-    },
-    "security": {
-        "contentSecurityPolicy": {
-            "policy": "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; media-src 'none'; child-src 'none';",
-            "reportOnly": false
+    "sap.security": {
+        "headers": {
+            "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' wss:; font-src 'self' data:;",
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY",
+            "X-XSS-Protection": "1; mode=block",
+            "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+            "Referrer-Policy": "strict-origin-when-cross-origin",
+            "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
         },
-        "frameOptions": "DENY",
-        "contentTypeOptions": "nosniff",
-        "downloadOptions": "noopen",
-        "crossOriginEmbedderPolicy": "require-corp",
-        "crossOriginOpenerPolicy": "same-origin",
-        "crossOriginResourcePolicy": "same-origin",
-        "sqlSecurity": {
-            "maxQueryComplexity": 50,
-            "maxExecutionsPerHour": 100,
-            "allowedOperations": ["SELECT", "COUNT", "SHOW", "DESCRIBE", "EXPLAIN"],
-            "auditLogging": true,
-            "rateLimiting": true,
-            "sqlInjectionPrevention": true,
-            "parameterValidation": true
+        "csrf": {
+            "token": true
+        },
+        "cors": {
+            "allowedOrigins": ["https://*.ondemand.com"],
+            "allowedMethods": ["GET", "POST", "PUT", "DELETE"],
+            "allowedHeaders": ["Content-Type", "Authorization", "X-CSRF-Token"],
+            "exposeHeaders": ["X-CSRF-Token"],
+            "maxAge": 3600
         }
     }
 }

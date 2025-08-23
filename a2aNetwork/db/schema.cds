@@ -494,7 +494,6 @@ entity Messages : cuid, managed {
     @Common.Label: 'Delivery Status'
     status      : String(20) enum { pending; sent; delivered; failed; };
     
-        };
     @Common.Label: 'Retry Count'
     @assert.range: [0, 10]
     retryCount  : Integer default 0;
@@ -588,7 +587,6 @@ entity CrossChainTransfers : cuid, managed {
     toAgent      : String(42);
     messageHash  : String(66);
     status       : String(20) enum { initiated; pending; completed; failed; };
-        };
     sourceBlock  : Integer;
     targetBlock  : Integer;
     gasUsed      : Integer;
@@ -747,7 +745,7 @@ view RecentWorkflows as select from WorkflowExecutions {
     status,
     startTime as startedAt,
     endTime as completedAt,
-    metrics as gasUsed
+    durationMinutes as gasUsed
 } order by startTime desc;
 
 // Multi-tenancy support
@@ -826,7 +824,6 @@ entity ExtensionFields : managed {
     key field : String(50);
     key tenant : String(36);
     dataType : String(20) enum { String; Integer; Decimal; Boolean; Date; };
-        };
     label : localized String(100);
     defaultValue : String(100);
     mandatory : Boolean default false;

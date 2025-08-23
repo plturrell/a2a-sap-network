@@ -1,79 +1,232 @@
 {
-    "id": "a2a.agent0",
-    "type": "extension",
-    "i18n": "i18n/i18n.properties",
-    "name": "Agent 0 - Data Product Agent",
-    "description": "Entry point agent for data product management with Dublin Core metadata",
-    
-    "extends": {
-        "component": "a2a.Component",
-        "extensions": {
-            "sap.ui.controllerExtensions": {
-                "sap.fe.templates.ListReport.ListReportController": {
-                    "controllerName": "a2a.ext.agent0.controller.ListReportExt"
-                },
-                "sap.fe.templates.ObjectPage.ObjectPageController": {
-                    "controllerName": "a2a.ext.agent0.controller.ObjectPageExt"
+    "_version": "1.60.0",
+    "sap.app": {
+        "id": "a2a.network.agent0",
+        "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "title": "{{agent0Title}}",
+        "description": "{{agent0Description}}",
+        "applicationVersion": {
+            "version": "1.0.0"
+        },
+        "dataSources": {
+            "mainService": {
+                "uri": "https://a2a/agent0/v1/odata/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
+            }
+        }
+    },
+    "sap.ui5": {
+        "dependencies": {
+            "minUI5Version": "1.120.0",
+            "libs": {
+                "sap.fe.templates": {},
+                "sap.f": {},
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.uxap": {},
+                "sap.viz": {}
+            }
+        },
+        "models": {
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
+                "settings": {
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
                 }
             },
-            "sap.ui.viewExtensions": {
-                "sap.fe.templates.ListReport.ListReport": {
-                    "ResponsiveTableColumnsExtension|DataProducts": {
-                        "className": "sap.ui.core.Fragment",
-                        "fragmentName": "a2a.ext.agent0.fragment.DataProductColumns",
-                        "type": "XML"
+            "@i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "uri": "i18n/i18n.properties"
+            }
+        },
+        "routing": {
+            "routes": [
+                {
+                    "name": "DataProductsList",
+                    "pattern": ":?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "DataProductsList",
+                        "options": {
+                            "settings": {
+                                "entitySet": "DataProducts",
+                                "variantManagement": "Page",
+                                "initialLoad": true,
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.LineItem": {
+                                        "tableSettings": {
+                                            "type": "ResponsiveTable",
+                                            "selectionMode": "Multi"
+                                        },
+                                        "actions": {
+                                            "CreateDataProduct": {
+                                                "press": ".extension.a2a.network.agent0.ext.controller.ListReportExt.onCreateDataProduct",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Create Data Product"
+                                            },
+                                            "ImportSchema": {
+                                                "press": ".extension.a2a.network.agent0.ext.controller.ListReportExt.onImportSchema",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Import Schema"
+                                            },
+                                            "ValidateSelected": {
+                                                "press": ".extension.a2a.network.agent0.ext.controller.ListReportExt.onValidateSelected",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": true,
+                                                "text": "Validate Selected"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 },
-                "sap.fe.templates.ObjectPage.ObjectPage": {
-                    "ReplaceFacet|DublinCoreMetadata": {
-                        "className": "sap.ui.core.Fragment",
-                        "fragmentName": "a2a.ext.agent0.fragment.DublinCoreMetadata",
-                        "type": "XML"
+                {
+                    "name": "DataProductDetails",
+                    "pattern": "DataProducts({key}):?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "DataProductDetails",
+                        "options": {
+                            "settings": {
+                                "entitySet": "DataProducts",
+                                "navigation": {
+                                    "QualityMetrics": {
+                                        "detail": {
+                                            "route": "QualityMetricsDetails"
+                                        }
+                                    }
+                                },
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.HeaderInfo": {
+                                        "actions": {
+                                            "EditMetadata": {
+                                                "press": ".extension.a2a.network.agent0.ext.controller.ObjectPageExt.onEditMetadata",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Edit Metadata"
+                                            },
+                                            "ValidateSchema": {
+                                                "press": ".extension.a2a.network.agent0.ext.controller.ObjectPageExt.onValidateSchema",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Validate Schema"
+                                            },
+                                            "GenerateDublinCore": {
+                                                "press": ".extension.a2a.network.agent0.ext.controller.ObjectPageExt.onGenerateDublinCore",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Generate Dublin Core"
+                                            },
+                                            "ViewLineage": {
+                                                "press": ".extension.a2a.network.agent0.ext.controller.ObjectPageExt.onViewLineage",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "View Lineage"
+                                            },
+                                            "AssessQuality": {
+                                                "press": ".extension.a2a.network.agent0.ext.controller.ObjectPageExt.onAssessQuality",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Assess Quality"
+                                            },
+                                            "PublishToCatalog": {
+                                                "press": ".extension.a2a.network.agent0.ext.controller.ObjectPageExt.onPublishToCatalog",
+                                                "visible": "{= ${status} === 'DRAFT' || ${status} === 'VALIDATED' }",
+                                                "enabled": true,
+                                                "text": "Publish to Catalog"
+                                            },
+                                            "CreateVersion": {
+                                                "press": ".extension.a2a.network.agent0.ext.controller.ObjectPageExt.onCreateVersion",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Create Version"
+                                            },
+                                            "CompareVersions": {
+                                                "press": ".extension.a2a.network.agent0.ext.controller.ObjectPageExt.onCompareVersions",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Compare Versions"
+                                            },
+                                            "RefreshDashboard": {
+                                                "press": ".extension.a2a.network.agent0.ext.controller.ObjectPageExt.onRefreshDashboard",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Refresh Dashboard"
+                                            },
+                                            "ExportDashboard": {
+                                                "press": ".extension.a2a.network.agent0.ext.controller.ObjectPageExt.onExportDashboard",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Export Dashboard"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "extends": {
+            "extensions": {
+                "sap.ui.controllerExtensions": {
+                    "sap.fe.templates.ListReport.ListReportController": {
+                        "controllerName": "a2a.network.agent0.ext.controller.ListReportExt"
                     },
-                    "ReplaceFacet|DataLineage": {
-                        "className": "sap.ui.core.Fragment",
-                        "fragmentName": "a2a.ext.agent0.fragment.DataLineage",
-                        "type": "XML"
-                    },
-                    "ReplaceFacet|QualityMetrics": {
-                        "className": "sap.ui.core.Fragment",
-                        "fragmentName": "a2a.ext.agent0.fragment.QualityMetrics",
-                        "type": "XML"
+                    "sap.fe.templates.ObjectPage.ObjectPageController": {
+                        "controllerName": "a2a.network.agent0.ext.controller.ObjectPageExt"
                     }
                 }
             }
         }
     },
-    
-    "contentDensities": {
-        "compact": true,
-        "cozy": true
+    "sap.fiori": {
+        "registrationIds": ["F0001A0"],
+        "archeType": "transactional"
     },
-    
-    "sap.app/settings": {
-        "securityHeaders": {
+    "sap.fe": {
+        "template": "sap.fe.templates.ListReport.ObjectPage"
+    },
+    "sap.platform.cf": {
+        "oAuthScopes": [
+            "$XSAPPNAME.dataproduct.user",
+            "$XSAPPNAME.dataproduct.admin"
+        ]
+    },
+    "sap.security": {
+        "headers": {
+            "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' wss:; font-src 'self' data:;",
+            "X-Content-Type-Options": "nosniff",
             "X-Frame-Options": "DENY",
             "X-XSS-Protection": "1; mode=block",
-            "X-Content-Type-Options": "nosniff",
-            "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://sapui5.hana.ondemand.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://localhost:8000 wss://localhost:8000; font-src 'self' data:; frame-ancestors 'none'",
-            "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+            "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
             "Referrer-Policy": "strict-origin-when-cross-origin",
             "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
+        },
+        "csrf": {
+            "token": true
+        },
+        "cors": {
+            "allowedOrigins": ["https://*.ondemand.com"],
+            "allowedMethods": ["GET", "POST", "PUT", "DELETE"],
+            "allowedHeaders": ["Content-Type", "Authorization", "X-CSRF-Token"],
+            "exposeHeaders": ["X-CSRF-Token"],
+            "maxAge": 3600
         }
-    },
-    
-    "models": {
-        "i18n": {
-            "type": "sap.ui.model.resource.ResourceModel",
-            "settings": {
-                "bundleName": "a2a.ext.agent0.i18n.i18n"
-            }
-        }
-    },
-    
-    "resources": {
-        "css": [{
-            "uri": "css/style.css"
-        }]
     }
 }

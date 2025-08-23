@@ -355,7 +355,7 @@
                             <Label text="Metrics Export URL"/>
                             <Input 
                                 value="{config>/metricsExportUrl}"
-                                placeholder="http://monitoring.company.com/metrics"
+                                placeholder="https://monitoring.company.com/metrics"
                                 enabled="{config>/enablePerformanceMetrics}"/>
                         </form:content>
                     </form:SimpleForm>

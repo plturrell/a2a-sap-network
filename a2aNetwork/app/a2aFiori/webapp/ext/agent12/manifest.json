@@ -1,96 +1,189 @@
 {
-    "_version": "1.49.0",
+    "_version": "1.60.0",
     "sap.app": {
-        "id": "a2a.network.agent12.ext",
+        "id": "a2a.network.agent12",
         "type": "application",
-        "title": "{{appTitle}}",
-        "description": "{{appDescription}}",
+        "i18n": "i18n/i18n.properties",
+        "title": "{{agent12Title}}",
+        "description": "{{agent12Description}}",
         "applicationVersion": {
             "version": "1.0.0"
         },
         "dataSources": {
-            "i18n": {
-                "type": "ResourceBundle",
-                "uri": "i18n/i18n.properties"
+            "mainService": {
+                "uri": "https://a2a/agent12/v1/odata/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
             }
-        }
-    },
-    "sap.ui": {
-        "technology": "UI5",
-        "icons": {
-            "icon": "sap-icon://product",
-            "favIcon": "",
-            "phone": "",
-            "phone@2": "",
-            "tablet": "",
-            "tablet@2": ""
-        },
-        "deviceTypes": {
-            "desktop": true,
-            "tablet": true,
-            "phone": true
         }
     },
     "sap.ui5": {
         "dependencies": {
             "minUI5Version": "1.120.0",
             "libs": {
+                "sap.fe.templates": {},
+                "sap.f": {},
                 "sap.m": {},
                 "sap.ui.core": {},
-                "sap.ui.layout": {},
-                "sap.f": {},
-                "sap.suite.ui.commons": {},
-                "sap.suite.ui.microchart": {},
-                "sap.viz": {},
-                "sap.ui.table": {},
-                "sap.ui.unified": {},
-                "sap.tnt": {}
+                "sap.uxap": {},
+                "sap.viz": {}
             }
         },
         "models": {
-            "i18n": {
-                "dataSource": "i18n",
-                "type": "sap.ui.model.resource.ResourceModel",
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
                 "settings": {
-                    "bundleName": "a2a.network.agent12.ext.i18n.i18n"
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
+                }
+            },
+            "@i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "uri": "i18n/i18n.properties"
+            }
+        },
+        "routing": {
+            "routes": [
+                {
+                    "name": "PerformanceList",
+                    "pattern": ":?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "PerformanceList",
+                        "options": {
+                            "settings": {
+                                "entitySet": "PerformanceTasks",
+                                "variantManagement": "Page",
+                                "initialLoad": true,
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.LineItem": {
+                                        "tableSettings": {
+                                            "type": "ResponsiveTable",
+                                            "selectionMode": "Multi"
+                                        },
+                                        "actions": {
+                                            "StartBenchmark": {
+                                                "press": ".extension.a2a.network.agent12.ext.controller.ListReportExt.onStartBenchmark",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": true,
+                                                "text": "Start Benchmark"
+                                            },
+                                            "OptimizePerformance": {
+                                                "press": ".extension.a2a.network.agent12.ext.controller.ListReportExt.onOptimizePerformance",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": true,
+                                                "text": "Optimize Performance"
+                                            },
+                                            "TuneSettings": {
+                                                "press": ".extension.a2a.network.agent12.ext.controller.ListReportExt.onTuneSettings",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Tune Settings"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "PerformanceDetails",
+                    "pattern": "PerformanceTasks({key}):?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "PerformanceDetails",
+                        "options": {
+                            "settings": {
+                                "entitySet": "PerformanceTasks",
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.HeaderInfo": {
+                                        "actions": {
+                                            "ViewAnalytics": {
+                                                "press": ".extension.a2a.network.agent12.ext.controller.ObjectPageExt.onViewAnalytics",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "View Analytics"
+                                            },
+                                            "RunPerformanceTest": {
+                                                "press": ".extension.a2a.network.agent12.ext.controller.ObjectPageExt.onRunPerformanceTest",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Run Performance Test"
+                                            },
+                                            "GenerateBenchmarkReport": {
+                                                "press": ".extension.a2a.network.agent12.ext.controller.ObjectPageExt.onGenerateBenchmarkReport",
+                                                "visible": "{= ${status} === 'COMPLETED' }",
+                                                "enabled": true,
+                                                "text": "Generate Benchmark Report"
+                                            },
+                                            "ConfigureThresholds": {
+                                                "press": ".extension.a2a.network.agent12.ext.controller.ObjectPageExt.onConfigureThresholds",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Configure Thresholds"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "extends": {
+            "extensions": {
+                "sap.ui.controllerExtensions": {
+                    "sap.fe.templates.ListReport.ListReportController": {
+                        "controllerName": "a2a.network.agent12.ext.controller.ListReportExt"
+                    },
+                    "sap.fe.templates.ObjectPage.ObjectPageController": {
+                        "controllerName": "a2a.network.agent12.ext.controller.ObjectPageExt"
+                    }
                 }
             }
-        },
-        "contentSecurityPolicy": {
-            "policy": "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' wss: https:; img-src 'self' data: https:; font-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'none';",
-            "reportOnly": false
-        },
-        "resourceRoots": {
-            "a2a.network.agent12.ext": "./"
         }
-    },
-    "sap.fe": {
-        "type": "extension"
     },
     "sap.fiori": {
-        "_version": "1.1.0",
-        "registrationIds": [],
+        "registrationIds": ["F0001A12"],
         "archeType": "transactional"
     },
-    "sap.copilot": {
-        "contextAnalysis": {
-            "allowAddingToInsights": false,
-            "allowMergingIntoInsights": false
-        }
+    "sap.fe": {
+        "template": "sap.fe.templates.ListReport.ObjectPage"
     },
-    "sap.platform.hcp": {
-        "uri": ""
+    "sap.platform.cf": {
+        "oAuthScopes": [
+            "$XSAPPNAME.performance.user",
+            "$XSAPPNAME.performance.admin"
+        ]
     },
-    "sap.cloud": {
-        "public": true,
-        "service": "a2aAgents"
-    },
-    "sap.launchpad": {
-        "service": {
-            "SAP.UI.launchpad.context": {
-                "path": "@sap/launchpad/context",
-                "lazy": true
-            }
+    "sap.security": {
+        "headers": {
+            "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' wss:; font-src 'self' data:;",
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY",
+            "X-XSS-Protection": "1; mode=block",
+            "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+            "Referrer-Policy": "strict-origin-when-cross-origin",
+            "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
+        },
+        "csrf": {
+            "token": true
+        },
+        "cors": {
+            "allowedOrigins": ["https://*.ondemand.com"],
+            "allowedMethods": ["GET", "POST", "PUT", "DELETE"],
+            "allowedHeaders": ["Content-Type", "Authorization", "X-CSRF-Token"],
+            "exposeHeaders": ["X-CSRF-Token"],
+            "maxAge": 3600
         }
     }
 }

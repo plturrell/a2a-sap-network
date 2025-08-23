@@ -16,7 +16,7 @@ const { getXSUAAConfig: getXSUAAConfigHelper, initializeXSUAA } = require('./xsu
 
 // Session configuration
 const sessionConfig = {
-  secret: process.env.SESSION_SECRET || (() => {
+  secret: process.env.SESSION_SECRET || (function generateSessionSecret() {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('SESSION_SECRET must be set in production environment');
     }
@@ -55,7 +55,7 @@ if (ALLOW_NON_BTP_AUTH && process.env.NODE_ENV === 'production') {
 }
 
 // XSUAA JWT validation middleware
-const validateJWT = (req, res, next) => {
+const validateJWT = function validateJWTMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
   
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -152,8 +152,8 @@ const validateJWT = (req, res, next) => {
 };
 
 // Role-based access control middleware
-const requireRole = (role) => {
-  return (req, res, next) => {
+const requireRole = function requireRoleFactory(role) {
+  return function requireRoleMiddleware(req, res, next) {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -180,7 +180,7 @@ const requireRole = (role) => {
 };
 
 // API key validation for service-to-service communication
-const validateAPIKey = (req, res, next) => {
+const validateAPIKey = function validateAPIKeyMiddleware(req, res, next) {
   const apiKey = req.headers['x-api-key'];
   
   if (!apiKey) {
@@ -216,7 +216,7 @@ function createDevelopmentUser() {
 }
 
 // Apply authentication middleware
-const applyAuthMiddleware = (app) => {
+const applyAuthMiddleware = function applyAuthMiddleware(app) {
   // Initialize passport
   app.use(passport.initialize());
   
@@ -251,7 +251,7 @@ const applyAuthMiddleware = (app) => {
   }
   
   // JWT validation for user endpoints
-  app.use('/api/v1/*', (req, res, next) => {
+  const jwtValidationHandler = function(req, res, next) {
     const log = cds.log('auth-debug');
     log.info(`Auth middleware processing: ${req.method} ${req.path}`, {
       originalUrl: req.originalUrl,
@@ -314,7 +314,9 @@ const applyAuthMiddleware = (app) => {
     
     log.info(`Applying JWT validation for: ${req.path}`);
     validateJWT(req, res, next);
-  });
+  };
+  
+  app.use('/api/v1/*', jwtValidationHandler);
 };
 
 // Legacy function - use xsuaaConfig.js instead

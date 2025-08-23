@@ -1,85 +1,176 @@
 {
-    "_version": "1.49.0",
+    "_version": "1.60.0",
     "sap.app": {
-        "id": "a2a.network.agent6.ext",
+        "id": "a2a.network.agent6",
         "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "title": "{{agent6Title}}",
+        "description": "{{agent6Description}}",
         "applicationVersion": {
             "version": "1.0.0"
-        }
-    },
-    "sap.ui": {
-        "technology": "UI5",
-        "icons": {
-            "icon": "sap-icon://quality-issue",
-            "favIcon": "",
-            "phone": "",
-            "phone@2": "",
-            "tablet": "",
-            "tablet@2": ""
         },
-        "deviceTypes": {
-            "desktop": true,
-            "tablet": true,
-            "phone": true
+        "dataSources": {
+            "mainService": {
+                "uri": "https://a2a/agent6/v1/odata/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
+            }
         }
     },
     "sap.ui5": {
         "dependencies": {
             "minUI5Version": "1.120.0",
             "libs": {
+                "sap.fe.templates": {},
+                "sap.f": {},
                 "sap.m": {},
                 "sap.ui.core": {},
-                "sap.ui.layout": {},
-                "sap.f": {},
-                "sap.suite.ui.commons": {},
-                "sap.suite.ui.microchart": {},
+                "sap.uxap": {},
                 "sap.viz": {}
             }
         },
         "models": {
-            "i18n": {
-                "dataSource": "i18n",
-                "type": "sap.ui.model.resource.ResourceModel",
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
                 "settings": {
-                    "bundleName": "a2a.network.agent6.ext.i18n.i18n"
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
+                }
+            },
+            "@i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "uri": "i18n/i18n.properties"
+            }
+        },
+        "routing": {
+            "routes": [
+                {
+                    "name": "QualityAssuranceList",
+                    "pattern": ":?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "QualityAssuranceList",
+                        "options": {
+                            "settings": {
+                                "entitySet": "QualityAssuranceTasks",
+                                "variantManagement": "Page",
+                                "initialLoad": true,
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.LineItem": {
+                                        "tableSettings": {
+                                            "type": "ResponsiveTable",
+                                            "selectionMode": "Multi"
+                                        },
+                                        "actions": {
+                                            "CreateQualityTask": {
+                                                "press": ".extension.a2a.network.agent6.ext.controller.ListReportExt.onCreateQualityTask",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Create Quality Task"
+                                            },
+                                            "RunQualityChecks": {
+                                                "press": ".extension.a2a.network.agent6.ext.controller.ListReportExt.onRunQualityChecks",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": true,
+                                                "text": "Run Quality Checks"
+                                            },
+                                            "GenerateReport": {
+                                                "press": ".extension.a2a.network.agent6.ext.controller.ListReportExt.onGenerateReport",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Generate Report"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "QualityAssuranceDetails",
+                    "pattern": "QualityAssuranceTasks({key}):?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "QualityAssuranceDetails",
+                        "options": {
+                            "settings": {
+                                "entitySet": "QualityAssuranceTasks",
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.HeaderInfo": {
+                                        "actions": {
+                                            "StartQualityCheck": {
+                                                "press": ".extension.a2a.network.agent6.ext.controller.ObjectPageExt.onStartQualityCheck",
+                                                "visible": "{= ${status} === 'DRAFT' || ${status} === 'PAUSED' }",
+                                                "enabled": true,
+                                                "text": "Start Quality Check"
+                                            },
+                                            "PauseQualityCheck": {
+                                                "press": ".extension.a2a.network.agent6.ext.controller.ObjectPageExt.onPauseQualityCheck",
+                                                "visible": "{= ${status} === 'RUNNING' }",
+                                                "enabled": true,
+                                                "text": "Pause"
+                                            },
+                                            "ViewResults": {
+                                                "press": ".extension.a2a.network.agent6.ext.controller.ObjectPageExt.onViewResults",
+                                                "visible": "{= ${status} === 'COMPLETED' }",
+                                                "enabled": true,
+                                                "text": "View Results"
+                                            },
+                                            "ExportReport": {
+                                                "press": ".extension.a2a.network.agent6.ext.controller.ObjectPageExt.onExportReport",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Export Report"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "extends": {
+            "extensions": {
+                "sap.ui.controllerExtensions": {
+                    "sap.fe.templates.ListReport.ListReportController": {
+                        "controllerName": "a2a.network.agent6.ext.controller.ListReportExt"
+                    },
+                    "sap.fe.templates.ObjectPage.ObjectPageController": {
+                        "controllerName": "a2a.network.agent6.ext.controller.ObjectPageExt"
+                    }
                 }
             }
         }
-    },
-    "sap.fe": {
-        "type": "extension"
     },
     "sap.fiori": {
-        "_version": "1.1.0",
-        "registrationIds": [],
+        "registrationIds": ["F0001A6"],
         "archeType": "transactional"
     },
-    "sap.cloud": {
-        "public": true,
-        "service": "a2aAgents"
-    },
-    "sap.app/crossNavigation": {
-        "inbounds": {
-            "intent1": {
-                "signature": {
-                    "parameters": {},
-                    "additionalParameters": "allowed"
-                }
-            }
-        }
+    "sap.fe": {
+        "template": "sap.fe.templates.ListReport.ObjectPage"
     },
     "sap.platform.cf": {
         "oAuthScopes": [
-            "$XSAPPNAME.quality.control",
+            "$XSAPPNAME.quality.user",
             "$XSAPPNAME.quality.admin"
         ]
     },
     "sap.security": {
         "headers": {
+            "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' wss:; font-src 'self' data:;",
             "X-Content-Type-Options": "nosniff",
             "X-Frame-Options": "DENY",
             "X-XSS-Protection": "1; mode=block",
-            "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' wss:; font-src 'self' data:;",
             "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
             "Referrer-Policy": "strict-origin-when-cross-origin",
             "Permissions-Policy": "geolocation=(), microphone=(), camera=()"

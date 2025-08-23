@@ -129,7 +129,10 @@ def print_summary_table(analyses: List[Dict[str, Any]]):
                     issue_count[issue] += 1
             
             # Sort by frequency
-            for issue, count in sorted(issue_count.items(), key=lambda x: x[1], reverse=True)[:10]:
+            def get_issue_count(item):
+                return item[1]
+            
+            for issue, count in sorted(issue_count.items(), key=get_issue_count, reverse=True)[:10]:
                 print(f"  - {issue} (x{count})")
 
 def main():

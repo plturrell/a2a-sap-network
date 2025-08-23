@@ -4,7 +4,7 @@
 # This script validates that all components required for the 18-step startup are present
 # Can be run standalone or within Docker container
 
-set -e
+# Removed set -e to allow individual tests to fail gracefully
 
 # Support running from different locations
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -54,10 +54,10 @@ verify_step 5 "Core Services (Backend)" "test -d a2aAgents/backend && test -f a2
 verify_step 6 "Trust Systems" "test -d a2aAgents/backend/trustSystem || test -f a2aAgents/backend/app/a2a/core/trustManager.py"
 
 # Step 7: MCP Servers
-verify_step 7 "MCP Servers" "test -d a2aAgents/backend/mcpServers || test -f a2aAgents/backend/app/a2a/sdk/mcp_integration.py"
+verify_step 7 "MCP Servers" "test -d a2aAgents/backend/app/a2a/mcp/servers && test -f a2aAgents/backend/app/a2a/sdk/mcpServer.py"
 
 # Step 8: Network Services
-verify_step 8 "Network Services (CDS/CAP)" "test -f a2aNetwork/package.json && test -f a2aNetwork/server.js"
+verify_step 8 "Network Services (CDS/CAP)" "test -f a2aNetwork/package.json && test -f a2aNetwork/dev-services/server.js"
 
 # Step 9: Agent Services
 verify_step 9 "Agent Services (16 agents)" "ls a2aAgents/backend/app/a2a/agents/agent*/active/*.py 2>/dev/null | wc -l | grep -E '1[0-9]|[2-9][0-9]'"
@@ -69,7 +69,7 @@ verify_step 10 "Frontend Service" "test -d a2aAgents/frontend || test -d a2aNetw
 verify_step 11 "Notification System" "grep -r 'notification' a2aAgents/backend/ > /dev/null 2>&1 || grep -r 'websocket' a2aNetwork/ > /dev/null 2>&1"
 
 # Step 12: Telemetry Services
-verify_step 12 "Telemetry Services" "grep -r 'prometheus\|telemetry\|monitoring' . > /dev/null 2>&1"
+verify_step 12 "Telemetry Services" "grep -r 'prometheus\|telemetry\|monitoring' a2aAgents/backend a2aNetwork --include='*.py' --include='*.js' --include='*.yml' --include='*.yaml' > /dev/null 2>&1"
 
 # Step 13: Agent Communication Testing
 verify_step 13 "Agent Communication" "test -f a2aAgents/backend/app/a2a/sdk/client.py || test -f a2aAgents/backend/app/a2a/core/a2aClient.py"

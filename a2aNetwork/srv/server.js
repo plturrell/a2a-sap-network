@@ -334,83 +334,12 @@ cds.on('bootstrap', async (app) => {
     
 
     // ================================
-    // AGENT 6 - QUALITY CONTROL & WORKFLOW ROUTING PROXY ROUTES
+    // AGENT 6-15 PROXY ROUTES - MOVED TO CAP SERVICES
     // ================================
+    // Note: All agent proxy routes have been migrated to AgentProxyService.cds
+    // and individual agent service files for better CAP integration
     
-    
-    // Helper function to proxy Agent 6 requests
-    
-    // Agent 6 Quality Control Tasks
-    
-    // Agent 6 Task Operations
-        // Special handling for Server-Sent Events
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('Connection', 'keep-alive');
-        
-        const eventSourceUrl = `${AGENT6_BASE_URL}/a2a/agent6/v1/tasks/${req.params.taskId}/stream`;
-        // Proxy SSE stream - implementation would forward events
-        res.write(':ok\n\n');
-    });
-    
-    // Agent 6 Dashboard and Analytics
-    
-    // Agent 6 Routing Rules
-    
-    // Agent 6 Quality Gates
-    
-    // Agent 6 Batch Operations
-    
-    // Agent 6 Reports and Exports
-    
-    // Agent 6 Health Check
-    
-    // Agent 6 OData Service Proxy - Convert REST to OData format
-        try {
-            const response = await axios.get(`${AGENT6_BASE_URL}/a2a/agent6/v1/tasks`);
-            
-            const odataResponse = {
-                "@odata.context": "$metadata#QualityControlTasks",
-                "value": response.data.map(task => ({
-                    ID: task.id,
-                    taskName: task.task_name,
-                    description: task.description,
-                    qualityGate: task.quality_gate,
-                    dataSource: task.data_source,
-                    processingPipeline: task.processing_pipeline,
-                    status: task.status?.toUpperCase() || 'DRAFT',
-                    priority: task.priority?.toUpperCase() || 'NORMAL',
-                    overallQuality: task.overall_quality,
-                    trustScore: task.trust_score,
-                    issuesFound: task.issues_found || 0,
-                    routingDecision: task.routing_decision?.toUpperCase(),
-                    targetAgent: task.target_agent,
-                    routingConfidence: task.routing_confidence,
-                    assessmentDuration: task.assessment_duration,
-                    workflowOptimized: task.workflow_optimized || false,
-                    autoRouted: task.auto_routed || false,
-                    qualityComponents: JSON.stringify(task.quality_components || {}),
-                    assessmentResults: JSON.stringify(task.assessment_results || {}),
-                    errorDetails: task.error_details,
-                    startedAt: task.started_at,
-                    completedAt: task.completed_at,
-                    createdAt: task.created_at,
-                    modifiedAt: task.modified_at
-                }))
-            };
-            
-            res.json(odataResponse);
-        } catch (error) {
-            res.status(503).json({
-                error: {
-                    code: "SERVICE_UNAVAILABLE",
-                    message: "Agent 6 backend not available"
-                }
-            });
-        }
-    });
-    
-    log.info('Agent 6 API proxy routes initialized');
+    log.info('Agent proxy routes are now handled by CAP services');
     
     // ===== AGENT 7 PROXY ROUTES =====
     // Agent Management & Orchestration System
@@ -450,140 +379,11 @@ cds.on('bootstrap', async (app) => {
     
     // Agent Management Functions
     
-    // Real-time updates and streaming
-        // Server-Sent Events for real-time agent updates
-        res.writeHead(200, {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-            'Access-Control-Allow-Origin': '*'
-        });
-        
-    });
+    // Note: All agent proxy routes have been migrated to CAP services
+    // Real-time updates and streaming are now handled by WebSocket services
     
-    // Agent 7 OData Service Proxy - Convert REST to OData format
-        try {
-            const response = await axios.get(`${AGENT7_BASE_URL}/api/v1/registered-agents`);
-            
-            // Convert to OData format
-            const odataResponse = {
-                "@odata.context": "$metadata#RegisteredAgents",
-                "value": response.data.map(agent => ({
-                    ID: agent.id,
-                    agentName: agent.agent_name,
-                    agentType: agent.agent_type?.toUpperCase(),
-                    agentVersion: agent.agent_version,
-                    endpointUrl: agent.endpoint_url,
-                    status: agent.status?.toUpperCase() || 'REGISTERING',
-                    healthStatus: agent.health_status?.toUpperCase() || 'UNKNOWN',
-                    capabilities: JSON.stringify(agent.capabilities || {}),
-                    configuration: JSON.stringify(agent.configuration || {}),
-                    performanceScore: agent.performance_score || 0,
-                    responseTime: agent.response_time,
-                    throughput: agent.throughput,
-                    errorRate: agent.error_rate || 0,
-                    lastHealthCheck: agent.last_health_check,
-                    registrationDate: agent.registration_date,
-                    deactivationDate: agent.deactivation_date,
-                    loadBalanceWeight: agent.load_balance_weight || 50,
-                    priority: agent.priority || 5,
-                    tags: JSON.stringify(agent.tags || []),
-                    notes: agent.notes,
-                    createdAt: agent.created_at,
-                    createdBy: agent.created_by,
-                    modifiedAt: agent.modified_at,
-                    modifiedBy: agent.modified_by
-                }))
-            };
-            
-            res.json(odataResponse);
-        } catch (error) {
-            res.status(503).json({
-                error: {
-                    code: "SERVICE_UNAVAILABLE",
-                    message: "Agent 7 backend not available"
-                }
-            });
-        }
-    });
-    
-        try {
-            const response = await axios.get(`${AGENT7_BASE_URL}/api/v1/management-tasks`);
-            
-            // Convert to OData format
-            const odataResponse = {
-                "@odata.context": "$metadata#ManagementTasks",
-                "value": response.data.map(task => ({
-                    ID: task.id,
-                    taskName: task.task_name,
-                    taskType: task.task_type?.toUpperCase(),
-                    status: task.status?.toUpperCase() || 'SCHEDULED',
-                    priority: task.priority?.toUpperCase() || 'NORMAL',
-                    targetAgents: JSON.stringify(task.target_agents || []),
-                    parameters: JSON.stringify(task.parameters || {}),
-                    scheduleType: task.schedule_type?.toUpperCase() || 'IMMEDIATE',
-                    scheduledTime: task.scheduled_time,
-                    recurrencePattern: task.recurrence_pattern,
-                    startTime: task.start_time,
-                    endTime: task.end_time,
-                    duration: task.duration,
-                    progress: task.progress || 0,
-                    result: JSON.stringify(task.result || {}),
-                    errorMessage: task.error_message,
-                    retryCount: task.retry_count || 0,
-                    maxRetries: task.max_retries || 3,
-                    notificationSent: task.notification_sent !== false,
-                    rollbackAvailable: task.rollback_available !== false,
-                    createdAt: task.created_at,
-                    createdBy: task.created_by,
-                    modifiedAt: task.modified_at,
-                    modifiedBy: task.modified_by
-                }))
-            };
-            
-            res.json(odataResponse);
-        } catch (error) {
-            res.status(503).json({
-                error: {
-                    code: "SERVICE_UNAVAILABLE",
-                    message: "Agent 7 backend not available"
-                }
-            });
-        }
-    });
-    
-    log.info('Agent 7 API proxy routes initialized');
-    
-    // ===== AGENT 8 PROXY ROUTES =====
-    
-    // Agent 8 proxy function
-    
-    // Agent 8 Data Management Core Operations
-    
-    // Agent 8 Data Task Operations
-        // Special handling for Server-Sent Events
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('Connection', 'keep-alive');
-        
-        const eventSourceUrl = `${AGENT8_BASE_URL}/api/v1/data-tasks/${req.params.taskId}/stream`;
-        // Proxy SSE stream - implementation would forward events
-        res.write(':ok\n\n');
-    });
-    
-    // Agent 8 Storage Backend Management
-    
-    // Agent 8 Cache Management
-    
-    // Agent 8 Data Versioning
-    
-    // Agent 8 Data Backup Management
-    
-    // Agent 8 Data Import/Export
-    
-    // Agent 8 Bulk Operations
-    
-    // Agent 8 Performance Metrics
+    // ===== AGENTS 8-15 PROXY ROUTES =====
+    // Note: All agent proxy routes migrated to CAP services
     
     // Agent 8 Dashboard and Analytics
     
@@ -591,50 +391,7 @@ cds.on('bootstrap', async (app) => {
     
     // Agent 8 Health Check
     
-    // Agent 8 OData Service Proxy - Convert REST to OData format
-        try {
-            const response = await axios.get(`${AGENT8_BASE_URL}/api/v1/data-tasks`);
-            
-            const odataResponse = {
-                "@odata.context": "$metadata#DataTasks",
-                "value": response.data.map(task => ({
-                    ID: task.id,
-                    taskName: task.task_name,
-                    description: task.description,
-                    taskType: task.task_type?.toUpperCase() || 'PROCESSING',
-                    status: task.status?.toUpperCase() || 'PENDING',
-                    priority: task.priority?.toUpperCase() || 'NORMAL',
-                    dataSource: task.data_source,
-                    targetDestination: task.target_destination,
-                    dataSize: task.data_size || 0,
-                    processedSize: task.processed_size || 0,
-                    progressPercent: task.progress_percent || 0,
-                    estimatedDuration: task.estimated_duration,
-                    actualDuration: task.actual_duration,
-                    startTime: task.start_time,
-                    endTime: task.end_time,
-                    errorMessage: task.error_message,
-                    retryCount: task.retry_count || 0,
-                    maxRetries: task.max_retries || 3,
-                    configuration: JSON.stringify(task.configuration || {}),
-                    metadata: JSON.stringify(task.metadata || {}),
-                    createdAt: task.created_at,
-                    createdBy: task.created_by,
-                    modifiedAt: task.modified_at,
-                    modifiedBy: task.modified_by
-                }))
-            };
-            
-            res.json(odataResponse);
-        } catch (error) {
-            res.status(503).json({
-                error: {
-                    code: "SERVICE_UNAVAILABLE",
-                    message: "Agent 8 backend not available"
-                }
-            });
-        }
-    });
+    // Agent 8 OData Service Proxy - Migrated to CAP service
     
         try {
             const response = await axios.get(`${AGENT8_BASE_URL}/api/v1/storage-backends`);

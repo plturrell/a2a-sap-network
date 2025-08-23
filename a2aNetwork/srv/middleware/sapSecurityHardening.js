@@ -165,7 +165,7 @@ class SecurityHardening {
    * Input validation and sanitization
    */
   inputValidation() {
-    return (req, res, next) => {
+    return function inputValidationMiddleware(req, res, next) {
       try {
         // Skip validation for static file requests - SAP Enterprise Standard
         const staticFilePaths = ['/common/', '/a2aAgents/', '/a2aFiori/', '/shells/', '/app/a2a-fiori/'];

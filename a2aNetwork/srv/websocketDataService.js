@@ -48,53 +48,59 @@ class A2AWebSocketDataService extends EventEmitter {
         this.db = null;
         this.port = null;
         this.initializeDatabase();
-        this.initializeWebSocketServer().catch(error => {
+        const handleInitializationError = function(error) {
             logger.error('Failed to initialize WebSocket server:', error);
-        });
+        };
+        this.initializeWebSocketServer().catch(handleInitializationError);
         this.startDataStreaming();
     }
 
     initializeDatabase() {
         const sqlite3 = require('sqlite3').verbose();
-        this.db = new sqlite3.Database(this.dbPath, (err) => {
+        const handleDatabaseConnection = (err) => {
             if (err) {
                 logger.error('Failed to connect to database for real-time service:', err);
             } else {
                 logger.info('✅ Real-time service connected to database');
                 this.updateMetricsFromDatabase();
             }
-        });
+        };
+        this.db = new sqlite3.Database(this.dbPath, handleDatabaseConnection);
     }
 
     async updateMetricsFromDatabase() {
         try {
             // Fetch agent metrics
-            const agentData = await new Promise((resolve, reject) => {
+            const fetchAgentData = (resolve, reject) => {
+                const handleAgentResults = (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows[0] || { total: 0, active: 0 });
+                };
                 this.db.all(
                     `SELECT 
                         COUNT(*) as total,
                         SUM(CASE WHEN isActive = 1 THEN 1 ELSE 0 END) as active
                      FROM a2a_network_Agents`,
-                    (err, rows) => {
-                        if (err) reject(err);
-                        else resolve(rows[0] || { total: 0, active: 0 });
-                    }
+                    handleAgentResults
                 );
-            });
+            };
+            const agentData = await new Promise(fetchAgentData);
 
             // Fetch service metrics
-            const serviceData = await new Promise((resolve, reject) => {
+            const fetchServiceData = (resolve, reject) => {
+                const handleServiceResults = (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows[0] || { total: 0, active: 0 });
+                };
                 this.db.all(
                     `SELECT 
                         COUNT(*) as total,
                         SUM(CASE WHEN isActive = 1 THEN 1 ELSE 0 END) as active
                      FROM a2a_network_Services`,
-                    (err, rows) => {
-                        if (err) reject(err);
-                        else resolve(rows[0] || { total: 0, active: 0 });
-                    }
+                    handleServiceResults
                 );
-            });
+            };
+            const serviceData = await new Promise(fetchServiceData);
 
             // Fetch blockchain stats
             const blockchainData = await new Promise((resolve, reject) => {
@@ -166,7 +172,7 @@ class A2AWebSocketDataService extends EventEmitter {
                 path: '/realtime'
             });
 
-            this.wsServer.on('connection', (ws, req) => {
+            const handleWebSocketConnection = (ws, req) => {
                 const clientId = this.generateClientId();
                 logger.info(`📡 Real-time client connected: ${clientId}`);
                 
@@ -189,35 +195,41 @@ class A2AWebSocketDataService extends EventEmitter {
                 // Send initial data
                 this.sendInitialData(clientId);
 
-                ws.on('message', (message) => {
+                const handleWebSocketMessage = (message) => {
                     try {
                         const data = JSON.parse(message);
                         this.handleClientMessage(clientId, data);
                     } catch (error) {
                         logger.error('Invalid WebSocket message:', error);
                     }
-                });
+                };
+                ws.on('message', handleWebSocketMessage);
 
-                ws.on('close', () => {
+                const handleWebSocketClose = () => {
                     logger.info(`📡 Real-time client disconnected: ${clientId}`);
                     this.clients.delete(clientId);
                     websocketMonitor.removeConnection(clientId);
-                });
+                };
+                ws.on('close', handleWebSocketClose);
 
-                ws.on('error', (error) => {
+                const handleWebSocketError = (error) => {
                     logger.error('WebSocket error:', error);
                     this.clients.delete(clientId);
                     websocketMonitor.removeConnection(clientId);
-                });
+                };
+                ws.on('error', handleWebSocketError);
 
                 // Setup ping/pong for connection health
-                ws.on('pong', () => {
+                const handleWebSocketPong = () => {
                     const client = this.clients.get(clientId);
                     if (client) {
                         client.lastPing = Date.now();
                     }
-                });
-            });
+                };
+                ws.on('pong', handleWebSocketPong);
+            };
+            
+            this.wsServer.on('connection', handleWebSocketConnection);
 
             logger.info(`📡 Real-time WebSocket server started on port ${this.port}`);
         } catch (error) {
@@ -252,10 +264,11 @@ class A2AWebSocketDataService extends EventEmitter {
         const client = this.clients.get(clientId);
         if (!client) return;
 
-        streams.forEach(stream => {
+        const addStreamSubscription = (stream) => {
             client.subscriptions.add(stream);
             logger.info(`📡 Client ${clientId} subscribed to ${stream}`);
-        });
+        };
+        streams.forEach(addStreamSubscription);
 
         this.sendToClient(clientId, {
             action: 'subscription_confirmed',
@@ -267,9 +280,10 @@ class A2AWebSocketDataService extends EventEmitter {
         const client = this.clients.get(clientId);
         if (!client) return;
 
-        streams.forEach(stream => {
+        const removeStreamSubscription = (stream) => {
             client.subscriptions.delete(stream);
-        });
+        };
+        streams.forEach(removeStreamSubscription);
     }
 
     sendInitialData(clientId) {
@@ -285,11 +299,12 @@ class A2AWebSocketDataService extends EventEmitter {
 
     sendDataSnapshot(clientId, dataTypes) {
         const snapshot = {};
-        dataTypes.forEach(type => {
+        const addDataTypeToSnapshot = (type) => {
             if (this.metrics[type]) {
                 snapshot[type] = this.metrics[type];
             }
-        });
+        };
+        dataTypes.forEach(addDataTypeToSnapshot);
 
         this.sendToClient(clientId, {
             action: 'data_snapshot',
@@ -323,32 +338,37 @@ class A2AWebSocketDataService extends EventEmitter {
         this.stopDataStreaming();
         
         // Update metrics from database every 5 seconds
-        this.intervals.set('metrics', setInterval(() => {
+        const updateMetricsFromDatabase = () => {
             this.updateMetricsFromDatabase();
-        }, 5000));
+        };
+        this.intervals.set('metrics', setInterval(updateMetricsFromDatabase, 5000));
 
         // Update tile data every 10 seconds
-        this.intervals.set('tiles', setInterval(() => {
+        const updateTileData = () => {
             this.updateTileData();
-        }, 10000));
+        };
+        this.intervals.set('tiles', setInterval(updateTileData, 10000));
 
         // Update analytics every 5 seconds
-        this.intervals.set('analytics', setInterval(() => {
+        const updateAnalyticsData = () => {
             this.updateAnalyticsData();
-        }, 5000));
+        };
+        this.intervals.set('analytics', setInterval(updateAnalyticsData, 5000));
 
         // Update network metrics every 3 seconds
-        this.intervals.set('network', setInterval(() => {
+        const updateNetworkMetrics = () => {
             this.updateNetworkMetrics();
-        }, 3000));
+        };
+        this.intervals.set('network', setInterval(updateNetworkMetrics, 3000));
 
         // Listen for real-time events from event bus
         this.subscribeToRealTimeEvents();
 
         // Health check for clients
-        this.intervals.set('health', setInterval(() => {
+        const performHealthCheck = () => {
             this.performHealthCheck();
-        }, 30000));
+        };
+        this.intervals.set('health', setInterval(performHealthCheck, 30000));
     }
     
     stopDataStreaming() {
@@ -374,9 +394,10 @@ class A2AWebSocketDataService extends EventEmitter {
         
         // Close WebSocket server
         if (this.wsServer) {
-            this.wsServer.close(() => {
+            const handleServerClose = () => {
                 logger.info('WebSocket server closed');
-            });
+            };
+            this.wsServer.close(handleServerClose);
         }
         
         // Close database connection

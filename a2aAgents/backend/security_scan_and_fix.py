@@ -256,7 +256,10 @@ class SecurityScanner:
                 modified = False
                 
                 # Sort findings by line number (descending) to avoid line number shifts
-                file_findings.sort(key=lambda x: x.line_number, reverse=True)
+                def get_line_number_for_sorting(finding):
+                    return finding.line_number
+                
+                file_findings.sort(key=get_line_number_for_sorting, reverse=True)
                 
                 for finding in file_findings:
                     if auto_fix:

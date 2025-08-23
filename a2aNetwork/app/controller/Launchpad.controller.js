@@ -30,7 +30,7 @@ sap.ui.define([
             this._initializeSystemModels();
             
             // Check authorization before proceeding
-            this._checkUserAuthorization().then(() => {
+            this._checkUserAuthorization().then(function() {
                 const oI18nModel = this.getOwnerComponent().getModel("i18n");
                 const oResourceBundle = oI18nModel.getResourceBundle();
 
@@ -48,7 +48,7 @@ sap.ui.define([
 
                 this._initializeDataConnection();
                 this._setupConnectionHealthCheck();
-            }).catch(error => {
+            }.bind(this)).catch(function(error) {
                 Log.error("Authorization check failed", error);
                 MessageToast.show(this.getOwnerComponent().getModel("i18n").getResourceBundle().getText("authorizationError") || "You are not authorized to access this application");
             });
@@ -218,10 +218,11 @@ sap.ui.define([
             
             Log.info(`Scheduling WebSocket reconnection attempt ${this._reconnectAttempts} in ${delay}ms`);
             
-            this._reconnectTimer = setTimeout(function() {
+            const handleReconnectTimeout = function() {
                 this._reconnectTimer = null;
                 this._initializeWebSocket();
-            }.bind(this), delay);
+            }.bind(this);
+            this._reconnectTimer = setTimeout(handleReconnectTimeout, delay);
         },
 
         _clearReconnectTimer: function() {
@@ -232,7 +233,7 @@ sap.ui.define([
         },
 
         _setupConnectionHealthCheck: function() {
-            this._connectionHealthCheckInterval = setInterval(function() {
+            const performConnectionHealthCheck = function() {
                 if (this._websocket && this._websocket.readyState === WebSocket.OPEN) {
                     const timeSinceLastUpdate = this._lastDataUpdate ? 
                         (new Date() - this._lastDataUpdate) / 1000 : Infinity;
@@ -250,29 +251,33 @@ sap.ui.define([
                     Log.info("WebSocket not connected, attempting to reconnect");
                     this._scheduleReconnect();
                 }
-            }.bind(this), 30000);
+            }.bind(this);
+            this._connectionHealthCheckInterval = setInterval(performConnectionHealthCheck, 30000);
         },
 
         _fetchAndSetTileData: function () {
+            const handleTileDataSuccess = (data) => {
+                this._updateModelWithData(data);
+            };
+            const handleTileDataError = (error) => {
+                Log.error("Failed to fetch tile data", error);
+                const fallbackData = { agentCount: 9, services: 0, workflows: 0, performance: 85, notifications: 3, security: 0 };
+                this._updateModelWithData(fallbackData);
+            };
             this._securityService.secureAjax({
                 url: '/api/v1/Agents?id=agent_visualization',
                 method: 'GET',
                 dataType: 'json'
-            }).then(data => {
-                this._updateModelWithData(data);
-            }).catch(error => {
-                Log.error("Failed to fetch tile data", error);
-                const fallbackData = { agentCount: 9, services: 0, workflows: 0, performance: 85, notifications: 3, security: 0 };
-                this._updateModelWithData(fallbackData);
-            });
+            }).then(handleTileDataSuccess).catch(handleTileDataError);
         },
 
         _updateModelWithData: function(data) {
             const oModel = this.getView().getModel("launchpad");
             const aTiles = oModel.getProperty("/tiles");
-            aTiles.forEach(oTile => {
+            const updateTileValue = (oTile) => {
                 oTile.value = data[oTile.info] || 0;
-            });
+            };
+            aTiles.forEach(updateTileValue);
             oModel.setProperty("/tiles", aTiles);
         },
 
@@ -312,18 +317,20 @@ sap.ui.define([
             this.getView().setModel(personalizationModel, "personalization");
             
             if (!this._oPersonalizationDialog) {
+                const handlePersonalizationDialogLoad = function (oDialog) {
+                    this.getView().addDependent(oDialog);
+                    return oDialog;
+                }.bind(this);
                 this._oPersonalizationDialog = Fragment.load({
                     name: "a2a.network.launchpad.view.Personalization",
                     controller: this
-                }).then(function (oDialog) {
-                    this.getView().addDependent(oDialog);
-                    return oDialog;
-                }.bind(this));
+                }).then(handlePersonalizationDialogLoad);
             }
 
-            this._oPersonalizationDialog.then(function(oDialog) {
+            const openPersonalizationDialog = function(oDialog) {
                 oDialog.open();
-            });
+            };
+            this._oPersonalizationDialog.then(openPersonalizationDialog);
         },
 
         onApplyPersonalization: function() {
@@ -366,17 +373,19 @@ sap.ui.define([
             });
 
             if (!this._oNotificationsPopover) {
+                const handleNotificationsPopoverLoad = function (oPopover) {
+                    this.getView().addDependent(oPopover);
+                    return oPopover;
+                }.bind(this);
                 this._oNotificationsPopover = Fragment.load({
                     name: "a2a.network.launchpad.view.NotificationCenter",
                     controller: this
-                }).then(function (oPopover) {
-                    this.getView().addDependent(oPopover);
-                    return oPopover;
-                }.bind(this));
+                }).then(handleNotificationsPopoverLoad);
             }
-            this._oNotificationsPopover.then(function (oPopover) {
+            const openNotificationsPopover = function (oPopover) {
                 oPopover.openBy(oEvent.getSource());
-            });
+            };
+            this._oNotificationsPopover.then(openNotificationsPopover);
         },
 
         onClosePersonalization: function () {
@@ -473,9 +482,10 @@ sap.ui.define([
 
         onMarkAllRead: function() {
             const notifications = this.getView().getModel("notifications").getProperty("/items");
-            notifications.forEach(notification => {
+            const markNotificationAsRead = (notification) => {
                 notification.read = true;
-            });
+            };
+            notifications.forEach(markNotificationAsRead);
             this.getView().getModel("notifications").setProperty("/items", notifications);
             this._updateNotificationCounts();
         },
@@ -484,11 +494,11 @@ sap.ui.define([
             this.showStandardConfirmation({
                 message: "Are you sure you want to clear all notifications?",
                 title: "Clear Notifications",
-                onConfirm: () => {
+                onConfirm: function() {
                     this.getView().getModel("notifications").setProperty("/items", []);
                     this._updateNotificationCounts();
                     this.handleStandardSuccess("All notifications cleared");
-                }
+                }.bind(this)
             });
         },
 
@@ -498,7 +508,8 @@ sap.ui.define([
 
         onCloseNotifications: function() {
             if (this._oNotificationsPopover) {
-                this._oNotificationsPopover.then(popover => popover.close());
+                const closeNotificationsPopover = (popover) => popover.close();
+                this._oNotificationsPopover.then(closeNotificationsPopover);
             }
         },
 
@@ -527,9 +538,10 @@ sap.ui.define([
         onExit: function() {
             // Clean up intervals to prevent memory leaks
             if (this._intervals) {
-                this._intervals.forEach(function(intervalId) {
+                const clearIntervalById = function(intervalId) {
                     clearInterval(intervalId);
-                });
+                };
+                this._intervals.forEach(clearIntervalById);
                 this._intervals = [];
             }
             

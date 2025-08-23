@@ -1,151 +1,189 @@
 {
-    "_version": "1.49.0",
+    "_version": "1.60.0",
     "sap.app": {
-        "id": "a2a.network.agent14.ext",
+        "id": "a2a.network.agent14",
         "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "title": "{{agent14Title}}",
+        "description": "{{agent14Description}}",
         "applicationVersion": {
             "version": "1.0.0"
         },
-        "title": "{{appTitle}}",
-        "description": "{{appDescription}}",
-        "resources": "resources.json",
-        "ach": "AI-ML-EMB",
         "dataSources": {
             "mainService": {
-                "uri": "/sap/opu/odata/sap/EMBEDDING_FINETUNE_SRV/",
+                "uri": "https://a2a/agent14/v1/odata/",
                 "type": "OData",
                 "settings": {
-                    "odataVersion": "2.0",
-                    "localUri": "localService/metadata.xml"
-                }
-            },
-            "i18n": {
-                "uri": "i18n/i18n.properties",
-                "type": "properties"
-            }
-        },
-        "crossNavigation": {
-            "inbounds": {
-                "embeddingFineTuner": {
-                    "semanticObject": "EmbeddingFineTuner",
-                    "action": "manage",
-                    "title": "{{appTitle}}",
-                    "subTitle": "{{appDescription}}"
+                    "odataVersion": "4.0"
                 }
             }
-        }
-    },
-    "sap.ui": {
-        "technology": "UI5",
-        "icons": {
-            "icon": "sap-icon://machine-learning",
-            "favIcon": "",
-            "phone": "",
-            "phone@2": "",
-            "tablet": "",
-            "tablet@2": ""
-        },
-        "deviceTypes": {
-            "desktop": true,
-            "tablet": true,
-            "phone": true
         }
     },
     "sap.ui5": {
         "dependencies": {
             "minUI5Version": "1.120.0",
             "libs": {
+                "sap.fe.templates": {},
+                "sap.f": {},
                 "sap.m": {},
                 "sap.ui.core": {},
-                "sap.ui.layout": {},
-                "sap.f": {},
-                "sap.suite.ui.commons": {},
-                "sap.suite.ui.microchart": {},
-                "sap.viz": {},
-                "sap.ui.table": {},
-                "sap.ui.unified": {},
-                "sap.ui.codeeditor": {}
+                "sap.uxap": {},
+                "sap.viz": {}
             }
         },
         "models": {
-            "i18n": {
-                "dataSource": "i18n",
-                "type": "sap.ui.model.resource.ResourceModel",
-                "settings": {
-                    "bundleName": "a2a.network.agent14.ext.i18n.i18n",
-                    "supportedLocales": [""],
-                    "fallbackLocale": ""
-                }
-            },
             "": {
                 "dataSource": "mainService",
-                "type": "sap.ui.model.odata.v2.ODataModel",
+                "preload": true,
                 "settings": {
-                    "defaultBindingMode": "TwoWay",
-                    "defaultCountMode": "Inline",
-                    "refreshAfterChange": true,
-                    "useBatch": true,
-                    "preliminaryContext": true,
-                    "headers": {
-                        "X-Requested-With": "XMLHttpRequest"
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
+                }
+            },
+            "@i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "uri": "i18n/i18n.properties"
+            }
+        },
+        "routing": {
+            "routes": [
+                {
+                    "name": "BackupList",
+                    "pattern": ":?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "BackupList",
+                        "options": {
+                            "settings": {
+                                "entitySet": "BackupTasks",
+                                "variantManagement": "Page",
+                                "initialLoad": true,
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.LineItem": {
+                                        "tableSettings": {
+                                            "type": "ResponsiveTable",
+                                            "selectionMode": "Multi"
+                                        },
+                                        "actions": {
+                                            "CreateBackup": {
+                                                "press": ".extension.a2a.network.agent14.ext.controller.ListReportExt.onCreateBackup",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": true,
+                                                "text": "Create Backup"
+                                            },
+                                            "ScheduleBackup": {
+                                                "press": ".extension.a2a.network.agent14.ext.controller.ListReportExt.onScheduleBackup",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Schedule Backup"
+                                            },
+                                            "ViewBackupStatus": {
+                                                "press": ".extension.a2a.network.agent14.ext.controller.ListReportExt.onViewBackupStatus",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "View Backup Status"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "BackupDetails",
+                    "pattern": "BackupTasks({key}):?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "BackupDetails",
+                        "options": {
+                            "settings": {
+                                "entitySet": "BackupTasks",
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.HeaderInfo": {
+                                        "actions": {
+                                            "RestoreData": {
+                                                "press": ".extension.a2a.network.agent14.ext.controller.ObjectPageExt.onRestoreData",
+                                                "visible": "{= ${status} === 'COMPLETED' }",
+                                                "enabled": true,
+                                                "text": "Restore Data"
+                                            },
+                                            "VerifyBackup": {
+                                                "press": ".extension.a2a.network.agent14.ext.controller.ObjectPageExt.onVerifyBackup",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Verify Backup Integrity"
+                                            },
+                                            "DownloadBackup": {
+                                                "press": ".extension.a2a.network.agent14.ext.controller.ObjectPageExt.onDownloadBackup",
+                                                "visible": "{= ${status} === 'COMPLETED' }",
+                                                "enabled": true,
+                                                "text": "Download Backup"
+                                            },
+                                            "DeleteBackup": {
+                                                "press": ".extension.a2a.network.agent14.ext.controller.ObjectPageExt.onDeleteBackup",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Delete Backup"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "extends": {
+            "extensions": {
+                "sap.ui.controllerExtensions": {
+                    "sap.fe.templates.ListReport.ListReportController": {
+                        "controllerName": "a2a.network.agent14.ext.controller.ListReportExt"
+                    },
+                    "sap.fe.templates.ObjectPage.ObjectPageController": {
+                        "controllerName": "a2a.network.agent14.ext.controller.ObjectPageExt"
                     }
                 }
             }
-        },
-        "contentDensities": {
-            "compact": true,
-            "cozy": true
-        },
-        "flexEnabled": true,
-        "handleValidation": true
-    },
-    "sap.fe": {
-        "type": "extension"
+        }
     },
     "sap.fiori": {
-        "_version": "1.1.0",
-        "registrationIds": [],
+        "registrationIds": ["F0001A14"],
         "archeType": "transactional"
     },
-    "sap.cloud": {
-        "public": true,
-        "service": "a2aAgents"
+    "sap.fe": {
+        "template": "sap.fe.templates.ListReport.ObjectPage"
     },
-    "sap.app/ui5/cors": {
-        "allowedMethods": ["GET", "POST", "PUT", "DELETE"],
-        "allowedOrigins": ["https://*.sap.com"],
-        "allowedHeaders": ["X-CSRF-Token", "Content-Type", "Authorization"],
-        "exposeHeaders": ["X-CSRF-Token"],
-        "maxAge": 3600
+    "sap.platform.cf": {
+        "oAuthScopes": [
+            "$XSAPPNAME.backup.user",
+            "$XSAPPNAME.backup.admin"
+        ]
     },
-    "sap.app/settings": {
-        "securityHeaders": {
+    "sap.security": {
+        "headers": {
+            "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' wss:; font-src 'self' data:;",
+            "X-Content-Type-Options": "nosniff",
             "X-Frame-Options": "DENY",
             "X-XSS-Protection": "1; mode=block",
-            "X-Content-Type-Options": "nosniff",
-            "Content-Security-Policy": "default-src 'self'; script-src 'self' https://sapui5.hana.ondemand.com; style-src 'self' 'unsafe-inline' https://sapui5.hana.ondemand.com; img-src 'self' data: https:; connect-src 'self' https://localhost:8014 wss://localhost:8014 https://*.sap.com; font-src 'self' data: https://sapui5.hana.ondemand.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; media-src 'none'; worker-src 'none'",
-            "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+            "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
             "Referrer-Policy": "strict-origin-when-cross-origin",
-            "Permissions-Policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), serial=(), bluetooth=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=()",
-            "Cross-Origin-Embedder-Policy": "require-corp",
-            "Cross-Origin-Opener-Policy": "same-origin",
-            "Cross-Origin-Resource-Policy": "same-origin",
-            "Cache-Control": "no-store, must-revalidate",
-            "Pragma": "no-cache",
-            "X-Permitted-Cross-Domain-Policies": "none",
-            "Feature-Policy": "autoplay 'none'; camera 'none'; microphone 'none'; payment 'none'; usb 'none'",
-            "X-DNS-Prefetch-Control": "off"
+            "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
         },
-        "mlSecurity": {
-            "maxModelSize": "2GB",
-            "allowedModelFormats": ["pytorch", "tensorflow", "onnx", "safetensors"],
-            "maxTrainingTime": 86400,
-            "maxBatchSize": 1024,
-            "maxEpochs": 1000,
-            "enableAuditLogging": true,
-            "requireModelIntegrityCheck": true,
-            "blockSuspiciousPatterns": true,
-            "maxRiskScore": 75
+        "csrf": {
+            "token": true
+        },
+        "cors": {
+            "allowedOrigins": ["https://*.ondemand.com"],
+            "allowedMethods": ["GET", "POST", "PUT", "DELETE"],
+            "allowedHeaders": ["Content-Type", "Authorization", "X-CSRF-Token"],
+            "exposeHeaders": ["X-CSRF-Token"],
+            "maxAge": 3600
         }
     }
 }

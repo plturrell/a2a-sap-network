@@ -7,8 +7,9 @@ sap.ui.define([
     "sap/base/security/encodeXML",
     "sap/base/strings/escapeRegExp",
     "sap/base/security/sanitizeHTML",
-    "sap/base/Log"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log) {
+    "sap/base/Log",
+    "../utils/SecurityUtils"
+], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log, SecurityUtils) {
     "use strict";
 
     /**
@@ -30,6 +31,7 @@ sap.ui.define([
                 var oDeviceModel = new sap.ui.model.json.JSONModel(sap.ui.Device);
                 this.base.getView().setModel(oDeviceModel, "device");
                 this._extensionAPI = this.base.getExtensionAPI();
+                this._securityUtils = SecurityUtils;
                 // Initialize performance optimizations
                 this._throttledProgressUpdate = this._throttle(this._updateProgressDisplay.bind(this), 1000);
                 
@@ -532,7 +534,7 @@ sap.ui.define([
          */
         _getCSRFToken: function() {
             return new Promise(function(resolve, reject) {
-                jQuery.ajax({
+                this._securityUtils.secureAjaxRequest({
                     url: "/a2a/agent5/v1/csrf-token",
                     type: "GET",
                     success: function(data) {
@@ -563,7 +565,7 @@ sap.ui.define([
                     oOptions.headers["Authorization"] = "Bearer " + sAuthToken;
                 }
 
-                return jQuery.ajax(oOptions);
+                return this._securityUtils.secureAjaxRequest(oOptions);
             });
         },
 
@@ -595,7 +597,7 @@ sap.ui.define([
             };
 
             // Enhanced audit service logging
-            jQuery.ajax({
+            this._securityUtils.secureAjaxRequest({
                 url: "/a2a/common/v1/audit",
                 type: "POST",
                 contentType: "application/json",

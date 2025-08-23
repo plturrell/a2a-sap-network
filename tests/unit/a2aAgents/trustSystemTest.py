@@ -92,7 +92,10 @@ def test_trust_basic():
     ]
     
     # Sort by trust score (descending)
-    agents.sort(key=lambda x: x['trust_score'], reverse=True)
+    def get_trust_score_for_sorting(agent):
+        return agent['trust_score']
+    
+    agents.sort(key=get_trust_score_for_sorting, reverse=True)
     
     print("Agents ranked by trust:")
     for i, agent in enumerate(agents, 1):
@@ -110,7 +113,10 @@ def test_trust_basic():
     # Re-rank agents
     agents[1]["trust_score"] = trust.get_trust_score(AGENT2)
     agents[1]["trust_level"] = trust.get_trust_level(AGENT2)
-    agents.sort(key=lambda x: x['trust_score'], reverse=True)
+    def get_trust_score_for_resorting(agent):
+        return agent['trust_score']
+    
+    agents.sort(key=get_trust_score_for_resorting, reverse=True)
     
     print("Updated ranking:")
     for i, agent in enumerate(agents, 1):
@@ -124,13 +130,13 @@ def test_trust_basic():
     def simulate_agent_search(agents_list):
         """Simulate trust-aware agent search"""
         # Sort by trust score, health, and response time (simulated)
-        def sort_key(agent):
+        def sort_key_for_agent_search(agent):
             health_weight = 0  # Assume healthy
             trust_weight = 1.0 - agent['trust_score']  # Lower weight = higher trust
             response_weight = 0.1  # Simulated fast response
             return (health_weight, trust_weight, response_weight)
         
-        return sorted(agents_list, key=sort_key)
+        return sorted(agents_list, key=sort_key_for_agent_search)
     
     search_results = simulate_agent_search(agents)
     print("Registry search results (trust-aware ranking):")

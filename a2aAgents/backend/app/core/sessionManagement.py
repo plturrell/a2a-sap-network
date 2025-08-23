@@ -73,7 +73,10 @@ class RefreshTokenInfo:
     expires_at: datetime
     used_at: Optional[datetime] = None
     is_revoked: bool = False
-    token_family: str = field(default_factory=lambda: str(uuid.uuid4()))
+    def _generate_token_family():
+        return str(uuid.uuid4())
+    
+    token_family: str = field(default_factory=_generate_token_family)
     rotation_count: int = 0
 
 
@@ -149,7 +152,10 @@ class SessionManager:
             active_sessions = await self.get_user_sessions(user_id)
             if len(active_sessions) >= self.max_sessions_per_user:
                 # Terminate oldest session
-                oldest = min(active_sessions, key=lambda s: s.created_at)
+                def get_creation_time(session):
+                    return session.created_at
+                
+                oldest = min(active_sessions, key=get_creation_time)
                 await self.terminate_session(oldest.session_id)
                 
                 await report_security_event(

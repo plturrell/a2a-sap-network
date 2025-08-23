@@ -7,8 +7,9 @@ sap.ui.define([
     "sap/base/security/encodeXML",
     "sap/base/strings/escapeRegExp",
     "sap/base/security/sanitizeHTML",
-    "sap/base/Log"
-], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log) {
+    "sap/base/Log",
+    "../utils/SecurityUtils"
+], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent4.ext.controller.ListReportExt", {
@@ -16,6 +17,8 @@ sap.ui.define([
         override: {
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
+                this._securityUtils = SecurityUtils;
+                this._resourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
                 // Initialize dialog cache and security settings
                 this._dialogCache = {};
                 this._csrfToken = null;
@@ -147,7 +150,7 @@ sap.ui.define([
 
         _getCSRFToken: function() {
             return new Promise(function(resolve, reject) {
-                jQuery.ajax({
+                this._securityUtils.secureAjaxRequest({
                     url: "/a2a/agent4/v1/csrf-token",
                     type: "GET",
                     success: function(data) {
@@ -167,7 +170,7 @@ sap.ui.define([
          * @since 1.0.0
          */
         _initializeCSRFToken: function() {
-            jQuery.ajax({
+            this._securityUtils.secureAjaxRequest({
                 url: "/a2a/agent4/v1/csrf-token",
                 type: "GET",
                 headers: {
@@ -250,63 +253,21 @@ sap.ui.define([
                 return { isValid: false, message: "Formula is required", securityLevel: "LOW" };
             }
 
-            var sSanitized = sFormula.trim();
+            // Use SecurityUtils for formula validation
+            var oValidation = this._securityUtils.validateFormula(sFormula);
             
-            // Enhanced security patterns for formula validation
-            var aDangerousPatterns = [
-                { pattern: /eval\s*\(/gi, level: "CRITICAL", message: "eval() function not allowed" },
-                { pattern: /exec\s*\(/gi, level: "CRITICAL", message: "exec() function not allowed" },
-                { pattern: /system\s*\(/gi, level: "CRITICAL", message: "system() function not allowed" },
-                { pattern: /import\s+/gi, level: "HIGH", message: "import statements not allowed" },
-                { pattern: /require\s*\(/gi, level: "HIGH", message: "require() function not allowed" },
-                { pattern: /__[a-zA-Z_]+__/g, level: "MEDIUM", message: "Special attributes not allowed" },
-                { pattern: /\bfile\b/gi, level: "MEDIUM", message: "file operations not allowed" },
-                { pattern: /\bos\b/gi, level: "MEDIUM", message: "OS operations not allowed" }
-            ];
-
-            // Check for dangerous patterns
-            for (var i = 0; i < aDangerousPatterns.length; i++) {
-                var oPattern = aDangerousPatterns[i];
-                if (oPattern.pattern.test(sSanitized)) {
-                    this._logSecurityEvent("FORMULA_SECURITY_VIOLATION", oPattern.level, oPattern.message, sFormula);
-                    return { 
-                        isValid: false, 
-                        message: oPattern.message, 
-                        securityLevel: oPattern.level 
-                    };
-                }
-            }
-
-            // Validate mathematical operators and functions
-            var aAllowedFunctions = [
-                'sin', 'cos', 'tan', 'log', 'ln', 'sqrt', 'abs', 'pow', 'exp',
-                'min', 'max', 'sum', 'avg', 'round', 'floor', 'ceil', 'pi',
-                'e', 'factorial', 'gcd', 'lcm', 'mod'
-            ];
-
-            // Extract function calls from formula
-            var aFunctionCalls = sSanitized.match(/\b[a-zA-Z_][a-zA-Z0-9_]*\s*\(/g) || [];
-            for (var j = 0; j < aFunctionCalls.length; j++) {
-                var sFunctionName = aFunctionCalls[j].replace(/\s*\($/, '').toLowerCase();
-                if (aAllowedFunctions.indexOf(sFunctionName) === -1) {
-                    return { 
-                        isValid: false, 
-                        message: "Function '" + sFunctionName + "' is not allowed",
-                        securityLevel: "MEDIUM"
-                    };
-                }
-            }
-
-            // Validate parentheses balance
-            var nOpenParens = (sSanitized.match(/\(/g) || []).length;
-            var nCloseParens = (sSanitized.match(/\)/g) || []).length;
-            if (nOpenParens !== nCloseParens) {
-                return { isValid: false, message: "Unbalanced parentheses", securityLevel: "LOW" };
+            if (!oValidation.isValid) {
+                this._logSecurityEvent("FORMULA_SECURITY_VIOLATION", "CRITICAL", oValidation.errors.join(", "), sFormula);
+                return { 
+                    isValid: false, 
+                    message: oValidation.errors.join(", "), 
+                    securityLevel: "CRITICAL" 
+                };
             }
 
             return { 
                 isValid: true, 
-                sanitized: sanitizeHTML(encodeXML(sSanitized)),
+                sanitized: oValidation.sanitizedFormula,
                 securityLevel: "SAFE"
             };
         },
@@ -375,7 +336,7 @@ sap.ui.define([
          * @since 1.0.0
          */
         _sendAuditEvent: function(oLogData) {
-            jQuery.ajax({
+            this._securityUtils.secureAjaxRequest({
                 url: "/a2a/agent4/v1/audit",
                 type: "POST",
                 contentType: "application/json",
@@ -403,7 +364,7 @@ sap.ui.define([
                     oOptions.headers["Authorization"] = "Bearer " + sAuthToken;
                 }
 
-                return jQuery.ajax(oOptions);
+                return this._securityUtils.secureAjaxRequest(oOptions);
             });
         },
 
@@ -427,7 +388,7 @@ sap.ui.define([
             };
 
             // Send to audit service with enhanced logging
-            jQuery.ajax({
+            this._securityUtils.secureAjaxRequest({
                 url: "/a2a/common/v1/audit",
                 type: "POST",
                 contentType: "application/json",

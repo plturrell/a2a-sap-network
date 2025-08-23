@@ -1,120 +1,189 @@
 {
-    "_version": "1.49.0",
+    "_version": "1.60.0",
     "sap.app": {
-        "id": "a2a.network.agent13.ext",
+        "id": "a2a.network.agent13",
         "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "title": "{{agent13Title}}",
+        "description": "{{agent13Description}}",
         "applicationVersion": {
             "version": "1.0.0"
-        }
-    },
-    "sap.ui": {
-        "technology": "UI5",
-        "icons": {
-            "icon": "sap-icon://developer-settings",
-            "favIcon": "",
-            "phone": "",
-            "phone@2": "",
-            "tablet": "",
-            "tablet@2": ""
         },
-        "deviceTypes": {
-            "desktop": true,
-            "tablet": true,
-            "phone": true
+        "dataSources": {
+            "mainService": {
+                "uri": "https://a2a/agent13/v1/odata/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
+            }
         }
     },
     "sap.ui5": {
         "dependencies": {
             "minUI5Version": "1.120.0",
             "libs": {
+                "sap.fe.templates": {},
+                "sap.f": {},
                 "sap.m": {},
                 "sap.ui.core": {},
-                "sap.ui.layout": {},
-                "sap.f": {},
-                "sap.suite.ui.commons": {},
-                "sap.suite.ui.microchart": {},
-                "sap.viz": {},
-                "sap.ui.table": {},
-                "sap.ui.codeeditor": {},
-                "sap.ui.unified": {},
-                "sap.tnt": {}
+                "sap.uxap": {},
+                "sap.viz": {}
             }
         },
         "models": {
-            "i18n": {
-                "dataSource": "i18n",
-                "type": "sap.ui.model.resource.ResourceModel",
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
                 "settings": {
-                    "bundleName": "a2a.network.agent13.ext.i18n.i18n"
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
+                }
+            },
+            "@i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "uri": "i18n/i18n.properties"
+            }
+        },
+        "routing": {
+            "routes": [
+                {
+                    "name": "SecurityList",
+                    "pattern": ":?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "SecurityList",
+                        "options": {
+                            "settings": {
+                                "entitySet": "SecurityTasks",
+                                "variantManagement": "Page",
+                                "initialLoad": true,
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.LineItem": {
+                                        "tableSettings": {
+                                            "type": "ResponsiveTable",
+                                            "selectionMode": "Multi"
+                                        },
+                                        "actions": {
+                                            "SecurityScan": {
+                                                "press": ".extension.a2a.network.agent13.ext.controller.ListReportExt.onSecurityScan",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": true,
+                                                "text": "Security Scan"
+                                            },
+                                            "ConfigurePolicy": {
+                                                "press": ".extension.a2a.network.agent13.ext.controller.ListReportExt.onConfigurePolicy",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Configure Security Policy"
+                                            },
+                                            "ApplyPatches": {
+                                                "press": ".extension.a2a.network.agent13.ext.controller.ListReportExt.onApplyPatches",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": true,
+                                                "text": "Apply Security Patches"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "SecurityDetails",
+                    "pattern": "SecurityTasks({key}):?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "SecurityDetails",
+                        "options": {
+                            "settings": {
+                                "entitySet": "SecurityTasks",
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.HeaderInfo": {
+                                        "actions": {
+                                            "ViewVulnerabilities": {
+                                                "press": ".extension.a2a.network.agent13.ext.controller.ObjectPageExt.onViewVulnerabilities",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "View Vulnerabilities"
+                                            },
+                                            "RunThreatAnalysis": {
+                                                "press": ".extension.a2a.network.agent13.ext.controller.ObjectPageExt.onRunThreatAnalysis",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Run Threat Analysis"
+                                            },
+                                            "GenerateSecurityReport": {
+                                                "press": ".extension.a2a.network.agent13.ext.controller.ObjectPageExt.onGenerateSecurityReport",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Generate Security Report"
+                                            },
+                                            "ConfigureFirewall": {
+                                                "press": ".extension.a2a.network.agent13.ext.controller.ObjectPageExt.onConfigureFirewall",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Configure Firewall Rules"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "extends": {
+            "extensions": {
+                "sap.ui.controllerExtensions": {
+                    "sap.fe.templates.ListReport.ListReportController": {
+                        "controllerName": "a2a.network.agent13.ext.controller.ListReportExt"
+                    },
+                    "sap.fe.templates.ObjectPage.ObjectPageController": {
+                        "controllerName": "a2a.network.agent13.ext.controller.ObjectPageExt"
+                    }
                 }
             }
         }
-    },
-    "sap.fe": {
-        "type": "extension"
     },
     "sap.fiori": {
-        "_version": "1.1.0",
-        "registrationIds": [],
+        "registrationIds": ["F0001A13"],
         "archeType": "transactional"
     },
-    "sap.cloud": {
-        "public": true,
-        "service": "a2aAgents"
+    "sap.fe": {
+        "template": "sap.fe.templates.ListReport.ObjectPage"
     },
-    "sap.app/crossNavigation": {
-        "inbounds": {
-            "agent13-display": {
-                "semanticObject": "AgentBuilder",
-                "action": "display",
-                "title": "{{agent.name}}",
-                "signature": {
-                    "parameters": {},
-                    "additionalParameters": "allowed"
-                }
-            }
-        }
-    },
-    "sap.app/dataSources": {
-        "mainService": {
-            "uri": "/odata/v4/agent-builder/",
-            "type": "OData",
-            "settings": {
-                "odataVersion": "4.0",
-                "localUri": "localService/metadata.xml"
-            }
-        }
-    },
-    "sap.securityHeaders": {
-        "headers": [
-            {
-                "name": "X-Content-Type-Options",
-                "value": "nosniff"
-            },
-            {
-                "name": "X-Frame-Options",
-                "value": "DENY"
-            },
-            {
-                "name": "X-XSS-Protection",
-                "value": "1; mode=block"
-            },
-            {
-                "name": "Content-Security-Policy",
-                "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' wss:; font-src 'self'; object-src 'none'; frame-ancestors 'none';"
-            },
-            {
-                "name": "Strict-Transport-Security",
-                "value": "max-age=31536000; includeSubDomains"
-            },
-            {
-                "name": "Referrer-Policy",
-                "value": "strict-origin-when-cross-origin"
-            },
-            {
-                "name": "Permissions-Policy",
-                "value": "geolocation=(), microphone=(), camera=()"
-            }
+    "sap.platform.cf": {
+        "oAuthScopes": [
+            "$XSAPPNAME.security.user",
+            "$XSAPPNAME.security.admin"
         ]
+    },
+    "sap.security": {
+        "headers": {
+            "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' wss:; font-src 'self' data:;",
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY",
+            "X-XSS-Protection": "1; mode=block",
+            "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+            "Referrer-Policy": "strict-origin-when-cross-origin",
+            "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
+        },
+        "csrf": {
+            "token": true
+        },
+        "cors": {
+            "allowedOrigins": ["https://*.ondemand.com"],
+            "allowedMethods": ["GET", "POST", "PUT", "DELETE"],
+            "allowedHeaders": ["Content-Type", "Authorization", "X-CSRF-Token"],
+            "exposeHeaders": ["X-CSRF-Token"],
+            "maxAge": 3600
+        }
     }
 }

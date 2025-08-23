@@ -265,6 +265,8 @@ show_usage() {
     echo "  enterprise - Start enterprise production environment"
     echo "  complete   - Start COMPLETE ecosystem (agents + trust + MCP + infrastructure)"
     echo "  test       - Run blockchain tests only (no persistent services)"
+    echo "  verify     - Run 18-step CI verification without starting services"
+    echo "  ci-verify  - Run 18-step CI verification without starting services"
     echo "  agents     - Start agents only"
     echo "  network    - Start network only"
     echo "  minimal    - Start minimal services"
@@ -1952,7 +1954,7 @@ main() {
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
-            local|blockchain|enterprise|complete|agents|network|minimal|telemetry|test|infrastructure)
+            local|blockchain|enterprise|complete|agents|network|minimal|telemetry|test|infrastructure|verify|ci-verify)
                 mode="$1"
                 ;;
             --no-blockchain)
@@ -2081,10 +2083,10 @@ main() {
         test -f a2aAgents/backend/app/a2a/core/trustManager.py || log_warning "Trust manager not found"
         
         log_progress "MCP Servers" "Validating Model Context Protocol integration"
-        test -f a2aAgents/backend/app/a2a/sdk/mcp_integration.py || log_warning "MCP integration not found"
+        test -d a2aAgents/backend/app/a2a/mcp/servers && test -f a2aAgents/backend/app/a2a/sdk/mcpServer.py || log_warning "MCP servers not found"
         
         log_progress "Network Services" "Validating CDS/CAP network service"
-        test -f a2aNetwork/server.js || log_warning "Network service not found"
+        test -f a2aNetwork/dev-services/server.js || log_warning "Network service not found"
         
         log_progress "Agent Services" "Validating all 16 agents are present"
         local agent_count=$(ls a2aAgents/backend/app/a2a/agents/agent*/active/*.py 2>/dev/null | wc -l)

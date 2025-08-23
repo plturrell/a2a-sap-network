@@ -1,36 +1,20 @@
 {
-    "_version": "1.49.0",
+    "_version": "1.60.0",
     "sap.app": {
-        "id": "a2a.network.agent15.ext",
+        "id": "a2a.network.agent15",
         "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "title": "{{agent15Title}}",
+        "description": "{{agent15Description}}",
         "applicationVersion": {
             "version": "1.0.0"
         },
-        "title": "{{appTitle}}",
-        "description": "{{appDescription}}",
-        "resources": "resources.json",
-        "ach": "AI-WF-ORC",
         "dataSources": {
             "mainService": {
-                "uri": "/sap/opu/odata/sap/ORCHESTRATOR_SRV/",
+                "uri": "https://a2a/agent15/v1/odata/",
                 "type": "OData",
                 "settings": {
-                    "odataVersion": "2.0",
-                    "localUri": "localService/metadata.xml"
-                }
-            },
-            "i18n": {
-                "uri": "i18n/i18n.properties",
-                "type": "properties"
-            }
-        },
-        "crossNavigation": {
-            "inbounds": {
-                "orchestratorAgent": {
-                    "semanticObject": "OrchestratorAgent",
-                    "action": "manage",
-                    "title": "{{appTitle}}",
-                    "subTitle": "{{appDescription}}"
+                    "odataVersion": "4.0"
                 }
             }
         }
@@ -39,126 +23,167 @@
         "dependencies": {
             "minUI5Version": "1.120.0",
             "libs": {
+                "sap.fe.templates": {},
+                "sap.f": {},
                 "sap.m": {},
                 "sap.ui.core": {},
                 "sap.uxap": {},
-                "sap.f": {},
-                "sap.ui.layout": {},
-                "sap.suite.ui.commons": {},
                 "sap.viz": {}
             }
         },
         "models": {
-            "i18n": {
-                "dataSource": "i18n",
-                "type": "sap.ui.model.resource.ResourceModel",
-                "settings": {
-                    "bundleName": "a2a.network.agent15.ext.i18n.i18n",
-                    "supportedLocales": [""],
-                    "fallbackLocale": ""
-                }
-            },
             "": {
                 "dataSource": "mainService",
-                "type": "sap.ui.model.odata.v2.ODataModel",
+                "preload": true,
                 "settings": {
-                    "defaultBindingMode": "TwoWay",
-                    "defaultCountMode": "Inline",
-                    "refreshAfterChange": true,
-                    "useBatch": true,
-                    "preliminaryContext": true,
-                    "headers": {
-                        "X-Requested-With": "XMLHttpRequest"
-                    }
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
                 }
+            },
+            "@i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "uri": "i18n/i18n.properties"
             }
         },
-        "contentDensities": {
-            "compact": true,
-            "cozy": true
-        },
-        "flexEnabled": true,
-        "handleValidation": true
-    },
-    "sap.fiori": {
-        "registrationIds": ["F7015"],
-        "archeType": "transactional"
-    },
-    "sap.ui.generic.app": {
-        "_version": "1.3.0",
-        "settings": {
-            "forceGlobalRefresh": false,
-            "objectPageHeaderType": "Dynamic",
-            "considerAnalyticalParameters": true,
-            "showDraftToggle": false
-        },
-        "pages": {
-            "ListReport|Workflows": {
-                "entitySet": "Workflows",
-                "component": {
-                    "name": "sap.suite.ui.generic.template.ListReport",
-                    "list": true,
-                    "settings": {
-                        "condensedTableLayout": true,
-                        "smartVariantManagement": true,
-                        "enableTableFilterInPageVariant": true,
-                        "tableSettings": {
-                            "type": "GridTable",
-                            "multiSelect": true,
-                            "selectAll": true,
-                            "selectionLimit": 200
+        "routing": {
+            "routes": [
+                {
+                    "name": "DeploymentList",
+                    "pattern": ":?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "DeploymentList",
+                        "options": {
+                            "settings": {
+                                "entitySet": "DeploymentTasks",
+                                "variantManagement": "Page",
+                                "initialLoad": true,
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.LineItem": {
+                                        "tableSettings": {
+                                            "type": "ResponsiveTable",
+                                            "selectionMode": "Multi"
+                                        },
+                                        "actions": {
+                                            "DeployPackage": {
+                                                "press": ".extension.a2a.network.agent15.ext.controller.ListReportExt.onDeployPackage",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": true,
+                                                "text": "Deploy Package"
+                                            },
+                                            "ConfigurePipeline": {
+                                                "press": ".extension.a2a.network.agent15.ext.controller.ListReportExt.onConfigurePipeline",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "Configure Pipeline"
+                                            },
+                                            "ViewDeploymentStatus": {
+                                                "press": ".extension.a2a.network.agent15.ext.controller.ListReportExt.onViewDeploymentStatus",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "requiresSelection": false,
+                                                "text": "View Deployment Status"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 },
-                "pages": {
-                    "ObjectPage|Workflows": {
-                        "entitySet": "Workflows",
-                        "defaultLayoutTypeIfExternalNavigation": "MidColumnFullScreen",
-                        "component": {
-                            "name": "sap.suite.ui.generic.template.ObjectPage"
+                {
+                    "name": "DeploymentDetails",
+                    "pattern": "DeploymentTasks({key}):?query:",
+                    "target": {
+                        "type": "Component",
+                        "name": "DeploymentDetails",
+                        "options": {
+                            "settings": {
+                                "entitySet": "DeploymentTasks",
+                                "controlConfiguration": {
+                                    "@com.sap.vocabularies.UI.v1.HeaderInfo": {
+                                        "actions": {
+                                            "RollbackDeployment": {
+                                                "press": ".extension.a2a.network.agent15.ext.controller.ObjectPageExt.onRollbackDeployment",
+                                                "visible": "{= ${status} === 'DEPLOYED' || ${status} === 'FAILED' }",
+                                                "enabled": true,
+                                                "text": "Rollback Deployment"
+                                            },
+                                            "ValidateDeployment": {
+                                                "press": ".extension.a2a.network.agent15.ext.controller.ObjectPageExt.onValidateDeployment",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "Validate Deployment"
+                                            },
+                                            "ViewLogs": {
+                                                "press": ".extension.a2a.network.agent15.ext.controller.ObjectPageExt.onViewLogs",
+                                                "visible": true,
+                                                "enabled": true,
+                                                "text": "View Deployment Logs"
+                                            },
+                                            "PromoteToProduction": {
+                                                "press": ".extension.a2a.network.agent15.ext.controller.ObjectPageExt.onPromoteToProduction",
+                                                "visible": "{= ${environment} !== 'PRODUCTION' && ${status} === 'DEPLOYED' }",
+                                                "enabled": true,
+                                                "text": "Promote to Production"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
+                    }
+                }
+            ]
+        },
+        "extends": {
+            "extensions": {
+                "sap.ui.controllerExtensions": {
+                    "sap.fe.templates.ListReport.ListReportController": {
+                        "controllerName": "a2a.network.agent15.ext.controller.ListReportExt"
+                    },
+                    "sap.fe.templates.ObjectPage.ObjectPageController": {
+                        "controllerName": "a2a.network.agent15.ext.controller.ObjectPageExt"
                     }
                 }
             }
         }
     },
-    "sap.platform.hcp": {
-        "uri": ""
+    "sap.fiori": {
+        "registrationIds": ["F0001A15"],
+        "archeType": "transactional"
     },
-    "sap.cloud": {
-        "public": true,
-        "service": "a2aAgents"
+    "sap.fe": {
+        "template": "sap.fe.templates.ListReport.ObjectPage"
     },
-    "sap.app/ui5/cors": {
-        "allowedMethods": ["GET", "POST", "PUT", "DELETE"],
-        "allowedOrigins": ["https://*.sap.com"],
-        "allowedHeaders": ["X-CSRF-Token", "Content-Type", "Authorization"],
-        "exposeHeaders": ["X-CSRF-Token"],
-        "maxAge": 3600
+    "sap.platform.cf": {
+        "oAuthScopes": [
+            "$XSAPPNAME.deployment.user",
+            "$XSAPPNAME.deployment.admin"
+        ]
     },
-    "sap.app/settings": {
-        "securityHeaders": {
+    "sap.security": {
+        "headers": {
+            "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' wss:; font-src 'self' data:;",
+            "X-Content-Type-Options": "nosniff",
             "X-Frame-Options": "DENY",
             "X-XSS-Protection": "1; mode=block",
-            "X-Content-Type-Options": "nosniff",
-            "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://sapui5.hana.ondemand.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://localhost:8015 wss://localhost:8015; font-src 'self' data:; frame-ancestors 'none'",
-            "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+            "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
             "Referrer-Policy": "strict-origin-when-cross-origin",
             "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
-        }
-    },
-    "sap.app/crossNavigation": {
-        "inbounds": {
-            "a2a-network-agent15-display": {
-                "semanticObject": "OrchestratorAgent",
-                "action": "display",
-                "title": "Orchestrator Agent",
-                "icon": "sap-icon://workflow-tasks",
-                "signature": {
-                    "parameters": {},
-                    "additionalParameters": "allowed"
-                }
-            }
+        },
+        "csrf": {
+            "token": true
+        },
+        "cors": {
+            "allowedOrigins": ["https://*.ondemand.com"],
+            "allowedMethods": ["GET", "POST", "PUT", "DELETE"],
+            "allowedHeaders": ["Content-Type", "Authorization", "X-CSRF-Token"],
+            "exposeHeaders": ["X-CSRF-Token"],
+            "maxAge": 3600
         }
     }
 }
