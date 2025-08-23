@@ -5,6 +5,17 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of testing to run'
+        required: true
+        default: 'complete'
+        type: choice
+        options:
+        - verification
+        - complete
+        - ui-only
 
 env:
   REGISTRY: ghcr.io

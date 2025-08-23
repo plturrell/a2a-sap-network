@@ -1,0 +1,90 @@
+{
+  "snippets": {
+    "a2a-agent-basic": {
+      "prefix": "a2a-agent",
+      "description": "Create basic A2A agent structure",
+      "body": [
+        "const { Agent } = require('@a2a/core');",
+        "",
+        "class ${1:AgentName} extends Agent {",
+        "  constructor() {",
+        "    super({",
+        "      name: '${1:AgentName}',",
+        "      type: '${2:processing}',",
+        "      capabilities: [${3:'data-processing', 'validation'}]",
+        "    });",
+        "  }",
+        "",
+        "  async process(data) {",
+        "    // Agent processing logic",
+        "    ${4:return data;}",
+        "  }",
+        "",
+        "  async validate(data) {",
+        "    // Validation logic",
+        "    ${5:return true;}",
+        "  }",
+        "}",
+        "",
+        "module.exports = ${1:AgentName};"
+      ]
+    },
+    "a2a-workflow": {
+      "prefix": "a2a-workflow",
+      "description": "Create A2A workflow definition",
+      "body": [
+        "{",
+        "  \"name\": \"${1:WorkflowName}\",",
+        "  \"description\": \"${2:Workflow description}\",",
+        "  \"version\": \"${3:1.0.0}\",",
+        "  \"steps\": [",
+        "    {",
+        "      \"name\": \"${4:step1}\",",
+        "      \"agent\": \"${5:Agent0}\",",
+        "      \"input\": {",
+        "        \"${6:parameter}\": \"${7:value}\"",
+        "      },",
+        "      \"conditions\": {",
+        "        \"${8:condition}\": \"${9:value}\"",
+        "      }",
+        "    }",
+        "  ],",
+        "  \"triggers\": {",
+        "    \"type\": \"${10:schedule}\",",
+        "    \"schedule\": \"${11:0 0 * * *}\"",
+        "  }",
+        "}"
+      ]
+    },
+    "a2a-test": {
+      "prefix": "a2a-test",
+      "description": "Create A2A agent test",
+      "body": [
+        "const { expect } = require('chai');",
+        "const ${1:AgentName} = require('../src/${2:agent-file}');",
+        "",
+        "describe('${1:AgentName}', () => {",
+        "  let agent;",
+        "",
+        "  beforeEach(() => {",
+        "    agent = new ${1:AgentName}();",
+        "  });",
+        "",
+        "  it('should process data correctly', async () => {",
+        "    const input = ${3:{ test: 'data' }};",
+        "    const result = await agent.process(input);",
+        "    ",
+        "    expect(result).to.${4:deep.equal}(${5:expected});",
+        "  });",
+        "",
+        "  it('should validate input', async () => {",
+        "    const input = ${6:{ test: 'data' }};",
+        "    const isValid = await agent.validate(input);",
+        "    ",
+        "    expect(isValid).to.be.${7:true};",
+        "  });",
+        "});"
+      ]
+    }
+  }
+}

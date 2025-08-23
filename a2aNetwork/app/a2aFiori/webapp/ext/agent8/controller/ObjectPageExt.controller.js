@@ -300,10 +300,9 @@ sap.ui.define([
         _optimizeStorage: function(sDatasetName) {
             this._extensionAPI.getView().setBusy(true);
             
-            jQuery.ajax({
-                url: "/a2a/agent8/v1/datasets/" + sDatasetName + "/optimize",
+            jQuery.ajax(this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent8/v1/datasets/" + this._securityUtils.encodeURL(sDatasetName) + "/optimize",
                 type: "POST",
-                contentType: "application/json",
                 data: JSON.stringify({
                     compressionLevel: "OPTIMAL",
                     defragment: true,
@@ -1281,8 +1280,8 @@ sap.ui.define([
                     
                     MessageBox.success(
                         "Transformation started successfully!\\n" +
-                        "Job ID: " + this._securityUtils.sanitizeInput(data.jobId) + "\\n" +
-                        "Estimated time: " + this._securityUtils.sanitizeInput(data.estimatedTime) + " minutes"
+                        "Job ID: " + this._securityUtils.encodeHTML(data.jobId) + "\\n" +
+                        "Estimated time: " + this._securityUtils.encodeHTML(data.estimatedTime) + " minutes"
                     );
                     
                     this._extensionAPI.refresh();
@@ -1680,8 +1679,8 @@ sap.ui.define([
                     
                     MessageBox.success(
                         "Export initiated successfully!\\n" +
-                        "Export ID: " + this._securityUtils.sanitizeInput(data.exportId) + "\\n" +
-                        "Estimated time: " + this._securityUtils.sanitizeInput(data.estimatedTime) + " minutes\\n" +
+                        "Export ID: " + this._securityUtils.encodeHTML(data.exportId) + "\\n" +
+                        "Estimated time: " + this._securityUtils.encodeHTML(data.estimatedTime) + " minutes\\n" +
                         "You will be notified when the export is ready."
                     );
                     

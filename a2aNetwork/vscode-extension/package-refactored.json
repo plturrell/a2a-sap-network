@@ -1,0 +1,177 @@
+{
+  "name": "a2a-windsurf",
+  "displayName": "A2A Framework for Windsurf", 
+  "description": "Advanced development tools for A2A agent framework in Windsurf IDE",
+  "version": "1.0.0",
+  "publisher": "a2a-framework",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Extension Packs",
+    "Snippets", 
+    "Debuggers",
+    "Linters"
+  ],
+  "keywords": [
+    "a2a",
+    "agents",
+    "blockchain", 
+    "windsurf",
+    "microservices"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/a2a.config.js",
+    "workspaceContains:**/package.json",
+    "onCommand:a2a.createAgent",
+    "onLanguage:javascript",
+    "onLanguage:typescript"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "$comment": "Configuration is now modularized into separate JSON files for better maintainability",
+    
+    "commands": {
+      "$ref": "./configs/commands.json#/commands"
+    },
+    
+    "menus": {
+      "$ref": "./configs/menus.json#/menus"
+    },
+    
+    "submenus": {
+      "$ref": "./configs/menus.json#/submenus" 
+    },
+    
+    "views": {
+      "$ref": "./configs/views.json#/views"
+    },
+    
+    "viewsContainers": {
+      "$ref": "./configs/views.json#/viewsContainers"
+    },
+    
+    "viewsWelcome": {
+      "$ref": "./configs/views.json#/viewsWelcome"
+    },
+    
+    "snippets": [
+      {
+        "language": "javascript",
+        "path": "./configs/snippets.json"
+      },
+      {
+        "language": "typescript",
+        "path": "./configs/snippets.json" 
+      },
+      {
+        "language": "json",
+        "path": "./configs/workflow-snippets.json"
+      }
+    ],
+    
+    "configuration": {
+      "title": "A2A Framework",
+      "properties": {
+        "a2a.networkUrl": {
+          "type": "string",
+          "default": "http://localhost:4004",
+          "description": "A2A Network service URL"
+        },
+        "a2a.autoDetectAgents": {
+          "type": "boolean", 
+          "default": true,
+          "description": "Automatically detect A2A agents in workspace"
+        },
+        "a2a.debugMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable debug mode for A2A extension"
+        },
+        "a2a.blockchainProvider": {
+          "type": "string",
+          "enum": ["hardhat", "ganache", "anvil"],
+          "default": "hardhat",
+          "description": "Blockchain development provider"
+        }
+      }
+    },
+    
+    "languages": [
+      {
+        "id": "a2a-workflow",
+        "aliases": ["A2A Workflow", "workflow"],
+        "extensions": [".workflow.json"],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "a2a-agent", 
+        "aliases": ["A2A Agent", "agent"],
+        "extensions": [".agent.js", ".agent.ts"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    
+    "grammars": [
+      {
+        "language": "a2a-workflow",
+        "scopeName": "source.json.a2a-workflow", 
+        "path": "./syntaxes/a2a-workflow.tmGrammar.json"
+      }
+    ],
+    
+    "keybindings": [
+      {
+        "command": "a2a.createAgent",
+        "key": "ctrl+alt+a",
+        "mac": "cmd+alt+a",
+        "when": "workbenchState != empty"
+      },
+      {
+        "command": "a2a.startDebugDashboard",
+        "key": "ctrl+alt+d", 
+        "mac": "cmd+alt+d",
+        "when": "a2a.hasConfig"
+      }
+    ],
+    
+    "taskDefinitions": [
+      {
+        "type": "a2a",
+        "required": ["task"],
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The A2A task to run"
+          },
+          "agent": {
+            "type": "string",
+            "description": "Target agent name"
+          }
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "^18.x",
+    "typescript": "^5.1.6",
+    "@types/mocha": "^10.0.1",
+    "@vscode/test-electron": "^2.3.4",
+    "eslint": "^8.47.0",
+    "@typescript-eslint/eslint-plugin": "^6.3.0",
+    "@typescript-eslint/parser": "^6.3.0"
+  },
+  "dependencies": {
+    "axios": "^1.5.0",
+    "ws": "^8.13.0", 
+    "yaml": "^2.3.2"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "views": {
+    "a2a-explorer": [
+      {
+        "id": "a2aAgents",
+        "name": "A2A Agents",
+        "when": "a2a.hasConfig",
+        "icon": "$(robot)",
+        "contextualTitle": "A2A Agents"
+      },
+      {
+        "id": "a2aWorkflows", 
+        "name": "Workflows",
+        "when": "a2a.hasConfig",
+        "icon": "$(list-ordered)",
+        "contextualTitle": "A2A Workflows"
+      },
+      {
+        "id": "a2aNetwork",
+        "name": "Network Status",
+        "when": "a2a.hasConfig",
+        "icon": "$(pulse)",
+        "contextualTitle": "A2A Network"
+      },
+      {
+        "id": "a2aContracts",
+        "name": "Smart Contracts", 
+        "when": "a2a.hasContracts",
+        "icon": "$(link)",
+        "contextualTitle": "Smart Contracts"
+      }
+    ]
+  },
+  "viewsContainers": {
+    "activitybar": [
+      {
+        "id": "a2a-explorer",
+        "title": "A2A Framework",
+        "icon": "$(robot)"
+      }
+    ]
+  },
+  "viewsWelcome": [
+    {
+      "view": "a2aAgents",
+      "contents": "No A2A agents found in this workspace.\n[Create Agent](command:a2a.createAgent)\nTo learn more about A2A agents [read our docs](https://docs.a2a-framework.dev).",
+      "when": "!a2a.hasAgent"
+    },
+    {
+      "view": "a2aWorkflows",
+      "contents": "No workflows found.\n[Create Workflow](command:a2a.createWorkflow)\n[Import Workflow](command:a2a.importWorkflow)",
+      "when": "!a2a.hasWorkflow"
+    },
+    {
+      "view": "a2aNetwork", 
+      "contents": "Network status unavailable.\n[Check Status](command:a2a.networkStatus)\n[Run Diagnostics](command:a2a.networkDiagnostics)",
+      "when": "!a2a.networkConnected"
+    }
+  ]
+}

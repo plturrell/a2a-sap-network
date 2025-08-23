@@ -1,0 +1,64 @@
+# Main Docker Compose file - extends base configuration
+# Usage:
+#   Development: docker-compose -f docker-compose.yml -f docker-compose.development.yml up
+#   Production:  docker-compose -f docker-compose.yml -f docker-compose.production.yml up  
+#   Monitoring:  docker-compose -f docker-compose.monitoring.yml up
+
+version: '3.8'
+
+# Import base configuration with all common settings
+services:
+  a2a-agent:
+    extends:
+      file: docker-compose.base.yml
+      service: a2a-agent
+
+  redis:
+    extends:
+      file: docker-compose.base.yml
+      service: redis
+
+  postgres:
+    extends:
+      file: docker-compose.base.yml
+      service: postgres
+
+  nginx:
+    extends:
+      file: docker-compose.base.yml
+      service: nginx
+
+# Import base networks and volumes
+networks:
+  a2a-network:
+    name: a2a-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  redis-data:
+    name: a2a-redis-data
+    driver: local
+  postgres-data:
+    name: a2a-postgres-data
+    driver: local
+
+# Environment-specific usage examples:
+#
+# Development with hot reload and debug tools:
+# docker-compose -f docker-compose.yml -f docker-compose.development.yml up
+#
+# Production with monitoring and security hardening:
+# docker-compose -f docker-compose.yml -f docker-compose.production.yml up
+#
+# Standalone monitoring stack:
+# docker-compose -f docker-compose.monitoring.yml up
+#
+# Benefits of this refactored structure:
+# - Eliminated repetitive configuration through YAML anchors
+# - Environment-specific overrides for flexibility
+# - Modular monitoring stack
+# - Consistent resource limits and health checks
+# - Better maintainability and readability

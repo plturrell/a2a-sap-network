@@ -1,0 +1,95 @@
+# Standalone monitoring stack
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus:${PROMETHEUS_VERSION:-v2.40.0}
+    container_name: a2a-prometheus
+    restart: unless-stopped
+    networks:
+      - a2a-network
+    ports:
+      - "${PROMETHEUS_PORT:-9091}:9090"
+    volumes:
+      - ./config/prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION:-9.3.0}
+    container_name: a2a-grafana
+    restart: unless-stopped
+    networks:
+      - a2a-network
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./config/grafana:/etc/grafana/provisioning:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+
+  jaeger:
+    image: jaegertracing/all-in-one:${JAEGER_VERSION:-1.40}
+    container_name: a2a-jaeger
+    restart: unless-stopped
+    networks:
+      - a2a-network
+    ports:
+      - "${JAEGER_UI_PORT:-16687}:16686"
+      - "${JAEGER_COLLECTOR_PORT:-14269}:14268"
+      - "${JAEGER_OTLP_GRPC_PORT:-4317}:4317"
+      - "${JAEGER_OTLP_HTTP_PORT:-4318}:4318"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - JAEGER_DISABLED=false
+
+  loki:
+    image: grafana/loki:${LOKI_VERSION:-2.7.0}
+    container_name: a2a-loki
+    restart: unless-stopped
+    networks:
+      - a2a-network
+    ports:
+      - "${LOKI_PORT:-3101}:3100"
+    volumes:
+      - ./config/loki:/etc/loki:ro
+      - loki-data:/loki
+    command: -config.file=/etc/loki/loki.yml
+
+  promtail:
+    image: grafana/promtail:${PROMTAIL_VERSION:-2.7.0}
+    container_name: a2a-promtail
+    restart: unless-stopped
+    networks:
+      - a2a-network
+    volumes:
+      - ./config/promtail:/etc/promtail:ro
+      - ./logs:/var/log/a2a:ro
+      - /var/log:/var/log/host:ro
+    command: -config.file=/etc/promtail/promtail.yml
+
+networks:
+  a2a-network:
+    name: a2a-network
+    external: true
+
+volumes:
+  prometheus-data:
+    name: a2a-prometheus-data
+    driver: local
+  grafana-data:
+    name: a2a-grafana-data  
+    driver: local
+  loki-data:
+    name: a2a-loki-data
+    driver: local

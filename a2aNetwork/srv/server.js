@@ -547,76 +547,19 @@ cds.on('bootstrap', async (app) => {
     
     // Logging endpoints - migrated to CAP service
     
-    // Security monitoring dashboard
-        // SECURITY FIX: Improve authorization check for Admin access
-        if (!req.user || 
-            (!req.user.scope?.includes('Admin') && 
-             !req.user.roles?.includes('Admin') && 
-             !req.user.sapRoles?.includes('Admin'))) {
-            return res.status(403).json({ error: 'Admin role required' });
-        }
-        // Return recent security events
-        res.json({ message: 'Security events endpoint - implement based on your requirements' });
-    });
+    // Security monitoring dashboard - migrated to CAP service
     
-    // Network statistics service status endpoint
-        const status = networkStats.getStatus();
-        res.json(status);
-    });
+    // Network statistics service status endpoint - migrated to CAP service
 
     // LAUNCHPAD TILE REST ENDPOINTS - For real-time tile data
     const { checkAgentHealth, checkBlockchainHealth, checkMcpHealth, AGENT_METADATA } = require('./utils/launchpadHelpers');
 
-    // Agent visualization endpoint for launchpad controller
-        if (req.query.id === 'agent_visualization') {
-            try {
-                // Check health of all agents and aggregate data
-                const healthChecks = await Promise.all(
-                    Object.entries(AGENT_METADATA).map(async ([id, agent]) => {
-                        const health = await checkAgentHealth(agent.port);
-                        return { id: parseInt(id), health };
-                    })
-                );
-                
-                const healthyAgents = healthChecks.filter(h => h.health.status === 'healthy');
-                const totalActiveTasks = healthyAgents.reduce((sum, agent) => sum + (agent.health.active_tasks || 0), 0);
-                const totalSkills = healthyAgents.reduce((sum, agent) => sum + (agent.health.skills || 0), 0);
-                const totalMcpTools = healthyAgents.reduce((sum, agent) => sum + (agent.health.mcp_tools || 0), 0);
-                
-                // Calculate performance metric
-                const validSuccessRates = healthyAgents
-                    .filter(a => a.health.success_rate !== null)
-                    .map(a => a.health.success_rate);
-                const avgSuccessRate = validSuccessRates.length > 0 ? 
-                    validSuccessRates.reduce((sum, rate) => sum + rate, 0) / validSuccessRates.length : 85;
-                
-                res.json({
-                    agentCount: healthyAgents.length,
-                    services: totalSkills + totalMcpTools,
-                    workflows: totalActiveTasks,
-                    performance: Math.round(avgSuccessRate),
-                    notifications: 3, // Default value
-                    security: 0 // Default value
-                });
-            } catch (error) {
-                log.error('Error in agent visualization endpoint:', error);
-                // Return fallback data
-                res.json({
-                    agentCount: 0,
-                    services: 0,
-                    workflows: 0,
-                    performance: 0,
-                    notifications: 0,
-                    security: 0
-                });
-            }
-        } else {
-            res.status(400).json({ error: 'Invalid request' });
-        }
-    });
+    // Agent visualization endpoint for launchpad controller - migrated to CAP service
 
-    // Agent status endpoints for tiles
-    for (let i = 0; i < 16; i++) {
+    // Agent status endpoints for tiles - migrated to CAP service
+    
+    // Legacy for loop block - migrated to CAP service
+    // for (let i = 0; i < 16; i++) {
             try {
                 const agent = AGENT_METADATA[i];
                 if (!agent) {

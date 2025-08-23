@@ -14,376 +14,960 @@ sap.ui.define([
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._securityUtils = SecurityUtils;
+                
+                // Initialize device model for responsive behavior
+                var oDeviceModel = new JSONModel(sap.ui.Device);
+                oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
+                this.base.getView().setModel(oDeviceModel, "device");
+                
+                // Initialize create dialog model
                 this._initializeCreateModel();
+                
+                // Initialize security and audit logging
+                this._initializeSecurity();
+            },
+            
+            onExit: function() {
+                this._cleanupResources();
+                if (this.base.onExit) {
+                    this.base.onExit.apply(this, arguments);
+                }
             }
+        },
+
+        /**
+         * @function _initializeSecurity
+         * @description Initializes security features and audit logging.
+         * @private
+         */
+        _initializeSecurity: function() {
+            this._auditLogger = {
+                log: function(action, details) {
+                    var user = this._getCurrentUser();
+                    var timestamp = new Date().toISOString();
+                    var logEntry = {
+                        timestamp: timestamp,
+                        user: user,
+                        agent: "Agent9_APIIntegration",
+                        action: action,
+                        details: details || {}
+                    };
+                    console.info("AUDIT: " + JSON.stringify(logEntry));
+                }.bind(this)
+            };
+        },
+
+        /**
+         * @function _getCurrentUser
+         * @description Gets current user ID for audit logging.
+         * @returns {string} User ID or "anonymous"
+         * @private
+         */
+        _getCurrentUser: function() {
+            return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
+        },
+
+        /**
+         * @function _hasRole
+         * @description Checks if current user has specified role.
+         * @param {string} role - Role to check
+         * @returns {boolean} True if user has role
+         * @private
+         */
+        _hasRole: function(role) {
+            const user = sap.ushell?.Container?.getUser();
+            if (user && user.hasRole) {
+                return user.hasRole(role);
+            }
+            // Mock role validation for development/testing
+            const mockRoles = ["IntegrationAdmin", "IntegrationUser", "IntegrationOperator"];
+            return mockRoles.includes(role);
+        },
+
+        /**
+         * @function _cleanupResources
+         * @description Cleans up resources to prevent memory leaks.
+         * @private
+         */
+        _cleanupResources: function() {
+            // Clean up event sources
+            if (this._connectionEventSource) {
+                this._connectionEventSource.close();
+                this._connectionEventSource = null;
+            }
+            if (this._integrationEventSource) {
+                this._integrationEventSource.close();
+                this._integrationEventSource = null;
+            }
+            
+            // Clean up cached dialogs
+            var aDialogs = ["_oTestDialog", "_oAuthDialog", "_oLogsDialog", "_oConfigDialog"];
+            aDialogs.forEach(function(sDialog) {
+                if (this[sDialog]) {
+                    this[sDialog].destroy();
+                    this[sDialog] = null;
+                }
+            }.bind(this));
+            
+            this._auditLogger.log('RESOURCES_CLEANED_UP', 'ObjectPage resources cleaned up on exit');
         },
 
         _initializeCreateModel: function() {
             var oCreateData = {
-                taskName: "",
+                integrationName: "",
                 description: "",
-                reasoningType: "",
-                problemDomain: "",
+                integrationType: "REST_API",
+                endpointUrl: "",
+                authMethod: "API_KEY",
+                protocol: "HTTPS",
+                timeout: 30000,
                 priority: "MEDIUM",
-                taskNameState: "",
-                taskNameStateText: "",
-                reasoningTypeState: "",
-                reasoningTypeStateText: "",
-                problemDomainState: "",
-                problemDomainStateText: "",
-                reasoningEngine: "",
-                confidenceThreshold: 0.8,
-                maxInferenceDepth: 10,
-                chainingStrategy: "BREADTH_FIRST",
-                uncertaintyHandling: "PROBABILISTIC",
-                parallelReasoning: false,
-                cacheResults: true,
-                generateExplanations: true,
-                validateConsistency: true,
-                problemDomains: [],
-                availableEngines: []
+                // Validation states
+                integrationNameState: "None",
+                integrationNameStateText: "",
+                endpointUrlState: "None",
+                endpointUrlStateText: "",
+                integrationTypeState: "None",
+                integrationTypeStateText: "",
+                // Configuration options
+                retryPolicy: {
+                    maxRetries: 3,
+                    retryDelay: 1000,
+                    exponentialBackoff: true
+                },
+                rateLimiting: {
+                    requestsPerSecond: 10,
+                    burstSize: 50,
+                    enabled: true
+                },
+                dataFormat: "JSON",
+                validation: {
+                    validateSchema: true,
+                    strictMode: true,
+                    sanitizeInput: true
+                },
+                monitoring: {
+                    logRequests: true,
+                    trackPerformance: true,
+                    alertOnFailure: true
+                },
+                // Available options (loaded dynamically)
+                integrationTypes: [],
+                authMethods: [],
+                protocols: [],
+                dataFormats: []
             };
             var oCreateModel = new JSONModel(oCreateData);
             this.base.getView().setModel(oCreateModel, "create");
         },
 
-        onCreateReasoningTask: function() {
-            var oView = this.base.getView();
+        /**
+         * @function onTestConnection
+         * @description Tests API connection for the current integration.
+         * @public
+         */
+        onTestConnection: function() {
+            var oContext = this._extensionAPI.getBindingContext();
+            var sIntegrationId = oContext.getProperty("integrationId");
+            var sIntegrationName = oContext.getProperty("integrationName");
             
-            if (!this._oCreateDialog) {
-                Fragment.load({
-                    id: oView.getId(),
-                    name: "a2a.network.agent9.ext.fragment.CreateReasoningTask",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._oCreateDialog = oDialog;
-                    oView.addDependent(this._oCreateDialog);
-                    this._loadCreateDialogData();
-                    this._oCreateDialog.open();
-                }.bind(this));
-            } else {
-                this._loadCreateDialogData();
-                this._oCreateDialog.open();
-            }
-        },
-
-        _loadCreateDialogData: function() {
-            var oCreateModel = this.base.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            // Load problem domains
-            oData.problemDomains = [
-                { domainId: "GENERAL", domainName: "General Problem Solving", complexity: "Low" },
-                { domainId: "BUSINESS", domainName: "Business Logic", complexity: "Medium" },
-                { domainId: "TECHNICAL", domainName: "Technical Analysis", complexity: "High" },
-                { domainId: "SCIENTIFIC", domainName: "Scientific Research", complexity: "Very High" }
-            ];
-            
-            // Load available engines
-            oData.availableEngines = [
-                { engineId: "FORWARD", engineName: "Forward Chaining", engineType: "Rule-based" },
-                { engineId: "BACKWARD", engineName: "Backward Chaining", engineType: "Goal-driven" },
-                { engineId: "BAYESIAN", engineName: "Bayesian Network", engineType: "Probabilistic" },
-                { engineId: "FUZZY", engineName: "Fuzzy Logic", engineType: "Approximate" }
-            ];
-            
-            oCreateModel.setData(oData);
-        },
-
-        onTaskNameChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oCreateModel = this.base.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            if (!sValue || sValue.length < 3) {
-                oData.taskNameState = "Error";
-                oData.taskNameStateText = "Task name must be at least 3 characters";
-            } else if (sValue.length > 100) {
-                oData.taskNameState = "Error";
-                oData.taskNameStateText = "Task name must not exceed 100 characters";
-            } else {
-                oData.taskNameState = "Success";
-                oData.taskNameStateText = "Valid task name";
-            }
-            
-            oCreateModel.setData(oData);
-        },
-
-        onReasoningTypeChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.base.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            if (sValue) {
-                oData.reasoningTypeState = "Success";
-                oData.reasoningTypeStateText = "Reasoning type selected";
-                
-                // Smart suggestions based on reasoning type
-                switch (sValue) {
-                    case "DEDUCTIVE":
-                        oData.reasoningEngine = "FORWARD";
-                        oData.chainingStrategy = "BREADTH_FIRST";
-                        oData.uncertaintyHandling = "CRISP";
-                        break;
-                    case "INDUCTIVE":
-                        oData.reasoningEngine = "BAYESIAN";
-                        oData.chainingStrategy = "BEST_FIRST";
-                        oData.uncertaintyHandling = "PROBABILISTIC";
-                        break;
-                    case "PROBABILISTIC":
-                        oData.reasoningEngine = "BAYESIAN";
-                        oData.uncertaintyHandling = "PROBABILISTIC";
-                        oData.confidenceThreshold = 0.7;
-                        break;
-                    case "FUZZY":
-                        oData.reasoningEngine = "FUZZY";
-                        oData.uncertaintyHandling = "FUZZY";
-                        break;
-                }
-            } else {
-                oData.reasoningTypeState = "Error";
-                oData.reasoningTypeStateText = "Please select a reasoning type";
-            }
-            
-            oCreateModel.setData(oData);
-        },
-
-        onProblemDomainChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.base.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            if (sValue) {
-                oData.problemDomainState = "Success";
-                oData.problemDomainStateText = "Problem domain selected";
-                
-                // Adjust settings based on domain complexity
-                switch (sValue) {
-                    case "GENERAL":
-                        oData.maxInferenceDepth = 5;
-                        oData.confidenceThreshold = 0.9;
-                        break;
-                    case "BUSINESS":
-                        oData.maxInferenceDepth = 10;
-                        oData.confidenceThreshold = 0.8;
-                        break;
-                    case "TECHNICAL":
-                        oData.maxInferenceDepth = 20;
-                        oData.confidenceThreshold = 0.7;
-                        oData.parallelReasoning = true;
-                        break;
-                    case "SCIENTIFIC":
-                        oData.maxInferenceDepth = 50;
-                        oData.confidenceThreshold = 0.6;
-                        oData.parallelReasoning = true;
-                        oData.generateExplanations = true;
-                        break;
-                }
-            } else {
-                oData.problemDomainState = "Error";
-                oData.problemDomainStateText = "Please select a problem domain";
-            }
-            
-            oCreateModel.setData(oData);
-        },
-
-        onCancelCreateReasoningTask: function() {
-            this._oCreateDialog.close();
-            this._resetCreateModel();
-        },
-
-        onConfirmCreateReasoningTask: function() {
-            var oCreateModel = this.base.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            // Final validation
-            if (!this._validateCreateData(oData)) {
+            // Security check: Validate user authorization
+            if (!this._hasRole("IntegrationUser")) {
+                MessageBox.error("Access denied: Insufficient privileges for testing connections");
+                this._auditLogger.log("TEST_CONNECTION_ACCESS_DENIED", "User attempted connection test without IntegrationUser role");
                 return;
             }
             
-            this._oCreateDialog.setBusy(true);
-            
-            // Sanitize data for security
-            var oSanitizedData = {
-                taskName: this._securityUtils.sanitizeInput(oData.taskName),
-                description: this._securityUtils.sanitizeInput(oData.description),
-                reasoningType: oData.reasoningType,
-                problemDomain: oData.problemDomain,
-                priority: oData.priority,
-                reasoningEngine: oData.reasoningEngine,
-                confidenceThreshold: parseFloat(oData.confidenceThreshold) || 0.8,
-                maxInferenceDepth: parseInt(oData.maxInferenceDepth) || 10,
-                chainingStrategy: oData.chainingStrategy,
-                uncertaintyHandling: oData.uncertaintyHandling,
-                parallelReasoning: !!oData.parallelReasoning,
-                cacheResults: !!oData.cacheResults,
-                generateExplanations: !!oData.generateExplanations,
-                validateConsistency: !!oData.validateConsistency
-            };
-            
-            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
-                url: "/a2a/agent9/v1/tasks",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(oSanitizedData),
-                success: function(data) {
-                    this._oCreateDialog.setBusy(false);
-                    this._oCreateDialog.close();
-                    MessageToast.show("Reasoning task created successfully");
-                    this._extensionAPI.refresh();
-                    this._resetCreateModel();
-                }.bind(this),
-                error: function(xhr) {
-                    this._oCreateDialog.setBusy(false);
-                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Failed to create reasoning task: " + errorMsg);
-                }.bind(this)
-            });
-            
-            jQuery.ajax(ajaxConfig);
-        },
-
-        _validateCreateData: function(oData) {
-            if (!oData.taskName || oData.taskName.length < 3) {
-                MessageBox.error("Task name is required and must be at least 3 characters");
-                return false;
+            // Validate integration ID
+            if (this._securityUtils && !this._securityUtils.validateIntegrationId(sIntegrationId)) {
+                MessageBox.error("Invalid integration ID");
+                this._auditLogger.log("TEST_CONNECTION_INVALID_ID", "Invalid integration ID provided", { integrationId: sIntegrationId });
+                return;
             }
             
-            if (!oData.reasoningType) {
-                MessageBox.error("Reasoning type is required");
-                return false;
-            }
+            const safeIntegrationName = this._securityUtils ? 
+                this._securityUtils.encodeHTML(sIntegrationName) : 
+                sIntegrationName;
             
-            if (!oData.problemDomain) {
-                MessageBox.error("Problem domain is required");
-                return false;
-            }
-            
-            return true;
-        },
-
-        _resetCreateModel: function() {
-            var oCreateModel = this.base.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.taskName = "";
-            oData.description = "";
-            oData.reasoningType = "";
-            oData.problemDomain = "";
-            oData.priority = "MEDIUM";
-            oData.taskNameState = "";
-            oData.taskNameStateText = "";
-            oData.reasoningTypeState = "";
-            oData.reasoningTypeStateText = "";
-            oData.problemDomainState = "";
-            oData.problemDomainStateText = "";
-            
-            oCreateModel.setData(oData);
-        },
-
-
-        onStartReasoning: function() {
-            var oContext = this._extensionAPI.getBindingContext();
-            var sTaskId = oContext.getProperty("ID");
-            var sTaskName = oContext.getProperty("taskName");
-            
-            const safeTaskName = this._securityUtils.encodeHTML(sTaskName);
-            MessageBox.confirm("Start reasoning process for '" + safeTaskName + "'?", {
+            MessageBox.confirm("Test connection for '" + safeIntegrationName + "'?", {
                 onClose: function(oAction) {
                     if (oAction === MessageBox.Action.OK) {
-                        this._startReasoningProcess(sTaskId);
+                        this._executeConnectionTest(sIntegrationId, sIntegrationName);
                     }
                 }.bind(this)
             });
         },
 
-        _startReasoningProcess: function(sTaskId) {
+        /**
+         * @function _executeConnectionTest
+         * @description Executes connection test with real-time monitoring.
+         * @param {string} sIntegrationId - Integration ID to test
+         * @param {string} sIntegrationName - Integration name for display
+         * @private
+         */
+        _executeConnectionTest: function(sIntegrationId, sIntegrationName) {
             this._extensionAPI.getView().setBusy(true);
             
-            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
-                url: "/a2a/agent9/v1/tasks/" + encodeURIComponent(sTaskId) + "/reason",
-                type: "POST",
-                success: function(data) {
-                    this._extensionAPI.getView().setBusy(false);
-                    MessageToast.show("Reasoning process started");
-                    this._extensionAPI.refresh();
-                    
-                    this._startReasoningMonitoring(sTaskId);
-                }.bind(this),
-                error: function(xhr) {
-                    this._extensionAPI.getView().setBusy(false);
-                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
-                    MessageBox.error("Failed to start reasoning: " + errorMsg);
-                }.bind(this)
-            });
-            
-            jQuery.ajax(ajaxConfig);
+            this._withErrorRecovery(function() {
+                return new Promise(function(resolve, reject) {
+                    jQuery.ajax({
+                        url: "/a2a/agent9/v1/integrations/" + encodeURIComponent(sIntegrationId) + "/test",
+                        type: "POST",
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest",
+                            "X-CSRF-Token": this._getCSRFToken()
+                        },
+                        timeout: 60000, // 1 minute timeout for connection tests
+                        success: function(data) {
+                            resolve(data);
+                        },
+                        error: function(xhr, textStatus, errorThrown) {
+                            var errorMsg = "Network error";
+                            if (xhr.responseText) {
+                                errorMsg = this._securityUtils ? 
+                                    this._securityUtils.sanitizeErrorMessage(xhr.responseText) : 
+                                    "Connection test failed";
+                            }
+                            reject(new Error(errorMsg));
+                        }.bind(this)
+                    });
+                }.bind(this));
+            }.bind(this)).then(function(data) {
+                this._extensionAPI.getView().setBusy(false);
+                this._showConnectionTestResults(data, sIntegrationName);
+                this._auditLogger.log("TEST_CONNECTION_SUCCESS", "Connection test successful", {
+                    integrationId: sIntegrationId,
+                    integrationName: sIntegrationName,
+                    responseTime: data.responseTimeMs
+                });
+            }.bind(this)).catch(function(error) {
+                this._extensionAPI.getView().setBusy(false);
+                MessageBox.error("Connection test failed: " + error.message);
+                this._auditLogger.log("TEST_CONNECTION_FAILED", "Connection test failed", {
+                    integrationId: sIntegrationId,
+                    error: error.message
+                });
+            }.bind(this));
         },
 
-        _startReasoningMonitoring: function(sTaskId) {
-            this._reasoningEventSource = new EventSource("/a2a/agent9/v1/tasks/" + sTaskId + "/stream");
+        /**
+         * @function _showConnectionTestResults
+         * @description Displays connection test results in a formatted dialog.
+         * @param {Object} testData - Connection test results
+         * @param {string} integrationName - Integration name for display
+         * @private
+         */
+        _showConnectionTestResults: function(testData, integrationName) {
+            const safeIntegrationName = this._securityUtils ? 
+                this._securityUtils.encodeHTML(integrationName) : 
+                integrationName;
+            const safeStatus = this._securityUtils ? 
+                this._securityUtils.encodeHTML(testData.status) : 
+                testData.status;
+            const safeResponseTime = parseInt(testData.responseTimeMs) || 0;
+            const safeEndpoint = this._securityUtils ? 
+                this._securityUtils.encodeHTML(testData.endpoint) : 
+                testData.endpoint;
             
-            this._reasoningEventSource.onmessage = function(event) {
-                var data = JSON.parse(event.data);
-                
-                if (data.type === "progress") {
-                    this._updateReasoningProgress(data);
-                } else if (data.type === "inference") {
-                    const safeConclusion = this._securityUtils.encodeHTML(data.conclusion || 'Unknown conclusion');
-                    MessageToast.show("New inference: " + safeConclusion);
-                } else if (data.type === "complete") {
-                    this._reasoningEventSource.close();
-                    this._extensionAPI.refresh();
-                    this._showReasoningResults(data.results);
-                } else if (data.type === "error") {
-                    this._reasoningEventSource.close();
-                    const safeError = this._securityUtils.sanitizeErrorMessage(data.error);
-                    MessageBox.error("Reasoning failed: " + safeError);
+            var sMessage = "Connection Test Results for '" + safeIntegrationName + "':\n\n";
+            sMessage += "Status: " + safeStatus + "\n";
+            sMessage += "Response Time: " + safeResponseTime + " ms\n";
+            sMessage += "Endpoint: " + safeEndpoint + "\n";
+            
+            if (testData.httpStatusCode) {
+                sMessage += "HTTP Status: " + parseInt(testData.httpStatusCode) + "\n";
+            }
+            
+            if (testData.sslVerified !== undefined) {
+                sMessage += "SSL Verified: " + (testData.sslVerified ? "Yes" : "No") + "\n";
+            }
+            
+            if (testData.authenticationStatus) {
+                const safeAuthStatus = this._securityUtils ? 
+                    this._securityUtils.encodeHTML(testData.authenticationStatus) : 
+                    testData.authenticationStatus;
+                sMessage += "Authentication: " + safeAuthStatus + "\n";
+            }
+            
+            if (testData.rateLimitInfo && testData.rateLimitInfo.remaining !== undefined) {
+                sMessage += "Rate Limit Remaining: " + parseInt(testData.rateLimitInfo.remaining) + "\n";
+            }
+            
+            if (testData.errorDetails && !testData.success) {
+                sMessage += "\nError Details:\n";
+                const safeErrorDetails = this._securityUtils ? 
+                    this._securityUtils.encodeHTML(testData.errorDetails) : 
+                    testData.errorDetails;
+                sMessage += safeErrorDetails;
+            }
+            
+            var sIcon = testData.success ? MessageBox.Icon.SUCCESS : MessageBox.Icon.ERROR;
+            MessageBox.show(sMessage, {
+                icon: sIcon,
+                title: "Connection Test Results"
+            });
+        },
+
+        /**
+         * @function onRunIntegration
+         * @description Runs the API integration with the configured parameters.
+         * @public
+         */
+        onRunIntegration: function() {
+            var oContext = this._extensionAPI.getBindingContext();
+            var sIntegrationId = oContext.getProperty("integrationId");
+            var sIntegrationName = oContext.getProperty("integrationName");
+            var sStatus = oContext.getProperty("status");
+            
+            // Security check: Validate user authorization
+            if (!this._hasRole("IntegrationOperator")) {
+                MessageBox.error("Access denied: Insufficient privileges for running integrations");
+                this._auditLogger.log("RUN_INTEGRATION_ACCESS_DENIED", "User attempted to run integration without IntegrationOperator role");
+                return;
+            }
+            
+            // Validate integration status
+            if (sStatus !== "CONFIGURED" && sStatus !== "TESTED") {
+                MessageBox.warning("Integration must be configured and tested before running");
+                return;
+            }
+            
+            const safeIntegrationName = this._securityUtils ? 
+                this._securityUtils.encodeHTML(sIntegrationName) : 
+                sIntegrationName;
+            
+            MessageBox.confirm("Run integration '" + safeIntegrationName + "'?", {
+                onClose: function(oAction) {
+                    if (oAction === MessageBox.Action.OK) {
+                        this._executeIntegration(sIntegrationId, sIntegrationName);
+                    }
+                }.bind(this)
+            });
+        },
+
+        /**
+         * @function _executeIntegration
+         * @description Executes the integration with real-time monitoring.
+         * @param {string} sIntegrationId - Integration ID to run
+         * @param {string} sIntegrationName - Integration name for display
+         * @private
+         */
+        _executeIntegration: function(sIntegrationId, sIntegrationName) {
+            this._extensionAPI.getView().setBusy(true);
+            
+            // Start real-time monitoring for integration execution
+            this._startIntegrationMonitoring(sIntegrationId);
+            
+            this._withErrorRecovery(function() {
+                return new Promise(function(resolve, reject) {
+                    jQuery.ajax({
+                        url: "/a2a/agent9/v1/integrations/" + encodeURIComponent(sIntegrationId) + "/run",
+                        type: "POST",
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest",
+                            "X-CSRF-Token": this._getCSRFToken()
+                        },
+                        timeout: 300000, // 5 minutes timeout for integration execution
+                        success: function(data) {
+                            resolve(data);
+                        },
+                        error: function(xhr) {
+                            var errorMsg = this._securityUtils ? 
+                                this._securityUtils.sanitizeErrorMessage(xhr.responseText) : 
+                                "Integration execution failed";
+                            reject(new Error(errorMsg));
+                        }.bind(this)
+                    });
+                }.bind(this));
+            }.bind(this)).then(function(data) {
+                this._extensionAPI.getView().setBusy(false);
+                this._showIntegrationResults(data, sIntegrationName);
+                this._extensionAPI.refresh();
+                this._auditLogger.log("RUN_INTEGRATION_SUCCESS", "Integration executed successfully", {
+                    integrationId: sIntegrationId,
+                    integrationName: sIntegrationName,
+                    executionTime: data.executionTimeMs
+                });
+            }.bind(this)).catch(function(error) {
+                this._extensionAPI.getView().setBusy(false);
+                MessageBox.error("Integration execution failed: " + error.message);
+                this._auditLogger.log("RUN_INTEGRATION_FAILED", "Integration execution failed", {
+                    integrationId: sIntegrationId,
+                    error: error.message
+                });
+            }.bind(this));
+        },
+
+        /**
+         * @function _startIntegrationMonitoring
+         * @description Starts real-time monitoring for integration execution.
+         * @param {string} sIntegrationId - Integration ID being executed
+         * @private
+         */
+        _startIntegrationMonitoring: function(sIntegrationId) {
+            if (this._integrationEventSource) {
+                this._integrationEventSource.close();
+            }
+            
+            var monitoringUrl = "/a2a/agent9/v1/integrations/" + encodeURIComponent(sIntegrationId) + "/monitor";
+            if (this._securityUtils && !this._securityUtils.validateEventSourceUrl(monitoringUrl)) {
+                console.warn("Invalid integration monitoring URL, skipping real-time monitoring");
+                return;
+            }
+            
+            this._integrationEventSource = new EventSource(monitoringUrl);
+            
+            this._integrationEventSource.onmessage = function(event) {
+                try {
+                    var data = JSON.parse(event.data);
+                    this._updateIntegrationProgress(data);
+                } catch (error) {
+                    console.error("Error processing integration update:", error);
                 }
             }.bind(this);
             
-            this._reasoningEventSource.onerror = function() {
-                this._reasoningEventSource.close();
-                MessageBox.error("Lost connection to reasoning process");
+            this._integrationEventSource.onerror = function() {
+                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                var sMessage = oBundle.getText("error.integrationMonitoringLost") || "Integration monitoring connection lost";
+                MessageToast.show(sMessage);
             }.bind(this);
         },
 
-        _updateReasoningProgress: function(data) {
-            const safeStage = this._securityUtils.encodeHTML(data.stage || 'Processing');
-            const safeProgress = parseInt(data.progress) || 0;
-            const safeConfidence = parseFloat(data.confidence) || 0;
-            MessageToast.show(safeStage + ": " + safeProgress + "% (Confidence: " + safeConfidence + "%)");
-        },
-
-        _showReasoningResults: function(results) {
-            var oView = this.base.getView();
-            
-            if (!this._oResultsDialog) {
-                Fragment.load({
-                    id: oView.getId(),
-                    name: "a2a.network.agent9.ext.fragment.ReasoningResults",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._oResultsDialog = oDialog;
-                    oView.addDependent(this._oResultsDialog);
-                    
-                    var oModel = new JSONModel(results);
-                    this._oResultsDialog.setModel(oModel, "results");
-                    this._oResultsDialog.open();
-                    
-                    this._createResultsVisualizations(results);
-                }.bind(this));
-            } else {
-                var oModel = new JSONModel(results);
-                this._oResultsDialog.setModel(oModel, "results");
-                this._oResultsDialog.open();
-                this._createResultsVisualizations(results);
+        /**
+         * @function _updateIntegrationProgress
+         * @description Updates integration progress display with real-time data.
+         * @param {Object} progressData - Real-time integration progress data
+         * @private
+         */
+        _updateIntegrationProgress: function(progressData) {
+            if (progressData.type === "progress_update") {
+                const safeStage = this._securityUtils ? 
+                    this._securityUtils.encodeHTML(progressData.stage) : 
+                    progressData.stage;
+                const safeProgress = parseInt(progressData.progress) || 0;
+                const safeRecordsProcessed = parseInt(progressData.recordsProcessed) || 0;
+                
+                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                var sMessage = oBundle.getText("msg.integrationProgress") || "Integration progress";
+                sMessage += ": " + safeStage + " (" + safeProgress + "%)";
+                if (safeRecordsProcessed > 0) {
+                    sMessage += " - " + safeRecordsProcessed + " records processed";
+                }
+                MessageToast.show(sMessage);
+            } else if (progressData.type === "error") {
+                const safeError = this._securityUtils ? 
+                    this._securityUtils.sanitizeErrorMessage(progressData.error) : 
+                    progressData.error;
+                MessageToast.show("Integration Error: " + safeError);
             }
         },
 
-        _createResultsVisualizations: function(results) {
-            this._createInferenceNetwork(results.inferences);
-            this._createConfidenceBreakdown(results.confidence);
+        /**
+         * @function onViewLogs
+         * @description Opens the logs viewer for the current integration.
+         * @public
+         */
+        onViewLogs: function() {
+            var oContext = this._extensionAPI.getBindingContext();
+            var sIntegrationId = oContext.getProperty("integrationId");
+            var sIntegrationName = oContext.getProperty("integrationName");
+            
+            // Security check: Validate user authorization
+            if (!this._hasRole("IntegrationUser")) {
+                MessageBox.error("Access denied: Insufficient privileges for viewing logs");
+                this._auditLogger.log("VIEW_LOGS_ACCESS_DENIED", "User attempted to view logs without IntegrationUser role");
+                return;
+            }
+            
+            this._getOrCreateLogsDialog().then(function(oDialog) {
+                var oModel = new JSONModel({
+                    integrationId: sIntegrationId,
+                    integrationName: sIntegrationName,
+                    logs: [],
+                    logLevel: "INFO",
+                    dateRange: {
+                        from: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
+                        to: new Date()
+                    },
+                    autoRefresh: false,
+                    maxLines: 1000
+                });
+                oDialog.setModel(oModel, "logs");
+                oDialog.open();
+                this._loadIntegrationLogs(sIntegrationId, oDialog);
+                
+                this._auditLogger.log("VIEW_LOGS_OPENED", "Logs viewer opened", {
+                    integrationId: sIntegrationId,
+                    integrationName: sIntegrationName
+                });
+            }.bind(this));
+        },
+
+        /**
+         * @function onConfigureAuth
+         * @description Opens authentication configuration dialog for the current integration.
+         * @public
+         */
+        onConfigureAuth: function() {
+            var oContext = this._extensionAPI.getBindingContext();
+            var sIntegrationId = oContext.getProperty("integrationId");
+            var sIntegrationName = oContext.getProperty("integrationName");
+            var sCurrentAuthMethod = oContext.getProperty("authMethod");
+            
+            // Security check: Validate user authorization
+            if (!this._hasRole("IntegrationAdmin")) {
+                MessageBox.error("Access denied: Insufficient privileges for configuring authentication");
+                this._auditLogger.log("CONFIGURE_AUTH_ACCESS_DENIED", "User attempted to configure auth without IntegrationAdmin role");
+                return;
+            }
+            
+            this._getOrCreateAuthDialog().then(function(oDialog) {
+                var oModel = new JSONModel({
+                    integrationId: sIntegrationId,
+                    integrationName: sIntegrationName,
+                    authMethod: sCurrentAuthMethod || "API_KEY",
+                    apiKey: "",
+                    apiSecret: "",
+                    bearerToken: "",
+                    basicAuth: {
+                        username: "",
+                        password: ""
+                    },
+                    oauth2: {
+                        clientId: "",
+                        clientSecret: "",
+                        tokenUrl: "",
+                        scope: ""
+                    },
+                    customHeaders: [],
+                    availableAuthMethods: [
+                        { key: "API_KEY", text: "API Key" },
+                        { key: "BEARER_TOKEN", text: "Bearer Token" },
+                        { key: "BASIC_AUTH", text: "Basic Authentication" },
+                        { key: "OAUTH2", text: "OAuth 2.0" },
+                        { key: "CUSTOM", text: "Custom Headers" }
+                    ]
+                });
+                oDialog.setModel(oModel, "auth");
+                oDialog.open();
+                
+                this._auditLogger.log("CONFIGURE_AUTH_OPENED", "Authentication configuration dialog opened", {
+                    integrationId: sIntegrationId,
+                    integrationName: sIntegrationName
+                });
+            }.bind(this));
+        },
+
+        /**
+         * @function _getOrCreateLogsDialog
+         * @description Gets or creates the logs viewer dialog.
+         * @returns {Promise} Promise resolving to the logs dialog
+         * @private
+         */
+        _getOrCreateLogsDialog: function() {
+            if (this._oLogsDialog) {
+                return Promise.resolve(this._oLogsDialog);
+            }
+            
+            return Fragment.load({
+                id: this.base.getView().getId(),
+                name: "a2a.network.agent9.ext.fragment.LogsViewer",
+                controller: this
+            }).then(function(oDialog) {
+                this._oLogsDialog = oDialog;
+                this.base.getView().addDependent(this._oLogsDialog);
+                return oDialog;
+            }.bind(this));
+        },
+
+        /**
+         * @function _getOrCreateAuthDialog
+         * @description Gets or creates the authentication configuration dialog.
+         * @returns {Promise} Promise resolving to the auth dialog
+         * @private
+         */
+        _getOrCreateAuthDialog: function() {
+            if (this._oAuthDialog) {
+                return Promise.resolve(this._oAuthDialog);
+            }
+            
+            return Fragment.load({
+                id: this.base.getView().getId(),
+                name: "a2a.network.agent9.ext.fragment.AuthConfiguration",
+                controller: this
+            }).then(function(oDialog) {
+                this._oAuthDialog = oDialog;
+                this.base.getView().addDependent(this._oAuthDialog);
+                return oDialog;
+            }.bind(this));
+        },
+
+        /**
+         * @function _loadIntegrationLogs
+         * @description Loads integration logs with filtering and pagination.
+         * @param {string} sIntegrationId - Integration ID
+         * @param {sap.m.Dialog} oDialog - Logs dialog
+         * @private
+         */
+        _loadIntegrationLogs: function(sIntegrationId, oDialog) {
+            var oModel = oDialog.getModel("logs");
+            var oData = oModel.getData();
+            
+            oDialog.setBusy(true);
+            
+            this._withErrorRecovery(function() {
+                return new Promise(function(resolve, reject) {
+                    jQuery.ajax({
+                        url: "/a2a/agent9/v1/integrations/" + encodeURIComponent(sIntegrationId) + "/logs",
+                        type: "GET",
+                        data: {
+                            level: oData.logLevel,
+                            from: oData.dateRange.from.toISOString(),
+                            to: oData.dateRange.to.toISOString(),
+                            maxLines: oData.maxLines
+                        },
+                        success: function(data) {
+                            resolve(data);
+                        },
+                        error: function(xhr) {
+                            var errorMsg = this._securityUtils ? 
+                                this._securityUtils.sanitizeErrorMessage(xhr.responseText) : 
+                                "Failed to load logs";
+                            reject(new Error(errorMsg));
+                        }.bind(this)
+                    });
+                }.bind(this));
+            }.bind(this)).then(function(data) {
+                oDialog.setBusy(false);
+                oData.logs = this._sanitizeLogEntries(data.logs || []);
+                oModel.setData(oData);
+                this._auditLogger.log("LOGS_LOADED", "Integration logs loaded", {
+                    integrationId: sIntegrationId,
+                    logCount: data.logs.length
+                });
+            }.bind(this)).catch(function(error) {
+                oDialog.setBusy(false);
+                MessageBox.error("Failed to load logs: " + error.message);
+                this._auditLogger.log("LOGS_LOAD_FAILED", "Failed to load integration logs", {
+                    integrationId: sIntegrationId,
+                    error: error.message
+                });
+            }.bind(this));
+        },
+
+
+        /**
+         * @function _sanitizeLogEntries
+         * @description Sanitizes log entries for security display.
+         * @param {Array} aLogs - Array of log entries
+         * @returns {Array} Sanitized log entries
+         * @private
+         */
+        _sanitizeLogEntries: function(aLogs) {
+            if (!Array.isArray(aLogs)) return [];
+            
+            return aLogs.map(function(logEntry) {
+                return {
+                    timestamp: logEntry.timestamp,
+                    level: this._securityUtils ? this._securityUtils.encodeHTML(logEntry.level) : logEntry.level,
+                    message: this._securityUtils ? this._securityUtils.encodeHTML(logEntry.message) : logEntry.message,
+                    component: this._securityUtils ? this._securityUtils.encodeHTML(logEntry.component) : logEntry.component,
+                    requestId: this._securityUtils ? this._securityUtils.encodeHTML(logEntry.requestId) : logEntry.requestId,
+                    duration: parseInt(logEntry.duration) || 0,
+                    statusCode: parseInt(logEntry.statusCode) || 0
+                };
+            }.bind(this));
+        },
+
+        /**
+         * @function _showIntegrationResults
+         * @description Displays integration execution results.
+         * @param {Object} resultData - Integration execution results
+         * @param {string} integrationName - Integration name for display
+         * @private
+         */
+        _showIntegrationResults: function(resultData, integrationName) {
+            const safeIntegrationName = this._securityUtils ? 
+                this._securityUtils.encodeHTML(integrationName) : 
+                integrationName;
+            const safeStatus = this._securityUtils ? 
+                this._securityUtils.encodeHTML(resultData.status) : 
+                resultData.status;
+            const safeRecordsProcessed = parseInt(resultData.recordsProcessed) || 0;
+            const safeRecordsSuccessful = parseInt(resultData.recordsSuccessful) || 0;
+            const safeRecordsFailed = parseInt(resultData.recordsFailed) || 0;
+            const safeExecutionTime = parseInt(resultData.executionTimeMs) || 0;
+            
+            var sMessage = "Integration Execution Results for '" + safeIntegrationName + "':\n\n";
+            sMessage += "Status: " + safeStatus + "\n";
+            sMessage += "Execution Time: " + safeExecutionTime + " ms\n";
+            sMessage += "Records Processed: " + safeRecordsProcessed + "\n";
+            sMessage += "Records Successful: " + safeRecordsSuccessful + "\n";
+            sMessage += "Records Failed: " + safeRecordsFailed + "\n";
+            
+            if (resultData.successRate !== undefined) {
+                const safeSuccessRate = parseFloat(resultData.successRate) || 0;
+                sMessage += "Success Rate: " + safeSuccessRate + "%\n";
+            }
+            
+            if (resultData.throughput !== undefined) {
+                const safeThroughput = parseFloat(resultData.throughput) || 0;
+                sMessage += "Throughput: " + safeThroughput + " records/sec\n";
+            }
+            
+            if (resultData.errorSummary && resultData.errorSummary.length > 0) {
+                sMessage += "\nError Summary:\n";
+                resultData.errorSummary.forEach(function(error) {
+                    const safeErrorType = this._securityUtils ? 
+                        this._securityUtils.encodeHTML(error.type) : 
+                        error.type;
+                    const safeErrorCount = parseInt(error.count) || 0;
+                    sMessage += "• " + safeErrorType + ": " + safeErrorCount + " occurrences\n";
+                }.bind(this));
+            }
+            
+            var sIcon = resultData.status === "COMPLETED" ? MessageBox.Icon.SUCCESS : MessageBox.Icon.WARNING;
+            MessageBox.show(sMessage, {
+                icon: sIcon,
+                title: "Integration Results"
+            });
+        },
+
+        /**
+         * @function _withErrorRecovery
+         * @description Wraps operation with error recovery and retry logic.
+         * @param {Function} fnOperation - Operation to execute
+         * @param {Object} oOptions - Recovery options (optional)
+         * @returns {Promise} Promise with error recovery
+         * @private
+         */
+        _withErrorRecovery: function(fnOperation, oOptions) {
+            var oConfig = Object.assign({
+                maxRetries: 3,
+                retryDelay: 1000,
+                exponentialBackoff: true
+            }, oOptions);
+            
+            function attempt(retriesLeft, delay) {
+                return fnOperation().catch(function(error) {
+                    if (retriesLeft > 0) {
+                        var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                        var sRetryMsg = oBundle.getText("recovery.retrying") || "Network error. Retrying...";
+                        MessageToast.show(sRetryMsg);
+                        
+                        return new Promise(function(resolve) {
+                            setTimeout(resolve, delay);
+                        }).then(function() {
+                            var nextDelay = oConfig.exponentialBackoff ? delay * 2 : delay;
+                            return attempt.call(this, retriesLeft - 1, nextDelay);
+                        }.bind(this));
+                    }
+                    throw error;
+                }.bind(this));
+            }
+            
+            return attempt.call(this, oConfig.maxRetries, oConfig.retryDelay);
+        },
+
+        /**
+         * @function _getCSRFToken
+         * @description Gets CSRF token for secure POST requests.
+         * @returns {string} CSRF token
+         * @private
+         */
+        _getCSRFToken: function() {
+            return this._securityUtils ? this._securityUtils.getCSRFToken() : "placeholder-token";
+        },
+
+        /**
+         * @function onConfirmAuthConfiguration
+         * @description Confirms and saves authentication configuration.
+         * @public
+         */
+        onConfirmAuthConfiguration: function() {
+            var oModel = this._oAuthDialog.getModel("auth");
+            var oData = oModel.getData();
+            
+            // Validate authentication configuration
+            if (!this._validateAuthConfiguration(oData)) {
+                return;
+            }
+            
+            // Sanitize and prepare data for secure transmission
+            var oAuthData = this._sanitizeAuthConfiguration(oData);
+            
+            this._oAuthDialog.setBusy(true);
+            
+            this._withErrorRecovery(function() {
+                return new Promise(function(resolve, reject) {
+                    jQuery.ajax({
+                        url: "/a2a/agent9/v1/integrations/" + encodeURIComponent(oData.integrationId) + "/auth",
+                        type: "PUT",
+                        contentType: "application/json",
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest",
+                            "X-CSRF-Token": this._getCSRFToken()
+                        },
+                        data: JSON.stringify(oAuthData),
+                        success: function(data) {
+                            resolve(data);
+                        },
+                        error: function(xhr) {
+                            var errorMsg = this._securityUtils ? 
+                                this._securityUtils.sanitizeErrorMessage(xhr.responseText) : 
+                                "Authentication configuration failed";
+                            reject(new Error(errorMsg));
+                        }.bind(this)
+                    });
+                }.bind(this));
+            }.bind(this)).then(function(data) {
+                this._oAuthDialog.setBusy(false);
+                this._oAuthDialog.close();
+                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                var sMessage = oBundle.getText("msg.authConfigurationSaved") || "Authentication configuration saved successfully";
+                MessageToast.show(sMessage);
+                this._extensionAPI.refresh();
+                this._auditLogger.log("AUTH_CONFIGURATION_SAVED", "Authentication configuration updated", {
+                    integrationId: oData.integrationId,
+                    authMethod: oAuthData.authMethod
+                });
+            }.bind(this)).catch(function(error) {
+                this._oAuthDialog.setBusy(false);
+                MessageBox.error("Failed to save authentication configuration: " + error.message);
+                this._auditLogger.log("AUTH_CONFIGURATION_FAILED", "Failed to save authentication configuration", {
+                    integrationId: oData.integrationId,
+                    error: error.message
+                });
+            }.bind(this));
+        },
+
+        /**
+         * @function _validateAuthConfiguration
+         * @description Validates authentication configuration data.
+         * @param {Object} oData - Authentication data to validate
+         * @returns {boolean} True if validation passes
+         * @private
+         */
+        _validateAuthConfiguration: function(oData) {
+            if (!oData.authMethod) {
+                MessageBox.error("Authentication method is required");
+                return false;
+            }
+            
+            switch (oData.authMethod) {
+                case "API_KEY":
+                    if (!oData.apiKey || oData.apiKey.trim().length === 0) {
+                        MessageBox.error("API Key is required");
+                        return false;
+                    }
+                    break;
+                case "BEARER_TOKEN":
+                    if (!oData.bearerToken || oData.bearerToken.trim().length === 0) {
+                        MessageBox.error("Bearer Token is required");
+                        return false;
+                    }
+                    break;
+                case "BASIC_AUTH":
+                    if (!oData.basicAuth.username || !oData.basicAuth.password) {
+                        MessageBox.error("Username and password are required for Basic Authentication");
+                        return false;
+                    }
+                    break;
+                case "OAUTH2":
+                    if (!oData.oauth2.clientId || !oData.oauth2.clientSecret || !oData.oauth2.tokenUrl) {
+                        MessageBox.error("Client ID, Client Secret, and Token URL are required for OAuth 2.0");
+                        return false;
+                    }
+                    // Validate token URL format
+                    if (!/^https:\/\/[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+$/.test(oData.oauth2.tokenUrl)) {
+                        MessageBox.error("Token URL must be a valid HTTPS URL");
+                        return false;
+                    }
+                    break;
+            }
+            
+            return true;
+        },
+
+        /**
+         * @function _sanitizeAuthConfiguration
+         * @description Sanitizes authentication configuration for secure transmission.
+         * @param {Object} oData - Authentication data to sanitize
+         * @returns {Object} Sanitized authentication data
+         * @private
+         */
+        _sanitizeAuthConfiguration: function(oData) {
+            var oSanitized = {
+                authMethod: this._securityUtils ? this._securityUtils.sanitizeInput(oData.authMethod) : oData.authMethod
+            };
+            
+            switch (oData.authMethod) {
+                case "API_KEY":
+                    oSanitized.apiKey = oData.apiKey.trim();
+                    break;
+                case "BEARER_TOKEN":
+                    oSanitized.bearerToken = oData.bearerToken.trim();
+                    break;
+                case "BASIC_AUTH":
+                    oSanitized.basicAuth = {
+                        username: this._securityUtils ? this._securityUtils.sanitizeInput(oData.basicAuth.username) : oData.basicAuth.username.trim(),
+                        password: oData.basicAuth.password // Password not sanitized to preserve special characters
+                    };
+                    break;
+                case "OAUTH2":
+                    oSanitized.oauth2 = {
+                        clientId: this._securityUtils ? this._securityUtils.sanitizeInput(oData.oauth2.clientId) : oData.oauth2.clientId.trim(),
+                        clientSecret: oData.oauth2.clientSecret.trim(),
+                        tokenUrl: this._securityUtils ? this._securityUtils.sanitizeInput(oData.oauth2.tokenUrl) : oData.oauth2.tokenUrl.trim(),
+                        scope: this._securityUtils ? this._securityUtils.sanitizeInput(oData.oauth2.scope || '') : (oData.oauth2.scope || '').trim()
+                    };
+                    break;
+                case "CUSTOM":
+                    oSanitized.customHeaders = (oData.customHeaders || []).map(function(header) {
+                        return {
+                            name: this._securityUtils ? this._securityUtils.sanitizeInput(header.name) : header.name,
+                            value: header.value // Header values may contain special characters
+                        };
+                    }.bind(this));
+                    break;
+            }
+            
+            return oSanitized;
+        },
+
+        /**
+         * @function onCancelAuthConfiguration
+         * @description Cancels authentication configuration and closes dialog.
+         * @public
+         */
+        onCancelAuthConfiguration: function() {
+            if (this._oAuthDialog) {
+                this._oAuthDialog.close();
+            }
+        },
+
+        /**
+         * @function onRefreshLogs
+         * @description Refreshes the logs display with current settings.
+         * @public
+         */
+        onRefreshLogs: function() {
+            if (this._oLogsDialog) {
+                var oModel = this._oLogsDialog.getModel("logs");
+                var oData = oModel.getData();
+                this._loadIntegrationLogs(oData.integrationId, this._oLogsDialog);
+            }
+        },
+
+        /**
+         * @function onCloseLogs
+         * @description Closes the logs viewer dialog.
+         * @public
+         */
+        onCloseLogs: function() {
+            if (this._oLogsDialog) {
+                this._oLogsDialog.close();
+            }
         },
 
         onGenerateInferences: function() {
@@ -824,21 +1408,21 @@ sap.ui.define([
             });
         },
 
-        _createInferenceNetwork: function(inferences) {
-            // Placeholder for creating a network visualization of inferences
-            // This would typically use a graph library like D3.js or vis.js
+        // Placeholder visualization functions for future chart implementations
+        _createTestResultsChart: function(results) {
+            // Placeholder for connection test results visualization
         },
 
-        _createConfidenceBreakdown: function(confidence) {
-            // Placeholder for creating confidence visualization
+        _createExecutionTimeline: function(timeline) {
+            // Placeholder for integration execution timeline
         },
 
-        _createReasoningChainDiagram: function(chain) {
-            // Placeholder for creating reasoning chain visualization
+        _createPerformanceMetrics: function(metrics) {
+            // Placeholder for performance metrics visualization
         },
 
-        _createConfidenceChart: function(breakdown) {
-            // Placeholder for creating confidence breakdown chart
+        _createErrorAnalysisChart: function(errors) {
+            // Placeholder for error analysis visualization
         }
     });
 });

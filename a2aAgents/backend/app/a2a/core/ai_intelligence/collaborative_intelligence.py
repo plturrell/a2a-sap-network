@@ -145,6 +145,10 @@ class CollaborativeIntelligenceFramework:
         self.collaboration_metrics = defaultdict(list)
 
         logger.info(f"Initialized collaborative intelligence framework for agent {agent_id}")
+    
+    def _default_success_rate(self):
+        """Default success rate structure for agent success tracking"""
+        return {'successes': 0, 'attempts': 0}
 
     async def register_agent(self, agent: Agent) -> bool:
         """
@@ -562,7 +566,10 @@ class CollaborativeIntelligenceFramework:
             return []
 
         # Sort by confidence
-        accepting.sort(key=lambda x: x["confidence"], reverse=True)
+        def get_confidence_score(x):
+            return x["confidence"]
+        
+        accepting.sort(key=get_confidence_score, reverse=True)
 
         # Select based on collaboration type
         if request.collaboration_type == CollaborationType.CONSENSUS:
@@ -623,7 +630,10 @@ class CollaborativeIntelligenceFramework:
     ) -> Dict[str, Any]:
         """Execute delegation-based collaboration"""
         # Select best participant as delegate
-        delegate = max(participants, key=lambda p: p["confidence"])
+        def get_participant_confidence(p):
+            return p["confidence"]
+        
+        delegate = max(participants, key=get_participant_confidence)
 
         # Delegate task execution
         result = await self._delegate_task(delegate, task_data)
@@ -765,7 +775,10 @@ class CollaborativeIntelligenceFramework:
             for participant in collab.participants:
                 activity_counts[participant] += 1
 
-        sorted_agents = sorted(activity_counts.items(), key=lambda x: x[1], reverse=True)
+        def get_activity_count(x):
+            return x[1]
+        
+        sorted_agents = sorted(activity_counts.items(), key=get_activity_count, reverse=True)
         return [agent_id for agent_id, _ in sorted_agents[:5]]
 
     def _get_collaboration_type_stats(self) -> Dict[str, int]:
@@ -819,7 +832,10 @@ class MajorityVoteConsensus(ConsensusAlgorithm):
             vote_counts[str(vote)] += 1
 
         # Find majority
-        majority_vote = max(vote_counts.items(), key=lambda x: x[1])
+        def get_vote_count(x):
+            return x[1]
+        
+        majority_vote = max(vote_counts.items(), key=get_vote_count)
         total_votes = sum(vote_counts.values())
 
         return {
@@ -849,7 +865,10 @@ class WeightedVoteConsensus(ConsensusAlgorithm):
 
         # Find weighted majority
         if weighted_votes:
-            consensus_vote = max(weighted_votes.items(), key=lambda x: x[1])
+            def get_weighted_vote_count(x):
+                return x[1]
+            
+            consensus_vote = max(weighted_votes.items(), key=get_weighted_vote_count)
             confidence = consensus_vote[1] / total_weight if total_weight > 0 else 0.0
 
             return {
@@ -1028,7 +1047,10 @@ class DivisionOfLaborBehavior(SwarmBehavior):
                     })
             
             # Sort by compatibility and create connections to top agents
-            compatible_agents.sort(key=lambda x: x['score'], reverse=True)
+            def get_agent_compatibility_score(x):
+                return x['score']
+            
+            compatible_agents.sort(key=get_agent_compatibility_score, reverse=True)
             max_initial_connections = min(5, len(compatible_agents))  # Limit initial connections
             
             for i in range(max_initial_connections):
@@ -1341,7 +1363,7 @@ class DivisionOfLaborBehavior(SwarmBehavior):
                     'total_transfers': 0,
                     'successful_transfers': 0,
                     'transfer_methods': defaultdict(int),
-                    'agent_success_rates': defaultdict(lambda: {'successes': 0, 'attempts': 0})
+                    'agent_success_rates': defaultdict(self._default_success_rate)
                 }
             
             self.knowledge_transfer_metrics['total_transfers'] += 1
@@ -1507,12 +1529,15 @@ class DivisionOfLaborBehavior(SwarmBehavior):
             
             if len(connections) > max_connections:
                 # Sort connections by combined trust and activity score
-                sorted_connections = sorted(
-                    connections.items(),
-                    key=lambda x: (
+                def get_connection_score(x):
+                    return (
                         x[1].get('trust_score', 0) * 0.6 + 
                         min(1.0, x[1].get('interaction_count', 0) / 100.0) * 0.4
-                    ),
+                    )
+                
+                sorted_connections = sorted(
+                    connections.items(),
+                    key=get_connection_score,
                     reverse=True
                 )
                 

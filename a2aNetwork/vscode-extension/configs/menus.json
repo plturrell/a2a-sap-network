@@ -1,0 +1,78 @@
+{
+  "menus": {
+    "explorer/context": [
+      {
+        "submenu": "a2a.explorer",
+        "when": "explorerResourceIsFolder && a2a.hasConfig",
+        "group": "navigation@1"
+      }
+    ],
+    "a2a.explorer": [
+      {
+        "command": "a2a.createAgent",
+        "when": "explorerResourceIsFolder",
+        "group": "1_create@1"
+      },
+      {
+        "command": "a2a.createWorkflow", 
+        "when": "explorerResourceIsFolder",
+        "group": "1_create@2"
+      },
+      {
+        "command": "a2a.deployAgent",
+        "when": "explorerResourceIsFolder && a2a.hasAgent",
+        "group": "2_deploy@1"
+      },
+      {
+        "command": "a2a.testAgent",
+        "when": "explorerResourceIsFolder && a2a.hasAgent", 
+        "group": "3_test@1"
+      }
+    ],
+    "editor/context": [
+      {
+        "submenu": "a2a.editor",
+        "when": "editorLangId =~ /javascript|typescript/ && a2a.hasConfig",
+        "group": "a2a@1"
+      }
+    ],
+    "a2a.editor": [
+      {
+        "command": "a2a.validateWorkflow",
+        "when": "resourceExtname == .workflow.json",
+        "group": "validation@1"
+      },
+      {
+        "command": "a2a.configureAgent",
+        "when": "resourceExtname == .agent.js",
+        "group": "configuration@1"
+      }
+    ],
+    "commandPalette": [
+      {
+        "command": "a2a.createAgent",
+        "when": "workbenchState != empty"
+      },
+      {
+        "command": "a2a.createWorkflow",
+        "when": "workbenchState != empty"
+      },
+      {
+        "command": "a2a.startDebugDashboard",
+        "when": "a2a.hasConfig"
+      }
+    ]
+  },
+  "submenus": [
+    {
+      "id": "a2a.explorer",
+      "label": "A2A Framework",
+      "icon": "$(robot)"
+    },
+    {
+      "id": "a2a.editor", 
+      "label": "A2A Actions",
+      "icon": "$(robot)"
+    }
+  ]
+}

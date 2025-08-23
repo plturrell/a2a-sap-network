@@ -1,0 +1,127 @@
+{
+  "commands": [
+    {
+      "group": "agent",
+      "commands": [
+        {
+          "command": "a2a.createAgent",
+          "title": "Create New Agent",
+          "category": "A2A",
+          "icon": "$(add)",
+          "when": "workbenchState != empty"
+        },
+        {
+          "command": "a2a.deployAgent", 
+          "title": "Deploy Agent",
+          "category": "A2A",
+          "icon": "$(cloud-upload)",
+          "when": "a2a.hasConfig"
+        },
+        {
+          "command": "a2a.testAgent",
+          "title": "Test Agent",
+          "category": "A2A", 
+          "icon": "$(beaker)",
+          "when": "a2a.hasAgent"
+        },
+        {
+          "command": "a2a.configureAgent",
+          "title": "Configure Agent",
+          "category": "A2A",
+          "icon": "$(gear)",
+          "when": "a2a.hasAgent"
+        }
+      ]
+    },
+    {
+      "group": "workflow",
+      "commands": [
+        {
+          "command": "a2a.createWorkflow",
+          "title": "Create Workflow", 
+          "category": "A2A",
+          "icon": "$(list-ordered)",
+          "when": "workbenchState != empty"
+        },
+        {
+          "command": "a2a.runWorkflow",
+          "title": "Run Workflow",
+          "category": "A2A",
+          "icon": "$(play)",
+          "when": "a2a.hasWorkflow"
+        },
+        {
+          "command": "a2a.validateWorkflow",
+          "title": "Validate Workflow",
+          "category": "A2A", 
+          "icon": "$(check)",
+          "when": "a2a.hasWorkflow"
+        }
+      ]
+    },
+    {
+      "group": "debug",
+      "commands": [
+        {
+          "command": "a2a.startDebugDashboard",
+          "title": "Open Debug Dashboard",
+          "category": "A2A",
+          "icon": "$(dashboard)",
+          "when": "a2a.hasConfig"
+        },
+        {
+          "command": "a2a.showLogs",
+          "title": "Show Agent Logs",
+          "category": "A2A",
+          "icon": "$(output)",
+          "when": "a2a.hasAgent"
+        },
+        {
+          "command": "a2a.debugMode",
+          "title": "Toggle Debug Mode",
+          "category": "A2A",
+          "icon": "$(debug-alt)",
+          "when": "a2a.hasAgent"
+        }
+      ]
+    },
+    {
+      "group": "blockchain",
+      "commands": [
+        {
+          "command": "a2a.deployContract",
+          "title": "Deploy Smart Contract",
+          "category": "A2A",
+          "icon": "$(link)",
+          "when": "a2a.hasContracts"
+        },
+        {
+          "command": "a2a.interactContract", 
+          "title": "Interact with Contract",
+          "category": "A2A",
+          "icon": "$(plug)",
+          "when": "a2a.hasContracts"
+        }
+      ]
+    },
+    {
+      "group": "network",
+      "commands": [
+        {
+          "command": "a2a.networkStatus",
+          "title": "Check Network Status",
+          "category": "A2A",
+          "icon": "$(pulse)",
+          "when": "a2a.hasConfig"
+        },
+        {
+          "command": "a2a.networkDiagnostics",
+          "title": "Run Network Diagnostics", 
+          "category": "A2A",
+          "icon": "$(tools)",
+          "when": "a2a.hasConfig"
+        }
+      ]
+    }
+  ]
+}

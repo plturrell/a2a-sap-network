@@ -1064,7 +1064,7 @@ sap.ui.define([
             
             MessageBox.confirm(
                 "Schedule transformation for " + aSelectedContexts.length + " selected task(s)?\\n\\n" +
-                "Tasks: " + aTaskNames.join(", "),
+                "Tasks: " + aTaskNames.map(name => this._securityUtils.encodeHTML(name)).join(", "),
                 {
                     onClose: function(oAction) {
                         if (oAction === MessageBox.Action.OK) {
@@ -1218,9 +1218,9 @@ sap.ui.define([
                     
                     MessageBox.success(
                         "Batch transformation initiated successfully!\\n" +
-                        "Job ID: " + this._securityUtils.sanitizeInput(data.jobId) + "\\n" +
-                        "Processing " + data.taskCount + " transformation(s)\\n" +
-                        "Estimated time: " + this._securityUtils.sanitizeInput(data.estimatedTime) + " minutes"
+                        "Job ID: " + this._securityUtils.encodeHTML(data.jobId) + "\\n" +
+                        "Processing " + this._securityUtils.encodeHTML(String(data.taskCount)) + " transformation(s)\\n" +
+                        "Estimated time: " + this._securityUtils.encodeHTML(data.estimatedTime) + " minutes"
                     );
                     
                     this._extensionAPI.refresh();
@@ -1395,7 +1395,7 @@ sap.ui.define([
                     oDialog.close();
                     MessageBox.success(
                         "Transformation scheduled successfully!\\n" +
-                        "Schedule ID: " + this._securityUtils.sanitizeInput(data.scheduleId)
+                        "Schedule ID: " + this._securityUtils.encodeHTML(data.scheduleId)
                     );
                     this._extensionAPI.refresh();
                     
