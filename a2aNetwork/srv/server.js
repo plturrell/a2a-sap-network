@@ -321,742 +321,28 @@ cds.on('bootstrap', async (app) => {
     const { expressErrorMiddleware } = require('./utils/errorHandler');
     app.use(expressErrorMiddleware);
     
-    // AGENT 2 API PROXY ROUTES - Bridge to Python FastAPI Backend
-    const axios = require('axios');
-    const AGENT2_BASE_URL = process.env.AGENT2_BASE_URL || 'http://localhost:8001';
+    // Agent proxy routes have been moved to AgentProxyService (agentProxyService.cds)
+    // All Express routes are now handled through CAP services
     
-    // Helper function to proxy Agent 2 requests
-    async function proxyAgent2Request(req, res, endpoint, method = 'GET') {
-        try {
-            const config = {
-                method,
-                url: `${AGENT2_BASE_URL}/a2a/agent2/v1${endpoint}`,
-                timeout: 30000,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            };
-            
-            if (method !== 'GET' && req.body) {
-                config.data = req.body;
-            }
-            
-            if (req.query && Object.keys(req.query).length > 0) {
-                config.params = req.query;
-            }
-            
-            const response = await axios(config);
-            res.status(response.status).json(response.data);
-        } catch (error) {
-            log.error(`Agent 2 Proxy Error (${endpoint}):`, error.message);
-            if (error.response) {
-                res.status(error.response.status).json({
-                    error: error.response.data?.error || error.response.statusText,
-                    message: `Agent 2 Backend: ${error.response.status}`
-                });
-            } else {
-                res.status(503).json({
-                    error: 'Agent 2 Backend Connection Failed',
-                    message: error.message
-                });
-            }
-        }
-    }
-    
-    // Agent 2 Data Profiler
-    app.get('/a2a/agent2/v1/data-profile', (req, res) => proxyAgent2Request(req, res, '/data-profile'));
-    
-    // Agent 2 Tasks Management
-    app.post('/a2a/agent2/v1/tasks', (req, res) => proxyAgent2Request(req, res, '/tasks', 'POST'));
-    app.get('/a2a/agent2/v1/tasks/:taskId', (req, res) => 
-        proxyAgent2Request(req, res, `/tasks/${req.params.taskId}`));
-    app.post('/a2a/agent2/v1/tasks/:taskId/prepare', (req, res) => 
-        proxyAgent2Request(req, res, `/tasks/${req.params.taskId}/prepare`, 'POST'));
-    app.post('/a2a/agent2/v1/tasks/:taskId/analyze-features', (req, res) => 
-        proxyAgent2Request(req, res, `/tasks/${req.params.taskId}/analyze-features`, 'POST'));
-    app.post('/a2a/agent2/v1/tasks/:taskId/generate-embeddings', (req, res) => 
-        proxyAgent2Request(req, res, `/tasks/${req.params.taskId}/generate-embeddings`, 'POST'));
-    app.post('/a2a/agent2/v1/tasks/:taskId/export', (req, res) => 
-        proxyAgent2Request(req, res, `/tasks/${req.params.taskId}/export`, 'POST'));
-    app.post('/a2a/agent2/v1/tasks/:taskId/optimize', (req, res) => 
-        proxyAgent2Request(req, res, `/tasks/${req.params.taskId}/optimize`, 'POST'));
-    
-    // Agent 2 Batch Processing
-    app.post('/a2a/agent2/v1/batch-prepare', (req, res) => proxyAgent2Request(req, res, '/batch-prepare', 'POST'));
-    
-    // Agent 2 AutoML
-    app.post('/a2a/agent2/v1/automl', (req, res) => proxyAgent2Request(req, res, '/automl', 'POST'));
-    
-    // Agent 2 Health Check
-    app.get('/a2a/agent2/v1/health', (req, res) => proxyAgent2Request(req, res, '/health'));
-    
-    // Agent 2 OData Service Proxy - Convert REST to OData format
-    app.get('/a2a/agent2/v1/odata/AIPreparationTasks', async (req, res) => {
-        try {
-            // This would be handled by the CAP service, but we provide a fallback
-            const response = await axios.get(`${AGENT2_BASE_URL}/a2a/agent2/v1/tasks`);
-            
-            // Convert to OData format
-            const odataResponse = {
-                "@odata.context": "$metadata#AIPreparationTasks",
-                "value": response.data.map(task => ({
-                    ID: task.id,
-                    taskName: task.task_name,
-                    description: task.description,
-                    datasetName: task.dataset_name,
-                    modelType: task.model_type,
-                    dataType: task.data_type,
-                    framework: task.framework,
-                    status: task.status?.toUpperCase() || 'DRAFT',
-                    progressPercent: task.progress || 0,
-                    currentStage: task.current_stage,
-                    createdAt: task.created_at,
-                    modifiedAt: task.modified_at
-                }))
-            };
-            
-            res.json(odataResponse);
-        } catch (error) {
-            res.status(503).json({
-                error: {
-                    code: "SERVICE_UNAVAILABLE",
-                    message: "Agent 2 backend not available"
-                }
-            });
-        }
-    });
-    
-    log.info('Agent 2 API proxy routes initialized');
 
-    // AGENT 1 API PROXY ROUTES - Bridge to Python FastAPI Backend
-    const AGENT1_BASE_URL = process.env.AGENT1_BASE_URL || 'http://localhost:8001';
+    // Agent proxy routes have been moved to AgentProxyService (agentProxyService.cds)
+    // All Express routes are now handled through CAP services
     
-    // Helper function to proxy Agent 1 requests
-    async function proxyAgent1Request(req, res, endpoint, method = 'GET') {
-        try {
-            const config = {
-                method,
-                url: `${AGENT1_BASE_URL}/a2a/agent1/v1${endpoint}`,
-                timeout: 30000,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            };
-            
-            if (method !== 'GET' && req.body) {
-                config.data = req.body;
-            }
-            
-            if (req.query && Object.keys(req.query).length > 0) {
-                config.params = req.query;
-            }
-            
-            const response = await axios(config);
-            res.status(response.status).json(response.data);
-        } catch (error) {
-            log.error(`Agent 1 Proxy Error (${endpoint}):`, error.message);
-            if (error.response) {
-                res.status(error.response.status).json({
-                    error: error.response.data?.error || error.response.statusText,
-                    message: `Agent 1 Backend: ${error.response.status}`
-                });
-            } else {
-                res.status(503).json({
-                    error: 'Agent 1 Backend Connection Failed',
-                    message: error.message
-                });
-            }
-        }
-    }
-    
-    // Agent 1 Format Statistics
-    app.get('/a2a/agent1/v1/format-statistics', (req, res) => proxyAgent1Request(req, res, '/format-statistics'));
-    
-    // Agent 1 Tasks Management
-    app.post('/a2a/agent1/v1/tasks', (req, res) => proxyAgent1Request(req, res, '/tasks', 'POST'));
-    app.get('/a2a/agent1/v1/tasks/:taskId', (req, res) => 
-        proxyAgent1Request(req, res, `/tasks/${req.params.taskId}`));
-    app.post('/a2a/agent1/v1/tasks/:taskId/standardize', (req, res) => 
-        proxyAgent1Request(req, res, `/tasks/${req.params.taskId}/standardize`, 'POST'));
-    app.post('/a2a/agent1/v1/tasks/:taskId/validate', (req, res) => 
-        proxyAgent1Request(req, res, `/tasks/${req.params.taskId}/validate`, 'POST'));
-    app.post('/a2a/agent1/v1/tasks/:taskId/export', (req, res) => 
-        proxyAgent1Request(req, res, `/tasks/${req.params.taskId}/export`, 'POST'));
-    app.post('/a2a/agent1/v1/tasks/:taskId/preview', (req, res) => 
-        proxyAgent1Request(req, res, `/tasks/${req.params.taskId}/preview`, 'POST'));
-    
-    // Agent 1 Batch Processing
-    app.post('/a2a/agent1/v1/batch-process', (req, res) => proxyAgent1Request(req, res, '/batch-process', 'POST'));
-    
-    // Agent 1 Schema Management
-    app.post('/a2a/agent1/v1/schema/import', (req, res) => proxyAgent1Request(req, res, '/schema/import', 'POST'));
-    app.get('/a2a/agent1/v1/schema/templates', (req, res) => proxyAgent1Request(req, res, '/schema/templates'));
-    app.post('/a2a/agent1/v1/schema/validate', (req, res) => proxyAgent1Request(req, res, '/schema/validate', 'POST'));
-    
-    // Agent 1 Rules Management
-    app.post('/a2a/agent1/v1/rules/generate', (req, res) => proxyAgent1Request(req, res, '/rules/generate', 'POST'));
-    app.post('/a2a/agent1/v1/rules/apply', (req, res) => proxyAgent1Request(req, res, '/rules/apply', 'POST'));
-    
-    // Agent 1 Health Check
-    app.get('/a2a/agent1/v1/health', (req, res) => proxyAgent1Request(req, res, '/health'));
-    
-    // Agent 1 OData Service Proxy - Convert REST to OData format
-    app.get('/a2a/agent1/v1/odata/StandardizationTasks', async (req, res) => {
-        try {
-            // This would be handled by the CAP service, but we provide a fallback
-            const response = await axios.get(`${AGENT1_BASE_URL}/a2a/agent1/v1/tasks`);
-            
-            // Convert to OData format
-            const odataResponse = {
-                "@odata.context": "$metadata#StandardizationTasks",
-                "value": response.data.map(task => ({
-                    ID: task.id,
-                    taskName: task.task_name,
-                    description: task.description,
-                    sourceFormat: task.source_format,
-                    targetFormat: task.target_format,
-                    schemaTemplateId: task.schema_template_id,
-                    schemaValidation: task.schema_validation || true,
-                    dataTypeValidation: task.data_type_validation || true,
-                    formatValidation: task.format_validation || true,
-                    processingMode: task.processing_mode || 'FULL',
-                    batchSize: task.batch_size || 1000,
-                    status: task.status?.toUpperCase() || 'DRAFT',
-                    progressPercent: task.progress || 0,
-                    currentStage: task.current_stage,
-                    recordsProcessed: task.records_processed || 0,
-                    recordsTotal: task.records_total || 0,
-                    errorCount: task.error_count || 0,
-                    createdAt: task.created_at,
-                    modifiedAt: task.modified_at
-                }))
-            };
-            
-            res.json(odataResponse);
-        } catch (error) {
-            res.status(503).json({
-                error: {
-                    code: "SERVICE_UNAVAILABLE",
-                    message: "Agent 1 backend not available"
-                }
-            });
-        }
-    });
-    
-    log.info('Agent 1 API proxy routes initialized');
 
-    // AGENT 3 API PROXY ROUTES - Bridge to Python FastAPI Backend
-    const AGENT3_BASE_URL = process.env.AGENT3_BASE_URL || 'http://localhost:8002';
+    // Agent proxy routes have been moved to AgentProxyService (agentProxyService.cds)
+    // All Express routes are now handled through CAP services
     
-    // Helper function to proxy Agent 3 requests
-    async function proxyAgent3Request(req, res, endpoint, method = 'GET') {
-        try {
-            const config = {
-                method,
-                url: `${AGENT3_BASE_URL}/a2a/agent3/v1${endpoint}`,
-                timeout: 30000,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            };
-            
-            if (method !== 'GET' && req.body) {
-                config.data = req.body;
-            }
-            
-            if (req.query && Object.keys(req.query).length > 0) {
-                config.params = req.query;
-            }
-            
-            const response = await axios(config);
-            res.status(response.status).json(response.data);
-        } catch (error) {
-            log.error(`Agent 3 Proxy Error (${endpoint}):`, error.message);
-            if (error.response) {
-                res.status(error.response.status).json({
-                    error: error.response.data?.error || error.response.statusText,
-                    message: `Agent 3 Backend: ${error.response.status}`
-                });
-            } else {
-                res.status(503).json({
-                    error: 'Agent 3 Backend Connection Failed',
-                    message: error.message
-                });
-            }
-        }
-    }
-    
-    // Agent 3 Collections Management
-    app.get('/a2a/agent3/v1/collections', (req, res) => proxyAgent3Request(req, res, '/collections'));
-    app.post('/a2a/agent3/v1/collections', (req, res) => proxyAgent3Request(req, res, '/collections', 'POST'));
-    
-    // Agent 3 Vector Search
-    app.post('/a2a/agent3/v1/search', (req, res) => proxyAgent3Request(req, res, '/search', 'POST'));
-    
-    // Agent 3 Tasks Management
-    app.post('/a2a/agent3/v1/tasks', (req, res) => proxyAgent3Request(req, res, '/tasks', 'POST'));
-    app.get('/a2a/agent3/v1/tasks/:taskId', (req, res) => 
-        proxyAgent3Request(req, res, `/tasks/${req.params.taskId}`));
-    app.post('/a2a/agent3/v1/tasks/:taskId/process', (req, res) => 
-        proxyAgent3Request(req, res, `/tasks/${req.params.taskId}/process`, 'POST'));
-    app.post('/a2a/agent3/v1/tasks/:taskId/similarity-search', (req, res) => 
-        proxyAgent3Request(req, res, `/tasks/${req.params.taskId}/similarity-search`, 'POST'));
-    app.post('/a2a/agent3/v1/tasks/:taskId/optimize-index', (req, res) => 
-        proxyAgent3Request(req, res, `/tasks/${req.params.taskId}/optimize-index`, 'POST'));
-    app.post('/a2a/agent3/v1/tasks/:taskId/export', (req, res) => 
-        proxyAgent3Request(req, res, `/tasks/${req.params.taskId}/export`, 'POST'));
-    app.get('/a2a/agent3/v1/tasks/:taskId/visualization-data', (req, res) => 
-        proxyAgent3Request(req, res, `/tasks/${req.params.taskId}/visualization-data`));
-    app.post('/a2a/agent3/v1/tasks/:taskId/cluster-analysis', (req, res) => 
-        proxyAgent3Request(req, res, `/tasks/${req.params.taskId}/cluster-analysis`, 'POST'));
-    
-    // Agent 3 Batch Processing
-    app.post('/a2a/agent3/v1/batch-process', (req, res) => proxyAgent3Request(req, res, '/batch-process', 'POST'));
-    
-    // Agent 3 Model Comparison
-    app.get('/a2a/agent3/v1/model-comparison', (req, res) => proxyAgent3Request(req, res, '/model-comparison'));
-    
-    // Agent 3 Vector Operations
-    app.post('/a2a/agent3/v1/embeddings/generate', (req, res) => proxyAgent3Request(req, res, '/embeddings/generate', 'POST'));
-    app.post('/a2a/agent3/v1/index/optimize', (req, res) => proxyAgent3Request(req, res, '/index/optimize', 'POST'));
-    
-    // Agent 3 Health Check
-    app.get('/a2a/agent3/v1/health', (req, res) => proxyAgent3Request(req, res, '/health'));
-    
-    // Agent 3 WebSocket endpoint for real-time updates
-    app.get('/a2a/agent3/v1/tasks/:taskId/ws', (req, res) => {
-        // WebSocket upgrade handling - would be implemented with socket.io
-        res.status(501).json({
-            error: 'WebSocket endpoint not implemented',
-            message: 'Real-time updates will be available when WebSocket server is configured'
-        });
-    });
-    
-    // ================================
-    // AGENT 4 - CALCULATION VALIDATION PROXY ROUTES
-    // ================================
-    
-    const AGENT4_BASE_URL = process.env.AGENT4_BASE_URL || 'http://localhost:8003';
-    
-    // Helper function to proxy Agent 4 requests
-    async function proxyAgent4Request(req, res, endpoint, method = 'GET') {
-        try {
-            const config = {
-                method,
-                url: `${AGENT4_BASE_URL}/a2a/agent4/v1${endpoint}`,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': req.headers.authorization || '',
-                    'X-Forwarded-For': req.ip,
-                    'X-User-Agent': req.headers['user-agent'] || 'SAP-CAP-Proxy'
-                },
-                timeout: method === 'POST' ? 120000 : 30000 // Longer timeout for validation operations
-            };
-            
-            if (method !== 'GET' && req.body) {
-                config.data = req.body;
-            }
-            
-            if (req.query && Object.keys(req.query).length > 0) {
-                config.params = req.query;
-            }
-            
-            const response = await axios(config);
-            res.status(response.status).json(response.data);
-        } catch (error) {
-            log.error(`Agent 4 Proxy Error (${endpoint}):`, error.message);
-            if (error.response) {
-                res.status(error.response.status).json({
-                    error: error.response.data?.error || error.response.statusText,
-                    message: `Agent 4 Backend: ${error.response.status}`
-                });
-            } else {
-                res.status(503).json({
-                    error: 'Agent 4 Backend Connection Failed',
-                    message: error.message
-                });
-            }
-        }
-    }
-    
-    // Agent 4 Calculation Validation Tasks
-    app.get('/a2a/agent4/v1/tasks', (req, res) => proxyAgent4Request(req, res, '/tasks'));
-    app.post('/a2a/agent4/v1/tasks', (req, res) => proxyAgent4Request(req, res, '/tasks', 'POST'));
-    app.get('/a2a/agent4/v1/tasks/:taskId', (req, res) => 
-        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}`));
-    app.put('/a2a/agent4/v1/tasks/:taskId', (req, res) => 
-        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}`, 'PUT'));
-    app.delete('/a2a/agent4/v1/tasks/:taskId', (req, res) => 
-        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}`, 'DELETE'));
-    
-    // Agent 4 Validation Operations
-    app.post('/a2a/agent4/v1/tasks/:taskId/validate', (req, res) => 
-        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/validate`, 'POST'));
-    app.post('/a2a/agent4/v1/tasks/:taskId/pause', (req, res) => 
-        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/pause`, 'POST'));
-    app.post('/a2a/agent4/v1/tasks/:taskId/resume', (req, res) => 
-        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/resume`, 'POST'));
-    app.post('/a2a/agent4/v1/tasks/:taskId/cancel', (req, res) => 
-        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/cancel`, 'POST'));
-    
-    // Agent 4 Method-Specific Validation
-    app.post('/a2a/agent4/v1/tasks/:taskId/symbolic', (req, res) => 
-        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/symbolic`, 'POST'));
-    app.post('/a2a/agent4/v1/tasks/:taskId/numerical', (req, res) => 
-        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/numerical`, 'POST'));
-    app.post('/a2a/agent4/v1/tasks/:taskId/statistical', (req, res) => 
-        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/statistical`, 'POST'));
-    app.post('/a2a/agent4/v1/tasks/:taskId/ai-validation', (req, res) => 
-        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/ai-validation`, 'POST'));
-    app.post('/a2a/agent4/v1/tasks/:taskId/blockchain-consensus', (req, res) => 
-        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/blockchain-consensus`, 'POST'));
-    
-    // Agent 4 Expression Operations
-    app.post('/a2a/agent4/v1/expression/validate-syntax', (req, res) => 
-        proxyAgent4Request(req, res, '/expression/validate-syntax', 'POST'));
-    app.post('/a2a/agent4/v1/expression/evaluate', (req, res) => 
-        proxyAgent4Request(req, res, '/expression/evaluate', 'POST'));
-    app.post('/a2a/agent4/v1/expression/simplify', (req, res) => 
-        proxyAgent4Request(req, res, '/expression/simplify', 'POST'));
-    app.post('/a2a/agent4/v1/expression/derivative', (req, res) => 
-        proxyAgent4Request(req, res, '/expression/derivative', 'POST'));
-    app.post('/a2a/agent4/v1/expression/integral', (req, res) => 
-        proxyAgent4Request(req, res, '/expression/integral', 'POST'));
-    
-    // Agent 4 Validation Methods
-    app.get('/a2a/agent4/v1/methods', (req, res) => proxyAgent4Request(req, res, '/methods'));
-    app.get('/a2a/agent4/v1/methods/symbolic/engines', (req, res) => 
-        proxyAgent4Request(req, res, '/methods/symbolic/engines'));
-    app.get('/a2a/agent4/v1/methods/ai/models', (req, res) => 
-        proxyAgent4Request(req, res, '/methods/ai/models'));
-    app.post('/a2a/agent4/v1/methods/benchmark', (req, res) => 
-        proxyAgent4Request(req, res, '/methods/benchmark', 'POST'));
-    
-    // Agent 4 Templates Management
-    app.get('/a2a/agent4/v1/templates', (req, res) => proxyAgent4Request(req, res, '/templates'));
-    app.post('/a2a/agent4/v1/templates', (req, res) => proxyAgent4Request(req, res, '/templates', 'POST'));
-    app.get('/a2a/agent4/v1/templates/:templateId', (req, res) => 
-        proxyAgent4Request(req, res, `/templates/${req.params.templateId}`));
-    app.put('/a2a/agent4/v1/templates/:templateId', (req, res) => 
-        proxyAgent4Request(req, res, `/templates/${req.params.templateId}`, 'PUT'));
-    app.delete('/a2a/agent4/v1/templates/:templateId', (req, res) => 
-        proxyAgent4Request(req, res, `/templates/${req.params.templateId}`, 'DELETE'));
-    app.post('/a2a/agent4/v1/templates/:templateId/apply', (req, res) => 
-        proxyAgent4Request(req, res, `/templates/${req.params.templateId}/apply`, 'POST'));
-    
-    // Agent 4 AI Model Comparison
-    app.get('/a2a/agent4/v1/ai/models', (req, res) => proxyAgent4Request(req, res, '/ai/models'));
-    app.post('/a2a/agent4/v1/ai/compare', (req, res) => proxyAgent4Request(req, res, '/ai/compare', 'POST'));
-    app.get('/a2a/agent4/v1/ai/compare/:comparisonId', (req, res) => 
-        proxyAgent4Request(req, res, `/ai/compare/${req.params.comparisonId}`));
-    app.post('/a2a/agent4/v1/ai/configure', (req, res) => 
-        proxyAgent4Request(req, res, '/ai/configure', 'POST'));
-    
-    // Agent 4 Blockchain Consensus
-    app.get('/a2a/agent4/v1/blockchain/validators', (req, res) => 
-        proxyAgent4Request(req, res, '/blockchain/validators'));
-    app.post('/a2a/agent4/v1/blockchain/consensus', (req, res) => 
-        proxyAgent4Request(req, res, '/blockchain/consensus', 'POST'));
-    app.get('/a2a/agent4/v1/blockchain/consensus/:consensusId', (req, res) => 
-        proxyAgent4Request(req, res, `/blockchain/consensus/${req.params.consensusId}`));
-    app.post('/a2a/agent4/v1/blockchain/validators/select', (req, res) => 
-        proxyAgent4Request(req, res, '/blockchain/validators/select', 'POST'));
-    app.post('/a2a/agent4/v1/blockchain/configure', (req, res) => 
-        proxyAgent4Request(req, res, '/blockchain/configure', 'POST'));
-    
-    // Agent 4 Batch Operations
-    app.post('/a2a/agent4/v1/batch/validate', (req, res) => 
-        proxyAgent4Request(req, res, '/batch/validate', 'POST'));
-    app.get('/a2a/agent4/v1/batch/:batchId', (req, res) => 
-        proxyAgent4Request(req, res, `/batch/${req.params.batchId}`));
-    app.post('/a2a/agent4/v1/batch/:batchId/pause', (req, res) => 
-        proxyAgent4Request(req, res, `/batch/${req.params.batchId}/pause`, 'POST'));
-    app.post('/a2a/agent4/v1/batch/:batchId/resume', (req, res) => 
-        proxyAgent4Request(req, res, `/batch/${req.params.batchId}/resume`, 'POST'));
-    
-    // Agent 4 Export and Reporting
-    app.post('/a2a/agent4/v1/tasks/:taskId/export', (req, res) => 
-        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/export`, 'POST'));
-    app.get('/a2a/agent4/v1/tasks/:taskId/report', (req, res) => 
-        proxyAgent4Request(req, res, `/tasks/${req.params.taskId}/report`));
-    app.post('/a2a/agent4/v1/reports/generate', (req, res) => 
-        proxyAgent4Request(req, res, '/reports/generate', 'POST'));
-    
-    // Agent 4 Statistics and Analytics
-    app.get('/a2a/agent4/v1/stats/accuracy', (req, res) => 
-        proxyAgent4Request(req, res, '/stats/accuracy'));
-    app.get('/a2a/agent4/v1/stats/performance', (req, res) => 
-        proxyAgent4Request(req, res, '/stats/performance'));
-    app.get('/a2a/agent4/v1/stats/usage', (req, res) => 
-        proxyAgent4Request(req, res, '/stats/usage'));
-    
-    // Agent 4 Health Check
-    app.get('/a2a/agent4/v1/health', (req, res) => proxyAgent4Request(req, res, '/health'));
-    
-    log.info('Agent 4 API proxy routes initialized');
-
-    // ================================
-    // AGENT 5 - QA VALIDATION PROXY ROUTES
-    // ================================
-    
-    const AGENT5_BASE_URL = process.env.AGENT5_BASE_URL || 'http://localhost:8004';
-    
-    // Helper function to proxy Agent 5 requests
-    async function proxyAgent5Request(req, res, endpoint, method = 'GET') {
-        try {
-            const config = {
-                method,
-                url: `${AGENT5_BASE_URL}/a2a/agent5/v1${endpoint}`,
-                timeout: 60000, // Longer timeout for QA operations
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': req.headers.authorization || '',
-                    'X-Forwarded-For': req.ip,
-                    'X-User-Agent': req.headers['user-agent'] || 'SAP-CAP-Proxy'
-                }
-            };
-            
-            if (method !== 'GET' && req.body) {
-                config.data = req.body;
-            }
-            
-            if (req.query && Object.keys(req.query).length > 0) {
-                config.params = req.query;
-            }
-            
-            const response = await axios(config);
-            res.status(response.status).json(response.data);
-        } catch (error) {
-            log.error(`Agent 5 Proxy Error (${endpoint}):`, error.message);
-            if (error.response) {
-                res.status(error.response.status).json({
-                    error: error.response.data?.error || error.response.statusText,
-                    message: `Agent 5 Backend: ${error.response.status}`,
-                    details: error.response.data?.details || null
-                });
-            } else {
-                res.status(503).json({
-                    error: 'Agent 5 Backend Connection Failed',
-                    message: error.message,
-                    service: 'QA Validation Service'
-                });
-            }
-        }
-    }
-    
-    // Agent 5 QA Validation Tasks
-    app.get('/a2a/agent5/v1/tasks', (req, res) => proxyAgent5Request(req, res, '/tasks'));
-    app.post('/a2a/agent5/v1/tasks', (req, res) => proxyAgent5Request(req, res, '/tasks', 'POST'));
-    app.get('/a2a/agent5/v1/tasks/:taskId', (req, res) => 
-        proxyAgent5Request(req, res, `/tasks/${req.params.taskId}`));
-    app.put('/a2a/agent5/v1/tasks/:taskId', (req, res) => 
-        proxyAgent5Request(req, res, `/tasks/${req.params.taskId}`, 'PUT'));
-    app.delete('/a2a/agent5/v1/tasks/:taskId', (req, res) => 
-        proxyAgent5Request(req, res, `/tasks/${req.params.taskId}`, 'DELETE'));
-    
-    // Agent 5 Task Operations
-    app.post('/a2a/agent5/v1/tasks/:taskId/validate', (req, res) => 
-        proxyAgent5Request(req, res, `/tasks/${req.params.taskId}/validate`, 'POST'));
-    app.post('/a2a/agent5/v1/tasks/:taskId/pause', (req, res) => 
-        proxyAgent5Request(req, res, `/tasks/${req.params.taskId}/pause`, 'POST'));
-    app.post('/a2a/agent5/v1/tasks/:taskId/resume', (req, res) => 
-        proxyAgent5Request(req, res, `/tasks/${req.params.taskId}/resume`, 'POST'));
-    app.post('/a2a/agent5/v1/tasks/:taskId/cancel', (req, res) => 
-        proxyAgent5Request(req, res, `/tasks/${req.params.taskId}/cancel`, 'POST'));
-    
-    // Agent 5 Test Generation
-    app.post('/a2a/agent5/v1/tests/generate', (req, res) => 
-        proxyAgent5Request(req, res, '/tests/generate', 'POST'));
-    app.post('/a2a/agent5/v1/tests/simpleqa', (req, res) => 
-        proxyAgent5Request(req, res, '/tests/simpleqa', 'POST'));
-    app.post('/a2a/agent5/v1/tests/execute', (req, res) => 
-        proxyAgent5Request(req, res, '/tests/execute', 'POST'));
-    app.get('/a2a/agent5/v1/tests/:testId/results', (req, res) => 
-        proxyAgent5Request(req, res, `/tests/${req.params.testId}/results`));
-    
-    // Agent 5 ORD Discovery
-    app.post('/a2a/agent5/v1/ord/discover', (req, res) => 
-        proxyAgent5Request(req, res, '/ord/discover', 'POST'));
-    app.get('/a2a/agent5/v1/ord/registries', (req, res) => 
-        proxyAgent5Request(req, res, '/ord/registries'));
-    app.get('/a2a/agent5/v1/ord/data-products', (req, res) => 
-        proxyAgent5Request(req, res, '/ord/data-products'));
-    
-    // Agent 5 Validation Rules
-    app.get('/a2a/agent5/v1/rules', (req, res) => proxyAgent5Request(req, res, '/rules'));
-    app.post('/a2a/agent5/v1/rules', (req, res) => proxyAgent5Request(req, res, '/rules', 'POST'));
-    app.get('/a2a/agent5/v1/rules/:ruleId', (req, res) => 
-        proxyAgent5Request(req, res, `/rules/${req.params.ruleId}`));
-    app.put('/a2a/agent5/v1/rules/:ruleId', (req, res) => 
-        proxyAgent5Request(req, res, `/rules/${req.params.ruleId}`, 'PUT'));
-    app.delete('/a2a/agent5/v1/rules/:ruleId', (req, res) => 
-        proxyAgent5Request(req, res, `/rules/${req.params.ruleId}`, 'DELETE'));
-    app.post('/a2a/agent5/v1/rules/:ruleId/test', (req, res) => 
-        proxyAgent5Request(req, res, `/rules/${req.params.ruleId}/test`, 'POST'));
-    
-    // Agent 5 Approval Workflow
-    app.get('/a2a/agent5/v1/approvals', (req, res) => proxyAgent5Request(req, res, '/approvals'));
-    app.post('/a2a/agent5/v1/approvals', (req, res) => proxyAgent5Request(req, res, '/approvals', 'POST'));
-    app.get('/a2a/agent5/v1/approvals/:approvalId', (req, res) => 
-        proxyAgent5Request(req, res, `/approvals/${req.params.approvalId}`));
-    app.post('/a2a/agent5/v1/approvals/:approvalId/approve', (req, res) => 
-        proxyAgent5Request(req, res, `/approvals/${req.params.approvalId}/approve`, 'POST'));
-    app.post('/a2a/agent5/v1/approvals/:approvalId/reject', (req, res) => 
-        proxyAgent5Request(req, res, `/approvals/${req.params.approvalId}/reject`, 'POST'));
-    app.post('/a2a/agent5/v1/approvals/:approvalId/escalate', (req, res) => 
-        proxyAgent5Request(req, res, `/approvals/${req.params.approvalId}/escalate`, 'POST'));
-    
-    // Agent 5 Configuration
-    app.get('/a2a/agent5/v1/config', (req, res) => proxyAgent5Request(req, res, '/config'));
-    app.post('/a2a/agent5/v1/config', (req, res) => proxyAgent5Request(req, res, '/config', 'POST'));
-    app.put('/a2a/agent5/v1/config', (req, res) => proxyAgent5Request(req, res, '/config', 'PUT'));
-    
-    // Agent 5 Batch Operations
-    app.post('/a2a/agent5/v1/batch/validate', (req, res) => 
-        proxyAgent5Request(req, res, '/batch/validate', 'POST'));
-    app.get('/a2a/agent5/v1/batch/:batchId', (req, res) => 
-        proxyAgent5Request(req, res, `/batch/${req.params.batchId}`));
-    app.post('/a2a/agent5/v1/batch/:batchId/pause', (req, res) => 
-        proxyAgent5Request(req, res, `/batch/${req.params.batchId}/pause`, 'POST'));
-    app.post('/a2a/agent5/v1/batch/:batchId/resume', (req, res) => 
-        proxyAgent5Request(req, res, `/batch/${req.params.batchId}/resume`, 'POST'));
-    
-    // Agent 5 Reports and Analytics
-    app.get('/a2a/agent5/v1/reports', (req, res) => proxyAgent5Request(req, res, '/reports'));
-    app.post('/a2a/agent5/v1/reports/generate', (req, res) => 
-        proxyAgent5Request(req, res, '/reports/generate', 'POST'));
-    app.get('/a2a/agent5/v1/analytics/metrics', (req, res) => 
-        proxyAgent5Request(req, res, '/analytics/metrics'));
-    app.get('/a2a/agent5/v1/analytics/trends', (req, res) => 
-        proxyAgent5Request(req, res, '/analytics/trends'));
-    
-    // Agent 5 Health Check
-    app.get('/a2a/agent5/v1/health', (req, res) => proxyAgent5Request(req, res, '/health'));
-    
-    // Agent 5 OData Service Proxy - Convert REST to OData format
-    app.get('/a2a/agent5/v1/odata/QaValidationTasks', async (req, res) => {
-        try {
-            const response = await axios.get(`${AGENT5_BASE_URL}/a2a/agent5/v1/tasks`);
-            
-            const odataResponse = {
-                "@odata.context": "$metadata#QaValidationTasks",
-                "value": response.data.map(task => ({
-                    ID: task.id,
-                    taskName: task.task_name,
-                    description: task.description,
-                    dataProductId: task.data_product_id,
-                    ordRegistryUrl: task.ord_registry_url,
-                    validationType: task.validation_type?.toUpperCase() || 'QUALITY_ASSURANCE',
-                    qaScope: task.qa_scope?.toUpperCase() || 'DATA_INTEGRITY',
-                    testGenerationMethod: task.test_generation_method?.toUpperCase() || 'DYNAMIC_SIMPLEQA',
-                    simpleQaTestCount: task.simple_qa_test_count || 10,
-                    qualityThreshold: task.quality_threshold || 0.8,
-                    factualityThreshold: task.factuality_threshold || 0.85,
-                    complianceThreshold: task.compliance_threshold || 0.95,
-                    vectorSimilarityThreshold: task.vector_similarity_threshold || 0.7,
-                    enableFactualityTesting: task.enable_factuality_testing !== false,
-                    enableComplianceCheck: task.enable_compliance_check !== false,
-                    enableVectorSimilarity: task.enable_vector_similarity !== false,
-                    enableRegressionTesting: task.enable_regression_testing || false,
-                    requireApproval: task.require_approval !== false,
-                    status: task.status?.toUpperCase() || 'DRAFT',
-                    priority: task.priority?.toUpperCase() || 'MEDIUM',
-                    progressPercent: task.progress || 0,
-                    currentStage: task.current_stage,
-                    overallScore: task.overall_score,
-                    qualityScore: task.quality_score,
-                    factualityScore: task.factuality_score,
-                    complianceScore: task.compliance_score,
-                    testsGenerated: task.tests_generated || 0,
-                    testsPassed: task.tests_passed || 0,
-                    testsFailed: task.tests_failed || 0,
-                    validationTime: task.validation_time,
-                    approvalStatus: task.approval_status?.toUpperCase() || 'PENDING',
-                    approvedBy: task.approved_by,
-                    approvedAt: task.approved_at,
-                    rejectionReason: task.rejection_reason,
-                    createdBy: task.created_by,
-                    createdAt: task.created_at,
-                    modifiedAt: task.modified_at
-                }))
-            };
-            
-            res.json(odataResponse);
-        } catch (error) {
-            res.status(503).json({
-                error: {
-                    code: "SERVICE_UNAVAILABLE",
-                    message: "Agent 5 backend not available"
-                }
-            });
-        }
-    });
-    
-    log.info('Agent 5 API proxy routes initialized');
 
     // ================================
     // AGENT 6 - QUALITY CONTROL & WORKFLOW ROUTING PROXY ROUTES
     // ================================
     
-    const AGENT6_BASE_URL = process.env.AGENT6_BASE_URL || 'http://localhost:8005';
     
     // Helper function to proxy Agent 6 requests
-    async function proxyAgent6Request(req, res, endpoint, method = 'GET') {
-        try {
-            const config = {
-                method,
-                url: `${AGENT6_BASE_URL}/a2a/agent6/v1${endpoint}`,
-                timeout: 60000, // Longer timeout for quality assessments
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': req.headers.authorization || '',
-                    'X-Forwarded-For': req.ip,
-                    'X-User-Agent': req.headers['user-agent'] || 'SAP-CAP-Proxy'
-                }
-            };
-            
-            if (method !== 'GET' && req.body) {
-                config.data = req.body;
-            }
-            
-            if (req.query && Object.keys(req.query).length > 0) {
-                config.params = req.query;
-            }
-            
-            const response = await axios(config);
-            res.status(response.status).json(response.data);
-        } catch (error) {
-            log.error(`Agent 6 Proxy Error (${endpoint}):`, error.message);
-            if (error.response) {
-                res.status(error.response.status).json({
-                    error: error.response.data?.error || error.response.statusText,
-                    message: `Agent 6 Backend: ${error.response.status}`,
-                    details: error.response.data?.details || null
-                });
-            } else {
-                res.status(503).json({
-                    error: 'Agent 6 Backend Connection Failed',
-                    message: error.message,
-                    service: 'Quality Control Service'
-                });
-            }
-        }
-    }
     
     // Agent 6 Quality Control Tasks
-    app.get('/a2a/agent6/v1/tasks', (req, res) => proxyAgent6Request(req, res, '/tasks'));
-    app.post('/a2a/agent6/v1/tasks', (req, res) => proxyAgent6Request(req, res, '/tasks', 'POST'));
-    app.get('/a2a/agent6/v1/tasks/:taskId', (req, res) => 
-        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}`));
-    app.put('/a2a/agent6/v1/tasks/:taskId', (req, res) => 
-        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}`, 'PUT'));
-    app.delete('/a2a/agent6/v1/tasks/:taskId', (req, res) => 
-        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}`, 'DELETE'));
     
     // Agent 6 Task Operations
-    app.post('/a2a/agent6/v1/tasks/:taskId/assess', (req, res) => 
-        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/assess`, 'POST'));
-    app.get('/a2a/agent6/v1/tasks/:taskId/stream', (req, res) => {
         // Special handling for Server-Sent Events
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
@@ -1066,69 +352,20 @@ cds.on('bootstrap', async (app) => {
         // Proxy SSE stream - implementation would forward events
         res.write(':ok\n\n');
     });
-    app.post('/a2a/agent6/v1/tasks/:taskId/route', (req, res) => 
-        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/route`, 'POST'));
-    app.post('/a2a/agent6/v1/tasks/:taskId/verify-trust', (req, res) => 
-        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/verify-trust`, 'POST'));
-    app.post('/a2a/agent6/v1/tasks/:taskId/optimize', (req, res) => 
-        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/optimize`, 'POST'));
-    app.post('/a2a/agent6/v1/tasks/:taskId/apply-optimizations', (req, res) => 
-        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/apply-optimizations`, 'POST'));
-    app.post('/a2a/agent6/v1/tasks/:taskId/escalate', (req, res) => 
-        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/escalate`, 'POST'));
-    app.post('/a2a/agent6/v1/tasks/:taskId/report', (req, res) => 
-        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/report`, 'POST'));
-    app.get('/a2a/agent6/v1/tasks/:taskId/metrics', (req, res) => 
-        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/metrics`));
-    app.get('/a2a/agent6/v1/tasks/:taskId/routing-options', (req, res) => 
-        proxyAgent6Request(req, res, `/tasks/${req.params.taskId}/routing-options`));
     
     // Agent 6 Dashboard and Analytics
-    app.get('/a2a/agent6/v1/dashboard', (req, res) => proxyAgent6Request(req, res, '/dashboard'));
-    app.get('/a2a/agent6/v1/trust-metrics', (req, res) => proxyAgent6Request(req, res, '/trust-metrics'));
-    app.get('/a2a/agent6/v1/workflow-analysis', (req, res) => proxyAgent6Request(req, res, '/workflow-analysis'));
     
     // Agent 6 Routing Rules
-    app.get('/a2a/agent6/v1/routing-rules', (req, res) => proxyAgent6Request(req, res, '/routing-rules'));
-    app.post('/a2a/agent6/v1/routing-rules', (req, res) => proxyAgent6Request(req, res, '/routing-rules', 'POST'));
-    app.get('/a2a/agent6/v1/routing-rules/:ruleId', (req, res) => 
-        proxyAgent6Request(req, res, `/routing-rules/${req.params.ruleId}`));
-    app.put('/a2a/agent6/v1/routing-rules/:ruleId', (req, res) => 
-        proxyAgent6Request(req, res, `/routing-rules/${req.params.ruleId}`, 'PUT'));
-    app.delete('/a2a/agent6/v1/routing-rules/:ruleId', (req, res) => 
-        proxyAgent6Request(req, res, `/routing-rules/${req.params.ruleId}`, 'DELETE'));
-    app.post('/a2a/agent6/v1/routing-rules/:ruleId/test', (req, res) => 
-        proxyAgent6Request(req, res, `/routing-rules/${req.params.ruleId}/test`, 'POST'));
     
     // Agent 6 Quality Gates
-    app.get('/a2a/agent6/v1/quality-gates', (req, res) => proxyAgent6Request(req, res, '/quality-gates'));
-    app.post('/a2a/agent6/v1/quality-gates', (req, res) => proxyAgent6Request(req, res, '/quality-gates', 'POST'));
-    app.get('/a2a/agent6/v1/quality-gates/:gateId', (req, res) => 
-        proxyAgent6Request(req, res, `/quality-gates/${req.params.gateId}`));
-    app.put('/a2a/agent6/v1/quality-gates/:gateId', (req, res) => 
-        proxyAgent6Request(req, res, `/quality-gates/${req.params.gateId}`, 'PUT'));
-    app.delete('/a2a/agent6/v1/quality-gates/:gateId', (req, res) => 
-        proxyAgent6Request(req, res, `/quality-gates/${req.params.gateId}`, 'DELETE'));
     
     // Agent 6 Batch Operations
-    app.post('/a2a/agent6/v1/batch-assessment', (req, res) => 
-        proxyAgent6Request(req, res, '/batch-assessment', 'POST'));
-    app.get('/a2a/agent6/v1/batch/:batchId', (req, res) => 
-        proxyAgent6Request(req, res, `/batch/${req.params.batchId}`));
     
     // Agent 6 Reports and Exports
-    app.post('/a2a/agent6/v1/reports/generate', (req, res) => 
-        proxyAgent6Request(req, res, '/reports/generate', 'POST'));
-    app.get('/a2a/agent6/v1/reports/:reportId', (req, res) => 
-        proxyAgent6Request(req, res, `/reports/${req.params.reportId}`));
-    app.get('/a2a/agent6/v1/reports/:reportId/download', (req, res) => 
-        proxyAgent6Request(req, res, `/reports/${req.params.reportId}/download`));
     
     // Agent 6 Health Check
-    app.get('/a2a/agent6/v1/health', (req, res) => proxyAgent6Request(req, res, '/health'));
     
     // Agent 6 OData Service Proxy - Convert REST to OData format
-    app.get('/a2a/agent6/v1/odata/QualityControlTasks', async (req, res) => {
         try {
             const response = await axios.get(`${AGENT6_BASE_URL}/a2a/agent6/v1/tasks`);
             
@@ -1177,85 +414,18 @@ cds.on('bootstrap', async (app) => {
     
     // ===== AGENT 7 PROXY ROUTES =====
     // Agent Management & Orchestration System
-    const AGENT7_BASE_URL = process.env.AGENT7_BASE_URL || 'http://localhost:8006';
     
     // Helper function to proxy Agent 7 requests
-    async function proxyAgent7Request(req, res, endpoint, method = 'GET') {
-        try {
-            const config = {
-                method,
-                url: `${AGENT7_BASE_URL}/api/v1${endpoint}`,
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...req.headers
-                },
-                timeout: 30000
-            };
-            
-            if (method !== 'GET' && req.body) {
-                config.data = req.body;
-            }
-            
-            const response = await axios(config);
-            
-            // Add CORS headers
-            res.header('Access-Control-Allow-Origin', '*');
-            res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-            
-            res.status(response.status).json(response.data);
-        } catch (error) {
-            log.error('Agent 7 proxy error:', error.message);
-            
-            if (error.response) {
-                res.status(error.response.status).json(error.response.data);
-            } else {
-                res.status(503).json({
-                    error: {
-                        code: "SERVICE_UNAVAILABLE",
-                        message: "Agent 7 backend not available"
-                    }
-                });
-            }
-        }
-    }
     
     // Registered Agents endpoints
-    app.get('/a2a/agent7/v1/registered-agents', (req, res) => proxyAgent7Request(req, res, '/registered-agents'));
-    app.post('/a2a/agent7/v1/registered-agents', (req, res) => proxyAgent7Request(req, res, '/registered-agents', 'POST'));
-    app.get('/a2a/agent7/v1/registered-agents/:id', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}`));
-    app.put('/a2a/agent7/v1/registered-agents/:id', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}`, 'PUT'));
-    app.delete('/a2a/agent7/v1/registered-agents/:id', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}`, 'DELETE'));
     
     // Agent registration and management
-    app.post('/a2a/agent7/v1/register-agent', (req, res) => proxyAgent7Request(req, res, '/register-agent', 'POST'));
-    app.post('/a2a/agent7/v1/registered-agents/:id/update-status', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}/update-status`, 'POST'));
-    app.post('/a2a/agent7/v1/registered-agents/:id/health-check', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}/health-check`, 'POST'));
-    app.post('/a2a/agent7/v1/registered-agents/:id/update-config', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}/update-config`, 'POST'));
-    app.post('/a2a/agent7/v1/registered-agents/:id/deactivate', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}/deactivate`, 'POST'));
-    app.post('/a2a/agent7/v1/registered-agents/:id/schedule-task', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}/schedule-task`, 'POST'));
-    app.post('/a2a/agent7/v1/registered-agents/:id/assign-workload', (req, res) => proxyAgent7Request(req, res, `/registered-agents/${req.params.id}/assign-workload`, 'POST'));
     
     // Management Tasks endpoints
-    app.get('/a2a/agent7/v1/management-tasks', (req, res) => proxyAgent7Request(req, res, '/management-tasks'));
-    app.post('/a2a/agent7/v1/management-tasks', (req, res) => proxyAgent7Request(req, res, '/management-tasks', 'POST'));
-    app.get('/a2a/agent7/v1/management-tasks/:id', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}`));
-    app.put('/a2a/agent7/v1/management-tasks/:id', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}`, 'PUT'));
-    app.delete('/a2a/agent7/v1/management-tasks/:id', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}`, 'DELETE'));
     
     // Management task actions
-    app.post('/a2a/agent7/v1/management-tasks/:id/execute', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}/execute`, 'POST'));
-    app.post('/a2a/agent7/v1/management-tasks/:id/pause', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}/pause`, 'POST'));
-    app.post('/a2a/agent7/v1/management-tasks/:id/resume', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}/resume`, 'POST'));
-    app.post('/a2a/agent7/v1/management-tasks/:id/cancel', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}/cancel`, 'POST'));
-    app.post('/a2a/agent7/v1/management-tasks/:id/retry', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}/retry`, 'POST'));
-    app.post('/a2a/agent7/v1/management-tasks/:id/rollback', (req, res) => proxyAgent7Request(req, res, `/management-tasks/${req.params.id}/rollback`, 'POST'));
     
     // Health Check endpoints
-    app.get('/a2a/agent7/v1/health-checks', (req, res) => proxyAgent7Request(req, res, '/health-checks'));
-    app.get('/a2a/agent7/v1/health-status', (req, res) => proxyAgent7Request(req, res, '/health-status'));
-    app.get('/a2a/agent7/v1/health-status/:agentId', (req, res) => proxyAgent7Request(req, res, `/health-status/${req.params.agentId}`));
-    app.get('/a2a/agent7/v1/health-stream', (req, res) => {
         // Server-Sent Events for real-time health monitoring
         res.writeHead(200, {
             'Content-Type': 'text/event-stream',
@@ -1264,59 +434,23 @@ cds.on('bootstrap', async (app) => {
             'Access-Control-Allow-Origin': '*'
         });
         
-        proxyAgent7Request(req, res, '/health-stream').catch(error => {
-            res.write(`data: ${JSON.stringify({error: error.message})}\\n\\n`);
-            res.end();
-        });
     });
     
     // Performance Metrics endpoints
-    app.get('/a2a/agent7/v1/performance-metrics', (req, res) => proxyAgent7Request(req, res, '/performance-metrics'));
-    app.get('/a2a/agent7/v1/performance-analysis/:agentId', (req, res) => proxyAgent7Request(req, res, `/performance-analysis/${req.params.agentId}`));
-    app.get('/a2a/agent7/v1/performance-benchmarks', (req, res) => proxyAgent7Request(req, res, '/performance-benchmarks'));
     
     // Agent Coordination endpoints
-    app.get('/a2a/agent7/v1/coordination', (req, res) => proxyAgent7Request(req, res, '/coordination'));
-    app.post('/a2a/agent7/v1/coordination', (req, res) => proxyAgent7Request(req, res, '/coordination', 'POST'));
-    app.get('/a2a/agent7/v1/coordination/:id', (req, res) => proxyAgent7Request(req, res, `/coordination/${req.params.id}`));
-    app.put('/a2a/agent7/v1/coordination/:id', (req, res) => proxyAgent7Request(req, res, `/coordination/${req.params.id}`, 'PUT'));
-    app.delete('/a2a/agent7/v1/coordination/:id', (req, res) => proxyAgent7Request(req, res, `/coordination/${req.params.id}`, 'DELETE'));
     
     // Coordination actions
-    app.post('/a2a/agent7/v1/coordination/:id/activate', (req, res) => proxyAgent7Request(req, res, `/coordination/${req.params.id}/activate`, 'POST'));
-    app.post('/a2a/agent7/v1/coordination/:id/pause', (req, res) => proxyAgent7Request(req, res, `/coordination/${req.params.id}/pause`, 'POST'));
-    app.post('/a2a/agent7/v1/coordination/:id/update-rules', (req, res) => proxyAgent7Request(req, res, `/coordination/${req.params.id}/update-rules`, 'POST'));
-    app.post('/a2a/agent7/v1/coordination/:id/add-agent', (req, res) => proxyAgent7Request(req, res, `/coordination/${req.params.id}/add-agent`, 'POST'));
-    app.post('/a2a/agent7/v1/coordination/:id/remove-agent', (req, res) => proxyAgent7Request(req, res, `/coordination/${req.params.id}/remove-agent`, 'POST'));
     
     // Coordination status and management
-    app.get('/a2a/agent7/v1/coordination-status', (req, res) => proxyAgent7Request(req, res, '/coordination-status'));
-    app.get('/a2a/agent7/v1/network-topology', (req, res) => proxyAgent7Request(req, res, '/network-topology'));
-    app.get('/a2a/agent7/v1/load-balancing', (req, res) => proxyAgent7Request(req, res, '/load-balancing'));
-    app.post('/a2a/agent7/v1/load-balancing/optimize', (req, res) => proxyAgent7Request(req, res, '/load-balancing/optimize', 'POST'));
     
     // Bulk Operations endpoints
-    app.get('/a2a/agent7/v1/bulk-operations', (req, res) => proxyAgent7Request(req, res, '/bulk-operations'));
-    app.post('/a2a/agent7/v1/bulk-operations', (req, res) => proxyAgent7Request(req, res, '/bulk-operations', 'POST'));
-    app.get('/a2a/agent7/v1/bulk-operations/:id', (req, res) => proxyAgent7Request(req, res, `/bulk-operations/${req.params.id}`));
-    app.put('/a2a/agent7/v1/bulk-operations/:id', (req, res) => proxyAgent7Request(req, res, `/bulk-operations/${req.params.id}`, 'PUT'));
-    app.delete('/a2a/agent7/v1/bulk-operations/:id', (req, res) => proxyAgent7Request(req, res, `/bulk-operations/${req.params.id}`, 'DELETE'));
     
     // Bulk operation actions
-    app.post('/a2a/agent7/v1/bulk-operations/:id/execute', (req, res) => proxyAgent7Request(req, res, `/bulk-operations/${req.params.id}/execute`, 'POST'));
-    app.post('/a2a/agent7/v1/bulk-operations/:id/rollback', (req, res) => proxyAgent7Request(req, res, `/bulk-operations/${req.params.id}/rollback`, 'POST'));
-    app.post('/a2a/agent7/v1/bulk-operations/:id/pause', (req, res) => proxyAgent7Request(req, res, `/bulk-operations/${req.params.id}/pause`, 'POST'));
-    app.post('/a2a/agent7/v1/bulk-operations/:id/resume', (req, res) => proxyAgent7Request(req, res, `/bulk-operations/${req.params.id}/resume`, 'POST'));
     
     // Agent Management Functions
-    app.get('/a2a/agent7/v1/agent-types', (req, res) => proxyAgent7Request(req, res, '/agent-types'));
-    app.get('/a2a/agent7/v1/dashboard', (req, res) => proxyAgent7Request(req, res, '/dashboard'));
-    app.get('/a2a/agent7/v1/agent-capabilities/:type', (req, res) => proxyAgent7Request(req, res, `/agent-capabilities/${req.params.type}`));
-    app.post('/a2a/agent7/v1/validate-configuration', (req, res) => proxyAgent7Request(req, res, '/validate-configuration', 'POST'));
-    app.get('/a2a/agent7/v1/load-balancing-recommendations', (req, res) => proxyAgent7Request(req, res, '/load-balancing-recommendations'));
     
     // Real-time updates and streaming
-    app.get('/a2a/agent7/v1/realtime-updates', (req, res) => {
         // Server-Sent Events for real-time agent updates
         res.writeHead(200, {
             'Content-Type': 'text/event-stream',
@@ -1325,14 +459,9 @@ cds.on('bootstrap', async (app) => {
             'Access-Control-Allow-Origin': '*'
         });
         
-        proxyAgent7Request(req, res, '/realtime-updates').catch(error => {
-            res.write(`data: ${JSON.stringify({error: error.message})}\\n\\n`);
-            res.end();
-        });
     });
     
     // Agent 7 OData Service Proxy - Convert REST to OData format
-    app.get('/a2a/agent7/v1/odata/RegisteredAgents', async (req, res) => {
         try {
             const response = await axios.get(`${AGENT7_BASE_URL}/api/v1/registered-agents`);
             
@@ -1378,7 +507,6 @@ cds.on('bootstrap', async (app) => {
         }
     });
     
-    app.get('/a2a/agent7/v1/odata/ManagementTasks', async (req, res) => {
         try {
             const response = await axios.get(`${AGENT7_BASE_URL}/api/v1/management-tasks`);
             
@@ -1427,59 +555,12 @@ cds.on('bootstrap', async (app) => {
     log.info('Agent 7 API proxy routes initialized');
     
     // ===== AGENT 8 PROXY ROUTES =====
-    const AGENT8_BASE_URL = process.env.AGENT8_BASE_URL || 'http://localhost:8007';
     
     // Agent 8 proxy function
-    const proxyAgent8Request = async (req, res, endpoint, method = 'GET') => {
-        try {
-            const response = await axios({
-                method,
-                url: `${AGENT8_BASE_URL}/api/v1${endpoint}`,
-                data: req.body,
-                headers: { 'Content-Type': 'application/json' },
-                timeout: 30000
-            });
-            res.json(response.data);
-        } catch (error) {
-            log.error(`Agent 8 proxy error for ${endpoint}:`, error.message);
-            res.status(503).json({
-                error: {
-                    code: "SERVICE_UNAVAILABLE",
-                    message: "Agent 8 Data Management service temporarily unavailable",
-                    endpoint: endpoint
-                }
-            });
-        }
-    };
     
     // Agent 8 Data Management Core Operations
-    app.get('/a2a/agent8/v1/tasks', (req, res) => proxyAgent8Request(req, res, '/data-tasks'));
-    app.post('/a2a/agent8/v1/tasks', (req, res) => proxyAgent8Request(req, res, '/data-tasks', 'POST'));
-    app.get('/a2a/agent8/v1/tasks/:taskId', (req, res) => 
-        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}`));
-    app.put('/a2a/agent8/v1/tasks/:taskId', (req, res) => 
-        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}`, 'PUT'));
-    app.delete('/a2a/agent8/v1/tasks/:taskId', (req, res) => 
-        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}`, 'DELETE'));
     
     // Agent 8 Data Task Operations
-    app.post('/a2a/agent8/v1/tasks/:taskId/execute', (req, res) => 
-        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}/execute`, 'POST'));
-    app.post('/a2a/agent8/v1/tasks/:taskId/validate', (req, res) => 
-        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}/validate`, 'POST'));
-    app.post('/a2a/agent8/v1/tasks/:taskId/pause', (req, res) => 
-        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}/pause`, 'POST'));
-    app.post('/a2a/agent8/v1/tasks/:taskId/resume', (req, res) => 
-        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}/resume`, 'POST'));
-    app.post('/a2a/agent8/v1/tasks/:taskId/cancel', (req, res) => 
-        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}/cancel`, 'POST'));
-    app.get('/a2a/agent8/v1/tasks/:taskId/status', (req, res) => 
-        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}/status`));
-    app.get('/a2a/agent8/v1/tasks/:taskId/progress', (req, res) => 
-        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}/progress`));
-    app.get('/a2a/agent8/v1/tasks/:taskId/logs', (req, res) => 
-        proxyAgent8Request(req, res, `/data-tasks/${req.params.taskId}/logs`));
-    app.get('/a2a/agent8/v1/tasks/:taskId/stream', (req, res) => {
         // Special handling for Server-Sent Events
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
@@ -1491,124 +572,26 @@ cds.on('bootstrap', async (app) => {
     });
     
     // Agent 8 Storage Backend Management
-    app.get('/a2a/agent8/v1/storage-backends', (req, res) => proxyAgent8Request(req, res, '/storage-backends'));
-    app.post('/a2a/agent8/v1/storage-backends', (req, res) => proxyAgent8Request(req, res, '/storage-backends', 'POST'));
-    app.get('/a2a/agent8/v1/storage-backends/:backendId', (req, res) => 
-        proxyAgent8Request(req, res, `/storage-backends/${req.params.backendId}`));
-    app.put('/a2a/agent8/v1/storage-backends/:backendId', (req, res) => 
-        proxyAgent8Request(req, res, `/storage-backends/${req.params.backendId}`, 'PUT'));
-    app.delete('/a2a/agent8/v1/storage-backends/:backendId', (req, res) => 
-        proxyAgent8Request(req, res, `/storage-backends/${req.params.backendId}`, 'DELETE'));
-    app.post('/a2a/agent8/v1/storage-backends/:backendId/health-check', (req, res) => 
-        proxyAgent8Request(req, res, `/storage-backends/${req.params.backendId}/health-check`, 'POST'));
-    app.get('/a2a/agent8/v1/storage-backends/:backendId/utilization', (req, res) => 
-        proxyAgent8Request(req, res, `/storage-backends/${req.params.backendId}/utilization`));
-    app.post('/a2a/agent8/v1/storage-backends/:backendId/optimize', (req, res) => 
-        proxyAgent8Request(req, res, `/storage-backends/${req.params.backendId}/optimize`, 'POST'));
     
     // Agent 8 Cache Management
-    app.get('/a2a/agent8/v1/cache/configurations', (req, res) => proxyAgent8Request(req, res, '/cache/configurations'));
-    app.post('/a2a/agent8/v1/cache/configurations', (req, res) => proxyAgent8Request(req, res, '/cache/configurations', 'POST'));
-    app.get('/a2a/agent8/v1/cache/configurations/:configId', (req, res) => 
-        proxyAgent8Request(req, res, `/cache/configurations/${req.params.configId}`));
-    app.put('/a2a/agent8/v1/cache/configurations/:configId', (req, res) => 
-        proxyAgent8Request(req, res, `/cache/configurations/${req.params.configId}`, 'PUT'));
-    app.delete('/a2a/agent8/v1/cache/configurations/:configId', (req, res) => 
-        proxyAgent8Request(req, res, `/cache/configurations/${req.params.configId}`, 'DELETE'));
-    app.post('/a2a/agent8/v1/cache/:cacheId/clear', (req, res) => 
-        proxyAgent8Request(req, res, `/cache/${req.params.cacheId}/clear`, 'POST'));
-    app.post('/a2a/agent8/v1/cache/:cacheId/warmup', (req, res) => 
-        proxyAgent8Request(req, res, `/cache/${req.params.cacheId}/warmup`, 'POST'));
-    app.get('/a2a/agent8/v1/cache/:cacheId/stats', (req, res) => 
-        proxyAgent8Request(req, res, `/cache/${req.params.cacheId}/stats`));
-    app.get('/a2a/agent8/v1/cache/operations', (req, res) => proxyAgent8Request(req, res, '/cache/operations'));
-    app.get('/a2a/agent8/v1/cache/analytics', (req, res) => proxyAgent8Request(req, res, '/cache/analytics'));
     
     // Agent 8 Data Versioning
-    app.get('/a2a/agent8/v1/versions', (req, res) => proxyAgent8Request(req, res, '/data-versions'));
-    app.post('/a2a/agent8/v1/versions', (req, res) => proxyAgent8Request(req, res, '/data-versions', 'POST'));
-    app.get('/a2a/agent8/v1/versions/:versionId', (req, res) => 
-        proxyAgent8Request(req, res, `/data-versions/${req.params.versionId}`));
-    app.delete('/a2a/agent8/v1/versions/:versionId', (req, res) => 
-        proxyAgent8Request(req, res, `/data-versions/${req.params.versionId}`, 'DELETE'));
-    app.post('/a2a/agent8/v1/versions/:versionId/restore', (req, res) => 
-        proxyAgent8Request(req, res, `/data-versions/${req.params.versionId}/restore`, 'POST'));
-    app.get('/a2a/agent8/v1/versions/:versionId/compare/:compareVersionId', (req, res) => 
-        proxyAgent8Request(req, res, `/data-versions/${req.params.versionId}/compare/${req.params.compareVersionId}`));
-    app.get('/a2a/agent8/v1/datasets/:datasetId/versions', (req, res) => 
-        proxyAgent8Request(req, res, `/datasets/${req.params.datasetId}/versions`));
-    app.post('/a2a/agent8/v1/datasets/:datasetId/create-version', (req, res) => 
-        proxyAgent8Request(req, res, `/datasets/${req.params.datasetId}/create-version`, 'POST'));
     
     // Agent 8 Data Backup Management
-    app.get('/a2a/agent8/v1/backups', (req, res) => proxyAgent8Request(req, res, '/data-backups'));
-    app.post('/a2a/agent8/v1/backups', (req, res) => proxyAgent8Request(req, res, '/data-backups', 'POST'));
-    app.get('/a2a/agent8/v1/backups/:backupId', (req, res) => 
-        proxyAgent8Request(req, res, `/data-backups/${req.params.backupId}`));
-    app.delete('/a2a/agent8/v1/backups/:backupId', (req, res) => 
-        proxyAgent8Request(req, res, `/data-backups/${req.params.backupId}`, 'DELETE'));
-    app.post('/a2a/agent8/v1/backups/:backupId/restore', (req, res) => 
-        proxyAgent8Request(req, res, `/data-backups/${req.params.backupId}/restore`, 'POST'));
-    app.post('/a2a/agent8/v1/backups/:backupId/verify', (req, res) => 
-        proxyAgent8Request(req, res, `/data-backups/${req.params.backupId}/verify`, 'POST'));
-    app.get('/a2a/agent8/v1/backup-schedules', (req, res) => proxyAgent8Request(req, res, '/backup-schedules'));
-    app.post('/a2a/agent8/v1/backup-schedules', (req, res) => proxyAgent8Request(req, res, '/backup-schedules', 'POST'));
-    app.put('/a2a/agent8/v1/backup-schedules/:scheduleId', (req, res) => 
-        proxyAgent8Request(req, res, `/backup-schedules/${req.params.scheduleId}`, 'PUT'));
-    app.delete('/a2a/agent8/v1/backup-schedules/:scheduleId', (req, res) => 
-        proxyAgent8Request(req, res, `/backup-schedules/${req.params.scheduleId}`, 'DELETE'));
     
     // Agent 8 Data Import/Export
-    app.post('/a2a/agent8/v1/import', (req, res) => proxyAgent8Request(req, res, '/data-import', 'POST'));
-    app.get('/a2a/agent8/v1/import/:importId', (req, res) => 
-        proxyAgent8Request(req, res, `/data-import/${req.params.importId}`));
-    app.post('/a2a/agent8/v1/import/:importId/cancel', (req, res) => 
-        proxyAgent8Request(req, res, `/data-import/${req.params.importId}/cancel`, 'POST'));
-    app.post('/a2a/agent8/v1/export', (req, res) => proxyAgent8Request(req, res, '/data-export', 'POST'));
-    app.get('/a2a/agent8/v1/export/:exportId', (req, res) => 
-        proxyAgent8Request(req, res, `/data-export/${req.params.exportId}`));
-    app.get('/a2a/agent8/v1/export/:exportId/download', (req, res) => 
-        proxyAgent8Request(req, res, `/data-export/${req.params.exportId}/download`));
-    app.post('/a2a/agent8/v1/export/:exportId/cancel', (req, res) => 
-        proxyAgent8Request(req, res, `/data-export/${req.params.exportId}/cancel`, 'POST'));
     
     // Agent 8 Bulk Operations
-    app.get('/a2a/agent8/v1/bulk-operations', (req, res) => proxyAgent8Request(req, res, '/bulk-operations'));
-    app.post('/a2a/agent8/v1/bulk-operations', (req, res) => proxyAgent8Request(req, res, '/bulk-operations', 'POST'));
-    app.get('/a2a/agent8/v1/bulk-operations/:operationId', (req, res) => 
-        proxyAgent8Request(req, res, `/bulk-operations/${req.params.operationId}`));
-    app.post('/a2a/agent8/v1/bulk-operations/:operationId/pause', (req, res) => 
-        proxyAgent8Request(req, res, `/bulk-operations/${req.params.operationId}/pause`, 'POST'));
-    app.post('/a2a/agent8/v1/bulk-operations/:operationId/resume', (req, res) => 
-        proxyAgent8Request(req, res, `/bulk-operations/${req.params.operationId}/resume`, 'POST'));
-    app.post('/a2a/agent8/v1/bulk-operations/:operationId/cancel', (req, res) => 
-        proxyAgent8Request(req, res, `/bulk-operations/${req.params.operationId}/cancel`, 'POST'));
-    app.get('/a2a/agent8/v1/bulk-operations/:operationId/progress', (req, res) => 
-        proxyAgent8Request(req, res, `/bulk-operations/${req.params.operationId}/progress`));
     
     // Agent 8 Performance Metrics
-    app.get('/a2a/agent8/v1/performance/storage', (req, res) => proxyAgent8Request(req, res, '/performance/storage'));
-    app.get('/a2a/agent8/v1/performance/cache', (req, res) => proxyAgent8Request(req, res, '/performance/cache'));
-    app.get('/a2a/agent8/v1/performance/throughput', (req, res) => proxyAgent8Request(req, res, '/performance/throughput'));
-    app.get('/a2a/agent8/v1/performance/operations', (req, res) => proxyAgent8Request(req, res, '/performance/operations'));
     
     // Agent 8 Dashboard and Analytics
-    app.get('/a2a/agent8/v1/dashboard', (req, res) => proxyAgent8Request(req, res, '/dashboard'));
-    app.get('/a2a/agent8/v1/analytics/storage-trends', (req, res) => proxyAgent8Request(req, res, '/analytics/storage-trends'));
-    app.get('/a2a/agent8/v1/analytics/cache-performance', (req, res) => proxyAgent8Request(req, res, '/analytics/cache-performance'));
-    app.get('/a2a/agent8/v1/analytics/operation-patterns', (req, res) => proxyAgent8Request(req, res, '/analytics/operation-patterns'));
     
     // Agent 8 Configuration Management
-    app.get('/a2a/agent8/v1/config', (req, res) => proxyAgent8Request(req, res, '/config'));
-    app.put('/a2a/agent8/v1/config', (req, res) => proxyAgent8Request(req, res, '/config', 'PUT'));
-    app.post('/a2a/agent8/v1/config/test', (req, res) => proxyAgent8Request(req, res, '/config/test', 'POST'));
-    app.post('/a2a/agent8/v1/config/reset', (req, res) => proxyAgent8Request(req, res, '/config/reset', 'POST'));
     
     // Agent 8 Health Check
-    app.get('/a2a/agent8/v1/health', (req, res) => proxyAgent8Request(req, res, '/health'));
     
     // Agent 8 OData Service Proxy - Convert REST to OData format
-    app.get('/a2a/agent8/v1/odata/DataTasks', async (req, res) => {
         try {
             const response = await axios.get(`${AGENT8_BASE_URL}/api/v1/data-tasks`);
             
@@ -1653,7 +636,6 @@ cds.on('bootstrap', async (app) => {
         }
     });
     
-    app.get('/a2a/agent8/v1/odata/StorageBackends', async (req, res) => {
         try {
             const response = await axios.get(`${AGENT8_BASE_URL}/api/v1/storage-backends`);
             
@@ -1696,173 +678,24 @@ cds.on('bootstrap', async (app) => {
     log.info('Agent 8 API proxy routes initialized');
     
     // ===== AGENT 9 PROXY ROUTES - Advanced Logical Reasoning and Decision-Making Agent =====
-    const AGENT9_BASE_URL = process.env.AGENT9_BASE_URL || 'http://localhost:8008';
     
     // Agent 9 proxy function
-    const proxyAgent9Request = async (req, res, endpoint, method = 'GET') => {
-        try {
-            const config = {
-                method,
-                url: `${AGENT9_BASE_URL}/api/agent9/v1${endpoint}`,
-                timeout: 60000, // Longer timeout for complex reasoning operations
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
-            };
-            
-            if (method !== 'GET' && req.body) {
-                config.data = req.body;
-            }
-            
-            if (req.query && Object.keys(req.query).length > 0) {
-                config.params = req.query;
-            }
-            
-            const response = await axios(config);
-            res.status(response.status).json(response.data);
-        } catch (error) {
-            log.error('Agent 9 proxy error:', {
-                endpoint,
-                method,
-                error: error.message,
-                status: error.response?.status,
-                data: error.response?.data
-            });
-            
-            res.status(error.response?.status || 500).json({
-                error: 'Agent 9 service unavailable',
-                message: error.message,
-                timestamp: new Date().toISOString()
-            });
-        }
-    };
     
     // Reasoning Tasks Management
-    app.get('/a2a/agent9/v1/reasoning-tasks', (req, res) => proxyAgent9Request(req, res, '/reasoning-tasks'));
-    app.post('/a2a/agent9/v1/reasoning-tasks', (req, res) => proxyAgent9Request(req, res, '/reasoning-tasks', 'POST'));
-    app.get('/a2a/agent9/v1/reasoning-tasks/:taskId', (req, res) => 
-        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}`));
-    app.put('/a2a/agent9/v1/reasoning-tasks/:taskId', (req, res) => 
-        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}`, 'PUT'));
-    app.delete('/a2a/agent9/v1/reasoning-tasks/:taskId', (req, res) => 
-        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}`, 'DELETE'));
     
     // Reasoning Task Actions
-    app.post('/a2a/agent9/v1/reasoning-tasks/:taskId/start', (req, res) => 
-        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}/start`, 'POST'));
-    app.post('/a2a/agent9/v1/reasoning-tasks/:taskId/pause', (req, res) => 
-        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}/pause`, 'POST'));
-    app.post('/a2a/agent9/v1/reasoning-tasks/:taskId/resume', (req, res) => 
-        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}/resume`, 'POST'));
-    app.post('/a2a/agent9/v1/reasoning-tasks/:taskId/cancel', (req, res) => 
-        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}/cancel`, 'POST'));
-    app.post('/a2a/agent9/v1/reasoning-tasks/:taskId/validate', (req, res) => 
-        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}/validate`, 'POST'));
-    app.post('/a2a/agent9/v1/reasoning-tasks/:taskId/explain', (req, res) => 
-        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}/explain`, 'POST'));
     
     // Knowledge Base Management
-    app.get('/a2a/agent9/v1/knowledge-base', (req, res) => proxyAgent9Request(req, res, '/knowledge-base'));
-    app.post('/a2a/agent9/v1/knowledge-base/elements', (req, res) => 
-        proxyAgent9Request(req, res, '/knowledge-base/elements', 'POST'));
-    app.get('/a2a/agent9/v1/knowledge-base/elements/:elementId', (req, res) => 
-        proxyAgent9Request(req, res, `/knowledge-base/elements/${req.params.elementId}`));
-    app.put('/a2a/agent9/v1/knowledge-base/elements/:elementId', (req, res) => 
-        proxyAgent9Request(req, res, `/knowledge-base/elements/${req.params.elementId}`, 'PUT'));
-    app.delete('/a2a/agent9/v1/knowledge-base/elements/:elementId', (req, res) => 
-        proxyAgent9Request(req, res, `/knowledge-base/elements/${req.params.elementId}`, 'DELETE'));
-    app.post('/a2a/agent9/v1/knowledge-base/validate', (req, res) => 
-        proxyAgent9Request(req, res, '/knowledge-base/validate', 'POST'));
-    app.post('/a2a/agent9/v1/knowledge-base/optimize', (req, res) => 
-        proxyAgent9Request(req, res, '/knowledge-base/optimize', 'POST'));
-    
-    // Inference Generation
-    app.post('/a2a/agent9/v1/inferences/generate', (req, res) => 
-        proxyAgent9Request(req, res, '/inferences/generate', 'POST'));
-    app.get('/a2a/agent9/v1/inferences', (req, res) => proxyAgent9Request(req, res, '/inferences'));
-    app.get('/a2a/agent9/v1/inferences/:inferenceId', (req, res) => 
-        proxyAgent9Request(req, res, `/inferences/${req.params.inferenceId}`));
-    app.post('/a2a/agent9/v1/inferences/:inferenceId/verify', (req, res) => 
-        proxyAgent9Request(req, res, `/inferences/${req.params.inferenceId}/verify`, 'POST'));
-    app.delete('/a2a/agent9/v1/inferences/:inferenceId', (req, res) => 
-        proxyAgent9Request(req, res, `/inferences/${req.params.inferenceId}`, 'DELETE'));
     
     // Decision Making
-    app.post('/a2a/agent9/v1/decisions/make', (req, res) => 
-        proxyAgent9Request(req, res, '/decisions/make', 'POST'));
-    app.get('/a2a/agent9/v1/decisions', (req, res) => proxyAgent9Request(req, res, '/decisions'));
-    app.get('/a2a/agent9/v1/decisions/:decisionId', (req, res) => 
-        proxyAgent9Request(req, res, `/decisions/${req.params.decisionId}`));
-    app.post('/a2a/agent9/v1/decisions/:decisionId/evaluate', (req, res) => 
-        proxyAgent9Request(req, res, `/decisions/${req.params.decisionId}/evaluate`, 'POST'));
-    app.get('/a2a/agent9/v1/decisions/:decisionId/analysis', (req, res) => 
-        proxyAgent9Request(req, res, `/decisions/${req.params.decisionId}/analysis`));
     
     // Problem Solving
-    app.post('/a2a/agent9/v1/problems/solve', (req, res) => 
-        proxyAgent9Request(req, res, '/problems/solve', 'POST'));
-    app.get('/a2a/agent9/v1/problems', (req, res) => proxyAgent9Request(req, res, '/problems'));
-    app.get('/a2a/agent9/v1/problems/:problemId', (req, res) => 
-        proxyAgent9Request(req, res, `/problems/${req.params.problemId}`));
-    app.post('/a2a/agent9/v1/problems/:problemId/optimize', (req, res) => 
-        proxyAgent9Request(req, res, `/problems/${req.params.problemId}/optimize`, 'POST'));
-    app.get('/a2a/agent9/v1/problems/:problemId/insights', (req, res) => 
-        proxyAgent9Request(req, res, `/problems/${req.params.problemId}/insights`));
     
     // Reasoning Engines Management
-    app.get('/a2a/agent9/v1/engines', (req, res) => proxyAgent9Request(req, res, '/engines'));
-    app.post('/a2a/agent9/v1/engines/:engineId/optimize', (req, res) => 
-        proxyAgent9Request(req, res, `/engines/${req.params.engineId}/optimize`, 'POST'));
-    app.post('/a2a/agent9/v1/engines/:engineId/calibrate', (req, res) => 
-        proxyAgent9Request(req, res, `/engines/${req.params.engineId}/calibrate`, 'POST'));
-    app.get('/a2a/agent9/v1/engines/comparison', (req, res) => 
-        proxyAgent9Request(req, res, '/engines/comparison'));
-    
-    // Logical Analysis
-    app.post('/a2a/agent9/v1/analysis/contradictions', (req, res) => 
-        proxyAgent9Request(req, res, '/analysis/contradictions', 'POST'));
-    app.post('/a2a/agent9/v1/analysis/consistency', (req, res) => 
-        proxyAgent9Request(req, res, '/analysis/consistency', 'POST'));
-    app.get('/a2a/agent9/v1/analysis/performance', (req, res) => 
-        proxyAgent9Request(req, res, '/analysis/performance'));
-    
-    // Dashboard and Analytics
-    app.get('/a2a/agent9/v1/dashboard', (req, res) => proxyAgent9Request(req, res, '/dashboard'));
-    app.get('/a2a/agent9/v1/reasoning-options', (req, res) => proxyAgent9Request(req, res, '/reasoning-options'));
-    app.get('/a2a/agent9/v1/knowledge-stats', (req, res) => proxyAgent9Request(req, res, '/knowledge-stats'));
-    app.get('/a2a/agent9/v1/reasoning-chain/:taskId', (req, res) => 
-        proxyAgent9Request(req, res, `/reasoning-chain/${req.params.taskId}`));
-    app.get('/a2a/agent9/v1/performance-metrics', (req, res) => 
-        proxyAgent9Request(req, res, '/performance-metrics'));
-    
-    // Real-time updates and streaming
-    app.get('/a2a/agent9/v1/reasoning-tasks/:taskId/stream', (req, res) => {
-        // Server-Sent Events for real-time reasoning updates
-        res.writeHead(200, {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-            'Access-Control-Allow-Origin': '*'
-        });
-        
-        // This would implement actual SSE streaming to Agent 9
-        const eventSourceUrl = `${AGENT9_BASE_URL}/api/agent9/v1/reasoning-tasks/${req.params.taskId}/stream`;
-        
-        // Placeholder for SSE implementation
-        res.write('data: {"type":"connected","timestamp":"' + new Date().toISOString() + '"}\n\n');
-        
-        // Clean up on client disconnect
-        req.on('close', () => {
-            res.end();
-        });
-    });
     
     // Health Check
-    app.get('/a2a/agent9/v1/health', (req, res) => proxyAgent9Request(req, res, '/health'));
     
     // Agent 9 OData Service Proxy - Convert REST to OData format
-    app.get('/a2a/agent9/v1/odata/ReasoningTasks', async (req, res) => {
         try {
             // This would be handled by the CAP service, but we provide a fallback
             const response = await axios.get(`${AGENT9_BASE_URL}/api/agent9/v1/reasoning-tasks`);
@@ -1909,7 +742,6 @@ cds.on('bootstrap', async (app) => {
         }
     });
     
-    app.get('/a2a/agent9/v1/odata/KnowledgeBaseElements', async (req, res) => {
         try {
             const response = await axios.get(`${AGENT9_BASE_URL}/api/agent9/v1/knowledge-base`);
             
@@ -1947,98 +779,24 @@ cds.on('bootstrap', async (app) => {
     log.info('Agent 9 API proxy routes initialized');
     
     // ===== AGENT 10 PROXY ROUTES - Calculation Engine =====
-    const AGENT10_BASE_URL = process.env.AGENT10_BASE_URL || 'http://localhost:8010';
     
     // Agent 10 proxy function
-    const proxyAgent10Request = async (req, res, endpoint, method = 'GET') => {
-        try {
-            const config = {
-                method,
-                url: `${AGENT10_BASE_URL}/api/agent10/v1${endpoint}`,
-                timeout: 60000, // Longer timeout for complex calculations
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
-            };
-            
-            if (method !== 'GET' && req.body) {
-                config.data = req.body;
-            }
-            
-            if (req.query && Object.keys(req.query).length > 0) {
-                config.params = req.query;
-            }
-            
-            const response = await axios(config);
-            res.status(response.status).json(response.data);
-        } catch (error) {
-            log.error('Agent 10 proxy error:', {
-                endpoint,
-                method,
-                error: error.message,
-                status: error.response?.status,
-                data: error.response?.data
-            });
-            
-            res.status(error.response?.status || 500).json({
-                error: 'Agent 10 service unavailable',
-                message: error.message,
-                timestamp: new Date().toISOString()
-            });
-        }
-    };
     
     // Calculation Tasks Management
-    app.get('/a2a/agent10/v1/calculation-tasks', (req, res) => proxyAgent10Request(req, res, '/calculation-tasks'));
-    app.post('/a2a/agent10/v1/calculation-tasks', (req, res) => proxyAgent10Request(req, res, '/calculation-tasks', 'POST'));
-    app.get('/a2a/agent10/v1/calculation-tasks/:taskId', (req, res) => 
-        proxyAgent10Request(req, res, `/calculation-tasks/${req.params.taskId}`));
-    app.put('/a2a/agent10/v1/calculation-tasks/:taskId', (req, res) => 
-        proxyAgent10Request(req, res, `/calculation-tasks/${req.params.taskId}`, 'PUT'));
-    app.delete('/a2a/agent10/v1/calculation-tasks/:taskId', (req, res) => 
-        proxyAgent10Request(req, res, `/calculation-tasks/${req.params.taskId}`, 'DELETE'));
     
     // Calculation Task Actions
-    app.post('/a2a/agent10/v1/calculation-tasks/:taskId/start', (req, res) => 
-        proxyAgent10Request(req, res, `/calculation-tasks/${req.params.taskId}/start`, 'POST'));
-    app.post('/a2a/agent10/v1/calculation-tasks/:taskId/pause', (req, res) => 
-        proxyAgent10Request(req, res, `/calculation-tasks/${req.params.taskId}/pause`, 'POST'));
-    app.post('/a2a/agent10/v1/calculation-tasks/:taskId/resume', (req, res) => 
-        proxyAgent10Request(req, res, `/calculation-tasks/${req.params.taskId}/resume`, 'POST'));
-    app.post('/a2a/agent10/v1/calculation-tasks/:taskId/cancel', (req, res) => 
-        proxyAgent10Request(req, res, `/calculation-tasks/${req.params.taskId}/cancel`, 'POST'));
     
     // Calculation Operations
-    app.post('/a2a/agent10/v1/calculate', (req, res) => proxyAgent10Request(req, res, '/calculate', 'POST'));
-    app.post('/a2a/agent10/v1/statistical-analysis', (req, res) => proxyAgent10Request(req, res, '/statistical-analysis', 'POST'));
-    app.post('/a2a/agent10/v1/batch-calculate', (req, res) => proxyAgent10Request(req, res, '/batch-calculate', 'POST'));
-    app.post('/a2a/agent10/v1/evaluate-formula', (req, res) => proxyAgent10Request(req, res, '/evaluate-formula', 'POST'));
-    app.post('/a2a/agent10/v1/validate-formula', (req, res) => proxyAgent10Request(req, res, '/validate-formula', 'POST'));
-    app.post('/a2a/agent10/v1/preview-calculation', (req, res) => proxyAgent10Request(req, res, '/preview-calculation', 'POST'));
     
     // Configuration and Methods
-    app.get('/a2a/agent10/v1/calculation-methods', (req, res) => proxyAgent10Request(req, res, '/calculation-methods'));
-    app.get('/a2a/agent10/v1/statistical-methods', (req, res) => proxyAgent10Request(req, res, '/statistical-methods'));
-    app.get('/a2a/agent10/v1/self-healing-strategies', (req, res) => proxyAgent10Request(req, res, '/self-healing-strategies'));
-    app.post('/a2a/agent10/v1/configure-precision', (req, res) => proxyAgent10Request(req, res, '/configure-precision', 'POST'));
-    app.post('/a2a/agent10/v1/configure-parallel-processing', (req, res) => proxyAgent10Request(req, res, '/configure-parallel-processing', 'POST'));
     
     // Results and History
-    app.get('/a2a/agent10/v1/calculation-history', (req, res) => proxyAgent10Request(req, res, '/calculation-history'));
-    app.get('/a2a/agent10/v1/performance-metrics/:taskId', (req, res) => 
-        proxyAgent10Request(req, res, `/performance-metrics/${req.params.taskId}`));
-    app.post('/a2a/agent10/v1/export-results/:taskId', (req, res) => 
-        proxyAgent10Request(req, res, `/export-results/${req.params.taskId}`, 'POST'));
     
     // Cache Management
-    app.post('/a2a/agent10/v1/clear-cache', (req, res) => proxyAgent10Request(req, res, '/clear-cache', 'POST'));
     
     // Health Check
-    app.get('/a2a/agent10/v1/health', (req, res) => proxyAgent10Request(req, res, '/health'));
     
     // Agent 10 OData Service Proxy - Convert REST to OData format
-    app.get('/a2a/agent10/v1/odata/CalculationTasks', async (req, res) => {
         try {
             const response = await axios.get(`${AGENT10_BASE_URL}/api/agent10/v1/calculation-tasks`);
             
@@ -2090,117 +848,30 @@ cds.on('bootstrap', async (app) => {
     log.info('Agent 10 API proxy routes initialized');
     
     // ===== AGENT 11 PROXY ROUTES - SQL Engine =====
-    const AGENT11_BASE_URL = process.env.AGENT11_BASE_URL || 'http://localhost:8011';
     
     // Agent 11 proxy function
-    const proxyAgent11Request = async (req, res, endpoint, method = 'GET') => {
-        try {
-            const config = {
-                method,
-                url: `${AGENT11_BASE_URL}/api/agent11/v1${endpoint}`,
-                timeout: 60000, // Longer timeout for complex SQL operations
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
-            };
-            
-            if (method !== 'GET' && req.body) {
-                config.data = req.body;
-            }
-            
-            if (req.query && Object.keys(req.query).length > 0) {
-                config.params = req.query;
-            }
-            
-            const response = await axios(config);
-            res.status(response.status).json(response.data);
-        } catch (error) {
-            log.error('Agent 11 proxy error:', {
-                endpoint,
-                method,
-                error: error.message,
-                status: error.response?.status,
-                data: error.response?.data
-            });
-            
-            res.status(error.response?.status || 500).json({
-                error: 'Agent 11 service unavailable',
-                message: error.message,
-                timestamp: new Date().toISOString()
-            });
-        }
-    };
     
     // SQL Query Tasks Management
-    app.get('/a2a/agent11/v1/sql-queries', (req, res) => proxyAgent11Request(req, res, '/sql-queries'));
-    app.post('/a2a/agent11/v1/sql-queries', (req, res) => proxyAgent11Request(req, res, '/sql-queries', 'POST'));
-    app.get('/a2a/agent11/v1/sql-queries/:queryId', (req, res) => 
-        proxyAgent11Request(req, res, `/sql-queries/${req.params.queryId}`));
-    app.put('/a2a/agent11/v1/sql-queries/:queryId', (req, res) => 
-        proxyAgent11Request(req, res, `/sql-queries/${req.params.queryId}`, 'PUT'));
-    app.delete('/a2a/agent11/v1/sql-queries/:queryId', (req, res) => 
-        proxyAgent11Request(req, res, `/sql-queries/${req.params.queryId}`, 'DELETE'));
     
     // SQL Query Actions
-    app.post('/a2a/agent11/v1/sql-queries/:queryId/execute', (req, res) => 
-        proxyAgent11Request(req, res, `/sql-queries/${req.params.queryId}/execute`, 'POST'));
-    app.post('/a2a/agent11/v1/sql-queries/:queryId/validate', (req, res) => 
-        proxyAgent11Request(req, res, `/sql-queries/${req.params.queryId}/validate`, 'POST'));
-    app.post('/a2a/agent11/v1/sql-queries/:queryId/optimize', (req, res) => 
-        proxyAgent11Request(req, res, `/sql-queries/${req.params.queryId}/optimize`, 'POST'));
-    app.post('/a2a/agent11/v1/sql-queries/:queryId/explain', (req, res) => 
-        proxyAgent11Request(req, res, `/sql-queries/${req.params.queryId}/explain`, 'POST'));
-    app.post('/a2a/agent11/v1/sql-queries/:queryId/approve', (req, res) => 
-        proxyAgent11Request(req, res, `/sql-queries/${req.params.queryId}/approve`, 'POST'));
     
     // Natural Language to SQL
-    app.post('/a2a/agent11/v1/translate-nl', (req, res) => proxyAgent11Request(req, res, '/translate-nl', 'POST'));
-    app.post('/a2a/agent11/v1/generate-from-nl', (req, res) => proxyAgent11Request(req, res, '/generate-from-nl', 'POST'));
     
     // SQL Operations
-    app.post('/a2a/agent11/v1/execute-sql', (req, res) => proxyAgent11Request(req, res, '/execute-sql', 'POST'));
-    app.post('/a2a/agent11/v1/validate-sql', (req, res) => proxyAgent11Request(req, res, '/validate-sql', 'POST'));
-    app.post('/a2a/agent11/v1/optimize-sql', (req, res) => proxyAgent11Request(req, res, '/optimize-sql', 'POST'));
-    app.post('/a2a/agent11/v1/explain-plan', (req, res) => proxyAgent11Request(req, res, '/explain-plan', 'POST'));
     
     // Schema and Database Information
-    app.get('/a2a/agent11/v1/schema-info/:database', (req, res) => 
-        proxyAgent11Request(req, res, `/schema-info/${req.params.database}`));
-    app.get('/a2a/agent11/v1/table-info/:database/:table', (req, res) => 
-        proxyAgent11Request(req, res, `/table-info/${req.params.database}/${req.params.table}`));
-    app.get('/a2a/agent11/v1/databases', (req, res) => proxyAgent11Request(req, res, '/databases'));
-    app.get('/a2a/agent11/v1/dialects', (req, res) => proxyAgent11Request(req, res, '/dialects'));
     
     // Query History and Performance
-    app.get('/a2a/agent11/v1/query-history', (req, res) => proxyAgent11Request(req, res, '/query-history'));
-    app.get('/a2a/agent11/v1/performance-analysis/:queryId', (req, res) => 
-        proxyAgent11Request(req, res, `/performance-analysis/${req.params.queryId}`));
-    app.post('/a2a/agent11/v1/suggest-indexes', (req, res) => proxyAgent11Request(req, res, '/suggest-indexes', 'POST'));
     
     // Query Templates
-    app.get('/a2a/agent11/v1/query-templates', (req, res) => proxyAgent11Request(req, res, '/query-templates'));
-    app.post('/a2a/agent11/v1/query-templates', (req, res) => proxyAgent11Request(req, res, '/query-templates', 'POST'));
-    app.get('/a2a/agent11/v1/query-templates/:templateId', (req, res) => 
-        proxyAgent11Request(req, res, `/query-templates/${req.params.templateId}`));
     
     // Database Connection Management
-    app.get('/a2a/agent11/v1/connections', (req, res) => proxyAgent11Request(req, res, '/connections'));
-    app.post('/a2a/agent11/v1/connections', (req, res) => proxyAgent11Request(req, res, '/connections', 'POST'));
-    app.post('/a2a/agent11/v1/connections/test', (req, res) => proxyAgent11Request(req, res, '/connections/test', 'POST'));
     
     // Export and Backup
-    app.post('/a2a/agent11/v1/export-results/:queryId', (req, res) => 
-        proxyAgent11Request(req, res, `/export-results/${req.params.queryId}`, 'POST'));
-    app.post('/a2a/agent11/v1/backup-query/:queryId', (req, res) => 
-        proxyAgent11Request(req, res, `/backup-query/${req.params.queryId}`, 'POST'));
-    app.post('/a2a/agent11/v1/restore-query', (req, res) => proxyAgent11Request(req, res, '/restore-query', 'POST'));
     
     // Health Check
-    app.get('/a2a/agent11/v1/health', (req, res) => proxyAgent11Request(req, res, '/health'));
     
     // Agent 11 OData Service Proxy - Convert REST to OData format
-    app.get('/a2a/agent11/v1/odata/SQLQueryTasks', async (req, res) => {
         try {
             const response = await axios.get(`${AGENT11_BASE_URL}/api/agent11/v1/sql-queries`);
             
@@ -2257,172 +928,40 @@ cds.on('bootstrap', async (app) => {
     log.info('Agent 11 API proxy routes initialized');
     
     // ===== AGENT 12 PROXY ROUTES - Catalog Manager =====
-    const AGENT12_BASE_URL = process.env.AGENT12_BASE_URL || 'http://localhost:8012';
     
     // Agent 12 proxy function
-    const proxyAgent12Request = async (req, res, endpoint, method = 'GET') => {
-        try {
-            const config = {
-                method,
-                url: `${AGENT12_BASE_URL}/api/agent12/v1${endpoint}`,
-                timeout: 30000, // Timeout for catalog operations
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
-            };
-            
-            if (method !== 'GET' && req.body) {
-                config.data = req.body;
-            }
-            
-            if (req.query && Object.keys(req.query).length > 0) {
-                config.params = req.query;
-            }
-            
-            const response = await axios(config);
-            res.status(response.status).json(response.data);
-        } catch (error) {
-            log.error('Agent 12 proxy error:', {
-                endpoint,
-                method,
-                error: error.message,
-                status: error.response?.status,
-                data: error.response?.data
-            });
-            
-            res.status(error.response?.status || 500).json({
-                error: 'Agent 12 service unavailable',
-                message: error.message,
-                timestamp: new Date().toISOString()
-            });
-        }
-    };
     
     // Catalog Entry Management
-    app.get('/a2a/agent12/v1/catalog-entries', (req, res) => proxyAgent12Request(req, res, '/catalog-entries'));
-    app.post('/a2a/agent12/v1/catalog-entries', (req, res) => proxyAgent12Request(req, res, '/catalog-entries', 'POST'));
-    app.get('/a2a/agent12/v1/catalog-entries/:entryId', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}`));
-    app.put('/a2a/agent12/v1/catalog-entries/:entryId', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}`, 'PUT'));
-    app.delete('/a2a/agent12/v1/catalog-entries/:entryId', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}`, 'DELETE'));
     
     // Catalog Entry Actions
-    app.post('/a2a/agent12/v1/catalog-entries/:entryId/publish', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/publish`, 'POST'));
-    app.post('/a2a/agent12/v1/catalog-entries/:entryId/deprecate', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/deprecate`, 'POST'));
-    app.post('/a2a/agent12/v1/catalog-entries/:entryId/archive', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/archive`, 'POST'));
-    app.post('/a2a/agent12/v1/catalog-entries/:entryId/validate', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/validate`, 'POST'));
-    app.post('/a2a/agent12/v1/catalog-entries/:entryId/duplicate', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/duplicate`, 'POST'));
-    app.post('/a2a/agent12/v1/catalog-entries/:entryId/export', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/export`, 'POST'));
-    app.post('/a2a/agent12/v1/catalog-entries/:entryId/generate-docs', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/generate-docs`, 'POST'));
     
     // Dependencies Management
-    app.get('/a2a/agent12/v1/catalog-dependencies', (req, res) => proxyAgent12Request(req, res, '/catalog-dependencies'));
-    app.post('/a2a/agent12/v1/catalog-dependencies', (req, res) => proxyAgent12Request(req, res, '/catalog-dependencies', 'POST'));
-    app.get('/a2a/agent12/v1/catalog-dependencies/:entryId', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-dependencies/${req.params.entryId}`));
-    app.delete('/a2a/agent12/v1/catalog-dependencies/:depId', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-dependencies/${req.params.depId}`, 'DELETE'));
     
     // Reviews and Ratings
-    app.get('/a2a/agent12/v1/catalog-reviews', (req, res) => proxyAgent12Request(req, res, '/catalog-reviews'));
-    app.post('/a2a/agent12/v1/catalog-reviews', (req, res) => proxyAgent12Request(req, res, '/catalog-reviews', 'POST'));
-    app.get('/a2a/agent12/v1/catalog-reviews/:entryId', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-reviews/${req.params.entryId}`));
-    app.post('/a2a/agent12/v1/catalog-reviews/:reviewId/approve', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-reviews/${req.params.reviewId}/approve`, 'POST'));
-    app.post('/a2a/agent12/v1/catalog-reviews/:reviewId/reject', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-reviews/${req.params.reviewId}/reject`, 'POST'));
-    app.post('/a2a/agent12/v1/catalog-reviews/:reviewId/flag', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-reviews/${req.params.reviewId}/flag`, 'POST'));
     
     // Metadata Management
-    app.get('/a2a/agent12/v1/catalog-metadata/:entryId', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-metadata/${req.params.entryId}`));
-    app.post('/a2a/agent12/v1/catalog-metadata', (req, res) => proxyAgent12Request(req, res, '/catalog-metadata', 'POST'));
-    app.put('/a2a/agent12/v1/catalog-metadata/:metadataId', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-metadata/${req.params.metadataId}`, 'PUT'));
-    app.delete('/a2a/agent12/v1/catalog-metadata/:metadataId', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-metadata/${req.params.metadataId}`, 'DELETE'));
     
     // Search and Discovery
-    app.get('/a2a/agent12/v1/search', (req, res) => proxyAgent12Request(req, res, '/search'));
-    app.post('/a2a/agent12/v1/search', (req, res) => proxyAgent12Request(req, res, '/search', 'POST'));
-    app.post('/a2a/agent12/v1/search/advanced', (req, res) => proxyAgent12Request(req, res, '/search/advanced', 'POST'));
-    app.post('/a2a/agent12/v1/discover-services', (req, res) => proxyAgent12Request(req, res, '/discover-services', 'POST'));
-    app.get('/a2a/agent12/v1/search-history', (req, res) => proxyAgent12Request(req, res, '/search-history'));
     
     // Service Registration
-    app.post('/a2a/agent12/v1/register-service', (req, res) => proxyAgent12Request(req, res, '/register-service', 'POST'));
-    app.post('/a2a/agent12/v1/update-service-health', (req, res) => proxyAgent12Request(req, res, '/update-service-health', 'POST'));
-    app.get('/a2a/agent12/v1/services/:serviceId/health', (req, res) => 
-        proxyAgent12Request(req, res, `/services/${req.params.serviceId}/health`));
     
     // Registry Management
-    app.get('/a2a/agent12/v1/registries', (req, res) => proxyAgent12Request(req, res, '/registries'));
-    app.post('/a2a/agent12/v1/registries', (req, res) => proxyAgent12Request(req, res, '/registries', 'POST'));
-    app.get('/a2a/agent12/v1/registries/:registryId', (req, res) => 
-        proxyAgent12Request(req, res, `/registries/${req.params.registryId}`));
-    app.put('/a2a/agent12/v1/registries/:registryId', (req, res) => 
-        proxyAgent12Request(req, res, `/registries/${req.params.registryId}`, 'PUT'));
-    app.post('/a2a/agent12/v1/registries/:registryId/sync', (req, res) => 
-        proxyAgent12Request(req, res, `/registries/${req.params.registryId}/sync`, 'POST'));
-    app.post('/a2a/agent12/v1/registries/:registryId/test', (req, res) => 
-        proxyAgent12Request(req, res, `/registries/${req.params.registryId}/test`, 'POST'));
-    app.post('/a2a/agent12/v1/registries/:registryId/reset', (req, res) => 
-        proxyAgent12Request(req, res, `/registries/${req.params.registryId}/reset`, 'POST'));
     
     // Analysis and Reporting
-    app.post('/a2a/agent12/v1/analyze-dependencies', (req, res) => proxyAgent12Request(req, res, '/analyze-dependencies', 'POST'));
-    app.post('/a2a/agent12/v1/validate-metadata', (req, res) => proxyAgent12Request(req, res, '/validate-metadata', 'POST'));
-    app.post('/a2a/agent12/v1/generate-report', (req, res) => proxyAgent12Request(req, res, '/generate-report', 'POST'));
-    app.get('/a2a/agent12/v1/statistics', (req, res) => proxyAgent12Request(req, res, '/statistics'));
-    app.get('/a2a/agent12/v1/analytics', (req, res) => proxyAgent12Request(req, res, '/analytics'));
     
     // Bulk Operations
-    app.post('/a2a/agent12/v1/bulk-import', (req, res) => proxyAgent12Request(req, res, '/bulk-import', 'POST'));
-    app.post('/a2a/agent12/v1/bulk-export', (req, res) => proxyAgent12Request(req, res, '/bulk-export', 'POST'));
-    app.post('/a2a/agent12/v1/bulk-update', (req, res) => proxyAgent12Request(req, res, '/bulk-update', 'POST'));
-    app.post('/a2a/agent12/v1/bulk-delete', (req, res) => proxyAgent12Request(req, res, '/bulk-delete', 'POST'));
     
     // External Catalog Integration  
-    app.post('/a2a/agent12/v1/sync-external-catalog', (req, res) => proxyAgent12Request(req, res, '/sync-external-catalog', 'POST'));
-    app.get('/a2a/agent12/v1/external-catalogs', (req, res) => proxyAgent12Request(req, res, '/external-catalogs'));
-    app.post('/a2a/agent12/v1/external-catalogs/test', (req, res) => proxyAgent12Request(req, res, '/external-catalogs/test', 'POST'));
     
     // Categories and Tags
-    app.get('/a2a/agent12/v1/categories', (req, res) => proxyAgent12Request(req, res, '/categories'));
-    app.post('/a2a/agent12/v1/categories', (req, res) => proxyAgent12Request(req, res, '/categories', 'POST'));
-    app.get('/a2a/agent12/v1/tags', (req, res) => proxyAgent12Request(req, res, '/tags'));
-    app.get('/a2a/agent12/v1/popular-tags', (req, res) => proxyAgent12Request(req, res, '/popular-tags'));
     
     // Recommendations and AI features
-    app.post('/a2a/agent12/v1/recommendations', (req, res) => proxyAgent12Request(req, res, '/recommendations', 'POST'));
-    app.post('/a2a/agent12/v1/optimize-search-index', (req, res) => proxyAgent12Request(req, res, '/optimize-search-index', 'POST'));
-    app.post('/a2a/agent12/v1/rebuild-catalog', (req, res) => proxyAgent12Request(req, res, '/rebuild-catalog', 'POST'));
     
     // Versioning
-    app.get('/a2a/agent12/v1/catalog-entries/:entryId/versions', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/versions`));
-    app.post('/a2a/agent12/v1/catalog-entries/:entryId/versions', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/versions`, 'POST'));
-    app.get('/a2a/agent12/v1/catalog-entries/:entryId/versions/:version', (req, res) => 
-        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/versions/${req.params.version}`));
     
     // Health Check
-    app.get('/a2a/agent12/v1/health', (req, res) => proxyAgent12Request(req, res, '/health'));
     
     // Agent 12 OData Service Proxy - Convert REST to OData format
-    app.get('/a2a/agent12/v1/odata/CatalogEntries', async (req, res) => {
         try {
             const response = await axios.get(`${AGENT12_BASE_URL}/api/agent12/v1/catalog-entries`);
             
@@ -2476,7 +1015,6 @@ cds.on('bootstrap', async (app) => {
     log.info('Agent 12 API proxy routes initialized');
     
     // Agent 3 OData Service Proxy - Convert REST to OData format
-    app.get('/a2a/agent3/v1/odata/VectorProcessingTasks', async (req, res) => {
         try {
             // This would be handled by the CAP service, but we provide a fallback
             const response = await axios.get(`${AGENT3_BASE_URL}/a2a/agent3/v1/tasks`);
@@ -2527,7 +1065,6 @@ cds.on('bootstrap', async (app) => {
         }
     });
     
-    app.get('/a2a/agent3/v1/odata/VectorCollections', async (req, res) => {
         try {
             const response = await axios.get(`${AGENT3_BASE_URL}/a2a/agent3/v1/collections`);
             
@@ -2566,7 +1103,6 @@ cds.on('bootstrap', async (app) => {
     log.info('Agent 3 API proxy routes initialized');
 
     // Health check endpoints
-    app.get('/health', async (req, res) => {
         try {
             const health = await healthService.getHealth();
             res.status(200).json(health);
@@ -2575,7 +1111,6 @@ cds.on('bootstrap', async (app) => {
         }
     });
 
-    app.get('/health/detailed', async (req, res) => {
         try {
             const health = await healthService.getDetailedHealth();
             res.status(health.status === 'healthy' ? 200 : 503).json(health);
@@ -2585,7 +1120,6 @@ cds.on('bootstrap', async (app) => {
     });
 
     // Launchpad-specific health check endpoint
-    app.get('/api/v1/launchpad/health', async (req, res) => {
         try {
             const healthCheck = {
                 timestamp: new Date().toISOString(),
@@ -2619,13 +1153,10 @@ cds.on('bootstrap', async (app) => {
 
             // 3. Check API endpoints
             const endpointChecks = await Promise.all([
-                fetch(`http://localhost:${req.app.get('port') || 4004}/api/v1/Agents?id=agent_visualization`)
                     .then(r => ({ endpoint: 'agent_visualization', ok: r.ok, status: r.status }))
                     .catch(e => ({ endpoint: 'agent_visualization', ok: false, error: e.message })),
-                fetch(`http://localhost:${req.app.get('port') || 4004}/api/v1/network/overview`)
                     .then(r => ({ endpoint: 'network_overview', ok: r.ok, status: r.status }))
                     .catch(e => ({ endpoint: 'network_overview', ok: false, error: e.message })),
-                fetch(`http://localhost:${req.app.get('port') || 4004}/api/v1/health/summary`)
                     .then(r => ({ endpoint: 'health_summary', ok: r.ok, status: r.status }))
                     .catch(e => ({ endpoint: 'health_summary', ok: false, error: e.message }))
             ]);
@@ -2636,7 +1167,6 @@ cds.on('bootstrap', async (app) => {
 
             // 4. Check tile data quality
             try {
-                const tileDataResponse = await fetch(`http://localhost:${req.app.get('port') || 4004}/api/v1/Agents?id=agent_visualization`);
                 const tileData = await tileDataResponse.json();
                 
                 // Check if we have real data (not all zeros)
@@ -2698,7 +1228,6 @@ cds.on('bootstrap', async (app) => {
         }
     });
 
-    app.get('/health/ready', async (req, res) => {
         try {
             const readiness = await healthService.getReadiness();
             res.status(readiness.status === 'ready' ? 200 : 503).json(readiness);
@@ -2707,18 +1236,15 @@ cds.on('bootstrap', async (app) => {
         }
     });
 
-    app.get('/health/live', (req, res) => {
         const liveness = healthService.getLiveness();
         res.status(liveness.status === 'alive' ? 200 : 503).json(liveness);
     });
 
-    app.get('/metrics', (req, res) => {
         const metrics = healthService.getMetrics();
         res.status(200).json(metrics);
     });
 
     // Error reporting endpoints
-    app.post('/api/v1/errors/report', (req, res) => {
         try {
             // Validate basic structure or provide defaults
             const errorData = req.body || {};
@@ -2740,7 +1266,6 @@ cds.on('bootstrap', async (app) => {
         }
     });
 
-    app.get('/api/v1/errors', (req, res) => {
         const limit = parseInt(req.query.limit) || 50;
         const filters = {
             severity: req.query.severity,
@@ -2754,13 +1279,11 @@ cds.on('bootstrap', async (app) => {
         res.status(200).json(errors);
     });
 
-    app.get('/api/v1/errors/stats', (req, res) => {
         const timeframe = req.query.timeframe || '24h';
         const stats = errorReporting.getErrorStats(timeframe);
         res.status(200).json(stats);
     });
 
-    app.get('/api/v1/logs', (req, res) => {
         const limit = parseInt(req.query.limit) || 100;
         const level = req.query.level;
         const logs = loggingService.getRecentLogs(limit, level);
@@ -2777,24 +1300,18 @@ cds.on('bootstrap', async (app) => {
     // app.use('/shells', express.static(path.join(__dirname, '../app/shells')));
     
     // Serve launchpad pages
-    app.get('/', (req, res) => {
         res.sendFile(path.join(__dirname, '../app/launchpad.html'));
     });
-    app.get('/launchpad.html', (req, res) => {
         res.sendFile(path.join(__dirname, '../app/launchpad.html'));
     });
-    app.get('/fiori-launchpad.html', (req, res) => {
         res.sendFile(path.join(__dirname, '../app/fioriLaunchpad.html'));
     });
-    app.get('/debug-launchpad.html', (req, res) => {
         res.sendFile(path.join(__dirname, 'debugLaunchpad.html'));
     });
-    app.get('/launchpad-simple.html', (req, res) => {
         res.sendFile(path.join(__dirname, '../app/launchpadSimple.html'));
     });
     
     // SAP Fiori flexibility services stub endpoints
-    app.get('/sap/bc/lrep/flex/settings', (req, res) => {
         res.status(200).json({
             "isKeyUser": false,
             "isAtoAvailable": false,
@@ -2806,7 +1323,6 @@ cds.on('bootstrap', async (app) => {
         });
     });
     
-    app.get('/sap/bc/lrep/flex/data/:appId', (req, res) => {
         res.status(200).json({
             changes: [],
             ui2personalization: {},
@@ -2818,7 +1334,6 @@ cds.on('bootstrap', async (app) => {
     monitoringIntegration.setupRoutes(app);
     
     // Cache management endpoints
-    app.get('/cache/stats', async (req, res) => {
         // SECURITY FIX: Improve authorization check for Admin access
         if (!req.user || 
             (!req.user.scope?.includes('Admin') && 
@@ -2830,7 +1345,6 @@ cds.on('bootstrap', async (app) => {
         res.json(stats);
     });
     
-    app.post('/cache/invalidate', async (req, res) => {
         // SECURITY FIX: Improve authorization check for Admin access
         if (!req.user || 
             (!req.user.scope?.includes('Admin') && 
@@ -2847,7 +1361,6 @@ cds.on('bootstrap', async (app) => {
     });
     
     // Logging endpoints
-    app.get('/logs/audit', (req, res) => {
         // SECURITY FIX: Improve authorization check for Admin access
         if (!req.user || 
             (!req.user.scope?.includes('Admin') && 
@@ -2860,7 +1373,6 @@ cds.on('bootstrap', async (app) => {
     });
     
     // Security monitoring dashboard
-    app.get('/security/events', (req, res) => {
         // SECURITY FIX: Improve authorization check for Admin access
         if (!req.user || 
             (!req.user.scope?.includes('Admin') && 
@@ -2873,7 +1385,6 @@ cds.on('bootstrap', async (app) => {
     });
     
     // Network statistics service status endpoint
-    app.get('/network-stats/status', (req, res) => {
         const status = networkStats.getStatus();
         res.json(status);
     });
@@ -2882,7 +1393,6 @@ cds.on('bootstrap', async (app) => {
     const { checkAgentHealth, checkBlockchainHealth, checkMcpHealth, AGENT_METADATA } = require('./utils/launchpadHelpers');
 
     // Agent visualization endpoint for launchpad controller
-    app.get('/api/v1/Agents', async (req, res) => {
         if (req.query.id === 'agent_visualization') {
             try {
                 // Check health of all agents and aggregate data
@@ -2932,7 +1442,6 @@ cds.on('bootstrap', async (app) => {
 
     // Agent status endpoints for tiles
     for (let i = 0; i < 16; i++) {
-        app.get(`/api/v1/agents/${i}/status`, async (req, res) => {
             try {
                 const agent = AGENT_METADATA[i];
                 if (!agent) {
@@ -3028,7 +1537,6 @@ cds.on('bootstrap', async (app) => {
     }
 
     // Network overview endpoint
-    app.get('/api/v1/network/overview', async (req, res) => {
         try {
             const [healthChecks, blockchainHealth, mcpHealth] = await Promise.all([
                 Promise.all(
@@ -3093,7 +1601,6 @@ cds.on('bootstrap', async (app) => {
     });
 
     // Blockchain stats endpoint
-    app.get('/api/v1/blockchain/status', async (req, res) => {
         try {
             const blockchainHealth = await checkBlockchainHealth();
             
@@ -3142,7 +1649,6 @@ cds.on('bootstrap', async (app) => {
     });
 
     // Services count endpoint
-    app.get('/api/v1/services/count', async (req, res) => {
         try {
             const healthChecks = await Promise.all(
                 Object.entries(AGENT_METADATA).map(async ([id, agent]) => {
@@ -3192,7 +1698,6 @@ cds.on('bootstrap', async (app) => {
     });
 
     // Health summary endpoint
-    app.get('/api/v1/health/summary', async (req, res) => {
         try {
             const [healthChecks, blockchainHealth, mcpHealth] = await Promise.all([
                 Promise.all(
@@ -3267,7 +1772,6 @@ cds.on('bootstrap', async (app) => {
     });
 
     // Comprehensive UI Health Check endpoint
-    app.get('/health/ui', async (req, res) => {
         try {
             const UIHealthChecker = require('./lib/sapUiHealthCheck');
             const port = process.env.PORT || 4004;
@@ -3521,200 +2025,44 @@ cds.on('listening', async (info) => {
     // AGENT 13 - AGENT BUILDER PROXY ROUTES
     // ============================================
     
-    const AGENT13_BASE_URL = process.env.AGENT13_BASE_URL || 'http://localhost:8013';
     
     // Agent 13 proxy function
-    const proxyAgent13Request = async (req, res, endpoint, method = 'GET') => {
-        try {
-            const config = {
-                method,
-                url: `${AGENT13_BASE_URL}/api/agent13/v1${endpoint}`,
-                timeout: 45000, // Extended timeout for builds and deployments
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
-            };
-            
-            if (method !== 'GET' && req.body) {
-                config.data = req.body;
-            }
-            
-            if (req.query && Object.keys(req.query).length > 0) {
-                config.params = req.query;
-            }
-            
-            const response = await axios(config);
-            res.status(response.status).json(response.data);
-        } catch (error) {
-            log.error('Agent 13 proxy error:', {
-                endpoint,
-                method,
-                error: error.message,
-                status: error.response?.status,
-                data: error.response?.data
-            });
-            
-            res.status(error.response?.status || 500).json({
-                error: error.response?.data || { message: 'Agent 13 service error' }
-            });
-        }
-    };
     
     // Template Management
-    app.get('/a2a/agent13/v1/templates', (req, res) => proxyAgent13Request(req, res, '/templates'));
-    app.post('/a2a/agent13/v1/templates', (req, res) => proxyAgent13Request(req, res, '/templates', 'POST'));
-    app.get('/a2a/agent13/v1/templates/:templateId', (req, res) => 
-        proxyAgent13Request(req, res, `/templates/${req.params.templateId}`));
-    app.put('/a2a/agent13/v1/templates/:templateId', (req, res) => 
-        proxyAgent13Request(req, res, `/templates/${req.params.templateId}`, 'PUT'));
-    app.delete('/a2a/agent13/v1/templates/:templateId', (req, res) => 
-        proxyAgent13Request(req, res, `/templates/${req.params.templateId}`, 'DELETE'));
     
     // Template Actions
-    app.post('/a2a/agent13/v1/templates/:templateId/clone', (req, res) => 
-        proxyAgent13Request(req, res, `/templates/${req.params.templateId}/clone`, 'POST'));
-    app.post('/a2a/agent13/v1/templates/:templateId/validate', (req, res) => 
-        proxyAgent13Request(req, res, `/templates/${req.params.templateId}/validate`, 'POST'));
-    app.post('/a2a/agent13/v1/templates/:templateId/generate', (req, res) => 
-        proxyAgent13Request(req, res, `/templates/${req.params.templateId}/generate`, 'POST'));
-    app.post('/a2a/agent13/v1/templates/:templateId/export', (req, res) => 
-        proxyAgent13Request(req, res, `/templates/${req.params.templateId}/export`, 'POST'));
-    app.post('/a2a/agent13/v1/templates/:templateId/import', (req, res) => 
-        proxyAgent13Request(req, res, `/templates/${req.params.templateId}/import`, 'POST'));
     
     // Agent Build Management
-    app.get('/a2a/agent13/v1/builds', (req, res) => proxyAgent13Request(req, res, '/builds'));
-    app.post('/a2a/agent13/v1/builds', (req, res) => proxyAgent13Request(req, res, '/builds', 'POST'));
-    app.get('/a2a/agent13/v1/builds/:buildId', (req, res) => 
-        proxyAgent13Request(req, res, `/builds/${req.params.buildId}`));
-    app.delete('/a2a/agent13/v1/builds/:buildId', (req, res) => 
-        proxyAgent13Request(req, res, `/builds/${req.params.buildId}`, 'DELETE'));
     
     // Build Actions
-    app.post('/a2a/agent13/v1/builds/:buildId/start', (req, res) => 
-        proxyAgent13Request(req, res, `/builds/${req.params.buildId}/start`, 'POST'));
-    app.post('/a2a/agent13/v1/builds/:buildId/stop', (req, res) => 
-        proxyAgent13Request(req, res, `/builds/${req.params.buildId}/stop`, 'POST'));
-    app.post('/a2a/agent13/v1/builds/:buildId/restart', (req, res) => 
-        proxyAgent13Request(req, res, `/builds/${req.params.buildId}/restart`, 'POST'));
-    app.get('/a2a/agent13/v1/builds/:buildId/logs', (req, res) => 
-        proxyAgent13Request(req, res, `/builds/${req.params.buildId}/logs`));
-    app.get('/a2a/agent13/v1/builds/:buildId/artifacts', (req, res) => 
-        proxyAgent13Request(req, res, `/builds/${req.params.buildId}/artifacts`));
-    app.post('/a2a/agent13/v1/builds/:buildId/test', (req, res) => 
-        proxyAgent13Request(req, res, `/builds/${req.params.buildId}/test`, 'POST'));
     
     // Deployment Management
-    app.get('/a2a/agent13/v1/deployments', (req, res) => proxyAgent13Request(req, res, '/deployments'));
-    app.post('/a2a/agent13/v1/deployments', (req, res) => proxyAgent13Request(req, res, '/deployments', 'POST'));
-    app.get('/a2a/agent13/v1/deployments/:deploymentId', (req, res) => 
-        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}`));
-    app.put('/a2a/agent13/v1/deployments/:deploymentId', (req, res) => 
-        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}`, 'PUT'));
-    app.delete('/a2a/agent13/v1/deployments/:deploymentId', (req, res) => 
-        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}`, 'DELETE'));
     
     // Deployment Actions
-    app.post('/a2a/agent13/v1/deployments/:deploymentId/start', (req, res) => 
-        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}/start`, 'POST'));
-    app.post('/a2a/agent13/v1/deployments/:deploymentId/stop', (req, res) => 
-        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}/stop`, 'POST'));
-    app.post('/a2a/agent13/v1/deployments/:deploymentId/restart', (req, res) => 
-        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}/restart`, 'POST'));
-    app.post('/a2a/agent13/v1/deployments/:deploymentId/scale', (req, res) => 
-        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}/scale`, 'POST'));
-    app.get('/a2a/agent13/v1/deployments/:deploymentId/status', (req, res) => 
-        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}/status`));
-    app.get('/a2a/agent13/v1/deployments/:deploymentId/logs', (req, res) => 
-        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}/logs`));
-    app.get('/a2a/agent13/v1/deployments/:deploymentId/metrics', (req, res) => 
-        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}/metrics`));
     
     // Template Component Management
-    app.get('/a2a/agent13/v1/components', (req, res) => proxyAgent13Request(req, res, '/components'));
-    app.post('/a2a/agent13/v1/components', (req, res) => proxyAgent13Request(req, res, '/components', 'POST'));
-    app.get('/a2a/agent13/v1/components/:componentId', (req, res) => 
-        proxyAgent13Request(req, res, `/components/${req.params.componentId}`));
-    app.put('/a2a/agent13/v1/components/:componentId', (req, res) => 
-        proxyAgent13Request(req, res, `/components/${req.params.componentId}`, 'PUT'));
-    app.delete('/a2a/agent13/v1/components/:componentId', (req, res) => 
-        proxyAgent13Request(req, res, `/components/${req.params.componentId}`, 'DELETE'));
     
     // Component Actions
-    app.post('/a2a/agent13/v1/components/:componentId/validate', (req, res) => 
-        proxyAgent13Request(req, res, `/components/${req.params.componentId}/validate`, 'POST'));
-    app.post('/a2a/agent13/v1/components/:componentId/test', (req, res) => 
-        proxyAgent13Request(req, res, `/components/${req.params.componentId}/test`, 'POST'));
-    app.get('/a2a/agent13/v1/templates/:templateId/components', (req, res) => 
-        proxyAgent13Request(req, res, `/templates/${req.params.templateId}/components`));
     
     // Build Pipeline Management
-    app.get('/a2a/agent13/v1/pipelines', (req, res) => proxyAgent13Request(req, res, '/pipelines'));
-    app.post('/a2a/agent13/v1/pipelines', (req, res) => proxyAgent13Request(req, res, '/pipelines', 'POST'));
-    app.get('/a2a/agent13/v1/pipelines/:pipelineId', (req, res) => 
-        proxyAgent13Request(req, res, `/pipelines/${req.params.pipelineId}`));
-    app.put('/a2a/agent13/v1/pipelines/:pipelineId', (req, res) => 
-        proxyAgent13Request(req, res, `/pipelines/${req.params.pipelineId}`, 'PUT'));
-    app.delete('/a2a/agent13/v1/pipelines/:pipelineId', (req, res) => 
-        proxyAgent13Request(req, res, `/pipelines/${req.params.pipelineId}`, 'DELETE'));
     
     // Pipeline Actions
-    app.post('/a2a/agent13/v1/pipelines/:pipelineId/trigger', (req, res) => 
-        proxyAgent13Request(req, res, `/pipelines/${req.params.pipelineId}/trigger`, 'POST'));
-    app.post('/a2a/agent13/v1/pipelines/:pipelineId/stop', (req, res) => 
-        proxyAgent13Request(req, res, `/pipelines/${req.params.pipelineId}/stop`, 'POST'));
-    app.get('/a2a/agent13/v1/pipelines/:pipelineId/status', (req, res) => 
-        proxyAgent13Request(req, res, `/pipelines/${req.params.pipelineId}/status`));
-    app.get('/a2a/agent13/v1/pipelines/:pipelineId/logs', (req, res) => 
-        proxyAgent13Request(req, res, `/pipelines/${req.params.pipelineId}/logs`));
-    app.get('/a2a/agent13/v1/pipelines/:pipelineId/history', (req, res) => 
-        proxyAgent13Request(req, res, `/pipelines/${req.params.pipelineId}/history`));
     
     // Code Generation
-    app.post('/a2a/agent13/v1/generate-code', (req, res) => proxyAgent13Request(req, res, '/generate-code', 'POST'));
-    app.post('/a2a/agent13/v1/validate-code', (req, res) => proxyAgent13Request(req, res, '/validate-code', 'POST'));
-    app.post('/a2a/agent13/v1/optimize-code', (req, res) => proxyAgent13Request(req, res, '/optimize-code', 'POST'));
-    app.post('/a2a/agent13/v1/analyze-dependencies', (req, res) => proxyAgent13Request(req, res, '/analyze-dependencies', 'POST'));
     
     // Batch Operations
-    app.post('/a2a/agent13/v1/batch-build', (req, res) => proxyAgent13Request(req, res, '/batch-build', 'POST'));
-    app.post('/a2a/agent13/v1/batch-deploy', (req, res) => proxyAgent13Request(req, res, '/batch-deploy', 'POST'));
-    app.post('/a2a/agent13/v1/batch-test', (req, res) => proxyAgent13Request(req, res, '/batch-test', 'POST'));
-    app.get('/a2a/agent13/v1/batch-status/:batchId', (req, res) => 
-        proxyAgent13Request(req, res, `/batch-status/${req.params.batchId}`));
     
     // Statistics and Analytics
-    app.get('/a2a/agent13/v1/statistics', (req, res) => proxyAgent13Request(req, res, '/statistics'));
-    app.get('/a2a/agent13/v1/analytics', (req, res) => proxyAgent13Request(req, res, '/analytics'));
-    app.get('/a2a/agent13/v1/build-metrics', (req, res) => proxyAgent13Request(req, res, '/build-metrics'));
-    app.get('/a2a/agent13/v1/deployment-metrics', (req, res) => proxyAgent13Request(req, res, '/deployment-metrics'));
-    app.get('/a2a/agent13/v1/template-usage', (req, res) => proxyAgent13Request(req, res, '/template-usage'));
     
     // Configuration and Settings
-    app.get('/a2a/agent13/v1/config', (req, res) => proxyAgent13Request(req, res, '/config'));
-    app.put('/a2a/agent13/v1/config', (req, res) => proxyAgent13Request(req, res, '/config', 'PUT'));
-    app.get('/a2a/agent13/v1/environments', (req, res) => proxyAgent13Request(req, res, '/environments'));
-    app.get('/a2a/agent13/v1/deployment-targets', (req, res) => proxyAgent13Request(req, res, '/deployment-targets'));
     
     // Resource Management  
-    app.get('/a2a/agent13/v1/resources', (req, res) => proxyAgent13Request(req, res, '/resources'));
-    app.get('/a2a/agent13/v1/resource-usage', (req, res) => proxyAgent13Request(req, res, '/resource-usage'));
-    app.post('/a2a/agent13/v1/cleanup-resources', (req, res) => proxyAgent13Request(req, res, '/cleanup-resources', 'POST'));
     
     // Templates and Documentation
-    app.get('/a2a/agent13/v1/template-types', (req, res) => proxyAgent13Request(req, res, '/template-types'));
-    app.get('/a2a/agent13/v1/frameworks', (req, res) => proxyAgent13Request(req, res, '/frameworks'));
-    app.get('/a2a/agent13/v1/documentation/:templateId', (req, res) => 
-        proxyAgent13Request(req, res, `/documentation/${req.params.templateId}`));
-    app.post('/a2a/agent13/v1/generate-docs', (req, res) => proxyAgent13Request(req, res, '/generate-docs', 'POST'));
     
     // Health and Status
-    app.get('/a2a/agent13/v1/health', (req, res) => proxyAgent13Request(req, res, '/health'));
-    app.get('/a2a/agent13/v1/status', (req, res) => proxyAgent13Request(req, res, '/status'));
     
     // Agent 13 OData Service Proxy - Convert REST to OData format
-    app.get('/a2a/agent13/v1/odata/AgentTemplates', async (req, res) => {
         try {
             const response = await axios.get(`${AGENT13_BASE_URL}/api/agent13/v1/templates`);
             
@@ -3754,7 +2102,6 @@ cds.on('listening', async (info) => {
         }
     });
     
-    app.get('/a2a/agent13/v1/odata/AgentBuilds', async (req, res) => {
         try {
             const response = await axios.get(`${AGENT13_BASE_URL}/api/agent13/v1/builds`);
             
@@ -3792,7 +2139,6 @@ cds.on('listening', async (info) => {
         }
     });
     
-    app.get('/a2a/agent13/v1/odata/AgentDeployments', async (req, res) => {
         try {
             const response = await axios.get(`${AGENT13_BASE_URL}/api/agent13/v1/deployments`);
             

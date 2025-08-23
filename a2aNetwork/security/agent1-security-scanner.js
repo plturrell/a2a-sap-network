@@ -346,7 +346,9 @@ class Agent1SecurityScanner {
             SCHEMA_MANIPULATION: [
                 /validateSchema\s*\([^)]*["']/gi,  // String validation
                 /schemaType\s*=\s*["']/gi,  // String assignments
-                /JSON\.parse\s*\([^)]*["']/gi  // String parsing
+                /JSON\.parse\s*\([^)]*["']/gi,  // String parsing
+                /validateSchema.*sanitize/gi,  // Validation with sanitization
+                /SecurityUtils\.validateSchema/gi  // SecurityUtils validation
             ],
             FORMAT_VALIDATION_BYPASS: [
                 /formatValidation.*default/gi,  // Default settings

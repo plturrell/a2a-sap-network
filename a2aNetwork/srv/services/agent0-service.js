@@ -24,16 +24,17 @@ class Agent0Service extends cds.ApplicationService {
         } = db.entities;
 
         // CRUD Operations for DataProducts
-        this.on('READ', 'DataProducts', async (req) => {
+        const handleReadDataProducts = async (req) => {
             try {
                 const products = await this.adapter.getDataProducts(req.query);
                 return products;
             } catch (error) {
                 req.error(500, `Failed to read data products: ${error.message}`);
             }
-        });
+        };
+        this.on('READ', 'DataProducts', handleReadDataProducts);
 
-        this.on('CREATE', 'DataProducts', async (req) => {
+        const handleCreateDataProducts = async (req) => {
             try {
                 // Validate required Dublin Core fields
                 if (!req.data.productName || !req.data.description) {
@@ -69,9 +70,10 @@ class Agent0Service extends cds.ApplicationService {
             } catch (error) {
                 req.error(500, `Failed to create data product: ${error.message}`);
             }
-        });
+        };
+        this.on('CREATE', 'DataProducts', handleCreateDataProducts);
 
-        this.on('UPDATE', 'DataProducts', async (req) => {
+        const handleUpdateDataProducts = async (req) => {
             try {
                 const product = await this.adapter.updateDataProduct(req.params[0], req.data);
                 
@@ -86,9 +88,10 @@ class Agent0Service extends cds.ApplicationService {
             } catch (error) {
                 req.error(500, `Failed to update data product: ${error.message}`);
             }
-        });
+        };
+        this.on('UPDATE', 'DataProducts', handleUpdateDataProducts);
 
-        this.on('DELETE', 'DataProducts', async (req) => {
+        const handleDeleteDataProducts = async (req) => {
             try {
                 await this.adapter.deleteDataProduct(req.params[0]);
                 
@@ -101,10 +104,11 @@ class Agent0Service extends cds.ApplicationService {
             } catch (error) {
                 req.error(500, `Failed to delete data product: ${error.message}`);
             }
-        });
+        };
+        this.on('DELETE', 'DataProducts', handleDeleteDataProducts);
 
         // Dublin Core Operations
-        this.on('generateDublinCore', 'DataProducts', async (req) => {
+        const handleGenerateDublinCore = async (req) => {
             try {
                 const { ID } = req.params[0];
                 const result = await this.adapter.generateDublinCore(ID);
@@ -143,9 +147,10 @@ class Agent0Service extends cds.ApplicationService {
             } catch (error) {
                 req.error(500, `Failed to generate Dublin Core metadata: ${error.message}`);
             }
-        });
+        };
+        this.on('generateDublinCore', 'DataProducts', handleGenerateDublinCore);
 
-        this.on('updateDublinCore', 'DataProducts', async (req) => {
+        const handleUpdateDublinCore = async (req) => {
             try {
                 const { ID } = req.params[0];
                 const dublinCoreData = req.data;
@@ -168,10 +173,11 @@ class Agent0Service extends cds.ApplicationService {
             } catch (error) {
                 req.error(500, `Failed to update Dublin Core metadata: ${error.message}`);
             }
-        });
+        };
+        this.on('updateDublinCore', 'DataProducts', handleUpdateDublinCore);
 
         // Validation Operations
-        this.on('validateMetadata', 'DataProducts', async (req) => {
+        const handleValidateMetadata = async (req) => {
             try {
                 const { ID } = req.params[0];
                 const validationOptions = req.data || {};
@@ -198,9 +204,10 @@ class Agent0Service extends cds.ApplicationService {
             } catch (error) {
                 req.error(500, `Failed to validate metadata: ${error.message}`);
             }
-        });
+        };
+        this.on('validateMetadata', 'DataProducts', handleValidateMetadata);
 
-        this.on('validateSchema', 'DataProducts', async (req) => {
+        const handleValidateSchema = async (req) => {
             try {
                 const { ID } = req.params[0];
                 const schemaData = req.data;
@@ -219,10 +226,11 @@ class Agent0Service extends cds.ApplicationService {
             } catch (error) {
                 req.error(500, `Failed to validate schema: ${error.message}`);
             }
-        });
+        };
+        this.on('validateSchema', 'DataProducts', handleValidateSchema);
 
         // Quality Assessment
-        this.on('assessQuality', 'DataProducts', async (req) => {
+        const handleAssessQuality = async (req) => {
             try {
                 const { ID } = req.params[0];
                 const assessmentCriteria = req.data || {};
@@ -267,10 +275,11 @@ class Agent0Service extends cds.ApplicationService {
             } catch (error) {
                 req.error(500, `Failed to assess quality: ${error.message}`);
             }
-        });
+        };
+        this.on('assessQuality', 'DataProducts', handleAssessQuality);
 
         // Publishing Operations
-        this.on('publish', 'DataProducts', async (req) => {
+        const handlePublish = async (req) => {
             try {
                 const { ID } = req.params[0];
                 const publishOptions = req.data || {};
@@ -305,7 +314,8 @@ class Agent0Service extends cds.ApplicationService {
             } catch (error) {
                 req.error(500, `Failed to publish product: ${error.message}`);
             }
-        });
+        };
+        this.on('publish', 'DataProducts', handlePublish);
 
         this.on('archive', 'DataProducts', async (req) => {
             try {

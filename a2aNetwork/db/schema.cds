@@ -494,6 +494,7 @@ entity Messages : cuid, managed {
     @Common.Label: 'Delivery Status'
     status      : String(20) enum { pending; sent; delivered; failed; };
     
+        };
     @Common.Label: 'Retry Count'
     @assert.range: [0, 10]
     retryCount  : Integer default 0;
@@ -587,6 +588,7 @@ entity CrossChainTransfers : cuid, managed {
     toAgent      : String(42);
     messageHash  : String(66);
     status       : String(20) enum { initiated; pending; completed; failed; };
+        };
     sourceBlock  : Integer;
     targetBlock  : Integer;
     gasUsed      : Integer;
@@ -824,6 +826,7 @@ entity ExtensionFields : managed {
     key field : String(50);
     key tenant : String(36);
     dataType : String(20) enum { String; Integer; Decimal; Boolean; Date; };
+        };
     label : localized String(100);
     defaultValue : String(100);
     mandatory : Boolean default false;
@@ -881,6 +884,7 @@ entity AIPreparationTasks : cuid, managed {
     @Common.Label: 'Validation Strategy'
     validationStrategy : String(20) enum { KFOLD; HOLDOUT; } default 'KFOLD';
     
+        };
     @Common.Label: 'Random Seed'
     randomSeed      : Integer default 42;
     
@@ -915,6 +919,7 @@ entity AIPreparationTasks : cuid, managed {
     @Common.Label: 'Priority'
     priority        : String(10) enum { LOW; MEDIUM; HIGH; URGENT; } default 'MEDIUM';
     
+        };
     @Common.Label: 'Progress Percentage'
     @assert.range: [0, 100]
     progressPercent : Integer default 0;
@@ -956,6 +961,7 @@ entity AIPreparationFeatures : cuid {
     @Common.Label: 'Feature Type'
     type            : String(20) enum { NUMERICAL; CATEGORICAL; TEXT; DATETIME; BOOLEAN; };
     
+        };
     @Common.Label: 'Data Type'
     dataType        : String(20);
     
@@ -1093,12 +1099,12 @@ entity StandardizationTasks : cuid, managed {
     @Common.Label: 'Source Format'
     sourceFormat       : String(50) @mandatory enum { 
         CSV; JSON; XML; EXCEL; FIXED_WIDTH; AVRO; PARQUET; 
-;
+    };
     
     @Common.Label: 'Target Format'
     targetFormat       : String(50) @mandatory enum { 
         CSV; JSON; XML; PARQUET; AVRO; 
-;
+    };
     
     @Common.Label: 'Schema Template ID'
     schemaTemplateId   : String(50) enum { 
@@ -1117,6 +1123,7 @@ entity StandardizationTasks : cuid, managed {
     @Common.Label: 'Processing Mode'
     processingMode     : String(20) enum { FULL; BATCH; } default 'FULL';
     
+        };
     @Common.Label: 'Batch Size'
     batchSize          : Integer default 1000;
     
@@ -1128,6 +1135,7 @@ entity StandardizationTasks : cuid, managed {
     @Common.Label: 'Priority'
     priority           : String(10) enum { LOW; MEDIUM; HIGH; URGENT; } default 'MEDIUM';
     
+        };
     @Common.Label: 'Progress Percentage'
     @assert.range: [0, 100]
     progressPercent    : Integer default 0;
@@ -1235,23 +1243,23 @@ entity VectorProcessingTasks : cuid, managed {
     
     @Common.Label: 'Model Provider'
     modelProvider      : String(50) enum { 
-        OPENAI; HUGGINGFACE; COHERE; ANTHROPIC; GOOGLE; CUSTOM; 
- default 'OPENAI';
+        OPENAI; HUGGINGFACE; COHERE; ANTHROPIC; GOOGLE; CUSTOM;
+    } default 'OPENAI';
     
     @Common.Label: 'Vector Database'
     vectorDatabase     : String(50) enum { 
-        PINECONE; WEAVIATE; MILVUS; CHROMA; QDRANT; PGVECTOR; 
- default 'PINECONE';
+        PINECONE; WEAVIATE; MILVUS; CHROMA; QDRANT; PGVECTOR;
+    } default 'PINECONE';
     
     @Common.Label: 'Index Type'
     indexType          : String(20) enum { 
-        HNSW; IVF; FLAT; LSH; 
- default 'HNSW';
+        HNSW; IVF; FLAT; LSH;
+    } default 'HNSW';
     
     @Common.Label: 'Distance Metric'
     distanceMetric     : String(20) enum { 
-        COSINE; EUCLIDEAN; DOT_PRODUCT; MANHATTAN; 
- default 'COSINE';
+        COSINE; EUCLIDEAN; DOT_PRODUCT; MANHATTAN;
+    } default 'COSINE';
     
     @Common.Label: 'Vector Dimensions'
     @assert.range: [128, 4096]
@@ -1282,6 +1290,7 @@ entity VectorProcessingTasks : cuid, managed {
     @Common.Label: 'Priority'
     priority           : String(10) enum { LOW; MEDIUM; HIGH; URGENT; } default 'MEDIUM';
     
+        };
     @Common.Label: 'Progress Percentage'
     @assert.range: [0, 100]
     progressPercent    : Integer default 0;
@@ -1489,8 +1498,8 @@ entity CalcValidationTasks : cuid, managed {
     
     @Common.Label: 'Precision Level'
     precisionLevel     : String(20) enum { 
- MEDIUM; HIGH; ULTRA_HIGH; 
- default 'MEDIUM';
+ MEDIUM; HIGH; ULTRA_HIGH;
+    } default 'MEDIUM';
     
     @Common.Label: 'Tolerance'
     tolerance          : Decimal(10,8) default 0.0001;
@@ -1512,8 +1521,8 @@ entity CalcValidationTasks : cuid, managed {
     
     @Common.Label: 'AI Model'
     aiModel            : String(100) enum { 
-        GROK; GPT4; CLAUDE; GEMINI; CUSTOM; 
- default 'GROK';
+        GROK; GPT4; CLAUDE; GEMINI; CUSTOM;
+    } default 'GROK';
     
     @Common.Label: 'Consensus Validators'
     consensusValidators : Integer default 3;
@@ -1530,6 +1539,7 @@ entity CalcValidationTasks : cuid, managed {
     @Common.Label: 'Priority'
     priority           : String(10) enum { LOW; MEDIUM; HIGH; URGENT; } default 'MEDIUM';
     
+        };
     @Common.Label: 'Progress Percentage'
     @assert.range: [0, 100]
     progressPercent    : Integer default 0;
@@ -1675,13 +1685,13 @@ entity QaValidationTasks : cuid, managed {
     
     @Common.Label: 'QA Scope'
     qaScope            : String(50) enum { 
-        DATA_INTEGRITY; BUSINESS_RULES; REGULATORY_COMPLIANCE; PERFORMANCE; SECURITY; COMPLETENESS; 
- default 'DATA_INTEGRITY';
+        DATA_INTEGRITY; BUSINESS_RULES; REGULATORY_COMPLIANCE; PERFORMANCE; SECURITY; COMPLETENESS;
+    } default 'DATA_INTEGRITY';
     
     @Common.Label: 'Test Generation Method'
     testGenerationMethod : String(50) enum { 
-        DYNAMIC_SIMPLEQA; STATIC_RULES; HYBRID; CUSTOM_TEMPLATE; 
- default 'DYNAMIC_SIMPLEQA';
+        DYNAMIC_SIMPLEQA; STATIC_RULES; HYBRID; CUSTOM_TEMPLATE;
+    } default 'DYNAMIC_SIMPLEQA';
     
     @Common.Label: 'SimpleQA Test Count'
     simpleQaTestCount  : Integer default 10;
@@ -1726,6 +1736,7 @@ entity QaValidationTasks : cuid, managed {
     @Common.Label: 'Priority'
     priority           : String(10) enum { LOW; MEDIUM; HIGH; URGENT; } default 'MEDIUM';
     
+        };
     @Common.Label: 'Progress Percentage'
     @assert.range: [0, 100]
     progressPercent    : Integer default 0;
@@ -1854,7 +1865,7 @@ entity QaValidationRules : cuid, managed {
     @Common.Label: 'Rule Category'
     ruleCategory       : String(50) enum { 
         DATA_QUALITY; BUSINESS_LOGIC; REGULATORY; SECURITY; PERFORMANCE; COMPLETENESS; 
-;
+    };
     
     @Common.Label: 'Rule Type'
     ruleType           : String(50) enum { 
@@ -2471,7 +2482,7 @@ entity AgentHealthChecks : cuid {
     checkType          : String(50) enum {
         PING; HTTP_GET; HTTP_POST; HEARTBEAT; DIAGNOSTIC;
         MEMORY_CHECK; CPU_CHECK; DISK_CHECK; CUSTOM;
-;
+    };
     
     @Common.Label: 'Status'
     status             : String(20) enum {
@@ -2515,7 +2526,7 @@ entity AgentPerformanceMetrics : cuid {
     metricType         : String(50) enum {
         RESPONSE_TIME; THROUGHPUT; ERROR_RATE; CPU_USAGE;
         MEMORY_USAGE; QUEUE_LENGTH; SUCCESS_RATE; LATENCY;
-;
+    };
     
     @Common.Label: 'Value'
     value              : Decimal(20, 5);
@@ -2698,7 +2709,7 @@ entity DataTasks : cuid, managed {
     taskType           : String(50) enum {
         STORE; RETRIEVE; UPDATE; DELETE; BACKUP; RESTORE;
         MIGRATE; COMPRESS; CACHE; VALIDATE; OPTIMIZE; ARCHIVE;
-;
+    };
     
     @Common.Label: 'Data Source'
     dataSource         : String(500);
@@ -2709,18 +2720,18 @@ entity DataTasks : cuid, managed {
     @Common.Label: 'Data Format'
     dataFormat         : String(50) enum {
         JSON; XML; CSV; PARQUET; AVRO; BINARY; TEXT; IMAGE; DOCUMENT;
-;
+    };
     
     @Common.Label: 'Storage Backend'
     @mandatory
     storageBackend     : String(50) enum {
         HANA; SQLITE; S3; REDIS; MEMORY; FILE_SYSTEM; DISTRIBUTED; HYBRID;
-;
+    };
     
     @Common.Label: 'Cache Strategy'
     cacheStrategy      : String(50) enum {
         NONE; MEMORY_ONLY; REDIS_ONLY; MULTI_TIER; WRITE_THROUGH; WRITE_BACK;
-;
+    };
     
     @Common.Label: 'Compression'
     compressionEnabled : Boolean default false;
@@ -2728,7 +2739,7 @@ entity DataTasks : cuid, managed {
     @Common.Label: 'Compression Type'
     compressionType    : String(30) enum {
         GZIP; LZ4; SNAPPY; BROTLI; ZSTD;
-;
+    };
     
     @Common.Label: 'Encryption Enabled'
     encryptionEnabled  : Boolean default false;
@@ -2736,7 +2747,7 @@ entity DataTasks : cuid, managed {
     @Common.Label: 'Encryption Algorithm'
     encryptionAlgorithm : String(30) enum {
         AES_256; AES_128; RSA; CHACHA20;
-;
+    };
     
     @Common.Label: 'Versioning Enabled'
     versioningEnabled  : Boolean default false;
@@ -2752,7 +2763,7 @@ entity DataTasks : cuid, managed {
     @Common.Label: 'Status'
     status             : String(20) enum {
         DRAFT; QUEUED; PROCESSING; COMPLETED; FAILED; CANCELLED; PAUSED;
- default 'DRAFT';
+    } default 'DRAFT';
     
     @Common.Label: 'Priority'
     priority           : String(10) enum {
@@ -2950,7 +2961,7 @@ entity CacheConfigurations : cuid, managed {
     @mandatory
     cacheType          : String(30) enum {
         MEMORY; REDIS; HYBRID; DISTRIBUTED;
-;
+    };
     
     @Common.Label: 'Cache Strategy'
     cacheStrategy      : String(50) enum {
@@ -3010,7 +3021,7 @@ entity CacheOperations : cuid {
     @Common.Label: 'Operation Type'
     operationType      : String(20) enum {
         GET; PUT; DELETE; EVICT; FLUSH; INVALIDATE;
-;
+    };
     
     @Common.Label: 'Cache Key'
     cacheKey           : String(500);
@@ -3118,12 +3129,12 @@ entity DataBackups : cuid, managed {
     @Common.Label: 'Status'
     status             : String(20) enum {
  RUNNING; COMPLETED; FAILED; CANCELLED;
- default 'SCHEDULED';
+    } default 'SCHEDULED';
     
     @Common.Label: 'Schedule Type'
     scheduleType       : String(20) enum {
  HOURLY; DAILY; WEEKLY; MONTHLY;
- default 'MANUAL';
+    } default 'MANUAL';
     
     @Common.Label: 'Schedule Expression'
     scheduleExpression : String(100);
@@ -3189,7 +3200,7 @@ entity DataPerformanceMetrics : cuid {
     metricType         : String(50) enum {
         THROUGHPUT; LATENCY; IOPS; CPU_USAGE; MEMORY_USAGE;
         STORAGE_USAGE; CACHE_HIT_RATE; ERROR_RATE; QUEUE_DEPTH;
-;
+    };
     
     @Common.Label: 'Storage Backend'
     storageBackend     : Association to StorageBackends;
@@ -3259,14 +3270,14 @@ entity ReasoningTasks : cuid, managed {
     reasoningType      : String(30) enum {
         DEDUCTIVE; INDUCTIVE; ABDUCTIVE; ANALOGICAL; 
         PROBABILISTIC; CAUSAL; TEMPORAL; MODAL;
-;
+    };
     
     @Common.Label: 'Problem Domain'
     @mandatory
     problemDomain      : String(50) enum {
         BUSINESS_LOGIC; SCIENTIFIC; MEDICAL; LEGAL; 
         TECHNICAL; FINANCIAL; EDUCATIONAL; GENERAL;
-;
+    };
     
     @Common.Label: 'Reasoning Engine'
     @mandatory
@@ -3278,7 +3289,7 @@ entity ReasoningTasks : cuid, managed {
     @Common.Label: 'Status'
     status             : String(20) enum {
         DRAFT; PENDING; PROCESSING; COMPLETED; FAILED; CANCELLED;
- default 'DRAFT';
+    } default 'DRAFT';
     
     @Common.Label: 'Priority'
     priority           : String(20) enum {
@@ -3404,7 +3415,7 @@ entity LogicalInferences : cuid, managed {
     inferenceType      : String(30) enum {
         DEDUCTION; INDUCTION; ABDUCTION; GENERALIZATION;
         SPECIALIZATION; ANALOGY; CONTRADICTION_RESOLUTION;
-;
+    };
     
     @Common.Label: 'Statement'
     @mandatory
@@ -3604,7 +3615,7 @@ entity ProblemSolvingRecords : cuid, managed {
     problemType        : String(30) enum {
         ANALYTICAL; CREATIVE; OPTIMIZATION; DIAGNOSTIC;
         PLANNING; SCHEDULING; RESOURCE_ALLOCATION;
-;
+    };
     
     @Common.Label: 'Problem Description'
     @mandatory
@@ -3681,13 +3692,13 @@ entity ReasoningPerformanceMetrics : cuid, managed {
     metricType         : String(30) enum {
         ACCURACY; PRECISION; RECALL; F1_SCORE; CONFIDENCE;
         PROCESSING_TIME; MEMORY_USAGE; THROUGHPUT; ERROR_RATE;
-;
+    };
     
     @Common.Label: 'Engine Type'
     engineType         : String(40) enum {
         FORWARD_CHAINING; BACKWARD_CHAINING; BAYESIAN_NETWORK;
         FUZZY_LOGIC; NEURAL_REASONING; CASE_BASED; EXPERT_SYSTEM;
-;
+    };
     
     @Common.Label: 'Problem Domain'
     problemDomain      : String(50);
@@ -3710,7 +3721,7 @@ entity ReasoningPerformanceMetrics : cuid, managed {
     @Common.Label: 'Performance Grade'
     performanceGrade   : String(10) enum {
         EXCELLENT; GOOD; AVERAGE; POOR; CRITICAL;
-;
+    };
     
     @Common.Label: 'Trend'
     trend              : String(20) enum {
@@ -3751,7 +3762,7 @@ entity CalculationTasks : cuid, managed {
     calculationType    : String(50) enum {
         MATHEMATICAL; STATISTICAL; FINANCIAL; SCIENTIFIC; 
         CUSTOM_FORMULA; OPTIMIZATION; SIMULATION;
-;
+    };
     
     @Common.Label: 'Formula Expression'
     @UI.MultiLineText: true
@@ -3772,7 +3783,7 @@ entity CalculationTasks : cuid, managed {
     @Common.Label: 'Precision Type'
     precisionType      : String(20) enum {
         DECIMAL32; DECIMAL64; DECIMAL128; ARBITRARY;
- default 'DECIMAL64';
+    } default 'DECIMAL64';
     
     @Common.Label: 'Required Accuracy'
     requiredAccuracy   : Decimal(10, 8) default 0.000001;
@@ -3798,7 +3809,7 @@ entity CalculationTasks : cuid, managed {
     @Common.Label: 'Priority'
     priority           : String(10) enum {
  MEDIUM; HIGH; CRITICAL;
- default 'MEDIUM';
+    } default 'MEDIUM';
     
     @Common.Label: 'Status'
     status             : String(20) enum {
@@ -3967,7 +3978,7 @@ entity CalculationErrorCorrections : cuid, managed {
         OVERFLOW; UNDERFLOW; DIVISION_BY_ZERO; NAN;
         PRECISION_LOSS; CONVERGENCE_FAILURE; TIMEOUT;
         INVALID_INPUT; FORMULA_ERROR;
-;
+    };
     
     @Common.Label: 'Error Description'
     errorDescription   : String(500);
@@ -3976,7 +3987,7 @@ entity CalculationErrorCorrections : cuid, managed {
     detectionMethod    : String(30) enum {
         BOUNDARY_CHECK; CONSISTENCY_CHECK; REDUNDANT_CALC;
         PATTERN_ANALYSIS; STATISTICAL_ANOMALY;
-;
+    };
     
     @Common.Label: 'Original Value'
     originalValue      : String(200);
@@ -4049,7 +4060,7 @@ entity SQLQueryTasks : cuid, managed {
     @Common.Label: 'SQL Dialect'
     sqlDialect         : String(30) enum {
         HANA; POSTGRESQL; MYSQL; SQLITE; ORACLE; SQLSERVER; MARIADB;
- default 'HANA';
+    } default 'HANA';
     
     @Common.Label: 'Parameters'
     @Core.MediaType: 'application/json'
@@ -4062,7 +4073,7 @@ entity SQLQueryTasks : cuid, managed {
     @Common.Label: 'Priority'
     priority           : String(10) enum {
  MEDIUM; HIGH; CRITICAL;
- default 'MEDIUM';
+    } default 'MEDIUM';
     
     @Common.Label: 'Status'
     status             : String(20) enum {
@@ -4221,7 +4232,7 @@ entity QueryExecutionHistory : cuid, managed {
     @Common.Label: 'Execution Status'
     executionStatus    : String(20) enum {
         SUCCESS; FAILED; TIMEOUT; CANCELLED; PARTIAL;
-;
+    };
     
     @Common.Label: 'Error Code'
     errorCode          : String(20);
@@ -4292,7 +4303,7 @@ entity SchemaReferences : cuid, managed {
     @Common.Label: 'Reference Type'
     referenceType      : String(20) enum {
         TABLE; COLUMN; INDEX; CONSTRAINT; VIEW; PROCEDURE; FUNCTION;
-;
+    };
     
     @Common.Label: 'Usage Context'
     usageContext       : String(20) enum {
@@ -4409,7 +4420,7 @@ entity CatalogEntries : cuid, managed {
     @Common.Label: 'Category'
     category           : String(50) not null enum {
         SERVICE; API; DATABASE; WORKFLOW; AGENT; RESOURCE; TEMPLATE; CONNECTOR;
-;
+    };
     
     @Common.Label: 'Sub Category'
     subCategory        : String(50);
@@ -4420,7 +4431,7 @@ entity CatalogEntries : cuid, managed {
     @Common.Label: 'Status'
     status             : String(20) not null enum {
         DRAFT; PUBLISHED; DEPRECATED; ARCHIVED; UNDER_REVIEW;
- default 'DRAFT';
+    } default 'DRAFT';
     
     @Common.Label: 'Visibility'
     visibility         : String(20) not null enum {
@@ -4586,7 +4597,7 @@ entity CatalogMetadata : cuid, managed {
     @Common.Label: 'Value Type'
     valueType          : String(20) enum {
         STRING; NUMBER; BOOLEAN; DATE; JSON; URL; EMAIL;
- default 'STRING';
+    } default 'STRING';
     
     @Common.Label: 'Is Searchable'
     isSearchable       : Boolean default true;
@@ -4610,6 +4621,7 @@ entity CatalogSearches : cuid, managed {
         KEYWORD; CATEGORY; TAG; METADATA; ADVANCED; SEMANTIC;
  not null;
     
+        };
     @Common.Label: 'Filters Applied'
     @Core.MediaType: 'application/json'
     filtersApplied     : String(1000);
@@ -4654,7 +4666,7 @@ entity RegistryManagement : cuid, managed {
     @Common.Label: 'Status'
     status             : String(20) enum {
  INACTIVE; MAINTENANCE; ERROR; SYNCING;
- default 'ACTIVE';
+    } default 'ACTIVE';
     
     @Common.Label: 'Last Sync'
     lastSync           : DateTime;
@@ -4662,7 +4674,7 @@ entity RegistryManagement : cuid, managed {
     @Common.Label: 'Sync Frequency'
     syncFrequency      : String(20) enum {
         REAL_TIME; HOURLY; DAILY; WEEKLY; MANUAL;
- default 'DAILY';
+    } default 'DAILY';
     
     @Common.Label: 'Authentication Type'
     authenticationType : String(20) enum {
@@ -4707,7 +4719,7 @@ entity AgentTemplates : cuid, managed {
     @Common.Label: 'Template Category'
     templateCategory   : String(50) not null enum {
         DATA_PROCESSING; ML_INFERENCE; INTEGRATION; UTILITY; SECURITY; ANALYTICS;
-;
+    };
     
     @Common.Label: 'Template Type'
     templateType       : String(30) not null enum {
@@ -4721,17 +4733,17 @@ entity AgentTemplates : cuid, managed {
     framework          : String(30) enum {
         PYTHON_FASTAPI; PYTHON_FLASK; JAVASCRIPT_EXPRESS; JAVASCRIPT_FASTIFY;
         GO_NATIVE; JAVA_SPRING; CSHARP_DOTNET;
- default 'PYTHON_FASTAPI';
+    } default 'PYTHON_FASTAPI';
     
     @Common.Label: 'Language'
     language           : String(20) enum {
         PYTHON; JAVASCRIPT; GO; JAVA; CSHARP; TYPESCRIPT;
- default 'PYTHON';
+    } default 'PYTHON';
     
     @Common.Label: 'Status'
     status             : String(20) not null enum {
         DRAFT; PUBLISHED; DEPRECATED; ARCHIVED;
- default 'DRAFT';
+    } default 'DRAFT';
     
     @Common.Label: 'Complexity Level'
     complexityLevel    : String(20) enum {
@@ -4816,7 +4828,7 @@ entity AgentBuilds : cuid, managed {
     @Common.Label: 'Build Status'
     buildStatus        : String(20) not null enum {
  IN_PROGRESS; COMPLETED; FAILED; CANCELLED;
- default 'PENDING';
+    } default 'PENDING';
     
     @Common.Label: 'Build Type'
     buildType          : String(20) enum {
@@ -4964,17 +4976,17 @@ entity AgentDeployments : cuid, managed {
     @Common.Label: 'Deployment Status'
     deploymentStatus   : String(20) not null enum {
  DEPLOYING; DEPLOYED; FAILED; STOPPED; SCALING;
- default 'PENDING';
+    } default 'PENDING';
     
     @Common.Label: 'Environment'
     environment        : String(20) enum {
         DEVELOPMENT; TESTING; STAGING; PRODUCTION;
- default 'DEVELOPMENT';
+    } default 'DEVELOPMENT';
     
     @Common.Label: 'Deployment Type'
     deploymentType     : String(20) enum {
         KUBERNETES; DOCKER; SERVERLESS; CONTAINER;
- default 'KUBERNETES';
+    } default 'KUBERNETES';
     
     @Common.Label: 'Agent ID'
     agentId            : String(50);

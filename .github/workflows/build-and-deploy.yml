@@ -93,44 +93,15 @@ jobs:
             chmod 777 /app/logs /app/data
             # Make start.sh executable
             chmod +x start.sh
-            # Run the 18-step verification in dry-run mode
-            # Since test mode only runs blockchain tests, we'll use a custom approach
-            echo '🔄 Running 18-step verification sequence...'
+            # Run the 18-step verification using the new CI verify mode
+            echo '🔄 Running 18-step A2A System Verification'
+            echo ''
             
-            # Source the script to get functions
-            source ./start.sh
+            # Use the CI verify mode we just added to start.sh
+            ./start.sh ci-verify
             
-            # Mock the actual service starts to just validate steps
-            export DRY_RUN=true
-            export CI=true
-            
-            # Execute the verification steps
-            echo '📋 Executing verification steps:'
-            echo 'Step 1/18: Pre-flight Checks'
-            preflight_checks || echo 'Pre-flight checks completed'
-            
-            echo 'Step 2/18: Environment Setup'  
-            setup_environment || echo 'Environment setup completed'
-            
-            echo 'Step 3/18: Infrastructure Services (skipped in CI)'
-            echo 'Step 4/18: Blockchain Services (skipped in CI)'
-            echo 'Step 5/18: Core Services (skipped in CI)'
-            echo 'Step 6/18: Trust Systems (skipped in CI)'
-            echo 'Step 7/18: MCP Servers (skipped in CI)'
-            echo 'Step 8/18: Network Services (skipped in CI)'
-            echo 'Step 9/18: Agent Services (skipped in CI)'
-            echo 'Step 10/18: Frontend Service (skipped in CI)'
-            echo 'Step 11/18: Notification System (skipped in CI)'
-            echo 'Step 12/18: Telemetry Services (skipped in CI)'
-            echo 'Step 13/18: Agent Communication Testing (validated)'
-            echo 'Step 14/18: Blockchain Integration Testing (validated)'
-            echo 'Step 15/18: Database Connectivity (validated)'
-            echo 'Step 16/18: Security Configuration (validated)'
-            echo 'Step 17/18: Performance Optimization (validated)'
-            echo 'Step 18/18: Final Validation (validated)'
-            
-            echo '✅ A2A System verification completed successfully'
-            echo '📊 All 18 steps validated in CI environment'
+            echo ''
+            echo '🎉 A2A System verification completed successfully!'
           "
         
         # Display verification results

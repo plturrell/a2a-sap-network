@@ -1,0 +1,947 @@
+{
+  "agent": "Agent4-CalculationValidation",
+  "timestamp": "2025-08-23T09:49:45.903Z",
+  "summary": {
+    "filesScanned": 10,
+    "totalVulnerabilities": 92,
+    "critical": 1,
+    "high": 1,
+    "medium": 0,
+    "low": 90,
+    "warnings": 0
+  },
+  "vulnerabilities": [
+    {
+      "type": "CODE_INJECTION",
+      "severity": "CRITICAL",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 257,
+      "code": "{ pattern: /eval\\s*\\(/gi, level: \"CRITICAL\", message: \"eval() function not allowed\" },",
+      "message": "Code injection via eval()",
+      "impact": "Could allow arbitrary code execution in calculation validation context",
+      "fix": "Remove eval() and Function constructor usage, use safe alternatives"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 939,
+      "code": "MessageToast.show(\"Validation task created successfully\");",
+      "message": "Hardcoded message in MessageToast",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 1124,
+      "code": "MessageToast.show(\"Formula test passed!\");",
+      "message": "Hardcoded message in MessageToast",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 678,
+      "code": "MessageBox.error(\"Insufficient permissions to access formula builder\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 718,
+      "code": "MessageBox.error(\"Insufficient permissions for batch validation\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 726,
+      "code": "MessageBox.warning(\"Please select tasks for batch validation.\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 732,
+      "code": "MessageBox.error(\"Maximum 100 tasks can be validated in batch for security reasons.\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 736,
+      "code": "MessageBox.confirm(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 773,
+      "code": "MessageBox.success(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 782,
+      "code": "MessageBox.error(\"Batch validation failed: \" + this.formatSecureText(xhr.responseText));",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 797,
+      "code": "MessageBox.error(\"Insufficient permissions to view analytics\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 840,
+      "code": "MessageBox.error(\"Failed to load analytics: \" + this.formatSecureText(xhr.responseText));",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 880,
+      "code": "MessageBox.error(\"Invalid task name: \" + oTaskNameValidation.message);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 886,
+      "code": "MessageBox.error(\"Invalid description: \" + oDescValidation.message);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 891,
+      "code": "MessageBox.error(\"Please select a calculation type\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 896,
+      "code": "MessageBox.error(\"Please add at least one formula to validate\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 904,
+      "code": "MessageBox.error(\"Invalid formula at position \" + (i + 1) + \": \" + oFormulaValidation.message);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 944,
+      "code": "MessageBox.error(\"Failed to create task: \" + this.formatSecureText(xhr.responseText));",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 987,
+      "code": "MessageBox.error(\"Formula too long. Maximum 5000 characters allowed.\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 1038,
+      "code": "MessageBox.error(\"Please enter a formula to test\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 1043,
+      "code": "MessageBox.error(\"Formula security validation required before testing\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 1088,
+      "code": "MessageBox.error(\"Invalid test data format\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 1097,
+      "code": "MessageBox.error(\"Invalid expected result format\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 1101,
+      "code": "MessageBox.error(\"Invalid test data JSON format\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 1126,
+      "code": "MessageBox.warning(\"Formula test failed. Check variance: \" + this.formatCalculationResult(data.variance));",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 1135,
+      "code": "MessageBox.error(\"Formula test failed: \" + this.formatSecureText(xhr.responseText));",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 216,
+      "code": "oView.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing calculation status changes",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 753,
+      "code": "this.base.getView().setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing calculation status changes",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 823,
+      "code": "this._oAnalyticsDialog.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing calculation status changes",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 909,
+      "code": "this._oCreateDialog.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing calculation status changes",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 1105,
+      "code": "this._oTestDialog.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing calculation status changes",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 776,
+      "code": "\"Estimated formulas: \" + this.formatCalculationResult(data.totalFormulas)",
+      "message": "Formula result accessibility: Missing screen reader support for calculation results",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ListReportExt.controller.js",
+      "line": 783,
+      "code": "this._logAuditEvent(\"BATCH_VALIDATION_ERROR\", \"Batch validation failed\", xhr.responseText);",
+      "message": "Validation error accessibility: Missing ARIA live regions for error announcements",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 226,
+      "code": "MessageToast.show(\"Configure custom validation rules in the Advanced tab\");",
+      "message": "Hardcoded message in MessageToast",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 537,
+      "code": "MessageToast.show(\"Validation process started\");",
+      "message": "Hardcoded message in MessageToast",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 1113,
+      "code": "MessageToast.show(\"Optimization applied successfully\");",
+      "message": "Hardcoded message in MessageToast",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 498,
+      "code": "MessageBox.error(\"Insufficient permissions to start validation\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 509,
+      "code": "MessageBox.error(\"Invalid task ID: \" + oTaskIdValidation.message);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 513,
+      "code": "MessageBox.confirm(\"Start calculation validation for '\" + this.formatSecureText(sTaskName) + \"'?\", {",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 545,
+      "code": "MessageBox.error(\"Failed to start validation: \" + this.formatSecureText(xhr.responseText));",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 560,
+      "code": "MessageBox.warning(\"Validation monitoring timeout. Please refresh to check status.\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 580,
+      "code": "MessageBox.success(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 588,
+      "code": "MessageBox.error(\"Validation failed: \" + this.formatSecureText(data.error));",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 630,
+      "code": "MessageBox.error(\"Insufficient permissions to validate formulas\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 639,
+      "code": "MessageBox.error(\"Invalid task ID\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 686,
+      "code": "MessageBox.error(\"Failed to load formulas: \" + this.formatSecureText(xhr.responseText));",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 720,
+      "code": "MessageBox.error(\"Please select formulas to validate\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 726,
+      "code": "MessageBox.error(\"Maximum 50 formulas can be validated at once for security reasons\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 752,
+      "code": "MessageBox.success(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 767,
+      "code": "MessageBox.error(\"Formula validation failed: \" + this.formatSecureText(xhr.responseText));",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 796,
+      "code": "MessageBox.error(\"Insufficient permissions to run benchmarks\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 805,
+      "code": "MessageBox.error(\"Invalid task ID\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 809,
+      "code": "MessageBox.confirm(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 842,
+      "code": "MessageBox.error(\"Benchmark failed: \" + this.formatSecureText(xhr.responseText));",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 862,
+      "code": "MessageBox.error(\"Insufficient permissions to generate reports\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 872,
+      "code": "MessageBox.error(\"Invalid task ID\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 910,
+      "code": "MessageBox.error(\"Invalid report type\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 934,
+      "code": "MessageBox.success(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 953,
+      "code": "MessageBox.error(\"Report generation failed: \" + this.formatSecureText(xhr.responseText));",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 964,
+      "code": "MessageBox.error(\"Invalid download URL\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 967,
+      "code": "MessageBox.error(\"Invalid download URL format\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 973,
+      "code": "MessageBox.error(\"Insufficient permissions to optimize calculations\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 982,
+      "code": "MessageBox.error(\"Invalid task ID\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 986,
+      "code": "MessageBox.confirm(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 1018,
+      "code": "MessageBox.information(\"No optimization opportunities found. Calculations are already optimized.\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 1023,
+      "code": "MessageBox.error(\"Optimization failed: \" + this.formatSecureText(xhr.responseText));",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 1085,
+      "code": "MessageBox.error(\"This optimization is marked as potentially unsafe and cannot be applied\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 1089,
+      "code": "MessageBox.confirm(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 1120,
+      "code": "MessageBox.error(\"Failed to apply optimization: \" + this.formatSecureText(xhr.responseText));",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for calculation validation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 523,
+      "code": "this._extensionAPI.getView().setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing calculation status changes",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 663,
+      "code": "this._oFormulaValidationDialog.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing calculation status changes",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 730,
+      "code": "this._oFormulaValidationDialog.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing calculation status changes",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 822,
+      "code": "this._extensionAPI.getView().setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing calculation status changes",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 914,
+      "code": "this._oReportDialog.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing calculation status changes",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 999,
+      "code": "this._extensionAPI.getView().setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing calculation status changes",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 582,
+      "code": "\"Formulas validated: \" + this.formatCalculationResult(data.formulasValidated) + \"\\n\" +",
+      "message": "Formula result accessibility: Missing screen reader support for calculation results",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 702,
+      "code": "validationResult: formula.validationResult ? this.formatSecureText(formula.validationResult) : \"\",",
+      "message": "Formula result accessibility: Missing screen reader support for calculation results",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 703,
+      "code": "actualValue: typeof formula.actualValue === 'number' ? this.formatCalculationResult(formula.actualValue) : \"\",",
+      "message": "Formula result accessibility: Missing screen reader support for calculation results",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 704,
+      "code": "expectedValue: typeof formula.expectedValue === 'number' ? this.formatCalculationResult(formula.expectedValue) : \"\",",
+      "message": "Formula result accessibility: Missing screen reader support for calculation results",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 750,
+      "code": "this._updateFormulaResults(data.results);",
+      "message": "Formula result accessibility: Missing screen reader support for calculation results",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 771,
+      "code": "_updateFormulaResults: function(aResults) {",
+      "message": "Formula result accessibility: Missing screen reader support for calculation results",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 783,
+      "code": "oFormula.validationResult = this.formatSecureText(result.result);",
+      "message": "Formula result accessibility: Missing screen reader support for calculation results",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 784,
+      "code": "oFormula.actualValue = this.formatCalculationResult(result.actualValue);",
+      "message": "Formula result accessibility: Missing screen reader support for calculation results",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 853,
+      "code": "\"Formulas per second: \" + this.formatCalculationResult(data.formulasPerSecond);",
+      "message": "Formula result accessibility: Missing screen reader support for calculation results",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 546,
+      "code": "this._logAuditEvent(\"VALIDATION_START_ERROR\", \"Failed to start validation\", xhr.responseText);",
+      "message": "Validation error accessibility: Missing ARIA live regions for error announcements",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 588,
+      "code": "MessageBox.error(\"Validation failed: \" + this.formatSecureText(data.error));",
+      "message": "Validation error accessibility: Missing ARIA live regions for error announcements",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/controller/ObjectPageExt.controller.js",
+      "line": 589,
+      "code": "this._logAuditEvent(\"VALIDATION_FAILED\", \"Validation failed\", data.error);",
+      "message": "Validation error accessibility: Missing ARIA live regions for error announcements",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/fragment/CreateValidationTask.fragment.xml",
+      "line": 370,
+      "code": "<core:InvisibleText id=\"errorHandlingHelp\" text=\"Select how validation errors should be handled during execution.\"/>",
+      "message": "Validation error accessibility: Missing ARIA live regions for error announcements",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/fragment/FormulaBuilder.fragment.xml",
+      "line": 19,
+      "code": "<core:InvisibleText id=\"formulaBuilderHelp\" text=\"Build and test mathematical formulas using the editor panel on the left and results panel on the right. Include functions, operators, and variables to create complex calculations.\"/>",
+      "message": "Formula result accessibility: Missing screen reader support for calculation results",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/fragment/FormulaBuilder.fragment.xml",
+      "line": 182,
+      "code": "items=\"{formula>/testResults}\"",
+      "message": "Formula result accessibility: Missing screen reader support for calculation results",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/fragment/FormulaBuilder.fragment.xml",
+      "line": 193,
+      "code": "<Text text=\"{formula>result}\"/>",
+      "message": "Formula result accessibility: Missing screen reader support for calculation results",
+      "impact": "Reduces accessibility for calculation validation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "SAP_SECURITY",
+      "severity": "HIGH",
+      "file": "/Users/apple/projects/a2a/a2aNetwork/app/a2aFiori/webapp/ext/agent4/manifest.json",
+      "line": 1,
+      "code": "manifest.json",
+      "message": "Missing security header: Content-Security-Policy",
+      "impact": "Reduces calculation validation application security posture",
+      "fix": "Add Content-Security-Policy to manifest security configuration"
+    }
+  ],
+  "recommendations": [
+    "Implement secure formula processing with strict validation",
+    "Prevent expression injection with sanitization and whitelisting",
+    "Protect calculation integrity with verification and checksums",
+    "Implement numeric safety controls and bounds checking",
+    "Secure validation rules from unauthorized modification",
+    "Implement batch processing protection and rate limiting",
+    "Secure formula builder with strict component validation",
+    "Protect benchmark integrity with configuration validation",
+    "Implement secure report generation with output encoding",
+    "Secure template processing with content validation"
+  ]
+}

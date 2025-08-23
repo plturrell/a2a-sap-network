@@ -4,8 +4,9 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/m/MessageToast",
     "sap/base/security/encodeXML",
-    "sap/base/strings/escapeRegExp"
-], function (ControllerExtension, Fragment, MessageBox, MessageToast, encodeXML, escapeRegExp) {
+    "sap/base/strings/escapeRegExp",
+    "../utils/SecurityUtils"
+], function (ControllerExtension, Fragment, MessageBox, MessageToast, encodeXML, escapeRegExp, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent1.ext.controller.ListReportExt", {
@@ -13,6 +14,8 @@ sap.ui.define([
         override: {
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
+                this._securityUtils = SecurityUtils;
+                this._resourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
                 // Initialize dialog cache for better performance
                 this._dialogCache = {};
                 
@@ -128,7 +131,7 @@ sap.ui.define([
             // Show busy indicator
             this.base.getView().setBusy(true);
             
-            jQuery.ajax({
+            this._securityUtils.secureAjaxRequest({
                 url: "/a2a/agent1/v1/batch-process",
                 type: "POST",
                 contentType: "application/json",
@@ -180,7 +183,7 @@ sap.ui.define([
          * @since 1.0.0
          */
         _loadFormatStatistics: function() {
-            jQuery.ajax({
+            this._securityUtils.secureAjaxRequest({
                 url: "/a2a/agent1/v1/format-statistics",
                 type: "GET",
                 headers: {

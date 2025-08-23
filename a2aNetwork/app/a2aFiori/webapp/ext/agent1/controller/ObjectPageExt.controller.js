@@ -4,8 +4,9 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/ui/core/Fragment",
     "sap/base/security/encodeXML",
-    "sap/base/strings/escapeRegExp"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, encodeXML, escapeRegExp) {
+    "sap/base/strings/escapeRegExp",
+    "../utils/SecurityUtils"
+], function (ControllerExtension, MessageBox, MessageToast, Fragment, encodeXML, escapeRegExp, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent1.ext.controller.ObjectPageExt", {
@@ -13,6 +14,8 @@ sap.ui.define([
         override: {
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
+                this._securityUtils = SecurityUtils;
+                this._resourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
                 // Initialize dialog cache and search filters
                 this._dialogCache = {};
                 this._searchFilters = {
@@ -75,8 +78,8 @@ sap.ui.define([
         _startStandardizationProcess: function(sTaskId) {
             this._extensionAPI.getView().setBusy(true);
             
-            jQuery.ajax({
-                url: "/a2a/agent1/v1/tasks/" + sTaskId + "/start",
+            this._securityUtils.secureAjaxRequest({
+                url: "/a2a/agent1/v1/tasks/" + encodeURIComponent(sTaskId) + "/start",
                 type: "POST",
                 success: function(data) {
                     this._extensionAPI.getView().setBusy(false);
@@ -96,7 +99,7 @@ sap.ui.define([
         _startProgressMonitoring: function(sTaskId) {
             // Poll for progress updates every 2 seconds
             this._progressInterval = setInterval(function() {
-                jQuery.ajax({
+                this._securityUtils.secureAjaxRequest({
                     url: "/a2a/agent1/v1/tasks/" + sTaskId + "/progress",
                     type: "GET",
                     success: function(data) {
@@ -132,7 +135,7 @@ sap.ui.define([
         },
 
         _pauseStandardization: function(sTaskId) {
-            jQuery.ajax({
+            this._securityUtils.secureAjaxRequest({
                 url: "/a2a/agent1/v1/tasks/" + sTaskId + "/pause",
                 type: "POST",
                 success: function() {
@@ -157,7 +160,7 @@ sap.ui.define([
             
             this._extensionAPI.getView().setBusy(true);
             
-            jQuery.ajax({
+            this._securityUtils.secureAjaxRequest({
                 url: "/a2a/agent1/v1/validate-mapping",
                 type: "POST",
                 contentType: "application/json",
@@ -262,7 +265,7 @@ sap.ui.define([
             
             this._oExportDialog.setBusy(true);
             
-            jQuery.ajax({
+            this._securityUtils.secureAjaxRequest({
                 url: "/a2a/agent1/v1/tasks/" + oExportData.taskId + "/export",
                 type: "POST",
                 contentType: "application/json",
@@ -321,7 +324,7 @@ sap.ui.define([
         },
 
         _loadPreviewData: function(oTaskData) {
-            jQuery.ajax({
+            this._securityUtils.secureAjaxRequest({
                 url: "/a2a/agent1/v1/preview-transformation",
                 type: "POST",
                 contentType: "application/json",
@@ -487,8 +490,11 @@ sap.ui.define([
             var sScript = oScriptArea.getValue();
             
             try {
-                // Basic syntax validation
-                new Function(sScript);
+                // Validate script for security
+                var validation = this._securityUtils.validateTransformationScript(sScript);
+                if (!validation.isValid) {
+                    throw new Error(validation.errors.join(", "));
+                }
                 
                 // Announce success to screen readers
                 sap.ui.getCore().announceForAccessibility("Script validation successful");
@@ -546,6 +552,13 @@ sap.ui.define([
         onScriptChange: function(oEvent) {
             var oScriptArea = oEvent.getSource();
             var sScript = oEvent.getParameter("value");
+            
+            // Validate input parameter
+            if (!this._securityUtils.validateInputParameter(sScript, 'string')) {
+                oScriptArea.setValueState("Error");
+                oScriptArea.setValueStateText("Invalid input");
+                return;
+            }
             
             // Reset validation state for live editing
             if (sScript.length === 0) {
@@ -669,7 +682,7 @@ sap.ui.define([
             
             this.base.getView().setBusy(true);
             
-            jQuery.ajax({
+            this._securityUtils.secureAjaxRequest({
                 url: "/a2a/agent1/v1/tasks",
                 type: "POST",
                 contentType: "application/json",
@@ -753,8 +766,13 @@ sap.ui.define([
             oReader.onload = function(e) {
                 try {
                     var oTemplate = JSON.parse(e.target.result);
+                    // Validate and sanitize the schema
+                    if (!this._securityUtils.validateSchema(oTemplate)) {
+                        throw new Error("Invalid schema format");
+                    }
+                    oTemplate = this._securityUtils.sanitizeSchema(oTemplate);
                     this._validateTemplateSchema(oTemplate);
-                    MessageToast.show("Template uploaded successfully");
+                    MessageToast.show(this._resourceBundle.getText("msg.templateUploadSuccess"));
                 } catch (oError) {
                     MessageBox.error("Invalid template file: " + oError.message);
                 }

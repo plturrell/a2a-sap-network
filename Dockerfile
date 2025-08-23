@@ -61,12 +61,51 @@ COPY --from=builder /usr/local/bin/ /usr/local/bin/
 # Copy application code
 COPY --from=builder --chown=a2auser:a2auser /app .
 
+# Copy verification script and make it executable
+COPY --chown=a2auser:a2auser scripts/verify-18-steps.sh /app/scripts/
+RUN chmod +x /app/scripts/verify-18-steps.sh /app/start.sh
+
 # Create directories for data and logs
 RUN mkdir -p /app/data /app/logs && \
     chown -R a2auser:a2auser /app/data /app/logs
 
+# Add entrypoint script for flexible command handling
+COPY --chown=a2auser:a2auser <<'EOF' /app/entrypoint.sh
+#!/bin/bash
+set -e
+
+# Handle different commands
+case "${1}" in
+    verify)
+        echo "Running 18-step verification..."
+        exec /app/scripts/verify-18-steps.sh
+        ;;
+    ci-verify)
+        echo "Running CI verification mode..."
+        exec /app/start.sh ci-verify
+        ;;
+    test)
+        echo "Running test mode..."
+        exec /app/start.sh test
+        ;;
+    start)
+        echo "Starting A2A system..."
+        exec /app/start.sh "${@:2}"
+        ;;
+    *)
+        # Default: run the command as-is
+        exec "$@"
+        ;;
+esac
+EOF
+
+RUN chmod +x /app/entrypoint.sh
+
 # Switch to non-root user
 USER a2auser
+
+# Set entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
