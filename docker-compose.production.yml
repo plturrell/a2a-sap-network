@@ -4,649 +4,396 @@ services:
   # Infrastructure Services
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
+    restart: always
+    mem_limit: 512m
+    mem_reservation: 256m
     networks:
       - a2a-network
-    restart: unless-stopped
-    mem_limit: 512m
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Blockchain (Anvil for development, replace with mainnet/testnet for production)
-  blockchain:
-    image: ghcr.io/foundry-rs/foundry:latest
-    command: anvil --host 0.0.0.0 --accounts 20 --balance 1000
-    ports:
-      - "8545:8545"
-    networks:
-      - a2a-network
-    restart: unless-stopped
-    mem_limit: 1g
-    healthcheck:
-      test: ["CMD", "cast", "block-number", "--rpc-url", "http://localhost:8545"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Network Service (CAP/CDS)
-  network-service:
-    build:
-      context: ./a2aNetwork
-      dockerfile: Dockerfile
-    ports:
-      - "4004:4004"
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    mem_limit: 1g
+    mem_reservation: 512m
     environment:
-      - NODE_ENV=production
-      - PORT=4004
-      - DATABASE_URL=sqlite://db.sqlite
-      - BLOCKCHAIN_URL=http://blockchain:8545
+      POSTGRES_USER: a2a
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-a2apass}
+      POSTGRES_DB: a2a_platform
     volumes:
-      - network-data:/app/data
+      - postgres-data:/var/lib/postgresql/data
     networks:
       - a2a-network
-    depends_on:
-      - blockchain
-    restart: unless-stopped
-    mem_limit: 1g
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4004/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test: ["CMD-SHELL", "pg_isready -U a2a"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # Agent 0: Registry Server (Port 8000)
-  registry-server:
-    build:
-      context: ./a2aAgents/backend
-      dockerfile: Dockerfile
-      args:
-        AGENT_NAME: registry-server
-        AGENT_PORT: 8000
+  # Agent 0 - Registry Server
+  agent-0-registry:
+    image: finsightintelligence/a2a:latest
+    restart: always
+    mem_limit: 512m
+    mem_reservation: 256m
+    environment:
+      AGENT_ID: "0"
+      AGENT_TYPE: "registry"
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://a2a:${POSTGRES_PASSWORD:-a2apass}@postgres:5432/a2a_platform
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "8000:8000"
-    environment:
-      - NODE_ENV=production
-      - PORT=8000
-      - AGENT_ID=registry-server
-      - BLOCKCHAIN_URL=http://blockchain:8545
-      - REDIS_URL=redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     networks:
       - a2a-network
-    depends_on:
-      - redis
-      - blockchain
-    restart: unless-stopped
-    mem_limit: 512m
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: ["python", "-m", "a2aAgents.backend.main", "--agent-id", "0"]
 
-  # Agent 1: Data Product Agent (Port 8001)
-  agent0-data-product:
-    build:
-      context: ./a2aAgents/backend
-      dockerfile: Dockerfile
-      args:
-        AGENT_NAME: agent0
-        AGENT_PORT: 8001
+  # Agent 1 - Manager
+  agent-1-manager:
+    image: finsightintelligence/a2a:latest
+    restart: always
+    mem_limit: 512m
+    mem_reservation: 256m
+    environment:
+      AGENT_ID: "1"
+      AGENT_TYPE: "manager"
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://a2a:${POSTGRES_PASSWORD:-a2apass}@postgres:5432/a2a_platform
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "8001:8001"
-    environment:
-      - NODE_ENV=production
-      - PORT=8001
-      - AGENT_ID=data_product_agent_0
-      - REGISTRY_URL=http://registry-server:8000
-      - BLOCKCHAIN_URL=http://blockchain:8545
-      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - agent-0-registry
     networks:
       - a2a-network
-    depends_on:
-      - registry-server
-    restart: unless-stopped
-    mem_limit: 512m
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: ["python", "-m", "a2aAgents.backend.main", "--agent-id", "1"]
 
-  # Agent 2: Standardization Agent (Port 8002)
-  agent1-standardization:
-    build:
-      context: ./a2aAgents/backend
-      dockerfile: Dockerfile
-      args:
-        AGENT_NAME: agent1
-        AGENT_PORT: 8002
+  # Agent 2 - Calculator
+  agent-2-calculator:
+    image: finsightintelligence/a2a:latest
+    restart: always
+    mem_limit: 256m
+    mem_reservation: 128m
+    environment:
+      AGENT_ID: "2"
+      AGENT_TYPE: "calculator"
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://a2a:${POSTGRES_PASSWORD:-a2apass}@postgres:5432/a2a_platform
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "8002:8002"
-    environment:
-      - NODE_ENV=production
-      - PORT=8002
-      - AGENT_ID=data_standardization_agent_1
-      - REGISTRY_URL=http://registry-server:8000
-      - BLOCKCHAIN_URL=http://blockchain:8545
-      - DOWNSTREAM_URL=http://agent2-ai-preparation:8003
+    depends_on:
+      - agent-0-registry
     networks:
       - a2a-network
-    depends_on:
-      - agent0-data-product
-    restart: unless-stopped
-    mem_limit: 512m
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: ["python", "-m", "a2aAgents.backend.main", "--agent-id", "2"]
 
-  # Agent 3: AI Preparation Agent (Port 8003)
-  agent2-ai-preparation:
-    build:
-      context: ./a2aAgents/backend
-      dockerfile: Dockerfile
-      args:
-        AGENT_NAME: agent2
-        AGENT_PORT: 8003
+  # Agent 3 - Trust Manager
+  agent-3-trust:
+    image: finsightintelligence/a2a:latest
+    restart: always
+    mem_limit: 256m
+    mem_reservation: 128m
+    environment:
+      AGENT_ID: "3"
+      AGENT_TYPE: "trust"
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://a2a:${POSTGRES_PASSWORD:-a2apass}@postgres:5432/a2a_platform
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "8003:8003"
-    environment:
-      - NODE_ENV=production
-      - PORT=8003
-      - AGENT_ID=ai_preparation_agent_2
-      - REGISTRY_URL=http://registry-server:8000
-      - BLOCKCHAIN_URL=http://blockchain:8545
-      - DOWNSTREAM_URL=http://agent3-vector-processing:8004
-      - GROK_API_KEY=${GROK_API_KEY}
+    depends_on:
+      - agent-0-registry
     networks:
       - a2a-network
-    depends_on:
-      - agent1-standardization
-    restart: unless-stopped
-    mem_limit: 768m
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: ["python", "-m", "a2aAgents.backend.main", "--agent-id", "3"]
 
-  # Agent 4: Vector Processing Agent (Port 8004)
-  agent3-vector-processing:
-    build:
-      context: ./a2aAgents/backend
-      dockerfile: Dockerfile
-      args:
-        AGENT_NAME: agent3
-        AGENT_PORT: 8004
+  # Agent 4 - Security Monitor
+  agent-4-security:
+    image: finsightintelligence/a2a:latest
+    restart: always
+    mem_limit: 256m
+    mem_reservation: 128m
+    environment:
+      AGENT_ID: "4"
+      AGENT_TYPE: "security"
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://a2a:${POSTGRES_PASSWORD:-a2apass}@postgres:5432/a2a_platform
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "8004:8004"
-    environment:
-      - NODE_ENV=production
-      - PORT=8004
-      - AGENT_ID=vector_processing_agent_3
-      - REGISTRY_URL=http://registry-server:8000
-      - BLOCKCHAIN_URL=http://blockchain:8545
-      - VECTOR_DB=SAP_HANA
+    depends_on:
+      - agent-0-registry
     networks:
       - a2a-network
-    depends_on:
-      - agent2-ai-preparation
-    restart: unless-stopped
-    mem_limit: 1g
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: ["python", "-m", "a2aAgents.backend.main", "--agent-id", "4"]
 
-  # Agent 5: Calc Validation Agent (Port 8005)
-  agent4-calc-validation:
-    build:
-      context: ./a2aAgents/backend
-      dockerfile: Dockerfile
-      args:
-        AGENT_NAME: agent4
-        AGENT_PORT: 8005
+  # Agent 5 - Persistence Manager
+  agent-5-persistence:
+    image: finsightintelligence/a2a:latest
+    restart: always
+    mem_limit: 256m
+    mem_reservation: 128m
+    environment:
+      AGENT_ID: "5"
+      AGENT_TYPE: "persistence"
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://a2a:${POSTGRES_PASSWORD:-a2apass}@postgres:5432/a2a_platform
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "8005:8005"
-    environment:
-      - NODE_ENV=production
-      - PORT=8005
-      - AGENT_ID=calculation_validation_agent_4
-      - REGISTRY_URL=http://registry-server:8000
-      - BLOCKCHAIN_URL=http://blockchain:8545
+    depends_on:
+      - agent-0-registry
     networks:
       - a2a-network
-    depends_on:
-      - agent3-vector-processing
-    restart: unless-stopped
-    mem_limit: 512m
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: ["python", "-m", "a2aAgents.backend.main", "--agent-id", "5"]
 
-  # Agent 6: QA Validation Agent (Port 8006)
-  agent5-qa-validation:
-    build:
-      context: ./a2aAgents/backend
-      dockerfile: Dockerfile
-      args:
-        AGENT_NAME: agent5
-        AGENT_PORT: 8006
+  # Agent 6 - Data Processor
+  agent-6-data:
+    image: finsightintelligence/a2a:latest
+    restart: always
+    mem_limit: 256m
+    mem_reservation: 128m
+    environment:
+      AGENT_ID: "6"
+      AGENT_TYPE: "data_processor"
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://a2a:${POSTGRES_PASSWORD:-a2apass}@postgres:5432/a2a_platform
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "8006:8006"
-    environment:
-      - NODE_ENV=production
-      - PORT=8006
-      - AGENT_ID=qa_validation_agent_5
-      - REGISTRY_URL=http://registry-server:8000
-      - BLOCKCHAIN_URL=http://blockchain:8545
+    depends_on:
+      - agent-0-registry
     networks:
       - a2a-network
-    depends_on:
-      - agent4-calc-validation
-    restart: unless-stopped
-    mem_limit: 512m
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: ["python", "-m", "a2aAgents.backend.main", "--agent-id", "6"]
 
-  # Agent 7: Quality Control Agent (Port 8007)
-  agent6-quality-control:
-    build:
-      context: ./a2aAgents/backend
-      dockerfile: Dockerfile
-      args:
-        AGENT_NAME: agent6
-        AGENT_PORT: 8007
+  # Agent 7 - Analytics
+  agent-7-analytics:
+    image: finsightintelligence/a2a:latest
+    restart: always
+    mem_limit: 256m
+    mem_reservation: 128m
+    environment:
+      AGENT_ID: "7"
+      AGENT_TYPE: "analytics"
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://a2a:${POSTGRES_PASSWORD:-a2apass}@postgres:5432/a2a_platform
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "8007:8007"
-    environment:
-      - NODE_ENV=production
-      - PORT=8007
-      - AGENT_ID=quality_control_agent_6
-      - REGISTRY_URL=http://registry-server:8000
-      - BLOCKCHAIN_URL=http://blockchain:8545
+    depends_on:
+      - agent-0-registry
     networks:
       - a2a-network
-    depends_on:
-      - agent5-qa-validation
-    restart: unless-stopped
-    mem_limit: 512m
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8007/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: ["python", "-m", "a2aAgents.backend.main", "--agent-id", "7"]
 
-  # Agent 8: Reasoning Agent (Port 8008)
-  reasoning-agent:
-    build:
-      context: ./a2aAgents/backend
-      dockerfile: Dockerfile
-      args:
-        AGENT_NAME: reasoning-agent
-        AGENT_PORT: 8008
+  # Agent 8 - Communication Hub
+  agent-8-comm:
+    image: finsightintelligence/a2a:latest
+    restart: always
+    mem_limit: 256m
+    mem_reservation: 128m
+    environment:
+      AGENT_ID: "8"
+      AGENT_TYPE: "communication"
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://a2a:${POSTGRES_PASSWORD:-a2apass}@postgres:5432/a2a_platform
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "8008:8008"
-    environment:
-      - NODE_ENV=production
-      - PORT=8008
-      - AGENT_ID=reasoning_agent
-      - REGISTRY_URL=http://registry-server:8000
-      - BLOCKCHAIN_URL=http://blockchain:8545
+    depends_on:
+      - agent-0-registry
     networks:
       - a2a-network
-    depends_on:
-      - registry-server
-    restart: unless-stopped
-    mem_limit: 768m
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8008/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: ["python", "-m", "a2aAgents.backend.main", "--agent-id", "8"]
 
-  # Agent 9: SQL Agent (Port 8009)
-  sql-agent:
-    build:
-      context: ./a2aAgents/backend
-      dockerfile: Dockerfile
-      args:
-        AGENT_NAME: sql-agent
-        AGENT_PORT: 8009
+  # Agent 9 - Task Scheduler
+  agent-9-scheduler:
+    image: finsightintelligence/a2a:latest
+    restart: always
+    mem_limit: 256m
+    mem_reservation: 128m
+    environment:
+      AGENT_ID: "9"
+      AGENT_TYPE: "scheduler"
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://a2a:${POSTGRES_PASSWORD:-a2apass}@postgres:5432/a2a_platform
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "8009:8009"
-    environment:
-      - NODE_ENV=production
-      - PORT=8009
-      - AGENT_ID=sql_agent
-      - REGISTRY_URL=http://registry-server:8000
-      - BLOCKCHAIN_URL=http://blockchain:8545
-      - DATABASE_URL=${DATABASE_URL:-sqlite://data/sql-agent.db}
-    volumes:
-      - sql-agent-data:/app/data
+    depends_on:
+      - agent-0-registry
     networks:
       - a2a-network
-    depends_on:
-      - registry-server
-    restart: unless-stopped
-    mem_limit: 512m
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8009/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: ["python", "-m", "a2aAgents.backend.main", "--agent-id", "9"]
 
-  # Agent 10: Agent Manager (Port 8010)
-  agent-manager:
-    build:
-      context: ./a2aAgents/backend
-      dockerfile: Dockerfile
-      args:
-        AGENT_NAME: agent-manager
-        AGENT_PORT: 8010
+  # Agent 10 - Resource Monitor
+  agent-10-resource:
+    image: finsightintelligence/a2a:latest
+    restart: always
+    mem_limit: 256m
+    mem_reservation: 128m
+    environment:
+      AGENT_ID: "10"
+      AGENT_TYPE: "resource_monitor"
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://a2a:${POSTGRES_PASSWORD:-a2apass}@postgres:5432/a2a_platform
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "8010:8010"
-    environment:
-      - NODE_ENV=production
-      - PORT=8010
-      - AGENT_ID=agent_manager
-      - REGISTRY_URL=http://registry-server:8000
-      - BLOCKCHAIN_URL=http://blockchain:8545
-      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - agent-0-registry
     networks:
       - a2a-network
-    depends_on:
-      - registry-server
-      - redis
-    restart: unless-stopped
-    mem_limit: 768m
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: ["python", "-m", "a2aAgents.backend.main", "--agent-id", "10"]
 
-  # Agent 11: Data Manager (Port 8011)
-  data-manager:
-    build:
-      context: ./a2aAgents/backend
-      dockerfile: Dockerfile
-      args:
-        AGENT_NAME: data-manager
-        AGENT_PORT: 8011
+  # Agent 11 - Compliance Checker
+  agent-11-compliance:
+    image: finsightintelligence/a2a:latest
+    restart: always
+    mem_limit: 256m
+    mem_reservation: 128m
+    environment:
+      AGENT_ID: "11"
+      AGENT_TYPE: "compliance"
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://a2a:${POSTGRES_PASSWORD:-a2apass}@postgres:5432/a2a_platform
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "8011:8011"
-    environment:
-      - NODE_ENV=production
-      - PORT=8011
-      - AGENT_ID=data_manager_agent
-      - REGISTRY_URL=http://registry-server:8000
-      - BLOCKCHAIN_URL=http://blockchain:8545
-      - DATABASE_URL=sqlite://data/data-manager.db
-    volumes:
-      - data-manager-storage:/app/data
+    depends_on:
+      - agent-0-registry
     networks:
       - a2a-network
-    depends_on:
-      - registry-server
-    restart: unless-stopped
-    mem_limit: 768m
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8011/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: ["python", "-m", "a2aAgents.backend.main", "--agent-id", "11"]
 
-  # Agent 12: Catalog Manager (Port 8012)
-  catalog-manager:
-    build:
-      context: ./a2aAgents/backend
-      dockerfile: Dockerfile
-      args:
-        AGENT_NAME: catalog-manager
-        AGENT_PORT: 8012
+  # Agent 12 - Integration Bridge
+  agent-12-integration:
+    image: finsightintelligence/a2a:latest
+    restart: always
+    mem_limit: 256m
+    mem_reservation: 128m
+    environment:
+      AGENT_ID: "12"
+      AGENT_TYPE: "integration"
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://a2a:${POSTGRES_PASSWORD:-a2apass}@postgres:5432/a2a_platform
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "8012:8012"
-    environment:
-      - NODE_ENV=production
-      - PORT=8012
-      - AGENT_ID=catalog_manager_agent
-      - REGISTRY_URL=http://registry-server:8000
-      - BLOCKCHAIN_URL=http://blockchain:8545
-      - DATA_MANAGER_URL=http://data-manager:8011
+    depends_on:
+      - agent-0-registry
     networks:
       - a2a-network
-    depends_on:
-      - data-manager
-    restart: unless-stopped
-    mem_limit: 512m
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8012/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: ["python", "-m", "a2aAgents.backend.main", "--agent-id", "12"]
 
-  # Agent 13: Calculation Agent (Port 8013)
-  calculation-agent:
-    build:
-      context: ./a2aAgents/backend
-      dockerfile: Dockerfile
-      args:
-        AGENT_NAME: calculation-agent
-        AGENT_PORT: 8013
+  # Agent 13 - Backup Manager
+  agent-13-backup:
+    image: finsightintelligence/a2a:latest
+    restart: always
+    mem_limit: 256m
+    mem_reservation: 128m
+    environment:
+      AGENT_ID: "13"
+      AGENT_TYPE: "backup"
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://a2a:${POSTGRES_PASSWORD:-a2apass}@postgres:5432/a2a_platform
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "8013:8013"
-    environment:
-      - NODE_ENV=production
-      - PORT=8013
-      - AGENT_ID=calculation_agent
-      - REGISTRY_URL=http://registry-server:8000
-      - BLOCKCHAIN_URL=http://blockchain:8545
+    depends_on:
+      - agent-0-registry
     networks:
       - a2a-network
-    depends_on:
-      - registry-server
-    restart: unless-stopped
-    mem_limit: 768m
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8013/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: ["python", "-m", "a2aAgents.backend.main", "--agent-id", "13"]
 
-  # Agent 14: Agent Builder (Port 8014)
-  agent-builder:
-    build:
-      context: ./a2aAgents/backend
-      dockerfile: Dockerfile
-      args:
-        AGENT_NAME: agent-builder
-        AGENT_PORT: 8014
+  # Agent 14 - Notification Service
+  agent-14-notification:
+    image: finsightintelligence/a2a:latest
+    restart: always
+    mem_limit: 256m
+    mem_reservation: 128m
+    environment:
+      AGENT_ID: "14"
+      AGENT_TYPE: "notification"
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://a2a:${POSTGRES_PASSWORD:-a2apass}@postgres:5432/a2a_platform
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "8014:8014"
-    environment:
-      - NODE_ENV=production
-      - PORT=8014
-      - AGENT_ID=agent_builder_agent
-      - REGISTRY_URL=http://registry-server:8000
-      - BLOCKCHAIN_URL=http://blockchain:8545
+    depends_on:
+      - agent-0-registry
     networks:
       - a2a-network
-    depends_on:
-      - registry-server
-    restart: unless-stopped
-    mem_limit: 768m
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8014/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: ["python", "-m", "a2aAgents.backend.main", "--agent-id", "14"]
 
-  # Agent 15: Embedding Fine-Tuner (Port 8015)
-  embedding-finetuner:
-    build:
-      context: ./a2aAgents/backend
-      dockerfile: Dockerfile
-      args:
-        AGENT_NAME: embedding-finetuner
-        AGENT_PORT: 8015
+  # Agent 15 - Audit Logger
+  agent-15-audit:
+    image: finsightintelligence/a2a:latest
+    restart: always
+    mem_limit: 256m
+    mem_reservation: 128m
+    environment:
+      AGENT_ID: "15"
+      AGENT_TYPE: "audit"
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://a2a:${POSTGRES_PASSWORD:-a2apass}@postgres:5432/a2a_platform
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "8015:8015"
-    environment:
-      - NODE_ENV=production
-      - PORT=8015
-      - AGENT_ID=embedding_fine_tuner_agent
-      - REGISTRY_URL=http://registry-server:8000
-      - BLOCKCHAIN_URL=http://blockchain:8545
+    depends_on:
+      - agent-0-registry
     networks:
       - a2a-network
-    depends_on:
-      - registry-server
-    restart: unless-stopped
-    mem_limit: 1g
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8015/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: ["python", "-m", "a2aAgents.backend.main", "--agent-id", "15"]
 
-  # Unified Service (Port 8888)
-  unified-service:
-    build:
-      context: ./a2aAgents/backend
-      dockerfile: Dockerfile
-    ports:
-      - "8888:8888"
+  # CDS/CAP Network Service
+  cds-service:
+    image: finsightintelligence/a2a:network-latest
+    restart: always
+    mem_limit: 512m
+    mem_reservation: 256m
     environment:
-      - NODE_ENV=production
-      - PORT=8888
-      - BLOCKCHAIN_URL=http://blockchain:8545
-      - REGISTRY_URL=http://registry-server:8000
-      - REDIS_URL=redis://redis:6379
-      - A2A_SERVICE_URL=http://unified-service:8888
-      - A2A_SERVICE_HOST=unified-service
-      - A2A_BASE_URL=http://network-service:4004
-    networks:
-      - a2a-network
+      NODE_ENV: production
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://a2a:${POSTGRES_PASSWORD:-a2apass}@postgres:5432/a2a_platform
+    ports:
+      - "3000:3000"
     depends_on:
-      - registry-server
       - redis
-      - blockchain
-    restart: unless-stopped
-    mem_limit: 2g
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Notification System
-  notification-system:
-    build:
-      context: ./a2aNetwork
-      dockerfile: Dockerfile
-      args:
-        SERVICE_NAME: notification
-    ports:
-      - "4006:4006"
-    environment:
-      - NODE_ENV=production
-      - PORT=4006
-      - A2A_SERVICE_URL=http://unified-service:8888
-      - A2A_SERVICE_HOST=unified-service
-      - A2A_BASE_URL=http://network-service:4004
-      - NOTIFICATION_PORT=4006
+      - postgres
     networks:
       - a2a-network
-    depends_on:
-      - unified-service
-      - network-service
-    restart: unless-stopped
-    mem_limit: 512m
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4006/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
-  # Nginx Reverse Proxy
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
-    networks:
-      - a2a-network
-    depends_on:
-      - registry-server
-      - unified-service
-    restart: unless-stopped
+  # Frontend UI (Optional - can be served statically)
+  frontend:
+    image: finsightintelligence/a2a:frontend-latest
+    restart: always
     mem_limit: 256m
-
-  # Monitoring - Prometheus
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus-data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    networks:
-      - a2a-network
-    restart: unless-stopped
-    mem_limit: 512m
-
-  # Monitoring - Grafana
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3001:3000"
-    volumes:
-      - grafana-data:/var/lib/grafana
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    mem_reservation: 128m
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_INSTALL_PLUGINS=redis-datasource
+      REACT_APP_API_URL: http://agent-0-registry:8000
+    ports:
+      - "3001:80"
+    depends_on:
+      - agent-0-registry
     networks:
       - a2a-network
-    depends_on:
-      - prometheus
-    restart: unless-stopped
-    mem_limit: 512m
 
 networks:
   a2a-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
 
 volumes:
-  redis-data:
-  network-data:
-  data-manager-storage:
-  sql-agent-data:
-  prometheus-data:
-  grafana-data:
+  postgres-data:
+    driver: local

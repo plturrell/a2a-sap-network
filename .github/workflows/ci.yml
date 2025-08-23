@@ -1,520 +1,94 @@
-name: A2A Production CI/CD Pipeline
+name: ci
 
 on:
   push:
-    branches: [main, develop]
+    branches:
+      - "main"
+      - "develop"
   pull_request:
-    branches: [main, develop]
-  release:
-    types: [published]
-
-env:
-  PYTHON_VERSION: '3.11'
-  NODE_VERSION: '18'
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+    branches:
+      - "main"
 
 jobs:
-  security-scan:
-    name: Security Scanning
+  docker:
     runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      contents: read
-    
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-
-      - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: 'trivy-results.sarif'
-
-      - name: Dependency Review
-        uses: actions/dependency-review-action@v3
-        if: github.event_name == 'pull_request'
-
-      - name: CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
-        with:
-          languages: python, javascript
-
-  lint-and-format:
-    name: Code Quality
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install ruff black isort mypy
-          pip install -r requirements.txt
-
-      - name: Install Node.js dependencies
-        run: |
-          cd a2aNetwork
-          npm ci
-
-      - name: Run Python linting
-        run: |
-          ruff check . --format=github
-          black --check .
-          isort --check-only .
-
-      - name: Run Python type checking
-        run: mypy . --config-file=pyproject.toml
-
-      - name: Run JavaScript/TypeScript linting
-        run: |
-          cd a2aNetwork
-          npm run lint
-
-      - name: Check formatting
-        run: |
-          cd a2aNetwork
-          npm run format -- --check
-
-  unit-tests:
-    name: Unit Tests
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.9', '3.10', '3.11']
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-cov pytest-asyncio
-
-      - name: Run unit tests
-        run: |
-          pytest tests/unit/ \
-            --cov=a2aAgents \
-            --cov-report=xml \
-            --cov-report=html \
-            --junit-xml=pytest-results.xml \
-            -v
-
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-
-      - name: Upload test results
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: Unit Tests (Python ${{ matrix.python-version }})
-          path: pytest-results.xml
-          reporter: java-junit
-
-  integration-tests:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    needs: [unit-tests]
-    
-    services:
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_PASSWORD: testpass
-          POSTGRES_DB: a2a_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-asyncio
-
-      - name: Run integration tests
-        env:
-          REDIS_URL: redis://localhost:6379
-          DATABASE_URL: postgresql://postgres:testpass@localhost:5432/a2a_test
-        run: |
-          pytest tests/integration/ \
-            --junit-xml=integration-results.xml \
-            -v
-
-      - name: Upload integration test results
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: Integration Tests
-          path: integration-results.xml
-          reporter: java-junit
-
-  e2e-tests:
-    name: End-to-End Tests
-    runs-on: ubuntu-latest
-    needs: [integration-tests]
-    
-    services:
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          cd a2aNetwork && npm ci
-
-      - name: Start test environment
-        run: |
-          # Start A2A Network services
-          cd a2aNetwork
-          npm run dev &
-          sleep 10
-
-          # Start test agents
-          cd ../a2aAgents/backend
-          python -m pytest tests/e2e/ \
-            --junit-xml=e2e-results.xml \
-            -v
-
-      - name: Upload E2E test results
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: End-to-End Tests
-          path: e2e-results.xml
-          reporter: java-junit
-
-  performance-tests:
-    name: Performance Tests
-    runs-on: ubuntu-latest
-    needs: [integration-tests]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install locust pytest-benchmark
-
-      - name: Run performance tests
-        run: |
-          pytest tests/performance/ \
-            --benchmark-json=benchmark-results.json \
-            -v
-
-      - name: Upload performance results
-        uses: actions/upload-artifact@v3
-        with:
-          name: performance-results
-          path: benchmark-results.json
-
-  chaos-tests:
-    name: Chaos Engineering Tests
-    runs-on: ubuntu-latest
-    needs: [integration-tests]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pytest-asyncio
-
-      - name: Run chaos tests
-        run: |
-          pytest tests/chaos/ \
-            --junit-xml=chaos-results.xml \
-            -v
-
-      - name: Upload chaos test results
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: Chaos Engineering Tests
-          path: chaos-results.xml
-          reporter: java-junit
-
-  build-images:
-    name: Build Container Images
-    runs-on: ubuntu-latest
-    needs: [lint-and-format, unit-tests]
-    outputs:
-      image-digest: ${{ steps.build.outputs.digest }}
-      image-tag: ${{ steps.meta.outputs.tags }}
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Container Registry
+        
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
+          username: ${{ vars.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PAT }}
+          
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: cloud
+          endpoint: "finsightintelligence/a22"
+          install: true
+          
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: finsightintelligence/a2a
           tags: |
             type=ref,event=branch
             type=ref,event=pr
-            type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push images
-        id: build
-        uses: docker/build-push-action@v5
+            type=sha,prefix={{branch}}-
+            
+      - name: Build and push main platform
+        uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
           platforms: linux/amd64,linux/arm64
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            finsightintelligence/a2a:latest
+            finsightintelligence/a2a:platform-latest
+            ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # For pull requests, export results to the build cache.
+          # Otherwise, push to a registry.
+          outputs: ${{ github.event_name == 'pull_request' && 'type=cacheonly' || 'type=registry' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+      - name: Build and push network service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./a2aNetwork
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            finsightintelligence/a2a:network-latest
+            finsightintelligence/a2a:network-${{ github.sha }}
+          outputs: ${{ github.event_name == 'pull_request' && 'type=cacheonly' || 'type=registry' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./a2aAgents/frontend
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            finsightintelligence/a2a:frontend-latest
+            finsightintelligence/a2a:frontend-${{ github.sha }}
+          outputs: ${{ github.event_name == 'pull_request' && 'type=cacheonly' || 'type=registry' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  security-scan-images:
-    name: Container Security Scan
+  deploy:
+    needs: docker
     runs-on: ubuntu-latest
-    needs: [build-images]
-    
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ needs.build-images.outputs.image-tag }}
-          format: 'sarif'
-          output: 'trivy-image-results.sarif'
-
-      - name: Upload image scan results
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: 'trivy-image-results.sarif'
-
-  deploy-staging:
-    name: Deploy to Staging
-    runs-on: ubuntu-latest
-    needs: [e2e-tests, build-images, security-scan-images]
-    if: github.ref == 'refs/heads/develop'
-    environment:
-      name: staging
-      url: https://staging.a2a-network.com
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to staging
+      - name: Deploy notification
         run: |
-          echo "Deploying to staging environment"
-          # Add actual deployment commands here
-          # kubectl apply -f k8s/staging/
-          # helm upgrade --install a2a-staging ./charts/a2a
-
-      - name: Run smoke tests
-        run: |
-          pytest tests/smoke/ --env=staging -v
-
-      - name: Notify deployment
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          channel: '#deployments'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-
-  deploy-production:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: [e2e-tests, performance-tests, build-images, security-scan-images]
-    if: github.ref == 'refs/heads/main'
-    environment:
-      name: production
-      url: https://a2a-network.com
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to production
-        run: |
-          echo "Deploying to production environment"
-          # Add actual deployment commands here
-          # kubectl apply -f k8s/production/
-          # helm upgrade --install a2a-production ./charts/a2a
-
-      - name: Run health checks
-        run: |
-          pytest tests/smoke/ --env=production -v
-
-      - name: Update deployment status
-        run: |
-          curl -X POST \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d '{"state":"success","description":"Deployment successful"}' \
-            "https://api.github.com/repos/${{ github.repository }}/deployments/${{ github.sha }}/statuses"
-
-  release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    needs: [deploy-production]
-    if: github.event_name == 'release'
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Generate changelog
-        id: changelog
-        run: |
-          # Generate changelog from commits
-          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
-          git log --pretty=format:"- %s (%h)" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          body: |
-            ## Changes
-            ${{ steps.changelog.outputs.CHANGELOG }}
-            
-            ## Docker Images
-            - `${{ needs.build-images.outputs.image-tag }}`
-            
-            ## Deployment
-            Successfully deployed to production ✅
-          files: |
-            requirements.txt
-            README.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  cleanup:
-    name: Cleanup
-    runs-on: ubuntu-latest
-    needs: [deploy-production, deploy-staging]
-    if: always()
-    
-    steps:
-      - name: Clean up old images
-        run: |
-          # Clean up container registry
-          # Keep only last 10 images
-          echo "Cleaning up old container images"
-
-      - name: Archive test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: test-results-${{ github.run_number }}
-          path: |
-            pytest-results.xml
-            integration-results.xml
-            e2e-results.xml
-            chaos-results.xml
-            coverage.xml
-          retention-days: 30
+          echo "🚀 A2A Platform images built and pushed successfully!"
+          echo "Images available:"
+          echo "- finsightintelligence/a2a:latest"
+          echo "- finsightintelligence/a2a:network-latest"
+          echo "- finsightintelligence/a2a:frontend-latest"

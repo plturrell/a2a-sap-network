@@ -1,0 +1,215 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:unified="sap.ui.unified">
+    
+    <Dialog
+        id="codeGeneratorDialog"
+        title="Agent Code Generator"
+        contentWidth="95%"
+        contentHeight="80vh"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox height="100%">
+                <!-- Code Generation Options -->
+                <Panel expandable="false" headerText="Generation Options" class="sapUiSmallMarginBottom">
+                    <l:Grid defaultSpan="XL3 L4 M6 S12" containerQuery="true" class="sapUiSmallMargin">
+                        <l:content>
+                            <VBox>
+                                <Label text="Target Framework"/>
+                                <Select id="targetFramework" selectedKey="{/generation/framework}">
+                                    <items>
+                                        <core:Item key="a2a-sdk" text="A2A SDK"/>
+                                        <core:Item key="langchain" text="LangChain"/>
+                                        <core:Item key="autogen" text="AutoGen"/>
+                                        <core:Item key="crewai" text="CrewAI"/>
+                                        <core:Item key="custom" text="Custom Framework"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                            
+                            <VBox>
+                                <Label text="Programming Language"/>
+                                <Select id="programmingLanguage" selectedKey="{/generation/language}">
+                                    <items>
+                                        <core:Item key="python" text="Python"/>
+                                        <core:Item key="javascript" text="JavaScript"/>
+                                        <core:Item key="typescript" text="TypeScript"/>
+                                        <core:Item key="java" text="Java"/>
+                                        <core:Item key="csharp" text="C#"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                            
+                            <VBox>
+                                <Label text="Code Style"/>
+                                <Select id="codeStyle" selectedKey="{/generation/style}">
+                                    <items>
+                                        <core:Item key="clean" text="Clean Code"/>
+                                        <core:Item key="functional" text="Functional"/>
+                                        <core:Item key="object-oriented" text="Object-Oriented"/>
+                                        <core:Item key="microservices" text="Microservices"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                            
+                            <VBox>
+                                <Label text="Test Generation"/>
+                                <Select id="testGeneration" selectedKey="{/generation/testing}">
+                                    <items>
+                                        <core:Item key="unit" text="Unit Tests"/>
+                                        <core:Item key="integration" text="Integration Tests"/>
+                                        <core:Item key="both" text="Unit + Integration"/>
+                                        <core:Item key="none" text="No Tests"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                        </l:content>
+                    </l:Grid>
+                </Panel>
+                
+                <!-- Code Preview Tabs -->
+                <IconTabBar id="codePreviewTabs" expanded="true" class="sapUiResponsiveContentPadding" height="100%">
+                    <items>
+                        <IconTabFilter key="agent" text="Agent Code" icon="sap-icon://product">
+                            <VBox height="100%">
+                                <Toolbar>
+                                    <Title text="Agent Implementation"/>
+                                    <ToolbarSpacer/>
+                                    <Button icon="sap-icon://copy" text="Copy" press="onCopyCode" data:codeType="agent"/>
+                                    <Button icon="sap-icon://download" text="Download" press="onDownloadCode" data:codeType="agent"/>
+                                </Toolbar>
+                                
+                                <unified:CodeEditor
+                                    id="agentCodeEditor"
+                                    type="python"
+                                    width="100%"
+                                    height="500px"
+                                    value="{/generatedCode/agent}"
+                                    editable="true"
+                                    lineNumbers="true"
+                                    syntaxHints="true"/>
+                            </VBox>
+                        </IconTabFilter>
+                        
+                        <IconTabFilter key="skills" text="Skills" icon="sap-icon://puzzle">
+                            <VBox height="100%">
+                                <Toolbar>
+                                    <Title text="Agent Skills"/>
+                                    <ToolbarSpacer/>
+                                    <Button icon="sap-icon://copy" text="Copy" press="onCopyCode" data:codeType="skills"/>
+                                    <Button icon="sap-icon://download" text="Download" press="onDownloadCode" data:codeType="skills"/>
+                                </Toolbar>
+                                
+                                <unified:CodeEditor
+                                    id="skillsCodeEditor"
+                                    type="python"
+                                    width="100%"
+                                    height="500px"
+                                    value="{/generatedCode/skills}"
+                                    editable="true"
+                                    lineNumbers="true"
+                                    syntaxHints="true"/>
+                            </VBox>
+                        </IconTabFilter>
+                        
+                        <IconTabFilter key="tests" text="Tests" icon="sap-icon://checklist">
+                            <VBox height="100%">
+                                <Toolbar>
+                                    <Title text="Test Cases"/>
+                                    <ToolbarSpacer/>
+                                    <Button icon="sap-icon://copy" text="Copy" press="onCopyCode" data:codeType="tests"/>
+                                    <Button icon="sap-icon://download" text="Download" press="onDownloadCode" data:codeType="tests"/>
+                                </Toolbar>
+                                
+                                <unified:CodeEditor
+                                    id="testsCodeEditor"
+                                    type="python"
+                                    width="100%"
+                                    height="500px"
+                                    value="{/generatedCode/tests}"
+                                    editable="true"
+                                    lineNumbers="true"
+                                    syntaxHints="true"/>
+                            </VBox>
+                        </IconTabFilter>
+                        
+                        <IconTabFilter key="config" text="Configuration" icon="sap-icon://settings">
+                            <VBox height="100%">
+                                <Toolbar>
+                                    <Title text="Configuration Files"/>
+                                    <ToolbarSpacer/>
+                                    <Button icon="sap-icon://copy" text="Copy" press="onCopyCode" data:codeType="config"/>
+                                    <Button icon="sap-icon://download" text="Download" press="onDownloadCode" data:codeType="config"/>
+                                </Toolbar>
+                                
+                                <unified:CodeEditor
+                                    id="configCodeEditor"
+                                    type="json"
+                                    width="100%"
+                                    height="500px"
+                                    value="{/generatedCode/config}"
+                                    editable="true"
+                                    lineNumbers="true"
+                                    syntaxHints="true"/>
+                            </VBox>
+                        </IconTabFilter>
+                        
+                        <IconTabFilter key="deployment" text="Deployment" icon="sap-icon://cloud">
+                            <VBox height="100%">
+                                <Toolbar>
+                                    <Title text="Deployment Scripts"/>
+                                    <ToolbarSpacer/>
+                                    <Button icon="sap-icon://copy" text="Copy" press="onCopyCode" data:codeType="deployment"/>
+                                    <Button icon="sap-icon://download" text="Download" press="onDownloadCode" data:codeType="deployment"/>
+                                </Toolbar>
+                                
+                                <unified:CodeEditor
+                                    id="deploymentCodeEditor"
+                                    type="yaml"
+                                    width="100%"
+                                    height="500px"
+                                    value="{/generatedCode/deployment}"
+                                    editable="true"
+                                    lineNumbers="true"
+                                    syntaxHints="true"/>
+                            </VBox>
+                        </IconTabFilter>
+                        
+                        <IconTabFilter key="documentation" text="Documentation" icon="sap-icon://document-text">
+                            <VBox height="100%">
+                                <Toolbar>
+                                    <Title text="Generated Documentation"/>
+                                    <ToolbarSpacer/>
+                                    <Button icon="sap-icon://copy" text="Copy" press="onCopyCode" data:codeType="documentation"/>
+                                    <Button icon="sap-icon://download" text="Download" press="onDownloadCode" data:codeType="documentation"/>
+                                </Toolbar>
+                                
+                                <unified:CodeEditor
+                                    id="documentationEditor"
+                                    type="markdown"
+                                    width="100%"
+                                    height="500px"
+                                    value="{/generatedCode/documentation}"
+                                    editable="true"
+                                    lineNumbers="true"
+                                    syntaxHints="true"/>
+                            </VBox>
+                        </IconTabFilter>
+                    </items>
+                </IconTabBar>
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button text="Regenerate Code" type="Ghost" icon="sap-icon://refresh" press="onRegenerateCode"/>
+            <Button text="Validate Code" type="Ghost" icon="sap-icon://validate" press="onValidateCode"/>
+            <Button text="Deploy Agent" type="Emphasized" icon="sap-icon://cloud" press="onDeployAgent"/>
+            <Button text="Download All" type="Ghost" icon="sap-icon://download" press="onDownloadAll"/>
+            <Button text="Close" press="onCloseCodeGenerator"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

@@ -1,0 +1,54 @@
+name: a2a-platform
+region: nyc
+services:
+  - name: redis
+    image:
+      registry_type: DOCKER_HUB
+      registry: redis
+      repository: redis
+      tag: 7-alpine
+    instance_size_slug: basic-xxs
+    instance_count: 1
+    
+  - name: agent-0-registry
+    image:
+      registry_type: GHCR
+      registry: ghcr.io
+      repository: $GITHUB_REPOSITORY/a2a-platform
+      tag: latest
+    instance_size_slug: basic-xxs
+    instance_count: 1
+    http_port: 8000
+    envs:
+      - key: AGENT_ID
+        value: "0"
+      - key: AGENT_TYPE
+        value: "registry"
+      - key: REDIS_URL
+        value: ${redis.PRIVATE_URL}
+    health_check:
+      http_path: /health
+      
+  - name: agent-1-manager
+    image:
+      registry_type: GHCR
+      registry: ghcr.io
+      repository: $GITHUB_REPOSITORY/a2a-platform
+      tag: latest
+    instance_size_slug: basic-xxs
+    instance_count: 1
+    http_port: 8001
+    envs:
+      - key: AGENT_ID
+        value: "1"
+      - key: AGENT_TYPE
+        value: "manager"
+      - key: REDIS_URL
+        value: ${redis.PRIVATE_URL}
+        
+databases:
+  - name: a2a-db
+    engine: PG
+    version: "15"
+    size: db-s-1vcpu-1gb
+    num_nodes: 1

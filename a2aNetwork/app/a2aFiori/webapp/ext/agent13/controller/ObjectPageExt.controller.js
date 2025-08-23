@@ -102,6 +102,639 @@ sap.ui.define([
             oWizardModel.setData(oData);
         },
 
+        // Wizard Dialog Lifecycle
+        onWizardDialogAfterOpen: function() {
+            // Focus on first input field
+            var oTemplateNameInput = this.getView().byId("templateNameInput");
+            if (oTemplateNameInput) {
+                oTemplateNameInput.focus();
+            }
+            
+            // Start real-time validation
+            this._startWizardValidation();
+        },
+        
+        onWizardDialogAfterClose: function() {
+            // Stop real-time validation
+            this._stopWizardValidation();
+        },
+        
+        _startWizardValidation: function() {
+            this._wizardValidationInterval = setInterval(() => {
+                var oWizardModel = this.getView().getModel("wizard");
+                if (oWizardModel) {
+                    var oData = oWizardModel.getData();
+                    this._updateCreateButtonState(oData);
+                }
+            }, 500);
+        },
+        
+        _stopWizardValidation: function() {
+            if (this._wizardValidationInterval) {
+                clearInterval(this._wizardValidationInterval);
+                this._wizardValidationInterval = null;
+            }
+        },
+        
+        _updateCreateButtonState: function(oData) {
+            // Validate required fields
+            var bValid = oData.templateName && oData.templateName.length >= 3 &&
+                        oData.templateType && oData.agentCategory &&
+                        oData.templateNameState !== "Error" &&
+                        oData.templateTypeState !== "Error" &&
+                        oData.agentCategoryState !== "Error";
+            
+            oData.canCreate = bValid;
+            this.getView().getModel("wizard").setData(oData);
+        },
+
+        // Wizard Event Handlers
+        onTemplateNameChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oWizardModel = this.getView().getModel("wizard");
+            var oData = oWizardModel.getData();
+            
+            // Sanitize input
+            var sSanitized = SecurityUtils.sanitizeTemplateData(sValue);
+            if (sSanitized !== sValue) {
+                oEvent.getSource().setValue(sSanitized);
+                sValue = sSanitized;
+            }
+            
+            if (!sValue || sValue.length < 3) {
+                oData.templateNameState = "Error";
+                oData.templateNameStateText = "Template name must be at least 3 characters";
+            } else if (sValue.length > 100) {
+                oData.templateNameState = "Error";
+                oData.templateNameStateText = "Template name must not exceed 100 characters";
+            } else {
+                oData.templateNameState = "Success";
+                oData.templateNameStateText = "Valid template name";
+            }
+            
+            oWizardModel.setData(oData);
+        },
+        
+        onDescriptionChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            // Sanitize description
+            var sSanitized = SecurityUtils.sanitizeTemplateData(sValue);
+            if (sSanitized !== sValue) {
+                oEvent.getSource().setValue(sSanitized);
+            }
+        },
+        
+        onTemplateTypeChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oWizardModel = this.getView().getModel("wizard");
+            var oData = oWizardModel.getData();
+            
+            if (sValue) {
+                oData.templateTypeState = "Success";
+                oData.templateTypeStateText = "Template type selected";
+                
+                // Auto-suggest based on template type
+                switch (sValue) {
+                    case "basic":
+                        oData.complexity = "simple";
+                        oData.codeLanguage = "python";
+                        break;
+                    case "cognitive":
+                    case "autonomous":
+                        oData.complexity = "expert";
+                        oData.codeLanguage = "python";
+                        oData.dependencies = "tensorflow, scikit-learn";
+                        break;
+                    case "microservice":
+                        oData.deploymentTarget = "kubernetes";
+                        oData.containerImage = "python:3.9-slim";
+                        break;
+                    case "realtime":
+                        oData.communicationMode = "streaming";
+                        oData.supportedProtocols = ["websocket", "grpc"];
+                        break;
+                }
+                
+                this._updateTemplatePreview(oData);
+            } else {
+                oData.templateTypeState = "Error";
+                oData.templateTypeStateText = "Please select a template type";
+            }
+            
+            oWizardModel.setData(oData);
+        },
+        
+        onAgentCategoryChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oWizardModel = this.getView().getModel("wizard");
+            var oData = oWizardModel.getData();
+            
+            if (sValue) {
+                oData.agentCategoryState = "Success";
+                oData.agentCategoryStateText = "Agent category selected";
+                
+                // Auto-suggest based on category
+                switch (sValue) {
+                    case "ml_ai":
+                        oData.codeLanguage = "python";
+                        oData.testFramework = "pytest";
+                        oData.dependencies = "numpy, pandas, scikit-learn";
+                        break;
+                    case "api_integration":
+                        oData.communicationMode = "request_response";
+                        oData.supportedProtocols = ["http"];
+                        oData.authenticationMethods = ["oauth2", "bearer"];
+                        break;
+                    case "data_processing":
+                        oData.communicationMode = "batch";
+                        oData.scalingPolicy = "horizontal";
+                        break;
+                    case "monitoring":
+                        oData.monitoringEnabled = true;
+                        oData.loggingLevel = "info";
+                        break;
+                }
+            } else {
+                oData.agentCategoryState = "Error";
+                oData.agentCategoryStateText = "Please select an agent category";
+            }
+            
+            oWizardModel.setData(oData);
+        },
+        
+        onComplexityChange: function(oEvent) {
+            var sValue = oEvent.getParameter("key");
+            var oWizardModel = this.getView().getModel("wizard");
+            var oData = oWizardModel.getData();
+            
+            // Adjust settings based on complexity
+            switch (sValue) {
+                case "simple":
+                    oData.codeQualityTarget = 70;
+                    oData.autoGenerateTests = true;
+                    oData.autoGenerateDocs = true;
+                    break;
+                case "expert":
+                    oData.codeQualityTarget = 95;
+                    oData.autoGenerateTests = false; // Manual tests for complex scenarios
+                    break;
+            }
+            
+            oWizardModel.setData(oData);
+        },
+        
+        onBaseTemplateChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oWizardModel = this.getView().getModel("wizard");
+            var oData = oWizardModel.getData();
+            
+            // Load template-specific defaults
+            if (sValue) {
+                this._loadTemplateDefaults(sValue, oData);
+            }
+            
+            oWizardModel.setData(oData);
+        },
+        
+        onTemplateLanguageChange: function(oEvent) {
+            this._updateTemplatePreview();
+        },
+        
+        onFrameworkVersionChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            // Validate version format
+            if (sValue && !/^\d+\.\d+(\.\d+)?/.test(sValue)) {
+                MessageToast.show("Please use semantic versioning (e.g., 1.0.0)");
+            }
+        },
+        
+        onDependenciesChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            // Validate dependencies format
+            if (sValue) {
+                var sDependencies = SecurityUtils.sanitizeTemplateData(sValue);
+                if (sDependencies !== sValue) {
+                    oEvent.getSource().setValue(sDependencies);
+                }
+            }
+        },
+        
+        onPrerequisitesChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var sSanitized = SecurityUtils.sanitizeTemplateData(sValue);
+            if (sSanitized !== sValue) {
+                oEvent.getSource().setValue(sSanitized);
+            }
+        },
+        
+        onCustomizableChange: function(oEvent) {
+            var bState = oEvent.getParameter("state");
+            if (!bState) {
+                MessageToast.show("Template will use fixed configuration");
+            }
+        },
+        
+        onCodeLanguageChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oWizardModel = this.getView().getModel("wizard");
+            var oData = oWizardModel.getData();
+            
+            // Auto-adjust based on language
+            switch (sValue) {
+                case "python":
+                    oData.testFramework = "pytest";
+                    oData.documentationStyle = "sphinx";
+                    oData.previewType = "python";
+                    break;
+                case "javascript":
+                case "typescript":
+                    oData.testFramework = "jest";
+                    oData.documentationStyle = "jsdoc";
+                    oData.previewType = "javascript";
+                    break;
+                case "java":
+                    oData.testFramework = "junit";
+                    oData.documentationStyle = "javadoc";
+                    oData.previewType = "java";
+                    break;
+            }
+            
+            this._updateTemplatePreview(oData);
+            oWizardModel.setData(oData);
+        },
+        
+        onCodeStyleChange: function(oEvent) {
+            this._updateTemplatePreview();
+        },
+        
+        onTestFrameworkChange: function(oEvent) {
+            this._updateTemplatePreview();
+        },
+        
+        onDocumentationStyleChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            if (sValue === "swagger") {
+                MessageToast.show("OpenAPI documentation will be auto-generated");
+            }
+        },
+        
+        onCodeQualityTargetChange: function(oEvent) {
+            var nValue = oEvent.getParameter("value");
+            if (nValue < 80) {
+                MessageToast.show("Consider setting higher code quality target for production");
+            }
+        },
+        
+        onAutoGenerateTestsChange: function(oEvent) {
+            var bState = oEvent.getParameter("state");
+            if (!bState) {
+                MessageBox.information("You will need to create tests manually");
+            }
+        },
+        
+        onAutoGenerateDocsChange: function(oEvent) {
+            var bState = oEvent.getParameter("state");
+            if (!bState) {
+                MessageBox.information("You will need to write documentation manually");
+            }
+        },
+        
+        onDeploymentTargetChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oWizardModel = this.getView().getModel("wizard");
+            var oData = oWizardModel.getData();
+            
+            // Auto-adjust deployment settings
+            switch (sValue) {
+                case "kubernetes":
+                    oData.containerImage = oData.codeLanguage + ":latest";
+                    oData.scalingPolicy = "horizontal";
+                    oData.monitoringEnabled = true;
+                    break;
+                case "serverless":
+                    oData.scalingPolicy = "predictive";
+                    oData.resourceRequirements = "Memory: 512MB";
+                    break;
+                case "edge":
+                    oData.resourceRequirements = "CPU: 1, Memory: 1GB";
+                    oData.scalingPolicy = "manual";
+                    break;
+            }
+            
+            oWizardModel.setData(oData);
+        },
+        
+        onContainerImageChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            // Validate container image format
+            if (sValue && !sValue.includes(":")) {
+                MessageToast.show("Consider specifying image tag (e.g., python:3.9)");
+            }
+        },
+        
+        onResourceRequirementsChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var sSanitized = SecurityUtils.sanitizeTemplateData(sValue);
+            if (sSanitized !== sValue) {
+                oEvent.getSource().setValue(sSanitized);
+            }
+        },
+        
+        onScalingPolicyChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            if (sValue === "manual") {
+                MessageToast.show("Manual scaling requires monitoring setup");
+            }
+        },
+        
+        onEnvironmentVariablesChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            // Validate environment variables format
+            if (sValue) {
+                var aLines = sValue.split('\n');
+                var bValid = aLines.every(function(sLine) {
+                    return !sLine.trim() || sLine.includes('=');
+                });
+                if (!bValid) {
+                    MessageToast.show("Use KEY=VALUE format for environment variables");
+                }
+            }
+        },
+        
+        onHealthCheckConfigChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            if (sValue && !sValue.startsWith('/')) {
+                MessageToast.show("Health check endpoint should start with /");
+            }
+        },
+        
+        onMonitoringEnabledChange: function(oEvent) {
+            var bState = oEvent.getParameter("state");
+            if (!bState) {
+                MessageBox.warning("Monitoring is highly recommended for production deployments");
+            }
+        },
+        
+        onSupportedProtocolsChange: function(oEvent) {
+            var aKeys = oEvent.getParameter("selectedKeys");
+            if (aKeys.includes("grpc") && aKeys.includes("http")) {
+                MessageToast.show("gRPC and HTTP protocols selected for maximum compatibility");
+            }
+        },
+        
+        onCommunicationModeChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oWizardModel = this.getView().getModel("wizard");
+            var oData = oWizardModel.getData();
+            
+            // Adjust protocols based on communication mode
+            switch (sValue) {
+                case "streaming":
+                    if (!oData.supportedProtocols.includes("websocket")) {
+                        oData.supportedProtocols.push("websocket");
+                    }
+                    break;
+                case "event_driven":
+                case "pubsub":
+                    if (!oData.supportedProtocols.includes("mqtt")) {
+                        oData.supportedProtocols.push("mqtt");
+                    }
+                    break;
+            }
+            
+            oWizardModel.setData(oData);
+        },
+        
+        onAuthenticationMethodsChange: function(oEvent) {
+            var aKeys = oEvent.getParameter("selectedKeys");
+            if (aKeys.includes("none")) {
+                MessageBox.warning("No authentication is not recommended for production");
+            }
+        },
+        
+        onDataProcessingCapabilitiesChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var sSanitized = SecurityUtils.sanitizeTemplateData(sValue);
+            if (sSanitized !== sValue) {
+                oEvent.getSource().setValue(sSanitized);
+            }
+        },
+        
+        onIntegrationPointsChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var sSanitized = SecurityUtils.sanitizeTemplateData(sValue);
+            if (sSanitized !== sValue) {
+                oEvent.getSource().setValue(sSanitized);
+            }
+        },
+        
+        onLoggingLevelChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            if (sValue === "trace" || sValue === "debug") {
+                MessageToast.show("Debug logging may impact performance");
+            }
+        },
+        
+        _updateTemplatePreview: function(oData) {
+            if (!oData) {
+                oData = this.getView().getModel("wizard").getData();
+            }
+            
+            // Generate preview based on settings
+            var sPreview = this._generateTemplatePreview(oData);
+            oData.templatePreview = sPreview;
+        },
+        
+        _generateTemplatePreview: function(oData) {
+            // Simple template preview generation
+            var sTemplate = "";
+            
+            switch (oData.codeLanguage) {
+                case "python":
+                    sTemplate = `# ${oData.templateName || 'Agent Template'}
+class Agent:
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+        
+    def process(self, data):
+        """Process incoming data"""
+        self.logger.info("Processing data")
+        return {"status": "success", "data": data}`;
+                    break;
+                case "javascript":
+                    sTemplate = `// ${oData.templateName || 'Agent Template'}
+class Agent {
+    constructor() {
+        this.logger = console;
+    }
+    
+    process(data) {
+        this.logger.log("Processing data");
+        return { status: "success", data: data };
+    }
+}`;
+                    break;
+                default:
+                    sTemplate = "// Template preview will be generated based on your selections";
+            }
+            
+            return sTemplate;
+        },
+        
+        _loadTemplateDefaults: function(sTemplateId, oData) {
+            // Load defaults based on base template
+            switch (sTemplateId) {
+                case "rest_api":
+                    oData.supportedProtocols = ["http"];
+                    oData.communicationMode = "request_response";
+                    oData.authenticationMethods = ["bearer", "oauth2"];
+                    break;
+                case "ml_pipeline":
+                    oData.codeLanguage = "python";
+                    oData.dependencies = "scikit-learn, pandas, numpy";
+                    oData.resourceRequirements = "CPU: 4, Memory: 8GB";
+                    break;
+            }
+        },
+        
+        onCancelTemplateWizard: function() {
+            this._oTemplateWizard.close();
+            this._resetWizardModel();
+        },
+        
+        onConfirmTemplateWizard: function() {
+            var oWizardModel = this.getView().getModel("wizard");
+            var oData = oWizardModel.getData();
+            
+            // Final validation
+            if (!this._validateWizardData(oData)) {
+                return;
+            }
+            
+            this._oTemplateWizard.setBusy(true);
+            
+            // Sanitize data for security
+            var oSanitizedData = this._sanitizeWizardData(oData);
+            
+            SecurityUtils.secureCallFunction(this.getView().getModel(), "/CreateAgentTemplate", {
+                urlParameters: oSanitizedData,
+                success: function(data) {
+                    this._oTemplateWizard.setBusy(false);
+                    this._oTemplateWizard.close();
+                    MessageToast.show(this.getResourceBundle().getText("msg.templateCreated"));
+                    this._refreshTemplateData();
+                    this._resetWizardModel();
+                }.bind(this),
+                error: function(error) {
+                    this._oTemplateWizard.setBusy(false);
+                    var errorMsg = SecurityUtils.escapeHTML(error.message || "Unknown error");
+                    MessageBox.error(this.getResourceBundle().getText("error.templateCreationFailed") + ": " + errorMsg);
+                }.bind(this)
+            });
+        },
+        
+        _validateWizardData: function(oData) {
+            if (!oData.templateName || oData.templateName.length < 3) {
+                MessageBox.error(this.getResourceBundle().getText("validation.templateNameRequired"));
+                return false;
+            }
+            
+            if (!oData.templateType) {
+                MessageBox.error(this.getResourceBundle().getText("validation.templateTypeRequired"));
+                return false;
+            }
+            
+            if (!oData.agentCategory) {
+                MessageBox.error(this.getResourceBundle().getText("validation.agentCategoryRequired"));
+                return false;
+            }
+            
+            return true;
+        },
+        
+        _sanitizeWizardData: function(oData) {
+            return {
+                templateName: SecurityUtils.sanitizeTemplateData(oData.templateName),
+                description: SecurityUtils.sanitizeTemplateData(oData.description),
+                templateType: oData.templateType,
+                agentCategory: oData.agentCategory,
+                complexity: oData.complexity,
+                baseTemplate: oData.baseTemplate,
+                templateLanguage: oData.templateLanguage,
+                frameworkVersion: SecurityUtils.sanitizeTemplateData(oData.frameworkVersion),
+                dependencies: SecurityUtils.sanitizeTemplateData(oData.dependencies),
+                prerequisites: SecurityUtils.sanitizeTemplateData(oData.prerequisites),
+                customizable: !!oData.customizable,
+                codeLanguage: oData.codeLanguage,
+                codeStyle: oData.codeStyle,
+                testFramework: oData.testFramework,
+                documentationStyle: oData.documentationStyle,
+                codeQualityTarget: parseInt(oData.codeQualityTarget) || 85,
+                autoGenerateTests: !!oData.autoGenerateTests,
+                autoGenerateDocs: !!oData.autoGenerateDocs,
+                deploymentTarget: oData.deploymentTarget,
+                containerImage: SecurityUtils.sanitizeTemplateData(oData.containerImage),
+                resourceRequirements: SecurityUtils.sanitizeTemplateData(oData.resourceRequirements),
+                scalingPolicy: oData.scalingPolicy,
+                environmentVariables: SecurityUtils.sanitizeTemplateData(oData.environmentVariables),
+                healthCheckConfig: SecurityUtils.sanitizeTemplateData(oData.healthCheckConfig),
+                monitoringEnabled: !!oData.monitoringEnabled,
+                supportedProtocols: oData.supportedProtocols || [],
+                communicationMode: oData.communicationMode,
+                authenticationMethods: oData.authenticationMethods || [],
+                dataProcessingCapabilities: SecurityUtils.sanitizeTemplateData(oData.dataProcessingCapabilities),
+                integrationPoints: SecurityUtils.sanitizeTemplateData(oData.integrationPoints),
+                loggingLevel: oData.loggingLevel
+            };
+        },
+        
+        _resetWizardModel: function() {
+            var oWizardModel = this.getView().getModel("wizard");
+            var oData = oWizardModel.getData();
+            
+            oData.templateName = "";
+            oData.description = "";
+            oData.templateType = "";
+            oData.agentCategory = "";
+            oData.complexity = "moderate";
+            oData.baseTemplate = "";
+            oData.templateLanguage = "handlebars";
+            oData.frameworkVersion = "";
+            oData.dependencies = "";
+            oData.prerequisites = "";
+            oData.customizable = true;
+            oData.codeLanguage = "python";
+            oData.codeStyle = "standard";
+            oData.testFramework = "pytest";
+            oData.documentationStyle = "sphinx";
+            oData.codeQualityTarget = 85;
+            oData.autoGenerateTests = true;
+            oData.autoGenerateDocs = true;
+            oData.templatePreview = "";
+            oData.deploymentTarget = "kubernetes";
+            oData.containerImage = "";
+            oData.resourceRequirements = "";
+            oData.scalingPolicy = "horizontal";
+            oData.environmentVariables = "";
+            oData.healthCheckConfig = "";
+            oData.monitoringEnabled = true;
+            oData.supportedProtocols = ["http"];
+            oData.communicationMode = "asynchronous";
+            oData.authenticationMethods = ["bearer"];
+            oData.dataProcessingCapabilities = "";
+            oData.integrationPoints = "";
+            oData.loggingLevel = "info";
+            oData.templateNameState = "";
+            oData.templateNameStateText = "";
+            oData.templateTypeState = "";
+            oData.templateTypeStateText = "";
+            oData.agentCategoryState = "";
+            oData.agentCategoryStateText = "";
+            oData.canCreate = false;
+            
+            oWizardModel.setData(oData);
+        },
+
         // Generate Agent Action
         onGenerateAgent: function() {
             const oContext = this.base.getView().getBindingContext();
@@ -508,6 +1141,9 @@ sap.ui.define([
             }
             if (this._pollInterval) {
                 clearInterval(this._pollInterval);
+            }
+            if (this._wizardValidationInterval) {
+                clearInterval(this._wizardValidationInterval);
             }
         }
     });

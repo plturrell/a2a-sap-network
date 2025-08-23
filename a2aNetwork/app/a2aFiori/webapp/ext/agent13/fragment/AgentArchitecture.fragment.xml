@@ -1,0 +1,262 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:viz="sap.viz.ui5.controls"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        id="agentArchitectureDialog"
+        title="Agent Architecture Designer"
+        contentWidth="90%"
+        contentHeight="700px"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <ScrollContainer height="100%" width="100%" vertical="true">
+                <VBox class="sapUiMediumMargin">
+                    <!-- Architecture Type Selection -->
+                    <Panel expandable="false" headerText="Architecture Pattern">
+                        <HBox justifyContent="SpaceAround" alignItems="Center" class="sapUiMediumMargin">
+                            <VBox alignItems="Center" class="sapUiSmallMargin">
+                                <Button
+                                    id="monolithicArchBtn"
+                                    icon="sap-icon://product"
+                                    text="Monolithic"
+                                    press="onSelectArchitecture"
+                                    type="Transparent"/>
+                                <Text text="Single Agent" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <VBox alignItems="Center" class="sapUiSmallMargin">
+                                <Button
+                                    id="microservicesArchBtn"
+                                    icon="sap-icon://grid"
+                                    text="Microservices"
+                                    press="onSelectArchitecture"
+                                    type="Transparent"/>
+                                <Text text="Distributed Agents" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <VBox alignItems="Center" class="sapUiSmallMargin">
+                                <Button
+                                    id="layeredArchBtn"
+                                    icon="sap-icon://layers"
+                                    text="Layered"
+                                    press="onSelectArchitecture"
+                                    type="Transparent"/>
+                                <Text text="Hierarchical Layers" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                            
+                            <VBox alignItems="Center" class="sapUiSmallMargin">
+                                <Button
+                                    id="eventDrivenArchBtn"
+                                    icon="sap-icon://message-warning"
+                                    text="Event-Driven"
+                                    press="onSelectArchitecture"
+                                    type="Transparent"/>
+                                <Text text="Event-Based" class="sapUiTinyMarginTop"/>
+                            </VBox>
+                        </HBox>
+                    </Panel>
+                    
+                    <!-- Architecture Configuration -->
+                    <Panel expandable="true" expanded="true" headerText="Architecture Configuration" class="sapUiSmallMarginTop">
+                        <l:Grid defaultSpan="XL6 L6 M12 S12" containerQuery="true" class="sapUiSmallMargin">
+                            <l:content>
+                                <!-- Communication Patterns -->
+                                <VBox>
+                                    <Label text="Communication Pattern" required="true"/>
+                                    <Select id="communicationPattern" selectedKey="{/architecture/communicationPattern}">
+                                        <items>
+                                            <core:Item key="synchronous" text="Synchronous"/>
+                                            <core:Item key="asynchronous" text="Asynchronous"/>
+                                            <core:Item key="event-driven" text="Event-Driven"/>
+                                            <core:Item key="message-queue" text="Message Queue"/>
+                                            <core:Item key="publish-subscribe" text="Publish-Subscribe"/>
+                                        </items>
+                                    </Select>
+                                </VBox>
+                                
+                                <!-- Scaling Strategy -->
+                                <VBox>
+                                    <Label text="Scaling Strategy"/>
+                                    <Select id="scalingStrategy" selectedKey="{/architecture/scalingStrategy}">
+                                        <items>
+                                            <core:Item key="horizontal" text="Horizontal Scaling"/>
+                                            <core:Item key="vertical" text="Vertical Scaling"/>
+                                            <core:Item key="auto" text="Auto Scaling"/>
+                                            <core:Item key="manual" text="Manual Scaling"/>
+                                        </items>
+                                    </Select>
+                                </VBox>
+                                
+                                <!-- Load Balancing -->
+                                <VBox>
+                                    <Label text="Load Balancing"/>
+                                    <Select id="loadBalancing" selectedKey="{/architecture/loadBalancing}">
+                                        <items>
+                                            <core:Item key="round-robin" text="Round Robin"/>
+                                            <core:Item key="weighted" text="Weighted"/>
+                                            <core:Item key="least-connections" text="Least Connections"/>
+                                            <core:Item key="ip-hash" text="IP Hash"/>
+                                        </items>
+                                    </Select>
+                                </VBox>
+                                
+                                <!-- Error Handling -->
+                                <VBox>
+                                    <Label text="Error Handling"/>
+                                    <Select id="errorHandling" selectedKey="{/architecture/errorHandling}">
+                                        <items>
+                                            <core:Item key="retry" text="Retry Strategy"/>
+                                            <core:Item key="circuit-breaker" text="Circuit Breaker"/>
+                                            <core:Item key="fallback" text="Fallback"/>
+                                            <core:Item key="bulkhead" text="Bulkhead Pattern"/>
+                                        </items>
+                                    </Select>
+                                </VBox>
+                                
+                                <!-- Security Model -->
+                                <VBox>
+                                    <Label text="Security Model"/>
+                                    <Select id="securityModel" selectedKey="{/architecture/securityModel}">
+                                        <items>
+                                            <core:Item key="basic-auth" text="Basic Authentication"/>
+                                            <core:Item key="oauth2" text="OAuth 2.0"/>
+                                            <core:Item key="jwt" text="JWT Tokens"/>
+                                            <core:Item key="mutual-tls" text="Mutual TLS"/>
+                                        </items>
+                                    </Select>
+                                </VBox>
+                                
+                                <!-- Data Consistency -->
+                                <VBox>
+                                    <Label text="Data Consistency"/>
+                                    <Select id="dataConsistency" selectedKey="{/architecture/dataConsistency}">
+                                        <items>
+                                            <core:Item key="strong" text="Strong Consistency"/>
+                                            <core:Item key="eventual" text="Eventual Consistency"/>
+                                            <core:Item key="weak" text="Weak Consistency"/>
+                                            <core:Item key="causal" text="Causal Consistency"/>
+                                        </items>
+                                    </Select>
+                                </VBox>
+                            </l:content>
+                        </l:Grid>
+                    </Panel>
+                    
+                    <!-- Component Dependencies -->
+                    <Panel expandable="true" expanded="false" headerText="Component Dependencies" class="sapUiSmallMarginTop">
+                        <Table
+                            id="dependenciesTable"
+                            items="{/architecture/dependencies}"
+                            mode="MultiSelect">
+                            <headerToolbar>
+                                <Toolbar>
+                                    <Title text="Dependencies"/>
+                                    <ToolbarSpacer/>
+                                    <Button icon="sap-icon://add" text="Add Dependency" press="onAddDependency"/>
+                                </Toolbar>
+                            </headerToolbar>
+                            <columns>
+                                <Column>
+                                    <Text text="Component"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Depends On"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Type"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Required"/>
+                                </Column>
+                                <Column>
+                                    <Text text="Actions"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{component}"/>
+                                        <Text text="{dependsOn}"/>
+                                        <ObjectStatus text="{type}" state="{
+                                            path: 'type',
+                                            formatter: '.formatDependencyState'
+                                        }"/>
+                                        <CheckBox selected="{required}" editable="false"/>
+                                        <HBox>
+                                            <Button icon="sap-icon://edit" type="Transparent" press="onEditDependency"/>
+                                            <Button icon="sap-icon://delete" type="Transparent" press="onDeleteDependency"/>
+                                        </HBox>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </Panel>
+                    
+                    <!-- Performance Requirements -->
+                    <Panel expandable="true" expanded="false" headerText="Performance Requirements" class="sapUiSmallMarginTop">
+                        <l:Grid defaultSpan="XL4 L6 M12 S12" containerQuery="true" class="sapUiSmallMargin">
+                            <l:content>
+                                <VBox>
+                                    <Label text="Response Time (ms)"/>
+                                    <Input value="{/architecture/performance/responseTime}" type="Number"/>
+                                </VBox>
+                                
+                                <VBox>
+                                    <Label text="Throughput (req/sec)"/>
+                                    <Input value="{/architecture/performance/throughput}" type="Number"/>
+                                </VBox>
+                                
+                                <VBox>
+                                    <Label text="Concurrent Users"/>
+                                    <Input value="{/architecture/performance/concurrentUsers}" type="Number"/>
+                                </VBox>
+                                
+                                <VBox>
+                                    <Label text="Memory Limit (MB)"/>
+                                    <Input value="{/architecture/performance/memoryLimit}" type="Number"/>
+                                </VBox>
+                                
+                                <VBox>
+                                    <Label text="CPU Limit (cores)"/>
+                                    <Input value="{/architecture/performance/cpuLimit}" type="Number"/>
+                                </VBox>
+                                
+                                <VBox>
+                                    <Label text="Storage (GB)"/>
+                                    <Input value="{/architecture/performance/storage}" type="Number"/>
+                                </VBox>
+                            </l:content>
+                        </l:Grid>
+                    </Panel>
+                    
+                    <!-- Architecture Preview -->
+                    <Panel expandable="true" expanded="false" headerText="Architecture Preview" class="sapUiSmallMarginTop">
+                        <VBox class="sapUiSmallMargin">
+                            <Text text="Architecture diagram will be generated based on your configuration" class="sapUiMediumMarginBottom"/>
+                            
+                            <!-- Placeholder for architecture diagram -->
+                            <HBox justifyContent="Center" class="sapUiLargeMarginTop sapUiLargeMarginBottom">
+                                <VBox alignItems="Center" width="80%" height="300px" class="architectureDiagramPlaceholder">
+                                    <core:Icon src="sap-icon://customer-and-supplier" size="4rem" color="#0070f2"/>
+                                    <Text text="Architecture Diagram" class="sapUiMediumMarginTop"/>
+                                    <Text text="Visual representation will be generated here" class="sapUiSmallMarginTop"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                    </Panel>
+                </VBox>
+            </ScrollContainer>
+        </content>
+        
+        <buttons>
+            <Button text="Validate Architecture" type="Ghost" icon="sap-icon://validate" press="onValidateArchitecture"/>
+            <Button text="Generate Code" type="Emphasized" icon="sap-icon://generate-shortcut" press="onGenerateArchitecture"/>
+            <Button text="Save Template" type="Ghost" icon="sap-icon://save" press="onSaveArchitectureTemplate"/>
+            <Button text="Close" press="onCloseArchitectureDialog"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>
