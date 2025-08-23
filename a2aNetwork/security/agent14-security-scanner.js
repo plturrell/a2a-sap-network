@@ -468,10 +468,10 @@ class Agent14SecurityScanner {
             /embedding.*token.*["'][^"']+["']/gi
         ];
 
-        credentialPatterns.forEach(pattern => {
+        const checkCredentialPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const addCredentialVulnerability = (match) => {
                     this.vulnerabilities.push({
                         type: 'HARDCODED_CREDENTIALS',
                         severity: 'CRITICAL',
@@ -482,9 +482,11 @@ class Agent14SecurityScanner {
                         impact: 'Credentials exposed in source code',
                         recommendation: 'Use secure credential management system'
                     });
-                });
+                };
+                matches.forEach(addCredentialVulnerability);
             }
-        });
+        };
+        credentialPatterns.forEach(checkCredentialPattern);
 
         // Unsafe functions
         const unsafeFunctions = [
@@ -494,10 +496,10 @@ class Agent14SecurityScanner {
             /setInterval\s*\(\s*["'][^"']*["']/gi
         ];
 
-        unsafeFunctions.forEach(pattern => {
+        const checkUnsafeFunction = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const addUnsafeFunctionVulnerability = (match) => {
                     // Skip if it's just the sap.ui.define function declaration
                     if (match.toLowerCase().includes('function(') && 
                         content.includes('sap.ui.define')) {
@@ -514,18 +516,20 @@ class Agent14SecurityScanner {
                         impact: 'Could allow code injection',
                         recommendation: 'Avoid eval() and similar unsafe functions'
                     });
-                });
+                };
+                matches.forEach(addUnsafeFunctionVulnerability);
             }
-        });
+        };
+        unsafeFunctions.forEach(checkUnsafeFunction);
     }
 
     scanInputValidation(content, filePath) {
         // Check for embedding-specific input validation
-        this.embeddingPatterns.forEach(pattern => {
+        const checkEmbeddingPattern = (pattern) => {
             const regex = new RegExp(`${pattern}\\s*[=:]\\s*.*input`, 'gi');
             const matches = content.match(regex);
             if (matches && !content.includes('SecurityUtils.validate') && !content.includes('validateModel')) {
-                matches.forEach(match => {
+                const addValidationWarning = (match) => {
                     this.warnings.push({
                         type: 'MISSING_EMBEDDING_VALIDATION',
                         severity: 'MEDIUM',
@@ -535,15 +539,18 @@ class Agent14SecurityScanner {
                         code: match.trim(),
                         recommendation: 'Add SecurityUtils.validateEmbeddingField() validation'
                     });
-                });
+                };
+                matches.forEach(addValidationWarning);
             }
-        });
+        };
+        this.embeddingPatterns.forEach(checkEmbeddingPattern);
     }
 
     scanAuthenticationChecks(content, filePath) {
-        const sensitiveOps = this.sensitiveOperations.filter(op => content.includes(op));
+        const checkSensitiveOperation = function(op) { return content.includes(op); };
+        const sensitiveOps = this.sensitiveOperations.filter(checkSensitiveOperation);
         
-        sensitiveOps.forEach(op => {
+        const checkAuthForOperation = (op) => {
             if (!content.includes('checkAuth') && !content.includes('isAuthenticated') && 
                 !content.includes('SecurityUtils.checkEmbeddingAuth')) {
                 this.warnings.push({
@@ -554,7 +561,8 @@ class Agent14SecurityScanner {
                     recommendation: 'Add SecurityUtils.checkEmbeddingAuth() before operations'
                 });
             }
-        });
+        };
+        sensitiveOps.forEach(checkAuthForOperation);
     }
 
     scanErrorHandling(content, filePath) {
@@ -564,10 +572,10 @@ class Agent14SecurityScanner {
             /error[^}]*console\.log/gi
         ];
 
-        errorPatterns.forEach(pattern => {
+        const checkErrorPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const addErrorHandlingWarning = (match) => {
                     this.warnings.push({
                         type: 'POOR_ERROR_HANDLING',
                         severity: 'LOW',
@@ -577,9 +585,11 @@ class Agent14SecurityScanner {
                         code: match.trim(),
                         recommendation: 'Implement proper error handling with SecurityUtils.logSecureError()'
                     });
-                });
+                };
+                matches.forEach(addErrorHandlingWarning);
             }
-        });
+        };
+        errorPatterns.forEach(checkErrorPattern);
     }
 
     getLineNumber(content, searchString) {

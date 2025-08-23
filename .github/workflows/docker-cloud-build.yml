@@ -1,0 +1,76 @@
+name: Docker Build Cloud
+
+on:
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Enable debug logging'
+        required: false
+        default: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test-cloud-access:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Debug Docker Build Cloud
+      run: |
+        echo "🔍 Testing Docker Build Cloud access"
+        echo "Repository: ${{ github.repository }}"
+        echo "Actor: ${{ github.actor }}"
+        
+        # Try to list available builders
+        docker buildx ls || true
+        
+        # Check Docker Hub login status
+        docker info || true
+        
+    - name: Try Docker Hub Login
+      uses: docker/login-action@v3
+      continue-on-error: true
+      with:
+        username: finsightintelligence
+        password: ${{ secrets.DOCKER_TOKEN }}
+        
+    - name: Try GitHub Container Registry Login
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Test Docker Build Cloud with different configurations
+      run: |
+        echo "🧪 Testing different cloud builder configurations"
+        
+        # Test 1: Try with explicit organization prefix
+        echo "Test 1: With organization prefix"
+        docker buildx create --driver cloud --name test1 \
+          plturrell/a2a-sap-network || echo "Failed: plturrell/a2a-sap-network"
+        
+        # Test 2: Try with different endpoint format
+        echo "Test 2: Different endpoint format"
+        docker buildx create --driver cloud --name test2 \
+          "cloud://finsightintelligence/a22" || echo "Failed: cloud://finsightintelligence/a22"
+        
+        # Test 3: Try without endpoint (default)
+        echo "Test 3: Default cloud builder"
+        docker buildx create --driver cloud --name test3 || echo "Failed: default cloud"
+        
+        # List all builders
+        echo "📋 Available builders:"
+        docker buildx ls
+        
+    - name: Test standard buildx
+      run: |
+        echo "🔨 Testing standard buildx setup"
+        docker buildx create --name standard-builder --driver docker-container --use
+        docker buildx inspect --bootstrap
+        echo "✅ Standard buildx works"

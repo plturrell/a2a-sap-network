@@ -6,8 +6,9 @@ sap.ui.define([
     "sap/ui/model/json/JSONModel",
     "sap/base/security/encodeXML",
     "sap/base/security/encodeURL",
-    "sap/base/Log"
-], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, encodeXML, encodeURL, Log) {
+    "sap/base/Log",
+    "../utils/SecurityUtils"
+], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, encodeXML, encodeURL, Log, SecurityUtils) {
     "use strict";
 
     /**
@@ -26,6 +27,7 @@ sap.ui.define([
              */
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
+                this._securityUtils = SecurityUtils;
                 this._initializeSecurity();
                 this._initializeDeviceModel();
                 this._initializeDialogCache();
