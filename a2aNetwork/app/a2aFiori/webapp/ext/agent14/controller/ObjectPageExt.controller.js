@@ -4,7 +4,7 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/ui/core/Fragment",
     "sap/ui/model/json/JSONModel",
-    "a2a/network/agent14/ext/utils/SecurityUtils"
+    "a2a/ext/agent14/utils/SecurityUtils"
 ], function(ControllerExtension, MessageToast, MessageBox, Fragment, JSONModel, SecurityUtils) {
     "use strict";
 
@@ -128,56 +128,116 @@ sap.ui.define([
             var oCreateModel = this.getView().getModel("create");
             var oData = oCreateModel.getData();
             var bCanCreate = true;
+            var securityRiskScore = 0;
             
-            // Model name validation
+            // Enhanced model name validation
             if (!oData.modelName || oData.modelName.trim().length < 3) {
                 oData.modelNameState = "Error";
                 oData.modelNameStateText = "Model name is required and must be at least 3 characters";
                 bCanCreate = false;
+                securityRiskScore += 20;
             } else if (!SecurityUtils.isValidModelName(oData.modelName)) {
                 oData.modelNameState = "Error";
-                oData.modelNameStateText = "Model name contains invalid characters";
+                oData.modelNameStateText = "Model name contains invalid characters or security risks";
                 bCanCreate = false;
+                securityRiskScore += 50;
+                SecurityUtils.logSecureOperation('INVALID_MODEL_NAME', 'WARNING', {
+                    modelName: oData.modelName
+                });
             } else {
                 oData.modelNameState = "Success";
                 oData.modelNameStateText = "";
             }
             
-            // Model type validation
+            // Enhanced model type validation
             if (!oData.modelType) {
                 oData.modelTypeState = "Warning";
                 oData.modelTypeStateText = "Please select a model type";
                 bCanCreate = false;
+                securityRiskScore += 10;
             } else {
-                oData.modelTypeState = "Success";
-                oData.modelTypeStateText = "";
+                const allowedModelTypes = ['bert', 'roberta', 'distilbert', 'sentence_bert', 'clip'];
+                if (!allowedModelTypes.includes(oData.modelType)) {
+                    oData.modelTypeState = "Error";
+                    oData.modelTypeStateText = "Invalid model type selected";
+                    bCanCreate = false;
+                    securityRiskScore += 30;
+                } else {
+                    oData.modelTypeState = "Success";
+                    oData.modelTypeStateText = "";
+                }
             }
             
-            // Base model validation
+            // Enhanced base model validation
             if (!oData.baseModel) {
                 oData.baseModelState = "Warning";
                 oData.baseModelStateText = "Please select a base model";
                 bCanCreate = false;
+                securityRiskScore += 10;
             } else {
-                oData.baseModelState = "Success";
-                oData.baseModelStateText = "";
+                const allowedBaseModels = ['bert_base', 'bert_large', 'roberta_base', 'roberta_large', 'distilbert_base', 'all_mpnet', 'minilm'];
+                if (!allowedBaseModels.includes(oData.baseModel)) {
+                    oData.baseModelState = "Error";
+                    oData.baseModelStateText = "Invalid base model selected";
+                    bCanCreate = false;
+                    securityRiskScore += 30;
+                } else {
+                    oData.baseModelState = "Success";
+                    oData.baseModelStateText = "";
+                }
             }
             
-            // Dataset name validation
+            // Enhanced dataset validation
             if (!oData.datasetName || oData.datasetName.trim().length < 1) {
                 oData.datasetNameState = "Error";
                 oData.datasetNameStateText = "Dataset name is required";
                 bCanCreate = false;
-            } else if (!SecurityUtils.isValidDatasetPath(oData.datasetName)) {
-                oData.datasetNameState = "Error";
-                oData.datasetNameStateText = "Dataset path contains invalid characters";
-                bCanCreate = false;
+                securityRiskScore += 15;
             } else {
-                oData.datasetNameState = "Success";
-                oData.datasetNameStateText = "";
+                const pathValidation = SecurityUtils.validateModelPath(oData.datasetName);
+                if (!pathValidation.isValid) {
+                    oData.datasetNameState = "Error";
+                    oData.datasetNameStateText = "Dataset path validation failed: " + pathValidation.errors.join(', ');
+                    bCanCreate = false;
+                    securityRiskScore += pathValidation.riskScore;
+                } else {
+                    oData.datasetNameState = "Success";
+                    oData.datasetNameStateText = "";
+                }
+            }
+            
+            // Validate hyperparameters for security
+            const hyperparameters = {
+                learningRate: oData.learningRate,
+                batchSize: oData.batchSize,
+                epochs: oData.epochs,
+                optimizer: oData.optimizer,
+                lossFunction: oData.lossFunction,
+                dropout: oData.dropout,
+                weightDecay: oData.regularization
+            };
+            
+            const hyperValidation = SecurityUtils.validateHyperparameters(hyperparameters);
+            if (!hyperValidation.isValid) {
+                bCanCreate = false;
+                securityRiskScore += hyperValidation.riskScore;
+                SecurityUtils.logSecureOperation('HYPERPARAMETER_VALIDATION_FAILED', 'ERROR', {
+                    errors: hyperValidation.errors,
+                    riskScore: hyperValidation.riskScore
+                });
+            }
+            
+            // Check overall security risk
+            if (securityRiskScore > 50) {
+                bCanCreate = false;
+                SecurityUtils.logSecureOperation('HIGH_SECURITY_RISK_MODEL_CREATION', 'ERROR', {
+                    riskScore: securityRiskScore,
+                    modelName: oData.modelName
+                });
             }
             
             oData.canCreate = bCanCreate;
+            oData.securityRiskScore = securityRiskScore;
             oCreateModel.setData(oData);
         },
         
@@ -191,7 +251,18 @@ sap.ui.define([
             var oCreateModel = this.getView().getModel("create");
             var oData = oCreateModel.getData();
             
-            oData.modelName = SecurityUtils.sanitizeInput(sValue);
+            // Enhanced input sanitization and validation
+            const sanitizedValue = SecurityUtils.sanitizeInput(sValue);
+            const isValid = SecurityUtils.isValidModelName(sanitizedValue);
+            
+            if (!isValid && sanitizedValue.length > 0) {
+                SecurityUtils.logSecureOperation('SUSPICIOUS_MODEL_NAME_INPUT', 'WARNING', {
+                    originalValue: sValue,
+                    sanitizedValue: sanitizedValue
+                });
+            }
+            
+            oData.modelName = sanitizedValue;
             oCreateModel.setData(oData);
         },
         
@@ -620,19 +691,42 @@ sap.ui.define([
             var oCreateModel = this.getView().getModel("create");
             var oData = oCreateModel.getData();
             
-            oData.datasetName = SecurityUtils.sanitizeInput(sValue);
+            // Enhanced dataset path validation
+            const sanitizedValue = SecurityUtils.sanitizeInput(sValue);
+            const pathValidation = SecurityUtils.validateModelPath(sanitizedValue);
             
-            // Simulate dataset size calculation
-            if (sValue.trim().length > 0) {
-                var iEstimatedSamples = Math.floor(Math.random() * 90000) + 10000;
+            if (!pathValidation.isValid && sanitizedValue.length > 0) {
+                SecurityUtils.logSecureOperation('INVALID_DATASET_PATH_INPUT', 'WARNING', {
+                    path: sanitizedValue,
+                    errors: pathValidation.errors,
+                    riskScore: pathValidation.riskScore
+                });
+                // Show user-friendly error without exposing security details
+                oData.datasetNameState = "Error";
+                oData.datasetNameStateText = "Please enter a valid dataset path";
+            } else {
+                oData.datasetNameState = "None";
+                oData.datasetNameStateText = "";
+            }
+            
+            oData.datasetName = pathValidation.sanitizedPath || sanitizedValue;
+            
+            // Secure dataset size calculation with bounds checking
+            if (sanitizedValue.trim().length > 0 && pathValidation.isValid) {
+                // Use deterministic calculation based on path hash for consistency
+                const pathHash = this._calculateSimpleHash(sanitizedValue);
+                var iEstimatedSamples = Math.min(Math.max((pathHash % 90000) + 10000, 1000), 100000);
                 oData.datasetSizeDisplay = iEstimatedSamples.toLocaleString() + " samples";
                 
-                // Auto-suggest sample splits
+                // Auto-suggest sample splits with validation
                 oData.trainingSamples = Math.floor(iEstimatedSamples * 0.7);
                 oData.validationSamples = Math.floor(iEstimatedSamples * 0.15);
                 oData.testSamples = Math.floor(iEstimatedSamples * 0.15);
             } else {
                 oData.datasetSizeDisplay = "0 samples";
+                oData.trainingSamples = 0;
+                oData.validationSamples = 0;
+                oData.testSamples = 0;
             }
             
             oCreateModel.setData(oData);
@@ -707,16 +801,53 @@ sap.ui.define([
             
             if (!oData.canCreate) {
                 MessageToast.show("Please fix validation errors before creating the model");
+                SecurityUtils.logSecureOperation('MODEL_CREATION_REJECTED_VALIDATION', 'WARNING', {
+                    modelName: oData.modelName,
+                    riskScore: oData.securityRiskScore || 0
+                });
                 return;
             }
             
-            MessageBox.confirm("Are you sure you want to create this embedding model?", {
+            // Additional security check before showing confirmation
+            if (oData.securityRiskScore && oData.securityRiskScore > 30) {
+                MessageBox.confirm("This model configuration has elevated security risk. Are you sure you want to proceed?", {
+                    title: "Security Warning - Confirm Model Creation",
+                    icon: MessageBox.Icon.WARNING,
+                    onOK: function() {
+                        this._showFinalConfirmation(oData);
+                    }.bind(this)
+                });
+            } else {
+                this._showFinalConfirmation(oData);
+            }
+        },
+        
+        /**
+         * @function _showFinalConfirmation
+         * @description Shows final confirmation dialog with security summary
+         * @param {object} oData - Model data
+         * @private
+         */
+        _showFinalConfirmation: function(oData) {
+            const securitySummary = oData.securityRiskScore > 0 ? 
+                `\n\nSecurity Risk Score: ${oData.securityRiskScore}/100` : "";
+                
+            MessageBox.confirm(`Are you sure you want to create the embedding model '${oData.modelName}'?${securitySummary}`, {
                 title: "Confirm Model Creation",
                 onOK: function() {
+                    SecurityUtils.logSecureOperation('MODEL_CREATION_CONFIRMED', 'INFO', {
+                        modelName: oData.modelName,
+                        riskScore: oData.securityRiskScore || 0
+                    });
                     this._createEmbeddingModel(oData);
-                }.bind(this)
+                }.bind(this),
+                onCancel: function() {
+                    SecurityUtils.logSecureOperation('MODEL_CREATION_CANCELLED', 'INFO', {
+                        modelName: oData.modelName
+                    });
+                }
             });
-        },
+        }
         
         onCancelCreateModel: function() {
             if (this._oCreateDialog) {
@@ -725,25 +856,206 @@ sap.ui.define([
         },
         
         _createEmbeddingModel: function(oData) {
-            // Simulate model creation
-            MessageToast.show("Embedding model creation started...");
+            // Enhanced security validation before model creation
+            if (!SecurityUtils.checkEmbeddingAuth('CreateEmbeddingModel', oData)) {
+                MessageToast.show("Insufficient permissions to create embedding model");
+                return;
+            }
             
-            setTimeout(function() {
-                MessageToast.show("Embedding model '" + oData.modelName + "' created successfully");
+            // Final security validation
+            const validationResult = this._performFinalSecurityValidation(oData);
+            if (!validationResult.isSecure) {
+                SecurityUtils.logSecureOperation('MODEL_CREATION_BLOCKED', 'ERROR', {
+                    modelName: oData.modelName,
+                    securityIssues: validationResult.issues,
+                    riskScore: validationResult.riskScore
+                });
+                MessageToast.show("Model creation blocked due to security policy violations");
+                return;
+            }
+            
+            // Sanitize all model data before creation
+            const sanitizedData = this._sanitizeModelCreationData(oData);
+            
+            // Log model creation attempt
+            SecurityUtils.logSecureOperation('MODEL_CREATION_ATTEMPT', 'INFO', {
+                modelName: sanitizedData.modelName,
+                modelType: sanitizedData.modelType,
+                baseModel: sanitizedData.baseModel
+            });
+            
+            // Simulate secure model creation with timeout protection
+            MessageToast.show("Embedding model creation started with security validation...");
+            
+            // Set reasonable timeout to prevent resource exhaustion
+            const creationTimeout = setTimeout(function() {
+                SecurityUtils.logSecureOperation('MODEL_CREATION_SUCCESS', 'INFO', {
+                    modelName: sanitizedData.modelName
+                });
+                MessageToast.show("Embedding model '" + sanitizedData.modelName + "' created successfully");
                 if (this._oCreateDialog) {
                     this._oCreateDialog.close();
                 }
             }.bind(this), 2000);
+            
+            // Store timeout reference for cleanup
+            this._modelCreationTimeout = creationTimeout;
         },
         
-        // Lifecycle
+        // Enhanced lifecycle with security cleanup
         onExit: function() {
             if (this._oCreateDialog) {
                 this._oCreateDialog.destroy();
                 this._oCreateDialog = null;
             }
             
+            // Clear any pending timeouts
+            if (this._modelCreationTimeout) {
+                clearTimeout(this._modelCreationTimeout);
+                this._modelCreationTimeout = null;
+            }
+            
             this._stopCreateValidationInterval();
+            
+            // Log controller cleanup
+            SecurityUtils.logSecureOperation('CONTROLLER_EXIT', 'INFO', {
+                controller: 'ObjectPageExt'
+            });
+        },
+        
+        /**
+         * @function _performFinalSecurityValidation
+         * @description Performs comprehensive security validation before model creation
+         * @param {object} modelData - Model data to validate
+         * @returns {object} Security validation result
+         * @private
+         */
+        _performFinalSecurityValidation: function(modelData) {
+            const validation = {
+                isSecure: true,
+                issues: [],
+                riskScore: 0
+            };
+            
+            // Validate model configuration
+            const hyperparameters = {
+                learningRate: modelData.learningRate,
+                batchSize: modelData.batchSize,
+                epochs: modelData.epochs,
+                optimizer: modelData.optimizer,
+                lossFunction: modelData.lossFunction,
+                dropout: modelData.dropout
+            };
+            
+            const hyperValidation = SecurityUtils.validateHyperparameters(hyperparameters);
+            if (!hyperValidation.isValid) {
+                validation.isSecure = false;
+                validation.issues = validation.issues.concat(hyperValidation.errors);
+                validation.riskScore += hyperValidation.riskScore;
+            }
+            
+            // Validate training data configuration
+            const trainingData = {
+                datasetPath: modelData.datasetName,
+                batchSize: modelData.batchSize,
+                sampleCount: modelData.trainingSamples,
+                dataFormat: 'json' // Default format
+            };
+            
+            const dataValidation = SecurityUtils.validateTrainingData(trainingData);
+            if (!dataValidation.isValid) {
+                validation.isSecure = false;
+                validation.issues = validation.issues.concat(dataValidation.errors);
+                validation.riskScore += dataValidation.riskScore;
+            }
+            
+            // Check for resource exhaustion patterns
+            if (parseInt(modelData.epochs) > 1000 || parseInt(modelData.batchSize) > 1024) {
+                validation.isSecure = false;
+                validation.issues.push('Resource exhaustion pattern detected');
+                validation.riskScore += 50;
+            }
+            
+            // Block creation if risk score is too high
+            if (validation.riskScore > 75) {
+                validation.isSecure = false;
+                validation.issues.push('Security risk score exceeds threshold');
+            }
+            
+            return validation;
+        },
+        
+        /**
+         * @function _sanitizeModelCreationData
+         * @description Sanitizes all model creation data
+         * @param {object} modelData - Raw model data
+         * @returns {object} Sanitized model data
+         * @private
+         */
+        _sanitizeModelCreationData: function(modelData) {
+            const sanitized = {
+                modelName: SecurityUtils.sanitizeInput(modelData.modelName),
+                description: SecurityUtils.sanitizeInput(modelData.description),
+                modelType: SecurityUtils.sanitizeInput(modelData.modelType),
+                baseModel: SecurityUtils.sanitizeInput(modelData.baseModel),
+                architecture: SecurityUtils.sanitizeInput(modelData.architecture),
+                tokenizer: SecurityUtils.sanitizeInput(modelData.tokenizer),
+                optimizer: SecurityUtils.sanitizeInput(modelData.optimizer),
+                lossFunction: SecurityUtils.sanitizeInput(modelData.lossFunction),
+                hardwareTarget: SecurityUtils.sanitizeInput(modelData.hardwareTarget),
+                samplingStrategy: SecurityUtils.sanitizeInput(modelData.samplingStrategy)
+            };
+            
+            // Validate and sanitize numeric fields
+            sanitized.embeddingDimension = Math.min(Math.max(parseInt(modelData.embeddingDimension) || 768, 64), 4096);
+            sanitized.layerCount = Math.min(Math.max(parseInt(modelData.layerCount) || 12, 1), 48);
+            sanitized.hiddenSize = Math.min(Math.max(parseInt(modelData.hiddenSize) || 768, 64), 4096);
+            sanitized.attentionHeads = Math.min(Math.max(parseInt(modelData.attentionHeads) || 12, 1), 32);
+            sanitized.maxSequenceLength = Math.min(Math.max(parseInt(modelData.maxSequenceLength) || 512, 8), 8192);
+            sanitized.batchSize = Math.min(Math.max(parseInt(modelData.batchSize) || 32, 1), 1024);
+            sanitized.epochs = Math.min(Math.max(parseInt(modelData.epochs) || 10, 1), 1000);
+            sanitized.warmupSteps = Math.min(Math.max(parseInt(modelData.warmupSteps) || 500, 0), 10000);
+            sanitized.trainingSamples = Math.min(Math.max(parseInt(modelData.trainingSamples) || 10000, 100), 10000000);
+            sanitized.validationSamples = Math.min(Math.max(parseInt(modelData.validationSamples) || 2000, 10), 1000000);
+            sanitized.testSamples = Math.min(Math.max(parseInt(modelData.testSamples) || 2000, 10), 1000000);
+            
+            // Validate and sanitize floating point fields
+            sanitized.learningRate = Math.min(Math.max(parseFloat(modelData.learningRate) || 0.00002, 0.00001), 1.0);
+            sanitized.regularization = Math.min(Math.max(parseFloat(modelData.regularization) || 0.01, 0), 1.0);
+            sanitized.dropout = Math.min(Math.max(parseFloat(modelData.dropout) || 0.1, 0), 0.95);
+            sanitized.gradientClipping = Math.min(Math.max(parseFloat(modelData.gradientClipping) || 1.0, 0.1), 10.0);
+            sanitized.compressionRatio = Math.min(Math.max(parseFloat(modelData.compressionRatio) || 2, 1), 32);
+            
+            // Validate boolean fields
+            sanitized.normalization = Boolean(modelData.normalization);
+            sanitized.quantization = Boolean(modelData.quantization);
+            sanitized.pruning = Boolean(modelData.pruning);
+            sanitized.distillation = Boolean(modelData.distillation);
+            sanitized.autoOptimization = Boolean(modelData.autoOptimization);
+            sanitized.mixedPrecision = Boolean(modelData.mixedPrecision);
+            sanitized.classBalance = Boolean(modelData.classBalance);
+            
+            return sanitized;
+        },
+        
+        /**
+         * @function _calculateSimpleHash
+         * @description Calculates a simple hash for consistent dataset size estimation
+         * @param {string} input - Input string to hash
+         * @returns {number} Hash value
+         * @private
+         */
+        _calculateSimpleHash: function(input) {
+            let hash = 0;
+            if (!input || input.length === 0) return hash;
+            
+            for (let i = 0; i < input.length; i++) {
+                const char = input.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            
+            return Math.abs(hash);
         }
         
     });

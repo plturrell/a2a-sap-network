@@ -205,7 +205,10 @@ service A2AService @(path: '/api/v1') {
         { grant: ['CREATE', 'UPDATE'], to: 'AgentManager' },
         { grant: 'READ', to: 'authenticated-user' }
     ]
-    entity AgentCapabilities as projection on db.AgentCapabilities;
+    entity AgentCapabilities as projection on db.AgentCapabilities {
+        *,
+        agent : redirected to Agents
+    };
     
     @readonly
     @requires: ['authenticated-user']
@@ -240,7 +243,10 @@ service A2AService @(path: '/api/v1') {
         { grant: ['CREATE', 'UPDATE'], to: 'ServiceManager' },
         { grant: 'READ', to: 'authenticated-user' }
     ]
-    entity Services as projection on db.Services actions {
+    entity Services as projection on db.Services {
+        *,
+        provider : redirected to Agents
+    } actions {
         @requires: ['ServiceManager', 'Admin']
         action listOnMarketplace() returns String;
         @requires: ['ServiceManager', 'Admin']
@@ -255,7 +261,11 @@ service A2AService @(path: '/api/v1') {
         { grant: ['CREATE', 'UPDATE'], to: 'ServiceManager' },
         { grant: 'READ', to: 'authenticated-user' }
     ]
-    entity ServiceOrders as projection on db.ServiceOrders actions {
+    entity ServiceOrders as projection on db.ServiceOrders {
+        *,
+        service : redirected to Services,
+        consumer : redirected to Agents
+    } actions {
         @requires: ['ServiceManager', 'Admin']
         action complete(rating: Integer, feedback: String) returns Boolean;
         @requires: ['ServiceManager', 'Admin']
@@ -290,7 +300,11 @@ service A2AService @(path: '/api/v1') {
         { grant: ['CREATE', 'UPDATE'], to: 'WorkflowManager' },
         { grant: 'READ', to: 'authenticated-user' }
     ]
-    entity Workflows as projection on db.Workflows actions {
+    entity Workflows as projection on db.Workflows {
+        *,
+        steps : redirected to WorkflowSteps,
+        executions: redirected to WorkflowExecutions
+    } actions {
         @requires: ['WorkflowManager', 'Admin']
         action execute(parameters: String) returns String; // returns executionId
         @requires: ['WorkflowManager', 'Admin']
@@ -298,7 +312,7 @@ service A2AService @(path: '/api/v1') {
         @requires: ['WorkflowManager', 'Admin']
         action publish() returns Boolean;
     };
-    
+
     @cds.redirection.target
     @requires: ['authenticated-user']
     @restrict: [
@@ -308,18 +322,20 @@ service A2AService @(path: '/api/v1') {
     ]
     entity WorkflowExecutions as projection on db.WorkflowExecutions {
         *,
-        workflow : redirected to Workflows,
-        steps : redirected to WorkflowSteps
+        workflowId : redirected to Workflows
     } actions {
         @requires: ['WorkflowManager', 'Admin']
         action cancel() returns Boolean;
         @requires: ['WorkflowManager', 'Admin']
         action retry() returns String;
     };
-    
+
     @readonly
     @requires: ['authenticated-user']
-    entity WorkflowSteps as projection on db.WorkflowSteps;
+    entity WorkflowSteps as projection on db.WorkflowSteps {
+        *,
+        workflowId: redirected to Workflows
+    };
     
     // Cross-chain
     @requires: ['Admin']
@@ -461,697 +477,50 @@ service A2AService @(path: '/api/v1') {
         { grant: ['READ'], to: 'authenticated-user' },
         { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' }
     ]
-    entity ReputationTransactions as projection on db.ReputationTransactions;
-    
-    @requires: ['authenticated-user']
-    @restrict: [
-        { grant: ['CREATE'], to: 'authenticated-user' },
-        { grant: ['READ'], to: 'authenticated-user' },
-        { grant: ['UPDATE', 'DELETE'], to: 'Admin' }
-    ]
-    entity PeerEndorsements as projection on db.PeerEndorsements actions {
+    entity ReputationTransactions as projection on db.ReputationTransactions {
+            *,
+            agent : redirected to Agents,
+            createdByAgent : redirected to Agents,
+            serviceOrder : redirected to ServiceOrders,
+            workflow : redirected to Workflows
+        } actions {
+            @requires: ['authenticated-user']
+            action verify() returns Boolean;
+        };
+        
         @requires: ['authenticated-user']
-        action verify() returns Boolean;
-    };
-    
-    @readonly
-    @requires: ['authenticated-user']
-    entity ReputationMilestones as projection on db.ReputationMilestones;
-    
-    @requires: ['authenticated-user']
-    @restrict: [
-        { grant: ['CREATE'], to: 'authenticated-user' },
-        { grant: ['READ'], to: 'authenticated-user' },
-        { grant: ['UPDATE', 'DELETE'], to: 'Admin' }
-    ]
-    entity ReputationRecovery as projection on db.ReputationRecovery actions {
+        @restrict: [
+            { grant: ['CREATE'], to: 'authenticated-user' },
+            { grant: ['READ'], to: 'authenticated-user' },
+            { grant: ['UPDATE', 'DELETE'], to: 'Admin' }
+        ]
+        entity PeerEndorsements as projection on db.PeerEndorsements actions {
+            @requires: ['authenticated-user']
+            action verify() returns Boolean;
+        };
+        
+        @readonly
         @requires: ['authenticated-user']
-        action startProgram() returns Boolean;
+        entity ReputationMilestones as projection on db.ReputationMilestones;
+        
         @requires: ['authenticated-user']
-        action updateProgress(progress: String) returns Boolean;
-    };
-    
-    @readonly
-    @requires: ['authenticated-user']
+        @restrict: [
+            { grant: ['CREATE'], to: 'authenticated-user' },
+            { grant: ['READ'], to: 'authenticated-user' },
+            { grant: ['UPDATE', 'DELETE'], to: 'Admin' }
+        ]
+        entity ReputationRecovery as projection on db.ReputationRecovery actions {
+            @requires: ['authenticated-user']
+            action startProgram() returns Boolean;
+            @requires: ['authenticated-user']
+            action updateProgress(progress: String) returns Boolean;
+        };
+        
+        event ReputationMilestoneReached : { 
+            target: db.ReputationMilestones 
+        };
+
     entity DailyReputationLimits as projection on db.DailyReputationLimits;
-    
-    @readonly
-    @requires: ['authenticated-user']
-    entity ReputationAnalytics as projection on db.ReputationAnalytics;
-    
-    // Configuration
-    @requires: 'Admin'
-    entity NetworkConfig as projection on db.NetworkConfig;
-    
-    // Functions for complex operations
-    @requires: ['authenticated-user']
-    function matchCapabilities(requirements: array of String) returns array of String;
-    
-    @requires: ['authenticated-user']
-    function calculateReputation(agentAddress: String) returns String;
-    
-    @requires: ['authenticated-user']
-    function getNetworkHealth() returns String;
-    
-    @requires: ['authenticated-user']
-    function searchAgents(
-        capabilities: array of String,
-        minReputation: Integer,
-        maxPrice: Decimal(10,4)
-    ) returns array of String;
-    
-    // ================================
-    // REPUTATION SYSTEM FUNCTIONS
-    // ================================
-    
-    @requires: ['authenticated-user']
-    function getReputationHistory(
-        agentId: String,
-        startDate: Date,
-        endDate: Date
-    ) returns array of String;
-    
-    @requires: ['authenticated-user']
-    function getReputationAnalytics(
-        agentId: String,
-        period: String
-    ) returns String;
-    
-    @requires: ['authenticated-user']
-    function getEndorsementNetwork(
-        agentId: String,
-        depth: Integer
-    ) returns String;
-    
-    @requires: ['authenticated-user']
-    function calculateReputationScore(
-        agentId: String
-    ) returns String;
-    
-    @requires: ['authenticated-user']
-    function getReputationBadge(
-        reputation: Integer
-    ) returns String;
-    
-    @requires: ['authenticated-user']
-    function canEndorsePeer(
-        fromAgentId: String,
-        toAgentId: String,
-        amount: Integer
-    ) returns Boolean;
-    
-    // Actions for blockchain operations
-    @requires: ['Admin']
-    action deployContract(
-        contractType: String enum { Agent; Service; Workflow; },
-        parameters: String
-    ) returns String;
-    
-    @requires: ['Admin']
-    action syncBlockchain() returns String;
-    
-    // Events for real-time updates
-    event AgentRegistered : {
-        agentId: String;
-        address: String;
-        name: String;
-        timestamp: DateTime;
-    };
-    
-    event ServiceCreated : {
-        serviceId: String;
-        providerId: String;
-        name: String;
-        price: Decimal(10,4);
-    };
-    
-    event ReputationUpdated : {
-        agentId: String;
-        oldScore: Integer;
-        newScore: Integer;
-        reason: String;
-    };
-    
-    event WorkflowCompleted : {
-        executionId: String;
-        workflowId: String;
-        status: String;
-        gasUsed: Integer;
-    };
-    
-    // ================================
-    // AGENT 1 - DATA STANDARDIZATION ENTITIES
-    // ================================
-    
-    @cds.redirection.target
-    @requires: ['authenticated-user']
-    @restrict: [
-        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
-        { grant: ['CREATE', 'UPDATE'], to: 'DataManager' },
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
-    entity StandardizationTasks as projection on db.StandardizationTasks {
-        *,
-        agent : redirected to Agents,
-        rules : redirected to StandardizationRules
-    } actions {
-        @requires: ['DataManager', 'Admin']
-        action startStandardization() returns String;
-        @requires: ['DataManager', 'Admin']
-        action pauseStandardization() returns Boolean;
-        @requires: ['DataManager', 'Admin']
-        action resumeStandardization() returns Boolean;
-        @requires: ['DataManager', 'Admin']
-        action cancelStandardization() returns Boolean;
-        @requires: ['DataManager', 'Admin']
-        action validateFormat(
-            sampleData: String,
-            validationRules: String
-        ) returns String;
-        @requires: ['DataManager', 'Admin']
-        action analyzeDataQuality() returns String;
-        @requires: ['DataManager', 'Admin']
-        action exportResults(
-            format: String,
-            includeMetadata: Boolean,
-            compression: String
-        ) returns String;
-        @requires: ['DataManager', 'Admin']
-        action previewTransformation(
-            sampleSize: Integer,
-            rules: String
-        ) returns String;
-    };
-    
-    @requires: ['authenticated-user']
-    @restrict: [
-        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
-        { grant: ['CREATE', 'UPDATE'], to: 'DataManager' },
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
-    entity StandardizationRules as projection on db.StandardizationRules;
-    
-    // Agent 1 specific actions for data standardization
-    @requires: ['DataManager', 'Admin']
-    action getFormatStatistics() returns String;
-    
-    @requires: ['DataManager', 'Admin'] 
-    action batchStandardize(
-        taskIds: array of String,
-        parallel: Boolean,
-        priority: String
-    ) returns String;
-    
-    @requires: ['DataManager', 'Admin']
-    action importSchema(
-        schemaData: String,
-        format: String,
-        templateName: String
-    ) returns String;
-    
-    @requires: ['DataManager', 'Admin']
-    action validateSchemaTemplate(
-        templateId: String,
-        sourceData: String
-    ) returns String;
-    
-    @requires: ['DataManager', 'Admin']
-    action generateStandardizationRules(
-        sourceFormat: String,
-        targetFormat: String,
-        sampleData: String
-    ) returns String;
-    
-    // ================================
-    // AGENT 3 - VECTOR PROCESSING ENTITIES
-    // ================================
-    
-    @cds.redirection.target
-    @requires: ['authenticated-user']
-    @restrict: [
-        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
-        { grant: ['CREATE', 'UPDATE'], to: 'VectorManager' },
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
-    entity VectorProcessingTasks as projection on db.VectorProcessingTasks {
-        *,
-        agent : redirected to Agents,
-        collection : redirected to VectorCollections,
-        similarityResults : redirected to VectorSimilarityResults
-    } actions {
-        @requires: ['VectorManager', 'Admin']
-        action startProcessing() returns String;
-        @requires: ['VectorManager', 'Admin']
-        action pauseProcessing() returns Boolean;
-        @requires: ['VectorManager', 'Admin']
-        action resumeProcessing() returns Boolean;
-        @requires: ['VectorManager', 'Admin']
-        action cancelProcessing() returns Boolean;
-        @requires: ['VectorManager', 'Admin']
-        action runSimilaritySearch(
-            queryType: String,
-            query: String,
-            vectorQuery: String,
-            topK: Integer,
-            includeMetadata: Boolean,
-            includeDistance: Boolean,
-            filters: String
-        ) returns String;
-        @requires: ['VectorManager', 'Admin']
-        action optimizeIndex(
-            indexType: String,
-            parameters: String
-        ) returns String;
-        @requires: ['VectorManager', 'Admin']
-        action exportVectors(
-            format: String,
-            includeMetadata: Boolean,
-            compression: String,
-            chunkSize: Integer
-        ) returns String;
-        @requires: ['VectorManager', 'Admin']
-        action getVisualizationData(
-            method: String,
-            perplexity: Integer,
-            dimensions: Integer,
-            sampleSize: Integer
-        ) returns String;
-        @requires: ['VectorManager', 'Admin']
-        action runClusterAnalysis(
-            algorithm: String,
-            numClusters: String,
-            minClusterSize: Integer
-        ) returns String;
-    };
-    
-    @requires: ['authenticated-user']
-    @restrict: [
-        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
-        { grant: ['CREATE', 'UPDATE'], to: 'VectorManager' },
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
-    entity VectorCollections as projection on db.VectorCollections {
-        *,
-        tasks : redirected to VectorProcessingTasks
-    } actions {
-        @requires: ['VectorManager', 'Admin']
-        action createIndex() returns String;
-        @requires: ['VectorManager', 'Admin']
-        action optimizeCollection() returns Boolean;
-        @requires: ['Admin']
-        action deleteCollection() returns Boolean;
-    };
-    
-    @requires: ['authenticated-user']
-    @restrict: [
-        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
-        { grant: ['CREATE'], to: 'VectorManager' },
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
-    entity VectorSimilarityResults as projection on db.VectorSimilarityResults;
-    
-    @requires: ['authenticated-user']
-    @restrict: [
-        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
-        { grant: ['CREATE', 'UPDATE'], to: 'VectorManager' },
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
-    entity VectorProcessingJobs as projection on db.VectorProcessingJobs;
-    
-    // Agent 3 specific actions for vector processing
-    @requires: ['VectorManager', 'Admin']
-    action batchVectorProcessing(
-        taskIds: array of String,
-        parallel: Boolean,
-        useGPU: Boolean,
-        priority: String
-    ) returns String;
-    
-    @requires: ['VectorManager', 'Admin'] 
-    action executeVectorSearch(
-        query: String,
-        collection: String,
-        topK: Integer,
-        threshold: Decimal,
-        filters: String
-    ) returns String;
-    
-    @requires: ['VectorManager', 'Admin']
-    action getModelComparison() returns String;
-    
-    @requires: ['VectorManager', 'Admin']
-    action getCollections() returns String;
-    
-    @requires: ['VectorManager', 'Admin']
-    action createCollection(
-        name: String,
-        description: String,
-        vectorDatabase: String,
-        embeddingModel: String,
-        dimensions: Integer,
-        distanceMetric: String,
-        indexType: String
-    ) returns String;
-    
-    @requires: ['VectorManager', 'Admin']
-    action generateEmbeddings(
-        texts: array of String,
-        model: String,
-        normalize: Boolean
-    ) returns String;
-    
-    // ================================
-    // AGENT 4 - CALCULATION VALIDATION
-    // ================================
-    
-    @requires: ['authenticated-user']
-    @restrict: [
-        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
-        { grant: ['CREATE', 'UPDATE'], to: 'DataManager' },
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
-    entity CalcValidationTasks as projection on db.CalcValidationTasks {
-        *,
-        agent : redirected to Agents,
-        validationResults : redirected to CalcValidationResults
-    } actions {
-        @requires: ['DataManager', 'Admin']
-        action startValidation() returns String;
-        @requires: ['DataManager', 'Admin']
-        action pauseValidation() returns String;
-        @requires: ['DataManager', 'Admin']
-        action resumeValidation() returns String;
-        @requires: ['DataManager', 'Admin']
-        action cancelValidation() returns String;
-        @requires: ['DataManager', 'Admin']
-        action runSymbolicValidation() returns String;
-        @requires: ['DataManager', 'Admin']
-        action runNumericalValidation() returns String;
-        @requires: ['DataManager', 'Admin']
-        action runStatisticalValidation() returns String;
-        @requires: ['DataManager', 'Admin']
-        action runAIValidation() returns String;
-        @requires: ['DataManager', 'Admin']
-        action runBlockchainConsensus() returns String;
-        @requires: ['DataManager', 'Admin']
-        action exportValidationReport(
-            format: String,
-            includeSteps: Boolean,
-            includeConfidence: Boolean
-        ) returns String;
-        @requires: ['DataManager', 'Admin']
-        action validateFromTemplate(
-            templateId: String,
-            variables: String
-        ) returns String;
-    };
-    
-    @requires: ['authenticated-user']
-    @restrict: [
-        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
-        { grant: ['CREATE'], to: 'DataManager' },
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
-    entity CalcValidationResults as projection on db.CalcValidationResults;
-    
-    @requires: ['authenticated-user']
-    @restrict: [
-        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
-        { grant: ['CREATE', 'UPDATE'], to: 'DataManager' },
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
-    entity CalcValidationTemplates as projection on db.CalcValidationTemplates {
-        *
-    } actions {
-        @requires: ['DataManager', 'Admin']
-        action createFromExpression(
-            expression: String,
-            variables: String
-        ) returns String;
-        @requires: ['Admin']
-        action updateSuccessRate() returns String;
-        @requires: ['Admin']
-        action deactivateTemplate() returns String;
-    };
-    
-    // Agent 4 specific actions for calculation validation
-    @requires: ['DataManager', 'Admin']
-    action batchValidateCalculations(
-        taskIds: array of String,
-        validationMethod: String,
-        parallel: Boolean,
-        priority: String
-    ) returns String;
-    
-    @requires: ['DataManager', 'Admin'] 
-    action validateExpression(
-        expression: String,
-        variables: String,
-        method: String,
-        precision: String
-    ) returns String;
-    
-    @requires: ['DataManager', 'Admin']
-    action getValidationMethods() returns String;
-    
-    @requires: ['DataManager', 'Admin']
-    action getCalculationTemplates() returns String;
-    
-    @requires: ['DataManager', 'Admin']
-    action createTemplate(
-        name: String,
-        category: String,
-        expression: String,
-        variables: String,
-        defaultMethod: String
-    ) returns String;
-    
-    @requires: ['DataManager', 'Admin']
-    action benchmarkMethods(
-        expression: String,
-        variables: String,
-        iterations: Integer
-    ) returns String;
-    
-    @requires: ['DataManager', 'Admin']
-    action configureAIModel(
-        model: String,
-        parameters: String
-    ) returns String;
-    
-    @requires: ['DataManager', 'Admin']
-    action configureBlockchainConsensus(
-        validators: Integer,
-        threshold: Decimal,
-        timeout: Integer
-    ) returns String;
-    
-    // ================================
-    // AGENT 5 - QA VALIDATION
-    // ================================
-    
-    @requires: ['authenticated-user']
-    @restrict: [
-        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
-        { grant: ['CREATE', 'UPDATE'], to: 'QAManager' },
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
-    entity QaValidationTasks as projection on db.QaValidationTasks {
-        *,
-        agent : redirected to Agents,
-        qaTestResults : redirected to QaTestResults
-    } actions {
-        @requires: ['QAManager', 'Admin']
-        action startValidation() returns String;
-        @requires: ['QAManager', 'Admin']
-        action pauseValidation() returns String;
-        @requires: ['QAManager', 'Admin']
-        action resumeValidation() returns String;
-        @requires: ['QAManager', 'Admin']
-        action cancelValidation() returns String;
-        @requires: ['QAManager', 'Admin']
-        action generateSimpleQATests() returns String;
-        @requires: ['QAManager', 'Admin']
-        action runFactualityTests() returns String;
-        @requires: ['QAManager', 'Admin']
-        action runComplianceCheck() returns String;
-        @requires: ['QAManager', 'Admin']
-        action runVectorSimilarityCheck() returns String;
-        @requires: ['QAManager', 'Admin']
-        action approveValidation(
-            comments: String,
-            conditionalApproval: Boolean
-        ) returns String;
-        @requires: ['QAManager', 'Admin']
-        action rejectValidation(
-            reason: String,
-            actionItems: String
-        ) returns String;
-        @requires: ['QAManager', 'Admin']
-        action exportValidationReport(
-            format: String,
-            includeTestResults: Boolean,
-            includeRecommendations: Boolean
-        ) returns String;
-        @requires: ['QAManager', 'Admin']
-        action discoverFromORD(
-            ordRegistryUrl: String,
-            dataProductId: String
-        ) returns String;
-    };
-    
-    @requires: ['authenticated-user']
-    @restrict: [
-        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
-        { grant: ['CREATE'], to: 'QAManager' },
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
-    entity QaTestResults as projection on db.QaTestResults;
-    
-    @requires: ['authenticated-user']
-    @restrict: [
-        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
-        { grant: ['CREATE', 'UPDATE'], to: 'QAManager' },
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
-    entity QaValidationRules as projection on db.QaValidationRules {
-        *
-    } actions {
-        @requires: ['QAManager', 'Admin']
-        action activateRule() returns String;
-        @requires: ['QAManager', 'Admin']
-        action deactivateRule() returns String;
-        @requires: ['QAManager', 'Admin']
-        action testRule(
-            testData: String
-        ) returns String;
-        @requires: ['Admin']
-        action updateSuccessRate() returns String;
-    };
-    
-    @requires: ['authenticated-user']
-    @restrict: [
-        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
-        { grant: ['CREATE', 'UPDATE'], to: 'QAManager' },
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
-    entity QaApprovalWorkflows as projection on db.QaApprovalWorkflows {
-        *
-    } actions {
-        @requires: ['QAManager', 'Admin']
-        action activateWorkflow() returns String;
-        @requires: ['QAManager', 'Admin']
-        action triggerWorkflow(
-            taskId: String,
-            context: String
-        ) returns String;
-        @requires: ['Admin']
-        action setAsDefault() returns String;
-    };
-    
-    // Agent 5 specific actions for QA validation
-    @requires: ['QAManager', 'Admin']
-    action batchValidateDataProducts(
-        dataProductIds: array of String,
-        validationType: String,
-        qualityThreshold: Decimal,
-        parallel: Boolean
-    ) returns String;
-    
-    @requires: ['QAManager', 'Admin'] 
-    action validateDataProduct(
-        dataProductId: String,
-        ordRegistryUrl: String,
-        validationType: String,
-        qaScope: String
-    ) returns String;
-    
-    @requires: ['QAManager', 'Admin']
-    action generateDynamicTests(
-        dataProductId: String,
-        testCount: Integer,
-        testType: String
-    ) returns String;
-    
-    @requires: ['QAManager', 'Admin']
-    action getORDMetadata(
-        ordRegistryUrl: String,
-        dataProductId: String
-    ) returns String;
-    
-    @requires: ['QAManager', 'Admin']
-    action createValidationRule(
-        ruleName: String,
-        ruleCategory: String,
-        ruleType: String,
-        ruleExpression: String,
-        severityLevel: String
-    ) returns String;
-    
-    @requires: ['QAManager', 'Admin']
-    action runRegressionTests(
-        baselineTaskId: String,
-        currentTaskId: String,
-        threshold: Decimal
-    ) returns String;
-    
-    @requires: ['QAManager', 'Admin']
-    action analyzeQualityTrends(
-        dataProductId: String,
-        timeRange: String
-    ) returns String;
-    
-    @requires: ['QAManager', 'Admin']
-    action configureApprovalWorkflow(
-        workflowName: String,
-        triggerConditions: String,
-        approvalSteps: String,
-        autoApprovalRules: String
-    ) returns String;
-    
-    @requires: ['QAManager', 'Admin']
-    action integrateWithAgent3(
-        taskId: String,
-        vectorSimilarityThreshold: Decimal,
-        collectionName: String
-    ) returns String;
-    
-    // ================================
-    // REPUTATION SYSTEM EVENTS
-    // ================================
-    
-    event ReputationChanged : {
-        agentId: String;
-        oldReputation: Integer;
-        newReputation: Integer;
-        change: Integer;
-        reason: String;
-        timestamp: DateTime;
-    };
-    
-    event ReputationEndorsed : {
-        endorsementId: String;
-        fromAgent: String;
-        toAgent: String;
-        amount: Integer;
-        reason: String;
-        timestamp: DateTime;
-    };
-    
-    event ReputationMilestoneReached : {
-        agentId: String;
-        milestone: Integer;
-        badge: String;
-        timestamp: DateTime;
-    };
-    
-    event TaskCompleted : {
-        agentId: String;
-        taskId: String;
-        complexity: String;
-        performance: String;
-        reputationEarned: Integer;
-    };
     
     event ServiceOrderRated : {
         serviceOrderId: String;
@@ -1167,7 +536,10 @@ service A2AService @(path: '/api/v1') {
     // ============================================
     
     @requires: ['authenticated-user']
-    entity QualityControlTasks as projection on db.QualityControlTasks actions {
+    entity QualityControlTasks as projection on db.QualityControlTasks {
+        *,
+        agent : redirected to Agents
+    } actions {
         @requires: ['QualityManager', 'Admin']
         action startAssessment() returns String;
         @requires: ['QualityManager', 'Admin']
@@ -1224,28 +596,6 @@ service A2AService @(path: '/api/v1') {
     
     @requires: ['authenticated-user']
     entity TrustVerifications as projection on db.TrustVerifications;
-    
-    @requires: ['authenticated-user']
-    entity QualityGates as projection on db.QualityGates actions {
-        @requires: ['QualityManager', 'Admin']
-        action validateGate(
-            taskData: String
-        ) returns String;
-        @requires: ['QualityManager', 'Admin']
-        action updateCriteria(
-            criteria: String
-        ) returns String;
-    };
-    
-    @requires: ['authenticated-user']
-    entity WorkflowOptimizations as projection on db.WorkflowOptimizations actions {
-        @requires: ['QualityManager', 'Admin']
-        action applyOptimization() returns String;
-        @requires: ['QualityManager', 'Admin']
-        action rollbackOptimization() returns String;
-        @requires: ['QualityManager', 'Admin']
-        action measureImpact() returns String;
-    };
     
     // Agent 6 Utility Functions
     @requires: ['authenticated-user']
@@ -2617,25 +1967,14 @@ service Agent9Service @(path: '/api/agent9/v1') {
 }
 */
 
-// ================================
-// AGENT 10 - CALCULATION ENGINE
-// ================================
-
-@requires: ['authenticated-user']
-service Agent10Service @(path: '/api/v1/agent10') {
-    
+    // Agent 10 Service - Calculation Engine
     @requires: ['authenticated-user']
     @restrict: [
         { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
         { grant: ['CREATE', 'UPDATE'], to: 'DataManager' },
         { grant: 'READ', to: 'authenticated-user' }
     ]
-    entity CalculationTasks as projection on db.CalculationTasks {
-        *,
-        calculationSteps : redirected to CalculationSteps,
-        statisticalResults : redirected to StatisticalAnalysisResults,
-        errorCorrections : redirected to CalculationErrorCorrections
-    } actions {
+    entity CalculationTasks as projection on db.CalculationTasks actions {
         @requires: ['DataManager', 'Admin']
         action startCalculation() returns String;
         @requires: ['DataManager', 'Admin']
@@ -2660,21 +1999,12 @@ service Agent10Service @(path: '/api/v1/agent10') {
     };
     
     @requires: ['authenticated-user']
-    @restrict: [
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
     entity CalculationSteps as projection on db.CalculationSteps;
     
     @requires: ['authenticated-user']
-    @restrict: [
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
     entity StatisticalAnalysisResults as projection on db.StatisticalAnalysisResults;
     
     @requires: ['authenticated-user']
-    @restrict: [
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
     entity CalculationErrorCorrections as projection on db.CalculationErrorCorrections;
     
     // Agent 10 specific actions for calculation engine
@@ -2789,27 +2119,15 @@ service Agent10Service @(path: '/api/v1/agent10') {
         step: Integer;
         timestamp: DateTime;
     };
-}
 
-// ================================
-// AGENT 11 - SQL ENGINE
-// ================================
-
-@requires: ['authenticated-user']
-service Agent11Service @(path: '/api/v1/agent11') {
-    
+    // Agent 11 Service - SQL Engine
     @requires: ['authenticated-user']
     @restrict: [
         { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
         { grant: ['CREATE', 'UPDATE'], to: 'DataManager' },
         { grant: 'READ', to: 'authenticated-user' }
     ]
-    entity SQLQueryTasks as projection on db.SQLQueryTasks {
-        *,
-        optimizations : redirected to QueryOptimizations,
-        executionHistory : redirected to QueryExecutionHistory,
-        schemaReferences : redirected to SchemaReferences
-    } actions {
+    entity SQLQueryTasks as projection on db.SQLQueryTasks actions {
         @requires: ['DataManager', 'Admin']
         action executeQuery() returns String;
         @requires: ['DataManager', 'Admin']
@@ -2830,27 +2148,15 @@ service Agent11Service @(path: '/api/v1/agent11') {
     };
     
     @requires: ['authenticated-user']
-    @restrict: [
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
     entity QueryOptimizations as projection on db.QueryOptimizations;
     
     @requires: ['authenticated-user']
-    @restrict: [
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
     entity QueryExecutionHistory as projection on db.QueryExecutionHistory;
     
     @requires: ['authenticated-user']
-    @restrict: [
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
     entity SchemaReferences as projection on db.SchemaReferences;
     
     @requires: ['authenticated-user']
-    @restrict: [
-        { grant: 'READ', to: 'authenticated-user' }
-    ]
     entity NLProcessingResults as projection on db.NLProcessingResults;
     
     // Agent 11 specific actions for SQL operations
@@ -2995,7 +2301,6 @@ service Agent11Service @(path: '/api/v1/agent11') {
         recommendation: String;
         timestamp: DateTime;
     };
-}
 
 //=====================================================
 // Agent 12 Service: Catalog Manager
@@ -4106,8 +3411,7 @@ service Agent12Service @(path : '/a2a/agent12') {
     @odata.draft.enabled
     entity Workflows as projection on db.Workflows;
     
-    @odata.draft.enabled
-    entity WorkflowExecutions as projection on db.WorkflowExecutions;
+
     
     @odata.draft.enabled
     entity WorkflowSteps as projection on db.WorkflowSteps;
@@ -4566,6 +3870,269 @@ service Agent12Service @(path : '/a2a/agent12') {
         errorMessage: String;
         workflowId: String;
         executionId: String;
+        timestamp: DateTime;
+    };
+    
+    // ============================================
+    // AGENT 0 - DATA PRODUCT AGENT
+    // ============================================
+    
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE', 'UPDATE'], to: 'DataProductManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity DataProducts as projection on db.DataProducts {
+        *
+    } actions {
+        @requires: ['DataProductManager', 'Admin']
+        action generateDublinCore() returns String;
+        @requires: ['DataProductManager', 'Admin']
+        action updateDublinCore(
+            title: String,
+            creator: String,
+            subject: String,
+            description: String,
+            publisher: String,
+            contributor: String,
+            date: Date,
+            type: String,
+            format: String,
+            identifier: String,
+            source: String,
+            language: String,
+            relation: String,
+            coverage: String,
+            rights: String
+        ) returns String;
+        @requires: ['DataProductManager', 'Admin']
+        action validateMetadata(
+            validationOptions: String
+        ) returns String;
+        @requires: ['DataProductManager', 'Admin']
+        action validateSchema(
+            schemaData: String
+        ) returns String;
+        @requires: ['DataProductManager', 'Admin']
+        action assessQuality(
+            completenessWeight: Integer,
+            accuracyWeight: Integer,
+            consistencyWeight: Integer,
+            timelinessWeight: Integer,
+            validityWeight: Integer,
+            uniquenessWeight: Integer
+        ) returns String;
+        @requires: ['DataProductManager', 'Admin']
+        action publish(
+            targetCatalog: String,
+            visibility: String,
+            approvalRequired: Boolean,
+            notificationEnabled: Boolean
+        ) returns String;
+        @requires: ['DataProductManager', 'Admin']
+        action archive(
+            reason: String
+        ) returns String;
+        @requires: ['authenticated-user']
+        action getLineage() returns String;
+        @requires: ['DataProductManager', 'Admin']
+        action createVersion(
+            versionNumber: String,
+            changeDescription: String,
+            versionType: String,
+            autoIncrement: Boolean
+        ) returns String;
+        @requires: ['authenticated-user']
+        action compareVersions(
+            fromVersion: String,
+            toVersion: String
+        ) returns String;
+    };
+
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE', 'UPDATE'], to: 'DataProductManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity DublinCoreMetadata as projection on db.DublinCoreMetadata;
+
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE'], to: 'DataProductManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity IngestionSessions as projection on db.IngestionSessions;
+
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE'], to: 'DataProductManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity QualityAssessments as projection on db.QualityAssessments;
+
+    @requires: ['authenticated-user']
+    @restrict: [
+        { grant: ['CREATE', 'UPDATE', 'DELETE'], to: 'Admin' },
+        { grant: ['CREATE'], to: 'DataProductManager' },
+        { grant: 'READ', to: 'authenticated-user' }
+    ]
+    entity ProductTransformations as projection on db.ProductTransformations;
+
+    // Agent 0 specific actions for data product management
+    @requires: ['DataProductManager', 'Admin']
+    action getDashboardMetrics() returns {
+        totalProducts: Integer;
+        activeProducts: Integer;
+        averageQuality: Decimal;
+        productsByType: String;
+        qualityDistribution: String;
+        recentActivity: String;
+        topContributors: String;
+    };
+
+    @requires: ['DataProductManager', 'Admin']
+    action importMetadata(
+        format: String,
+        data: String,
+        overwriteExisting: Boolean,
+        validateBeforeImport: Boolean,
+        createBackup: Boolean
+    ) returns String;
+
+    @requires: ['DataProductManager', 'Admin']
+    action exportCatalog(
+        format: String,
+        includePrivate: Boolean
+    ) returns {
+        success: Boolean;
+        downloadUrl: String;
+        exportId: String;
+        expiresAt: String;
+    };
+
+    @requires: ['DataProductManager', 'Admin']
+    action bulkUpdateProducts(
+        productIds: array of String,
+        updateData: String
+    ) returns String;
+
+    @requires: ['DataProductManager', 'Admin']
+    action batchValidateProducts(
+        productIds: array of String,
+        validationType: String
+    ) returns String;
+
+    // ================================
+    // DATA PRODUCT EVENTS
+    // ================================
+
+    event DataProductCreated : {
+        productId: String;
+        productName: String;
+        timestamp: DateTime;
+        createdBy: String;
+    };
+
+    event DataProductUpdated : {
+        productId: String;
+        timestamp: DateTime;
+        modifiedBy: String;
+    };
+
+    event DataProductDeleted : {
+        productId: String;
+        timestamp: DateTime;
+        deletedBy: String;
+    };
+
+    event DublinCoreGenerated : {
+        productId: String;
+        timestamp: DateTime;
+        generatedBy: String;
+    };
+
+    event DublinCoreUpdated : {
+        productId: String;
+        timestamp: DateTime;
+        updatedBy: String;
+    };
+
+    event MetadataValidated : {
+        productId: String;
+        isValid: Boolean;
+        score: Decimal;
+        timestamp: DateTime;
+    };
+
+    event SchemaValidated : {
+        productId: String;
+        isValid: Boolean;
+        errors: String;
+        timestamp: DateTime;
+    };
+
+    event QualityAssessed : {
+        productId: String;
+        overallScore: Decimal;
+        qualityDimensions: String;
+        timestamp: DateTime;
+    };
+
+    event DataProductPublished : {
+        productId: String;
+        publicationId: String;
+        catalogUrl: String;
+        timestamp: DateTime;
+        publishedBy: String;
+    };
+
+    event DataProductArchived : {
+        productId: String;
+        reason: String;
+        timestamp: DateTime;
+        archivedBy: String;
+    };
+
+    event DataProductVersionCreated : {
+        productId: String;
+        versionId: String;
+        versionNumber: String;
+        timestamp: DateTime;
+        createdBy: String;
+    };
+
+    event MetadataImported : {
+        importedCount: Integer;
+        skippedCount: Integer;
+        errorCount: Integer;
+        timestamp: DateTime;
+        importedBy: String;
+    };
+
+    event CatalogExported : {
+        exportId: String;
+        format: String;
+        timestamp: DateTime;
+        exportedBy: String;
+    };
+
+    event ProductsBulkUpdated : {
+        productIds: array of String;
+        updatedCount: Integer;
+        failedCount: Integer;
+        timestamp: DateTime;
+        updatedBy: String;
+    };
+
+    event ProductsBatchValidated : {
+        validationId: String;
+        totalProducts: Integer;
+        validProducts: Integer;
+        invalidProducts: Integer;
         timestamp: DateTime;
     };
 }

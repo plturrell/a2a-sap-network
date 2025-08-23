@@ -1,0 +1,548 @@
+[
+  {
+    "name": "agent0DataProduct",
+    "exists": true,
+    "files": [
+      "__init__.py",
+      "README.md"
+    ],
+    "directories": [
+      "__pycache__",
+      "active"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {},
+    "simulations": {},
+    "gaps": [
+      "No service layer detected",
+      "No mock implementations found",
+      "No simulation capabilities found"
+    ]
+  },
+  {
+    "name": "agent1Standardization",
+    "exists": true,
+    "files": [
+      "__init__.py",
+      "README.md"
+    ],
+    "directories": [
+      "__pycache__",
+      "active"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {},
+    "simulations": {},
+    "gaps": [
+      "No service layer detected",
+      "No mock implementations found",
+      "No simulation capabilities found"
+    ]
+  },
+  {
+    "name": "agent2AiPreparation",
+    "exists": true,
+    "files": [
+      "__init__.py",
+      "README.md"
+    ],
+    "directories": [
+      "__pycache__",
+      "active"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {},
+    "simulations": {},
+    "gaps": [
+      "No service layer detected",
+      "No mock implementations found",
+      "No simulation capabilities found"
+    ]
+  },
+  {
+    "name": "agent3VectorProcessing",
+    "exists": true,
+    "files": [
+      "__init__.py",
+      "README.md"
+    ],
+    "directories": [
+      "__pycache__",
+      "active"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {},
+    "simulations": {},
+    "gaps": [
+      "No service layer detected",
+      "No mock implementations found",
+      "No simulation capabilities found"
+    ]
+  },
+  {
+    "name": "agent4CalcValidation",
+    "exists": true,
+    "files": [
+      "__init__.py",
+      "README.md"
+    ],
+    "directories": [
+      "__pycache__",
+      "templates",
+      "active"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {},
+    "simulations": {},
+    "gaps": [
+      "No service layer detected",
+      "No mock implementations found",
+      "No simulation capabilities found"
+    ]
+  },
+  {
+    "name": "agent5QaValidation",
+    "exists": true,
+    "files": [
+      "__init__.py",
+      "README.md"
+    ],
+    "directories": [
+      "__pycache__",
+      "active"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {},
+    "simulations": {},
+    "gaps": [
+      "No service layer detected",
+      "No mock implementations found",
+      "No simulation capabilities found"
+    ]
+  },
+  {
+    "name": "agent6QualityControl",
+    "exists": true,
+    "files": [
+      "README.md"
+    ],
+    "directories": [
+      "active"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {},
+    "simulations": {},
+    "gaps": [
+      "No service layer detected",
+      "No mock implementations found",
+      "No simulation capabilities found"
+    ]
+  },
+  {
+    "name": "agentBuilder",
+    "exists": true,
+    "files": [
+      "__init__.py",
+      "README.md"
+    ],
+    "directories": [
+      "templates",
+      "active"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {},
+    "simulations": {},
+    "gaps": [
+      "No service layer detected",
+      "No mock implementations found",
+      "No simulation capabilities found"
+    ]
+  },
+  {
+    "name": "agentManager",
+    "exists": true,
+    "files": [
+      "__init__.py",
+      "README.md"
+    ],
+    "directories": [
+      "__pycache__",
+      "active"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {},
+    "simulations": {},
+    "gaps": [
+      "No service layer detected",
+      "No mock implementations found",
+      "No simulation capabilities found"
+    ]
+  },
+  {
+    "name": "calculationAgent",
+    "exists": true,
+    "files": [
+      "__init__.py",
+      "README.md"
+    ],
+    "directories": [
+      "__pycache__",
+      "docs",
+      "active"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {},
+    "simulations": {},
+    "gaps": [
+      "No service layer detected",
+      "No mock implementations found",
+      "No simulation capabilities found"
+    ]
+  },
+  {
+    "name": "catalogManager",
+    "exists": true,
+    "files": [
+      "__init__.py",
+      "README.md"
+    ],
+    "directories": [
+      "__pycache__",
+      "active"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {},
+    "simulations": {},
+    "gaps": [
+      "No service layer detected",
+      "No mock implementations found",
+      "No simulation capabilities found"
+    ]
+  },
+  {
+    "name": "dataManager",
+    "exists": true,
+    "files": [
+      "__init__.py",
+      "README.md"
+    ],
+    "directories": [
+      "active"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {},
+    "simulations": {},
+    "gaps": [
+      "No service layer detected",
+      "No mock implementations found",
+      "No simulation capabilities found"
+    ]
+  },
+  {
+    "name": "embeddingFineTuner",
+    "exists": true,
+    "files": [
+      "README.md"
+    ],
+    "directories": [
+      "active"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {},
+    "simulations": {},
+    "gaps": [
+      "No service layer detected",
+      "No mock implementations found",
+      "No simulation capabilities found"
+    ]
+  },
+  {
+    "name": "gleanAgent",
+    "exists": true,
+    "files": [
+      "gleanAgentSdk.py",
+      "test_real_complexity.py",
+      "test_startup.py",
+      "test_real_refactoring.py",
+      "test_mcp_tools.py",
+      "__init__.py",
+      "glean_analysis.db",
+      "typescript_analyzer_standalone.py",
+      "test_cli_capabilities.py",
+      "README.md",
+      "test_all_real_features.py",
+      "test_scss_enhanced.py",
+      "scss_analyzer_standalone.py",
+      "cli.py",
+      "test_real_security.py",
+      "test_real_project.py",
+      "setup_test_env.sh",
+      "run_scss_analysis.py",
+      "solidity_analyzer_standalone.py",
+      "cds_analyzer_standalone.py",
+      "test_glean_functionality.py",
+      "test_javascript_analysis.py",
+      "verify_fixes.py",
+      "test_glean_agent.py",
+      "intelligentScanManager.py",
+      "test_final_validation.py",
+      "test_phase2_features.py",
+      "test_real_linting.py",
+      "test_specific_languages.py"
+    ],
+    "directories": [
+      "__pycache__"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {
+      "test": {
+        "files": [
+          "test_real_complexity.py",
+          "test_startup.py",
+          "test_real_refactoring.py",
+          "test_mcp_tools.py",
+          "test_cli_capabilities.py",
+          "test_all_real_features.py",
+          "test_scss_enhanced.py",
+          "test_real_security.py",
+          "test_real_project.py",
+          "setup_test_env.sh",
+          "test_glean_functionality.py",
+          "test_javascript_analysis.py",
+          "test_glean_agent.py",
+          "test_final_validation.py",
+          "test_phase2_features.py",
+          "test_real_linting.py",
+          "test_specific_languages.py"
+        ],
+        "directories": []
+      }
+    },
+    "simulations": {},
+    "gaps": [
+      "No service layer detected",
+      "No simulation capabilities found"
+    ]
+  },
+  {
+    "name": "orchestratorAgent",
+    "exists": true,
+    "files": [],
+    "directories": [
+      "active"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {},
+    "simulations": {},
+    "gaps": [
+      "No service layer detected",
+      "No mock implementations found",
+      "No simulation capabilities found"
+    ]
+  },
+  {
+    "name": "reasoningAgent",
+    "exists": true,
+    "files": [
+      "test_blackboard_quick.py",
+      "DEEP_HONEST_ASSESSMENT.md",
+      "enhancedReasoningAgent.py",
+      "test_blackboard_standalone.py",
+      "testMode.py",
+      "FINAL_FIXES_COMPLETE.md",
+      "test_reasoning_agent.py",
+      "test_performance_simple.py",
+      "reasoningValidationFramework.py",
+      "reasoningMemorySystem.py",
+      "ensureAsyncConsistency.py",
+      "reasoningConfidenceCalculator.py",
+      "asyncGrokClient.py",
+      "test_integration_no_mocks.py",
+      "STEP_BY_STEP_PLAN.md",
+      "FINAL_VALIDATION_REPORT.md",
+      "mcpTransportLayer.py",
+      "test_clean_architecture.py",
+      "test_integration_grok_api.py",
+      "MOCK_ELIMINATION_REPORT.md",
+      "grokReasoning.py",
+      "INCREMENTAL_FIX_PLAN.md",
+      "integrateGrok.py",
+      "enhancedReasoningSkills.py",
+      "testEnhancedReasoningAgent.py",
+      "peerToPeerArchitecture.py",
+      "INTERNAL_BPMN_ANALYSIS.md",
+      "test_architecture_integration.py",
+      "testCompleteMcpSystem.py",
+      "FIXES_IMPLEMENTED.md",
+      "integrateArchitectures.py",
+      "BPMN_ANALYSIS.md",
+      "test_error_handling.py",
+      "mcpReasoningAgent.py",
+      "BLACKBOARD_IMPLEMENTATION.md",
+      "FINAL_MCP_STATUS.md",
+      "REAL_VS_MOCK_ANALYSIS.md",
+      "reasoningSkills.py",
+      "FIXED_ISSUES_SUMMARY.md",
+      "blackboardArchitecture.py",
+      "asyncReasoningEngine.py",
+      "test_performance_benchmarks.py",
+      "enhancedReasoningAgentWithMCP.py",
+      "__init__.py",
+      "knowledgeRepresentationSystem.py",
+      "test_blackboard_comprehensive.py",
+      "asyncMcpEnhancements.py",
+      "test_integration_quick.py",
+      "embeddingPatternMatcher.py",
+      "README.md",
+      "swarmIntelligenceArchitecture.py",
+      "mcpSessionManagement.py",
+      "grokIntegration.py",
+      "A2AMultiAgentCoordination.py",
+      "enhancedMcpToolIntegration.py",
+      "mcpIntraAgentExtension.py",
+      "asyncReasoningMemorySystem.py",
+      "test_blackboard_simple.py",
+      "reasoningAgent.backup.20250816_192136",
+      "chainOfThoughtArchitecture.py",
+      "nlpPatternMatcher.py",
+      "test_unit_components.py",
+      "test_no_fallbacks.py",
+      "test_performance_improvements.py",
+      "reasoningAgent.py",
+      "debateArchitecture.py",
+      "reasoningAgentClean.py",
+      "mcpResourceStreaming.py",
+      "MCP_IMPLEMENTATION_STATUS.md",
+      "semanticSimilarityCalculator.py",
+      "asyncCleanupManager.py",
+      "test_integration.py",
+      "advancedReasoningEngine.py",
+      "sdkImportHandler.py",
+      "functionalIntraSkillCommunication.py",
+      "test_blackboard_integration.py",
+      "mcpSemanticSimilarityCalculator.py",
+      "BLACKBOARD_INTEGRATION.md",
+      "reasoningAgent.backup.20250816_190937",
+      "mcpReasoningConfidenceCalculator.py",
+      "PERFORMANCE_IMPROVEMENTS_SUMMARY.md",
+      "REASONING_IMPROVEMENTS.md",
+      "reasoning_agent_config.yaml",
+      "integration_test.py",
+      "CLEAN_ARCHITECTURE_SUMMARY.md",
+      "test_mcpReasoningConfidenceCalculator.py"
+    ],
+    "directories": [
+      "skills",
+      "active"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {
+      "mock": {
+        "files": [
+          "test_integration_no_mocks.py",
+          "MOCK_ELIMINATION_REPORT.md",
+          "REAL_VS_MOCK_ANALYSIS.md"
+        ],
+        "directories": []
+      },
+      "test": {
+        "files": [
+          "test_blackboard_quick.py",
+          "test_blackboard_standalone.py",
+          "testMode.py",
+          "test_reasoning_agent.py",
+          "test_performance_simple.py",
+          "test_integration_no_mocks.py",
+          "test_clean_architecture.py",
+          "test_integration_grok_api.py",
+          "testEnhancedReasoningAgent.py",
+          "test_architecture_integration.py",
+          "testCompleteMcpSystem.py",
+          "test_error_handling.py",
+          "test_performance_benchmarks.py",
+          "test_blackboard_comprehensive.py",
+          "test_integration_quick.py",
+          "test_blackboard_simple.py",
+          "test_unit_components.py",
+          "test_no_fallbacks.py",
+          "test_performance_improvements.py",
+          "test_integration.py",
+          "test_blackboard_integration.py",
+          "integration_test.py",
+          "test_mcpReasoningConfidenceCalculator.py"
+        ],
+        "directories": []
+      }
+    },
+    "simulations": {
+      "sim": {
+        "files": [
+          "test_performance_simple.py",
+          "test_blackboard_simple.py",
+          "semanticSimilarityCalculator.py",
+          "mcpSemanticSimilarityCalculator.py"
+        ],
+        "directories": []
+      }
+    },
+    "gaps": [
+      "No service layer detected"
+    ]
+  },
+  {
+    "name": "serviceDiscoveryAgent",
+    "exists": true,
+    "files": [],
+    "directories": [
+      "active"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {},
+    "simulations": {},
+    "gaps": [
+      "No service layer detected",
+      "No mock implementations found",
+      "No simulation capabilities found"
+    ]
+  },
+  {
+    "name": "sqlAgent",
+    "exists": true,
+    "files": [
+      "SQL_AGENT_CONFIG.md",
+      "__init__.py",
+      "README.md"
+    ],
+    "directories": [
+      "__pycache__",
+      "bpmn",
+      "active"
+    ],
+    "service_layer": {},
+    "adapter_layer": {},
+    "mocks": {},
+    "simulations": {},
+    "gaps": [
+      "No service layer detected",
+      "No mock implementations found",
+      "No simulation capabilities found"
+    ]
+  }
+]

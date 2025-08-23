@@ -113,7 +113,7 @@ service A2ADraftService @(path: '/api/v1/drafts') {
         @UI.Hidden: false
         creator : Association to one Agents on creator.ID = $self.creator.ID,
         @UI.Hidden: false
-        executions : Association to many WorkflowExecutions on executions.workflow.ID = $self.ID
+        executions : Association to many WorkflowExecutions on executions.workflowId.ID = $self.ID
     } actions {
         @Common.IsActionCritical: true
         action execute(

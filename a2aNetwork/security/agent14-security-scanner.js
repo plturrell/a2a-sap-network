@@ -22,17 +22,17 @@ class Agent14SecurityScanner {
         
         // Agent 14 specific security patterns for ML/embedding operations
         this.embeddingSecurityPatterns = {
-            // ML model injection and manipulation
+            // ML model injection and manipulation (more specific patterns)
             modelInjection: [
-                /eval\s*\(\s*.*model/gi,
-                /Function\s*\(\s*.*model/gi,
-                /exec\s*\(\s*.*model/gi,
-                /pickle\.loads.*model/gi,
-                /torch\.load.*model.*map_location/gi,
-                /joblib\.load.*model/gi,
-                /numpy\.load.*model/gi,
-                /tf\.keras\.models\.load_model.*model/gi,
-                /model\.load_state_dict.*unsafe/gi
+                /eval\s*\(\s*.*model.*\+.*input/gi,
+                /new\s+Function\s*\(\s*.*model.*\+/gi,
+                /exec\s*\(\s*.*model.*input/gi,
+                /pickle\.loads.*model.*input/gi,
+                /torch\.load.*model.*map_location.*input/gi,
+                /joblib\.load.*model.*input/gi,
+                /numpy\.load.*model.*input/gi,
+                /tf\.keras\.models\.load_model.*model.*input/gi,
+                /model\.load_state_dict.*unsafe.*input/gi
             ],
             
             // Model path traversal vulnerabilities

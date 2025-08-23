@@ -13,10 +13,10 @@ function cleanupIntervals() {
 }
 
 // Cleanup on exit
-if (typeof process !== 'undefined') {
-    process.on('exit', cleanupIntervals);
-    process.on('SIGTERM', cleanupIntervals);
-    process.on('SIGINT', cleanupIntervals);
+if (typeof process !== "undefined") {
+    process.on("exit", cleanupIntervals);
+    process.on("SIGTERM", cleanupIntervals);
+    process.on("SIGINT", cleanupIntervals);
 }
 
 sap.ui.define([
@@ -30,7 +30,7 @@ sap.ui.define([
     "sap/ui/core/library",
     "sap/base/Log",
     "sap/base/util/UriParameters"
-], function(
+], (
     UIComponent,
     Device,
     JSONModel,
@@ -41,7 +41,7 @@ sap.ui.define([
     coreLibrary,
     Log,
     UriParameters
-) {
+) => {
     "use strict";
 
     const LayoutType = fioriLibrary.LayoutType;
@@ -62,7 +62,7 @@ sap.ui.define([
          * @override
          */
         init() {
-            // call the base component's init function
+            // call the base component"s init function
             UIComponent.prototype.init.apply(this, arguments);
 
             // Initialize global error handling
@@ -98,7 +98,7 @@ sap.ui.define([
                 this._oSocket = null;
             }
 
-            // call the base component's destroy function
+            // call the base component"s destroy function
             UIComponent.prototype.destroy.apply(this, arguments);
         },
 
@@ -106,7 +106,7 @@ sap.ui.define([
          * This method can be called to determine whether the sapUiSizeCompact or sapUiSizeCozy
          * design mode class should be set, which influences the size appearance of some controls.
          * @public
-         * @returns {string} css class, either 'sapUiSizeCompact' or 'sapUiSizeCozy' -
+         * @returns {string} css class, either "sapUiSizeCompact" or "sapUiSizeCozy" -
          * or an empty string if no css class should be set
          */
         getContentDensityClass() {
@@ -210,9 +210,9 @@ sap.ui.define([
             this._initUserAuthentication();
 
             // Set up periodic refresh
-            trackInterval(setInterval(function() {
+            trackInterval(setInterval(() => {
                 this._loadNetworkStats();
-            }.bind(this), 60000); // Refresh every minute
+            }, 60000)); // Refresh every minute
         },
 
         /**
@@ -234,7 +234,7 @@ sap.ui.define([
                     reconnectionAttempts: 5
                 });
 
-                this._oSocket.on("connect", function() {
+                this._oSocket.on("connect", () => {
                     Log.info("WebSocket connected");
                     this.getModel("app").setProperty("/networkStatus", "connected");
 
@@ -242,17 +242,17 @@ sap.ui.define([
                     this._oSocket.emit("subscribe", {
                         rooms: ["agents", "services", "workflows", "reputation"]
                     });
-                }.bind(this));
+                });
 
-                this._oSocket.on("disconnect", function() {
+                this._oSocket.on("disconnect", () => {
                     Log.warning("WebSocket disconnected");
                     this.getModel("app").setProperty("/networkStatus", "disconnected");
-                }.bind(this));
+                });
 
-                this._oSocket.on("error", function(error) {
+                this._oSocket.on("error", (error) => {
                     Log.error("WebSocket error", error);
                     this.getModel("app").setProperty("/networkStatus", "error");
-                }.bind(this));
+                });
 
                 // Real-time event handlers
                 this._attachSocketEventHandlers();
@@ -272,24 +272,24 @@ sap.ui.define([
             }
 
             // Agent events
-            this._oSocket.on("agent:registered", function(data) {
+            this._oSocket.on("agent:registered", (data) => {
                 MessageToast.show(this._getResourceBundle().getText("agentRegisteredMessage", [data.name]));
                 this._loadNetworkStats();
                 this.getEventBus().publish("app", "agentRegistered", data);
-            }.bind(this));
+            });
 
-            this._oSocket.on("agent:updated", function(data) {
+            this._oSocket.on("agent:updated", (data) => {
                 this.getEventBus().publish("app", "agentUpdated", data);
-            }.bind(this));
+            });
 
             // Service events
-            this._oSocket.on("service:created", function(data) {
+            this._oSocket.on("service:created", (data) => {
                 MessageToast.show(this._getResourceBundle().getText("serviceCreatedMessage", [data.name]));
                 this.getEventBus().publish("app", "serviceCreated", data);
-            }.bind(this));
+            });
 
             // Reputation events
-            this._oSocket.on("reputation:updated", function(data) {
+            this._oSocket.on("reputation:updated", (data) => {
                 this.getEventBus().publish("app", "reputationUpdated", data);
 
                 // Update UI if viewing the affected agent
@@ -297,18 +297,18 @@ sap.ui.define([
                 if (sCurrentHash.includes(data.agentId)) {
                     this.getModel().refresh();
                 }
-            }.bind(this));
+            });
 
             // Workflow events
-            this._oSocket.on("workflow:completed", function(data) {
+            this._oSocket.on("workflow:completed", (data) => {
                 MessageToast.show(this._getResourceBundle().getText("workflowCompletedMessage", [data.executionId]));
                 this.getEventBus().publish("app", "workflowCompleted", data);
-            }.bind(this));
+            });
 
-            this._oSocket.on("workflow:failed", function(data) {
+            this._oSocket.on("workflow:failed", (data) => {
                 MessageBox.error(this._getResourceBundle().getText("workflowFailedMessage", [data.executionId]));
                 this.getEventBus().publish("app", "workflowFailed", data);
-            }.bind(this));
+            });
         },
 
         /**
@@ -393,10 +393,10 @@ sap.ui.define([
                     });
                     Log.info("User authenticated", { userId: oUserInfo.id });
                 },
-                error: function(oError) {
+                error: (oError) => {
                     Log.error("Failed to load user info", oError);
                     MessageBox.error(this._getResourceBundle().getText("authenticationError"));
-                }.bind(this)
+                }
             });
         },
 

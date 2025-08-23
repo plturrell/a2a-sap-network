@@ -72,8 +72,8 @@ jobs:
         # Create necessary directories for logs and data
         mkdir -p logs data
         
-        # Pull the built image
-        docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        # Pull the built image (use latest tag from main branch)
+        docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
         
         # Run the 18-step startup verification in Docker
         docker run --rm \
@@ -83,7 +83,7 @@ jobs:
           -e CI=true \
           --memory=4g \
           --cpus=2 \
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main \
           /bin/bash -c "
             echo '🔍 Running A2A 18-Step System Verification'
             chmod +x start.sh
@@ -122,9 +122,9 @@ jobs:
     - name: Deploy to production
       run: |
         echo "🚀 A2A Platform deployment ready!"
-        echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+        echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main"
         echo "✅ 18-step verification completed successfully"
         echo ""
         echo "Deploy commands:"
-        echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+        echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main"
         echo "docker-compose -f docker-compose.production.yml up -d"

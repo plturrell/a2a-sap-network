@@ -123,10 +123,29 @@
             "X-Frame-Options": "DENY",
             "X-XSS-Protection": "1; mode=block",
             "X-Content-Type-Options": "nosniff",
-            "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://sapui5.hana.ondemand.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://localhost:8014 wss://localhost:8014; font-src 'self' data:; frame-ancestors 'none'",
+            "Content-Security-Policy": "default-src 'self'; script-src 'self' https://sapui5.hana.ondemand.com; style-src 'self' 'unsafe-inline' https://sapui5.hana.ondemand.com; img-src 'self' data: https:; connect-src 'self' https://localhost:8014 wss://localhost:8014 https://*.sap.com; font-src 'self' data: https://sapui5.hana.ondemand.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; media-src 'none'; worker-src 'none'",
             "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
             "Referrer-Policy": "strict-origin-when-cross-origin",
-            "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
+            "Permissions-Policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), serial=(), bluetooth=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=()",
+            "Cross-Origin-Embedder-Policy": "require-corp",
+            "Cross-Origin-Opener-Policy": "same-origin",
+            "Cross-Origin-Resource-Policy": "same-origin",
+            "Cache-Control": "no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "X-Permitted-Cross-Domain-Policies": "none",
+            "Feature-Policy": "autoplay 'none'; camera 'none'; microphone 'none'; payment 'none'; usb 'none'",
+            "X-DNS-Prefetch-Control": "off"
+        },
+        "mlSecurity": {
+            "maxModelSize": "2GB",
+            "allowedModelFormats": ["pytorch", "tensorflow", "onnx", "safetensors"],
+            "maxTrainingTime": 86400,
+            "maxBatchSize": 1024,
+            "maxEpochs": 1000,
+            "enableAuditLogging": true,
+            "requireModelIntegrityCheck": true,
+            "blockSuspiciousPatterns": true,
+            "maxRiskScore": 75
         }
     }
 }

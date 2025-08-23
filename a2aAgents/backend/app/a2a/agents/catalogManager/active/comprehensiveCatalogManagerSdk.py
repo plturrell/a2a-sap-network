@@ -94,27 +94,7 @@ from app.a2a.sdk import a2a_handler, a2a_skill, a2a_task
 from app.a2a.sdk.types import A2AMessage, MessageRole
 from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
-
-# MCP tool decorators
-from mcp.types import Tool
-
-def mcp_tool(name: str, description: str = "", **kwargs):
-    def decorator(func):
-        func._mcp_tool = {'name': name, 'description': description, **kwargs}
-        return func
-    return decorator
-    
-def mcp_resource(uri: str, name: str = "", **kwargs):
-    def decorator(func):
-        func._mcp_resource = {'uri': uri, 'name': name, **kwargs}
-        return func
-    return decorator
-
-def mcp_prompt(name: str, description: str = "", **kwargs):
-    def decorator(func):
-        func._mcp_prompt = {'name': name, 'description': description, **kwargs}
-        return func
-    return decorator
+from app.a2a.sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
 
 # Network connector - Use standard A2A network (NO FALLBACKS)
 from ....a2a.network.networkConnector import get_network_connector

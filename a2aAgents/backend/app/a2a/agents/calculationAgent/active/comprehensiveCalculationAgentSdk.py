@@ -79,13 +79,14 @@ from app.a2a.sdk import a2a_handler, a2a_skill, a2a_task
 from app.a2a.sdk.types import A2AMessage, MessageRole
 from app.a2a.sdk.utils import create_agent_id, create_error_response, create_success_response
 from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
-
+from app.a2a.sdk.mcpDecorators import mcp_tool, mcp_resource, mcp_prompt
 
 # A2A Protocol Compliance: Require environment variables
 required_env_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
 missing_vars = [var for var in required_env_vars if var in locals() and not os.getenv(var)]
 if missing_vars:
     raise ValueError(f"Required environment variables not set for A2A compliance: {missing_vars}")
+
 # Real Grok AI Integration
 try:
     from openai import AsyncOpenAI
@@ -107,37 +108,6 @@ try:
     AIOHTTP_AVAILABLE = True
 except ImportError:
     AIOHTTP_AVAILABLE = False
-
-# MCP integration decorators
-def mcp_tool(name: str, description: str = "", **kwargs):
-    """Decorator for MCP tool registration"""
-    def decorator(func):
-        func._mcp_tool = True
-        func._mcp_name = name
-        func._mcp_description = description
-        func._mcp_config = kwargs
-        return func
-    return decorator
-
-def mcp_resource(name: str, uri: str, **kwargs):
-    """Decorator for MCP resource registration"""  
-    def decorator(func):
-        func._mcp_resource = True
-        func._mcp_name = name
-        func._mcp_uri = uri
-        func._mcp_config = kwargs
-        return func
-    return decorator
-
-def mcp_prompt(name: str, description: str = "", **kwargs):
-    """Decorator for MCP prompt registration"""
-    def decorator(func):
-        func._mcp_prompt = True
-        func._mcp_name = name
-        func._mcp_description = description
-        func._mcp_config = kwargs
-        return func
-    return decorator
 
 logger = logging.getLogger(__name__)
 
