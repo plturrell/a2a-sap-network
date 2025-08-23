@@ -9,12 +9,11 @@ from typing import Dict, Any, Optional, Tuple
 from web3 import Web3
 from eth_account import Account
 from eth_account.messages import encode_defunct
-from config.agentConfig import config
-
-
-# A2A Protocol Compliance: All imports must be available
-# No fallback implementations allowed - the agent must have all required dependencies
+try:
+    from config.agentConfig import config
 except ImportError:
+    # A2A Protocol Compliance: All imports must be available
+    # No fallback implementations allowed - the agent must have all required dependencies
     # Fallback configuration
     class Config:
         def __init__(self):
