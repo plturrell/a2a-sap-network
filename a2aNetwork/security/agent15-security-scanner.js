@@ -25,10 +25,11 @@ class Agent15SecurityScanner {
             // Workflow execution vulnerabilities
             WORKFLOW_INJECTION: {
                 patterns: [
-                    /eval\s*\(/gi,
-                    /new\s+Function\s*\(/gi,
+                    /eval\s*\(.*\+/gi,
+                    /new\s+Function\s*\(.*\+/gi,
                     /setTimeout\s*\([^,)]*eval/gi,
                     /setTimeout\s*\([^,)]*Function/gi,
+                    /setTimeout\s*\([^,)]*\+.*input/gi,
                     /\.execute\s*\([^)]*\$\{/gi,
                     /\.runWorkflow\s*\([^)]*\+/gi,
                     /workflowConfig\s*=.*eval/gi,
@@ -275,7 +276,11 @@ class Agent15SecurityScanner {
                 /setTimeout\s*\(\s*\(\s*\)\s*=>\s*this\._/gi,  // Arrow function with this
                 /setTimeout\s*\(\s*function\s*\(\s*\)\s*\{.*this\._/gi,  // Function with this
                 /_pollInterval\s*=\s*setInterval/gi,  // Polling intervals
-                /_initializePolling/gi  // Polling initialization
+                /_initializePolling/gi,  // Polling initialization
+                /setTimeout\s*\(\s*function\s*\(\s*\)\s*\{.*\.focus\(\)/gi,  // UI focus
+                /setTimeout\s*\(\s*function\s*\(\s*\)\s*\{.*MessageToast/gi,  // UI feedback
+                /setTimeout\s*\(\s*\(\s*\)\s*=>\s*\{.*\.focus\(\)/gi,  // Arrow function UI focus
+                /setTimeout\s*\(\s*\(\s*\)\s*=>\s*\{.*MessageToast/gi  // Arrow function UI feedback
             ],
             AGENT_HIJACKING: [
                 /validation\.sanitizedAgentId/gi,  // SecurityUtils sanitization

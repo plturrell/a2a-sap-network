@@ -684,12 +684,12 @@ sap.ui.define([
             var oData = oCreateModel.getData();
             
             if (!oData.canCreate) {
-                MessageToast.show("Please fix validation errors before creating the workflow");
+                MessageToast.show(this._getResourceBundle().getText("msg.fixValidationErrors"));
                 return;
             }
             
-            MessageBox.confirm("Are you sure you want to create this workflow?", {
-                title: "Confirm Workflow Creation",
+            MessageBox.confirm(this._getResourceBundle().getText("msg.confirmWorkflowCreation"), {
+                title: this._getResourceBundle().getText("title.confirmWorkflowCreation"),
                 onOK: function() {
                     this._createWorkflow(oData);
                 }.bind(this)
@@ -704,10 +704,10 @@ sap.ui.define([
         
         _createWorkflow: function(oData) {
             // Simulate workflow creation
-            MessageToast.show("Workflow creation started...");
+            MessageToast.show(this._getResourceBundle().getText("msg.workflowCreationStarted"));
             
             setTimeout(function() {
-                MessageToast.show("Workflow '" + oData.workflowName + "' created successfully");
+                MessageToast.show(this._getResourceBundle().getText("msg.workflowCreated", [oData.workflowName]));
                 if (this._oCreateDialog) {
                     this._oCreateDialog.close();
                 }
