@@ -156,8 +156,8 @@ class QualityControlManagerAgent(A2AAgentBase, PerformanceOptimizationMixin):
         PerformanceOptimizationMixin.__init__(self)
         
         self.enable_monitoring = enable_monitoring
-        self.data_manager_url = data_manager_url or os.getenv("DATA_MANAGER_URL", "os.getenv("DATA_MANAGER_URL")")
-        self.catalog_manager_url = catalog_manager_url or os.getenv("CATALOG_MANAGER_URL", "os.getenv("CATALOG_MANAGER_URL")")
+        self.data_manager_url = data_manager_url or os.getenv("DATA_MANAGER_URL", "http://localhost:8008")
+        self.catalog_manager_url = catalog_manager_url or os.getenv("CATALOG_MANAGER_URL", "http://localhost:8009")
         
         # Quality thresholds
         self.default_thresholds = {

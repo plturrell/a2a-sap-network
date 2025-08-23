@@ -7,10 +7,13 @@
     <Dialog
         title="{i18n>dialog.createEmbeddingModel.title}"
         class="sapUiMediumMargin"
-        contentWidth="80vw"
+        contentWidth="75rem"
         contentHeight="85vh"
         resizable="true"
-        draggable="true">
+        draggable="true"
+        stretch="{device>/system/phone}"
+        afterOpen=".onCreateModelDialogAfterOpen"
+        afterClose=".onCreateModelDialogAfterClose">
         
         <content>
             <Page showHeader="false">
@@ -31,19 +34,22 @@
                                             
                                             <!-- Model Name -->
                                             <Label text="{i18n>field.modelName}" required="true"/>
-                                            <Input id="modelNameInput" value="" placeholder="{i18n>placeholder.modelName}" required="true"/>
+                                            <Input id="modelNameInput" value="{create>/modelName}" placeholder="{i18n>placeholder.modelName}" required="true" valueState="{create>/modelNameState}" valueStateText="{create>/modelNameStateText}" liveChange=".onModelNameChange"/>
                                             
                                             <!-- Description -->
                                             <Label text="{i18n>field.description}"/>
-                                            <TextArea id="descriptionInput" value="" rows="3" placeholder="{i18n>placeholder.description}"/>
+                                            <TextArea id="descriptionInput" value="{create>/description}" rows="3" placeholder="{i18n>placeholder.description}" maxLength="500" showExceededText="true" liveChange=".onDescriptionChange"/>
                                             
                                             <!-- Model Type -->
                                             <Label text="{i18n>field.modelType}" required="true"/>
                                             <ComboBox
                                                 id="modelTypeCombo"
-                                                selectedKey=""
+                                                selectedKey="{create>/modelType}"
                                                 placeholder="{i18n>placeholder.modelType}"
-                                                required="true">
+                                                required="true"
+                                                valueState="{create>/modelTypeState}"
+                                                valueStateText="{create>/modelTypeStateText}"
+                                                selectionChange=".onModelTypeChange">
                                                 <core:Item key="bert" text="{i18n>model.bert}"/>
                                                 <core:Item key="roberta" text="{i18n>model.roberta}"/>
                                                 <core:Item key="distilbert" text="{i18n>model.distilbert}"/>
@@ -61,9 +67,12 @@
                                             <Label text="{i18n>field.baseModel}" required="true"/>
                                             <ComboBox
                                                 id="baseModelCombo"
-                                                selectedKey=""
+                                                selectedKey="{create>/baseModel}"
                                                 placeholder="{i18n>placeholder.baseModel}"
-                                                required="true">
+                                                required="true"
+                                                valueState="{create>/baseModelState}"
+                                                valueStateText="{create>/baseModelStateText}"
+                                                selectionChange=".onBaseModelChange">
                                                 <core:Item key="bert_base" text="{i18n>base.bert_base}"/>
                                                 <core:Item key="bert_large" text="{i18n>base.bert_large}"/>
                                                 <core:Item key="roberta_base" text="{i18n>base.roberta_base}"/>
@@ -77,7 +86,7 @@
                                             
                                             <!-- Embedding Dimension -->
                                             <Label text="{i18n>field.embeddingDimension}"/>
-                                            <StepInput id="embeddingDimensionInput" value="768" min="64" max="4096" step="64"/>
+                                            <StepInput id="embeddingDimensionInput" value="{create>/embeddingDimension}" min="64" max="4096" step="64" change=".onEmbeddingDimensionChange"/>
                                             
                                         </f:content>
                                     </f:SimpleForm>
@@ -96,31 +105,31 @@
                                             
                                             <!-- Architecture -->
                                             <Label text="{i18n>field.architecture}"/>
-                                            <Input id="architectureInput" value="" placeholder="{i18n>placeholder.architecture}"/>
+                                            <Input id="architectureInput" value="{create>/architecture}" placeholder="{i18n>placeholder.architecture}" liveChange=".onArchitectureChange"/>
                                             
                                             <!-- Layer Count -->
                                             <Label text="{i18n>field.layerCount}"/>
-                                            <StepInput id="layerCountInput" value="12" min="1" max="48" step="1"/>
+                                            <StepInput id="layerCountInput" value="{create>/layerCount}" min="1" max="48" step="1" change=".onLayerCountChange"/>
                                             
                                             <!-- Hidden Size -->
                                             <Label text="{i18n>field.hiddenSize}"/>
-                                            <StepInput id="hiddenSizeInput" value="768" min="128" max="4096" step="128"/>
+                                            <StepInput id="hiddenSizeInput" value="{create>/hiddenSize}" min="128" max="4096" step="128" change=".onHiddenSizeChange"/>
                                             
                                             <!-- Attention Heads -->
                                             <Label text="{i18n>field.attentionHeads}"/>
-                                            <StepInput id="attentionHeadsInput" value="12" min="1" max="64" step="1"/>
+                                            <StepInput id="attentionHeadsInput" value="{create>/attentionHeads}" min="1" max="64" step="1" change=".onAttentionHeadsChange"/>
                                             
                                             <!-- Vocabulary Size -->
                                             <Label text="{i18n>field.vocabularySize}"/>
-                                            <Input id="vocabularySizeInput" value="30522" placeholder="{i18n>placeholder.vocabularySize}"/>
+                                            <Input id="vocabularySizeInput" value="{create>/vocabularySize}" placeholder="{i18n>placeholder.vocabularySize}" liveChange=".onVocabularySizeChange"/>
                                             
                                             <!-- Max Sequence Length -->
                                             <Label text="{i18n>field.maxSequenceLength}"/>
-                                            <StepInput id="maxSequenceLengthInput" value="512" min="64" max="4096" step="64"/>
+                                            <StepInput id="maxSequenceLengthInput" value="{create>/maxSequenceLength}" min="64" max="4096" step="64" change=".onMaxSequenceLengthChange"/>
                                             
                                             <!-- Tokenizer -->
                                             <Label text="{i18n>field.tokenizer}"/>
-                                            <ComboBox id="tokenizerCombo" selectedKey="wordpiece">
+                                            <ComboBox id="tokenizerCombo" selectedKey="{create>/tokenizer}" selectionChange=".onTokenizerChange">
                                                 <core:Item key="wordpiece" text="{i18n>tokenizer.wordpiece}"/>
                                                 <core:Item key="sentencepiece" text="{i18n>tokenizer.sentencepiece}"/>
                                                 <core:Item key="bpe" text="{i18n>tokenizer.bpe}"/>
@@ -131,7 +140,7 @@
                                             
                                             <!-- Normalization -->
                                             <Label text="{i18n>field.normalization}"/>
-                                            <Switch id="normalizationSwitch" state="true"/>
+                                            <Switch id="normalizationSwitch" state="{create>/normalization}" change=".onNormalizationChange"/>
                                             
                                         </f:content>
                                     </f:SimpleForm>
@@ -150,19 +159,19 @@
                                             
                                             <!-- Learning Rate -->
                                             <Label text="{i18n>field.learningRate}"/>
-                                            <Input id="learningRateInput" value="0.00002" placeholder="{i18n>placeholder.learningRate}"/>
+                                            <Input id="learningRateInput" value="{create>/learningRate}" placeholder="{i18n>placeholder.learningRate}" liveChange=".onLearningRateChange"/>
                                             
                                             <!-- Batch Size -->
                                             <Label text="{i18n>field.batchSize}"/>
-                                            <StepInput id="batchSizeInput" value="32" min="1" max="512" step="1"/>
+                                            <StepInput id="batchSizeInput" value="{create>/batchSize}" min="1" max="512" step="1" change=".onBatchSizeChange"/>
                                             
                                             <!-- Epochs -->
                                             <Label text="{i18n>field.epochs}"/>
-                                            <StepInput id="epochsInput" value="10" min="1" max="100" step="1"/>
+                                            <StepInput id="epochsInput" value="{create>/epochs}" min="1" max="100" step="1" change=".onEpochsChange"/>
                                             
                                             <!-- Optimizer -->
                                             <Label text="{i18n>field.optimizer}"/>
-                                            <ComboBox id="optimizerCombo" selectedKey="adamw">
+                                            <ComboBox id="optimizerCombo" selectedKey="{create>/optimizer}" selectionChange=".onOptimizerChange">
                                                 <core:Item key="adam" text="{i18n>optimizer.adam}"/>
                                                 <core:Item key="adamw" text="{i18n>optimizer.adamw}"/>
                                                 <core:Item key="sgd" text="{i18n>optimizer.sgd}"/>
@@ -176,7 +185,7 @@
                                             
                                             <!-- Loss Function -->
                                             <Label text="{i18n>field.lossFunction}"/>
-                                            <ComboBox id="lossFunctionCombo" selectedKey="cosine">
+                                            <ComboBox id="lossFunctionCombo" selectedKey="{create>/lossFunction}" selectionChange=".onLossFunctionChange">
                                                 <core:Item key="cosine" text="{i18n>loss.cosine}"/>
                                                 <core:Item key="triplet" text="{i18n>loss.triplet}"/>
                                                 <core:Item key="contrastive" text="{i18n>loss.contrastive}"/>
@@ -189,19 +198,19 @@
                                             
                                             <!-- Regularization -->
                                             <Label text="{i18n>field.regularization}"/>
-                                            <Input id="regularizationInput" value="0.01" placeholder="{i18n>placeholder.regularization}"/>
+                                            <Input id="regularizationInput" value="{create>/regularization}" placeholder="{i18n>placeholder.regularization}" liveChange=".onRegularizationChange"/>
                                             
                                             <!-- Dropout -->
                                             <Label text="{i18n>field.dropout}"/>
-                                            <Slider id="dropoutSlider" value="0.1" min="0" max="0.5" step="0.05" enableTickmarks="true"/>
+                                            <Slider id="dropoutSlider" value="{create>/dropout}" min="0" max="0.5" step="0.05" enableTickmarks="true" change=".onDropoutChange"/>
                                             
                                             <!-- Warmup Steps -->
                                             <Label text="{i18n>field.warmupSteps}"/>
-                                            <StepInput id="warmupStepsInput" value="500" min="0" max="10000" step="100"/>
+                                            <StepInput id="warmupStepsInput" value="{create>/warmupSteps}" min="0" max="10000" step="100" change=".onWarmupStepsChange"/>
                                             
                                             <!-- Gradient Clipping -->
                                             <Label text="{i18n>field.gradientClipping}"/>
-                                            <Input id="gradientClippingInput" value="1.0" placeholder="{i18n>placeholder.gradientClipping}"/>
+                                            <Input id="gradientClippingInput" value="{create>/gradientClipping}" placeholder="{i18n>placeholder.gradientClipping}" liveChange=".onGradientClippingChange"/>
                                             
                                         </f:content>
                                     </f:SimpleForm>
@@ -220,23 +229,23 @@
                                             
                                             <!-- Quantization -->
                                             <Label text="{i18n>field.quantization}"/>
-                                            <Switch id="quantizationSwitch" state="false"/>
+                                            <Switch id="quantizationSwitch" state="{create>/quantization}" change=".onQuantizationChange"/>
                                             
                                             <!-- Pruning -->
                                             <Label text="{i18n>field.pruning}"/>
-                                            <Switch id="pruningSwitch" state="false"/>
+                                            <Switch id="pruningSwitch" state="{create>/pruning}" change=".onPruningChange"/>
                                             
                                             <!-- Distillation -->
                                             <Label text="{i18n>field.distillation}"/>
-                                            <Switch id="distillationSwitch" state="false"/>
+                                            <Switch id="distillationSwitch" state="{create>/distillation}" change=".onDistillationChange"/>
                                             
                                             <!-- Compression Ratio -->
                                             <Label text="{i18n>field.compressionRatio}"/>
-                                            <Slider id="compressionRatioSlider" value="2" min="1" max="10" step="0.5" enableTickmarks="true"/>
+                                            <Slider id="compressionRatioSlider" value="{create>/compressionRatio}" min="1" max="10" step="0.5" enableTickmarks="true" change=".onCompressionRatioChange"/>
                                             
                                             <!-- Optimization Target -->
                                             <Label text="{i18n>field.optimizationTarget}"/>
-                                            <SegmentedButton id="optimizationTargetSegmented" selectedKey="balanced">
+                                            <SegmentedButton id="optimizationTargetSegmented" selectedKey="{create>/optimizationTarget}" selectionChange=".onOptimizationTargetChange">
                                                 <items>
                                                     <SegmentedButtonItem key="speed" text="Speed"/>
                                                     <SegmentedButtonItem key="balanced" text="Balanced"/>
@@ -246,7 +255,7 @@
                                             
                                             <!-- Hardware Target -->
                                             <Label text="{i18n>field.hardwareTarget}"/>
-                                            <ComboBox id="hardwareTargetCombo" selectedKey="gpu">
+                                            <ComboBox id="hardwareTargetCombo" selectedKey="{create>/hardwareTarget}" selectionChange=".onHardwareTargetChange">
                                                 <core:Item key="cpu" text="{i18n>hardware.cpu}"/>
                                                 <core:Item key="gpu" text="{i18n>hardware.gpu}"/>
                                                 <core:Item key="tpu" text="{i18n>hardware.tpu}"/>
@@ -257,11 +266,11 @@
                                             
                                             <!-- Auto Optimization -->
                                             <Label text="{i18n>field.autoOptimization}"/>
-                                            <Switch id="autoOptimizationSwitch" state="true"/>
+                                            <Switch id="autoOptimizationSwitch" state="{create>/autoOptimization}" change=".onAutoOptimizationChange"/>
                                             
                                             <!-- Mixed Precision -->
                                             <Label text="{i18n>field.mixedPrecision}"/>
-                                            <Switch id="mixedPrecisionSwitch" state="true"/>
+                                            <Switch id="mixedPrecisionSwitch" state="{create>/mixedPrecision}" change=".onMixedPrecisionChange"/>
                                             
                                         </f:content>
                                     </f:SimpleForm>
@@ -280,27 +289,27 @@
                                             
                                             <!-- Dataset Name -->
                                             <Label text="{i18n>field.datasetName}" required="true"/>
-                                            <Input id="datasetNameInput" value="" placeholder="{i18n>placeholder.datasetPath}" required="true"/>
+                                            <Input id="datasetNameInput" value="{create>/datasetName}" placeholder="{i18n>placeholder.datasetPath}" required="true" valueState="{create>/datasetNameState}" valueStateText="{create>/datasetNameStateText}" liveChange=".onDatasetNameChange"/>
                                             
                                             <!-- Dataset Size -->
                                             <Label text="{i18n>field.datasetSize}"/>
-                                            <Text id="datasetSizeText" text="0 samples"/>
+                                            <Text id="datasetSizeText" text="{create>/datasetSizeDisplay}"/>
                                             
                                             <!-- Training Samples -->
                                             <Label text="{i18n>field.trainingSamples}"/>
-                                            <StepInput id="trainingSamplesInput" value="10000" min="100" max="10000000" step="1000"/>
+                                            <StepInput id="trainingSamplesInput" value="{create>/trainingSamples}" min="100" max="10000000" step="1000" change=".onTrainingSamplesChange"/>
                                             
                                             <!-- Validation Samples -->
                                             <Label text="{i18n>field.validationSamples}"/>
-                                            <StepInput id="validationSamplesInput" value="2000" min="10" max="1000000" step="100"/>
+                                            <StepInput id="validationSamplesInput" value="{create>/validationSamples}" min="10" max="1000000" step="100" change=".onValidationSamplesChange"/>
                                             
                                             <!-- Test Samples -->
                                             <Label text="{i18n>field.testSamples}"/>
-                                            <StepInput id="testSamplesInput" value="2000" min="10" max="1000000" step="100"/>
+                                            <StepInput id="testSamplesInput" value="{create>/testSamples}" min="10" max="1000000" step="100" change=".onTestSamplesChange"/>
                                             
                                             <!-- Data Augmentation -->
                                             <Label text="{i18n>field.dataAugmentation}"/>
-                                            <MultiComboBox id="dataAugmentationMultiCombo">
+                                            <MultiComboBox id="dataAugmentationMultiCombo" selectedKeys="{create>/dataAugmentation}" selectionChange=".onDataAugmentationChange">
                                                 <core:Item key="synonym" text="{i18n>aug.synonym}"/>
                                                 <core:Item key="backtranslation" text="{i18n>aug.backtranslation}"/>
                                                 <core:Item key="paraphrase" text="{i18n>aug.paraphrase}"/>
@@ -312,7 +321,7 @@
                                             
                                             <!-- Sampling Strategy -->
                                             <Label text="{i18n>field.samplingStrategy}"/>
-                                            <ComboBox id="samplingStrategyCombo" selectedKey="stratified">
+                                            <ComboBox id="samplingStrategyCombo" selectedKey="{create>/samplingStrategy}" selectionChange=".onSamplingStrategyChange">
                                                 <core:Item key="random" text="{i18n>sampling.random}"/>
                                                 <core:Item key="stratified" text="{i18n>sampling.stratified}"/>
                                                 <core:Item key="balanced" text="{i18n>sampling.balanced}"/>
@@ -323,7 +332,7 @@
                                             
                                             <!-- Class Balance -->
                                             <Label text="{i18n>field.classBalance}"/>
-                                            <Switch id="classBalanceSwitch" state="true"/>
+                                            <Switch id="classBalanceSwitch" state="{create>/classBalance}" change=".onClassBalanceChange"/>
                                             
                                         </f:content>
                                     </f:SimpleForm>
@@ -338,10 +347,10 @@
         </content>
         
         <beginButton>
-            <Button text="{i18n>btn.createModel}" press="onCreateModel" type="Emphasized"/>
+            <Button text="{i18n>btn.cancel}" press=".onCancelCreateModel"/>
         </beginButton>
         <endButton>
-            <Button text="{i18n>btn.cancel}" press="onCancelCreateModel"/>
+            <Button text="{i18n>btn.create}" press=".onConfirmCreateModel" type="Emphasized" enabled="{create>/canCreate}"/>
         </endButton>
         
     </Dialog>

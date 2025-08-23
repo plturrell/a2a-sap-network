@@ -91,8 +91,9 @@ class CalcTestingIntegrationSkills:
         self.agent = agent
         self.grok_client = GrokClient() if GROK_AVAILABLE else None
         self.scoreboard = Scoreboard()
-        self.http_client = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        # httpx\.AsyncClient(timeout=60.0)
+        # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        self.http_client = None  # Disabled for A2A protocol compliance
+        # self.http_client = httpx.AsyncClient(timeout=60.0)
         # Agent endpoints will be discovered dynamically
         self._agent_endpoints = {}
         self._discovered_agents = {}

@@ -1,0 +1,390 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout">
+    
+    <Dialog
+        id="agentTestingDialog"
+        title="Agent Testing & Validation"
+        contentWidth="90%"
+        contentHeight="80vh"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <IconTabBar id="testingTabs" expanded="true" class="sapUiResponsiveContentPadding">
+                <items>
+                    <IconTabFilter key="unitTests" text="Unit Tests" icon="sap-icon://checklist-item">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel expandable="false" headerText="Unit Test Configuration">
+                                <l:Grid defaultSpan="XL4 L6 M12 S12" containerQuery="true" class="sapUiSmallMargin">
+                                    <l:content>
+                                        <VBox>
+                                            <Label text="Test Framework"/>
+                                            <Select id="unitTestFramework" selectedKey="{/testing/unit/framework}">
+                                                <items>
+                                                    <core:Item key="pytest" text="pytest"/>
+                                                    <core:Item key="unittest" text="unittest"/>
+                                                    <core:Item key="nose" text="nose"/>
+                                                    <core:Item key="jest" text="Jest (JS)"/>
+                                                </items>
+                                            </Select>
+                                        </VBox>
+                                        
+                                        <VBox>
+                                            <Label text="Coverage Threshold"/>
+                                            <Slider
+                                                id="coverageThreshold"
+                                                min="0"
+                                                max="100"
+                                                value="{/testing/unit/coverageThreshold}"
+                                                step="5"
+                                                showAdvancedTooltip="true"
+                                                inputsAsTooltips="true"/>
+                                        </VBox>
+                                        
+                                        <VBox>
+                                            <Label text="Mock Strategy"/>
+                                            <Select id="mockStrategy" selectedKey="{/testing/unit/mockStrategy}">
+                                                <items>
+                                                    <core:Item key="manual" text="Manual Mocking"/>
+                                                    <core:Item key="automatic" text="Automatic Mocking"/>
+                                                    <core:Item key="dependency-injection" text="Dependency Injection"/>
+                                                    <core:Item key="test-doubles" text="Test Doubles"/>
+                                                </items>
+                                            </Select>
+                                        </VBox>
+                                    </l:content>
+                                </l:Grid>
+                                
+                                <HBox justifyContent="End" class="sapUiSmallMarginTop">
+                                    <Button text="Generate Unit Tests" type="Emphasized" icon="sap-icon://generate-shortcut" press="onGenerateUnitTests"/>
+                                    <Button text="Run Tests" type="Ghost" icon="sap-icon://play" press="onRunUnitTests" class="sapUiTinyMarginBegin"/>
+                                </HBox>
+                            </Panel>
+                            
+                            <!-- Test Results -->
+                            <Panel expandable="true" expanded="false" headerText="Test Results" class="sapUiSmallMarginTop">
+                                <Table
+                                    id="unitTestResults"
+                                    items="{/testing/unit/results}"
+                                    mode="None">
+                                    <columns>
+                                        <Column>
+                                            <Text text="Test Name"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Status"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Duration"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Coverage"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Details"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="{testName}"/>
+                                                <ObjectStatus text="{status}" state="{
+                                                    path: 'status',
+                                                    formatter: '.formatTestStatus'
+                                                }"/>
+                                                <Text text="{duration}ms"/>
+                                                <ProgressIndicator
+                                                    percentValue="{coverage}"
+                                                    displayValue="{coverage}%"
+                                                    showValue="true"/>
+                                                <Button icon="sap-icon://detail-view" type="Transparent" press="onShowTestDetails"/>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <IconTabFilter key="integrationTests" text="Integration Tests" icon="sap-icon://connected">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel expandable="false" headerText="Integration Test Configuration">
+                                <l:Grid defaultSpan="XL4 L6 M12 S12" containerQuery="true" class="sapUiSmallMargin">
+                                    <l:content>
+                                        <VBox>
+                                            <Label text="Test Environment"/>
+                                            <Select id="testEnvironment" selectedKey="{/testing/integration/environment}">
+                                                <items>
+                                                    <core:Item key="local" text="Local Environment"/>
+                                                    <core:Item key="docker" text="Docker Containers"/>
+                                                    <core:Item key="kubernetes" text="Kubernetes"/>
+                                                    <core:Item key="cloud" text="Cloud Environment"/>
+                                                </items>
+                                            </Select>
+                                        </VBox>
+                                        
+                                        <VBox>
+                                            <Label text="Database Setup"/>
+                                            <Select id="databaseSetup" selectedKey="{/testing/integration/database}">
+                                                <items>
+                                                    <core:Item key="in-memory" text="In-Memory Database"/>
+                                                    <core:Item key="test-db" text="Test Database"/>
+                                                    <core:Item key="mock-db" text="Mock Database"/>
+                                                    <core:Item key="shared-db" text="Shared Test Database"/>
+                                                </items>
+                                            </Select>
+                                        </VBox>
+                                        
+                                        <VBox>
+                                            <Label text="Network Simulation"/>
+                                            <CheckBox text="Enable network delays" selected="{/testing/integration/networkDelays}"/>
+                                            <CheckBox text="Simulate failures" selected="{/testing/integration/simulateFailures}"/>
+                                        </VBox>
+                                    </l:content>
+                                </l:Grid>
+                                
+                                <HBox justifyContent="End" class="sapUiSmallMarginTop">
+                                    <Button text="Setup Environment" type="Ghost" icon="sap-icon://settings" press="onSetupTestEnvironment"/>
+                                    <Button text="Run Integration Tests" type="Emphasized" icon="sap-icon://play" press="onRunIntegrationTests" class="sapUiTinyMarginBegin"/>
+                                </HBox>
+                            </Panel>
+                            
+                            <!-- Integration Test Scenarios -->
+                            <Panel expandable="true" expanded="false" headerText="Test Scenarios" class="sapUiSmallMarginTop">
+                                <Table
+                                    id="integrationTestScenarios"
+                                    items="{/testing/integration/scenarios}"
+                                    mode="MultiSelect">
+                                    <headerToolbar>
+                                        <Toolbar>
+                                            <Title text="Integration Test Scenarios"/>
+                                            <ToolbarSpacer/>
+                                            <Button icon="sap-icon://add" text="Add Scenario" press="onAddTestScenario"/>
+                                        </Toolbar>
+                                    </headerToolbar>
+                                    <columns>
+                                        <Column>
+                                            <Text text="Scenario"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Components"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Expected Outcome"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Status"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Actions"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="{scenarioName}"/>
+                                                <Text text="{components}"/>
+                                                <Text text="{expectedOutcome}"/>
+                                                <ObjectStatus text="{status}" state="{
+                                                    path: 'status',
+                                                    formatter: '.formatTestStatus'
+                                                }"/>
+                                                <HBox>
+                                                    <Button icon="sap-icon://play" type="Transparent" press="onRunScenario"/>
+                                                    <Button icon="sap-icon://edit" type="Transparent" press="onEditScenario"/>
+                                                </HBox>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <IconTabFilter key="performanceTests" text="Performance Tests" icon="sap-icon://performance">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel expandable="false" headerText="Performance Test Configuration">
+                                <l:Grid defaultSpan="XL3 L4 M6 S12" containerQuery="true" class="sapUiSmallMargin">
+                                    <l:content>
+                                        <VBox>
+                                            <Label text="Load Pattern"/>
+                                            <Select id="loadPattern" selectedKey="{/testing/performance/loadPattern}">
+                                                <items>
+                                                    <core:Item key="constant" text="Constant Load"/>
+                                                    <core:Item key="ramp-up" text="Ramp-up"/>
+                                                    <core:Item key="spike" text="Spike Testing"/>
+                                                    <core:Item key="stress" text="Stress Testing"/>
+                                                </items>
+                                            </Select>
+                                        </VBox>
+                                        
+                                        <VBox>
+                                            <Label text="Concurrent Users"/>
+                                            <Input value="{/testing/performance/concurrentUsers}" type="Number"/>
+                                        </VBox>
+                                        
+                                        <VBox>
+                                            <Label text="Test Duration (minutes)"/>
+                                            <Input value="{/testing/performance/duration}" type="Number"/>
+                                        </VBox>
+                                        
+                                        <VBox>
+                                            <Label text="Response Time Threshold (ms)"/>
+                                            <Input value="{/testing/performance/responseTimeThreshold}" type="Number"/>
+                                        </VBox>
+                                        
+                                        <VBox>
+                                            <Label text="Throughput Target (req/sec)"/>
+                                            <Input value="{/testing/performance/throughputTarget}" type="Number"/>
+                                        </VBox>
+                                        
+                                        <VBox>
+                                            <Label text="Error Rate Threshold (%)"/>
+                                            <Input value="{/testing/performance/errorRateThreshold}" type="Number"/>
+                                        </VBox>
+                                    </l:content>
+                                </l:Grid>
+                                
+                                <HBox justifyContent="End" class="sapUiSmallMarginTop">
+                                    <Button text="Start Performance Test" type="Emphasized" icon="sap-icon://play" press="onStartPerformanceTest"/>
+                                    <Button text="Stop Test" type="Ghost" icon="sap-icon://stop" press="onStopPerformanceTest" class="sapUiTinyMarginBegin"/>
+                                </HBox>
+                            </Panel>
+                            
+                            <!-- Performance Metrics -->
+                            <Panel expandable="true" expanded="true" headerText="Performance Metrics" class="sapUiSmallMarginTop">
+                                <l:Grid defaultSpan="XL6 L6 M12 S12" containerQuery="true" class="sapUiSmallMargin">
+                                    <l:content>
+                                        <VBox alignItems="Center">
+                                            <NumericContent
+                                                value="{/testing/performance/metrics/avgResponseTime}"
+                                                scale="ms"
+                                                icon="sap-icon://time-entry-request"
+                                                withMargin="false"/>
+                                            <Title text="Avg Response Time" level="H5"/>
+                                        </VBox>
+                                        
+                                        <VBox alignItems="Center">
+                                            <NumericContent
+                                                value="{/testing/performance/metrics/throughput}"
+                                                scale="req/sec"
+                                                icon="sap-icon://accelerated"
+                                                valueColor="Good"
+                                                withMargin="false"/>
+                                            <Title text="Throughput" level="H5"/>
+                                        </VBox>
+                                        
+                                        <VBox alignItems="Center">
+                                            <NumericContent
+                                                value="{/testing/performance/metrics/errorRate}"
+                                                scale="%"
+                                                icon="sap-icon://error"
+                                                valueColor="{
+                                                    path: '/testing/performance/metrics/errorRate',
+                                                    formatter: '.formatErrorRateColor'
+                                                }"
+                                                withMargin="false"/>
+                                            <Title text="Error Rate" level="H5"/>
+                                        </VBox>
+                                        
+                                        <VBox alignItems="Center">
+                                            <NumericContent
+                                                value="{/testing/performance/metrics/cpuUsage}"
+                                                scale="%"
+                                                icon="sap-icon://sys-monitor"
+                                                withMargin="false"/>
+                                            <Title text="CPU Usage" level="H5"/>
+                                        </VBox>
+                                    </l:content>
+                                </l:Grid>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <IconTabFilter key="securityTests" text="Security Tests" icon="sap-icon://shield">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel expandable="false" headerText="Security Test Categories">
+                                <List
+                                    id="securityTestCategories"
+                                    items="{/testing/security/categories}"
+                                    mode="MultiSelect">
+                                    <StandardListItem
+                                        title="{categoryName}"
+                                        description="{description}"
+                                        icon="{icon}"
+                                        iconInset="false"
+                                        type="Active"
+                                        press="onSelectSecurityCategory">
+                                        <customData>
+                                            <core:CustomData key="enabled" value="{enabled}"/>
+                                        </customData>
+                                    </StandardListItem>
+                                </List>
+                                
+                                <HBox justifyContent="End" class="sapUiSmallMarginTop">
+                                    <Button text="Run Security Scan" type="Emphasized" icon="sap-icon://shield" press="onRunSecurityScan"/>
+                                    <Button text="Generate Report" type="Ghost" icon="sap-icon://document" press="onGenerateSecurityReport" class="sapUiTinyMarginBegin"/>
+                                </HBox>
+                            </Panel>
+                            
+                            <!-- Security Vulnerabilities -->
+                            <Panel expandable="true" expanded="false" headerText="Security Assessment Results" class="sapUiSmallMarginTop">
+                                <Table
+                                    id="securityVulnerabilities"
+                                    items="{/testing/security/vulnerabilities}"
+                                    mode="None">
+                                    <columns>
+                                        <Column>
+                                            <Text text="Vulnerability"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Severity"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Category"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Status"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Actions"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="{vulnerabilityName}"/>
+                                                <ObjectStatus text="{severity}" state="{
+                                                    path: 'severity',
+                                                    formatter: '.formatSeverityState'
+                                                }"/>
+                                                <Text text="{category}"/>
+                                                <ObjectStatus text="{status}" state="{
+                                                    path: 'status',
+                                                    formatter: '.formatVulnerabilityStatus'
+                                                }"/>
+                                                <HBox>
+                                                    <Button icon="sap-icon://detail-view" type="Transparent" press="onShowVulnerabilityDetails"/>
+                                                    <Button icon="sap-icon://decline" type="Transparent" press="onMarkAsFixed"/>
+                                                </HBox>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <buttons>
+            <Button text="Run All Tests" type="Emphasized" icon="sap-icon://play" press="onRunAllTests"/>
+            <Button text="Export Results" type="Ghost" icon="sap-icon://download" press="onExportTestResults"/>
+            <Button text="Schedule Tests" type="Ghost" icon="sap-icon://time-overtime" press="onScheduleTests"/>
+            <Button text="Close" press="onCloseTestingDialog"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

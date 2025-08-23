@@ -7,10 +7,13 @@
     <Dialog
         title="{i18n>dialog.workflowCreator.title}"
         class="sapUiMediumMargin"
-        contentWidth="85vw"
-        contentHeight="90vh"
+        contentWidth="75rem"
+        contentHeight="85vh"
         resizable="true"
-        draggable="true">
+        draggable="true"
+        stretch="{device>/system/phone}"
+        afterOpen=".onCreateWorkflowDialogAfterOpen"
+        afterClose=".onCreateWorkflowDialogAfterClose">
         
         <content>
             <Page showHeader="false">
@@ -31,19 +34,22 @@
                                             
                                             <!-- Workflow Name -->
                                             <Label text="{i18n>field.workflowName}" required="true"/>
-                                            <Input id="workflowNameInput" value="" placeholder="{i18n>placeholder.workflowName}" required="true"/>
+                                            <Input id="workflowNameInput" value="{create>/workflowName}" placeholder="{i18n>placeholder.workflowName}" required="true" valueState="{create>/workflowNameState}" valueStateText="{create>/workflowNameStateText}" liveChange=".onWorkflowNameChange"/>
                                             
                                             <!-- Description -->
                                             <Label text="{i18n>field.description}"/>
-                                            <TextArea id="descriptionInput" value="" rows="3" placeholder="{i18n>placeholder.description}"/>
+                                            <TextArea id="descriptionInput" value="{create>/description}" rows="3" placeholder="{i18n>placeholder.description}" maxLength="500" showExceededText="true" liveChange=".onDescriptionChange"/>
                                             
                                             <!-- Workflow Type -->
                                             <Label text="{i18n>field.workflowType}" required="true"/>
                                             <ComboBox
                                                 id="workflowTypeCombo"
-                                                selectedKey=""
+                                                selectedKey="{create>/workflowType}"
                                                 placeholder="{i18n>placeholder.selectWorkflowType}"
-                                                required="true">
+                                                required="true"
+                                                valueState="{create>/workflowTypeState}"
+                                                valueStateText="{create>/workflowTypeStateText}"
+                                                selectionChange=".onWorkflowTypeChange">
                                                 <core:Item key="sequential" text="{i18n>workflowType.sequential}"/>
                                                 <core:Item key="parallel" text="{i18n>workflowType.parallel}"/>
                                                 <core:Item key="conditional" text="{i18n>workflowType.conditional}"/>
@@ -60,7 +66,7 @@
                                             
                                             <!-- Priority -->
                                             <Label text="{i18n>field.priority}"/>
-                                            <ComboBox id="priorityCombo" selectedKey="medium">
+                                            <ComboBox id="priorityCombo" selectedKey="{create>/priority}" selectionChange=".onPriorityChange">
                                                 <core:Item key="low" text="{i18n>priority.low}"/>
                                                 <core:Item key="medium" text="{i18n>priority.medium}"/>
                                                 <core:Item key="high" text="{i18n>priority.high}"/>
@@ -70,7 +76,7 @@
                                             
                                             <!-- Version -->
                                             <Label text="{i18n>field.version}"/>
-                                            <Input id="versionInput" value="1.0.0" placeholder="{i18n>placeholder.version}"/>
+                                            <Input id="versionInput" value="{create>/version}" placeholder="{i18n>placeholder.version}" liveChange=".onVersionChange"/>
                                             
                                         </f:content>
                                     </f:SimpleForm>
@@ -91,8 +97,11 @@
                                             <Label text="{i18n>field.orchestrationMode}" required="true"/>
                                             <ComboBox
                                                 id="orchestrationModeCombo"
-                                                selectedKey="centralized"
-                                                required="true">
+                                                selectedKey="{create>/orchestrationMode}"
+                                                required="true"
+                                                valueState="{create>/orchestrationModeState}"
+                                                valueStateText="{create>/orchestrationModeStateText}"
+                                                selectionChange=".onOrchestrationModeChange">
                                                 <core:Item key="centralized" text="{i18n>orchestrationMode.centralized}"/>
                                                 <core:Item key="distributed" text="{i18n>orchestrationMode.distributed}"/>
                                                 <core:Item key="federated" text="{i18n>orchestrationMode.federated}"/>
@@ -105,7 +114,7 @@
                                             
                                             <!-- Execution Strategy -->
                                             <Label text="{i18n>field.executionStrategy}"/>
-                                            <ComboBox id="executionStrategyCombo" selectedKey="sequential">
+                                            <ComboBox id="executionStrategyCombo" selectedKey="{create>/executionStrategy}" selectionChange=".onExecutionStrategyChange">
                                                 <core:Item key="sequential" text="{i18n>executionStrategy.sequential}"/>
                                                 <core:Item key="parallel" text="{i18n>executionStrategy.parallel}"/>
                                                 <core:Item key="adaptive" text="{i18n>executionStrategy.adaptive}"/>
@@ -119,15 +128,15 @@
                                             
                                             <!-- Parallelization -->
                                             <Label text="{i18n>field.parallelization}"/>
-                                            <Switch id="parallelizationSwitch" state="false"/>
+                                            <Switch id="parallelizationSwitch" state="{create>/parallelization}" change=".onParallelizationChange"/>
                                             
                                             <!-- Max Concurrency -->
                                             <Label text="{i18n>field.maxConcurrency}"/>
-                                            <StepInput id="maxConcurrencyInput" value="4" min="1" max="64" step="1"/>
+                                            <StepInput id="maxConcurrencyInput" value="{create>/maxConcurrency}" min="1" max="64" step="1" change=".onMaxConcurrencyChange"/>
                                             
                                             <!-- Task Distribution -->
                                             <Label text="{i18n>field.taskDistribution}"/>
-                                            <ComboBox id="taskDistributionCombo" selectedKey="roundRobin">
+                                            <ComboBox id="taskDistributionCombo" selectedKey="{create>/taskDistribution}" selectionChange=".onTaskDistributionChange">
                                                 <core:Item key="roundRobin" text="Round Robin"/>
                                                 <core:Item key="leastLoaded" text="Least Loaded"/>
                                                 <core:Item key="weighted" text="Weighted"/>
@@ -138,11 +147,11 @@
                                             
                                             <!-- Load Balancing -->
                                             <Label text="{i18n>field.loadBalancing}"/>
-                                            <Switch id="loadBalancingSwitch" state="true"/>
+                                            <Switch id="loadBalancingSwitch" state="{create>/loadBalancing}" change=".onLoadBalancingChange"/>
                                             
                                             <!-- Failover Strategy -->
                                             <Label text="{i18n>field.failoverStrategy}"/>
-                                            <ComboBox id="failoverStrategyCombo" selectedKey="immediate">
+                                            <ComboBox id="failoverStrategyCombo" selectedKey="{create>/failoverStrategy}" selectionChange=".onFailoverStrategyChange">
                                                 <core:Item key="immediate" text="Immediate"/>
                                                 <core:Item key="graceful" text="Graceful"/>
                                                 <core:Item key="manual" text="Manual"/>
@@ -151,7 +160,7 @@
                                             
                                             <!-- Retry Policy -->
                                             <Label text="{i18n>field.retryPolicy}"/>
-                                            <ComboBox id="retryPolicyCombo" selectedKey="exponential">
+                                            <ComboBox id="retryPolicyCombo" selectedKey="{create>/retryPolicy}" selectionChange=".onRetryPolicyChange">
                                                 <core:Item key="none" text="None"/>
                                                 <core:Item key="immediate" text="Immediate"/>
                                                 <core:Item key="fixed" text="Fixed Delay"/>
@@ -162,7 +171,7 @@
                                             
                                             <!-- Circuit Breaker -->
                                             <Label text="{i18n>field.circuitBreaker}"/>
-                                            <Switch id="circuitBreakerSwitch" state="true"/>
+                                            <Switch id="circuitBreakerSwitch" state="{create>/circuitBreaker}" change=".onCircuitBreakerChange"/>
                                             
                                         </f:content>
                                     </f:SimpleForm>
@@ -181,7 +190,7 @@
                                             
                                             <!-- Trigger Type -->
                                             <Label text="{i18n>field.triggerType}"/>
-                                            <ComboBox id="triggerTypeCombo" selectedKey="manual">
+                                            <ComboBox id="triggerTypeCombo" selectedKey="{create>/triggerType}" selectionChange=".onTriggerTypeChange">
                                                 <core:Item key="manual" text="Manual"/>
                                                 <core:Item key="scheduled" text="Scheduled"/>
                                                 <core:Item key="event" text="Event-Driven"/>
@@ -193,31 +202,31 @@
                                             
                                             <!-- Schedule -->
                                             <Label text="{i18n>field.schedule}"/>
-                                            <Input id="scheduleInput" value="" placeholder="{i18n>placeholder.enterSchedule}"/>
+                                            <Input id="scheduleInput" value="{create>/schedule}" placeholder="{i18n>placeholder.enterSchedule}" liveChange=".onScheduleChange"/>
                                             
                                             <!-- Timeout -->
                                             <Label text="{i18n>field.timeout}"/>
-                                            <StepInput id="timeoutInput" value="300" min="30" max="3600" step="30"/>
+                                            <StepInput id="timeoutInput" value="{create>/timeout}" min="30" max="3600" step="30" change=".onTimeoutChange"/>
                                             
                                             <!-- Max Duration -->
                                             <Label text="{i18n>field.maxDuration}"/>
-                                            <StepInput id="maxDurationInput" value="3600" min="300" max="86400" step="300"/>
+                                            <StepInput id="maxDurationInput" value="{create>/maxDuration}" min="300" max="86400" step="300" change=".onMaxDurationChange"/>
                                             
                                             <!-- Checkpoint Enabled -->
                                             <Label text="{i18n>field.checkpointEnabled}"/>
-                                            <Switch id="checkpointEnabledSwitch" state="true"/>
+                                            <Switch id="checkpointEnabledSwitch" state="{create>/checkpointEnabled}" change=".onCheckpointEnabledChange"/>
                                             
                                             <!-- Rollback Enabled -->
                                             <Label text="{i18n>field.rollbackEnabled}"/>
-                                            <Switch id="rollbackEnabledSwitch" state="true"/>
+                                            <Switch id="rollbackEnabledSwitch" state="{create>/rollbackEnabled}" change=".onRollbackEnabledChange"/>
                                             
                                             <!-- Compensation Enabled -->
                                             <Label text="{i18n>field.compensationEnabled}"/>
-                                            <Switch id="compensationEnabledSwitch" state="false"/>
+                                            <Switch id="compensationEnabledSwitch" state="{create>/compensationEnabled}" change=".onCompensationEnabledChange"/>
                                             
                                             <!-- Transactional -->
                                             <Label text="{i18n>field.transactional}"/>
-                                            <Switch id="transactionalSwitch" state="false"/>
+                                            <Switch id="transactionalSwitch" state="{create>/transactional}" change=".onTransactionalChange"/>
                                             
                                         </f:content>
                                     </f:SimpleForm>
@@ -236,7 +245,7 @@
                                             
                                             <!-- Agent Selection Mode -->
                                             <Label text="{i18n>field.agentSelectionMode}"/>
-                                            <ComboBox id="agentSelectionModeCombo" selectedKey="automatic">
+                                            <ComboBox id="agentSelectionModeCombo" selectedKey="{create>/agentSelectionMode}" selectionChange=".onAgentSelectionModeChange">
                                                 <core:Item key="automatic" text="Automatic"/>
                                                 <core:Item key="manual" text="Manual"/>
                                                 <core:Item key="capability" text="Capability-Based"/>
@@ -248,7 +257,7 @@
                                             
                                             <!-- Communication Protocol -->
                                             <Label text="{i18n>field.communicationProtocol}"/>
-                                            <ComboBox id="communicationProtocolCombo" selectedKey="websocket">
+                                            <ComboBox id="communicationProtocolCombo" selectedKey="{create>/communicationProtocol}" selectionChange=".onCommunicationProtocolChange">
                                                 <core:Item key="websocket" text="WebSocket"/>
                                                 <core:Item key="http" text="HTTP/REST"/>
                                                 <core:Item key="grpc" text="gRPC"/>
@@ -260,15 +269,15 @@
                                             
                                             <!-- Message Queuing -->
                                             <Label text="{i18n>field.messageQueuing}"/>
-                                            <Switch id="messageQueuingSwitch" state="true"/>
+                                            <Switch id="messageQueuingSwitch" state="{create>/messageQueuing}" change=".onMessageQueuingChange"/>
                                             
                                             <!-- Event Bus -->
                                             <Label text="{i18n>field.eventBus}"/>
-                                            <Switch id="eventBusSwitch" state="true"/>
+                                            <Switch id="eventBusSwitch" state="{create>/eventBus}" change=".onEventBusChange"/>
                                             
                                             <!-- Coordination Pattern -->
                                             <Label text="{i18n>field.coordinationPattern}"/>
-                                            <ComboBox id="coordinationPatternCombo" selectedKey="masterSlave">
+                                            <ComboBox id="coordinationPatternCombo" selectedKey="{create>/coordinationPattern}" selectionChange=".onCoordinationPatternChange">
                                                 <core:Item key="masterSlave" text="Master-Slave"/>
                                                 <core:Item key="peer2peer" text="Peer-to-Peer"/>
                                                 <core:Item key="publish" text="Publish-Subscribe"/>
@@ -280,7 +289,7 @@
                                             
                                             <!-- Consensus Algorithm -->
                                             <Label text="{i18n>field.consensusAlgorithm}"/>
-                                            <ComboBox id="consensusAlgorithmCombo" selectedKey="raft">
+                                            <ComboBox id="consensusAlgorithmCombo" selectedKey="{create>/consensusAlgorithm}" selectionChange=".onConsensusAlgorithmChange">
                                                 <core:Item key="none" text="None"/>
                                                 <core:Item key="raft" text="Raft"/>
                                                 <core:Item key="paxos" text="Paxos"/>
@@ -291,7 +300,7 @@
                                             
                                             <!-- Conflict Resolution -->
                                             <Label text="{i18n>field.conflictResolution}"/>
-                                            <ComboBox id="conflictResolutionCombo" selectedKey="priority">
+                                            <ComboBox id="conflictResolutionCombo" selectedKey="{create>/conflictResolution}" selectionChange=".onConflictResolutionChange">
                                                 <core:Item key="priority" text="Priority-Based"/>
                                                 <core:Item key="timestamp" text="Timestamp-Based"/>
                                                 <core:Item key="voting" text="Voting"/>
@@ -302,7 +311,7 @@
                                             
                                             <!-- Data Consistency -->
                                             <Label text="{i18n>field.dataConsistency}"/>
-                                            <ComboBox id="dataConsistencyCombo" selectedKey="eventual">
+                                            <ComboBox id="dataConsistencyCombo" selectedKey="{create>/dataConsistency}" selectionChange=".onDataConsistencyChange">
                                                 <core:Item key="strong" text="Strong Consistency"/>
                                                 <core:Item key="eventual" text="Eventual Consistency"/>
                                                 <core:Item key="weak" text="Weak Consistency"/>
@@ -327,19 +336,19 @@
                                             
                                             <!-- Monitoring Enabled -->
                                             <Label text="{i18n>field.monitoringEnabled}"/>
-                                            <Switch id="monitoringEnabledSwitch" state="true"/>
+                                            <Switch id="monitoringEnabledSwitch" state="{create>/monitoringEnabled}" change=".onMonitoringEnabledChange"/>
                                             
                                             <!-- Metrics Collection -->
                                             <Label text="{i18n>field.metricsCollection}"/>
-                                            <Switch id="metricsCollectionSwitch" state="true"/>
+                                            <Switch id="metricsCollectionSwitch" state="{create>/metricsCollection}" change=".onMetricsCollectionChange"/>
                                             
                                             <!-- Tracing Enabled -->
                                             <Label text="{i18n>field.tracingEnabled}"/>
-                                            <Switch id="tracingEnabledSwitch" state="true"/>
+                                            <Switch id="tracingEnabledSwitch" state="{create>/tracingEnabled}" change=".onTracingEnabledChange"/>
                                             
                                             <!-- Logging Level -->
                                             <Label text="{i18n>field.loggingLevel}"/>
-                                            <ComboBox id="loggingLevelCombo" selectedKey="info">
+                                            <ComboBox id="loggingLevelCombo" selectedKey="{create>/loggingLevel}" selectionChange=".onLoggingLevelChange">
                                                 <core:Item key="trace" text="Trace"/>
                                                 <core:Item key="debug" text="Debug"/>
                                                 <core:Item key="info" text="Info"/>
@@ -350,19 +359,19 @@
                                             
                                             <!-- Alerting Enabled -->
                                             <Label text="{i18n>field.alertingEnabled}"/>
-                                            <Switch id="alertingEnabledSwitch" state="true"/>
+                                            <Switch id="alertingEnabledSwitch" state="{create>/alertingEnabled}" change=".onAlertingEnabledChange"/>
                                             
                                             <!-- Health Check Interval -->
                                             <Label text="{i18n>field.healthCheckInterval}"/>
-                                            <StepInput id="healthCheckIntervalInput" value="30" min="5" max="300" step="5"/>
+                                            <StepInput id="healthCheckIntervalInput" value="{create>/healthCheckInterval}" min="5" max="300" step="5" change=".onHealthCheckIntervalChange"/>
                                             
                                             <!-- Performance Thresholds -->
                                             <Label text="{i18n>field.performanceThresholds}"/>
-                                            <Input id="performanceThresholdsInput" value="" placeholder="{i18n>placeholder.enterThreshold}"/>
+                                            <Input id="performanceThresholdsInput" value="{create>/performanceThresholds}" placeholder="{i18n>placeholder.enterThreshold}" liveChange=".onPerformanceThresholdsChange"/>
                                             
                                             <!-- Anomaly Detection -->
                                             <Label text="{i18n>field.anomalyDetection}"/>
-                                            <Switch id="anomalyDetectionSwitch" state="false"/>
+                                            <Switch id="anomalyDetectionSwitch" state="{create>/anomalyDetection}" change=".onAnomalyDetectionChange"/>
                                             
                                         </f:content>
                                     </f:SimpleForm>
@@ -377,10 +386,10 @@
         </content>
         
         <beginButton>
-            <Button text="{i18n>btn.createWorkflow}" press="onCreateWorkflow" type="Emphasized"/>
+            <Button text="{i18n>btn.createWorkflow}" press=".onConfirmCreateWorkflow" type="Emphasized" enabled="{create>/canCreate}"/>
         </beginButton>
         <endButton>
-            <Button text="{i18n>btn.cancel}" press="onCancelCreateWorkflow"/>
+            <Button text="{i18n>btn.cancel}" press=".onCancelCreateWorkflow"/>
         </endButton>
         
     </Dialog>

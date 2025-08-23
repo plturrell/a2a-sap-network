@@ -3,447 +3,748 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/MessageBox",
     "sap/ui/core/Fragment",
+    "sap/ui/model/json/JSONModel",
     "a2a/network/agent14/ext/utils/SecurityUtils"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment, SecurityUtils) {
+], function(ControllerExtension, MessageToast, MessageBox, Fragment, JSONModel, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent14.ext.controller.ObjectPageExt", {
         
-        // Fine-Tune Model Action
-        onFineTuneModel: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
-            
-            if (oData.status === 'training') {
-                MessageToast.show(this.getResourceBundle().getText("msg.alreadyTraining"));
-                return;
+        override: {
+            onInit: function () {
+                this._initializeCreateModel();
             }
+        },
+        
+        _initializeCreateModel: function() {
+            var oCreateData = {
+                modelName: "",
+                description: "",
+                modelType: "",
+                baseModel: "",
+                embeddingDimension: 768,
+                architecture: "",
+                layerCount: 12,
+                hiddenSize: 768,
+                attentionHeads: 12,
+                vocabularySize: "30522",
+                maxSequenceLength: 512,
+                tokenizer: "wordpiece",
+                normalization: true,
+                learningRate: "0.00002",
+                batchSize: 32,
+                epochs: 10,
+                optimizer: "adamw",
+                lossFunction: "cosine",
+                regularization: "0.01",
+                dropout: 0.1,
+                warmupSteps: 500,
+                gradientClipping: "1.0",
+                quantization: false,
+                pruning: false,
+                distillation: false,
+                compressionRatio: 2,
+                optimizationTarget: "balanced",
+                hardwareTarget: "gpu",
+                autoOptimization: true,
+                mixedPrecision: true,
+                datasetName: "",
+                datasetSizeDisplay: "0 samples",
+                trainingSamples: 10000,
+                validationSamples: 2000,
+                testSamples: 2000,
+                dataAugmentation: [],
+                samplingStrategy: "stratified",
+                classBalance: true,
+                modelNameState: "",
+                modelNameStateText: "",
+                modelTypeState: "",
+                modelTypeStateText: "",
+                baseModelState: "",
+                baseModelStateText: "",
+                datasetNameState: "",
+                datasetNameStateText: "",
+                canCreate: false
+            };
+            var oCreateModel = new JSONModel(oCreateData);
+            this.getView().setModel(oCreateModel, "create");
+        },
 
-            if (!this._fineTuningDialog) {
+        // Create Embedding Model Action
+        onCreateEmbeddingModel: function() {
+            var oView = this.getView();
+            
+            if (!this._oCreateDialog) {
                 Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent14.ext.fragment.FineTuningDialog",
+                    id: oView.getId(),
+                    name: "a2a.network.agent14.ext.fragment.CreateEmbeddingModel",
                     controller: this
                 }).then(function(oDialog) {
-                    this._fineTuningDialog = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._loadFineTuningOptions(oContext);
-                    oDialog.open();
+                    this._oCreateDialog = oDialog;
+                    oView.addDependent(this._oCreateDialog);
+                    this._resetCreateModel();
+                    this._oCreateDialog.open();
                 }.bind(this));
             } else {
-                this._loadFineTuningOptions(oContext);
-                this._fineTuningDialog.open();
+                this._resetCreateModel();
+                this._oCreateDialog.open();
             }
         },
-
-        // Evaluate Model Action
-        onEvaluateModel: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
-            
-            if (oData.status === 'training') {
-                MessageToast.show(this.getResourceBundle().getText("error.cannotEvaluateWhileTraining"));
-                return;
+        
+        // Create Dialog Lifecycle
+        onCreateModelDialogAfterOpen: function() {
+            // Focus on first input field
+            var oModelNameInput = this.getView().byId("modelNameInput");
+            if (oModelNameInput) {
+                oModelNameInput.focus();
             }
-
-            if (!this._evaluationDialog) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent14.ext.fragment.EvaluationDialog",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._evaluationDialog = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._loadEvaluationOptions(oContext);
-                    oDialog.open();
-                }.bind(this));
+            
+            // Start real-time validation
+            this._startCreateValidationInterval();
+        },
+        
+        onCreateModelDialogAfterClose: function() {
+            this._stopCreateValidationInterval();
+        },
+        
+        _startCreateValidationInterval: function() {
+            if (this.createValidationInterval) {
+                clearInterval(this.createValidationInterval);
+            }
+            
+            this.createValidationInterval = setInterval(function() {
+                this._validateCreateForm();
+            }.bind(this), 1000);
+        },
+        
+        _stopCreateValidationInterval: function() {
+            if (this.createValidationInterval) {
+                clearInterval(this.createValidationInterval);
+                this.createValidationInterval = null;
+            }
+        },
+        
+        _validateCreateForm: function() {
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            var bCanCreate = true;
+            
+            // Model name validation
+            if (!oData.modelName || oData.modelName.trim().length < 3) {
+                oData.modelNameState = "Error";
+                oData.modelNameStateText = "Model name is required and must be at least 3 characters";
+                bCanCreate = false;
+            } else if (!SecurityUtils.isValidModelName(oData.modelName)) {
+                oData.modelNameState = "Error";
+                oData.modelNameStateText = "Model name contains invalid characters";
+                bCanCreate = false;
             } else {
-                this._loadEvaluationOptions(oContext);
-                this._evaluationDialog.open();
+                oData.modelNameState = "Success";
+                oData.modelNameStateText = "";
             }
-        },
-
-        // Optimize Model Action
-        onOptimizeModel: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
             
-            if (oData.status === 'training' || oData.status === 'optimizing') {
-                MessageToast.show(this.getResourceBundle().getText("error.cannotOptimizeNow"));
-                return;
-            }
-
-            if (!this._optimizationDialog) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent14.ext.fragment.OptimizationDialog",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._optimizationDialog = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._loadOptimizationOptions(oContext);
-                    oDialog.open();
-                }.bind(this));
+            // Model type validation
+            if (!oData.modelType) {
+                oData.modelTypeState = "Warning";
+                oData.modelTypeStateText = "Please select a model type";
+                bCanCreate = false;
             } else {
-                this._loadOptimizationOptions(oContext);
-                this._optimizationDialog.open();
+                oData.modelTypeState = "Success";
+                oData.modelTypeStateText = "";
             }
-        },
-
-        // Deploy Model Action
-        onDeployModel: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
             
-            if (oData.status !== 'completed' && oData.status !== 'deployed') {
-                MessageToast.show(this.getResourceBundle().getText("error.modelNotReady"));
-                return;
-            }
-
-            MessageBox.confirm(
-                this.getResourceBundle().getText("msg.deployModelConfirm"),
-                {
-                    onClose: function(oAction) {
-                        if (oAction === MessageBox.Action.OK) {
-                            this._deployModel(oContext);
-                        }
-                    }.bind(this)
-                }
-            );
-        },
-
-        // Test Model Action
-        onTestModel: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
-            
-            if (oData.status === 'training') {
-                MessageToast.show(this.getResourceBundle().getText("error.cannotTestWhileTraining"));
-                return;
-            }
-
-            if (!this._testModelDialog) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent14.ext.fragment.TestModelDialog",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._testModelDialog = oDialog;
-                    this.getView().addDependent(oDialog);
-                    oDialog.open();
-                }.bind(this));
+            // Base model validation
+            if (!oData.baseModel) {
+                oData.baseModelState = "Warning";
+                oData.baseModelStateText = "Please select a base model";
+                bCanCreate = false;
             } else {
-                this._testModelDialog.open();
+                oData.baseModelState = "Success";
+                oData.baseModelStateText = "";
             }
-        },
-
-        // Compare Models Action
-        onCompareModels: function() {
-            const oContext = this.base.getView().getBindingContext();
             
-            if (!this._modelComparisonDialog) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent14.ext.fragment.ModelComparison",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._modelComparisonDialog = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._loadComparisonData(oContext);
-                    oDialog.open();
-                }.bind(this));
+            // Dataset name validation
+            if (!oData.datasetName || oData.datasetName.trim().length < 1) {
+                oData.datasetNameState = "Error";
+                oData.datasetNameStateText = "Dataset name is required";
+                bCanCreate = false;
+            } else if (!SecurityUtils.isValidDatasetPath(oData.datasetName)) {
+                oData.datasetNameState = "Error";
+                oData.datasetNameStateText = "Dataset path contains invalid characters";
+                bCanCreate = false;
             } else {
-                this._loadComparisonData(oContext);
-                this._modelComparisonDialog.open();
+                oData.datasetNameState = "Success";
+                oData.datasetNameStateText = "";
             }
-        },
-
-        // Export Model Action
-        onExportModel: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
             
-            if (oData.status === 'training') {
-                MessageToast.show(this.getResourceBundle().getText("error.cannotExportWhileTraining"));
-                return;
-            }
-
-            if (!this._exportDialog) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent14.ext.fragment.ExportModel",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._exportDialog = oDialog;
-                    this.getView().addDependent(oDialog);
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._exportDialog.open();
-            }
+            oData.canCreate = bCanCreate;
+            oCreateModel.setData(oData);
         },
-
-        // Visualize Embeddings Action
-        onVisualizeEmbeddings: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
+        
+        _resetCreateModel: function() {
+            this._initializeCreateModel();
+        },
+        
+        // Field Change Handlers
+        onModelNameChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
             
-            if (!oData.modelPath) {
-                MessageToast.show(this.getResourceBundle().getText("error.modelNotTrained"));
-                return;
-            }
-
-            if (!this._embeddingVisualizer) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent14.ext.fragment.EmbeddingVisualizer",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._embeddingVisualizer = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._loadEmbeddingData(oContext);
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._loadEmbeddingData(oContext);
-                this._embeddingVisualizer.open();
-            }
+            oData.modelName = SecurityUtils.sanitizeInput(sValue);
+            oCreateModel.setData(oData);
         },
-
-        // Real-time monitoring initialization
-        onAfterRendering: function() {
-            this._initializeModelMonitoring();
-        },
-
-        _initializeModelMonitoring: function() {
-            const oContext = this.base.getView().getBindingContext();
-            if (!oContext) return;
-
-            const modelId = oContext.getObject().modelId;
+        
+        onDescriptionChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
             
-            // Subscribe to model updates for this specific model
-            if (this._eventSource) {
-                this._eventSource.close();
+            oData.description = SecurityUtils.sanitizeInput(sValue);
+            oCreateModel.setData(oData);
+        },
+        
+        onModelTypeChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.modelType = sValue;
+            
+            // Auto-suggest based on model type
+            switch (sValue) {
+                case "bert":
+                    oData.baseModel = "bert_base";
+                    oData.embeddingDimension = 768;
+                    oData.layerCount = 12;
+                    oData.hiddenSize = 768;
+                    oData.attentionHeads = 12;
+                    oData.vocabularySize = "30522";
+                    oData.maxSequenceLength = 512;
+                    oData.tokenizer = "wordpiece";
+                    break;
+                case "roberta":
+                    oData.baseModel = "roberta_base";
+                    oData.embeddingDimension = 768;
+                    oData.layerCount = 12;
+                    oData.hiddenSize = 768;
+                    oData.attentionHeads = 12;
+                    oData.vocabularySize = "50265";
+                    oData.maxSequenceLength = 512;
+                    oData.tokenizer = "bpe";
+                    break;
+                case "distilbert":
+                    oData.baseModel = "distilbert_base";
+                    oData.embeddingDimension = 768;
+                    oData.layerCount = 6;
+                    oData.hiddenSize = 768;
+                    oData.attentionHeads = 12;
+                    oData.vocabularySize = "30522";
+                    oData.maxSequenceLength = 512;
+                    oData.tokenizer = "wordpiece";
+                    break;
+                case "sentence_bert":
+                    oData.baseModel = "all_mpnet";
+                    oData.embeddingDimension = 768;
+                    oData.layerCount = 12;
+                    oData.hiddenSize = 768;
+                    oData.attentionHeads = 12;
+                    oData.vocabularySize = "30522";
+                    oData.maxSequenceLength = 384;
+                    oData.tokenizer = "wordpiece";
+                    break;
+                case "clip":
+                    oData.embeddingDimension = 512;
+                    oData.layerCount = 12;
+                    oData.hiddenSize = 512;
+                    oData.attentionHeads = 8;
+                    oData.vocabularySize = "49408";
+                    oData.maxSequenceLength = 77;
+                    oData.tokenizer = "bpe";
+                    break;
             }
-
-            try {
-                this._eventSource = SecurityUtils.createSecureEventSource(`https://localhost:8014/embedding/${modelId}/stream`, {
-                    'training-progress': (event) => {
-                        const data = JSON.parse(event.data);
-                        this._updateTrainingProgress(data);
-                    },
-                    'training-completed': (event) => {
-                        const data = JSON.parse(event.data);
-                        this._handleTrainingCompleted(data);
-                    },
-                    'evaluation-progress': (event) => {
-                        const data = JSON.parse(event.data);
-                        this._updateEvaluationProgress(data);
-                    },
-                    'optimization-progress': (event) => {
-                        const data = JSON.parse(event.data);
-                        this._updateOptimizationProgress(data);
-                    }
-                });
+            
+            oCreateModel.setData(oData);
+        },
+        
+        onBaseModelChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.baseModel = sValue;
+            
+            // Auto-adjust parameters based on base model
+            switch (sValue) {
+                case "bert_large":
+                    oData.embeddingDimension = 1024;
+                    oData.layerCount = 24;
+                    oData.hiddenSize = 1024;
+                    oData.attentionHeads = 16;
+                    break;
+                case "roberta_large":
+                    oData.embeddingDimension = 1024;
+                    oData.layerCount = 24;
+                    oData.hiddenSize = 1024;
+                    oData.attentionHeads = 16;
+                    break;
+                case "minilm":
+                    oData.embeddingDimension = 384;
+                    oData.layerCount = 6;
+                    oData.hiddenSize = 384;
+                    oData.attentionHeads = 12;
+                    break;
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+        onEmbeddingDimensionChange: function(oEvent) {
+            var iValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.embeddingDimension = iValue;
+            
+            // Adjust hidden size to match embedding dimension if they're the same
+            if (oData.hiddenSize === oData.embeddingDimension) {
+                oData.hiddenSize = iValue;
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+        onArchitectureChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.architecture = SecurityUtils.sanitizeInput(sValue);
+            oCreateModel.setData(oData);
+        },
+        
+        onLayerCountChange: function(oEvent) {
+            var iValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.layerCount = iValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onHiddenSizeChange: function(oEvent) {
+            var iValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.hiddenSize = iValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onAttentionHeadsChange: function(oEvent) {
+            var iValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.attentionHeads = iValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onVocabularySizeChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.vocabularySize = SecurityUtils.sanitizeInput(sValue);
+            oCreateModel.setData(oData);
+        },
+        
+        onMaxSequenceLengthChange: function(oEvent) {
+            var iValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.maxSequenceLength = iValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onTokenizerChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.tokenizer = sValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onNormalizationChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.normalization = bValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onLearningRateChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.learningRate = SecurityUtils.sanitizeInput(sValue);
+            oCreateModel.setData(oData);
+        },
+        
+        onBatchSizeChange: function(oEvent) {
+            var iValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.batchSize = iValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onEpochsChange: function(oEvent) {
+            var iValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.epochs = iValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onOptimizerChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.optimizer = sValue;
+            
+            // Auto-adjust learning rate based on optimizer
+            switch (sValue) {
+                case "adam":
+                    oData.learningRate = "0.001";
+                    break;
+                case "adamw":
+                    oData.learningRate = "0.00002";
+                    break;
+                case "sgd":
+                    oData.learningRate = "0.01";
+                    break;
+                case "rmsprop":
+                    oData.learningRate = "0.001";
+                    break;
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+        onLossFunctionChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.lossFunction = sValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onRegularizationChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.regularization = SecurityUtils.sanitizeInput(sValue);
+            oCreateModel.setData(oData);
+        },
+        
+        onDropoutChange: function(oEvent) {
+            var fValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.dropout = fValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onWarmupStepsChange: function(oEvent) {
+            var iValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.warmupSteps = iValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onGradientClippingChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.gradientClipping = SecurityUtils.sanitizeInput(sValue);
+            oCreateModel.setData(oData);
+        },
+        
+        onQuantizationChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.quantization = bValue;
+            
+            // Auto-suggest compression ratio when quantization is enabled
+            if (bValue && oData.compressionRatio < 2) {
+                oData.compressionRatio = 4;
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+        onPruningChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.pruning = bValue;
+            
+            // Auto-suggest compression ratio when pruning is enabled
+            if (bValue && oData.compressionRatio < 2) {
+                oData.compressionRatio = 3;
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+        onDistillationChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.distillation = bValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onCompressionRatioChange: function(oEvent) {
+            var fValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.compressionRatio = fValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onOptimizationTargetChange: function(oEvent) {
+            var sValue = oEvent.getParameter("key");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.optimizationTarget = sValue;
+            
+            // Auto-adjust settings based on optimization target
+            switch (sValue) {
+                case "speed":
+                    oData.quantization = true;
+                    oData.pruning = true;
+                    oData.mixedPrecision = true;
+                    oData.compressionRatio = 5;
+                    break;
+                case "balanced":
+                    oData.quantization = false;
+                    oData.pruning = false;
+                    oData.mixedPrecision = true;
+                    oData.compressionRatio = 2;
+                    break;
+                case "accuracy":
+                    oData.quantization = false;
+                    oData.pruning = false;
+                    oData.mixedPrecision = false;
+                    oData.compressionRatio = 1;
+                    break;
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+        onHardwareTargetChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.hardwareTarget = sValue;
+            
+            // Auto-adjust settings based on hardware target
+            switch (sValue) {
+                case "cpu":
+                    oData.mixedPrecision = false;
+                    oData.batchSize = Math.min(oData.batchSize, 16);
+                    break;
+                case "gpu":
+                    oData.mixedPrecision = true;
+                    oData.batchSize = Math.max(oData.batchSize, 32);
+                    break;
+                case "tpu":
+                    oData.mixedPrecision = true;
+                    oData.batchSize = Math.max(oData.batchSize, 64);
+                    break;
+                case "edge":
+                case "mobile":
+                    oData.quantization = true;
+                    oData.pruning = true;
+                    oData.compressionRatio = 8;
+                    oData.batchSize = Math.min(oData.batchSize, 8);
+                    break;
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+        onAutoOptimizationChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.autoOptimization = bValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onMixedPrecisionChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.mixedPrecision = bValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onDatasetNameChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.datasetName = SecurityUtils.sanitizeInput(sValue);
+            
+            // Simulate dataset size calculation
+            if (sValue.trim().length > 0) {
+                var iEstimatedSamples = Math.floor(Math.random() * 90000) + 10000;
+                oData.datasetSizeDisplay = iEstimatedSamples.toLocaleString() + " samples";
                 
-                // Event handlers configured in createSecureEventSource
-
-            } catch (error) {
-                console.warn("Server-Sent Events not available, using polling");
-                this._initializePolling(modelId);
+                // Auto-suggest sample splits
+                oData.trainingSamples = Math.floor(iEstimatedSamples * 0.7);
+                oData.validationSamples = Math.floor(iEstimatedSamples * 0.15);
+                oData.testSamples = Math.floor(iEstimatedSamples * 0.15);
+            } else {
+                oData.datasetSizeDisplay = "0 samples";
             }
-        },
-
-        _initializePolling: function(modelId) {
-            this._pollInterval = setInterval(() => {
-                this._refreshModelData();
-            }, 3000);
-        },
-
-        _loadFineTuningOptions: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sModelId = oContext.getObject().modelId;
             
-            if (!SecurityUtils.checkEmbeddingAuth('GetFineTuningOptions', {})) {
-                return;
+            oCreateModel.setData(oData);
+        },
+        
+        onTrainingSamplesChange: function(oEvent) {
+            var iValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.trainingSamples = iValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onValidationSamplesChange: function(oEvent) {
+            var iValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.validationSamples = iValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onTestSamplesChange: function(oEvent) {
+            var iValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.testSamples = iValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onDataAugmentationChange: function(oEvent) {
+            var aSelectedKeys = oEvent.getParameter("selectedItems").map(function(oItem) {
+                return oItem.getKey();
+            });
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.dataAugmentation = aSelectedKeys;
+            oCreateModel.setData(oData);
+        },
+        
+        onSamplingStrategyChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.samplingStrategy = sValue;
+            
+            // Auto-suggest class balance based on sampling strategy
+            if (sValue === "balanced" || sValue === "stratified") {
+                oData.classBalance = true;
             }
-
-            SecurityUtils.secureCallFunction(oModel, "/GetFineTuningOptions", {
-                urlParameters: {
-                    modelId: sModelId
-                },
-                success: function(data) {
-                    this._displayFineTuningOptions(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingFineTuningOptions"));
-                }.bind(this)
-            });
-        },
-
-        _loadEvaluationOptions: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sModelId = oContext.getObject().modelId;
             
-            SecurityUtils.secureCallFunction(oModel, "/GetEvaluationOptions", {
-                urlParameters: {
-                    modelId: sModelId
-                },
-                success: function(data) {
-                    this._displayEvaluationOptions(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingEvaluationOptions"));
-                }.bind(this)
-            });
+            oCreateModel.setData(oData);
         },
-
-        _loadOptimizationOptions: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sModelId = oContext.getObject().modelId;
+        
+        onClassBalanceChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
             
-            if (!SecurityUtils.checkEmbeddingAuth('GetOptimizationOptions', {})) {
-                return;
-            }
-
-            SecurityUtils.secureCallFunction(oModel, "/GetOptimizationOptions", {
-                urlParameters: {
-                    modelId: sModelId
-                },
-                success: function(data) {
-                    this._displayOptimizationOptions(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingOptimizationOptions"));
-                }.bind(this)
-            });
+            oData.classBalance = bValue;
+            oCreateModel.setData(oData);
         },
-
-        _deployModel: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sModelId = oContext.getObject().modelId;
+        
+        // Dialog Action Handlers
+        onConfirmCreateModel: function() {
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
             
-            MessageToast.show(this.getResourceBundle().getText("msg.deploymentStarted"));
-            
-            if (!SecurityUtils.checkEmbeddingAuth('DeployModel', {})) {
-                return;
-            }
-
-            SecurityUtils.secureCallFunction(oModel, "/DeployModel", {
-                urlParameters: {
-                    modelId: sModelId
-                },
-                success: function(data) {
-                    MessageToast.show(this.getResourceBundle().getText("msg.modelDeployed"));
-                    this._refreshModelData();
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.deploymentFailed"));
-                }.bind(this)
-            });
-        },
-
-        _loadComparisonData: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sModelId = oContext.getObject().modelId;
-            
-            SecurityUtils.secureCallFunction(oModel, "/GetModelComparisons", {
-                urlParameters: {
-                    modelId: sModelId
-                },
-                success: function(data) {
-                    this._displayModelComparisons(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingComparisonData"));
-                }.bind(this)
-            });
-        },
-
-        _loadEmbeddingData: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sModelId = oContext.getObject().modelId;
-            
-            SecurityUtils.secureCallFunction(oModel, "/GetEmbeddingVisualization", {
-                urlParameters: {
-                    modelId: sModelId
-                },
-                success: function(data) {
-                    this._displayEmbeddingVisualization(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingEmbeddingData"));
-                }.bind(this)
-            });
-        },
-
-        _updateTrainingProgress: function(data) {
-            // Update training progress indicators
-            const oProgressIndicator = this.getView().byId("trainingProgress");
-            if (oProgressIndicator) {
-                oProgressIndicator.setPercentValue(data.progress);
-                oProgressIndicator.setDisplayValue(`Epoch ${data.epoch}/${data.totalEpochs} - Loss: ${data.loss.toFixed(4)}`);
-            }
-        },
-
-        _handleTrainingCompleted: function(data) {
-            // Validate model output for security
-            const validation = SecurityUtils.validateModelPath(data.modelPath);
-            if (!validation.isValid) {
-                MessageBox.error("Model validation failed: " + validation.errors.join(", "));
+            if (!oData.canCreate) {
+                MessageToast.show("Please fix validation errors before creating the model");
                 return;
             }
             
-            MessageToast.show(this.getResourceBundle().getText("msg.fineTuningCompleted"));
-            this._refreshModelData();
+            MessageBox.confirm("Are you sure you want to create this embedding model?", {
+                title: "Confirm Model Creation",
+                onOK: function() {
+                    this._createEmbeddingModel(oData);
+                }.bind(this)
+            });
         },
-
-        _updateEvaluationProgress: function(data) {
-            // Update evaluation progress indicators
-        },
-
-        _updateOptimizationProgress: function(data) {
-            // Update optimization progress indicators
-        },
-
-        _refreshModelData: function() {
-            const oContext = this.base.getView().getBindingContext();
-            if (oContext) {
-                oContext.refresh();
+        
+        onCancelCreateModel: function() {
+            if (this._oCreateDialog) {
+                this._oCreateDialog.close();
             }
         },
-
-        _displayFineTuningOptions: function(data) {
-            // Display fine-tuning options in dialog
+        
+        _createEmbeddingModel: function(oData) {
+            // Simulate model creation
+            MessageToast.show("Embedding model creation started...");
+            
+            setTimeout(function() {
+                MessageToast.show("Embedding model '" + oData.modelName + "' created successfully");
+                if (this._oCreateDialog) {
+                    this._oCreateDialog.close();
+                }
+            }.bind(this), 2000);
         },
-
-        _displayEvaluationOptions: function(data) {
-            // Display evaluation options in dialog
-        },
-
-        _displayOptimizationOptions: function(data) {
-            // Display optimization options in dialog
-        },
-
-        _displayModelComparisons: function(data) {
-            // Display model comparison results
-        },
-
-        _displayEmbeddingVisualization: function(data) {
-            // Display embedding visualization
-        },
-
-        getResourceBundle: function() {
-            return this.getView().getModel("i18n").getResourceBundle();
-        },
-
+        
+        // Lifecycle
         onExit: function() {
-            if (this._eventSource) {
-                this._eventSource.close();
+            if (this._oCreateDialog) {
+                this._oCreateDialog.destroy();
+                this._oCreateDialog = null;
             }
-            if (this._pollInterval) {
-                clearInterval(this._pollInterval);
-            }
+            
+            this._stopCreateValidationInterval();
         }
+        
     });
 });

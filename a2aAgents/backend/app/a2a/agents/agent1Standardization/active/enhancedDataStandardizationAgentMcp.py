@@ -256,15 +256,16 @@ class ConnectionPool:
             # Create new connection if under limit
             async with self.lock:
                 if self.active_connections < self.max_connections:
-                    client = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        # httpx\.AsyncClient(
-                        base_url=self.service_url,
-                        timeout=httpx.Timeout(30.0),
-                        limits=httpx.Limits(
-                            max_keepalive_connections=5,
-                            max_connections=10
-                        )
-                    )
+                    # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+                    client = None  # Disabled for A2A protocol compliance
+                    # client = httpx.AsyncClient(
+                    #     base_url=self.service_url,
+                    #     timeout=httpx.Timeout(30.0),
+                    #     limits=httpx.Limits(
+                    #         max_keepalive_connections=5,
+                    #         max_connections=10
+                    #     )
+                    # )
                     self.active_connections += 1
                     return client
             

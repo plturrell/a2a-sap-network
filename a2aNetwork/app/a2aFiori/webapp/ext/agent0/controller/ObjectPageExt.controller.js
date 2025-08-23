@@ -5,8 +5,9 @@ sap.ui.define([
     "sap/ui/model/json/JSONModel",
     "sap/m/Dialog",
     "sap/m/Button",
-    "sap/m/Text"
-], function (MessageToast, MessageBox, Fragment, JSONModel, Dialog, Button, Text) {
+    "sap/m/Text",
+    "a2a/ext/agent0/utils/SecurityUtils"
+], function (MessageToast, MessageBox, Fragment, JSONModel, Dialog, Button, Text, SecurityUtils) {
     'use strict';
 
     return {
@@ -78,28 +79,43 @@ sap.ui.define([
             const oBinding = this.getView().getBindingContext();
             const sPath = oBinding.getPath();
             
-            MessageToast.show("Validating schema...");
+            const oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
+            MessageToast.show(oResourceBundle.getText("msg.validatingSchema"));
             
             const oModel = this.getView().getModel();
-            oModel.bindContext(`${sPath}/validateSchema(...)`).execute()
-                .then(function (oResult) {
+            const oData = oBinding.getObject();
+            const validation = SecurityUtils.validateSchema(oData.schema);
+            
+            if (!validation.valid) {
+                const oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
+                MessageBox.error(oResourceBundle.getText("error.validationFailed") + ": " + validation.error);
+                return;
+            }
+            
+            SecurityUtils.secureCallFunction(oModel, `${sPath}/validateSchema`, validation.sanitized,
+                function (oResult) {
                     const oValidationResult = oResult.getBoundContext().getObject();
+                    const oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
+                    
                     if (oValidationResult.isValid) {
-                        MessageBox.success("Schema validation passed!");
+                        MessageBox.success(oResourceBundle.getText("msg.validationPassed"));
                     } else {
                         this._showValidationErrors(oValidationResult.errors);
                     }
-                }.bind(this))
-                .catch(function (error) {
-                    MessageBox.error("Schema validation failed");
-                });
+                }.bind(this),
+                function (error) {
+                    const oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
+                    MessageBox.error(oResourceBundle.getText("error.validationFailed"));
+                }.bind(this)
+            );
         },
 
         /**
          * Generate Dublin Core metadata
          */
         onGenerateDublinCore: function () {
-            MessageBox.confirm("Generate Dublin Core metadata from existing fields?", {
+            const oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
+            MessageBox.confirm(oResourceBundle.getText("msg.confirmGenerateDublinCore"), {
                 onClose: function (oAction) {
                     if (oAction === MessageBox.Action.OK) {
                         this._generateDublinCore();
@@ -138,24 +154,31 @@ sap.ui.define([
             const oBinding = this.getView().getBindingContext();
             const sPath = oBinding.getPath();
             
-            MessageToast.show("Assessing data quality...");
+            const oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
+            MessageToast.show(oResourceBundle.getText("msg.assessingQuality"));
             
             const oModel = this.getView().getModel();
-            oModel.bindContext(`${sPath}/assessQuality(...)`).execute()
-                .then(function (oResult) {
+            const oData = oBinding.getObject();
+            const validation = SecurityUtils.validateQualityMetrics(oData.qualityMetrics || {});
+            
+            SecurityUtils.secureCallFunction(oModel, `${sPath}/assessQuality`, validation.sanitized || {},
+                function (oResult) {
                     const oQualityResult = oResult.getBoundContext().getObject();
                     this._showQualityResults(oQualityResult);
-                }.bind(this))
-                .catch(function (error) {
-                    MessageBox.error("Quality assessment failed");
-                });
+                }.bind(this),
+                function (error) {
+                    const oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
+                    MessageBox.error(oResourceBundle.getText("error.qualityAssessmentFailed"));
+                }.bind(this)
+            );
         },
 
         /**
          * Publish to catalog
          */
         onPublishToCatalog: function () {
-            MessageBox.confirm("Publish this data product to the catalog?", {
+            const oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
+            MessageBox.confirm(oResourceBundle.getText("msg.confirmPublish"), {
                 onClose: function (oAction) {
                     if (oAction === MessageBox.Action.OK) {
                         this._publishProduct();
@@ -269,14 +292,27 @@ sap.ui.define([
             
             try {
                 const oModel = this.getView().getModel();
-                const oResult = await oModel.bindContext(`${sPath}/generateDublinCore(...)`).execute();
+                const oData = oBinding.getObject();
+                const validation = SecurityUtils.validateMetadata(oData);
                 
-                MessageBox.success("Dublin Core metadata generated successfully");
+                if (!validation.valid) {
+                    MessageBox.error(validation.error);
+                    return;
+                }
+                
+                await SecurityUtils.secureCallFunction(oModel, `${sPath}/generateDublinCore`, validation.sanitized,
+                    function() { /* success handled below */ },
+                    function() { throw new Error("Generation failed"); }
+                );
+                
+                const oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
+                MessageBox.success(oResourceBundle.getText("msg.dublinCoreGenerated"));
                 
                 // Refresh the binding
                 oBinding.refresh();
             } catch (error) {
-                MessageBox.error("Failed to generate Dublin Core metadata");
+                const oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
+                MessageBox.error(oResourceBundle.getText("error.dublinCoreGenerationFailed"));
             }
         },
 
@@ -408,14 +444,27 @@ sap.ui.define([
             
             try {
                 const oModel = this.getView().getModel();
-                await oModel.bindContext(`${sPath}/publish(...)`).execute();
+                const oData = oBinding.getObject();
+                const validation = SecurityUtils.validateDublinCore(oData.dublinCore);
                 
-                MessageBox.success("Product published successfully");
+                if (!validation.valid) {
+                    MessageBox.error(validation.error);
+                    return;
+                }
+                
+                await SecurityUtils.secureCallFunction(oModel, `${sPath}/publish`, validation.sanitized,
+                    function() { /* success handled below */ },
+                    function() { throw new Error("Publish failed"); }
+                );
+                
+                const oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
+                MessageBox.success(oResourceBundle.getText("msg.publishSuccess"));
                 
                 // Refresh the binding
                 oBinding.refresh();
             } catch (error) {
-                MessageBox.error("Failed to publish product");
+                const oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
+                MessageBox.error(oResourceBundle.getText("error.publishFailed"));
             }
         },
 

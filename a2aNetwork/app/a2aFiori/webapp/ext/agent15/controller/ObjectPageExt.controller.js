@@ -3,11 +3,716 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/MessageBox",
     "sap/ui/core/Fragment",
+    "sap/ui/model/json/JSONModel",
     "a2a/network/agent15/ext/utils/SecurityUtils"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment, SecurityUtils) {
+], function(ControllerExtension, MessageToast, MessageBox, Fragment, JSONModel, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent15.ext.controller.ObjectPageExt", {
+        
+        override: {
+            onInit: function () {
+                this._initializeCreateModel();
+            }
+        },
+        
+        _initializeCreateModel: function() {
+            var oCreateData = {
+                workflowName: "",
+                description: "",
+                workflowType: "",
+                priority: "medium",
+                version: "1.0.0",
+                orchestrationMode: "centralized",
+                executionStrategy: "sequential",
+                parallelization: false,
+                maxConcurrency: 4,
+                taskDistribution: "roundRobin",
+                loadBalancing: true,
+                failoverStrategy: "immediate",
+                retryPolicy: "exponential",
+                circuitBreaker: true,
+                triggerType: "manual",
+                schedule: "",
+                timeout: 300,
+                maxDuration: 3600,
+                checkpointEnabled: true,
+                rollbackEnabled: true,
+                compensationEnabled: false,
+                transactional: false,
+                agentSelectionMode: "automatic",
+                communicationProtocol: "websocket",
+                messageQueuing: true,
+                eventBus: true,
+                coordinationPattern: "masterSlave",
+                consensusAlgorithm: "raft",
+                conflictResolution: "priority",
+                dataConsistency: "eventual",
+                monitoringEnabled: true,
+                metricsCollection: true,
+                tracingEnabled: true,
+                loggingLevel: "info",
+                alertingEnabled: true,
+                healthCheckInterval: 30,
+                performanceThresholds: "",
+                anomalyDetection: false,
+                workflowNameState: "",
+                workflowNameStateText: "",
+                workflowTypeState: "",
+                workflowTypeStateText: "",
+                orchestrationModeState: "",
+                orchestrationModeStateText: "",
+                canCreate: false
+            };
+            var oCreateModel = new JSONModel(oCreateData);
+            this.getView().setModel(oCreateModel, "create");
+        },
+
+        // Create Workflow Action
+        onCreateWorkflow: function() {
+            var oView = this.getView();
+            
+            if (!this._oCreateDialog) {
+                Fragment.load({
+                    id: oView.getId(),
+                    name: "a2a.network.agent15.ext.fragment.WorkflowCreator",
+                    controller: this
+                }).then(function(oDialog) {
+                    this._oCreateDialog = oDialog;
+                    oView.addDependent(this._oCreateDialog);
+                    this._resetCreateModel();
+                    this._oCreateDialog.open();
+                }.bind(this));
+            } else {
+                this._resetCreateModel();
+                this._oCreateDialog.open();
+            }
+        },
+        
+        // Create Dialog Lifecycle
+        onCreateWorkflowDialogAfterOpen: function() {
+            // Focus on first input field
+            var oWorkflowNameInput = this.getView().byId("workflowNameInput");
+            if (oWorkflowNameInput) {
+                oWorkflowNameInput.focus();
+            }
+            
+            // Start real-time validation
+            this._startCreateValidationInterval();
+        },
+        
+        onCreateWorkflowDialogAfterClose: function() {
+            this._stopCreateValidationInterval();
+        },
+        
+        _startCreateValidationInterval: function() {
+            if (this.createValidationInterval) {
+                clearInterval(this.createValidationInterval);
+            }
+            
+            this.createValidationInterval = setInterval(function() {
+                this._validateCreateForm();
+            }.bind(this), 1000);
+        },
+        
+        _stopCreateValidationInterval: function() {
+            if (this.createValidationInterval) {
+                clearInterval(this.createValidationInterval);
+                this.createValidationInterval = null;
+            }
+        },
+        
+        _validateCreateForm: function() {
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            var bCanCreate = true;
+            
+            // Workflow name validation
+            if (!oData.workflowName || oData.workflowName.trim().length < 3) {
+                oData.workflowNameState = "Error";
+                oData.workflowNameStateText = "Workflow name is required and must be at least 3 characters";
+                bCanCreate = false;
+            } else if (!SecurityUtils.isValidWorkflowName(oData.workflowName)) {
+                oData.workflowNameState = "Error";
+                oData.workflowNameStateText = "Workflow name contains invalid characters";
+                bCanCreate = false;
+            } else {
+                oData.workflowNameState = "Success";
+                oData.workflowNameStateText = "";
+            }
+            
+            // Workflow type validation
+            if (!oData.workflowType) {
+                oData.workflowTypeState = "Warning";
+                oData.workflowTypeStateText = "Please select a workflow type";
+                bCanCreate = false;
+            } else {
+                oData.workflowTypeState = "Success";
+                oData.workflowTypeStateText = "";
+            }
+            
+            // Orchestration mode validation
+            if (!oData.orchestrationMode) {
+                oData.orchestrationModeState = "Warning";
+                oData.orchestrationModeStateText = "Please select an orchestration mode";
+                bCanCreate = false;
+            } else {
+                oData.orchestrationModeState = "Success";
+                oData.orchestrationModeStateText = "";
+            }
+            
+            oData.canCreate = bCanCreate;
+            oCreateModel.setData(oData);
+        },
+        
+        _resetCreateModel: function() {
+            this._initializeCreateModel();
+        },
+        
+        // Field Change Handlers
+        onWorkflowNameChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.workflowName = SecurityUtils.sanitizeInput(sValue);
+            oCreateModel.setData(oData);
+        },
+        
+        onDescriptionChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.description = SecurityUtils.sanitizeInput(sValue);
+            oCreateModel.setData(oData);
+        },
+        
+        onWorkflowTypeChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.workflowType = sValue;
+            
+            // Auto-suggest based on workflow type
+            switch (sValue) {
+                case "parallel":
+                    oData.parallelization = true;
+                    oData.executionStrategy = "parallel";
+                    oData.maxConcurrency = 8;
+                    break;
+                case "eventDriven":
+                    oData.triggerType = "event";
+                    oData.eventBus = true;
+                    oData.communicationProtocol = "mqtt";
+                    break;
+                case "microservice":
+                    oData.orchestrationMode = "distributed";
+                    oData.communicationProtocol = "http";
+                    oData.coordinationPattern = "peer2peer";
+                    break;
+                case "serverless":
+                    oData.executionStrategy = "optimistic";
+                    oData.triggerType = "api";
+                    oData.scalingEnabled = true;
+                    break;
+                case "batch":
+                    oData.executionStrategy = "resilient";
+                    oData.checkpointEnabled = true;
+                    oData.rollbackEnabled = true;
+                    break;
+                case "streaming":
+                    oData.executionStrategy = "bestEffort";
+                    oData.communicationProtocol = "kafka";
+                    oData.eventBus = true;
+                    break;
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+        onPriorityChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.priority = sValue;
+            
+            // Auto-adjust settings based on priority
+            switch (sValue) {
+                case "critical":
+                case "urgent":
+                    oData.failoverStrategy = "immediate";
+                    oData.retryPolicy = "immediate";
+                    oData.healthCheckInterval = 15;
+                    oData.alertingEnabled = true;
+                    break;
+                case "high":
+                    oData.failoverStrategy = "graceful";
+                    oData.healthCheckInterval = 20;
+                    break;
+                case "low":
+                    oData.healthCheckInterval = 60;
+                    oData.alertingEnabled = false;
+                    break;
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+        onVersionChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.version = SecurityUtils.sanitizeInput(sValue);
+            oCreateModel.setData(oData);
+        },
+        
+        onOrchestrationModeChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.orchestrationMode = sValue;
+            
+            // Auto-adjust settings based on orchestration mode
+            switch (sValue) {
+                case "distributed":
+                    oData.consensusAlgorithm = "raft";
+                    oData.coordinationPattern = "peer2peer";
+                    oData.conflictResolution = "voting";
+                    oData.dataConsistency = "eventual";
+                    break;
+                case "federated":
+                    oData.consensusAlgorithm = "paxos";
+                    oData.coordinationPattern = "publish";
+                    oData.conflictResolution = "priority";
+                    break;
+                case "autonomous":
+                    oData.consensusAlgorithm = "gossip";
+                    oData.coordinationPattern = "scatter";
+                    oData.agentSelectionMode = "capability";
+                    break;
+                case "centralized":
+                    oData.consensusAlgorithm = "none";
+                    oData.coordinationPattern = "masterSlave";
+                    oData.conflictResolution = "priority";
+                    oData.dataConsistency = "strong";
+                    break;
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+        onExecutionStrategyChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.executionStrategy = sValue;
+            
+            // Auto-adjust settings based on execution strategy
+            switch (sValue) {
+                case "parallel":
+                    oData.parallelization = true;
+                    oData.maxConcurrency = Math.max(oData.maxConcurrency, 4);
+                    break;
+                case "failfast":
+                    oData.retryPolicy = "none";
+                    oData.failoverStrategy = "disabled";
+                    break;
+                case "resilient":
+                    oData.retryPolicy = "exponential";
+                    oData.circuitBreaker = true;
+                    oData.rollbackEnabled = true;
+                    break;
+                case "guaranteedDelivery":
+                    oData.retryPolicy = "exponential";
+                    oData.checkpointEnabled = true;
+                    oData.transactional = true;
+                    break;
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+        // Continue with remaining change handlers
+        onParallelizationChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.parallelization = bValue;
+            if (bValue && oData.maxConcurrency < 2) {
+                oData.maxConcurrency = 4;
+            }
+            oCreateModel.setData(oData);
+        },
+        
+        onMaxConcurrencyChange: function(oEvent) {
+            var iValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.maxConcurrency = iValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onTaskDistributionChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.taskDistribution = sValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onLoadBalancingChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.loadBalancing = bValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onFailoverStrategyChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.failoverStrategy = sValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onRetryPolicyChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.retryPolicy = sValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onCircuitBreakerChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.circuitBreaker = bValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onTriggerTypeChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.triggerType = sValue;
+            
+            // Auto-enable/disable schedule field based on trigger type
+            if (sValue === "scheduled") {
+                // Focus schedule input if available
+                var oScheduleInput = this.getView().byId("scheduleInput");
+                if (oScheduleInput) {
+                    setTimeout(function() { oScheduleInput.focus(); }, 100);
+                }
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+        onScheduleChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.schedule = SecurityUtils.sanitizeInput(sValue);
+            oCreateModel.setData(oData);
+        },
+        
+        onTimeoutChange: function(oEvent) {
+            var iValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.timeout = iValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onMaxDurationChange: function(oEvent) {
+            var iValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.maxDuration = iValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onCheckpointEnabledChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.checkpointEnabled = bValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onRollbackEnabledChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.rollbackEnabled = bValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onCompensationEnabledChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.compensationEnabled = bValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onTransactionalChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.transactional = bValue;
+            
+            // Auto-enable related settings when transactional is enabled
+            if (bValue) {
+                oData.rollbackEnabled = true;
+                oData.checkpointEnabled = true;
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+        onAgentSelectionModeChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.agentSelectionMode = sValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onCommunicationProtocolChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.communicationProtocol = sValue;
+            
+            // Auto-adjust settings based on protocol
+            switch (sValue) {
+                case "mqtt":
+                case "amqp":
+                case "kafka":
+                    oData.messageQueuing = true;
+                    oData.eventBus = true;
+                    break;
+                case "websocket":
+                    oData.eventBus = true;
+                    break;
+                case "http":
+                    oData.messageQueuing = false;
+                    break;
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+        onMessageQueuingChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.messageQueuing = bValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onEventBusChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.eventBus = bValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onCoordinationPatternChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.coordinationPattern = sValue;
+            
+            // Auto-adjust consensus algorithm based on pattern
+            switch (sValue) {
+                case "peer2peer":
+                    oData.consensusAlgorithm = "gossip";
+                    break;
+                case "masterSlave":
+                    oData.consensusAlgorithm = "none";
+                    break;
+                case "publish":
+                    oData.consensusAlgorithm = "raft";
+                    break;
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+        onConsensusAlgorithmChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.consensusAlgorithm = sValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onConflictResolutionChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.conflictResolution = sValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onDataConsistencyChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.dataConsistency = sValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onMonitoringEnabledChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.monitoringEnabled = bValue;
+            
+            // Auto-disable related monitoring features when disabled
+            if (!bValue) {
+                oData.metricsCollection = false;
+                oData.tracingEnabled = false;
+                oData.alertingEnabled = false;
+                oData.anomalyDetection = false;
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+        onMetricsCollectionChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.metricsCollection = bValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onTracingEnabledChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.tracingEnabled = bValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onLoggingLevelChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.loggingLevel = sValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onAlertingEnabledChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.alertingEnabled = bValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onHealthCheckIntervalChange: function(oEvent) {
+            var iValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.healthCheckInterval = iValue;
+            oCreateModel.setData(oData);
+        },
+        
+        onPerformanceThresholdsChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.performanceThresholds = SecurityUtils.sanitizeInput(sValue);
+            oCreateModel.setData(oData);
+        },
+        
+        onAnomalyDetectionChange: function(oEvent) {
+            var bValue = oEvent.getParameter("state");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.anomalyDetection = bValue;
+            oCreateModel.setData(oData);
+        },
+        
+        // Dialog Action Handlers
+        onConfirmCreateWorkflow: function() {
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            if (!oData.canCreate) {
+                MessageToast.show("Please fix validation errors before creating the workflow");
+                return;
+            }
+            
+            MessageBox.confirm("Are you sure you want to create this workflow?", {
+                title: "Confirm Workflow Creation",
+                onOK: function() {
+                    this._createWorkflow(oData);
+                }.bind(this)
+            });
+        },
+        
+        onCancelCreateWorkflow: function() {
+            if (this._oCreateDialog) {
+                this._oCreateDialog.close();
+            }
+        },
+        
+        _createWorkflow: function(oData) {
+            // Simulate workflow creation
+            MessageToast.show("Workflow creation started...");
+            
+            setTimeout(function() {
+                MessageToast.show("Workflow '" + oData.workflowName + "' created successfully");
+                if (this._oCreateDialog) {
+                    this._oCreateDialog.close();
+                }
+            }.bind(this), 2000);
+        },
         
         // Execute Workflow Action
         onExecuteWorkflow: function() {
@@ -533,6 +1238,38 @@ sap.ui.define([
         },
 
         onExit: function() {
+            // Clean up create dialog
+            if (this._oCreateDialog) {
+                this._oCreateDialog.destroy();
+                this._oCreateDialog = null;
+            }
+            
+            this._stopCreateValidationInterval();
+            
+            // Clean up other dialogs
+            if (this._cloneWorkflowDialog) {
+                this._cloneWorkflowDialog.destroy();
+            }
+            if (this._agentConfigDialog) {
+                this._agentConfigDialog.destroy();
+            }
+            if (this._executionMonitor) {
+                this._executionMonitor.destroy();
+            }
+            if (this._performanceOptimizer) {
+                this._performanceOptimizer.destroy();
+            }
+            if (this._schedulerDialog) {
+                this._schedulerDialog.destroy();
+            }
+            if (this._coordinationViewer) {
+                this._coordinationViewer.destroy();
+            }
+            if (this._exportDialog) {
+                this._exportDialog.destroy();
+            }
+            
+            // Clean up monitoring
             if (this._eventSource) {
                 this._eventSource.close();
             }

@@ -622,11 +622,12 @@ class EnhancedDataStandardizationAgentSDK(A2AAgentBase):
         await self._initialize_schema_knowledge()
         
         # Initialize HTTP client
-        self.http_client = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        # httpx\.AsyncClient(
-            timeout=httpx.Timeout(30.0),
-            limits=httpx.Limits(max_connections=10, max_keepalive_connections=5)
-        )
+        # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
+        self.http_client = None  # Disabled for A2A protocol compliance
+        # self.http_client = httpx.AsyncClient(
+        #     timeout=httpx.Timeout(30.0),
+        #     limits=httpx.Limits(max_connections=10, max_keepalive_connections=5)
+        # )
         
         # Initialize trust system
         await self._initialize_trust_system()

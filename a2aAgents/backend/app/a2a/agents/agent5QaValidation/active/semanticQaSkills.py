@@ -529,9 +529,10 @@ class SemanticQASkills:
             if self.vectorServiceUrl:
                 import httpx
                 # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
-        async with httpx.AsyncClient() as client:
-        # httpx\.AsyncClient() as client:
-                    response = await client.post(
+                # Disabled httpx usage for A2A protocol compliance
+                if False:  # Disabled block
+                    async with httpx.AsyncClient() as client:
+                        response = await client.post(
                         f"{self.vectorServiceUrl}/generate_embeddings",
                         json={
                             'texts': [answer, groundTruth],

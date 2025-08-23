@@ -1,0 +1,655 @@
+{
+  "agent": "Agent3-VectorProcessing",
+  "timestamp": "2025-08-23T04:58:40.170Z",
+  "summary": {
+    "filesScanned": 11,
+    "totalVulnerabilities": 63,
+    "critical": 0,
+    "high": 1,
+    "medium": 0,
+    "low": 60,
+    "warnings": 2
+  },
+  "vulnerabilities": [
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 192,
+      "code": "MessageToast.show(\"No similar vectors found\");",
+      "message": "Hardcoded message in MessageToast",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 263,
+      "code": "MessageToast.show(\"3D visualization loading...\");",
+      "message": "Hardcoded message in MessageToast",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 411,
+      "code": "MessageToast.show(\"Vector processing task created successfully\");",
+      "message": "Hardcoded message in MessageToast",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 159,
+      "code": "MessageBox.error(\"Failed to load vector collections: \" + errorMsg);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 201,
+      "code": "MessageBox.error(\"Search failed: \" + errorMsg);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 280,
+      "code": "MessageBox.warning(\"Please select tasks for batch processing.\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 285,
+      "code": "MessageBox.warning(\"Maximum 100 tasks can be processed in a single batch.\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 289,
+      "code": "MessageBox.confirm(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 326,
+      "code": "MessageBox.success(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 337,
+      "code": "MessageBox.error(\"Batch processing failed: \" + errorMsg);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 380,
+      "code": "MessageBox.error(\"Failed to load model comparison data: \" + errorMsg);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 421,
+      "code": "MessageBox.error(\"Failed to create task: \" + errorMsg);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 175,
+      "code": "this._oVectorSearchDialog.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing vector processing status changes",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 306,
+      "code": "this.base.getView().setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing vector processing status changes",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 396,
+      "code": "this._oCreateDialog.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing vector processing status changes",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 225,
+      "code": "// Initialize 3D visualization with throttling",
+      "message": "3D visualization accessibility: Missing alternative text descriptions",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 226,
+      "code": "this._init3DVisualization();",
+      "message": "3D visualization accessibility: Missing alternative text descriptions",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 230,
+      "code": "this._refresh3DVisualization();",
+      "message": "3D visualization accessibility: Missing alternative text descriptions",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 234,
+      "code": "_init3DVisualization: function() {",
+      "message": "3D visualization accessibility: Missing alternative text descriptions",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 246,
+      "code": "// Performance-optimized 3D visualization",
+      "message": "3D visualization accessibility: Missing alternative text descriptions",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 263,
+      "code": "MessageToast.show(\"3D visualization loading...\");",
+      "message": "3D visualization accessibility: Missing alternative text descriptions",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 267,
+      "code": "_refresh3DVisualization: function() {",
+      "message": "3D visualization accessibility: Missing alternative text descriptions",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 272,
+      "code": "this._init3DVisualization();",
+      "message": "3D visualization accessibility: Missing alternative text descriptions",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 808,
+      "code": "// Clean up 3D visualization",
+      "message": "3D visualization accessibility: Missing alternative text descriptions",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 260,
+      "code": "this._animationFrameId = requestAnimationFrame(render);",
+      "message": "Animation frame management: Potential memory leak in 3D visualization",
+      "impact": "May affect vector processing performance and user experience",
+      "fix": "Review implementation for performance optimization and proper resource cleanup"
+    },
+    {
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ListReportExt.controller.js",
+      "line": 264,
+      "code": "this._animationFrameId = requestAnimationFrame(render);",
+      "message": "Animation frame management: Potential memory leak in 3D visualization",
+      "impact": "May affect vector processing performance and user experience",
+      "fix": "Review implementation for performance optimization and proper resource cleanup"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 105,
+      "code": "MessageToast.show(\"Vector processing started\");",
+      "message": "Hardcoded message in MessageToast",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 1105,
+      "code": "MessageToast.show(\"Opening data source browser...\");",
+      "message": "Hardcoded message in MessageToast",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 1141,
+      "code": "MessageToast.show(\"Loading available data sources...\");",
+      "message": "Hardcoded message in MessageToast",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 79,
+      "code": "MessageBox.error(\"You don't have permission to start vector processing\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 83,
+      "code": "MessageBox.confirm(\"Start vector processing for '\" + encodeXML(sTaskName) + \"'?\", {",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 118,
+      "code": "MessageBox.error(\"Failed to start processing: \" + errorMsg);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 143,
+      "code": "MessageBox.error(\"Failed to establish real-time connection\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 168,
+      "code": "MessageBox.success(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 178,
+      "code": "MessageBox.error(\"Processing error: \" + errorMsg);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 187,
+      "code": "MessageBox.error(\"Lost connection to processing server\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 241,
+      "code": "MessageBox.error(\"You don't have permission to run similarity search\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 309,
+      "code": "MessageBox.error(\"Search failed: \" + errorMsg);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 390,
+      "code": "MessageBox.error(\"You don't have permission to optimize indexes\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 394,
+      "code": "MessageBox.confirm(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 430,
+      "code": "MessageBox.success(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 444,
+      "code": "MessageBox.error(\"Optimization failed: \" + errorMsg);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 456,
+      "code": "MessageBox.error(\"You don't have permission to export vectors\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 513,
+      "code": "MessageBox.success(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 535,
+      "code": "MessageBox.error(\"Export failed: \" + errorMsg);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 577,
+      "code": "MessageBox.error(\"Invalid download URL\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 590,
+      "code": "MessageBox.error(\"Failed to initiate download\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 646,
+      "code": "MessageBox.error(\"Failed to load visualization data: \" + errorMsg);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 701,
+      "code": "MessageBox.error(\"You don't have permission to run cluster analysis\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 705,
+      "code": "MessageBox.confirm(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 736,
+      "code": "MessageBox.success(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 748,
+      "code": "MessageBox.error(\"Cluster analysis failed: \" + errorMsg);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 1127,
+      "code": "MessageBox.information(\"Data source browser not yet implemented. Please enter data source path manually.\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for vector processing interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 93,
+      "code": "this._extensionAPI.getView().setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing vector processing status changes",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 284,
+      "code": "this._oSimilaritySearchDialog.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing vector processing status changes",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 407,
+      "code": "this._extensionAPI.getView().setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing vector processing status changes",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 497,
+      "code": "this._oExportDialog.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing vector processing status changes",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 618,
+      "code": "this._oVisualizationDialog.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing vector processing status changes",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/controller/ObjectPageExt.controller.js",
+      "line": 639,
+      "code": "// Create 3D visualization",
+      "message": "3D visualization accessibility: Missing alternative text descriptions",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/fragment/EmbeddingVisualization.fragment.xml",
+      "line": 155,
+      "code": "<!-- 3D/2D Visualization Container -->",
+      "message": "3D visualization accessibility: Missing alternative text descriptions",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/fragment/VectorVisualization3D.fragment.xml",
+      "line": 8,
+      "code": "title=\"3D Vector Space Visualization\"",
+      "message": "3D visualization accessibility: Missing alternative text descriptions",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent3/fragment/VectorVisualization3D.fragment.xml",
+      "line": 16,
+      "code": "<!-- 3D Visualization Container -->",
+      "message": "3D visualization accessibility: Missing alternative text descriptions",
+      "impact": "Reduces accessibility for vector processing interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "SAP_SECURITY",
+      "severity": "HIGH",
+      "file": "../app/a2aFiori/webapp/ext/agent3/manifest.json",
+      "line": 1,
+      "code": "manifest.json",
+      "message": "Missing security header: Content-Security-Policy",
+      "impact": "Reduces vector processing application security posture",
+      "fix": "Add Content-Security-Policy to manifest security configuration"
+    }
+  ],
+  "recommendations": [
+    "Implement vector input validation and dimension checking",
+    "Protect against embedding poisoning attacks",
+    "Secure vector database connections and access",
+    "Validate similarity search operations and parameters",
+    "Implement vector index integrity protection",
+    "Secure clustering and analysis operations",
+    "Protect 3D visualization from content injection",
+    "Implement proper vector export access controls"
+  ]
+}

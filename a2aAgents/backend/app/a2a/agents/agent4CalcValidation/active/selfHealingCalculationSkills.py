@@ -17,7 +17,8 @@ from pathlib import Path
 from app.a2a.sdk.decorators import a2a_skill, a2a_handler, a2a_task
 
 # Import mixins with fallback
-from app.a2a.sdk.mixins import PerformanceMonitorMixin, SecurityHardenedMixin
+try:
+    from app.a2a.sdk.mixins import PerformanceMonitorMixin, SecurityHardenedMixin
 except ImportError:
     # Fallback stubs
     class PerformanceMonitorMixin:

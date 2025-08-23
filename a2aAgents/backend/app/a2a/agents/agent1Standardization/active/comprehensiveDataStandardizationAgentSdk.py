@@ -288,7 +288,7 @@ class BlockchainQueueMixin:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-class ComprehensiveDataStandardizationAgentSDK(A2AAgentBase, BlockchainQueueMixin), PerformanceMonitoringMixin:
+class ComprehensiveDataStandardizationAgentSDK(A2AAgentBase, BlockchainQueueMixin, PerformanceMonitoringMixin):
     """
     Comprehensive Data Standardization Agent with Real AI Intelligence
     

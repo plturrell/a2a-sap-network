@@ -1,0 +1,363 @@
+{
+  "agent": "Agent2-AIPreparation",
+  "timestamp": "2025-08-23T04:55:11.936Z",
+  "summary": {
+    "filesScanned": 9,
+    "totalVulnerabilities": 34,
+    "critical": 0,
+    "high": 1,
+    "medium": 0,
+    "low": 33,
+    "warnings": 0
+  },
+  "vulnerabilities": [
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ListReportExt.controller.js",
+      "line": 96,
+      "code": "MessageBox.error(\"Failed to load data profile: \" + xhr.responseText);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ListReportExt.controller.js",
+      "line": 453,
+      "code": "MessageBox.error(\"Failed to load statistics data\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ListReportExt.controller.js",
+      "line": 576,
+      "code": "MessageBox.error(\"Failed to load feature analysis data\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ListReportExt.controller.js",
+      "line": 195,
+      "code": "var oMicroChart = new sap.suite.ui.microchart.ColumnMicroChart({",
+      "message": "MicroChart accessibility: Missing ARIA labels",
+      "impact": "Reduces accessibility for AI preparation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ListReportExt.controller.js",
+      "line": 74,
+      "code": "this._oDataProfiler.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing status changes",
+      "impact": "Reduces accessibility for AI preparation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ListReportExt.controller.js",
+      "line": 335,
+      "code": "oView.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing status changes",
+      "impact": "Reduces accessibility for AI preparation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ListReportExt.controller.js",
+      "line": 440,
+      "code": "oVizFrame.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing status changes",
+      "impact": "Reduces accessibility for AI preparation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ListReportExt.controller.js",
+      "line": 557,
+      "code": "oDialog.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing status changes",
+      "impact": "Reduces accessibility for AI preparation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 88,
+      "code": "MessageToast.show(\"AI data preparation started\");",
+      "message": "Hardcoded message in MessageToast",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 846,
+      "code": "MessageToast.show(\"Opening dataset browser...\");",
+      "message": "Hardcoded message in MessageToast",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 883,
+      "code": "MessageToast.show(\"Loading available datasets...\");",
+      "message": "Hardcoded message in MessageToast",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 71,
+      "code": "MessageBox.confirm(\"Start AI data preparation for '\" + sTaskName + \"'?\", {",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 96,
+      "code": "MessageBox.error(\"Failed to start preparation: \" + xhr.responseText);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 116,
+      "code": "MessageBox.success(\"AI data preparation completed successfully!\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 119,
+      "code": "MessageBox.error(\"Preparation failed: \" + data.error);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 125,
+      "code": "MessageBox.error(\"Lost connection to preparation process\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 149,
+      "code": "MessageBox.error(\"Feature analysis failed: \" + xhr.responseText);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 452,
+      "code": "MessageBox.success(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 463,
+      "code": "MessageBox.error(\"Failed to generate embeddings: \" + xhr.responseText);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 523,
+      "code": "MessageBox.error(\"Export failed: \" + xhr.responseText);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 550,
+      "code": "MessageBox.confirm(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 574,
+      "code": "MessageBox.success(",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 582,
+      "code": "MessageBox.error(\"Failed to start optimization: \" + errorMsg);",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 869,
+      "code": "MessageBox.information(\"Dataset browser not yet implemented. Please enter dataset name manually.\");",
+      "message": "Hardcoded message in MessageBox",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 220,
+      "code": "headerText: \"Feature Importance (Top 10)\",",
+      "message": "Hardcoded header text",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 293,
+      "code": "headerText: \"Feature Correlation Matrix\",",
+      "message": "Hardcoded header text",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "SAP_STANDARDS",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 338,
+      "code": "headerText: \"Feature Distributions\",",
+      "message": "Hardcoded header text",
+      "impact": "Reduces internationalization support for AI preparation interfaces",
+      "fix": "Use i18n resource bundle: this.getResourceBundle().getText(\"key\")"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 225,
+      "code": "var oVizFrame = new sap.viz.ui5.controls.VizFrame({",
+      "message": "Chart accessibility: Missing ARIA labels for AI visualizations",
+      "impact": "Reduces accessibility for AI preparation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 356,
+      "code": "var oMicroChart = new sap.suite.ui.microchart.AreaMicroChart({",
+      "message": "MicroChart accessibility: Missing ARIA labels",
+      "impact": "Reduces accessibility for AI preparation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 81,
+      "code": "this._extensionAPI.getView().setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing status changes",
+      "impact": "Reduces accessibility for AI preparation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 138,
+      "code": "this._extensionAPI.getView().setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing status changes",
+      "impact": "Reduces accessibility for AI preparation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 435,
+      "code": "this._oEmbeddingDialog.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing status changes",
+      "impact": "Reduces accessibility for AI preparation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "ACCESSIBILITY",
+      "severity": "LOW",
+      "file": "../app/a2aFiori/webapp/ext/agent2/controller/ObjectPageExt.controller.js",
+      "line": 502,
+      "code": "this._oExportDialog.setBusy(true);",
+      "message": "Loading state accessibility: Consider announcing status changes",
+      "impact": "Reduces accessibility for AI preparation interfaces",
+      "fix": "Add appropriate ARIA labels and accessibility announcements"
+    },
+    {
+      "type": "SAP_SECURITY",
+      "severity": "HIGH",
+      "file": "../app/a2aFiori/webapp/ext/agent2/manifest.json",
+      "line": 1,
+      "code": "manifest.json",
+      "message": "Missing security header: Content-Security-Policy",
+      "impact": "Reduces AI preparation application security posture",
+      "fix": "Add Content-Security-Policy to manifest security configuration"
+    }
+  ],
+  "recommendations": [
+    "Implement strict training data validation",
+    "Secure feature engineering operations",
+    "Protect model parameters from tampering",
+    "Enforce pipeline integrity checks",
+    "Implement secure model export controls",
+    "Validate AutoML configurations"
+  ]
+}
