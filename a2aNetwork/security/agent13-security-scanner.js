@@ -233,16 +233,24 @@ class Agent13SecurityScanner {
             const matches = content.match(pattern);
             if (matches) {
                 matches.forEach(match => {
-                    this.vulnerabilities.push({
-                        type: 'BUILDER_CODE_INJECTION',
-                        severity: 'CRITICAL',
-                        file: filePath,
-                        line: this.getLineNumber(content, match),
-                        description: 'Potential code injection vulnerability in agent generation',
-                        code: match.trim(),
-                        impact: 'Could allow arbitrary code execution during agent building',
-                        recommendation: 'Use secure code generation with SecurityUtils.validateAgentCode()'
-                    });
+                    // Skip false positives - check if it's using SecurityUtils
+                    const functionStart = content.indexOf(match);
+                    const functionBlock = content.substring(functionStart, functionStart + 500);
+                    
+                    if (!functionBlock.includes('SecurityUtils.secureCallFunction') &&
+                        !functionBlock.includes('SecurityUtils.validateAgentCode') &&
+                        !filePath.includes('SecurityUtils')) {
+                        this.vulnerabilities.push({
+                            type: 'BUILDER_CODE_INJECTION',
+                            severity: 'CRITICAL',
+                            file: filePath,
+                            line: this.getLineNumber(content, match),
+                            description: 'Potential code injection vulnerability in agent generation',
+                            code: match.trim(),
+                            impact: 'Could allow arbitrary code execution during agent building',
+                            recommendation: 'Use secure code generation with SecurityUtils.validateAgentCode()'
+                        });
+                    }
                 });
             }
         });

@@ -296,10 +296,10 @@ class Agent14SecurityScanner {
     }
 
     scanCSRFProtection(content, filePath) {
-        this.embeddingSecurityPatterns.csrfMissing.forEach(pattern => {
+        const checkCSRFPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const checkCSRFMatch = (match) => {
                     // Check if CSRF token is present in the context
                     const functionStart = content.indexOf(match);
                     const functionBlock = content.substring(functionStart, functionStart + 500);
@@ -318,16 +318,18 @@ class Agent14SecurityScanner {
                             recommendation: 'Use SecurityUtils.secureCallFunction() for embedding operations'
                         });
                     }
-                });
+                };
+                matches.forEach(checkCSRFMatch);
             }
-        });
+        };
+        this.embeddingSecurityPatterns.csrfMissing.forEach(checkCSRFPattern);
     }
 
     scanHyperparameterInjection(content, filePath) {
-        this.embeddingSecurityPatterns.hyperparameterInjection.forEach(pattern => {
+        const checkHyperparameterPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const addHyperparameterVulnerability = (match) => {
                     this.vulnerabilities.push({
                         type: 'EMBEDDING_HYPERPARAMETER_INJECTION',
                         severity: 'MEDIUM',
@@ -338,16 +340,18 @@ class Agent14SecurityScanner {
                         impact: 'Could allow malicious hyperparameter manipulation',
                         recommendation: 'Validate hyperparameters with SecurityUtils.validateHyperparameters()'
                     });
-                });
+                };
+                matches.forEach(addHyperparameterVulnerability);
             }
-        });
+        };
+        this.embeddingSecurityPatterns.hyperparameterInjection.forEach(checkHyperparameterPattern);
     }
 
     scanDataPoisoningRisks(content, filePath) {
-        this.embeddingSecurityPatterns.dataPoisoningRisks.forEach(pattern => {
+        const checkDataPoisoningPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const addDataPoisoningVulnerability = (match) => {
                     this.vulnerabilities.push({
                         type: 'EMBEDDING_DATA_POISONING',
                         severity: 'HIGH',
@@ -358,16 +362,18 @@ class Agent14SecurityScanner {
                         impact: 'Could allow injection of malicious training data',
                         recommendation: 'Validate training data with SecurityUtils.validateTrainingData()'
                     });
-                });
+                };
+                matches.forEach(addDataPoisoningVulnerability);
             }
-        });
+        };
+        this.embeddingSecurityPatterns.dataPoisoningRisks.forEach(checkDataPoisoningPattern);
     }
 
     scanSerializationRisks(content, filePath) {
-        this.embeddingSecurityPatterns.serializationRisks.forEach(pattern => {
+        const checkSerializationPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const addSerializationVulnerability = (match) => {
                     this.vulnerabilities.push({
                         type: 'EMBEDDING_SERIALIZATION_RISK',
                         severity: 'CRITICAL',
@@ -378,16 +384,18 @@ class Agent14SecurityScanner {
                         impact: 'Could allow arbitrary code execution via malicious models',
                         recommendation: 'Use secure model serialization with SecurityUtils.secureModelSave()'
                     });
-                });
+                };
+                matches.forEach(addSerializationVulnerability);
             }
-        });
+        };
+        this.embeddingSecurityPatterns.serializationRisks.forEach(checkSerializationPattern);
     }
 
     scanVectorDbSecurity(content, filePath) {
-        this.embeddingSecurityPatterns.vectorDbSecurity.forEach(pattern => {
+        const checkVectorDbPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const addVectorDbVulnerability = (match) => {
                     this.vulnerabilities.push({
                         type: 'EMBEDDING_VECTOR_DB_SECURITY',
                         severity: 'MEDIUM',
@@ -398,16 +406,18 @@ class Agent14SecurityScanner {
                         impact: 'Could allow vector database injection attacks',
                         recommendation: 'Validate vector queries with SecurityUtils.validateVectorQuery()'
                     });
-                });
+                };
+                matches.forEach(addVectorDbVulnerability);
             }
-        });
+        };
+        this.embeddingSecurityPatterns.vectorDbSecurity.forEach(checkVectorDbPattern);
     }
 
     scanDeploymentSecurity(content, filePath) {
-        this.embeddingSecurityPatterns.deploymentSecurity.forEach(pattern => {
+        const checkDeploymentPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const addDeploymentVulnerability = (match) => {
                     this.vulnerabilities.push({
                         type: 'EMBEDDING_DEPLOYMENT_SECURITY',
                         severity: 'MEDIUM',
@@ -418,16 +428,18 @@ class Agent14SecurityScanner {
                         impact: 'Model endpoints not secure',
                         recommendation: 'Implement secure model deployment protocols'
                     });
-                });
+                };
+                matches.forEach(addDeploymentVulnerability);
             }
-        });
+        };
+        this.embeddingSecurityPatterns.deploymentSecurity.forEach(checkDeploymentPattern);
     }
 
     scanBenchmarkSecurity(content, filePath) {
-        this.embeddingSecurityPatterns.benchmarkSecurity.forEach(pattern => {
+        const checkBenchmarkPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const addBenchmarkVulnerability = (match) => {
                     this.vulnerabilities.push({
                         type: 'EMBEDDING_BENCHMARK_SECURITY',
                         severity: 'MEDIUM',
@@ -438,9 +450,11 @@ class Agent14SecurityScanner {
                         impact: 'Could allow manipulation of evaluation metrics',
                         recommendation: 'Secure benchmark calculations with validation'
                     });
-                });
+                };
+                matches.forEach(addBenchmarkVulnerability);
             }
-        });
+        };
+        this.embeddingSecurityPatterns.benchmarkSecurity.forEach(checkBenchmarkPattern);
     }
 
     scanGeneralSecurity(content, filePath) {
