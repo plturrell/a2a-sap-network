@@ -13,6 +13,7 @@ using {
 // using { a2a.network.tracking } from './change_tracking'; // Disabled for now
 using { a2a.network.aspects } from './sap_aspects';
 // using { a2a.network } from './blockchainSchema'; // Temporarily disabled
+using { a2a.reputation } from './reputationSchema';
 
 // Custom Types for Type Safety
 type BlockchainAddress : String(42);

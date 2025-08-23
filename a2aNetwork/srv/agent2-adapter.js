@@ -7,7 +7,7 @@ const axios = require('axios');
  */
 class Agent2Adapter {
     constructor() {
-        this.baseURL = process.env.AGENT2_BASE_URL || 'http://localhost:8001';
+        this.baseURL = process.env.AGENT2_BASE_URL || 'http://localhost:8002';
         this.apiBase = `${this.baseURL}/a2a/agent2/v1`;
         this.log = cds.log('agent2-adapter');
     }

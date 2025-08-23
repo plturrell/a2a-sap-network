@@ -9,8 +9,9 @@ sap.ui.define([
     "sap/base/Log",
     "sap/ui/core/routing/Router",
     "sap/base/strings/escapeRegExp",
-    "sap/base/security/sanitizeHTML"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, encodeURL, Log, Router, escapeRegExp, sanitizeHTML) {
+    "sap/base/security/sanitizeHTML",
+    "../utils/SecurityUtils"
+], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, encodeURL, Log, Router, escapeRegExp, sanitizeHTML, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent6.ext.controller.ObjectPageExt", {
@@ -18,6 +19,8 @@ sap.ui.define([
         override: {
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
+                this._securityUtils = SecurityUtils;
+                this._resourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
                 this._initializeSecurity();
                 
                 // Initialize device model for responsive behavior
@@ -61,6 +64,32 @@ sap.ui.define([
         _hasRole: function(role) {
             const user = sap.ushell?.Container?.getUser();
             return user && user.hasRole && user.hasRole(role);
+        },
+        
+        /**
+         * @function _getQualityThresholds
+         * @description Gets quality thresholds from configuration
+         * @returns {Object} Quality thresholds configuration
+         * @private
+         */
+        _getQualityThresholds: function() {
+            // Get from model configuration or default to secure values
+            var oConfigModel = this.base.getView().getModel("config");
+            if (oConfigModel) {
+                var thresholds = oConfigModel.getProperty("/qualityThresholds");
+                if (thresholds && this._securityUtils.validateQualityThreshold(thresholds)) {
+                    return thresholds;
+                }
+            }
+            
+            // Return secure defaults if no valid configuration
+            return {
+                minQualityScore: 80,
+                maxIssues: 5,
+                minTrustScore: 85,
+                maxDefects: 10,
+                maxWarnings: 20
+            };
         },
         
         _validateInput: function(input, type) {
@@ -182,11 +211,7 @@ sap.ui.define([
                     usability: false,
                     maintainability: false
                 },
-                thresholds: {
-                    minQualityScore: 80,
-                    maxIssues: 5,
-                    minTrustScore: 85
-                },
+                thresholds: this._getQualityThresholds(),
                 routingStrategy: "QUALITY_BASED",
                 autoRouteThreshold: 90,
                 enableFallback: true,
@@ -236,7 +261,7 @@ sap.ui.define([
                 return;
             }
             
-            MessageBox.confirm("Start quality assessment for '" + sTaskName + "'?", {
+            MessageBox.confirm(this._resourceBundle.getText("msg.confirmStartAssessment", [sTaskName]), {
                 onClose: function(oAction) {
                     if (oAction === MessageBox.Action.OK) {
                         this._startQualityAssessment(sTaskId);
@@ -262,7 +287,7 @@ sap.ui.define([
             }).catch(error => {
                 this._extensionAPI.getView().setBusy(false);
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Failed to start assessment: " + errorMsg);
+                MessageBox.error(this._resourceBundle.getText("error.startAssessmentFailed", [errorMsg]));
                 this._auditLogger.log("ASSESSMENT_START_FAILED", { taskId: sTaskId, error: errorMsg });
             });
         },
@@ -313,7 +338,7 @@ sap.ui.define([
         },
 
         _updateAssessmentProgress: function(data) {
-            MessageToast.show(data.component + ": " + data.progress + "%");
+            MessageToast.show(this._resourceBundle.getText("msg.assessmentProgress", [this._securityUtils.escapeHTML(data.component), data.progress]));
         },
 
         _showAssessmentResults: function(results) {

@@ -28,6 +28,7 @@ sap.ui.define([
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._securityUtils = SecurityUtils;
+                this._resourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
                 this._initializeSecurity();
                 this._initializeDeviceModel();
                 this._initializeDialogCache();
@@ -89,6 +90,32 @@ sap.ui.define([
                     };
                     Log.info("AUDIT: " + JSON.stringify(logEntry));
                 }.bind(this)
+            };
+        },
+        
+        /**
+         * @function _getQualityThresholds
+         * @description Gets quality thresholds from configuration
+         * @returns {Object} Quality thresholds configuration
+         * @private
+         */
+        _getQualityThresholds: function() {
+            // Get from model configuration or default to secure values
+            var oConfigModel = this.base.getView().getModel("config");
+            if (oConfigModel) {
+                var thresholds = oConfigModel.getProperty("/qualityThresholds");
+                if (thresholds && this._securityUtils.validateQualityThreshold(thresholds)) {
+                    return thresholds;
+                }
+            }
+            
+            // Return secure defaults if no valid configuration
+            return {
+                minQualityScore: 80,
+                maxIssues: 5,
+                minTrustScore: 75,
+                maxDefects: 10,
+                maxWarnings: 20
             };
         },
         
@@ -393,11 +420,7 @@ sap.ui.define([
                             usability: false,
                             maintainability: false
                         },
-                        thresholds: {
-                            minQualityScore: 80,
-                            maxIssues: 5,
-                            minTrustScore: 75
-                        }
+                        thresholds: this._getQualityThresholds()
                     });
                     oDialog.setModel(oModel, "create");
                     oDialog.open();
@@ -445,7 +468,7 @@ sap.ui.define([
             }).catch(error => {
                 this._oDashboard.setBusy(false);
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Failed to load dashboard data: " + errorMsg);
+                MessageBox.error(this._resourceBundle.getText("error.loadingDashboard", [errorMsg]));
                 this._auditLogger.log("DASHBOARD_LOAD_FAILED", { error: errorMsg });
             });
         },
@@ -537,7 +560,7 @@ sap.ui.define([
                 this._auditLogger.log("ROUTING_DATA_LOADED", { action: "load_routing_data" });
             }).catch(error => {
                 const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
-                MessageBox.error("Failed to load routing data: " + errorMsg);
+                MessageBox.error(this._resourceBundle.getText("error.loadingRoutingData", [errorMsg]));
                 this._auditLogger.log("ROUTING_DATA_LOAD_FAILED", { error: errorMsg });
             });
         },

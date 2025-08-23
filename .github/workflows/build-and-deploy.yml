@@ -77,18 +77,32 @@ jobs:
         
         # Run the 18-step startup verification in Docker
         docker run --rm \
-          -v $PWD/logs:/app/logs \
-          -v $PWD/data:/app/data \
+          -v $PWD/logs:/app/logs:rw \
+          -v $PWD/data:/app/data:rw \
           -e GITHUB_ACTIONS=true \
           -e CI=true \
+          -e USER_ID=1001 \
+          -e GROUP_ID=1001 \
           --memory=4g \
           --cpus=2 \
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main \
           /bin/bash -c "
             echo '🔍 Running A2A 18-Step System Verification'
+            # Fix permissions for logs directory
+            mkdir -p /app/logs /app/data
+            chmod 777 /app/logs /app/data
+            # Make start.sh executable
             chmod +x start.sh
-            ./start.sh test --timeout=300
-            echo '✅ A2A System verification completed'
+            # Run the 18-step verification
+            ./start.sh test
+            EXIT_CODE=\$?
+            echo '📊 Exit code: '\$EXIT_CODE
+            if [ \$EXIT_CODE -eq 0 ]; then
+              echo '✅ A2A System verification completed successfully'
+            else
+              echo '❌ A2A System verification failed with exit code: '\$EXIT_CODE
+              exit \$EXIT_CODE
+            fi
           "
         
         # Display verification results

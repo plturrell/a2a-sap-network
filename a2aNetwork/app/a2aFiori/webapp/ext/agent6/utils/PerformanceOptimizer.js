@@ -1,8 +1,9 @@
 sap.ui.define([
     "sap/ui/Device",
     "sap/m/MessageToast",
-    "sap/ui/model/json/JSONModel"
-], function (Device, MessageToast, JSONModel) {
+    "sap/ui/model/json/JSONModel",
+    "./SecurityUtils"
+], function (Device, MessageToast, JSONModel, SecurityUtils) {
     "use strict";
 
     /**
