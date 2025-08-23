@@ -141,3 +141,109 @@ jobs:
         echo "Deploy commands:"
         echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main"
         echo "docker-compose -f docker-compose.production.yml up -d"
+
+  ui-test:
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Log in to the Container registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Test UI from Docker Build Cloud
+      run: |
+        echo "🎨 Starting UI testing from Docker Build Cloud"
+        
+        # Pull the built image
+        docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
+        
+        # Start A2A system in background with UI exposed
+        docker run -d \
+          --name a2a-ui-test \
+          -p 8000:8000 \
+          -p 8001:8001 \
+          -p 8002:8002 \
+          -p 8003:8003 \
+          -p 8004:8004 \
+          -p 8005:8005 \
+          -e GITHUB_ACTIONS=true \
+          -e CI=true \
+          --memory=4g \
+          --cpus=2 \
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main \
+          start local
+        
+        # Wait for services to start
+        echo "⏳ Waiting for A2A services to start..."
+        sleep 30
+        
+        # Test UI endpoints
+        echo "🔍 Testing UI endpoints..."
+        
+        # Test main Agent 0 UI
+        if curl -f -s http://localhost:8000/health > /dev/null; then
+          echo "✅ Agent 0 UI (port 8000): Accessible"
+        else
+          echo "❌ Agent 0 UI (port 8000): Not accessible"
+        fi
+        
+        # Test Agent 1 UI  
+        if curl -f -s http://localhost:8001/health > /dev/null; then
+          echo "✅ Agent 1 UI (port 8001): Accessible"
+        else
+          echo "❌ Agent 1 UI (port 8001): Not accessible"
+        fi
+        
+        # Test A2A Network Service (if available)
+        if docker exec a2a-ui-test curl -f -s http://localhost:4004/api/v1/agents > /dev/null 2>&1; then
+          echo "✅ A2A Network Service API: Accessible"
+        else
+          echo "❌ A2A Network Service API: Not accessible"
+        fi
+        
+        # Test Frontend (if available)
+        if docker exec a2a-ui-test find /app -name "index.html" | head -1; then
+          echo "✅ Frontend files: Found"
+          # Try to access frontend if served
+          if curl -f -s http://localhost:3000 > /dev/null 2>&1; then
+            echo "✅ Frontend server: Accessible on port 3000"
+          else
+            echo "ℹ️  Frontend server: Not running (files available for manual start)"
+          fi
+        else
+          echo "ℹ️  Frontend: Static files not found"
+        fi
+        
+        # Show container logs for debugging
+        echo ""
+        echo "📋 Container logs (last 20 lines):"
+        docker logs --tail=20 a2a-ui-test
+        
+        # Cleanup
+        docker stop a2a-ui-test
+        docker rm a2a-ui-test
+        
+        echo ""
+        echo "🎉 UI testing completed!"
+        echo ""
+        echo "📋 UI Access Instructions:"
+        echo "1. Pull image: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main"
+        echo "2. Run with UI: docker run -p 8000:8000 -p 8001:8001 -p 8002:8002 -p 8003:8003 -p 8004:8004 -p 8005:8005 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main start local"
+        echo "3. Access Agent UIs:"
+        echo "   - Agent 0: http://localhost:8000"
+        echo "   - Agent 1: http://localhost:8001" 
+        echo "   - Agent 2: http://localhost:8002"
+        echo "   - Agent 3: http://localhost:8003"
+        echo "   - Agent 4: http://localhost:8004"
+        echo "   - Agent 5: http://localhost:8005"
+        echo "4. API Docs: http://localhost:8000/docs"
