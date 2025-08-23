@@ -32,8 +32,8 @@ class TilePersonalizationService {
     }
 
     async initializeSQLiteTables() {
-        return new Promise((resolve, reject) => {
-            this.db.serialize(() => {
+        const handleInitializeSQLiteTables = (resolve, reject) => {
+            const serializeInitialization = () => {
                 // User tile configurations table
                 this.db.run(`CREATE TABLE IF NOT EXISTS user_tile_config (
                     id TEXT PRIMARY KEY,
@@ -84,8 +84,11 @@ class TilePersonalizationService {
                 this.insertDefaultTileConfigurations();
                 
                 resolve();
-            });
-        });
+            };
+            this.db.serialize(serializeInitialization);
+        };
+        
+        return new Promise(handleInitializeSQLiteTables);
     }
 
     async initializeHANATables() {
@@ -129,34 +132,40 @@ class TilePersonalizationService {
             { groupId: 'a2a_operations_group', tileId: 'logs_tile', position: 3, size: '1x1' },
         ];
 
-        defaultConfigs.forEach(config => {
+        const insertDefaultConfig = (config) => {
             const id = `default-${config.groupId}-${config.tileId}`;
             this.db.run(`INSERT OR REPLACE INTO user_tile_config 
                 (id, user_id, tile_id, group_id, position, size) 
                 VALUES (?, 'default', ?, ?, ?, ?)`,
                 [id, config.tileId, config.groupId, config.position, config.size]);
-        });
+        };
+        defaultConfigs.forEach(insertDefaultConfig);
     }
 
     // Get user's tile configuration
     async getUserTileConfig(userId) {
         if (!this.initialized) await this.initialize();
         
-        return new Promise((resolve, reject) => {
+        const handleGetUserTileConfig = (resolve, reject) => {
             if (this.isBTP) {
                 // HANA query
+                const handleHanaResults = (results) => resolve(results);
+                const handleHanaError = (error) => reject(error);
                 this.db.run(`SELECT * FROM A2A_USER_TILE_CONFIG WHERE USER_ID = ?`, [userId])
-                    .then(results => resolve(results))
-                    .catch(reject);
+                    .then(handleHanaResults)
+                    .catch(handleHanaError);
             } else {
                 // SQLite query
-                this.db.all(`SELECT * FROM user_tile_config WHERE user_id = ? ORDER BY group_id, position`, 
-                    [userId], (err, rows) => {
+                const handleSQLiteResults = (err, rows) => {
                     if (err) reject(err);
                     else resolve(rows || []);
-                });
+                };
+                this.db.all(`SELECT * FROM user_tile_config WHERE user_id = ? ORDER BY group_id, position`, 
+                    [userId], handleSQLiteResults);
             }
-        });
+        };
+        
+        return new Promise(handleGetUserTileConfig);
     }
 
     // Save user's tile configuration
@@ -166,7 +175,7 @@ class TilePersonalizationService {
         const id = `${userId}-${tileId}`;
         const now = new Date().toISOString();
         
-        return new Promise((resolve, reject) => {
+        const handleSaveUserTileConfig = (resolve, reject) => {
             const query = `INSERT OR REPLACE INTO user_tile_config 
                 (id, user_id, tile_id, group_id, position, is_visible, size, custom_title, refresh_interval, settings, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
@@ -184,35 +193,45 @@ class TilePersonalizationService {
 
             if (this.isBTP) {
                 // HANA
+                const handleHanaSaveSuccess = () => resolve({ success: true });
+                const handleHanaSaveError = (error) => reject(error);
                 this.db.run(query, values)
-                    .then(() => resolve({ success: true }))
-                    .catch(reject);
+                    .then(handleHanaSaveSuccess)
+                    .catch(handleHanaSaveError);
             } else {
                 // SQLite
-                this.db.run(query, values, function(err) {
+                const handleSQLiteSave = function(err) {
                     if (err) reject(err);
                     else resolve({ success: true, changes: this.changes });
-                });
+                };
+                this.db.run(query, values, handleSQLiteSave);
             }
-        });
+        };
+        
+        return new Promise(handleSaveUserTileConfig);
     }
 
     // Get user's group configuration
     async getUserGroupConfig(userId) {
         if (!this.initialized) await this.initialize();
         
-        return new Promise((resolve, reject) => {
+        const handleGetUserGroupConfig = (resolve, reject) => {
             if (this.isBTP) {
+                const handleHanaGroupResults = (results) => resolve(results);
+                const handleHanaGroupError = (error) => reject(error);
                 this.db.run(`SELECT * FROM A2A_USER_GROUP_CONFIG WHERE USER_ID = ?`, [userId])
-                    .then(resolve).catch(reject);
+                    .then(handleHanaGroupResults).catch(handleHanaGroupError);
             } else {
-                this.db.all(`SELECT * FROM user_group_config WHERE user_id = ? ORDER BY position`, 
-                    [userId], (err, rows) => {
+                const handleSQLiteGroupResults = (err, rows) => {
                     if (err) reject(err);
                     else resolve(rows || []);
-                });
+                };
+                this.db.all(`SELECT * FROM user_group_config WHERE user_id = ? ORDER BY position`, 
+                    [userId], handleSQLiteGroupResults);
             }
-        });
+        };
+        
+        return new Promise(handleGetUserGroupConfig);
     }
 
     // Save user's group configuration
@@ -222,7 +241,7 @@ class TilePersonalizationService {
         const id = `${userId}-${groupId}`;
         const now = new Date().toISOString();
         
-        return new Promise((resolve, reject) => {
+        const handleSaveUserGroupConfig = (resolve, reject) => {
             const query = `INSERT OR REPLACE INTO user_group_config 
                 (id, user_id, group_id, group_title, position, is_visible, is_collapsed, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;

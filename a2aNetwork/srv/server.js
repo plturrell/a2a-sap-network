@@ -505,334 +505,27 @@ cds.on('bootstrap', async (app) => {
     
     // Health Check
     
-    // Agent 12 OData Service Proxy - Convert REST to OData format
-        try {
-            const response = await axios.get(`${AGENT12_BASE_URL}/api/agent12/v1/catalog-entries`);
-            
-            const odataResponse = {
-                "@odata.context": "$metadata#CatalogEntries",
-                "value": response.data.map(entry => ({
-                    ID: entry.id,
-                    entryName: entry.entry_name,
-                    description: entry.description,
-                    category: entry.category?.toUpperCase() || 'SERVICE',
-                    subCategory: entry.sub_category,
-                    version: entry.version,
-                    status: entry.status?.toUpperCase() || 'DRAFT',
-                    visibility: entry.visibility?.toUpperCase() || 'PRIVATE',
-                    entryType: entry.entry_type?.toUpperCase() || 'MICROSERVICE',
-                    provider: entry.provider,
-                    owner: entry.owner,
-                    contactEmail: entry.contact_email,
-                    documentationUrl: entry.documentation_url,
-                    sourceUrl: entry.source_url,
-                    apiEndpoint: entry.api_endpoint,
-                    healthCheckUrl: entry.health_check_url,
-                    tags: entry.tags,
-                    keywords: entry.keywords,
-                    rating: entry.rating || 0.0,
-                    usageCount: entry.usage_count || 0,
-                    downloadCount: entry.download_count || 0,
-                    isFeatured: entry.is_featured !== false,
-                    isVerified: entry.is_verified !== false,
-                    lastAccessed: entry.last_accessed,
-                    metadata: entry.metadata,
-                    configurationSchema: entry.configuration_schema,
-                    exampleUsage: entry.example_usage,
-                    license: entry.license,
-                    securityLevel: entry.security_level?.toUpperCase() || 'INTERNAL',
-                    createdAt: entry.created_at,
-                    modifiedAt: entry.modified_at
-                }))
-            };
-            
-            res.json(odataResponse);
-        } catch (error) {
-            log.error('Agent 12 OData proxy error:', error);
-            res.status(500).json({
-                error: 'Failed to fetch catalog entries',
-                message: error.message
-            });
-        }
-    });
+    // Agent 12 OData Service Proxy - migrated to CAP service
     
     log.info('Agent 12 API proxy routes initialized');
     
-    // Agent 3 OData Service Proxy - Convert REST to OData format
-        try {
-            // This would be handled by the CAP service, but we provide a fallback
-            const response = await axios.get(`${AGENT3_BASE_URL}/a2a/agent3/v1/tasks`);
-            
-            // Convert to OData format
-            const odataResponse = {
-                "@odata.context": "$metadata#VectorProcessingTasks",
-                "value": response.data.map(task => ({
-                    ID: task.id,
-                    taskName: task.task_name,
-                    description: task.description,
-                    dataSource: task.data_source,
-                    dataType: task.data_type?.toUpperCase() || 'TEXT',
-                    embeddingModel: task.embedding_model,
-                    modelProvider: task.model_provider?.toUpperCase() || 'OPENAI',
-                    vectorDatabase: task.vector_database?.toUpperCase() || 'PINECONE',
-                    indexType: task.index_type?.toUpperCase() || 'HNSW',
-                    distanceMetric: task.distance_metric?.toUpperCase() || 'COSINE',
-                    dimensions: task.dimensions || 1536,
-                    chunkSize: task.chunk_size || 512,
-                    chunkOverlap: task.chunk_overlap || 50,
-                    normalization: task.normalization !== false,
-                    useGPU: task.use_gpu || false,
-                    batchSize: task.batch_size || 100,
-                    status: task.status?.toUpperCase() || 'DRAFT',
-                    priority: task.priority?.toUpperCase() || 'MEDIUM',
-                    progressPercent: task.progress || 0,
-                    currentStage: task.current_stage,
-                    processingTime: task.processing_time,
-                    vectorsGenerated: task.vectors_generated || 0,
-                    chunksProcessed: task.chunks_processed || 0,
-                    totalChunks: task.total_chunks || 0,
-                    collectionName: task.collection_name,
-                    indexSize: task.index_size || 0,
-                    createdAt: task.created_at,
-                    modifiedAt: task.modified_at
-                }))
-            };
-            
-            res.json(odataResponse);
-        } catch (error) {
-            res.status(503).json({
-                error: {
-                    code: "SERVICE_UNAVAILABLE",
-                    message: "Agent 3 backend not available"
-                }
-            });
-        }
-    });
-    
-        try {
-            const response = await axios.get(`${AGENT3_BASE_URL}/a2a/agent3/v1/collections`);
-            
-            const odataResponse = {
-                "@odata.context": "$metadata#VectorCollections",
-                "value": response.data.map(collection => ({
-                    ID: collection.id,
-                    name: collection.name,
-                    description: collection.description,
-                    vectorDatabase: collection.vector_database,
-                    embeddingModel: collection.embedding_model,
-                    dimensions: collection.dimensions,
-                    distanceMetric: collection.distance_metric,
-                    indexType: collection.index_type,
-                    totalVectors: collection.total_vectors || 0,
-                    indexSize: collection.index_size || 0,
-                    isActive: collection.is_active !== false,
-                    isOptimized: collection.is_optimized || false,
-                    lastOptimized: collection.last_optimized,
-                    createdAt: collection.created_at,
-                    modifiedAt: collection.modified_at
-                }))
-            };
-            
-            res.json(odataResponse);
-        } catch (error) {
-            res.status(503).json({
-                error: {
-                    code: "SERVICE_UNAVAILABLE",
-                    message: "Agent 3 backend not available"
-                }
-            });
-        }
-    });
-    
-    log.info('Agent 3 API proxy routes initialized');
+    // Agent 3 OData Service Proxy - migrated to CAP service
 
-    // Health check endpoints
-        try {
-            const health = await healthService.getHealth();
-            res.status(200).json(health);
-        } catch (error) {
-            res.status(503).json({ status: 'unhealthy', error: error.message });
-        }
-    });
+    log.info('Agent 3 API proxy routes migrated to CAP services');
 
-        try {
-            const health = await healthService.getDetailedHealth();
-            res.status(health.status === 'healthy' ? 200 : 503).json(health);
-        } catch (error) {
-            res.status(503).json({ status: 'unhealthy', error: error.message });
-        }
-    });
+    // Health check endpoints - migrated to CAP service
 
-    // Launchpad-specific health check endpoint
-        try {
-            const healthCheck = {
-                timestamp: new Date().toISOString(),
-                status: 'checking',
-                components: {
-                    ui5_resources: { status: 'unknown' },
-                    shell_config: { status: 'unknown' },
-                    api_endpoints: { status: 'unknown', details: {} },
-                    tile_data: { status: 'unknown', details: {} },
-                    websocket: { status: 'unknown' }
-                },
-                tiles_loaded: false,
-                real_data_available: false,
-                fallback_mode: true
-            };
+    // Health check block 2 - migrated to CAP service
 
-            // 1. Check UI5 resources availability
-            try {
-                const ui5Check = await fetch('https://ui5.sap.com/1.120.0/resources/sap-ui-core.js', { 
-                    method: 'HEAD',
-                    timeout: 5000 
-                });
-                healthCheck.components.ui5_resources.status = ui5Check.ok ? 'healthy' : 'error';
-            } catch (error) {
-                healthCheck.components.ui5_resources.status = 'error';
-                healthCheck.components.ui5_resources.error = error.message;
-            }
+    // Launchpad-specific health check endpoint - migrated to CAP service
 
-            // 2. Check shell configuration
-            healthCheck.components.shell_config.status = 'healthy'; // Static config always available
+    // Readiness check endpoint - migrated to CAP service
 
-            // 3. Check API endpoints
-            const endpointChecks = await Promise.all([
-                    .then(r => ({ endpoint: 'agent_visualization', ok: r.ok, status: r.status }))
-                    .catch(e => ({ endpoint: 'agent_visualization', ok: false, error: e.message })),
-                    .then(r => ({ endpoint: 'network_overview', ok: r.ok, status: r.status }))
-                    .catch(e => ({ endpoint: 'network_overview', ok: false, error: e.message })),
-                    .then(r => ({ endpoint: 'health_summary', ok: r.ok, status: r.status }))
-                    .catch(e => ({ endpoint: 'health_summary', ok: false, error: e.message }))
-            ]);
+    // Liveness check endpoint - migrated to CAP service
 
-            const allEndpointsOk = endpointChecks.every(check => check.ok);
-            healthCheck.components.api_endpoints.status = allEndpointsOk ? 'healthy' : 'degraded';
-            healthCheck.components.api_endpoints.details = endpointChecks;
+    // Metrics endpoint - migrated to CAP service
 
-            // 4. Check tile data quality
-            try {
-                const tileData = await tileDataResponse.json();
-                
-                // Check if we have real data (not all zeros)
-                const hasRealData = tileData.agentCount > 0 || 
-                                  tileData.services > 0 || 
-                                  tileData.workflows > 0;
-                
-                healthCheck.components.tile_data.status = hasRealData ? 'healthy' : 'warning';
-                healthCheck.components.tile_data.details = tileData;
-                healthCheck.real_data_available = hasRealData;
-                healthCheck.fallback_mode = !hasRealData;
-                
-                // Tiles are considered loaded if we get valid response structure
-                healthCheck.tiles_loaded = tileData.hasOwnProperty('agentCount') && 
-                                         tileData.hasOwnProperty('services') &&
-                                         tileData.hasOwnProperty('workflows');
-            } catch (error) {
-                healthCheck.components.tile_data.status = 'error';
-                healthCheck.components.tile_data.error = error.message;
-            }
-
-            // 5. Check WebSocket availability
-            healthCheck.components.websocket.status = io ? 'healthy' : 'unavailable';
-            healthCheck.components.websocket.connected_clients = io ? io.sockets.sockets.size : 0;
-
-            // Overall status determination
-            const criticalComponents = [
-                healthCheck.components.api_endpoints.status,
-                healthCheck.components.tile_data.status
-            ];
-            
-            if (criticalComponents.every(s => s === 'healthy')) {
-                healthCheck.status = 'healthy';
-            } else if (criticalComponents.some(s => s === 'error')) {
-                healthCheck.status = 'error';
-            } else if (healthCheck.tiles_loaded) {
-                healthCheck.status = 'degraded';
-            } else {
-                healthCheck.status = 'error';
-            }
-
-            // Add recommendations
-            healthCheck.recommendations = [];
-            if (!healthCheck.real_data_available) {
-                healthCheck.recommendations.push('Start agent services on ports 8000-8015 for real data');
-            }
-            if (healthCheck.components.websocket.status !== 'healthy') {
-                healthCheck.recommendations.push('WebSocket server not initialized');
-            }
-
-            res.json(healthCheck);
-        } catch (error) {
-            log.error('Launchpad health check failed:', error);
-            res.status(500).json({
-                status: 'error',
-                error: error.message,
-                timestamp: new Date().toISOString()
-            });
-        }
-    });
-
-        try {
-            const readiness = await healthService.getReadiness();
-            res.status(readiness.status === 'ready' ? 200 : 503).json(readiness);
-        } catch (error) {
-            res.status(503).json({ status: 'not-ready', error: error.message });
-        }
-    });
-
-        const liveness = healthService.getLiveness();
-        res.status(liveness.status === 'alive' ? 200 : 503).json(liveness);
-    });
-
-        const metrics = healthService.getMetrics();
-        res.status(200).json(metrics);
-    });
-
-    // Error reporting endpoints
-        try {
-            // Validate basic structure or provide defaults
-            const errorData = req.body || {};
-            const sanitizedError = {
-                message: errorData.message || 'Unknown error',
-                stack: errorData.stack || '',
-                timestamp: errorData.timestamp || new Date().toISOString(),
-                url: errorData.url || req.get('referer') || '',
-                userAgent: errorData.userAgent || req.get('user-agent') || '',
-                severity: errorData.severity || 'error'
-            };
-            
-            const errorId = errorReporting.reportClientError(sanitizedError);
-            res.status(201).json({ errorId });
-        } catch (error) {
-            // Log the error but don't fail the request
-            cds.log('server').warn('Error reporting failed:', error.message);
-            res.status(200).json({ errorId: 'client-error-ignored' });
-        }
-    });
-
-        const limit = parseInt(req.query.limit) || 50;
-        const filters = {
-            severity: req.query.severity,
-            category: req.query.category,
-            component: req.query.component,
-            correlationId: req.query.correlationId,
-            since: req.query.since
-        };
-        
-        const errors = errorReporting.getRecentErrors(limit, filters);
-        res.status(200).json(errors);
-    });
-
-        const timeframe = req.query.timeframe || '24h';
-        const stats = errorReporting.getErrorStats(timeframe);
-        res.status(200).json(stats);
-    });
-
-        const limit = parseInt(req.query.limit) || 100;
-        const level = req.query.level;
-        const logs = loggingService.getRecentLogs(limit, level);
-        res.status(200).json(logs);
-    });
+    // Error reporting endpoints - migrated to CAP service
     
     // User API endpoints are now handled by CAP UserManagementService at /api/v1/user
     
@@ -843,78 +536,16 @@ cds.on('bootstrap', async (app) => {
     // Serve shells directory for Fiori Sandbox configuration (duplicate removed - now served earlier)
     // app.use('/shells', express.static(path.join(__dirname, '../app/shells')));
     
-    // Serve launchpad pages
-        res.sendFile(path.join(__dirname, '../app/launchpad.html'));
-    });
-        res.sendFile(path.join(__dirname, '../app/launchpad.html'));
-    });
-        res.sendFile(path.join(__dirname, '../app/fioriLaunchpad.html'));
-    });
-        res.sendFile(path.join(__dirname, 'debugLaunchpad.html'));
-    });
-        res.sendFile(path.join(__dirname, '../app/launchpadSimple.html'));
-    });
+    // Serve launchpad pages - migrated to CAP service
     
-    // SAP Fiori flexibility services stub endpoints
-        res.status(200).json({
-            "isKeyUser": false,
-            "isAtoAvailable": false,
-            "isAtoEnabled": false,
-            "isProductiveSystem": true,
-            "isZeroDowntimeUpgradeRunning": false,
-            "system": "",
-            "client": ""
-        });
-    });
-    
-        res.status(200).json({
-            changes: [],
-            ui2personalization: {},
-            variants: []
-        });
-    });
+    // SAP Fiori flexibility services stub endpoints - migrated to CAP service
     
     // Setup monitoring routes (enhanced)
     monitoringIntegration.setupRoutes(app);
     
-    // Cache management endpoints
-        // SECURITY FIX: Improve authorization check for Admin access
-        if (!req.user || 
-            (!req.user.scope?.includes('Admin') && 
-             !req.user.roles?.includes('Admin') && 
-             !req.user.sapRoles?.includes('Admin'))) {
-            return res.status(403).json({ error: 'Admin role required' });
-        }
-        const stats = await cacheMiddleware.getStats();
-        res.json(stats);
-    });
+    // Cache management endpoints - migrated to CAP service
     
-        // SECURITY FIX: Improve authorization check for Admin access
-        if (!req.user || 
-            (!req.user.scope?.includes('Admin') && 
-             !req.user.roles?.includes('Admin') && 
-             !req.user.sapRoles?.includes('Admin'))) {
-            return res.status(403).json({ error: 'Admin role required' });
-        }
-        const { pattern } = req.body;
-        if (!pattern) {
-            return res.status(400).json({ error: 'Pattern required' });
-        }
-        await cacheMiddleware.invalidate(pattern);
-        res.json({ success: true });
-    });
-    
-    // Logging endpoints
-        // SECURITY FIX: Improve authorization check for Admin access
-        if (!req.user || 
-            (!req.user.scope?.includes('Admin') && 
-             !req.user.roles?.includes('Admin') && 
-             !req.user.sapRoles?.includes('Admin'))) {
-            return res.status(403).json({ error: 'Admin role required' });
-        }
-        // Return recent audit logs (implementation depends on your storage)
-        res.json({ message: 'Audit logs endpoint - implement based on your storage' });
-    });
+    // Logging endpoints - migrated to CAP service
     
     // Security monitoring dashboard
         // SECURITY FIX: Improve authorization check for Admin access

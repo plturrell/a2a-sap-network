@@ -1,9 +1,9 @@
 {
   "summary": {
-    "total": 544,
+    "total": 547,
     "critical": 1,
-    "high": 228,
-    "medium": 315,
+    "high": 230,
+    "medium": 316,
     "low": 0
   },
   "byType": {
@@ -1307,6 +1307,26 @@
         "file": "controller/ObjectPageExt.controller.js",
         "line": 549,
         "code": "this._eventSource = SecurityUtils.createSecureEventSource(`http://localhost:8010/calculations/${taskId}/stream`);",
+        "message": "Hardcoded URLs should be configurable",
+        "fix": "Review and fix the security issue"
+      },
+      {
+        "type": "insecure",
+        "subtype": "hardcodedURLs",
+        "severity": "HIGH",
+        "file": "manifest.json",
+        "line": 14,
+        "code": "\"uri\": \"https://a2a/agent10/v1/odata/\",",
+        "message": "Hardcoded URLs should be configurable",
+        "fix": "Review and fix the security issue"
+      },
+      {
+        "type": "insecure",
+        "subtype": "hardcodedURLs",
+        "severity": "HIGH",
+        "file": "manifest.json",
+        "line": 182,
+        "code": "\"allowedOrigins\": [\"https://*.ondemand.com\"],",
         "message": "Hardcoded URLs should be configurable",
         "fix": "Review and fix the security issue"
       },
@@ -3259,16 +3279,6 @@
         "file": "fragment/StatisticalAnalysis.fragment.xml",
         "line": 148,
         "code": "<core:Item key=\"calculations\" text=\"{i18n>calculationHistory}\" />",
-        "message": "Security issue: errorHandling - missingErrorBoundaries",
-        "fix": "Review and fix the security issue"
-      },
-      {
-        "type": "errorHandling",
-        "subtype": "missingErrorBoundaries",
-        "severity": "MEDIUM",
-        "file": "manifest.json",
-        "line": 12,
-        "code": "\"semanticObject\": \"CalculationAgent\",",
         "message": "Security issue: errorHandling - missingErrorBoundaries",
         "fix": "Review and fix the security issue"
       },
@@ -5440,6 +5450,16 @@
         "type": "formulaInjection",
         "subtype": "scriptInFormula",
         "severity": "MEDIUM",
+        "file": "manifest.json",
+        "line": 176,
+        "code": "\"Permissions-Policy\": \"geolocation=(), microphone=(), camera=()\"",
+        "message": "Security issue: formulaInjection - scriptInFormula",
+        "fix": "Review and fix the security issue"
+      },
+      {
+        "type": "formulaInjection",
+        "subtype": "scriptInFormula",
+        "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
         "line": 96,
         "code": "/<script[^>]*>.*?<\\/script>/gi,",
@@ -5467,6 +5487,13 @@
         "code": "oModel.callFunction(sFunctionName, secureParams);",
         "message": "Missing CSRF token in state-changing operation",
         "fix": "Add CSRF token to request headers"
+      }
+    ],
+    "compliance": [
+      {
+        "type": "compliance",
+        "message": "Missing crossNavigation in manifest.json",
+        "severity": "MEDIUM"
       }
     ]
   },
@@ -10169,13 +10196,33 @@
     ],
     "manifest.json": [
       {
-        "type": "errorHandling",
-        "subtype": "missingErrorBoundaries",
+        "type": "formulaInjection",
+        "subtype": "scriptInFormula",
         "severity": "MEDIUM",
         "file": "manifest.json",
-        "line": 12,
-        "code": "\"semanticObject\": \"CalculationAgent\",",
-        "message": "Security issue: errorHandling - missingErrorBoundaries",
+        "line": 176,
+        "code": "\"Permissions-Policy\": \"geolocation=(), microphone=(), camera=()\"",
+        "message": "Security issue: formulaInjection - scriptInFormula",
+        "fix": "Review and fix the security issue"
+      },
+      {
+        "type": "insecure",
+        "subtype": "hardcodedURLs",
+        "severity": "HIGH",
+        "file": "manifest.json",
+        "line": 14,
+        "code": "\"uri\": \"https://a2a/agent10/v1/odata/\",",
+        "message": "Hardcoded URLs should be configurable",
+        "fix": "Review and fix the security issue"
+      },
+      {
+        "type": "insecure",
+        "subtype": "hardcodedURLs",
+        "severity": "HIGH",
+        "file": "manifest.json",
+        "line": 182,
+        "code": "\"allowedOrigins\": [\"https://*.ondemand.com\"],",
+        "message": "Hardcoded URLs should be configurable",
         "fix": "Review and fix the security issue"
       }
     ],
@@ -10931,6 +10978,13 @@
         "code": "eventSource.addEventListener = function(type, listener, options) {",
         "message": "Server-sent events not validated",
         "fix": "Validate all server-sent event data"
+      }
+    ],
+    "undefined": [
+      {
+        "type": "compliance",
+        "message": "Missing crossNavigation in manifest.json",
+        "severity": "MEDIUM"
       }
     ]
   },
@@ -15616,13 +15670,33 @@
       "fix": "Review and fix the security issue"
     },
     {
-      "type": "errorHandling",
-      "subtype": "missingErrorBoundaries",
+      "type": "formulaInjection",
+      "subtype": "scriptInFormula",
       "severity": "MEDIUM",
       "file": "manifest.json",
-      "line": 12,
-      "code": "\"semanticObject\": \"CalculationAgent\",",
-      "message": "Security issue: errorHandling - missingErrorBoundaries",
+      "line": 176,
+      "code": "\"Permissions-Policy\": \"geolocation=(), microphone=(), camera=()\"",
+      "message": "Security issue: formulaInjection - scriptInFormula",
+      "fix": "Review and fix the security issue"
+    },
+    {
+      "type": "insecure",
+      "subtype": "hardcodedURLs",
+      "severity": "HIGH",
+      "file": "manifest.json",
+      "line": 14,
+      "code": "\"uri\": \"https://a2a/agent10/v1/odata/\",",
+      "message": "Hardcoded URLs should be configurable",
+      "fix": "Review and fix the security issue"
+    },
+    {
+      "type": "insecure",
+      "subtype": "hardcodedURLs",
+      "severity": "HIGH",
+      "file": "manifest.json",
+      "line": 182,
+      "code": "\"allowedOrigins\": [\"https://*.ondemand.com\"],",
+      "message": "Hardcoded URLs should be configurable",
       "fix": "Review and fix the security issue"
     },
     {
@@ -16374,6 +16448,11 @@
       "code": "eventSource.addEventListener = function(type, listener, options) {",
       "message": "Server-sent events not validated",
       "fix": "Validate all server-sent event data"
+    },
+    {
+      "type": "compliance",
+      "message": "Missing crossNavigation in manifest.json",
+      "severity": "MEDIUM"
     }
   ]
 }

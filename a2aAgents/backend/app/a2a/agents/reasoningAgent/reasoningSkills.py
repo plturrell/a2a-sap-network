@@ -261,7 +261,10 @@ class MultiAgentReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
             sub_questions.append(fallback_question)
         
         # Rank and limit sub-questions
-        sub_questions = sorted(sub_questions, key=lambda x: x['confidence'], reverse=True)[:3]
+        def get_question_confidence(x):
+            return x['confidence']
+        
+        sub_questions = sorted(sub_questions, key=get_question_confidence, reverse=True)[:3]
         
         return sub_questions
 
@@ -287,7 +290,10 @@ class MultiAgentReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
                     'importance': len(word) / len(question)  # Length-based importance
                 })
         
-        return sorted(entities, key=lambda x: x['importance'], reverse=True)
+        def get_entity_importance(x):
+            return x['importance']
+        
+        return sorted(entities, key=get_entity_importance, reverse=True)
     
     def _extract_context_clues(self, context: Dict[str, Any]) -> List[str]:
         """Extract meaningful clues from context"""
@@ -713,7 +719,10 @@ class MultiAgentReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
         
         # For text proposals, select highest confidence
         # In production, would merge/synthesize proposals
-        best_proposal = max(proposals, key=lambda p: p['confidence'])
+        def get_proposal_confidence(p):
+            return p['confidence']
+        
+        best_proposal = max(proposals, key=get_proposal_confidence)
         
         # Calculate weighted confidence
         total_weight = sum(p['confidence'] for p in proposals)
@@ -798,7 +807,10 @@ class MultiAgentReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
         
         # Return highest confidence position after debate
         final_positions = list(debate_state['current_positions'].values())
-        best_position = max(final_positions, key=lambda p: p['confidence'])
+        def get_position_confidence(p):
+            return p['confidence']
+        
+        best_position = max(final_positions, key=get_position_confidence)
         
         return {
             'proposal': best_position['proposal'],
@@ -856,9 +868,12 @@ class MultiAgentReasoningSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
                 agent_network[agent_id]['influence'] = new_influences[agent_id]
         
         # Select proposal from most influential agent
+        def get_influence_confidence_score(x):
+            return x[1]['influence'] * x[1]['confidence']
+        
         most_influential = max(
             agent_network.items(),
-            key=lambda x: x[1]['influence'] * x[1]['confidence']
+            key=get_influence_confidence_score
         )
         
         # Detect emergent patterns
@@ -1136,9 +1151,12 @@ class ReasoningOrchestrationSkills(PerformanceMonitorMixin):
         """Evidence evaluation knowledge source"""
         # Evaluate hypotheses against evidence
         if blackboard['hypotheses'] and blackboard.get('evidence'):
+            def get_hypothesis_confidence(h):
+                return h['confidence']
+            
             best_hypothesis = max(
                 blackboard['hypotheses'],
-                key=lambda h: h['confidence']
+                key=get_hypothesis_confidence
             )
             
             conclusion = {
@@ -1166,18 +1184,24 @@ class ReasoningOrchestrationSkills(PerformanceMonitorMixin):
     def _synthesize_blackboard_solution(self) -> Dict[str, Any]:
         """Synthesize final solution from blackboard state"""
         if self.blackboard['conclusions']:
+            def get_conclusion_confidence(c):
+                return c['confidence']
+            
             best_conclusion = max(
                 self.blackboard['conclusions'],
-                key=lambda c: c['confidence']
+                key=get_conclusion_confidence
             )
             return {
                 'answer': best_conclusion['content'],
                 'confidence': best_conclusion['confidence']
             }
         elif self.blackboard['hypotheses']:
+            def get_best_hypothesis_confidence(h):
+                return h['confidence']
+            
             best_hypothesis = max(
                 self.blackboard['hypotheses'],
-                key=lambda h: h['confidence']
+                key=get_best_hypothesis_confidence
             )
             return {
                 'answer': f"Hypothesis: {best_hypothesis['content']}",
@@ -1293,7 +1317,10 @@ class HierarchicalReasoningSkills:
                     })
         
         # Rank evidence by relevance
-        evidence = sorted(evidence, key=lambda e: e['relevance'], reverse=True)[:5]
+        def get_evidence_relevance(e):
+            return e['relevance']
+        
+        evidence = sorted(evidence, key=get_evidence_relevance, reverse=True)[:5]
         
         return {
             'evidence': evidence,
@@ -1325,7 +1352,10 @@ class HierarchicalReasoningSkills:
         
         # Generate logical conclusion
         if inferences:
-            strongest_inference = max(inferences, key=lambda i: i['confidence'])
+            def get_inference_confidence(i):
+                return i['confidence']
+            
+            strongest_inference = max(inferences, key=get_inference_confidence)
             logical_conclusion = strongest_inference['conclusion']
             confidence = strongest_inference['confidence']
         else:

@@ -489,9 +489,10 @@ class CollaborativeIntelligenceFramework:
                         suitable_agents.append(agent)
 
         # Sort by suitability score
-        suitable_agents.sort(
-            key=lambda a: self._calculate_suitability_score(a, request), reverse=True
-        )
+        def get_agent_suitability_score(a):
+            return self._calculate_suitability_score(a, request)
+        
+        suitable_agents.sort(key=get_agent_suitability_score, reverse=True)
 
         return suitable_agents[:10]  # Limit to top 10
 

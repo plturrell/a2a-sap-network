@@ -1,0 +1,71 @@
+# Common MTA Module Template
+# Use this template for consistent module definitions
+
+build-parameters:
+  default: &default-build-params
+    builder: npm-ci
+    ignore: 
+      - "node_modules/"
+      - "coverage/"
+      - "test/"
+      - "*.log"
+    supported-platforms: []
+
+parameters:
+  nodejs-module: &nodejs-module-params
+    buildpack: nodejs_buildpack
+    stack: cflinuxfs4
+    keep-existing-routes: true
+    
+  memory:
+    small: &memory-small "512M"
+    medium: &memory-medium "1024M" 
+    large: &memory-large "2048M"
+    
+  disk:
+    small: &disk-small "512M"
+    medium: &disk-medium "1024M"
+    large: &disk-large "2048M"
+
+# Common service requirements
+requires:
+  xsuaa-binding: &xsuaa-binding
+    name: "#{XSUAA_SERVICE_NAME}"
+    parameters:
+      ENV_TYPE: XSUAA
+      
+  destination-binding: &destination-binding
+    name: "#{DESTINATION_SERVICE_NAME}"
+    parameters:
+      ENV_TYPE: DESTINATION
+      
+  connectivity-binding: &connectivity-binding
+    name: "#{CONNECTIVITY_SERVICE_NAME}"
+    parameters:
+      ENV_TYPE: CONNECTIVITY
+      
+  html5-repo-binding: &html5-repo-binding
+    name: "#{HTML5_REPO_SERVICE_NAME}"
+    parameters:
+      ENV_TYPE: HTML5_REPOSITORY
+      
+# Environment variables
+env:
+  common: &common-env
+    NODE_ENV: "#{NODE_ENV}"
+    LOG_LEVEL: "#{LOG_LEVEL}"
+    TENANT_MODE: "#{TENANT_MODE}"
+    
+# Health check configuration  
+health-check:
+  default: &default-health-check
+    type: http
+    invocation-timeout: 30
+    timeout: 180
+    
+# Build commands
+build-commands:
+  install: &install-cmd "npm ci --production"
+  build-ui: &build-ui-cmd "npm run build:ui5"
+  lint: &lint-cmd "npm run eslint"
+  test: &test-cmd "npm run test:unit"

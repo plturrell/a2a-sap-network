@@ -160,90 +160,198 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Test UI from Docker Build Cloud
+    - name: Test Complete A2A Platform UI from Docker Build Cloud
       run: |
-        echo "🎨 Starting UI testing from Docker Build Cloud"
+        echo "🚀 Starting Complete A2A Platform UI Testing from Docker Build Cloud"
+        echo "Testing: Launch Pad + All 18 Agents + A2A Network + Frontend"
+        echo ""
         
         # Pull the built image
         docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
         
-        # Start A2A system in background with UI exposed
+        # Start A2A system in background with all ports exposed for testing
         docker run -d \
-          --name a2a-ui-test \
+          --name a2a-full-test \
+          -p 3000:3000 \
+          -p 4004:4004 \
           -p 8000:8000 \
           -p 8001:8001 \
           -p 8002:8002 \
           -p 8003:8003 \
           -p 8004:8004 \
           -p 8005:8005 \
+          -p 8006:8006 \
+          -p 8007:8007 \
+          -p 8008:8008 \
+          -p 8009:8009 \
+          -p 8010:8010 \
+          -p 8011:8011 \
+          -p 8012:8012 \
+          -p 8013:8013 \
+          -p 8014:8014 \
+          -p 8015:8015 \
+          -p 8016:8016 \
+          -p 8017:8017 \
           -e GITHUB_ACTIONS=true \
           -e CI=true \
-          --memory=4g \
-          --cpus=2 \
+          -e ENABLE_ALL_AGENTS=true \
+          -e A2A_NETWORK_ENABLED=true \
+          -e FRONTEND_ENABLED=true \
+          --memory=6g \
+          --cpus=4 \
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main \
-          start local
+          start complete
         
-        # Wait for services to start
-        echo "⏳ Waiting for A2A services to start..."
-        sleep 30
+        # Wait for all services to initialize
+        echo "⏳ Waiting for complete A2A platform to start (60 seconds)..."
+        sleep 60
         
-        # Test UI endpoints
-        echo "🔍 Testing UI endpoints..."
-        
-        # Test main Agent 0 UI
-        if curl -f -s http://localhost:8000/health > /dev/null; then
-          echo "✅ Agent 0 UI (port 8000): Accessible"
-        else
-          echo "❌ Agent 0 UI (port 8000): Not accessible"
-        fi
-        
-        # Test Agent 1 UI  
-        if curl -f -s http://localhost:8001/health > /dev/null; then
-          echo "✅ Agent 1 UI (port 8001): Accessible"
-        else
-          echo "❌ Agent 1 UI (port 8001): Not accessible"
-        fi
-        
-        # Test A2A Network Service (if available)
-        if docker exec a2a-ui-test curl -f -s http://localhost:4004/api/v1/agents > /dev/null 2>&1; then
-          echo "✅ A2A Network Service API: Accessible"
-        else
-          echo "❌ A2A Network Service API: Not accessible"
-        fi
-        
-        # Test Frontend (if available)
-        if docker exec a2a-ui-test find /app -name "index.html" | head -1; then
-          echo "✅ Frontend files: Found"
-          # Try to access frontend if served
-          if curl -f -s http://localhost:3000 > /dev/null 2>&1; then
-            echo "✅ Frontend server: Accessible on port 3000"
-          else
-            echo "ℹ️  Frontend server: Not running (files available for manual start)"
-          fi
-        else
-          echo "ℹ️  Frontend: Static files not found"
-        fi
-        
-        # Show container logs for debugging
+        echo "🔍 Testing Complete A2A Platform Components..."
+        echo "=============================================="
         echo ""
-        echo "📋 Container logs (last 20 lines):"
-        docker logs --tail=20 a2a-ui-test
+        
+        # Test Launch Pad / Frontend
+        echo "🎯 Testing Launch Pad & Frontend:"
+        if curl -f -s http://localhost:3000 > /dev/null 2>&1; then
+          echo "✅ Launch Pad (port 3000): Accessible"
+        else
+          echo "❌ Launch Pad (port 3000): Not accessible"
+        fi
+        
+        if docker exec a2a-full-test find /app -name "*.html" -o -name "*.js" -o -name "*.css" | head -5; then
+          echo "✅ Frontend Assets: Found"
+        else
+          echo "❌ Frontend Assets: Not found"
+        fi
+        echo ""
+        
+        # Test A2A Network Service
+        echo "🌐 Testing A2A Network Service:"
+        if docker exec a2a-full-test curl -f -s http://localhost:4004/api/v1/health > /dev/null 2>&1; then
+          echo "✅ A2A Network API (port 4004): Accessible"
+        else
+          echo "❌ A2A Network API (port 4004): Not accessible"
+        fi
+        
+        if docker exec a2a-full-test curl -f -s http://localhost:4004/api/v1/agents > /dev/null 2>&1; then
+          echo "✅ A2A Agents Endpoint: Accessible"
+        else
+          echo "❌ A2A Agents Endpoint: Not accessible"
+        fi
+        
+        if docker exec a2a-full-test curl -f -s http://localhost:4004/api/v1/workflows > /dev/null 2>&1; then
+          echo "✅ A2A Workflows Endpoint: Accessible"
+        else
+          echo "❌ A2A Workflows Endpoint: Not accessible"
+        fi
+        echo ""
+        
+        # Test All 18 Agent UIs
+        echo "🤖 Testing All 18 Agent UIs:"
+        AGENT_COUNT=0
+        ACCESSIBLE_AGENTS=0
+        
+        for port in {8000..8017}; do
+          agent_id=$((port - 8000))
+          echo -n "Agent $agent_id (port $port): "
+          
+          if curl -f -s http://localhost:$port/health > /dev/null 2>&1; then
+            echo "✅ Accessible"
+            ((ACCESSIBLE_AGENTS++))
+          elif curl -f -s http://localhost:$port > /dev/null 2>&1; then
+            echo "✅ Accessible (no /health)"
+            ((ACCESSIBLE_AGENTS++))
+          elif docker exec a2a-full-test netstat -ln 2>/dev/null | grep ":$port " > /dev/null 2>&1; then
+            echo "🟡 Port open but not responding"
+          else
+            echo "❌ Not accessible"
+          fi
+          ((AGENT_COUNT++))
+        done
+        
+        echo ""
+        echo "📊 Agent Summary: $ACCESSIBLE_AGENTS/$AGENT_COUNT agents accessible"
+        echo ""
+        
+        # Test Agent Communication
+        echo "💬 Testing Agent Communication:"
+        if docker exec a2a-full-test curl -f -s http://localhost:8000/api/agents > /dev/null 2>&1; then
+          echo "✅ Agent Registry: Accessible"
+        else
+          echo "❌ Agent Registry: Not accessible"
+        fi
+        
+        # Test specific agent capabilities
+        if docker exec a2a-full-test curl -f -s http://localhost:8000/api/capabilities > /dev/null 2>&1; then
+          echo "✅ Agent Capabilities: Accessible"
+        else
+          echo "❌ Agent Capabilities: Not accessible"
+        fi
+        echo ""
+        
+        # Test API Documentation
+        echo "📚 Testing API Documentation:"
+        for port in 8000 8001 8002; do
+          if curl -f -s http://localhost:$port/docs > /dev/null 2>&1; then
+            echo "✅ Agent $((port - 8000)) API Docs (port $port): Accessible"
+          else
+            echo "❌ Agent $((port - 8000)) API Docs (port $port): Not accessible"
+          fi
+        done
+        echo ""
+        
+        # Test MCP Servers
+        echo "🔌 Testing MCP Servers:"
+        if docker exec a2a-full-test find /app -path "*/mcp/servers/*" -name "*.py" | head -3; then
+          echo "✅ MCP Server Files: Found"
+        else
+          echo "❌ MCP Server Files: Not found"
+        fi
+        echo ""
+        
+        # Show comprehensive logs
+        echo "📋 Platform Status & Logs:"
+        echo "=========================="
+        docker exec a2a-full-test ps aux 2>/dev/null | head -10 || echo "Could not get process list"
+        echo ""
+        echo "Recent container logs (last 30 lines):"
+        docker logs --tail=30 a2a-full-test
+        echo ""
+        
+        # Test resource usage
+        echo "💾 Resource Usage:"
+        docker stats --no-stream a2a-full-test
+        echo ""
         
         # Cleanup
-        docker stop a2a-ui-test
-        docker rm a2a-ui-test
+        docker stop a2a-full-test
+        docker rm a2a-full-test
         
         echo ""
-        echo "🎉 UI testing completed!"
+        echo "🎉 Complete A2A Platform UI Testing Completed!"
+        echo "=============================================="
         echo ""
-        echo "📋 UI Access Instructions:"
+        echo "📋 Full Platform Access Instructions:"
         echo "1. Pull image: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main"
-        echo "2. Run with UI: docker run -p 8000:8000 -p 8001:8001 -p 8002:8002 -p 8003:8003 -p 8004:8004 -p 8005:8005 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main start local"
-        echo "3. Access Agent UIs:"
-        echo "   - Agent 0: http://localhost:8000"
-        echo "   - Agent 1: http://localhost:8001" 
-        echo "   - Agent 2: http://localhost:8002"
-        echo "   - Agent 3: http://localhost:8003"
-        echo "   - Agent 4: http://localhost:8004"
-        echo "   - Agent 5: http://localhost:8005"
-        echo "4. API Docs: http://localhost:8000/docs"
+        echo ""
+        echo "2. Run complete platform:"
+        echo "   docker run -d --name a2a-platform \\"
+        echo "     -p 3000:3000 \\"
+        echo "     -p 4004:4004 \\"
+        echo "     -p 8000-8017:8000-8017 \\"
+        echo "     -e ENABLE_ALL_AGENTS=true \\"
+        echo "     -e A2A_NETWORK_ENABLED=true \\"
+        echo "     -e FRONTEND_ENABLED=true \\"
+        echo "     ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main start complete"
+        echo ""
+        echo "3. Access Points:"
+        echo "   🎯 Launch Pad: http://localhost:3000"
+        echo "   🌐 A2A Network API: http://localhost:4004/api/v1"
+        echo "   🤖 All 18 Agents: http://localhost:8000-8017"
+        echo "   📚 API Docs: http://localhost:8000/docs"
+        echo ""
+        echo "4. Key Endpoints:"
+        echo "   - Agent Registry: http://localhost:8000/api/agents"
+        echo "   - Network Health: http://localhost:4004/api/v1/health"
+        echo "   - Workflows: http://localhost:4004/api/v1/workflows"
+        echo "   - Agent Capabilities: http://localhost:8000/api/capabilities"

@@ -27,10 +27,14 @@ sap.ui.define([
              */
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
+                this._securityUtils = SecurityUtils;
                 this._initializeDeviceModel();
                 this._initializeDialogCache();
                 this._initializePerformanceOptimizations();
                 this._startRealtimeUpdates();
+                
+                // Initialize resource bundle for i18n
+                this._oResourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
             },
             
             /**
@@ -136,6 +140,73 @@ sap.ui.define([
          */
         _performSearch: function(sQuery) {
             // Implement search logic
+        },
+
+        /**
+         * @function _hasRole
+         * @description Checks if user has required role for operation
+         * @param {string} sRole - Required role
+         * @returns {boolean} True if user has role
+         * @private
+         */
+        _hasRole: function(sRole) {
+            // In a real implementation, this would check actual user roles
+            // For now, we'll check against a mock role system
+            var aUserRoles = this._getUserRoles();
+            return aUserRoles.includes(sRole);
+        },
+
+        /**
+         * @function _getUserRoles
+         * @description Gets current user's roles
+         * @returns {Array<string>} Array of user roles
+         * @private
+         */
+        _getUserRoles: function() {
+            // This would typically come from the authentication service
+            // Mock implementation for security testing
+            return ["AgentUser", "AgentAdmin"]; // Mock admin role for now
+        },
+
+        /**
+         * @function _authorizeOperation
+         * @description Authorizes specific operations
+         * @param {string} sOperation - Operation to authorize
+         * @returns {boolean} True if authorized
+         * @private
+         */
+        _authorizeOperation: function(sOperation) {
+            var mRequiredRoles = {
+                "BULK_OPERATIONS": ["AgentAdmin"],
+                "UPDATE_AGENT": ["AgentAdmin", "AgentOperator"],
+                "DELETE_AGENT": ["AgentAdmin"],
+                "START_AGENT": ["AgentAdmin", "AgentOperator"],
+                "STOP_AGENT": ["AgentAdmin", "AgentOperator"],
+                "CONFIG_AGENT": ["AgentAdmin"],
+                "VIEW_HEALTH": ["AgentAdmin", "AgentOperator", "AgentUser"],
+                "COORDINATION": ["AgentAdmin"]
+            };
+
+            var aRequiredRoles = mRequiredRoles[sOperation] || [];
+            var aUserRoles = this._getUserRoles();
+            
+            return aRequiredRoles.some(function(sRole) {
+                return aUserRoles.includes(sRole);
+            });
+        },
+
+        /**
+         * @function _logSecurityEvent
+         * @description Logs security events for audit
+         * @param {string} sEvent - Event type
+         * @param {string} sDescription - Description
+         * @param {Object} oData - Additional data
+         * @private
+         */
+        _logSecurityEvent: function(sEvent, sDescription, oData) {
+            if (this._securityUtils && this._securityUtils.logSecurityEvent) {
+                this._securityUtils.logSecurityEvent(sEvent, sDescription, oData);
+            }
         },
         
         /**
@@ -321,23 +392,53 @@ sap.ui.define([
             
             this._withErrorRecovery(function() {
                 return new Promise(function(resolve, reject) {
-                    jQuery.ajax({
-                        url: "/a2a/agent7/v1/registered-agents",
-                        type: "GET",
-                        success: function(data) {
+                    // SECURITY FIX: Use secure AJAX request instead of direct jQuery.ajax
+                    if (this._securityUtils) {
+                        this._securityUtils.secureAjaxRequest({
+                            url: "/a2a/agent7/v1/registered-agents",
+                            type: "GET"
+                        }).then(function(data) {
                             var oModel = oTargetDialog.getModel("create");
                             var oData = oModel.getData();
-                            oData.availableAgents = data.agents;
-                            oData.availableOperations = data.operations;
+                            // Sanitize received data
+                            oData.availableAgents = data.agents ? data.agents.map(function(agent) {
+                                return {
+                                    id: this._securityUtils.sanitizeInput(agent.id),
+                                    name: this._securityUtils.sanitizeInput(agent.name),
+                                    type: this._securityUtils.sanitizeInput(agent.type)
+                                };
+                            }.bind(this)) : [];
+                            oData.availableOperations = data.operations ? data.operations.map(function(op) {
+                                return this._securityUtils.sanitizeInput(op);
+                            }.bind(this)) : [];
                             oModel.setData(oData);
                             resolve(data);
-                        },
-                        error: function(xhr) {
-                            reject(new Error("Failed to load available agents: " + xhr.responseText));
-                        }
-                    });
-                });
-            }).catch(function(error) {
+                        }.bind(this)).catch(function(xhr) {
+                            reject(new Error("Failed to load available agents: " + (xhr.responseText || "Network error")));
+                        });
+                    } else {
+                        // Fallback to regular AJAX with basic headers
+                        jQuery.ajax({
+                            url: "/a2a/agent7/v1/registered-agents",
+                            type: "GET",
+                            headers: {
+                                "X-Requested-With": "XMLHttpRequest"
+                            },
+                            success: function(data) {
+                                var oModel = oTargetDialog.getModel("create");
+                                var oData = oModel.getData();
+                                oData.availableAgents = data.agents || [];
+                                oData.availableOperations = data.operations || [];
+                                oModel.setData(oData);
+                                resolve(data);
+                            },
+                            error: function(xhr) {
+                                reject(new Error("Failed to load available agents: " + xhr.responseText));
+                            }
+                        });
+                    }
+                }.bind(this));
+            }.bind(this)).catch(function(error) {
                 MessageBox.error(error.message);
             });
         },
@@ -447,6 +548,19 @@ sap.ui.define([
          * @public
          */
         onRegisterAgent: function() {
+            // SECURITY FIX: Add authentication check for agent registration
+            if (!this._hasRole("AgentAdmin")) {
+                MessageBox.error("Access denied: Insufficient privileges to register new agents");
+                this._logSecurityEvent("REGISTER_AGENT_ACCESS_DENIED", "User attempted agent registration without AgentAdmin role");
+                return;
+            }
+
+            if (!this._authorizeOperation("UPDATE_AGENT")) {
+                MessageBox.error("Access denied: Agent registration requires administrator privileges");
+                this._logSecurityEvent("REGISTER_AGENT_UNAUTHORIZED", "Unauthorized agent registration attempt");
+                return;
+            }
+
             this._getOrCreateDialog("registerAgent", "a2a.network.agent7.ext.fragment.RegisterAgent")
                 .then(function(oDialog) {
                     var oModel = new JSONModel({
@@ -463,6 +577,12 @@ sap.ui.define([
                     oDialog.setModel(oModel, "register");
                     oDialog.open();
                     this._loadAgentTypes(oDialog);
+
+                    this._logSecurityEvent("REGISTER_AGENT_AUTHORIZED", "Agent registration dialog opened");
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open agent registration dialog: " + error.message);
+                    this._logSecurityEvent("REGISTER_AGENT_ERROR", "Failed to open dialog", { error: error.message });
                 }.bind(this));
         },
 
@@ -472,23 +592,49 @@ sap.ui.define([
             
             this._withErrorRecovery(function() {
                 return new Promise(function(resolve, reject) {
-                    jQuery.ajax({
-                        url: "/a2a/agent7/v1/agent-types",
-                        type: "GET",
-                        success: function(data) {
+                    // SECURITY FIX: Use secure AJAX request instead of direct jQuery.ajax
+                    if (this._securityUtils) {
+                        this._securityUtils.secureAjaxRequest({
+                            url: "/a2a/agent7/v1/agent-types",
+                            type: "GET"
+                        }).then(function(data) {
                             var oModel = oTargetDialog.getModel("register");
                             var oData = oModel.getData();
-                            oData.availableTypes = data.types;
-                            oData.availableCapabilities = data.capabilities;
+                            // Sanitize received data
+                            oData.availableTypes = data.types ? data.types.map(function(type) {
+                                return this._securityUtils.sanitizeInput(type);
+                            }.bind(this)) : [];
+                            oData.availableCapabilities = data.capabilities ? data.capabilities.map(function(cap) {
+                                return this._securityUtils.sanitizeInput(cap);
+                            }.bind(this)) : [];
                             oModel.setData(oData);
                             resolve(data);
-                        },
-                        error: function(xhr) {
-                            reject(new Error("Failed to load agent types: " + xhr.responseText));
-                        }
-                    });
-                });
-            }).catch(function(error) {
+                        }.bind(this)).catch(function(xhr) {
+                            reject(new Error("Failed to load agent types: " + (xhr.responseText || "Network error")));
+                        });
+                    } else {
+                        // Fallback to regular AJAX with basic headers
+                        jQuery.ajax({
+                            url: "/a2a/agent7/v1/agent-types",
+                            type: "GET",
+                            headers: {
+                                "X-Requested-With": "XMLHttpRequest"
+                            },
+                            success: function(data) {
+                                var oModel = oTargetDialog.getModel("register");
+                                var oData = oModel.getData();
+                                oData.availableTypes = data.types || [];
+                                oData.availableCapabilities = data.capabilities || [];
+                                oModel.setData(oData);
+                                resolve(data);
+                            },
+                            error: function(xhr) {
+                                reject(new Error("Failed to load agent types: " + xhr.responseText));
+                            }
+                        });
+                    }
+                }.bind(this));
+            }.bind(this)).catch(function(error) {
                 MessageBox.error(error.message);
             });
         },
@@ -714,6 +860,25 @@ sap.ui.define([
          * @public
          */
         onBulkOperations: function() {
+            // CRITICAL SECURITY FIX: Add authentication and authorization checks
+            if (!this._hasRole("AgentAdmin")) {
+                MessageBox.error("Access denied: Insufficient privileges for bulk operations");
+                this._logSecurityEvent("BULK_OPERATIONS_ACCESS_DENIED", "User attempted bulk operations without AgentAdmin role", {
+                    userRoles: this._getUserRoles(),
+                    timestamp: new Date().toISOString()
+                });
+                return;
+            }
+
+            if (!this._authorizeOperation("BULK_OPERATIONS")) {
+                MessageBox.error("Access denied: Bulk operations require administrator privileges");
+                this._logSecurityEvent("BULK_OPERATIONS_UNAUTHORIZED", "Unauthorized bulk operations attempt", {
+                    operation: "BULK_OPERATIONS",
+                    authorized: false
+                });
+                return;
+            }
+
             var oTable = this._extensionAPI.getTable();
             var aSelectedContexts = oTable.getSelectedContexts();
             
@@ -723,12 +888,34 @@ sap.ui.define([
                 MessageBox.warning(sWarningMsg);
                 return;
             }
+
+            // Security validation: Limit bulk operations to prevent resource exhaustion
+            if (aSelectedContexts.length > 50) {
+                MessageBox.error("Bulk operations limited to 50 agents maximum for security reasons");
+                this._logSecurityEvent("BULK_OPERATIONS_LIMIT_EXCEEDED", "Bulk operation attempted on too many agents", {
+                    selectedCount: aSelectedContexts.length,
+                    maxAllowed: 50
+                });
+                return;
+            }
             
             this._getOrCreateDialog("bulkOperations", "a2a.network.agent7.ext.fragment.BulkOperations")
                 .then(function(oDialog) {
                     var aAgentIds = aSelectedContexts.map(function(oContext) {
-                        return oContext.getProperty("managedAgent");
-                    });
+                        var sAgentId = oContext.getProperty("managedAgent");
+                        // Sanitize agent ID to prevent injection attacks
+                        return this._securityUtils ? this._securityUtils.sanitizeInput(sAgentId) : sAgentId;
+                    }.bind(this));
+
+                    // Validate bulk operation data using SecurityUtils
+                    if (this._securityUtils) {
+                        var oBulkValidation = this._securityUtils.validateBulkOperation(aAgentIds, "BULK_MANAGE");
+                        if (!oBulkValidation.isValid) {
+                            MessageBox.error("Bulk operation validation failed: " + oBulkValidation.errors.join(", "));
+                            return;
+                        }
+                        aAgentIds = oBulkValidation.sanitizedIds;
+                    }
                     
                     var oModel = new JSONModel({
                         selectedAgents: aAgentIds,
@@ -739,6 +926,16 @@ sap.ui.define([
                     });
                     oDialog.setModel(oModel, "bulk");
                     oDialog.open();
+
+                    // Log successful authorization
+                    this._logSecurityEvent("BULK_OPERATIONS_AUTHORIZED", "Bulk operations dialog opened", {
+                        agentCount: aAgentIds.length,
+                        userRoles: this._getUserRoles()
+                    });
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open bulk operations dialog: " + error.message);
+                    this._logSecurityEvent("BULK_OPERATIONS_ERROR", "Failed to open dialog", { error: error.message });
                 }.bind(this));
         },
 

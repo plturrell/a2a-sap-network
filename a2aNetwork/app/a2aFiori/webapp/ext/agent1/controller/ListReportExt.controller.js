@@ -94,7 +94,7 @@ sap.ui.define([
             var aSelectedContexts = oTable.getSelectedContexts();
             
             if (aSelectedContexts.length === 0) {
-                MessageBox.warning("Please select at least one task for batch processing.");
+                MessageBox.warning(this._getResourceBundle().getText("error.selectTasksForBatch"));
                 return;
             }
             
@@ -103,8 +103,10 @@ sap.ui.define([
             });
             
             MessageBox.confirm(
-                "Start batch processing for " + aSelectedContexts.length + " tasks?\n\n" +
-                "Tasks: " + aTaskNames.join(", "),
+                this._getResourceBundle().getText("confirm.batchProcessingWithTasks", [
+                    aSelectedContexts.length,
+                    aTaskNames.join(", ")
+                ]),
                 {
                     onClose: function(oAction) {
                         if (oAction === MessageBox.Action.OK) {
@@ -143,15 +145,16 @@ sap.ui.define([
                 success: function(data) {
                     this.base.getView().setBusy(false);
                     MessageBox.success(
-                        "Batch processing started successfully!\n" +
-                        "Job ID: " + data.jobId + "\n" +
-                        "Processing " + data.taskCount + " tasks"
+                        this._getResourceBundle().getText("success.batchProcessingStarted", [
+                            data.jobId,
+                            data.taskCount
+                        ])
                     );
                     this._extensionAPI.refresh();
                 }.bind(this),
                 error: function(xhr) {
                     this.base.getView().setBusy(false);
-                    MessageBox.error("Batch processing failed: " + xhr.responseText);
+                    MessageBox.error(this._getResourceBundle().getText("error.batchProcessingFailed", [xhr.responseText]));
                 }.bind(this)
             });
         },

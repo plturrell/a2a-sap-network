@@ -1,5 +1,5 @@
 {
-  "scanTimestamp": "2025-08-23T05:16:39.855Z",
+  "scanTimestamp": "2025-08-23T10:33:44.210Z",
   "scanTarget": "Agent 8 - Data Manager UI",
   "filesScanned": [
     "controller/ListReportExt.controller.js",
@@ -8,15 +8,64 @@
     "manifest.json"
   ],
   "summary": {
-    "totalIssues": 149,
-    "criticalCount": 0,
-    "highCount": 20,
-    "mediumCount": 111,
+    "totalIssues": 220,
+    "criticalCount": 6,
+    "highCount": 27,
+    "mediumCount": 169,
     "lowCount": 18,
     "complianceScore": 0
   },
   "issues": {
-    "critical": [],
+    "critical": [
+      {
+        "severity": "critical",
+        "type": "XSS_MESSAGE_DISPLAY",
+        "description": "Potential XSS in message display - user data not properly encoded",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1219,
+        "code": "MessageBox.success(\n                        \"Batch transformation initiated successfully!\\\\n\" +\n    ..."
+      },
+      {
+        "severity": "critical",
+        "type": "XSS_MESSAGE_DISPLAY",
+        "description": "Potential XSS in message display - user data not properly encoded",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1396,
+        "code": "MessageBox.success(\n                        \"Transformation scheduled successfully!\\\\n\" +\n          ..."
+      },
+      {
+        "severity": "critical",
+        "type": "SQL_INJECTION",
+        "description": "Potential SQL injection vulnerability in dynamic query construction",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1066,
+        "code": "SelectedContexts.length + \" selected task(s)?\\\\n\\\\n\""
+      },
+      {
+        "severity": "critical",
+        "type": "SQL_INJECTION",
+        "description": "Potential SQL injection vulnerability in dynamic query construction",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1110,
+        "code": "SelectedContexts.length + \" selected task(s)?\\\\n\\\\n\""
+      },
+      {
+        "severity": "critical",
+        "type": "XSS_MESSAGE_DISPLAY",
+        "description": "Potential XSS in message display - user data not properly encoded",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1282,
+        "code": "MessageBox.success(\n                        \"Transformation started successfully!\\\\n\" +\n            ..."
+      },
+      {
+        "severity": "critical",
+        "type": "XSS_MESSAGE_DISPLAY",
+        "description": "Potential XSS in message display - user data not properly encoded",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1681,
+        "code": "MessageBox.success(\n                        \"Export initiated successfully!\\\\n\" +\n                  ..."
+      }
+    ],
     "high": [
       {
         "severity": "high",
@@ -32,6 +81,38 @@
         "description": "Form submission function lacks proper input validation",
         "file": "controller/ListReportExt.controller.js",
         "line": 145,
+        "code": ""
+      },
+      {
+        "severity": "high",
+        "type": "FORM_VALIDATION_MISSING",
+        "description": "Form submission function lacks proper input validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 996,
+        "code": ""
+      },
+      {
+        "severity": "high",
+        "type": "FORM_VALIDATION_MISSING",
+        "description": "Form submission function lacks proper input validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1002,
+        "code": ""
+      },
+      {
+        "severity": "high",
+        "type": "FORM_VALIDATION_MISSING",
+        "description": "Form submission function lacks proper input validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1353,
+        "code": ""
+      },
+      {
+        "severity": "high",
+        "type": "FORM_VALIDATION_MISSING",
+        "description": "Form submission function lacks proper input validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1357,
         "code": ""
       },
       {
@@ -148,6 +229,22 @@
       },
       {
         "severity": "high",
+        "type": "FORM_VALIDATION_MISSING",
+        "description": "Form submission function lacks proper input validation",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1643,
+        "code": ""
+      },
+      {
+        "severity": "high",
+        "type": "FORM_VALIDATION_MISSING",
+        "description": "Form submission function lacks proper input validation",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1647,
+        "code": ""
+      },
+      {
+        "severity": "high",
         "type": "MISSING_AUTH_CHECK",
         "description": "Controller appears to lack authentication/authorization checks",
         "file": "controller/ObjectPageExt.controller.js",
@@ -172,6 +269,14 @@
       },
       {
         "severity": "high",
+        "type": "FORM_VALIDATION_MISSING",
+        "description": "Form submission function lacks proper input validation",
+        "file": "manifest.json",
+        "line": 70,
+        "code": ""
+      },
+      {
+        "severity": "high",
         "type": "CSP_MISSING",
         "description": "Missing Content Security Policy configuration",
         "file": "manifest.json",
@@ -185,7 +290,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ListReportExt.controller.js",
-        "line": 648,
+        "line": 652,
         "code": "getProperty(\"datasetName\")"
       },
       {
@@ -193,7 +298,31 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ListReportExt.controller.js",
-        "line": 324,
+        "line": 1062,
+        "code": "getProperty(\"taskName\")"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1101,
+        "code": "getProperty(\"ID\")"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1168,
+        "code": "getProperty(\"ID\")"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 328,
         "code": "getData()"
       },
       {
@@ -201,7 +330,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ListReportExt.controller.js",
-        "line": 733,
+        "line": 737,
         "code": "getData()"
       },
       {
@@ -209,7 +338,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ListReportExt.controller.js",
-        "line": 821,
+        "line": 825,
         "code": "getData()"
       },
       {
@@ -217,7 +346,15 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ListReportExt.controller.js",
-        "line": 325,
+        "line": 1362,
+        "code": "getData()"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 329,
         "code": "oData.availableBackends"
       },
       {
@@ -225,7 +362,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ListReportExt.controller.js",
-        "line": 326,
+        "line": 330,
         "code": "oData.storageTypes"
       },
       {
@@ -233,7 +370,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ListReportExt.controller.js",
-        "line": 327,
+        "line": 331,
         "code": "oData.availableDatasets"
       },
       {
@@ -241,7 +378,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ListReportExt.controller.js",
-        "line": 734,
+        "line": 738,
         "code": "oData.availableDatasets"
       },
       {
@@ -249,7 +386,7 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ListReportExt.controller.js",
-        "line": 735,
+        "line": 739,
         "code": "oData.exportFormats"
       },
       {
@@ -257,16 +394,8 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ListReportExt.controller.js",
-        "line": 822,
+        "line": 826,
         "code": "oData.hitRates"
-      },
-      {
-        "severity": "medium",
-        "type": "INPUT_VALIDATION_MISSING",
-        "description": "User input processed without apparent validation",
-        "file": "controller/ListReportExt.controller.js",
-        "line": 937,
-        "code": "oData.taskName"
       },
       {
         "severity": "medium",
@@ -281,15 +410,15 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ListReportExt.controller.js",
-        "line": 950,
-        "code": "oData.datasetName"
+        "line": 945,
+        "code": "oData.taskName"
       },
       {
         "severity": "medium",
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ListReportExt.controller.js",
-        "line": 950,
+        "line": 954,
         "code": "oData.datasetName"
       },
       {
@@ -305,7 +434,15 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ListReportExt.controller.js",
-        "line": 961,
+        "line": 958,
+        "code": "oData.datasetName"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 965,
         "code": "oData.operationType"
       },
       {
@@ -313,40 +450,8 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ListReportExt.controller.js",
-        "line": 961,
+        "line": 965,
         "code": "oData.operationType"
-      },
-      {
-        "severity": "medium",
-        "type": "INPUT_VALIDATION_MISSING",
-        "description": "User input processed without apparent validation",
-        "file": "controller/ListReportExt.controller.js",
-        "line": 983,
-        "code": "oData.priority"
-      },
-      {
-        "severity": "medium",
-        "type": "INPUT_VALIDATION_MISSING",
-        "description": "User input processed without apparent validation",
-        "file": "controller/ListReportExt.controller.js",
-        "line": 984,
-        "code": "oData.compressionEnabled"
-      },
-      {
-        "severity": "medium",
-        "type": "INPUT_VALIDATION_MISSING",
-        "description": "User input processed without apparent validation",
-        "file": "controller/ListReportExt.controller.js",
-        "line": 985,
-        "code": "oData.encryptionEnabled"
-      },
-      {
-        "severity": "medium",
-        "type": "INPUT_VALIDATION_MISSING",
-        "description": "User input processed without apparent validation",
-        "file": "controller/ListReportExt.controller.js",
-        "line": 986,
-        "code": "oData.cacheEnabled"
       },
       {
         "severity": "medium",
@@ -354,14 +459,262 @@
         "description": "User input processed without apparent validation",
         "file": "controller/ListReportExt.controller.js",
         "line": 987,
+        "code": "oData.priority"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 988,
+        "code": "oData.compressionEnabled"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 989,
+        "code": "oData.encryptionEnabled"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 990,
+        "code": "oData.cacheEnabled"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 991,
         "code": "oData.versioningEnabled"
       },
       {
         "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1364,
+        "code": "oData.scheduleType"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1364,
+        "code": "oData.scheduledDateTime"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1364,
+        "code": "oData.scheduledDateTime"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1373,
+        "code": "oData.scheduleType"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1374,
+        "code": "oData.scheduledDateTime"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1377,
+        "code": "oData.recurrence"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1378,
+        "code": "oData.recurrence"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1379,
+        "code": "oData.recurrence"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1379,
+        "code": "oData.recurrence"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1382,
+        "code": "oData.executionOptions"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1383,
+        "code": "oData.executionOptions"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1384,
+        "code": "oData.executionOptions"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1385,
+        "code": "oData.executionOptions"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1426,
+        "code": "oData.transformationName"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1426,
+        "code": "oData.transformationName"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1430,
+        "code": "oData.sourceDataset"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1430,
+        "code": "oData.sourceDataset"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1434,
+        "code": "oData.targetDataset"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1434,
+        "code": "oData.targetDataset"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1438,
+        "code": "oData.transformationType"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1438,
+        "code": "oData.transformationType"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1464,
+        "code": "oData.schedule"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1467,
+        "code": "oData.processingOptions"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1469,
+        "code": "oData.processingOptions"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1470,
+        "code": "oData.processingOptions"
+      },
+      {
+        "severity": "medium",
+        "type": "OUTPUT_ENCODING_MISSING",
+        "description": "Output data not properly encoded before display",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1219,
+        "code": "MessageBox.success(\n                        \"Batch transformation initiated successfully!\\\\n\" +\n    ..."
+      },
+      {
+        "severity": "medium",
+        "type": "OUTPUT_ENCODING_MISSING",
+        "description": "Output data not properly encoded before display",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1396,
+        "code": "MessageBox.success(\n                        \"Transformation scheduled successfully!\\\\n\" +\n          ..."
+      },
+      {
+        "severity": "medium",
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ListReportExt.controller.js",
-        "line": 331,
+        "line": 335,
         "code": "error: function(xhr) {\n                            const errorMsg = this._securityUtils.sanitizeErro..."
       },
       {
@@ -369,7 +722,7 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ListReportExt.controller.js",
-        "line": 385,
+        "line": 389,
         "code": "error: function(xhr) {\n                            const errorMsg = this._securityUtils.sanitizeErro..."
       },
       {
@@ -377,7 +730,7 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ListReportExt.controller.js",
-        "line": 496,
+        "line": 500,
         "code": "error: function(xhr) {\n                            const errorMsg = this._securityUtils.sanitizeErro..."
       },
       {
@@ -385,7 +738,7 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ListReportExt.controller.js",
-        "line": 546,
+        "line": 550,
         "code": "error: function(xhr) {\n                            const errorMsg = this._securityUtils.sanitizeErro..."
       },
       {
@@ -393,7 +746,7 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ListReportExt.controller.js",
-        "line": 620,
+        "line": 624,
         "code": "error: function(xhr) {\n                    const errorMsg = this._securityUtils.sanitizeErrorMessage..."
       },
       {
@@ -401,7 +754,7 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ListReportExt.controller.js",
-        "line": 738,
+        "line": 742,
         "code": "error: function(xhr) {\n                    const errorMsg = this._securityUtils.sanitizeErrorMessage..."
       },
       {
@@ -409,7 +762,7 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ListReportExt.controller.js",
-        "line": 778,
+        "line": 782,
         "code": "error: function(xhr) {\n                    const errorMsg = this._securityUtils.sanitizeErrorMessage..."
       },
       {
@@ -417,7 +770,39 @@
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ListReportExt.controller.js",
-        "line": 866,
+        "line": 870,
+        "code": "error: function(xhr) {\n                    oDialog.setBusy(false);\n                    const errorMs..."
+      },
+      {
+        "severity": "medium",
+        "type": "ERROR_INFO_DISCLOSURE",
+        "description": "Error handling may expose sensitive information",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1146,
+        "code": "error: function(xhr) {\n                            const errorMsg = this._securityUtils.sanitizeErro..."
+      },
+      {
+        "severity": "medium",
+        "type": "ERROR_INFO_DISCLOSURE",
+        "description": "Error handling may expose sensitive information",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1234,
+        "code": "error: function(xhr) {\n                    this.base.getView().setBusy(false);\n                    c..."
+      },
+      {
+        "severity": "medium",
+        "type": "ERROR_INFO_DISCLOSURE",
+        "description": "Error handling may expose sensitive information",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1341,
+        "code": "error: function(xhr) {\n                    oDialog.setBusy(false);\n                    const errorMs..."
+      },
+      {
+        "severity": "medium",
+        "type": "ERROR_INFO_DISCLOSURE",
+        "description": "Error handling may expose sensitive information",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1407,
         "code": "error: function(xhr) {\n                    oDialog.setBusy(false);\n                    const errorMs..."
       },
       {
@@ -425,7 +810,31 @@
         "type": "MISSING_CONTENT_TYPE",
         "description": "POST request missing explicit content-type header",
         "file": "controller/ListReportExt.controller.js",
-        "line": 855,
+        "line": 859,
+        "code": ""
+      },
+      {
+        "severity": "medium",
+        "type": "MISSING_CONTENT_TYPE",
+        "description": "POST request missing explicit content-type header",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1214,
+        "code": ""
+      },
+      {
+        "severity": "medium",
+        "type": "MISSING_CONTENT_TYPE",
+        "description": "POST request missing explicit content-type header",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1328,
+        "code": ""
+      },
+      {
+        "severity": "medium",
+        "type": "MISSING_CONTENT_TYPE",
+        "description": "POST request missing explicit content-type header",
+        "file": "controller/ListReportExt.controller.js",
+        "line": 1391,
         "code": ""
       },
       {
@@ -521,6 +930,54 @@
         "type": "INPUT_VALIDATION_MISSING",
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
+        "line": 1105,
+        "code": "getProperty(\"taskName\")"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1132,
+        "code": "getProperty(\"taskName\")"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1133,
+        "code": "getProperty(\"status\")"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1168,
+        "code": "getProperty(\"ID\")"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1169,
+        "code": "getProperty(\"status\")"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1194,
+        "code": "getProperty(\"ID\")"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ObjectPageExt.controller.js",
         "line": 197,
         "code": "getData()"
       },
@@ -554,6 +1011,14 @@
         "description": "User input processed without apparent validation",
         "file": "controller/ObjectPageExt.controller.js",
         "line": 644,
+        "code": "getData()"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1652,
         "code": "getData()"
       },
       {
@@ -934,6 +1399,54 @@
       },
       {
         "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1655,
+        "code": "oData.exportFormat"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1664,
+        "code": "oData.exportFormat"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1665,
+        "code": "oData.includeMetadata"
+      },
+      {
+        "severity": "medium",
+        "type": "INPUT_VALIDATION_MISSING",
+        "description": "User input processed without apparent validation",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1670,
+        "code": "oData.filterCriteria"
+      },
+      {
+        "severity": "medium",
+        "type": "OUTPUT_ENCODING_MISSING",
+        "description": "Output data not properly encoded before display",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1282,
+        "code": "MessageBox.success(\n                        \"Transformation started successfully!\\\\n\" +\n            ..."
+      },
+      {
+        "severity": "medium",
+        "type": "OUTPUT_ENCODING_MISSING",
+        "description": "Output data not properly encoded before display",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1681,
+        "code": "MessageBox.success(\n                        \"Export initiated successfully!\\\\n\" +\n                  ..."
+      },
+      {
+        "severity": "medium",
         "type": "ERROR_INFO_DISCLOSURE",
         "description": "Error handling may expose sensitive information",
         "file": "controller/ObjectPageExt.controller.js",
@@ -1038,6 +1551,38 @@
       },
       {
         "severity": "medium",
+        "type": "ERROR_INFO_DISCLOSURE",
+        "description": "Error handling may expose sensitive information",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1249,
+        "code": "error: function(xhr) {\n                    this.base.getView().setBusy(false);\n                    c..."
+      },
+      {
+        "severity": "medium",
+        "type": "ERROR_INFO_DISCLOSURE",
+        "description": "Error handling may expose sensitive information",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1296,
+        "code": "error: function(xhr) {\n                    this.base.getView().setBusy(false);\n                    c..."
+      },
+      {
+        "severity": "medium",
+        "type": "ERROR_INFO_DISCLOSURE",
+        "description": "Error handling may expose sensitive information",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1338,
+        "code": "error: function(xhr) {\n                    oTargetDialog.setBusy(false);\n                    const e..."
+      },
+      {
+        "severity": "medium",
+        "type": "ERROR_INFO_DISCLOSURE",
+        "description": "Error handling may expose sensitive information",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1694,
+        "code": "error: function(xhr) {\n                    oDialog.setBusy(false);\n                    const errorMs..."
+      },
+      {
+        "severity": "medium",
         "type": "MISSING_CONTENT_TYPE",
         "description": "POST request missing explicit content-type header",
         "file": "controller/ObjectPageExt.controller.js",
@@ -1062,6 +1607,30 @@
       },
       {
         "severity": "medium",
+        "type": "MISSING_CONTENT_TYPE",
+        "description": "POST request missing explicit content-type header",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1238,
+        "code": ""
+      },
+      {
+        "severity": "medium",
+        "type": "MISSING_CONTENT_TYPE",
+        "description": "POST request missing explicit content-type header",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1277,
+        "code": ""
+      },
+      {
+        "severity": "medium",
+        "type": "MISSING_CONTENT_TYPE",
+        "description": "POST request missing explicit content-type header",
+        "file": "controller/ObjectPageExt.controller.js",
+        "line": 1675,
+        "code": ""
+      },
+      {
+        "severity": "medium",
         "type": "CLICKJACKING_PROTECTION_MISSING",
         "description": "Missing X-Frame-Options configuration for clickjacking protection",
         "file": "manifest.json",
@@ -1075,7 +1644,7 @@
         "type": "MISSING_ERROR_HANDLING",
         "description": "AJAX call missing error handling",
         "file": "controller/ListReportExt.controller.js",
-        "line": 319,
+        "line": 323,
         "code": ""
       },
       {
@@ -1083,7 +1652,7 @@
         "type": "MISSING_ERROR_HANDLING",
         "description": "AJAX call missing error handling",
         "file": "controller/ListReportExt.controller.js",
-        "line": 369,
+        "line": 373,
         "code": ""
       },
       {
@@ -1091,7 +1660,7 @@
         "type": "MISSING_ERROR_HANDLING",
         "description": "AJAX call missing error handling",
         "file": "controller/ListReportExt.controller.js",
-        "line": 483,
+        "line": 487,
         "code": ""
       },
       {
@@ -1099,7 +1668,7 @@
         "type": "MISSING_ERROR_HANDLING",
         "description": "AJAX call missing error handling",
         "file": "controller/ListReportExt.controller.js",
-        "line": 532,
+        "line": 536,
         "code": ""
       },
       {
@@ -1107,7 +1676,7 @@
         "type": "MISSING_ERROR_HANDLING",
         "description": "AJAX call missing error handling",
         "file": "controller/ListReportExt.controller.js",
-        "line": 608,
+        "line": 612,
         "code": ""
       },
       {
@@ -1115,7 +1684,7 @@
         "type": "MISSING_ERROR_HANDLING",
         "description": "AJAX call missing error handling",
         "file": "controller/ListReportExt.controller.js",
-        "line": 728,
+        "line": 732,
         "code": ""
       },
       {
@@ -1123,7 +1692,7 @@
         "type": "MISSING_ERROR_HANDLING",
         "description": "AJAX call missing error handling",
         "file": "controller/ListReportExt.controller.js",
-        "line": 766,
+        "line": 770,
         "code": ""
       },
       {
@@ -1217,6 +1786,9 @@
     ]
   },
   "recommendations": [
+    "🚨 URGENT: Address all critical security vulnerabilities immediately",
+    "Implement input validation and output encoding for all user data",
+    "Add CSRF protection to all state-changing operations",
     "🔧 Implement proper authentication and authorization checks",
     "Add Content Security Policy (CSP) headers",
     "Review error handling to prevent information disclosure",

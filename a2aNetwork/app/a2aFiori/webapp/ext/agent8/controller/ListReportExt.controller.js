@@ -294,6 +294,10 @@ sap.ui.define([
                 this._optimizationEventSource.close();
                 this._optimizationEventSource = null;
             }
+            if (this._batchMonitoringEventSource) {
+                this._batchMonitoringEventSource.close();
+                this._batchMonitoringEventSource = null;
+            }
             
             // Clean up cached dialogs
             Object.keys(this._dialogCache).forEach(function(key) {
@@ -986,6 +990,510 @@ sap.ui.define([
                 cacheEnabled: Boolean(oData.cacheEnabled),
                 versioningEnabled: Boolean(oData.versioningEnabled)
             };
+        },
+
+        /**
+         * @function onCreateTransformation
+         * @description Creates new data transformation task with comprehensive validation.
+         * @public
+         * @memberof a2a.network.agent8.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
+        onCreateTransformation: function() {
+            if (!this._securityUtils.hasRole("TransformationManager")) {
+                MessageBox.error("Access denied: Insufficient privileges for creating transformations");
+                this._securityUtils.auditLog("CREATE_TRANSFORMATION_ACCESS_DENIED", { action: "create_transformation" });
+                return;
+            }
+            
+            this._getOrCreateDialog("createTransformation", "a2a.network.agent8.ext.fragment.CreateTransformation")
+                .then(function(oDialog) {
+                    var oModel = new JSONModel({
+                        transformationName: "",
+                        description: "",
+                        sourceDataset: "",
+                        targetDataset: "",
+                        transformationType: "MAPPING",
+                        transformationRules: [],
+                        validationRules: [],
+                        schedule: {
+                            enabled: false,
+                            frequency: "DAILY",
+                            time: "00:00"
+                        },
+                        processingOptions: {
+                            parallelProcessing: true,
+                            batchSize: 1000,
+                            errorHandling: "CONTINUE",
+                            backupBeforeTransform: true
+                        }
+                    });
+                    oDialog.setModel(oModel, "transformation");
+                    oDialog.open();
+                    
+                    this._loadTransformationOptions(oDialog);
+                    this._securityUtils.auditLog("CREATE_TRANSFORMATION_INITIATED", { action: "create_transformation" });
+                }.bind(this));
+        },
+
+        /**
+         * @function onScheduleTransformation
+         * @description Schedules transformation tasks for selected items.
+         * @public
+         * @memberof a2a.network.agent8.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
+        onScheduleTransformation: function() {
+            var oTable = this._extensionAPI.getTable();
+            var aSelectedContexts = oTable.getSelectedContexts();
+            
+            if (aSelectedContexts.length === 0) {
+                MessageBox.warning("Please select at least one transformation task to schedule.");
+                return;
+            }
+            
+            if (!this._securityUtils.hasRole("TransformationManager")) {
+                MessageBox.error("Access denied: Insufficient privileges for scheduling transformations");
+                this._securityUtils.auditLog("SCHEDULE_TRANSFORMATION_ACCESS_DENIED", { action: "schedule_transformation" });
+                return;
+            }
+            
+            var aTaskNames = aSelectedContexts.map(function(oContext) {
+                return this._securityUtils.sanitizeInput(oContext.getProperty("taskName"));
+            }.bind(this));
+            
+            MessageBox.confirm(
+                "Schedule transformation for " + aSelectedContexts.length + " selected task(s)?\\n\\n" +
+                "Tasks: " + aTaskNames.join(", "),
+                {
+                    onClose: function(oAction) {
+                        if (oAction === MessageBox.Action.OK) {
+                            this._openScheduleDialog(aSelectedContexts);
+                        }
+                    }.bind(this)
+                }
+            );
+        },
+
+        /**
+         * @function onBatchTransformation
+         * @description Initiates batch transformation for selected tasks.
+         * @public
+         * @memberof a2a.network.agent8.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
+        onBatchTransformation: function() {
+            var oTable = this._extensionAPI.getTable();
+            var aSelectedContexts = oTable.getSelectedContexts();
+            
+            if (aSelectedContexts.length === 0) {
+                MessageBox.warning("Please select at least one transformation task for batch processing.");
+                return;
+            }
+            
+            if (!this._securityUtils.hasRole("TransformationManager")) {
+                MessageBox.error("Access denied: Insufficient privileges for batch transformations");
+                this._securityUtils.auditLog("BATCH_TRANSFORMATION_ACCESS_DENIED", { action: "batch_transformation" });
+                return;
+            }
+            
+            var aTaskIds = aSelectedContexts.map(function(oContext) {
+                return this._securityUtils.sanitizeInput(oContext.getProperty("ID"));
+            }.bind(this));
+            
+            if (aTaskIds.length > 20) {
+                MessageBox.error("Batch size limited to 20 tasks for security and performance reasons");
+                return;
+            }
+            
+            MessageBox.confirm(
+                "Start batch transformation for " + aSelectedContexts.length + " selected task(s)?\\n\\n" +
+                "This will execute all selected transformations in parallel with monitoring.",
+                {
+                    onClose: function(oAction) {
+                        if (oAction === MessageBox.Action.OK) {
+                            this._executeBatchTransformation(aTaskIds);
+                        }
+                    }.bind(this)
+                }
+            );
+        },
+
+        /**
+         * @function _loadTransformationOptions
+         * @description Loads available transformation options and datasets.
+         * @param {sap.m.Dialog} oDialog - Target dialog
+         * @private
+         */
+        _loadTransformationOptions: function(oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["createTransformation"];
+            if (!oTargetDialog) return;
+            
+            this._withErrorRecovery(function() {
+                return new Promise(function(resolve, reject) {
+                    const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                        url: "/a2a/agent8/v1/transformation-options",
+                        type: "GET",
+                        success: function(data) {
+                            var oModel = oTargetDialog.getModel("transformation");
+                            var oData = oModel.getData();
+                            oData.availableDatasets = this._securityUtils.sanitizeArray(data.datasets || []);
+                            oData.transformationTypes = this._securityUtils.sanitizeArray(data.types || []);
+                            oData.ruleTemplates = this._securityUtils.sanitizeArray(data.templates || []);
+                            oModel.setData(oData);
+                            resolve(data);
+                        }.bind(this),
+                        error: function(xhr) {
+                            const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                            reject(new Error("Failed to load transformation options: " + errorMsg));
+                        }.bind(this)
+                    });
+                    jQuery.ajax(ajaxConfig);
+                }.bind(this));
+            }.bind(this)).catch(function(error) {
+                MessageBox.error(error.message);
+            });
+        },
+
+        /**
+         * @function _openScheduleDialog
+         * @description Opens scheduling dialog for selected transformations.
+         * @param {Array} aContexts - Selected transformation contexts
+         * @private
+         */
+        _openScheduleDialog: function(aContexts) {
+            this._getOrCreateDialog("scheduleTransformation", "a2a.network.agent8.ext.fragment.ScheduleTransformation")
+                .then(function(oDialog) {
+                    var aTaskIds = aContexts.map(function(oContext) {
+                        return this._securityUtils.sanitizeInput(oContext.getProperty("ID"));
+                    }.bind(this));
+                    
+                    var oModel = new JSONModel({
+                        selectedTasks: aTaskIds,
+                        scheduleType: "IMMEDIATE",
+                        scheduledDateTime: new Date(Date.now() + 60000), // 1 minute from now
+                        recurrence: {
+                            enabled: false,
+                            frequency: "DAILY",
+                            interval: 1,
+                            endDate: null
+                        },
+                        executionOptions: {
+                            parallelExecution: false,
+                            maxConcurrency: 3,
+                            continueOnError: true,
+                            notifyOnCompletion: true
+                        }
+                    });
+                    oDialog.setModel(oModel, "schedule");
+                    oDialog.open();
+                    
+                    this._securityUtils.auditLog("SCHEDULE_DIALOG_OPENED", { taskCount: aTaskIds.length });
+                }.bind(this));
+        },
+
+        /**
+         * @function _executeBatchTransformation
+         * @description Executes batch transformation with progress monitoring.
+         * @param {Array} aTaskIds - Array of task IDs to transform
+         * @private
+         */
+        _executeBatchTransformation: function(aTaskIds) {
+            this.base.getView().setBusy(true);
+            
+            const requestData = {
+                taskIds: aTaskIds,
+                batchSize: Math.min(aTaskIds.length, 20),
+                executionMode: "PARALLEL",
+                continueOnError: true,
+                generateReport: true
+            };
+            
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent8/v1/batch-transformation",
+                type: "POST",
+                data: JSON.stringify(requestData),
+                success: function(data) {
+                    this.base.getView().setBusy(false);
+                    
+                    MessageBox.success(
+                        "Batch transformation initiated successfully!\\n" +
+                        "Job ID: " + this._securityUtils.sanitizeInput(data.jobId) + "\\n" +
+                        "Processing " + data.taskCount + " transformation(s)\\n" +
+                        "Estimated time: " + this._securityUtils.sanitizeInput(data.estimatedTime) + " minutes"
+                    );
+                    
+                    this._extensionAPI.refresh();
+                    this._startBatchMonitoring(data.jobId);
+                    
+                    this._securityUtils.auditLog("BATCH_TRANSFORMATION_STARTED", {
+                        jobId: data.jobId,
+                        taskCount: data.taskCount
+                    });
+                }.bind(this),
+                error: function(xhr) {
+                    this.base.getView().setBusy(false);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Batch transformation failed: " + errorMsg);
+                    this._securityUtils.auditLog("BATCH_TRANSFORMATION_FAILED", { error: errorMsg });
+                }.bind(this)
+            });
+            
+            jQuery.ajax(ajaxConfig);
+        },
+
+        /**
+         * @function _startBatchMonitoring
+         * @description Starts real-time monitoring of batch transformation progress.
+         * @param {string} sJobId - Batch job ID to monitor
+         * @private
+         */
+        _startBatchMonitoring: function(sJobId) {
+            if (this._batchMonitoringEventSource) {
+                this._batchMonitoringEventSource.close();
+            }
+            
+            const streamUrl = "/a2a/agent8/v1/batch-transformation/" + encodeURIComponent(sJobId) + "/stream";
+            
+            if (!this._securityUtils.validateEventSourceUrl(streamUrl)) {
+                MessageBox.error("Invalid batch monitoring stream URL");
+                return;
+            }
+            
+            this._batchMonitoringEventSource = new EventSource(streamUrl);
+            
+            this._batchMonitoringEventSource.onmessage = function(event) {
+                try {
+                    var data = JSON.parse(event.data);
+                    
+                    if (data.type === "progress") {
+                        const progress = Math.max(0, Math.min(100, parseInt(data.progress) || 0));
+                        const completed = parseInt(data.completed) || 0;
+                        const total = parseInt(data.total) || 0;
+                        MessageToast.show("Batch progress: " + completed + "/" + total + " (" + progress + "%)");
+                    } else if (data.type === "task_completed") {
+                        const taskName = this._securityUtils.sanitizeInput(data.taskName);
+                        MessageToast.show("Completed: " + taskName);
+                    } else if (data.type === "batch_completed") {
+                        this._batchMonitoringEventSource.close();
+                        MessageBox.success("Batch transformation completed successfully!");
+                        this._extensionAPI.refresh();
+                        this._securityUtils.auditLog("BATCH_TRANSFORMATION_COMPLETED", { jobId: sJobId });
+                    } else if (data.type === "batch_failed") {
+                        this._batchMonitoringEventSource.close();
+                        const errorMsg = this._securityUtils.sanitizeInput(data.error || "Unknown error");
+                        MessageBox.error("Batch transformation failed: " + errorMsg);
+                        this._securityUtils.auditLog("BATCH_TRANSFORMATION_FAILED", { jobId: sJobId, error: errorMsg });
+                    }
+                } catch (e) {
+                    this._batchMonitoringEventSource.close();
+                    MessageBox.error("Invalid data received from batch monitoring");
+                }
+            }.bind(this);
+            
+            this._batchMonitoringEventSource.onerror = function() {
+                if (this._batchMonitoringEventSource) {
+                    this._batchMonitoringEventSource.close();
+                    this._batchMonitoringEventSource = null;
+                }
+                MessageBox.error("Lost connection to batch monitoring");
+            }.bind(this);
+        },
+
+        /**
+         * @function onConfirmCreateTransformation
+         * @description Confirms and creates new transformation with validation.
+         * @public
+         */
+        onConfirmCreateTransformation: function() {
+            var oDialog = this._dialogCache["createTransformation"];
+            if (!oDialog) return;
+            
+            var oModel = oDialog.getModel("transformation");
+            var oData = oModel.getData();
+            
+            // Validate transformation data
+            const validation = this._validateTransformationData(oData);
+            if (!validation.isValid) {
+                MessageBox.error(validation.message);
+                return;
+            }
+            
+            oDialog.setBusy(true);
+            
+            const sanitizedData = this._sanitizeTransformationData(oData);
+            
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent8/v1/transformations",
+                type: "POST",
+                data: JSON.stringify(sanitizedData),
+                success: function(data) {
+                    oDialog.setBusy(false);
+                    oDialog.close();
+                    MessageToast.show("Transformation created successfully");
+                    this._extensionAPI.refresh();
+                    
+                    this._securityUtils.auditLog("TRANSFORMATION_CREATED", {
+                        transformationName: sanitizedData.transformationName,
+                        transformationId: data.id
+                    });
+                }.bind(this),
+                error: function(xhr) {
+                    oDialog.setBusy(false);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Failed to create transformation: " + errorMsg);
+                    this._securityUtils.auditLog("TRANSFORMATION_CREATE_FAILED", { error: errorMsg });
+                }.bind(this)
+            });
+            
+            jQuery.ajax(ajaxConfig);
+        },
+
+        /**
+         * @function onConfirmScheduleTransformation
+         * @description Confirms and schedules selected transformations.
+         * @public
+         */
+        onConfirmScheduleTransformation: function() {
+            var oDialog = this._dialogCache["scheduleTransformation"];
+            if (!oDialog) return;
+            
+            var oModel = oDialog.getModel("schedule");
+            var oData = oModel.getData();
+            
+            if (oData.scheduleType === "SCHEDULED" && (!oData.scheduledDateTime || oData.scheduledDateTime <= new Date())) {
+                MessageBox.error("Please select a valid future date and time for scheduling");
+                return;
+            }
+            
+            oDialog.setBusy(true);
+            
+            const sanitizedData = {
+                taskIds: this._securityUtils.sanitizeArray(oData.selectedTasks),
+                scheduleType: this._securityUtils.sanitizeInput(oData.scheduleType),
+                scheduledDateTime: oData.scheduledDateTime ? oData.scheduledDateTime.toISOString() : null,
+                recurrence: {
+                    enabled: Boolean(oData.recurrence.enabled),
+                    frequency: this._securityUtils.sanitizeInput(oData.recurrence.frequency || "DAILY"),
+                    interval: Math.max(1, Math.min(365, parseInt(oData.recurrence.interval) || 1)),
+                    endDate: oData.recurrence.endDate ? oData.recurrence.endDate.toISOString() : null
+                },
+                executionOptions: {
+                    parallelExecution: Boolean(oData.executionOptions.parallelExecution),
+                    maxConcurrency: Math.max(1, Math.min(10, parseInt(oData.executionOptions.maxConcurrency) || 3)),
+                    continueOnError: Boolean(oData.executionOptions.continueOnError),
+                    notifyOnCompletion: Boolean(oData.executionOptions.notifyOnCompletion)
+                }
+            };
+            
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent8/v1/schedule-transformation",
+                type: "POST",
+                data: JSON.stringify(sanitizedData),
+                success: function(data) {
+                    oDialog.setBusy(false);
+                    oDialog.close();
+                    MessageBox.success(
+                        "Transformation scheduled successfully!\\n" +
+                        "Schedule ID: " + this._securityUtils.sanitizeInput(data.scheduleId)
+                    );
+                    this._extensionAPI.refresh();
+                    
+                    this._securityUtils.auditLog("TRANSFORMATION_SCHEDULED", {
+                        scheduleId: data.scheduleId,
+                        taskCount: sanitizedData.taskIds.length
+                    });
+                }.bind(this),
+                error: function(xhr) {
+                    oDialog.setBusy(false);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Failed to schedule transformation: " + errorMsg);
+                    this._securityUtils.auditLog("TRANSFORMATION_SCHEDULE_FAILED", { error: errorMsg });
+                }.bind(this)
+            });
+            
+            jQuery.ajax(ajaxConfig);
+        },
+
+        /**
+         * @function _validateTransformationData
+         * @description Validates transformation creation data.
+         * @param {Object} oData - Transformation data to validate
+         * @returns {Object} Validation result
+         * @private
+         */
+        _validateTransformationData: function(oData) {
+            if (!oData.transformationName || !oData.transformationName.trim()) {
+                return { isValid: false, message: "Transformation name is required" };
+            }
+            
+            if (!oData.sourceDataset || !oData.sourceDataset.trim()) {
+                return { isValid: false, message: "Source dataset is required" };
+            }
+            
+            if (!oData.targetDataset || !oData.targetDataset.trim()) {
+                return { isValid: false, message: "Target dataset is required" };
+            }
+            
+            if (!oData.transformationType || !oData.transformationType.trim()) {
+                return { isValid: false, message: "Transformation type is required" };
+            }
+            
+            return { isValid: true };
+        },
+
+        /**
+         * @function _sanitizeTransformationData
+         * @description Sanitizes transformation data for security.
+         * @param {Object} oData - Transformation data to sanitize
+         * @returns {Object} Sanitized data
+         * @private
+         */
+        _sanitizeTransformationData: function(oData) {
+            return {
+                transformationName: this._securityUtils.sanitizeInput(oData.transformationName),
+                description: this._securityUtils.sanitizeInput(oData.description || ''),
+                sourceDataset: this._securityUtils.sanitizeInput(oData.sourceDataset),
+                targetDataset: this._securityUtils.sanitizeInput(oData.targetDataset),
+                transformationType: this._securityUtils.sanitizeInput(oData.transformationType),
+                transformationRules: this._securityUtils.sanitizeArray(oData.transformationRules || []),
+                validationRules: this._securityUtils.sanitizeArray(oData.validationRules || []),
+                schedule: {
+                    enabled: Boolean(oData.schedule.enabled),
+                    frequency: this._securityUtils.sanitizeInput(oData.schedule.frequency || "DAILY"),
+                    time: this._securityUtils.sanitizeInput(oData.schedule.time || "00:00")
+                },
+                processingOptions: {
+                    parallelProcessing: Boolean(oData.processingOptions.parallelProcessing),
+                    batchSize: Math.max(100, Math.min(10000, parseInt(oData.processingOptions.batchSize) || 1000)),
+                    errorHandling: this._securityUtils.sanitizeInput(oData.processingOptions.errorHandling || "CONTINUE"),
+                    backupBeforeTransform: Boolean(oData.processingOptions.backupBeforeTransform)
+                }
+            };
+        },
+
+        /**
+         * @function onCancelCreateTransformation
+         * @description Cancels transformation creation dialog.
+         * @public
+         */
+        onCancelCreateTransformation: function() {
+            var oDialog = this._dialogCache["createTransformation"];
+            if (oDialog) {
+                oDialog.close();
+            }
+        },
+
+        /**
+         * @function onCancelScheduleTransformation
+         * @description Cancels transformation scheduling dialog.
+         * @public
+         */
+        onCancelScheduleTransformation: function() {
+            var oDialog = this._dialogCache["scheduleTransformation"];
+            if (oDialog) {
+                oDialog.close();
+            }
         }
     });
 });

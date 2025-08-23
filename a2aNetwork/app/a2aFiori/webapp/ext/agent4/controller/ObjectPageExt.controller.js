@@ -753,10 +753,12 @@ sap.ui.define([
                     this._updateFormulaResults(data.results);
                     
                     MessageBox.success(
-                        "Formula validation completed!\n" +
-                        "Validated: " + this.formatCalculationResult(data.validated) + "/" + aSelectedFormulas.length + "\n" +
-                        "Passed: " + this.formatCalculationResult(data.passed) + "\n" +
-                        "Failed: " + this.formatCalculationResult(data.failed)
+                        this.getResourceBundle().getText("success.formulaValidationCompleted", [
+                            this.formatCalculationResult(data.validated),
+                            aSelectedFormulas.length,
+                            this.formatCalculationResult(data.passed),
+                            this.formatCalculationResult(data.failed)
+                        ])
                     );
                     
                     this._logAuditEvent("FORMULAS_VALIDATED", "Formulas validated", { 
@@ -767,7 +769,7 @@ sap.ui.define([
                 }
             }.bind(this)).catch(function(xhr) {
                 this._oFormulaValidationDialog.setBusy(false);
-                MessageBox.error("Formula validation failed: " + this.formatSecureText(xhr.responseText));
+                MessageBox.error(this.getResourceBundle().getText("error.operation.formulaValidationFailed", [this.formatSecureText(xhr.responseText)]));
             }.bind(this));
         },
 
@@ -796,7 +798,7 @@ sap.ui.define([
 
         onRunBenchmark: function() {
             if (!this._checkPermission("RUN_BENCHMARK")) {
-                MessageBox.error("Insufficient permissions to run benchmarks");
+                MessageBox.error(this.getResourceBundle().getText("error.insufficientPermissions.benchmarks"));
                 return;
             }
 
@@ -810,7 +812,7 @@ sap.ui.define([
             }
             
             MessageBox.confirm(
-                "Run performance benchmark? This may take several minutes.",
+                this.getResourceBundle().getText("confirm.runBenchmarkSimple"),
                 {
                     onClose: function(oAction) {
                         if (oAction === MessageBox.Action.OK) {
@@ -842,7 +844,7 @@ sap.ui.define([
                 this._logAuditEvent("BENCHMARK_COMPLETED", "Performance benchmark completed", { taskId: sTaskId });
             }.bind(this)).catch(function(xhr) {
                 this._extensionAPI.getView().setBusy(false);
-                MessageBox.error("Benchmark failed: " + this.formatSecureText(xhr.responseText));
+                MessageBox.error(this.getResourceBundle().getText("error.operation.benchmarkFailed", [this.formatSecureText(xhr.responseText)]));
                 this._logAuditEvent("BENCHMARK_ERROR", "Benchmark failed", xhr.responseText);
             }.bind(this));
         },
@@ -862,7 +864,7 @@ sap.ui.define([
 
         onGenerateReport: function() {
             if (!this._checkPermission("GENERATE_REPORT")) {
-                MessageBox.error("Insufficient permissions to generate reports");
+                MessageBox.error(this.getResourceBundle().getText("error.insufficientPermissions.reports"));
                 return;
             }
 
@@ -910,7 +912,7 @@ sap.ui.define([
             // Validate report type
             var oReportTypeValidation = this._validateInput(oData.reportType, "reportType");
             if (!oReportTypeValidation.isValid) {
-                MessageBox.error("Invalid report type");
+                MessageBox.error(this.getResourceBundle().getText("error.validation.invalidReportType"));
                 return;
             }
             
@@ -935,7 +937,7 @@ sap.ui.define([
                 // Validate download URL
                 if (data.downloadUrl && typeof data.downloadUrl === 'string') {
                     MessageBox.success(
-                        "Validation report generated successfully!",
+                        this.getResourceBundle().getText("success.reportGeneratedSuccess"),
                         {
                             actions: ["Download", MessageBox.Action.CLOSE],
                             onClose: function(oAction) {
@@ -953,7 +955,7 @@ sap.ui.define([
                 }
             }.bind(this)).catch(function(xhr) {
                 this._oReportDialog.setBusy(false);
-                MessageBox.error("Report generation failed: " + this.formatSecureText(xhr.responseText));
+                MessageBox.error(this.getResourceBundle().getText("error.operation.reportGenerationFailed", [this.formatSecureText(xhr.responseText)]));
             }.bind(this));
         },
 
@@ -964,16 +966,16 @@ sap.ui.define([
                 if (oUrl.origin === window.location.origin && oUrl.pathname.startsWith('/a2a/agent4/')) {
                     window.open(sUrl, "_blank");
                 } else {
-                    MessageBox.error("Invalid download URL");
+                    MessageBox.error(this.getResourceBundle().getText("error.validation.invalidDownloadUrl"));
                 }
             } catch (e) {
-                MessageBox.error("Invalid download URL format");
+                MessageBox.error(this.getResourceBundle().getText("error.validation.invalidDownloadUrlFormat"));
             }
         },
 
         onOptimizeCalculations: function() {
             if (!this._checkPermission("OPTIMIZE_CALCULATIONS")) {
-                MessageBox.error("Insufficient permissions to optimize calculations");
+                MessageBox.error(this.getResourceBundle().getText("error.insufficientPermissions.optimization"));
                 return;
             }
 
@@ -987,7 +989,7 @@ sap.ui.define([
             }
             
             MessageBox.confirm(
-                "Optimize calculation performance? This will analyze and suggest improvements.",
+                this.getResourceBundle().getText("confirm.optimizeCalculationsSimple"),
                 {
                     onClose: function(oAction) {
                         if (oAction === MessageBox.Action.OK) {
@@ -1018,12 +1020,12 @@ sap.ui.define([
                 if (data.optimizations && data.optimizations.length > 0) {
                     this._showOptimizationSuggestions(data);
                 } else {
-                    MessageBox.information("No optimization opportunities found. Calculations are already optimized.");
+                    MessageBox.information(this.getResourceBundle().getText("success.optimizationCompleted"));
                 }
                 this._logAuditEvent("OPTIMIZATION_COMPLETED", "Calculation optimization completed", { taskId: sTaskId });
             }.bind(this)).catch(function(xhr) {
                 this._extensionAPI.getView().setBusy(false);
-                MessageBox.error("Optimization failed: " + this.formatSecureText(xhr.responseText));
+                MessageBox.error(this.getResourceBundle().getText("error.operation.optimizationFailed", [this.formatSecureText(xhr.responseText)]));
             }.bind(this));
         },
 
@@ -1085,13 +1087,15 @@ sap.ui.define([
             
             // Security check - only apply safe optimizations
             if (!oOptimization.safe) {
-                MessageBox.error("This optimization is marked as potentially unsafe and cannot be applied");
+                MessageBox.error(this.getResourceBundle().getText("warning.optimizationUnsafe"));
                 return;
             }
             
             MessageBox.confirm(
-                "Apply optimization: " + oOptimization.description + "?\n" +
-                "Expected improvement: " + oOptimization.expectedImprovement,
+                this.getResourceBundle().getText("confirm.applyOptimizationWithDetails", [
+                    oOptimization.description,
+                    oOptimization.expectedImprovement
+                ]),
                 {
                     onClose: function(oAction) {
                         if (oAction === MessageBox.Action.OK) {
@@ -1120,7 +1124,7 @@ sap.ui.define([
                     type: oOptimization.type 
                 });
             }.bind(this)).catch(function(xhr) {
-                MessageBox.error("Failed to apply optimization: " + this.formatSecureText(xhr.responseText));
+                MessageBox.error(this.getResourceBundle().getText("error.operation.optimizationFailed", [this.formatSecureText(xhr.responseText)]));
             }.bind(this));
         }
     });

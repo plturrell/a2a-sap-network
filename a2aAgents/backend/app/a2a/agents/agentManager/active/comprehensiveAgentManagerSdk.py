@@ -496,9 +496,10 @@ class ComprehensiveAgentManagerSDK(A2AAgentBase, BlockchainIntegrationMixin):
         }
         
         # Method performance tracking
-        self.method_performance = defaultdict(lambda: {
-            "total": 0, "success": 0, "total_time": 0.0, "avg_health_improvement": 0.0
-        })
+        def _default_method_performance():
+            return {"total": 0, "success": 0, "total_time": 0.0, "avg_health_improvement": 0.0}
+        
+        self.method_performance = defaultdict(_default_method_performance)
         
         # Network and Data Manager integration
         self.network_connector = NetworkConnector()
@@ -510,27 +511,24 @@ class ComprehensiveAgentManagerSDK(A2AAgentBase, BlockchainIntegrationMixin):
         
         # ✨ NEW: Message Tracking and Reputation System
         self.message_tracking = {
-            "lifecycle_stats": defaultdict(lambda: {
-                "sent": 0, "received": 0, "processed": 0, "rejected": 0, 
-                "referred": 0, "completed": 0, "failed": 0, "partial": 0
-            }),
-            "skill_performance": defaultdict(lambda: defaultdict(lambda: {
-                "attempts": 0, "successes": 0, "failures": 0, 
-                "avg_processing_time": 0.0, "skill_reputation": 1.0
-            })),
+            "lifecycle_stats": defaultdict(self._default_lifecycle_stats),
+            "skill_performance": defaultdict(self._default_skill_performance),
             "message_routing": defaultdict(list),  # agent_id -> [routing decisions]
-            "referral_success": defaultdict(lambda: {"successful": 0, "failed": 0}),
+            "referral_success": defaultdict(self._default_referral_success),
             "cross_agent_collaboration": defaultdict(set),  # track agent interactions
             "message_quality_scores": defaultdict(list)  # track message quality over time
         }
         
         # Reputation calculation models
+        def _default_reputation_score():
+            return 1.0
+        
         self.reputation_models = {
-            "skill_based": defaultdict(lambda: 1.0),  # agent_id -> skill -> reputation
-            "collaboration": defaultdict(lambda: 1.0),  # agent_id -> collaboration reputation
-            "reliability": defaultdict(lambda: 1.0),   # agent_id -> reliability score
-            "response_quality": defaultdict(lambda: 1.0),  # agent_id -> quality score
-            "marketplace_rating": defaultdict(lambda: 1.0)  # agent_id -> marketplace score
+            "skill_based": defaultdict(_default_reputation_score),  # agent_id -> skill -> reputation
+            "collaboration": defaultdict(_default_reputation_score),  # agent_id -> collaboration reputation
+            "reliability": defaultdict(_default_reputation_score),   # agent_id -> reliability score
+            "response_quality": defaultdict(_default_reputation_score),  # agent_id -> quality score
+            "marketplace_rating": defaultdict(_default_reputation_score)  # agent_id -> marketplace score
         }
         
         # Blockchain-based reputation storage
@@ -553,7 +551,7 @@ class ComprehensiveAgentManagerSDK(A2AAgentBase, BlockchainIntegrationMixin):
             "processing_times": defaultdict(list),
             "success_rates": defaultdict(float),
             "error_patterns": defaultdict(list),
-            "communication_patterns": defaultdict(lambda: defaultdict(int)),
+            "communication_patterns": defaultdict(self._default_communication_patterns),
             "peak_usage_times": defaultdict(list),
             "resource_utilization": defaultdict(dict)
         }
@@ -578,6 +576,38 @@ class ComprehensiveAgentManagerSDK(A2AAgentBase, BlockchainIntegrationMixin):
         
         logger.info(f"Initialized {self.name} with real AI intelligence and comprehensive message tracking")
     
+    def _default_lifecycle_stats(self):
+        """Default lifecycle stats structure for message tracking"""
+        return {
+            "sent": 0, "received": 0, "processed": 0, "rejected": 0, 
+            "referred": 0, "completed": 0, "failed": 0, "partial": 0
+        }
+    
+    def _default_skill_performance(self):
+        """Default skill performance structure"""
+        def _default_skill_stats():
+            return {
+                "attempts": 0, "successes": 0, "failures": 0, 
+                "avg_processing_time": 0.0, "skill_reputation": 1.0
+            }
+        return defaultdict(_default_skill_stats)
+    
+    def _default_referral_success(self):
+        """Default referral success structure"""
+        return {"successful": 0, "failed": 0}
+    
+    def _default_communication_patterns(self):
+        """Default communication patterns structure"""
+        return defaultdict(int)
+    
+    def _get_agent_reputation(self, agent):
+        """Helper function to extract agent reputation for sorting"""
+        return agent["reputation"]
+    
+    def _get_overall_reputation_score(self, ranking_entry):
+        """Helper function to extract overall reputation score for sorting"""
+        return ranking_entry["reputation_scores"]["overall"]
+
     def _initialize_grok_client(self):
         """Initialize Grok AI client for intelligent agent management"""
         if not OPENAI_AVAILABLE:
@@ -1675,7 +1705,7 @@ class ComprehensiveAgentManagerSDK(A2AAgentBase, BlockchainIntegrationMixin):
                 "skill_bottlenecks": skill_bottlenecks,
                 "recommendations": recommendations,
                 "top_agents_by_skill": {
-                    skill: sorted(agents, key=lambda x: x["reputation"], reverse=True)[:3]
+                    skill: sorted(agents, key=self._get_agent_reputation, reverse=True)[:3]
                     for skill, agents in skill_agents.items()
                 },
                 "network_resilience": 1.0 - (single_point_skills / total_skills) if total_skills > 0 else 1.0
@@ -1755,7 +1785,7 @@ class ComprehensiveAgentManagerSDK(A2AAgentBase, BlockchainIntegrationMixin):
                 agent_rankings.append(ranking_entry)
             
             # Sort by overall reputation
-            agent_rankings.sort(key=lambda x: x["reputation_scores"]["overall"], reverse=True)
+            agent_rankings.sort(key=self._get_overall_reputation_score, reverse=True)
             
             logger.info(f"Generated marketplace rankings for {len(agent_rankings)} agents")
             

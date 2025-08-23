@@ -7,7 +7,7 @@ const { DevMonitor } = require('./services/DevMonitor');
 const { HotReloader } = require('./services/HotReloader');
 const logger = require('./utils/logger');
 
-module.exports = cds.service.impl(async function() {
+const handleCdsServiceImplementation = async function() {
     // Initialize services
     const mockRegistry = new MockRegistry();
     const testOrchestrator = new TestOrchestrator();
@@ -17,7 +17,7 @@ module.exports = cds.service.impl(async function() {
     const hotReloader = new HotReloader();
     
     // Initialize all services on startup
-    this.on('serving', async () => {
+    const handleServiceInitialization = async () => {
         await mockRegistry.initialize();
         await testOrchestrator.initialize();
         await agentSimulator.initialize();
@@ -25,81 +25,97 @@ module.exports = cds.service.impl(async function() {
         await devMonitor.initialize();
         await hotReloader.initialize();
         logger.info('All dev services initialized successfully');
-    });
+    };
+    this.on('serving', handleServiceInitialization);
     
     // Mock Registry handlers
-    this.on('READ', 'Agents', async () => {
+    const handleReadAgents = async () => {
         return await mockRegistry.getAllAgents();
-    });
+    };
+    this.on('READ', 'Agents', handleReadAgents);
     
-    this.on('registerAgent', async (req) => {
+    const handleRegisterAgent = async (req) => {
         const result = await mockRegistry.registerAgent(JSON.parse(req.data.agentData));
         return JSON.stringify(result);
-    });
+    };
+    this.on('registerAgent', handleRegisterAgent);
     
-    this.on('discoverAgents', async (req) => {
+    const handleDiscoverAgents = async (req) => {
         return await mockRegistry.discoverAgents(req.data.capability);
-    });
+    };
+    this.on('discoverAgents', handleDiscoverAgents);
     
     // Test Orchestration handlers
-    this.on('runTestSuite', async (req) => {
+    const handleRunTestSuite = async (req) => {
         const result = await testOrchestrator.runTestSuite(JSON.parse(req.data.testData));
         return result;
-    });
+    };
+    this.on('runTestSuite', handleRunTestSuite);
     
-    this.on('testAgent', async (req) => {
+    const handleTestAgent = async (req) => {
         const result = await testOrchestrator.testAgent(req.data.agentId, JSON.parse(req.data.testConfig));
         return JSON.stringify(result);
-    });
+    };
+    this.on('testAgent', handleTestAgent);
     
-    this.on('getTestResults', async (req) => {
+    const handleGetTestResults = async (req) => {
         return await testOrchestrator.getTestResults(req.data.testId);
-    });
+    };
+    this.on('getTestResults', handleGetTestResults);
     
     // Agent Simulation handlers
-    this.on('runScenario', async (req) => {
+    const handleRunScenario = async (req) => {
         const result = await agentSimulator.runScenario(JSON.parse(req.data.scenarioData));
         return JSON.stringify(result);
-    });
+    };
+    this.on('runScenario', handleRunScenario);
     
-    this.on('getAvailableScenarios', async () => {
+    const handleGetAvailableScenarios = async () => {
         return await agentSimulator.getAvailableScenarios();
-    });
+    };
+    this.on('getAvailableScenarios', handleGetAvailableScenarios);
     
-    this.on('runLoadTest', async (req) => {
+    const handleRunLoadTest = async (req) => {
         const result = await agentSimulator.runLoadTest(JSON.parse(req.data.loadTestConfig));
         return JSON.stringify(result);
-    });
+    };
+    this.on('runLoadTest', handleRunLoadTest);
     
     // Service Mocking handlers
-    this.on('READ', 'MockServices', async () => {
+    const handleReadMockServices = async () => {
         return await serviceMocker.getAllMocks();
-    });
+    };
+    this.on('READ', 'MockServices', handleReadMockServices);
     
-    this.on('createMock', async (req) => {
+    const handleCreateMock = async (req) => {
         return await serviceMocker.createMock(JSON.parse(req.data.mockData));
-    });
+    };
+    this.on('createMock', handleCreateMock);
     
-    this.on('updateMock', async (req) => {
+    const handleUpdateMock = async (req) => {
         return await serviceMocker.updateMock(req.data.mockId, JSON.parse(req.data.mockData));
-    });
+    };
+    this.on('updateMock', handleUpdateMock);
     
-    this.on('deleteMock', async (req) => {
+    const handleDeleteMock = async (req) => {
         await serviceMocker.deleteMock(req.data.mockId);
         return true;
-    });
+    };
+    this.on('deleteMock', handleDeleteMock);
     
     // Development Monitoring handlers
-    this.on('getMetrics', async () => {
+    const handleGetMetrics = async () => {
         return await devMonitor.getMetrics();
-    });
+    };
+    this.on('getMetrics', handleGetMetrics);
     
-    this.on('getLogs', async (req) => {
+    const handleGetLogs = async (req) => {
         const filters = req.data.filters ? JSON.parse(req.data.filters) : {};
         return await devMonitor.getLogs(filters);
-    });
+    };
+    this.on('getLogs', handleGetLogs);
     
-    this.on('getHealthStatus', async () => {
+    const handleGetHealthStatus = async () => {
         const health = await devMonitor.getHealthStatus();
         return JSON.stringify({
             status: 'healthy',
@@ -113,10 +129,11 @@ module.exports = cds.service.impl(async function() {
                 hotReloader: hotReloader.isHealthy()
             }
         });
-    });
+    };
+    this.on('getHealthStatus', handleGetHealthStatus);
     
     // Graceful shutdown
-    process.on('SIGTERM', async () => {
+    const handleGracefulShutdown = async () => {
         logger.info('Received SIGTERM, shutting down dev services gracefully');
         
         await mockRegistry.shutdown();
@@ -125,5 +142,8 @@ module.exports = cds.service.impl(async function() {
         await serviceMocker.shutdown();
         await devMonitor.shutdown();
         await hotReloader.shutdown();
-    });
-});
+    };
+    process.on('SIGTERM', handleGracefulShutdown);
+};
+
+module.exports = cds.service.impl(handleCdsServiceImplementation);

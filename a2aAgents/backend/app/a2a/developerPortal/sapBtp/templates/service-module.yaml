@@ -1,0 +1,39 @@
+# Backend Service Module Template  
+
+service-module:
+  type: nodejs
+  parameters:
+    <<: *nodejs-module-params
+    disk-quota: *disk-medium
+    memory: *memory-large
+    
+  build-parameters:
+    <<: *default-build-params
+    
+  requires:
+    - <<: *xsuaa-binding
+    - <<: *destination-binding
+    - <<: *connectivity-binding
+    - name: "#{DATABASE_SERVICE_NAME}"
+      parameters:
+        ENV_TYPE: DATABASE
+        
+  provides:
+    - name: "#{SERVICE_PROVIDES_NAME}"
+      properties:
+        srv-url: "${default-url}"
+        
+  properties:
+    SAP_JWT_TRUST_ACL: >
+      [
+        {"clientid":"*","identityzone":"*"}
+      ]
+    EXIT: 1
+    
+  env:
+    <<: *common-env
+    SERVICE_BINDING_ROOT: "/bindings"
+    
+  health-check:
+    <<: *default-health-check
+    endpoint: "/health"

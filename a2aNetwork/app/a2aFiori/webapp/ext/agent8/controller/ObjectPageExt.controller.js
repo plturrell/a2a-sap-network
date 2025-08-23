@@ -1090,6 +1090,631 @@ sap.ui.define([
                     return item;
                 }
             });
+        },
+
+        /**
+         * @function onTestTransformation
+         * @description Tests data transformation with sample data.
+         * @public
+         * @memberof a2a.network.agent8.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        onTestTransformation: function() {
+            var oContext = this._extensionAPI.getBindingContext();
+            var sTaskId = this._securityUtils.sanitizeInput(oContext.getProperty("ID"));
+            var sTaskName = this._securityUtils.sanitizeInput(oContext.getProperty("taskName"));
+            
+            if (!this._securityUtils.hasRole("TransformationManager")) {
+                MessageBox.error("Access denied: Insufficient privileges for testing transformations");
+                this._securityUtils.auditLog("TEST_TRANSFORMATION_ACCESS_DENIED", { taskId: sTaskId });
+                return;
+            }
+            
+            MessageBox.confirm("Test transformation for task '" + sTaskName + "'?\\n\\nThis will run the transformation on a sample dataset.", {
+                onClose: function(oAction) {
+                    if (oAction === MessageBox.Action.OK) {
+                        this._executeTransformationTest(sTaskId);
+                    }
+                }.bind(this)
+            });
+        },
+
+        /**
+         * @function onRunTransformation
+         * @description Runs the data transformation on the full dataset.
+         * @public
+         * @memberof a2a.network.agent8.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        onRunTransformation: function() {
+            var oContext = this._extensionAPI.getBindingContext();
+            var sTaskId = this._securityUtils.sanitizeInput(oContext.getProperty("ID"));
+            var sTaskName = this._securityUtils.sanitizeInput(oContext.getProperty("taskName"));
+            var sStatus = oContext.getProperty("status");
+            
+            if (!this._securityUtils.hasRole("TransformationManager")) {
+                MessageBox.error("Access denied: Insufficient privileges for running transformations");
+                this._securityUtils.auditLog("RUN_TRANSFORMATION_ACCESS_DENIED", { taskId: sTaskId });
+                return;
+            }
+            
+            if (sStatus !== "DRAFT" && sStatus !== "TESTED") {
+                MessageBox.warning("Transformation can only be run when status is DRAFT or TESTED");
+                return;
+            }
+            
+            MessageBox.confirm(
+                "Run transformation for task '" + sTaskName + "'?\\n\\n" +
+                "This will process the full dataset and may take considerable time.",
+                {
+                    onClose: function(oAction) {
+                        if (oAction === MessageBox.Action.OK) {
+                            this._executeTransformation(sTaskId);
+                        }
+                    }.bind(this)
+                }
+            );
+        },
+
+        /**
+         * @function onViewResults
+         * @description Views the results of completed transformation.
+         * @public
+         * @memberof a2a.network.agent8.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        onViewResults: function() {
+            var oContext = this._extensionAPI.getBindingContext();
+            var sTaskId = this._securityUtils.sanitizeInput(oContext.getProperty("ID"));
+            var sStatus = oContext.getProperty("status");
+            
+            if (sStatus !== "COMPLETED") {
+                MessageBox.warning("Results can only be viewed for completed transformations");
+                return;
+            }
+            
+            this._getOrCreateDialog("viewResults", "a2a.network.agent8.ext.fragment.TransformationResults")
+                .then(function(oDialog) {
+                    oDialog.open();
+                    this._loadTransformationResults(sTaskId, oDialog);
+                    
+                    this._securityUtils.auditLog("TRANSFORMATION_RESULTS_VIEWED", { taskId: sTaskId });
+                }.bind(this));
+        },
+
+        /**
+         * @function onExportTransformedData
+         * @description Exports the transformed data in various formats.
+         * @public
+         * @memberof a2a.network.agent8.ext.controller.ObjectPageExt
+         * @since 1.0.0
+         */
+        onExportTransformedData: function() {
+            var oContext = this._extensionAPI.getBindingContext();
+            var sTaskId = this._securityUtils.sanitizeInput(oContext.getProperty("ID"));
+            
+            if (!this._securityUtils.hasRole("TransformationManager")) {
+                MessageBox.error("Access denied: Insufficient privileges for exporting transformed data");
+                this._securityUtils.auditLog("EXPORT_TRANSFORMED_DATA_ACCESS_DENIED", { taskId: sTaskId });
+                return;
+            }
+            
+            this._getOrCreateDialog("exportTransformed", "a2a.network.agent8.ext.fragment.ExportTransformedData")
+                .then(function(oDialog) {
+                    var oModel = new JSONModel({
+                        taskId: sTaskId,
+                        exportFormat: "JSON",
+                        includeMetadata: true,
+                        includeStatistics: true,
+                        compressOutput: true,
+                        outputDestination: "LOCAL",
+                        maxRecords: 0,
+                        filterCriteria: {}
+                    });
+                    oDialog.setModel(oModel, "export");
+                    oDialog.open();
+                    
+                    this._securityUtils.auditLog("EXPORT_TRANSFORMED_DIALOG_OPENED", { taskId: sTaskId });
+                }.bind(this));
+        },
+
+        /**
+         * @function _executeTransformationTest
+         * @description Executes transformation test with sample data.
+         * @param {string} sTaskId - Task ID to test
+         * @private
+         */
+        _executeTransformationTest: function(sTaskId) {
+            this.base.getView().setBusy(true);
+            
+            const requestData = {
+                testMode: true,
+                sampleSize: 1000,
+                validateOutput: true
+            };
+            
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent8/v1/transformations/" + encodeURIComponent(sTaskId) + "/test",
+                type: "POST",
+                data: JSON.stringify(requestData),
+                success: function(data) {
+                    this.base.getView().setBusy(false);
+                    this._showTestResults(data);
+                    
+                    this._securityUtils.auditLog("TRANSFORMATION_TEST_EXECUTED", {
+                        taskId: sTaskId,
+                        testId: data.testId
+                    });
+                }.bind(this),
+                error: function(xhr) {
+                    this.base.getView().setBusy(false);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Transformation test failed: " + errorMsg);
+                    this._securityUtils.auditLog("TRANSFORMATION_TEST_FAILED", { taskId: sTaskId, error: errorMsg });
+                }.bind(this)
+            });
+            
+            jQuery.ajax(ajaxConfig);
+        },
+
+        /**
+         * @function _executeTransformation
+         * @description Executes full transformation with progress monitoring.
+         * @param {string} sTaskId - Task ID to run
+         * @private
+         */
+        _executeTransformation: function(sTaskId) {
+            this.base.getView().setBusy(true);
+            
+            const requestData = {
+                fullRun: true,
+                backupBeforeRun: true,
+                continueOnError: false
+            };
+            
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent8/v1/transformations/" + encodeURIComponent(sTaskId) + "/run",
+                type: "POST",
+                data: JSON.stringify(requestData),
+                success: function(data) {
+                    this.base.getView().setBusy(false);
+                    
+                    MessageBox.success(
+                        "Transformation started successfully!\\n" +
+                        "Job ID: " + this._securityUtils.sanitizeInput(data.jobId) + "\\n" +
+                        "Estimated time: " + this._securityUtils.sanitizeInput(data.estimatedTime) + " minutes"
+                    );
+                    
+                    this._extensionAPI.refresh();
+                    this._startTransformationMonitoring(data.jobId);
+                    
+                    this._securityUtils.auditLog("TRANSFORMATION_STARTED", {
+                        taskId: sTaskId,
+                        jobId: data.jobId
+                    });
+                }.bind(this),
+                error: function(xhr) {
+                    this.base.getView().setBusy(false);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Transformation failed to start: " + errorMsg);
+                    this._securityUtils.auditLog("TRANSFORMATION_START_FAILED", { taskId: sTaskId, error: errorMsg });
+                }.bind(this)
+            });
+            
+            jQuery.ajax(ajaxConfig);
+        },
+
+        /**
+         * @function _loadTransformationResults
+         * @description Loads transformation results for viewing.
+         * @param {string} sTaskId - Task ID
+         * @param {sap.m.Dialog} oDialog - Target dialog
+         * @private
+         */
+        _loadTransformationResults: function(sTaskId, oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["viewResults"];
+            if (!oTargetDialog) return;
+            
+            oTargetDialog.setBusy(true);
+            
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent8/v1/transformations/" + encodeURIComponent(sTaskId) + "/results",
+                type: "GET",
+                success: function(data) {
+                    oTargetDialog.setBusy(false);
+                    
+                    var oModel = new JSONModel({
+                        taskId: sTaskId,
+                        results: this._securityUtils.sanitizeObject(data.results),
+                        statistics: this._securityUtils.sanitizeObject(data.statistics),
+                        summary: this._securityUtils.sanitizeObject(data.summary),
+                        errors: this._securityUtils.sanitizeArray(data.errors || [])
+                    });
+                    oTargetDialog.setModel(oModel, "results");
+                    
+                    this._createResultsCharts(data, oTargetDialog);
+                    this._securityUtils.auditLog("TRANSFORMATION_RESULTS_LOADED", { taskId: sTaskId });
+                }.bind(this),
+                error: function(xhr) {
+                    oTargetDialog.setBusy(false);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Failed to load transformation results: " + errorMsg);
+                    this._securityUtils.auditLog("TRANSFORMATION_RESULTS_LOAD_FAILED", { taskId: sTaskId, error: errorMsg });
+                }.bind(this)
+            });
+            
+            jQuery.ajax(ajaxConfig);
+        },
+
+        /**
+         * @function _showTestResults
+         * @description Shows transformation test results.
+         * @param {Object} testData - Test results data
+         * @private
+         */
+        _showTestResults: function(testData) {
+            var sMessage = "Transformation Test Results:\\n\\n";
+            
+            const safeRecordsProcessed = parseInt(testData.recordsProcessed) || 0;
+            const safeRecordsTransformed = parseInt(testData.recordsTransformed) || 0;
+            const safeErrors = parseInt(testData.errors) || 0;
+            const safeExecutionTime = parseFloat(testData.executionTime) || 0;
+            
+            sMessage += "Records Processed: " + safeRecordsProcessed + "\\n";
+            sMessage += "Records Transformed: " + safeRecordsTransformed + "\\n";
+            sMessage += "Errors: " + safeErrors + "\\n";
+            sMessage += "Execution Time: " + safeExecutionTime + "s\\n\\n";
+            
+            if (testData.validationResults) {
+                const safeValidation = this._securityUtils.sanitizeObject(testData.validationResults);
+                sMessage += "Validation Results:\\n";
+                sMessage += "Valid Records: " + (safeValidation.validRecords || 0) + "\\n";
+                sMessage += "Invalid Records: " + (safeValidation.invalidRecords || 0) + "\\n";
+                sMessage += "Validation Score: " + (safeValidation.score || 0) + "%\\n\\n";
+            }
+            
+            if (safeErrors === 0) {
+                sMessage += "✓ Test completed successfully! Transformation is ready to run.";
+            } else {
+                sMessage += "⚠ Test completed with errors. Please review transformation rules.";
+            }
+            
+            MessageBox.information(sMessage, {
+                actions: ["View Details", "Run Full Transformation", MessageBox.Action.CLOSE],
+                onClose: function(oAction) {
+                    if (oAction === "View Details") {
+                        this._showDetailedTestResults(testData);
+                    } else if (oAction === "Run Full Transformation" && safeErrors === 0) {
+                        this.onRunTransformation();
+                    }
+                }.bind(this)
+            });
+        },
+
+        /**
+         * @function _showDetailedTestResults
+         * @description Shows detailed test results in a dialog.
+         * @param {Object} testData - Test results data
+         * @private
+         */
+        _showDetailedTestResults: function(testData) {
+            this._getOrCreateDialog("testResults", "a2a.network.agent8.ext.fragment.TestResults")
+                .then(function(oDialog) {
+                    var oModel = new JSONModel({
+                        testResults: this._securityUtils.sanitizeObject(testData)
+                    });
+                    oDialog.setModel(oModel, "test");
+                    oDialog.open();
+                }.bind(this));
+        },
+
+        /**
+         * @function _startTransformationMonitoring
+         * @description Starts real-time monitoring of transformation progress.
+         * @param {string} sJobId - Job ID to monitor
+         * @private
+         */
+        _startTransformationMonitoring: function(sJobId) {
+            if (this._transformationEventSource) {
+                this._transformationEventSource.close();
+            }
+            
+            const streamUrl = "/a2a/agent8/v1/transformations/jobs/" + encodeURIComponent(sJobId) + "/stream";
+            
+            if (!this._securityUtils.validateEventSourceUrl(streamUrl)) {
+                MessageBox.error("Invalid transformation monitoring stream URL");
+                return;
+            }
+            
+            this._transformationEventSource = new EventSource(streamUrl);
+            
+            this._transformationEventSource.onmessage = function(event) {
+                try {
+                    var data = JSON.parse(event.data);
+                    
+                    if (data.type === "progress") {
+                        const progress = Math.max(0, Math.min(100, parseInt(data.progress) || 0));
+                        const stage = this._securityUtils.sanitizeInput(data.stage);
+                        MessageToast.show("Transformation: " + stage + " (" + progress + "%)");
+                    } else if (data.type === "completed") {
+                        this._transformationEventSource.close();
+                        MessageBox.success("Transformation completed successfully!");
+                        this._extensionAPI.refresh();
+                        this._securityUtils.auditLog("TRANSFORMATION_COMPLETED", { jobId: sJobId });
+                    } else if (data.type === "failed") {
+                        this._transformationEventSource.close();
+                        const errorMsg = this._securityUtils.sanitizeInput(data.error || "Unknown error");
+                        MessageBox.error("Transformation failed: " + errorMsg);
+                        this._securityUtils.auditLog("TRANSFORMATION_FAILED", { jobId: sJobId, error: errorMsg });
+                    }
+                } catch (e) {
+                    this._transformationEventSource.close();
+                    MessageBox.error("Invalid data received from transformation monitoring");
+                }
+            }.bind(this);
+            
+            this._transformationEventSource.onerror = function() {
+                if (this._transformationEventSource) {
+                    this._transformationEventSource.close();
+                    this._transformationEventSource = null;
+                }
+                MessageBox.error("Lost connection to transformation monitoring");
+            }.bind(this);
+        },
+
+        /**
+         * @function _createResultsCharts
+         * @description Creates visualization charts for transformation results.
+         * @param {Object} data - Results data
+         * @param {sap.m.Dialog} oDialog - Target dialog
+         * @private
+         */
+        _createResultsCharts: function(data, oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["viewResults"];
+            if (!oTargetDialog) return;
+            
+            this._createTransformationSummaryChart(data.summary, oTargetDialog);
+            this._createErrorDistributionChart(data.errors, oTargetDialog);
+        },
+
+        /**
+         * @function _createTransformationSummaryChart
+         * @description Creates summary chart for transformation results.
+         * @param {Object} summaryData - Summary data
+         * @param {sap.m.Dialog} oDialog - Target dialog
+         * @private
+         */
+        _createTransformationSummaryChart: function(summaryData, oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["viewResults"];
+            if (!oTargetDialog) return;
+            
+            var oChart = oTargetDialog.byId("summaryChart");
+            if (!oChart || !summaryData) return;
+            
+            var aChartData = [
+                {
+                    Category: "Processed",
+                    Count: summaryData.recordsProcessed || 0
+                },
+                {
+                    Category: "Transformed",
+                    Count: summaryData.recordsTransformed || 0
+                },
+                {
+                    Category: "Errors",
+                    Count: summaryData.errors || 0
+                }
+            ];
+            
+            var oChartModel = new JSONModel({
+                summaryData: aChartData
+            });
+            oChart.setModel(oChartModel);
+        },
+
+        /**
+         * @function _createErrorDistributionChart
+         * @description Creates error distribution chart.
+         * @param {Array} errorData - Error data
+         * @param {sap.m.Dialog} oDialog - Target dialog
+         * @private
+         */
+        _createErrorDistributionChart: function(errorData, oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["viewResults"];
+            if (!oTargetDialog) return;
+            
+            var oChart = oTargetDialog.byId("errorChart");
+            if (!oChart || !errorData || errorData.length === 0) return;
+            
+            // Group errors by type
+            var errorGroups = {};
+            errorData.forEach(function(error) {
+                var type = error.type || "Unknown";
+                errorGroups[type] = (errorGroups[type] || 0) + 1;
+            });
+            
+            var aChartData = Object.keys(errorGroups).map(function(type) {
+                return {
+                    ErrorType: type,
+                    Count: errorGroups[type]
+                };
+            });
+            
+            var oChartModel = new JSONModel({
+                errorData: aChartData
+            });
+            oChart.setModel(oChartModel);
+        },
+
+        /**
+         * @function _getOrCreateDialog
+         * @description Gets cached dialog or creates new one for performance.
+         * @param {string} sDialogId - Dialog identifier
+         * @param {string} sFragmentName - Fragment name to load
+         * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog
+         * @private
+         */
+        _getOrCreateDialog: function(sDialogId, sFragmentName) {
+            var that = this;
+            
+            if (this._dialogCache && this._dialogCache[sDialogId]) {
+                return Promise.resolve(this._dialogCache[sDialogId]);
+            }
+            
+            // Initialize dialog cache if not exists
+            if (!this._dialogCache) {
+                this._dialogCache = {};
+            }
+            
+            return Fragment.load({
+                id: this.base.getView().getId(),
+                name: sFragmentName,
+                controller: this
+            }).then(function(oDialog) {
+                that._dialogCache[sDialogId] = oDialog;
+                that.base.getView().addDependent(oDialog);
+                
+                // Enable accessibility
+                that._enableDialogAccessibility(oDialog);
+                
+                // Optimize for mobile
+                that._optimizeDialogForDevice(oDialog);
+                
+                return oDialog;
+            });
+        },
+
+        /**
+         * @function _enableDialogAccessibility
+         * @description Adds accessibility features to dialog.
+         * @param {sap.m.Dialog} oDialog - Dialog to enhance
+         * @private
+         */
+        _enableDialogAccessibility: function(oDialog) {
+            oDialog.addEventDelegate({
+                onAfterRendering: function() {
+                    var $dialog = oDialog.$();
+                    
+                    // Set tabindex for focusable elements
+                    $dialog.find("input, button, select, textarea").attr("tabindex", "0");
+                    
+                    // Handle escape key
+                    $dialog.on("keydown", function(e) {
+                        if (e.key === "Escape") {
+                            oDialog.close();
+                        }
+                    });
+                    
+                    // Focus first input on open
+                    setTimeout(function() {
+                        $dialog.find("input:visible:first").focus();
+                    }, 100);
+                }
+            });
+        },
+
+        /**
+         * @function _optimizeDialogForDevice
+         * @description Optimizes dialog for current device type.
+         * @param {sap.m.Dialog} oDialog - Dialog to optimize
+         * @private
+         */
+        _optimizeDialogForDevice: function(oDialog) {
+            if (sap.ui.Device.system.phone) {
+                oDialog.setStretch(true);
+                oDialog.setContentWidth("100%");
+                oDialog.setContentHeight("100%");
+            } else if (sap.ui.Device.system.tablet) {
+                oDialog.setContentWidth("95%");
+                oDialog.setContentHeight("90%");
+            }
+            
+            // Add resize handler
+            sap.ui.Device.resize.attachHandler(function() {
+                if (sap.ui.Device.system.phone) {
+                    oDialog.setStretch(true);
+                } else {
+                    oDialog.setStretch(false);
+                }
+            });
+        },
+
+        /**
+         * @function onConfirmExportTransformedData
+         * @description Confirms and starts export of transformed data.
+         * @public
+         */
+        onConfirmExportTransformedData: function() {
+            var oDialog = this._dialogCache["exportTransformed"];
+            if (!oDialog) return;
+            
+            var oModel = oDialog.getModel("export");
+            var oData = oModel.getData();
+            
+            // Validate export parameters
+            if (!oData.exportFormat) {
+                MessageBox.error("Please select an export format");
+                return;
+            }
+            
+            oDialog.setBusy(true);
+            
+            const requestData = {
+                taskId: this._securityUtils.sanitizeInput(oData.taskId),
+                format: this._securityUtils.sanitizeInput(oData.exportFormat),
+                includeMetadata: Boolean(oData.includeMetadata),
+                includeStatistics: Boolean(oData.includeStatistics),
+                compressOutput: Boolean(oData.compressOutput),
+                outputDestination: this._securityUtils.sanitizeInput(oData.outputDestination),
+                maxRecords: Math.max(0, parseInt(oData.maxRecords) || 0),
+                filterCriteria: this._securityUtils.sanitizeObject(oData.filterCriteria || {})
+            };
+            
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent8/v1/transformations/export",
+                type: "POST",
+                data: JSON.stringify(requestData),
+                success: function(data) {
+                    oDialog.setBusy(false);
+                    oDialog.close();
+                    
+                    MessageBox.success(
+                        "Export initiated successfully!\\n" +
+                        "Export ID: " + this._securityUtils.sanitizeInput(data.exportId) + "\\n" +
+                        "Estimated time: " + this._securityUtils.sanitizeInput(data.estimatedTime) + " minutes\\n" +
+                        "You will be notified when the export is ready."
+                    );
+                    
+                    this._securityUtils.auditLog("TRANSFORMED_DATA_EXPORT_STARTED", {
+                        taskId: requestData.taskId,
+                        exportId: data.exportId,
+                        format: requestData.format
+                    });
+                }.bind(this),
+                error: function(xhr) {
+                    oDialog.setBusy(false);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Export failed: " + errorMsg);
+                    this._securityUtils.auditLog("TRANSFORMED_DATA_EXPORT_FAILED", {
+                        taskId: requestData.taskId,
+                        error: errorMsg
+                    });
+                }.bind(this)
+            });
+            
+            jQuery.ajax(ajaxConfig);
+        },
+
+        /**
+         * @function onCancelExportTransformedData
+         * @description Cancels export of transformed data.
+         * @public
+         */
+        onCancelExportTransformedData: function() {
+            var oDialog = this._dialogCache["exportTransformed"];
+            if (oDialog) {
+                oDialog.close();
+            }
         }
     });
 });

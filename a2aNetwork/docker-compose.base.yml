@@ -1,0 +1,149 @@
+# Base Docker Compose with reusable anchors
+version: '3.8'
+
+# YAML Anchors for reusable configuration
+x-common-variables: &common-variables
+  A2A_ENVIRONMENT: ${A2A_ENVIRONMENT:-development}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  NODE_ENV: ${NODE_ENV:-development}
+
+x-common-healthcheck: &common-healthcheck
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 60s
+
+x-restart-policy: &restart-policy
+  restart: unless-stopped
+
+x-network-config: &network-config
+  networks:
+    - a2a-network
+
+x-logging-config: &logging-config
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+x-resource-limits: &resource-limits-small
+  deploy:
+    resources:
+      limits:
+        cpus: '0.5'
+        memory: 512M
+      reservations:
+        cpus: '0.1'
+        memory: 128M
+
+x-resource-limits-medium: &resource-limits-medium
+  deploy:
+    resources:
+      limits:
+        cpus: '1.0'
+        memory: 1G
+      reservations:
+        cpus: '0.2'
+        memory: 256M
+
+x-resource-limits-large: &resource-limits-large
+  deploy:
+    resources:
+      limits:
+        cpus: '2.0'
+        memory: 2G
+      reservations:
+        cpus: '0.5'
+        memory: 512M
+
+services:
+  # A2A Network Agent
+  a2a-agent:
+    image: finsight-cib:latest
+    container_name: a2a-agent
+    <<: [*restart-policy, *network-config, *logging-config, *resource-limits-large]
+    environment:
+      <<: *common-variables
+    env_file:
+      - .env.${A2A_ENVIRONMENT:-development}
+    ports:
+      - "${A2A_API_PORT:-8000}:8000"
+      - "${A2A_METRICS_PORT:-9090}:9090"
+    volumes:
+      - ./logs:/app/logs
+      - ./config:/app/config:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      <<: *common-healthcheck
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+
+  # Redis for caching and rate limiting
+  redis:
+    image: redis:${REDIS_VERSION:-7}-alpine
+    container_name: a2a-redis
+    <<: [*restart-policy, *network-config, *logging-config, *resource-limits-small]
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-defaultpassword}
+    volumes:
+      - redis-data:/data
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    healthcheck:
+      <<: *common-healthcheck
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD:-defaultpassword}", "ping"]
+
+  # PostgreSQL for persistent data
+  postgres:
+    image: postgres:${POSTGRES_VERSION:-15}-alpine
+    container_name: a2a-postgres
+    <<: [*restart-policy, *network-config, *logging-config, *resource-limits-medium]
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-a2a_network}
+      POSTGRES_USER: ${POSTGRES_USER:-a2a_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-a2a_password}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./config/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      <<: *common-healthcheck
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-a2a_user} -d ${POSTGRES_DB:-a2a_network}"]
+
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:${NGINX_VERSION:-1.24}-alpine
+    container_name: a2a-nginx
+    <<: [*restart-policy, *network-config, *logging-config, *resource-limits-small]
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - a2a-agent
+    healthcheck:
+      <<: *common-healthcheck
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+
+networks:
+  a2a-network:
+    name: a2a-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  redis-data:
+    name: a2a-redis-data
+    driver: local
+  postgres-data:
+    name: a2a-postgres-data
+    driver: local

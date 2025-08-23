@@ -1,0 +1,59 @@
+# Development environment override
+version: '3.8'
+
+services:
+  a2a-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+    environment:
+      - A2A_ENVIRONMENT=development
+      - LOG_LEVEL=debug
+      - NODE_ENV=development
+      - DEBUG=a2a:*
+    volumes:
+      # Development hot reload
+      - .:/app
+      - /app/node_modules
+    ports:
+      # Expose debugging port
+      - "${DEBUG_PORT:-9229}:9229"
+    command: ["npm", "run", "dev"]
+
+  redis:
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    # No password in development
+    command: redis-server --appendonly yes
+
+  postgres:
+    environment:
+      - POSTGRES_PASSWORD=dev_password
+    volumes:
+      # Mount dev seed data
+      - ./dev/seed-data.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+
+  # Development tools
+  adminer:
+    image: adminer:${ADMINER_VERSION:-4.8.1}
+    container_name: a2a-adminer
+    restart: unless-stopped
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+    networks:
+      - a2a-network
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+
+  # Redis GUI
+  redis-commander:
+    image: rediscommander/redis-commander:${REDIS_COMMANDER_VERSION:-latest}
+    container_name: a2a-redis-gui
+    restart: unless-stopped
+    ports:
+      - "${REDIS_GUI_PORT:-8081}:8081"
+    networks:
+      - a2a-network
+    environment:
+      REDIS_HOSTS: local:redis:6379

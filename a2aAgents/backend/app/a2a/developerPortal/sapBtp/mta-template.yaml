@@ -1,0 +1,108 @@
+# MTA Template for A2A Developer Portal
+# This template uses parameterized values from environment-specific files
+
+_schema-version: "3.3"
+ID: "#{ID}"
+description: SAP A2A Enterprise Developer Portal - Multi-Agent Business Process Platform  
+version: "#{version}"
+author: SAP SE
+copyright: "© 2024 SAP SE or an SAP affiliate company. All rights reserved."
+
+# Import common templates
+x-templates:
+  - &common-module
+    $include: "./templates/common-module.yaml"
+
+parameters:
+  enable-parallel-deployments: "#{PARALLEL_DEPLOYMENTS}"
+  keep-existing-routes: "#{KEEP_EXISTING_ROUTES}"
+  deploy_mode: html5-repo
+
+global-parameters:
+  - name: backend-url
+    value: "~{srv-binding/srv-url}"
+  - name: sap-cloud-service
+    value: "sap.a2a.developerportal"
+
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - *install-cmd
+        - *build-ui-cmd
+        - *lint-cmd
+        - *test-cmd
+
+modules:
+  # Application Router Module
+  - name: "#{APPROUTER_MODULE_NAME}"
+    path: approuter
+    <<: 
+      - *common-module
+      - $include: "./templates/approuter-module.yaml#/approuter"
+    
+  # UI5 Frontend Module  
+  - name: "#{UI_MODULE_NAME}"
+    path: webapp
+    <<:
+      - *common-module
+      - $include: "./templates/ui5-module.yaml#/ui5-module"
+    
+  # Backend Service Module
+  - name: "#{SERVICE_MODULE_NAME}" 
+    path: srv
+    <<:
+      - *common-module
+      - $include: "./templates/service-module.yaml#/service-module"
+
+# Service Resources
+resources:
+  # XSUAA Service
+  - name: "#{XSUAA_SERVICE_NAME}"
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./security/xs-security.json
+      config:
+        xsappname: "#{ID}"
+        tenant-mode: "#{TENANT_MODE}"
+        
+  # Destination Service
+  - name: "#{DESTINATION_SERVICE_NAME}"
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+      config:
+        HTML5Runtime_enabled: true
+        
+  # Connectivity Service
+  - name: "#{CONNECTIVITY_SERVICE_NAME}"
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: connectivity
+      service-plan: lite
+      
+  # HTML5 Repository Service  
+  - name: "#{HTML5_REPO_SERVICE_NAME}"
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+      
+  # Database Service
+  - name: "#{DATABASE_SERVICE_NAME}"
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: postgresql
+      service-plan: standard
+
+# Note: This is a templated MTA file that reduces duplication through:
+# - Parameterized environment-specific values
+# - Reusable module templates
+# - Common configuration anchors
+# - Modular service definitions
+#
+# Usage: Replace parameter placeholders with environment-specific values
+# from development.yaml or production.yaml files

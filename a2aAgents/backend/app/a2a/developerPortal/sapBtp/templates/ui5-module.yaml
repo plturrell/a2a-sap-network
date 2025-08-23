@@ -1,0 +1,43 @@
+# SAP UI5/Fiori Module Template
+
+ui5-module:
+  type: html5
+  parameters:
+    <<: *nodejs-module-params
+    disk-quota: *disk-small
+    memory: *memory-small
+    
+  build-parameters:
+    builder: custom
+    commands:
+      - *install-cmd
+      - *build-ui-cmd
+      - *lint-cmd
+      - *test-cmd
+    ignore:
+      - "node_modules/"
+      - "coverage/"
+      - "test/"
+      - "*.log"
+      - "dist/"
+    artifacts:
+      - location: "dist/"
+        target-path: "webapp/"
+        
+  requires:
+    - <<: *xsuaa-binding
+    - name: "#{HTML5_REPO_SERVICE_NAME}"
+      parameters:
+        ENV_TYPE: HTML5_REPOSITORY
+        content-target: true
+        
+  provides:
+    - name: "#{UI_PROVIDES_NAME}"
+      properties:
+        url: "${default-url}"
+        
+  properties:
+    SAP_JWT_TRUST_ACL: >
+      [
+        {"clientid":"*","identityzone":"*"}
+      ]

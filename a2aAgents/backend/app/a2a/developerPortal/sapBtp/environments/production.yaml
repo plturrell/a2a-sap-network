@@ -1,0 +1,42 @@
+# Production Environment Parameters
+
+# Application Configuration
+ID: sap-a2a-developer-portal
+version: 2.1.0
+
+# Environment Settings
+NODE_ENV: production
+LOG_LEVEL: info
+TENANT_MODE: dedicated
+
+# Service Names
+XSUAA_SERVICE_NAME: sap-a2a-portal-xsuaa
+DESTINATION_SERVICE_NAME: sap-a2a-portal-destination
+CONNECTIVITY_SERVICE_NAME: sap-a2a-portal-connectivity
+HTML5_REPO_SERVICE_NAME: sap-a2a-portal-html5
+DATABASE_SERVICE_NAME: sap-a2a-portal-database
+
+# Module Names
+APPROUTER_MODULE_NAME: sap-a2a-portal-approuter
+UI_MODULE_NAME: sap-a2a-portal-ui
+SERVICE_MODULE_NAME: sap-a2a-portal-service
+
+# Provider Names
+APPROUTER_PROVIDES_NAME: approuter-api
+UI_PROVIDES_NAME: ui-content
+SERVICE_PROVIDES_NAME: srv-binding
+
+# BTP Settings
+CF_ORG: production
+CF_SPACE: a2a-prod
+DOMAIN: cfapps.sap.hana.ondemand.com
+
+# Resource Limits (Production)
+MEMORY_APPROUTER: 1024M
+MEMORY_UI: 512M
+MEMORY_SERVICE: 2048M
+DISK_QUOTA: 2048M
+
+# Build Settings
+PARALLEL_DEPLOYMENTS: true
+KEEP_EXISTING_ROUTES: false

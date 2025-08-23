@@ -2,118 +2,46 @@
   "scanMetadata": {
     "agent": "Agent 6 - Quality Control Manager",
     "scanType": "Quality Control Security Scan",
-    "timestamp": "2025-08-23T05:13:17.881Z",
-    "duration": 148,
-    "filesScanned": 14,
-    "totalVulnerabilities": 16
+    "timestamp": "2025-08-23T10:33:44.102Z",
+    "duration": 175,
+    "filesScanned": 15,
+    "totalVulnerabilities": 10
   },
   "summary": {
-    "critical": 3,
-    "high": 3,
-    "medium": 2,
+    "critical": 0,
+    "high": 2,
+    "medium": 0,
     "low": 8,
     "warning": 0
   },
   "vulnerabilities": [
     {
       "file": "../app/a2aFiori/webapp/ext/agent6/controller/ListReportExt.controller.js",
-      "line": 10,
-      "severity": "CRITICAL",
-      "category": "INPUT_VALIDATION",
-      "message": "Input validation vulnerability",
-      "impact": "Could allow code injection and arbitrary code execution in quality control context",
-      "pattern": "/Function\\s*\\([^)]*\\)/gi",
-      "match": "function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, encodeXML, encodeURL, Log)",
-      "isPositive": false,
-      "timestamp": "2025-08-23T05:13:17.741Z"
-    },
-    {
-      "file": "../app/a2aFiori/webapp/ext/agent6/controller/ObjectPageExt.controller.js",
-      "line": 13,
-      "severity": "CRITICAL",
-      "category": "INPUT_VALIDATION",
-      "message": "Input validation vulnerability",
-      "impact": "Could allow code injection and arbitrary code execution in quality control context",
-      "pattern": "/Function\\s*\\([^)]*\\)/gi",
-      "match": "function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, encodeURL, Log, Router, escapeRegExp, sanitizeHTML)",
-      "isPositive": false,
-      "timestamp": "2025-08-23T05:13:17.762Z"
-    },
-    {
-      "file": "../app/a2aFiori/webapp/ext/agent6/utils/PerformanceOptimizer.js",
-      "line": 5,
-      "severity": "CRITICAL",
-      "category": "INPUT_VALIDATION",
-      "message": "Input validation vulnerability",
-      "impact": "Could allow code injection and arbitrary code execution in quality control context",
-      "pattern": "/Function\\s*\\([^)]*\\)/gi",
-      "match": "function (Device, MessageToast, JSONModel)",
-      "isPositive": false,
-      "timestamp": "2025-08-23T05:13:17.873Z"
-    },
-    {
-      "file": "../app/a2aFiori/webapp/ext/agent6/controller/ListReportExt.controller.js",
-      "line": 446,
+      "line": 601,
       "severity": "HIGH",
       "category": "XSS_INJECTION",
       "message": "Cross-site scripting (XSS) vulnerability",
       "impact": "Could allow execution of malicious scripts in quality control interfaces",
       "pattern": "/MessageBox\\.\\w+\\s*\\([^)]*\\+/gi",
-      "match": "MessageBox.error(\"Failed to load dashboard data: \" +",
+      "match": "MessageBox.error(\"Failed to load trust data: \" +",
       "isPositive": false,
-      "timestamp": "2025-08-23T05:13:17.740Z"
+      "timestamp": "2025-08-23T10:33:43.935Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent6/controller/ObjectPageExt.controller.js",
-      "line": 316,
-      "severity": "HIGH",
-      "category": "XSS_INJECTION",
-      "message": "Cross-site scripting (XSS) vulnerability",
-      "impact": "Could allow execution of malicious scripts in quality control interfaces",
-      "pattern": "/MessageToast\\.show\\s*\\([^)]*\\+/gi",
-      "match": "MessageToast.show(data.component + \": \" + data.progress +",
-      "isPositive": false,
-      "timestamp": "2025-08-23T05:13:17.762Z"
-    },
-    {
-      "file": "../app/a2aFiori/webapp/ext/agent6/controller/ObjectPageExt.controller.js",
-      "line": 239,
+      "line": 320,
       "severity": "HIGH",
       "category": "XSS_INJECTION",
       "message": "Cross-site scripting (XSS) vulnerability",
       "impact": "Could allow execution of malicious scripts in quality control interfaces",
       "pattern": "/MessageBox\\.\\w+\\s*\\([^)]*\\+/gi",
-      "match": "MessageBox.confirm(\"Start quality assessment for '\" + sTaskName +",
+      "match": "MessageBox.error(\"Assessment failed: \" +",
       "isPositive": false,
-      "timestamp": "2025-08-23T05:13:17.762Z"
+      "timestamp": "2025-08-23T10:33:43.961Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent6/controller/ListReportExt.controller.js",
-      "line": 395,
-      "severity": "MEDIUM",
-      "category": "HARDCODED_THRESHOLDS",
-      "message": "Hardcoded quality thresholds detected",
-      "impact": "Could make quality control system inflexible and harder to maintain",
-      "pattern": "/minQualityScore\\s*[:=]\\s*[0-9]+/gi",
-      "match": "minQualityScore: 80...",
-      "isPositive": false,
-      "timestamp": "2025-08-23T05:13:17.756Z"
-    },
-    {
-      "file": "../app/a2aFiori/webapp/ext/agent6/controller/ObjectPageExt.controller.js",
-      "line": 186,
-      "severity": "MEDIUM",
-      "category": "HARDCODED_THRESHOLDS",
-      "message": "Hardcoded quality thresholds detected",
-      "impact": "Could make quality control system inflexible and harder to maintain",
-      "pattern": "/minQualityScore\\s*[:=]\\s*[0-9]+/gi",
-      "match": "minQualityScore: 80...",
-      "isPositive": false,
-      "timestamp": "2025-08-23T05:13:17.786Z"
-    },
-    {
-      "file": "../app/a2aFiori/webapp/ext/agent6/controller/ListReportExt.controller.js",
-      "line": 756,
+      "line": 781,
       "severity": "LOW",
       "category": "I18N_MISSING",
       "message": "Missing internationalization (i18n)",
@@ -121,11 +49,11 @@
       "pattern": "/MessageToast\\.show\\s*\\(\\s*[\"'][^\"']+[\"']\\s*\\)/gi",
       "match": "MessageToast.show(\"Quality control task created successfully\")",
       "isPositive": false,
-      "timestamp": "2025-08-23T05:13:17.741Z"
+      "timestamp": "2025-08-23T10:33:43.936Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent6/controller/ListReportExt.controller.js",
-      "line": 369,
+      "line": 398,
       "severity": "LOW",
       "category": "I18N_MISSING",
       "message": "Missing internationalization (i18n)",
@@ -133,11 +61,11 @@
       "pattern": "/MessageBox\\.\\w+\\s*\\(\\s*[\"'][^\"']+[\"']/gi",
       "match": "MessageBox.error(\"Access denied: Insufficient privileges for creating quality tasks\"",
       "isPositive": false,
-      "timestamp": "2025-08-23T05:13:17.741Z"
+      "timestamp": "2025-08-23T10:33:43.936Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent6/controller/ListReportExt.controller.js",
-      "line": 421,
+      "line": 446,
       "severity": "LOW",
       "category": "ACCESSIBILITY_MISSING",
       "message": "Missing accessibility features",
@@ -145,11 +73,11 @@
       "pattern": "/setBusy\\s*\\(\\s*true\\s*\\)/gi",
       "match": "setBusy(true)",
       "isPositive": false,
-      "timestamp": "2025-08-23T05:13:17.756Z"
+      "timestamp": "2025-08-23T10:33:43.954Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent6/controller/ListReportExt.controller.js",
-      "line": 644,
+      "line": 669,
       "severity": "LOW",
       "category": "ACCESSIBILITY_MISSING",
       "message": "Missing accessibility features",
@@ -157,11 +85,11 @@
       "pattern": "/Table\\s*\\([^)]*\\)/gi",
       "match": "Table()",
       "isPositive": false,
-      "timestamp": "2025-08-23T05:13:17.756Z"
+      "timestamp": "2025-08-23T10:33:43.954Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent6/controller/ObjectPageExt.controller.js",
-      "line": 256,
+      "line": 281,
       "severity": "LOW",
       "category": "I18N_MISSING",
       "message": "Missing internationalization (i18n)",
@@ -169,11 +97,11 @@
       "pattern": "/MessageToast\\.show\\s*\\(\\s*[\"'][^\"']+[\"']\\s*\\)/gi",
       "match": "MessageToast.show(\"Quality assessment started\")",
       "isPositive": false,
-      "timestamp": "2025-08-23T05:13:17.763Z"
+      "timestamp": "2025-08-23T10:33:43.962Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent6/controller/ObjectPageExt.controller.js",
-      "line": 225,
+      "line": 250,
       "severity": "LOW",
       "category": "I18N_MISSING",
       "message": "Missing internationalization (i18n)",
@@ -181,11 +109,11 @@
       "pattern": "/MessageBox\\.\\w+\\s*\\(\\s*[\"'][^\"']+[\"']/gi",
       "match": "MessageBox.error(\"Access denied: Insufficient privileges for starting assessments\"",
       "isPositive": false,
-      "timestamp": "2025-08-23T05:13:17.763Z"
+      "timestamp": "2025-08-23T10:33:43.962Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent6/controller/ObjectPageExt.controller.js",
-      "line": 249,
+      "line": 274,
       "severity": "LOW",
       "category": "ACCESSIBILITY_MISSING",
       "message": "Missing accessibility features",
@@ -193,11 +121,11 @@
       "pattern": "/setBusy\\s*\\(\\s*true\\s*\\)/gi",
       "match": "setBusy(true)",
       "isPositive": false,
-      "timestamp": "2025-08-23T05:13:17.786Z"
+      "timestamp": "2025-08-23T10:33:43.990Z"
     },
     {
       "file": "../app/a2aFiori/webapp/ext/agent6/utils/PerformanceOptimizer.js",
-      "line": 22,
+      "line": 23,
       "severity": "LOW",
       "category": "ACCESSIBILITY_MISSING",
       "message": "Missing accessibility features",
@@ -205,7 +133,7 @@
       "pattern": "/Table\\s*\\([^)]*\\)/gi",
       "match": "Table({\n                growing: true,\n                growingThreshold: this._getGrowingThreshold()",
       "isPositive": false,
-      "timestamp": "2025-08-23T05:13:17.879Z"
+      "timestamp": "2025-08-23T10:33:44.090Z"
     }
   ],
   "recommendations": [

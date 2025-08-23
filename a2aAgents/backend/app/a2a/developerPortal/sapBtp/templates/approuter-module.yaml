@@ -1,0 +1,37 @@
+# SAP Application Router Module Template
+
+approuter:
+  type: approuter.nodejs
+  parameters:
+    <<: *nodejs-module-params
+    disk-quota: *disk-small
+    memory: *memory-medium
+    
+  build-parameters:
+    <<: *default-build-params
+    
+  requires:
+    - <<: *xsuaa-binding
+    - <<: *destination-binding
+    - <<: *html5-repo-binding
+    - name: "#{UI_MODULE_NAME}"
+      group: destinations
+      properties:
+        name: ui
+        url: "~{url}"
+        forwardAuthToken: true
+        
+  provides:
+    - name: "#{APPROUTER_PROVIDES_NAME}"
+      properties:
+        url: "${default-url}"
+        
+  properties:
+    ENV_DESTINATION_NAME: ui
+    
+  env:
+    <<: *common-env
+    destinations: >
+      [
+        {"name":"ui","url":"~{#{UI_MODULE_NAME}/url}","forwardAuthToken":true}
+      ]

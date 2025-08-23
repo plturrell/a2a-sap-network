@@ -1,0 +1,42 @@
+# Development Environment Parameters
+
+# Application Configuration
+ID: sap-a2a-developer-portal-dev
+version: 2.1.0-dev
+
+# Environment Settings  
+NODE_ENV: development
+LOG_LEVEL: debug
+TENANT_MODE: shared
+
+# Service Names
+XSUAA_SERVICE_NAME: sap-a2a-portal-xsuaa-dev
+DESTINATION_SERVICE_NAME: sap-a2a-portal-destination-dev
+CONNECTIVITY_SERVICE_NAME: sap-a2a-portal-connectivity-dev
+HTML5_REPO_SERVICE_NAME: sap-a2a-portal-html5-dev
+DATABASE_SERVICE_NAME: sap-a2a-portal-database-dev
+
+# Module Names
+APPROUTER_MODULE_NAME: sap-a2a-portal-approuter-dev
+UI_MODULE_NAME: sap-a2a-portal-ui-dev
+SERVICE_MODULE_NAME: sap-a2a-portal-service-dev
+
+# Provider Names
+APPROUTER_PROVIDES_NAME: approuter-api-dev
+UI_PROVIDES_NAME: ui-content-dev
+SERVICE_PROVIDES_NAME: srv-binding-dev
+
+# BTP Settings
+CF_ORG: development
+CF_SPACE: a2a-dev
+DOMAIN: cfapps.sap.hana.ondemand.com
+
+# Resource Limits (Development)
+MEMORY_APPROUTER: 512M
+MEMORY_UI: 256M
+MEMORY_SERVICE: 1024M
+DISK_QUOTA: 1024M
+
+# Build Settings
+PARALLEL_DEPLOYMENTS: true
+KEEP_EXISTING_ROUTES: true
