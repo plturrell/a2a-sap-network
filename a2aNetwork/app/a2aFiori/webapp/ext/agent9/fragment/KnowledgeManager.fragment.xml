@@ -1,0 +1,515 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="knowledgeManagerDialog"
+        title="Knowledge Base Manager"
+        contentWidth="95%"
+        contentHeight="90%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Knowledge Base Overview -->
+                    <IconTabFilter text="Overview" icon="sap-icon://overview-chart">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Knowledge Statistics -->
+                            <Panel headerText="Knowledge Base Statistics" class="sapUiMediumMarginBottom">
+                                <HBox class="sapUiMediumMargin">
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Total Elements" level="H4"/>
+                                        <ObjectNumber 
+                                            number="{knowledge>/stats/totalElements}"
+                                            state="Information"
+                                            emphasized="true"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Facts" level="H4"/>
+                                        <ObjectNumber 
+                                            number="{knowledge>/stats/facts}"
+                                            state="Success"
+                                            emphasized="true"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Rules" level="H4"/>
+                                        <ObjectNumber 
+                                            number="{knowledge>/stats/rules}"
+                                            state="Warning"
+                                            emphasized="true"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Ontologies" level="H4"/>
+                                        <ObjectNumber 
+                                            number="{knowledge>/stats/ontologies}"
+                                            state="Information"
+                                            emphasized="true"/>
+                                    </VBox>
+                                    <VBox>
+                                        <Title text="Consistency Score" level="H4"/>
+                                        <mc:RadialMicroChart
+                                            size="L"
+                                            percentage="{knowledge>/stats/consistencyScore}"
+                                            valueColor="{= ${knowledge>/stats/consistencyScore} >= 90 ? 'Good' : ${knowledge>/stats/consistencyScore} >= 70 ? 'Critical' : 'Error'}"/>
+                                        <Text text="{knowledge>/stats/consistencyScore}%" class="sapUiLargeMarginTop"/>
+                                    </VBox>
+                                </HBox>
+                            </Panel>
+                            
+                            <!-- Domain Distribution -->
+                            <Panel headerText="Knowledge Distribution by Domain" class="sapUiMediumMarginBottom">
+                                <core:HTML 
+                                    id="domainDistributionChart"
+                                    content='<div id="domainDistributionChartDiv" style="width: 100%; height: 300px;"></div>'
+                                    preferDOM="true"/>
+                            </Panel>
+                            
+                            <!-- Consistency Analysis -->
+                            <Panel headerText="Consistency Analysis" class="sapUiMediumMarginBottom">
+                                <HBox class="sapUiMediumMargin">
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Contradictions" level="H5"/>
+                                        <ObjectNumber 
+                                            number="{knowledge>/consistency/contradictions}"
+                                            state="{= ${knowledge>/consistency/contradictions} === 0 ? 'Success' : ${knowledge>/consistency/contradictions} < 5 ? 'Warning' : 'Error'}"
+                                            emphasized="true"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Redundancies" level="H5"/>
+                                        <ObjectNumber 
+                                            number="{knowledge>/consistency/redundancies}"
+                                            state="Warning"
+                                            emphasized="true"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Knowledge Gaps" level="H5"/>
+                                        <ObjectNumber 
+                                            number="{knowledge>/consistency/gaps}"
+                                            state="Information"
+                                            emphasized="true"/>
+                                    </VBox>
+                                    <VBox>
+                                        <Title text="Coverage Score" level="H5"/>
+                                        <mc:RadialMicroChart
+                                            size="M"
+                                            percentage="{knowledge>/consistency/coverageScore}"
+                                            valueColor="Good"/>
+                                        <Text text="{knowledge>/consistency/coverageScore}%"/>
+                                    </VBox>
+                                </HBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Knowledge Elements Management -->
+                    <IconTabFilter text="Knowledge Elements" icon="sap-icon://learning-assistant">
+                        <VBox class="sapUiMediumMargin">
+                            <Table 
+                                items="{knowledge>/elements}"
+                                mode="MultiSelect"
+                                growing="true"
+                                growingThreshold="50">
+                                <headerToolbar>
+                                    <Toolbar>
+                                        <Title text="Knowledge Base Elements"/>
+                                        <ToolbarSpacer/>
+                                        <Button 
+                                            text="Add Knowledge"
+                                            icon="sap-icon://add"
+                                            press=".onAddKnowledge"
+                                            type="Emphasized"/>
+                                        <Button 
+                                            text="Import"
+                                            icon="sap-icon://upload"
+                                            press=".onImportKnowledge"/>
+                                        <Button 
+                                            text="Export Selected"
+                                            icon="sap-icon://download"
+                                            press=".onExportKnowledge"/>
+                                        <Button 
+                                            text="Validate"
+                                            icon="sap-icon://validate"
+                                            press=".onValidateKnowledge"/>
+                                    </Toolbar>
+                                </headerToolbar>
+                                <columns>
+                                    <Column>
+                                        <Text text="Element"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Type"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Domain"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Confidence"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Usage"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Status"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Actions"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <VBox>
+                                                <Text text="{elementName}" class="sapThemeHighlight-asTextColor"/>
+                                                <Text text="{content}" maxLines="2" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <ObjectStatus 
+                                                text="{elementType}"
+                                                state="Information"
+                                                icon="{= ${elementType} === 'FACT' ? 'sap-icon://documents' : ${elementType} === 'RULE' ? 'sap-icon://decision' : ${elementType} === 'ONTOLOGY' ? 'sap-icon://org-chart' : 'sap-icon://detail-view'}"/>
+                                            <Text text="{domain}"/>
+                                            <VBox>
+                                                <ProgressIndicator 
+                                                    percentValue="{= ${confidenceLevel} * 20}"
+                                                    displayValue="{confidenceLevel}/5"
+                                                    state="{= ${confidenceLevel} >= 4 ? 'Success' : ${confidenceLevel} >= 3 ? 'Warning' : 'Error'}"
+                                                    width="100px"/>
+                                                <Text text="Weight: {priorityWeight}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <VBox>
+                                                <Text text="Used: {usageCount} times"/>
+                                                <Text text="Last: {lastUsed}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <ObjectStatus 
+                                                text="{= ${isActive} ? 'ACTIVE' : 'INACTIVE'}"
+                                                state="{= ${isActive} ? 'Success' : 'Error'}"
+                                                icon="{= ${isActive} ? 'sap-icon://status-positive' : 'sap-icon://status-negative'}"/>
+                                            <HBox>
+                                                <Button 
+                                                    icon="sap-icon://edit"
+                                                    tooltip="Edit"
+                                                    press=".onEditKnowledgeElement"/>
+                                                <Button 
+                                                    icon="sap-icon://detail-view"
+                                                    tooltip="View Details"
+                                                    press=".onViewKnowledgeDetails"/>
+                                                <Button 
+                                                    icon="sap-icon://delete"
+                                                    tooltip="Delete"
+                                                    press=".onDeleteKnowledgeElement"/>
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Rules Management -->
+                    <IconTabFilter text="Rules Engine" icon="sap-icon://decision">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="Rule Configuration" class="sapUiMediumMarginBottom">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    class="sapUiMediumMargin">
+                                    <form:content>
+                                        <Label text="Rule Evaluation Mode"/>
+                                        <Select selectedKey="{knowledge>/ruleConfig/evaluationMode}">
+                                            <items>
+                                                <core:Item key="EAGER" text="Eager Evaluation"/>
+                                                <core:Item key="LAZY" text="Lazy Evaluation"/>
+                                                <core:Item key="SELECTIVE" text="Selective Evaluation"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Conflict Resolution"/>
+                                        <Select selectedKey="{knowledge>/ruleConfig/conflictResolution}">
+                                            <items>
+                                                <core:Item key="PRIORITY" text="Priority Based"/>
+                                                <core:Item key="SPECIFICITY" text="Specificity Based"/>
+                                                <core:Item key="RECENCY" text="Recency Based"/>
+                                                <core:Item key="VOTING" text="Voting System"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Max Inference Depth"/>
+                                        <Slider 
+                                            value="{knowledge>/ruleConfig/maxDepth}"
+                                            min="1"
+                                            max="20"
+                                            step="1"
+                                            width="200px"
+                                            enableTickmarks="true"/>
+                                        
+                                        <Label text="Confidence Threshold"/>
+                                        <Slider 
+                                            value="{knowledge>/ruleConfig/confidenceThreshold}"
+                                            min="0.1"
+                                            max="1.0"
+                                            step="0.1"
+                                            width="200px"
+                                            enableTickmarks="true"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                            </Panel>
+                            
+                            <!-- Active Rules -->
+                            <Panel headerText="Active Rules" class="sapUiMediumMarginBottom">
+                                <Table 
+                                    items="{knowledge>/activeRules}"
+                                    mode="SingleSelect">
+                                    <headerToolbar>
+                                        <Toolbar>
+                                            <Title text="Rule Management"/>
+                                            <ToolbarSpacer/>
+                                            <Button 
+                                                text="Create Rule"
+                                                icon="sap-icon://add"
+                                                press=".onCreateRule"/>
+                                            <Button 
+                                                text="Test Rules"
+                                                icon="sap-icon://test"
+                                                press=".onTestRules"/>
+                                        </Toolbar>
+                                    </headerToolbar>
+                                    <columns>
+                                        <Column>
+                                            <Text text="Rule"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Priority"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Applications"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Success Rate"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Status"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Actions"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <VBox>
+                                                    <Text text="{ruleName}" class="sapThemeHighlight-asTextColor"/>
+                                                    <Text text="{ruleDescription}" maxLines="2" class="sapThemeTextSecondary"/>
+                                                </VBox>
+                                                <ObjectNumber 
+                                                    number="{priority}"
+                                                    state="{= ${priority} >= 80 ? 'Error' : ${priority} >= 60 ? 'Warning' : 'Success'}"/>
+                                                <Text text="{applicationsCount}"/>
+                                                <ProgressIndicator 
+                                                    percentValue="{successRate}"
+                                                    displayValue="{successRate}%"
+                                                    state="{= ${successRate} >= 80 ? 'Success' : ${successRate} >= 60 ? 'Warning' : 'Error'}"
+                                                    width="100px"/>
+                                                <ObjectStatus 
+                                                    text="{status}"
+                                                    state="{= ${status} === 'ACTIVE' ? 'Success' : ${status} === 'TESTING' ? 'Warning' : 'Error'}"
+                                                    icon="{= ${status} === 'ACTIVE' ? 'sap-icon://status-positive' : ${status} === 'TESTING' ? 'sap-icon://pending' : 'sap-icon://status-negative'}"/>
+                                                <HBox>
+                                                    <Button 
+                                                        icon="sap-icon://edit"
+                                                        tooltip="Edit Rule"
+                                                        press=".onEditRule"/>
+                                                    <Button 
+                                                        icon="sap-icon://test"
+                                                        tooltip="Test Rule"
+                                                        press=".onTestSingleRule"/>
+                                                    <Button 
+                                                        icon="sap-icon://detail-view"
+                                                        tooltip="View Applications"
+                                                        press=".onViewRuleApplications"/>
+                                                </HBox>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Ontologies -->
+                    <IconTabFilter text="Ontologies" icon="sap-icon://org-chart">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="Ontology Management" class="sapUiMediumMarginBottom">
+                                <Table 
+                                    items="{knowledge>/ontologies}"
+                                    mode="SingleSelect">
+                                    <headerToolbar>
+                                        <Toolbar>
+                                            <Title text="Domain Ontologies"/>
+                                            <ToolbarSpacer/>
+                                            <Button 
+                                                text="Create Ontology"
+                                                icon="sap-icon://add"
+                                                press=".onCreateOntology"/>
+                                            <Button 
+                                                text="Import OWL"
+                                                icon="sap-icon://upload"
+                                                press=".onImportOWL"/>
+                                            <Button 
+                                                text="Validate All"
+                                                icon="sap-icon://validate"
+                                                press=".onValidateOntologies"/>
+                                        </Toolbar>
+                                    </headerToolbar>
+                                    <columns>
+                                        <Column>
+                                            <Text text="Ontology"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Domain"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Concepts"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Relations"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Completeness"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Actions"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <VBox>
+                                                    <Text text="{ontologyName}" class="sapThemeHighlight-asTextColor"/>
+                                                    <Text text="{description}" maxLines="2" class="sapThemeTextSecondary"/>
+                                                </VBox>
+                                                <Text text="{domain}"/>
+                                                <ObjectNumber 
+                                                    number="{conceptCount}"
+                                                    state="Information"/>
+                                                <ObjectNumber 
+                                                    number="{relationCount}"
+                                                    state="Success"/>
+                                                <ProgressIndicator 
+                                                    percentValue="{completeness}"
+                                                    displayValue="{completeness}%"
+                                                    state="{= ${completeness} >= 80 ? 'Success' : ${completeness} >= 60 ? 'Warning' : 'Error'}"
+                                                    width="100px"/>
+                                                <HBox>
+                                                    <Button 
+                                                        icon="sap-icon://edit"
+                                                        tooltip="Edit Ontology"
+                                                        press=".onEditOntology"/>
+                                                    <Button 
+                                                        icon="sap-icon://org-chart"
+                                                        tooltip="Visualize"
+                                                        press=".onVisualizeOntology"/>
+                                                    <Button 
+                                                        icon="sap-icon://download"
+                                                        tooltip="Export OWL"
+                                                        press=".onExportOWL"/>
+                                                </HBox>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                            
+                            <!-- Ontology Visualization -->
+                            <Panel 
+                                headerText="Ontology Visualization"
+                                expandable="true"
+                                expanded="false">
+                                <core:HTML 
+                                    id="ontologyVisualization"
+                                    content='<div id="ontologyVizDiv" style="width: 100%; height: 400px;"></div>'
+                                    preferDOM="true"/>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Analytics -->
+                    <IconTabFilter text="Analytics" icon="sap-icon://bar-chart">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Knowledge Growth -->
+                            <Panel headerText="Knowledge Growth Trends" class="sapUiMediumMarginBottom">
+                                <core:HTML 
+                                    id="knowledgeGrowthChart"
+                                    content='<div id="knowledgeGrowthChartDiv" style="width: 100%; height: 300px;"></div>'
+                                    preferDOM="true"/>
+                            </Panel>
+                            
+                            <!-- Usage Analytics -->
+                            <Panel headerText="Usage Analytics" class="sapUiMediumMarginBottom">
+                                <HBox class="sapUiMediumMargin">
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Most Used Elements" level="H5"/>
+                                        <List items="{knowledge>/analytics/mostUsed}">
+                                            <StandardListItem
+                                                title="{elementName}"
+                                                description="{elementType}"
+                                                info="{usageCount} uses"
+                                                infoState="Success"/>
+                                        </List>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Underutilized Elements" level="H5"/>
+                                        <List items="{knowledge>/analytics/underutilized}">
+                                            <StandardListItem
+                                                title="{elementName}"
+                                                description="{elementType}"
+                                                info="{usageCount} uses"
+                                                infoState="Warning"/>
+                                        </List>
+                                    </VBox>
+                                    <VBox>
+                                        <Title text="Performance Metrics" level="H5"/>
+                                        <mc:ColumnMicroChart
+                                            size="M"
+                                            columns="{knowledge>/analytics/performance}">
+                                            <mc:columns>
+                                                <mc:ColumnMicroChartData 
+                                                    value="{value}"
+                                                    color="Good"
+                                                    label="{metric}"/>
+                                            </mc:columns>
+                                        </mc:ColumnMicroChart>
+                                    </VBox>
+                                </HBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Optimize Knowledge Base"
+                icon="sap-icon://settings"
+                press=".onOptimizeKnowledgeBase"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Export Report"
+                    icon="sap-icon://download"
+                    press=".onExportKnowledgeReport"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseKnowledgeManager"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

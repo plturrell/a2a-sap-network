@@ -3,8 +3,12 @@ sap.ui.define([
     "sap/ui/core/Fragment",
     "sap/m/MessageBox",
     "sap/m/MessageToast",
-    "sap/ui/model/json/JSONModel"
-], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel) {
+    "sap/ui/model/json/JSONModel",
+    "sap/base/security/encodeXML",
+    "sap/base/strings/escapeRegExp",
+    "sap/base/security/sanitizeHTML",
+    "sap/base/Log"
+], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent4.ext.controller.ListReportExt", {
@@ -12,12 +16,31 @@ sap.ui.define([
         override: {
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
+                // Initialize dialog cache and security settings
+                this._dialogCache = {};
+                this._csrfToken = null;
+                this._initializeCSRFToken();
+                
                 // Initialize debounced validation for performance
                 this._debouncedValidation = this._debounce(this._validateFormulaSyntax.bind(this), 300);
+                
+                // Initialize device model for responsive behavior
+                var oDeviceModel = new sap.ui.model.json.JSONModel(sap.ui.Device);
+                oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
+                this.base.getView().setModel(oDeviceModel, "device");
+                
+                // Initialize resource bundle for i18n
+                this._oResourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
             },
 
             onExit: function() {
                 // Cleanup resources to prevent memory leaks
+                for (var sKey in this._dialogCache) {
+                    if (this._dialogCache.hasOwnProperty(sKey)) {
+                        this._dialogCache[sKey].destroy();
+                    }
+                }
+                // Cleanup legacy dialogs
                 if (this._oCreateDialog) {
                     this._oCreateDialog.destroy();
                 }
@@ -137,6 +160,237 @@ sap.ui.define([
             });
         },
 
+        /**
+         * Initializes CSRF token for secure API calls
+         * @private
+         * @memberof a2a.network.agent4.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
+        _initializeCSRFToken: function() {
+            jQuery.ajax({
+                url: "/a2a/agent4/v1/csrf-token",
+                type: "GET",
+                headers: {
+                    "X-CSRF-Token": "Fetch",
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                success: function(data, textStatus, xhr) {
+                    this._csrfToken = xhr.getResponseHeader("X-CSRF-Token");
+                }.bind(this),
+                error: function() {
+                    // Fallback to generate token if service not available
+                    this._csrfToken = "fetch";
+                }.bind(this)
+            });
+        },
+
+        /**
+         * Gets secure headers for AJAX requests including CSRF token
+         * @private
+         * @memberof a2a.network.agent4.ext.controller.ListReportExt
+         * @returns {object} Security headers object
+         * @since 1.0.0
+         */
+        _getSecureHeaders: function() {
+            return {
+                "X-CSRF-Token": this._csrfToken || "Fetch",
+                "X-Requested-With": "XMLHttpRequest",
+                "Content-Security-Policy": "default-src 'self'"
+            };
+        },
+
+        /**
+         * Opens cached dialog fragments with optimized loading for calculation workflows
+         * @private
+         * @memberof a2a.network.agent4.ext.controller.ListReportExt
+         * @param {string} sDialogKey - Dialog cache key
+         * @param {string} sFragmentName - Fragment name to load
+         * @param {function} [fnCallback] - Optional callback after opening
+         * @since 1.0.0
+         */
+        _openCachedDialog: function(sDialogKey, sFragmentName, fnCallback) {
+            var oView = this.base.getView();
+            
+            if (!this._dialogCache[sDialogKey]) {
+                // Show loading indicator for complex calculation dialogs
+                oView.setBusy(true);
+                
+                Fragment.load({
+                    id: oView.getId(),
+                    name: sFragmentName,
+                    controller: this
+                }).then(function(oDialog) {
+                    this._dialogCache[sDialogKey] = oDialog;
+                    oView.addDependent(oDialog);
+                    oView.setBusy(false);
+                    
+                    oDialog.open();
+                    if (fnCallback) {
+                        fnCallback(oDialog);
+                    }
+                }.bind(this));
+            } else {
+                this._dialogCache[sDialogKey].open();
+                if (fnCallback) {
+                    fnCallback(this._dialogCache[sDialogKey]);
+                }
+            }
+        },
+
+        /**
+         * Enhanced formula security validation with comprehensive input sanitization
+         * @private
+         * @memberof a2a.network.agent4.ext.controller.ListReportExt
+         * @param {string} sFormula - Formula expression to validate
+         * @returns {object} Validation result with security assessment
+         * @since 1.0.0
+         */
+        _validateFormulaExpression: function(sFormula) {
+            if (!sFormula || typeof sFormula !== 'string') {
+                return { isValid: false, message: "Formula is required", securityLevel: "LOW" };
+            }
+
+            var sSanitized = sFormula.trim();
+            
+            // Enhanced security patterns for formula validation
+            var aDangerousPatterns = [
+                { pattern: /eval\s*\(/gi, level: "CRITICAL", message: "eval() function not allowed" },
+                { pattern: /exec\s*\(/gi, level: "CRITICAL", message: "exec() function not allowed" },
+                { pattern: /system\s*\(/gi, level: "CRITICAL", message: "system() function not allowed" },
+                { pattern: /import\s+/gi, level: "HIGH", message: "import statements not allowed" },
+                { pattern: /require\s*\(/gi, level: "HIGH", message: "require() function not allowed" },
+                { pattern: /__[a-zA-Z_]+__/g, level: "MEDIUM", message: "Special attributes not allowed" },
+                { pattern: /\bfile\b/gi, level: "MEDIUM", message: "file operations not allowed" },
+                { pattern: /\bos\b/gi, level: "MEDIUM", message: "OS operations not allowed" }
+            ];
+
+            // Check for dangerous patterns
+            for (var i = 0; i < aDangerousPatterns.length; i++) {
+                var oPattern = aDangerousPatterns[i];
+                if (oPattern.pattern.test(sSanitized)) {
+                    this._logSecurityEvent("FORMULA_SECURITY_VIOLATION", oPattern.level, oPattern.message, sFormula);
+                    return { 
+                        isValid: false, 
+                        message: oPattern.message, 
+                        securityLevel: oPattern.level 
+                    };
+                }
+            }
+
+            // Validate mathematical operators and functions
+            var aAllowedFunctions = [
+                'sin', 'cos', 'tan', 'log', 'ln', 'sqrt', 'abs', 'pow', 'exp',
+                'min', 'max', 'sum', 'avg', 'round', 'floor', 'ceil', 'pi',
+                'e', 'factorial', 'gcd', 'lcm', 'mod'
+            ];
+
+            // Extract function calls from formula
+            var aFunctionCalls = sSanitized.match(/\b[a-zA-Z_][a-zA-Z0-9_]*\s*\(/g) || [];
+            for (var j = 0; j < aFunctionCalls.length; j++) {
+                var sFunctionName = aFunctionCalls[j].replace(/\s*\($/, '').toLowerCase();
+                if (aAllowedFunctions.indexOf(sFunctionName) === -1) {
+                    return { 
+                        isValid: false, 
+                        message: "Function '" + sFunctionName + "' is not allowed",
+                        securityLevel: "MEDIUM"
+                    };
+                }
+            }
+
+            // Validate parentheses balance
+            var nOpenParens = (sSanitized.match(/\(/g) || []).length;
+            var nCloseParens = (sSanitized.match(/\)/g) || []).length;
+            if (nOpenParens !== nCloseParens) {
+                return { isValid: false, message: "Unbalanced parentheses", securityLevel: "LOW" };
+            }
+
+            return { 
+                isValid: true, 
+                sanitized: sanitizeHTML(encodeXML(sSanitized)),
+                securityLevel: "SAFE"
+            };
+        },
+
+        /**
+         * Logs security events for audit purposes
+         * @private
+         * @memberof a2a.network.agent4.ext.controller.ListReportExt
+         * @param {string} sEventType - Type of security event
+         * @param {string} sLevel - Security level (LOW, MEDIUM, HIGH, CRITICAL)
+         * @param {string} sMessage - Event description
+         * @param {string} [sData] - Additional event data
+         * @since 1.0.0
+         */
+        _logSecurityEvent: function(sEventType, sLevel, sMessage, sData) {
+            var oLogData = {
+                timestamp: new Date().toISOString(),
+                eventType: sEventType,
+                level: sLevel,
+                message: sMessage,
+                userId: this._getCurrentUserId(),
+                sessionId: this._getSessionId(),
+                data: sData ? encodeXML(sData) : null
+            };
+
+            // Log to SAP logging system
+            Log.error("Security Event: " + sEventType, sMessage, "Agent4.Security");
+
+            // Send to audit service (if available)
+            if (sLevel === "CRITICAL" || sLevel === "HIGH") {
+                this._sendAuditEvent(oLogData);
+            }
+        },
+
+        /**
+         * Gets current user ID for audit logging
+         * @private
+         * @memberof a2a.network.agent4.ext.controller.ListReportExt
+         * @returns {string} Current user ID
+         * @since 1.0.0
+         */
+        _getCurrentUserId: function() {
+            try {
+                return sap.ushell?.Container?.getUser?.()?.getId?.() || "unknown";
+            } catch (e) {
+                return "system";
+            }
+        },
+
+        /**
+         * Gets session ID for audit logging
+         * @private
+         * @memberof a2a.network.agent4.ext.controller.ListReportExt
+         * @returns {string} Session ID
+         * @since 1.0.0
+         */
+        _getSessionId: function() {
+            return this._sessionId || (this._sessionId = "session_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9));
+        },
+
+        /**
+         * Sends audit events to backend logging service
+         * @private
+         * @memberof a2a.network.agent4.ext.controller.ListReportExt
+         * @param {object} oLogData - Audit log data
+         * @since 1.0.0
+         */
+        _sendAuditEvent: function(oLogData) {
+            jQuery.ajax({
+                url: "/a2a/agent4/v1/audit",
+                type: "POST",
+                contentType: "application/json",
+                headers: this._getSecureHeaders(),
+                data: JSON.stringify(oLogData),
+                success: function() {
+                    // Audit event sent successfully
+                },
+                error: function() {
+                    // Log locally if audit service is unavailable
+                    Log.warning("Failed to send audit event", oLogData, "Agent4.Audit");
+                }
+            });
+        },
+
         _secureAjax: function(oOptions) {
             var that = this;
             return this._getCSRFToken().then(function(sToken) {
@@ -211,6 +465,16 @@ sap.ui.define([
             return "current_user"; // Placeholder
         },
 
+        /**
+         * Enhanced formula security validation with comprehensive threat detection.
+         * Validates mathematical expressions against injection attacks, dangerous functions,
+         * and unauthorized operations while maintaining calculation integrity.
+         * @private
+         * @memberof a2a.network.agent4.ext.controller.ListReportExt
+         * @param {string} sFormula - Formula expression to validate
+         * @returns {object} Validation result with security assessment
+         * @since 1.0.0
+         */
         _validateFormulaSecurity: function(sFormula) {
             // Enhanced formula security validation
             var oValidation = this._validateInput(sFormula, "formula");
@@ -236,6 +500,15 @@ sap.ui.define([
             return { isValid: true, sanitized: oValidation.sanitized };
         },
 
+        /**
+         * Role-based permission validation for calculation validation operations.
+         * Enforces access control for sensitive calculation functions based on user roles.
+         * @private
+         * @memberof a2a.network.agent4.ext.controller.ListReportExt
+         * @param {string} sAction - Action requiring permission check
+         * @returns {boolean} Whether user has required permissions
+         * @since 1.0.0
+         */
         _checkPermission: function(sAction) {
             // Role-based permission check
             var aUserRoles = this._getUserRoles();
@@ -257,6 +530,15 @@ sap.ui.define([
             return ["VALIDATION_USER"]; // Placeholder
         },
 
+        /**
+         * Secure text formatter with XSS protection for UI data binding.
+         * Encodes potentially dangerous characters to prevent script injection.
+         * @public
+         * @memberof a2a.network.agent4.ext.controller.ListReportExt
+         * @param {string} sText - Text to format securely
+         * @returns {string} XSS-safe encoded text
+         * @since 1.0.0
+         */
         formatSecureText: function(sText) {
             // Secure text formatter for UI bindings
             if (!sText) return "";
@@ -265,6 +547,15 @@ sap.ui.define([
             return jQuery.sap.encodeXML(String(sText));
         },
 
+        /**
+         * Secure number formatter for calculation results with overflow protection.
+         * Prevents display of dangerous values and ensures numerical stability.
+         * @public
+         * @memberof a2a.network.agent4.ext.controller.ListReportExt
+         * @param {number} nValue - Numerical result to format
+         * @returns {string} Safely formatted number or error indicator
+         * @since 1.0.0
+         */
         formatCalculationResult: function(nValue) {
             // Secure number formatter
             if (typeof nValue !== 'number' || !isFinite(nValue)) {
@@ -279,48 +570,108 @@ sap.ui.define([
             return nValue.toFixed(6);
         },
 
+        /**
+         * Initialize the create model with default values and validation states
+         * @private
+         * @since 1.0.0
+         */
+        _initializeCreateModel: function() {
+            var oCreateModel = new JSONModel({
+                taskName: "",
+                description: "",
+                calculationType: "",
+                dataSource: "",
+                priority: "MEDIUM",
+                validationMode: "STANDARD",
+                precisionThreshold: 0.00001,
+                toleranceLevel: 0.001,
+                comparisonMethod: 0,
+                enableCrossValidation: false,
+                enableStatisticalTests: false,
+                parallelProcessing: true,
+                detailedLogs: false,
+                formulas: [],
+                customValidationRules: "",
+                benchmarkDataset: "",
+                maxExecutionTime: 300,
+                memoryLimit: 1024,
+                errorHandling: 1,
+                emailNotification: false,
+                progressUpdates: true,
+                isValid: false,
+                taskNameState: "None",
+                taskNameStateText: "",
+                calculationTypeState: "None",
+                calculationTypeStateText: "",
+                dataSourceState: "None",
+                dataSourceStateText: "",
+                templates: [
+                    { name: "Simple Arithmetic", formula: "a + b * c", category: "ARITHMETIC" },
+                    { name: "Compound Interest", formula: "P * (1 + r/n)^(n*t)", category: "FINANCIAL" },
+                    { name: "Standard Deviation", formula: "sqrt(sum((x - mean)^2) / n)", category: "STATISTICAL" },
+                    { name: "Pythagorean Theorem", formula: "sqrt(a^2 + b^2)", category: "MATHEMATICAL" },
+                    { name: "Sine Wave", formula: "A * sin(2 * PI * f * t + phase)", category: "TRIGONOMETRIC" }
+                ]
+            });
+            this.base.getView().setModel(oCreateModel, "create");
+        },
+
+        /**
+         * Opens the create validation task dialog with comprehensive security checks.
+         * Supports multiple calculation types including financial, mathematical, statistical,
+         * engineering, scientific, actuarial, accounting, and physics calculations.
+         * @public
+         * @memberof a2a.network.agent4.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
         onCreateValidationTask: function() {
             // Permission check
             if (!this._checkPermission("CREATE_TASK")) {
-                MessageBox.error("Insufficient permissions to create validation tasks");
+                MessageBox.error(this._oResourceBundle.getText("message.permissionDenied"));
                 return;
             }
 
-            var oView = this.base.getView();
+            // Initialize create model before opening dialog
+            this._initializeCreateModel();
             
-            if (!this._oCreateDialog) {
-                Fragment.load({
-                    id: oView.getId(),
-                    name: "a2a.network.agent4.ext.fragment.CreateValidationTask",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._oCreateDialog = oDialog;
-                    oView.addDependent(this._oCreateDialog);
-                    
-                    // Initialize model with secure defaults
-                    var oModel = new JSONModel({
-                        taskName: "",
-                        description: "",
-                        calculationType: "MATHEMATICAL",
-                        dataSource: "",
-                        priority: "MEDIUM",
-                        validationMode: "STANDARD",
-                        precisionThreshold: 0.001,
-                        toleranceLevel: 0.01,
-                        enableCrossValidation: true,
-                        enableStatisticalTests: false,
-                        formulas: []
-                    });
-                    this._oCreateDialog.setModel(oModel, "create");
-                    this._oCreateDialog.open();
-                    
-                    this._logAuditEvent("DIALOG_OPENED", "Create validation task dialog opened");
+            // Open cached dialog
+            this._openCachedDialog("createValidationTask", "a2a.network.agent4.ext.fragment.CreateValidationTask", function(oDialog) {
+                // Initialize formula builder if needed
+                this._initializeFormulaBuilder(oDialog);
+            }.bind(this));
+        },
+
+        /**
+         * Initialize formula builder with syntax highlighting and validation
+         * @private
+         * @param {sap.m.Dialog} oDialog - Dialog containing formula builder
+         * @since 1.0.0
+         */
+        _initializeFormulaBuilder: function(oDialog) {
+            // Initialize formula syntax validation
+            var oTable = oDialog.getContent()[0].getItems()[2].getContent()[1];
+            if (oTable) {
+                oTable.attachUpdateFinished(function() {
+                    // Add syntax highlighting to formula text areas
+                    var aItems = oTable.getItems();
+                    aItems.forEach(function(oItem) {
+                        var oTextArea = oItem.getCells()[0];
+                        if (oTextArea && oTextArea.attachLiveChange) {
+                            oTextArea.attachLiveChange(this._debouncedValidation);
+                        }
+                    }.bind(this));
                 }.bind(this));
-            } else {
-                this._oCreateDialog.open();
             }
         },
 
+        /**
+         * Opens the interactive formula builder dialog with real-time syntax validation.
+         * Provides comprehensive formula editor with function library, variable management,
+         * and secure expression testing capabilities.
+         * @public
+         * @memberof a2a.network.agent4.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
         onFormulaBuilder: function() {
             // Permission check
             if (!this._checkPermission("FORMULA_BUILDER")) {

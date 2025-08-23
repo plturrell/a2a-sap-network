@@ -3,7 +3,20 @@
     "sap.app": {
         "id": "a2a.network.agent8.ext",
         "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "title": "{{appTitle}}",
+        "description": "{{appDescription}}",
+        "tags": {
+            "keywords": ["data", "manager", "storage", "cache"]
+        },
         "applicationVersion": {
+            "version": "1.0.0"
+        },
+        "ach": "A2A-NET",
+        "resources": "resources.json",
+        "offline": false,
+        "sourceTemplate": {
+            "id": "sap.suite.ui.generic.template.ListReport",
             "version": "1.0.0"
         }
     },
@@ -37,14 +50,47 @@
                 "sap.ui.table": {}
             }
         },
+        "config": {
+            "sapFiori2Adaptation": true,
+            "flexibilityServices": [
+                {
+                    "connector": "LrepConnector",
+                    "layers": ["CUSTOMER", "PARTNER"],
+                    "url": "/sap/bc/lrep"
+                }
+            ]
+        },
+        "resourceRoots": {
+            "a2a.network.agent8.ext": "./"
+        },
+        "routing": {
+            "config": {
+                "routerClass": "sap.m.routing.Router",
+                "type": "View",
+                "viewType": "XML",
+                "async": true,
+                "path": "a2a.network.agent8.ext.view",
+                "controlId": "app",
+                "controlAggregation": "pages",
+                "bypassed": {
+                    "target": "notFound"
+                }
+            }
+        },
         "models": {
             "i18n": {
                 "dataSource": "i18n",
                 "type": "sap.ui.model.resource.ResourceModel",
                 "settings": {
-                    "bundleName": "a2a.network.agent8.ext.i18n.i18n"
+                    "bundleName": "a2a.network.agent8.ext.i18n.i18n",
+                    "supportedLocales": ["en", "de", "es", "fr"],
+                    "fallbackLocale": "en"
                 }
             }
+        },
+        "contentDensities": {
+            "compact": true,
+            "cozy": true
         }
     },
     "sap.fe": {
@@ -56,7 +102,43 @@
         "archeType": "transactional"
     },
     "sap.cloud": {
-        "public": true,
+        "public": false,
         "service": "a2aAgents"
+    },
+    "sap.app/dataSources": {
+        "i18n": {
+            "type": "ResourceBundle",
+            "uri": "i18n/i18n.properties"
+        },
+        "mainService": {
+            "uri": "/a2a/agent8/v1/",
+            "type": "OData",
+            "settings": {
+                "odataVersion": "2.0",
+                "localUri": "localService/metadata.xml",
+                "annotations": ["annotation"]
+            }
+        }
+    },
+    "sap.app/crossNavigation": {
+        "inbounds": {
+            "agent8-manage": {
+                "semanticObject": "DataManager",
+                "action": "manage",
+                "title": "{{appTitle}}",
+                "signature": {
+                    "parameters": {},
+                    "additionalParameters": "allowed"
+                }
+            }
+        }
+    },
+    "sap.ui/technology": "UI5",
+    "sap.ui/supportedThemes": ["sap_horizon", "sap_fiori_3", "sap_fiori_3_dark", "sap_horizon_dark", "sap_horizon_hcb", "sap_horizon_hcw"],
+    "sap.platform.abap": {
+        "uri": "/sap/bc/ui5_ui5/sap/a2aagent8/"
+    },
+    "sap.platform.cf": {
+        "oAuthScopes": ["$XSAPPNAME.Display", "$XSAPPNAME.Maintain"]
     }
 }

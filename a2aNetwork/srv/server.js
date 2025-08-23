@@ -259,7 +259,12 @@ cds.on('bootstrap', async (app) => {
             '/a2a/agent5/v1',
             '/a2a/agent6/v1',
             '/a2a/agent7/v1',
-            '/a2a/agent8/v1'
+            '/a2a/agent8/v1',
+            '/a2a/agent10/v1',
+            '/a2a/agent11/v1',
+            '/a2a/agent12/v1',
+            '/a2a/agent13/v1',
+            '/a2a/agent14/v1'
         ];
         
         const shouldBypass = bypassPaths.some(path => req.path.startsWith(path));
@@ -1690,6 +1695,786 @@ cds.on('bootstrap', async (app) => {
     
     log.info('Agent 8 API proxy routes initialized');
     
+    // ===== AGENT 9 PROXY ROUTES - Advanced Logical Reasoning and Decision-Making Agent =====
+    const AGENT9_BASE_URL = process.env.AGENT9_BASE_URL || 'http://localhost:8008';
+    
+    // Agent 9 proxy function
+    const proxyAgent9Request = async (req, res, endpoint, method = 'GET') => {
+        try {
+            const config = {
+                method,
+                url: `${AGENT9_BASE_URL}/api/agent9/v1${endpoint}`,
+                timeout: 60000, // Longer timeout for complex reasoning operations
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            };
+            
+            if (method !== 'GET' && req.body) {
+                config.data = req.body;
+            }
+            
+            if (req.query && Object.keys(req.query).length > 0) {
+                config.params = req.query;
+            }
+            
+            const response = await axios(config);
+            res.status(response.status).json(response.data);
+        } catch (error) {
+            log.error('Agent 9 proxy error:', {
+                endpoint,
+                method,
+                error: error.message,
+                status: error.response?.status,
+                data: error.response?.data
+            });
+            
+            res.status(error.response?.status || 500).json({
+                error: 'Agent 9 service unavailable',
+                message: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    };
+    
+    // Reasoning Tasks Management
+    app.get('/a2a/agent9/v1/reasoning-tasks', (req, res) => proxyAgent9Request(req, res, '/reasoning-tasks'));
+    app.post('/a2a/agent9/v1/reasoning-tasks', (req, res) => proxyAgent9Request(req, res, '/reasoning-tasks', 'POST'));
+    app.get('/a2a/agent9/v1/reasoning-tasks/:taskId', (req, res) => 
+        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}`));
+    app.put('/a2a/agent9/v1/reasoning-tasks/:taskId', (req, res) => 
+        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}`, 'PUT'));
+    app.delete('/a2a/agent9/v1/reasoning-tasks/:taskId', (req, res) => 
+        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}`, 'DELETE'));
+    
+    // Reasoning Task Actions
+    app.post('/a2a/agent9/v1/reasoning-tasks/:taskId/start', (req, res) => 
+        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}/start`, 'POST'));
+    app.post('/a2a/agent9/v1/reasoning-tasks/:taskId/pause', (req, res) => 
+        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}/pause`, 'POST'));
+    app.post('/a2a/agent9/v1/reasoning-tasks/:taskId/resume', (req, res) => 
+        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}/resume`, 'POST'));
+    app.post('/a2a/agent9/v1/reasoning-tasks/:taskId/cancel', (req, res) => 
+        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}/cancel`, 'POST'));
+    app.post('/a2a/agent9/v1/reasoning-tasks/:taskId/validate', (req, res) => 
+        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}/validate`, 'POST'));
+    app.post('/a2a/agent9/v1/reasoning-tasks/:taskId/explain', (req, res) => 
+        proxyAgent9Request(req, res, `/reasoning-tasks/${req.params.taskId}/explain`, 'POST'));
+    
+    // Knowledge Base Management
+    app.get('/a2a/agent9/v1/knowledge-base', (req, res) => proxyAgent9Request(req, res, '/knowledge-base'));
+    app.post('/a2a/agent9/v1/knowledge-base/elements', (req, res) => 
+        proxyAgent9Request(req, res, '/knowledge-base/elements', 'POST'));
+    app.get('/a2a/agent9/v1/knowledge-base/elements/:elementId', (req, res) => 
+        proxyAgent9Request(req, res, `/knowledge-base/elements/${req.params.elementId}`));
+    app.put('/a2a/agent9/v1/knowledge-base/elements/:elementId', (req, res) => 
+        proxyAgent9Request(req, res, `/knowledge-base/elements/${req.params.elementId}`, 'PUT'));
+    app.delete('/a2a/agent9/v1/knowledge-base/elements/:elementId', (req, res) => 
+        proxyAgent9Request(req, res, `/knowledge-base/elements/${req.params.elementId}`, 'DELETE'));
+    app.post('/a2a/agent9/v1/knowledge-base/validate', (req, res) => 
+        proxyAgent9Request(req, res, '/knowledge-base/validate', 'POST'));
+    app.post('/a2a/agent9/v1/knowledge-base/optimize', (req, res) => 
+        proxyAgent9Request(req, res, '/knowledge-base/optimize', 'POST'));
+    
+    // Inference Generation
+    app.post('/a2a/agent9/v1/inferences/generate', (req, res) => 
+        proxyAgent9Request(req, res, '/inferences/generate', 'POST'));
+    app.get('/a2a/agent9/v1/inferences', (req, res) => proxyAgent9Request(req, res, '/inferences'));
+    app.get('/a2a/agent9/v1/inferences/:inferenceId', (req, res) => 
+        proxyAgent9Request(req, res, `/inferences/${req.params.inferenceId}`));
+    app.post('/a2a/agent9/v1/inferences/:inferenceId/verify', (req, res) => 
+        proxyAgent9Request(req, res, `/inferences/${req.params.inferenceId}/verify`, 'POST'));
+    app.delete('/a2a/agent9/v1/inferences/:inferenceId', (req, res) => 
+        proxyAgent9Request(req, res, `/inferences/${req.params.inferenceId}`, 'DELETE'));
+    
+    // Decision Making
+    app.post('/a2a/agent9/v1/decisions/make', (req, res) => 
+        proxyAgent9Request(req, res, '/decisions/make', 'POST'));
+    app.get('/a2a/agent9/v1/decisions', (req, res) => proxyAgent9Request(req, res, '/decisions'));
+    app.get('/a2a/agent9/v1/decisions/:decisionId', (req, res) => 
+        proxyAgent9Request(req, res, `/decisions/${req.params.decisionId}`));
+    app.post('/a2a/agent9/v1/decisions/:decisionId/evaluate', (req, res) => 
+        proxyAgent9Request(req, res, `/decisions/${req.params.decisionId}/evaluate`, 'POST'));
+    app.get('/a2a/agent9/v1/decisions/:decisionId/analysis', (req, res) => 
+        proxyAgent9Request(req, res, `/decisions/${req.params.decisionId}/analysis`));
+    
+    // Problem Solving
+    app.post('/a2a/agent9/v1/problems/solve', (req, res) => 
+        proxyAgent9Request(req, res, '/problems/solve', 'POST'));
+    app.get('/a2a/agent9/v1/problems', (req, res) => proxyAgent9Request(req, res, '/problems'));
+    app.get('/a2a/agent9/v1/problems/:problemId', (req, res) => 
+        proxyAgent9Request(req, res, `/problems/${req.params.problemId}`));
+    app.post('/a2a/agent9/v1/problems/:problemId/optimize', (req, res) => 
+        proxyAgent9Request(req, res, `/problems/${req.params.problemId}/optimize`, 'POST'));
+    app.get('/a2a/agent9/v1/problems/:problemId/insights', (req, res) => 
+        proxyAgent9Request(req, res, `/problems/${req.params.problemId}/insights`));
+    
+    // Reasoning Engines Management
+    app.get('/a2a/agent9/v1/engines', (req, res) => proxyAgent9Request(req, res, '/engines'));
+    app.post('/a2a/agent9/v1/engines/:engineId/optimize', (req, res) => 
+        proxyAgent9Request(req, res, `/engines/${req.params.engineId}/optimize`, 'POST'));
+    app.post('/a2a/agent9/v1/engines/:engineId/calibrate', (req, res) => 
+        proxyAgent9Request(req, res, `/engines/${req.params.engineId}/calibrate`, 'POST'));
+    app.get('/a2a/agent9/v1/engines/comparison', (req, res) => 
+        proxyAgent9Request(req, res, '/engines/comparison'));
+    
+    // Logical Analysis
+    app.post('/a2a/agent9/v1/analysis/contradictions', (req, res) => 
+        proxyAgent9Request(req, res, '/analysis/contradictions', 'POST'));
+    app.post('/a2a/agent9/v1/analysis/consistency', (req, res) => 
+        proxyAgent9Request(req, res, '/analysis/consistency', 'POST'));
+    app.get('/a2a/agent9/v1/analysis/performance', (req, res) => 
+        proxyAgent9Request(req, res, '/analysis/performance'));
+    
+    // Dashboard and Analytics
+    app.get('/a2a/agent9/v1/dashboard', (req, res) => proxyAgent9Request(req, res, '/dashboard'));
+    app.get('/a2a/agent9/v1/reasoning-options', (req, res) => proxyAgent9Request(req, res, '/reasoning-options'));
+    app.get('/a2a/agent9/v1/knowledge-stats', (req, res) => proxyAgent9Request(req, res, '/knowledge-stats'));
+    app.get('/a2a/agent9/v1/reasoning-chain/:taskId', (req, res) => 
+        proxyAgent9Request(req, res, `/reasoning-chain/${req.params.taskId}`));
+    app.get('/a2a/agent9/v1/performance-metrics', (req, res) => 
+        proxyAgent9Request(req, res, '/performance-metrics'));
+    
+    // Real-time updates and streaming
+    app.get('/a2a/agent9/v1/reasoning-tasks/:taskId/stream', (req, res) => {
+        // Server-Sent Events for real-time reasoning updates
+        res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*'
+        });
+        
+        // This would implement actual SSE streaming to Agent 9
+        const eventSourceUrl = `${AGENT9_BASE_URL}/api/agent9/v1/reasoning-tasks/${req.params.taskId}/stream`;
+        
+        // Placeholder for SSE implementation
+        res.write('data: {"type":"connected","timestamp":"' + new Date().toISOString() + '"}\n\n');
+        
+        // Clean up on client disconnect
+        req.on('close', () => {
+            res.end();
+        });
+    });
+    
+    // Health Check
+    app.get('/a2a/agent9/v1/health', (req, res) => proxyAgent9Request(req, res, '/health'));
+    
+    // Agent 9 OData Service Proxy - Convert REST to OData format
+    app.get('/a2a/agent9/v1/odata/ReasoningTasks', async (req, res) => {
+        try {
+            // This would be handled by the CAP service, but we provide a fallback
+            const response = await axios.get(`${AGENT9_BASE_URL}/api/agent9/v1/reasoning-tasks`);
+            
+            // Convert to OData format
+            const odataResponse = {
+                "@odata.context": "$metadata#ReasoningTasks",
+                "value": response.data.map(task => ({
+                    ID: task.id,
+                    taskName: task.task_name,
+                    description: task.description,
+                    reasoningType: task.reasoning_type?.toUpperCase() || 'DEDUCTIVE',
+                    problemDomain: task.problem_domain?.toUpperCase() || 'GENERAL',
+                    reasoningEngine: task.reasoning_engine?.toUpperCase() || 'FORWARD_CHAINING',
+                    status: task.status?.toUpperCase() || 'PENDING',
+                    priority: task.priority?.toUpperCase() || 'MEDIUM',
+                    confidenceScore: task.confidence_score || 0.0,
+                    factsProcessed: task.facts_processed || 0,
+                    inferencesGenerated: task.inferences_generated || 0,
+                    conclusionsReached: task.conclusions_reached || 0,
+                    processingTime: task.processing_time || 0,
+                    confidenceThreshold: task.confidence_threshold || 0.5,
+                    maxInferenceDepth: task.max_inference_depth || 5,
+                    chainingStrategy: task.chaining_strategy?.toUpperCase() || 'BREADTH_FIRST',
+                    uncertaintyHandling: task.uncertainty_handling?.toUpperCase() || 'CRISP',
+                    probabilisticModel: task.probabilistic_model?.toUpperCase() || 'BAYESIAN',
+                    logicalFramework: task.logical_framework?.toUpperCase() || 'FIRST_ORDER',
+                    parallelReasoning: task.parallel_reasoning || false,
+                    explanationDepth: task.explanation_depth || 3,
+                    validationStatus: task.validation_status?.toUpperCase() || 'PENDING',
+                    createdAt: task.created_at,
+                    modifiedAt: task.modified_at
+                }))
+            };
+            
+            res.set('Content-Type', 'application/json');
+            res.json(odataResponse);
+        } catch (error) {
+            log.error('Agent 9 OData proxy error:', error.message);
+            res.status(500).json({
+                error: 'Failed to fetch Agent 9 reasoning tasks',
+                message: error.message
+            });
+        }
+    });
+    
+    app.get('/a2a/agent9/v1/odata/KnowledgeBaseElements', async (req, res) => {
+        try {
+            const response = await axios.get(`${AGENT9_BASE_URL}/api/agent9/v1/knowledge-base`);
+            
+            const odataResponse = {
+                "@odata.context": "$metadata#KnowledgeBaseElements", 
+                "value": response.data.map(element => ({
+                    ID: element.id,
+                    elementName: element.element_name,
+                    elementType: element.element_type?.toUpperCase() || 'FACT',
+                    content: element.content,
+                    domain: element.domain?.toUpperCase() || 'GENERAL',
+                    confidenceLevel: element.confidence_level || 3,
+                    priorityWeight: element.priority_weight || 0.5,
+                    source: element.source,
+                    isActive: element.is_active !== false,
+                    usageCount: element.usage_count || 0,
+                    lastUsed: element.last_used,
+                    tags: element.tags,
+                    createdAt: element.created_at,
+                    modifiedAt: element.modified_at
+                }))
+            };
+            
+            res.set('Content-Type', 'application/json');
+            res.json(odataResponse);
+        } catch (error) {
+            log.error('Agent 9 OData knowledge base proxy error:', error.message);
+            res.status(500).json({
+                error: 'Failed to fetch Agent 9 knowledge base elements',
+                message: error.message
+            });
+        }
+    });
+    
+    log.info('Agent 9 API proxy routes initialized');
+    
+    // ===== AGENT 10 PROXY ROUTES - Calculation Engine =====
+    const AGENT10_BASE_URL = process.env.AGENT10_BASE_URL || 'http://localhost:8010';
+    
+    // Agent 10 proxy function
+    const proxyAgent10Request = async (req, res, endpoint, method = 'GET') => {
+        try {
+            const config = {
+                method,
+                url: `${AGENT10_BASE_URL}/api/agent10/v1${endpoint}`,
+                timeout: 60000, // Longer timeout for complex calculations
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            };
+            
+            if (method !== 'GET' && req.body) {
+                config.data = req.body;
+            }
+            
+            if (req.query && Object.keys(req.query).length > 0) {
+                config.params = req.query;
+            }
+            
+            const response = await axios(config);
+            res.status(response.status).json(response.data);
+        } catch (error) {
+            log.error('Agent 10 proxy error:', {
+                endpoint,
+                method,
+                error: error.message,
+                status: error.response?.status,
+                data: error.response?.data
+            });
+            
+            res.status(error.response?.status || 500).json({
+                error: 'Agent 10 service unavailable',
+                message: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    };
+    
+    // Calculation Tasks Management
+    app.get('/a2a/agent10/v1/calculation-tasks', (req, res) => proxyAgent10Request(req, res, '/calculation-tasks'));
+    app.post('/a2a/agent10/v1/calculation-tasks', (req, res) => proxyAgent10Request(req, res, '/calculation-tasks', 'POST'));
+    app.get('/a2a/agent10/v1/calculation-tasks/:taskId', (req, res) => 
+        proxyAgent10Request(req, res, `/calculation-tasks/${req.params.taskId}`));
+    app.put('/a2a/agent10/v1/calculation-tasks/:taskId', (req, res) => 
+        proxyAgent10Request(req, res, `/calculation-tasks/${req.params.taskId}`, 'PUT'));
+    app.delete('/a2a/agent10/v1/calculation-tasks/:taskId', (req, res) => 
+        proxyAgent10Request(req, res, `/calculation-tasks/${req.params.taskId}`, 'DELETE'));
+    
+    // Calculation Task Actions
+    app.post('/a2a/agent10/v1/calculation-tasks/:taskId/start', (req, res) => 
+        proxyAgent10Request(req, res, `/calculation-tasks/${req.params.taskId}/start`, 'POST'));
+    app.post('/a2a/agent10/v1/calculation-tasks/:taskId/pause', (req, res) => 
+        proxyAgent10Request(req, res, `/calculation-tasks/${req.params.taskId}/pause`, 'POST'));
+    app.post('/a2a/agent10/v1/calculation-tasks/:taskId/resume', (req, res) => 
+        proxyAgent10Request(req, res, `/calculation-tasks/${req.params.taskId}/resume`, 'POST'));
+    app.post('/a2a/agent10/v1/calculation-tasks/:taskId/cancel', (req, res) => 
+        proxyAgent10Request(req, res, `/calculation-tasks/${req.params.taskId}/cancel`, 'POST'));
+    
+    // Calculation Operations
+    app.post('/a2a/agent10/v1/calculate', (req, res) => proxyAgent10Request(req, res, '/calculate', 'POST'));
+    app.post('/a2a/agent10/v1/statistical-analysis', (req, res) => proxyAgent10Request(req, res, '/statistical-analysis', 'POST'));
+    app.post('/a2a/agent10/v1/batch-calculate', (req, res) => proxyAgent10Request(req, res, '/batch-calculate', 'POST'));
+    app.post('/a2a/agent10/v1/evaluate-formula', (req, res) => proxyAgent10Request(req, res, '/evaluate-formula', 'POST'));
+    app.post('/a2a/agent10/v1/validate-formula', (req, res) => proxyAgent10Request(req, res, '/validate-formula', 'POST'));
+    app.post('/a2a/agent10/v1/preview-calculation', (req, res) => proxyAgent10Request(req, res, '/preview-calculation', 'POST'));
+    
+    // Configuration and Methods
+    app.get('/a2a/agent10/v1/calculation-methods', (req, res) => proxyAgent10Request(req, res, '/calculation-methods'));
+    app.get('/a2a/agent10/v1/statistical-methods', (req, res) => proxyAgent10Request(req, res, '/statistical-methods'));
+    app.get('/a2a/agent10/v1/self-healing-strategies', (req, res) => proxyAgent10Request(req, res, '/self-healing-strategies'));
+    app.post('/a2a/agent10/v1/configure-precision', (req, res) => proxyAgent10Request(req, res, '/configure-precision', 'POST'));
+    app.post('/a2a/agent10/v1/configure-parallel-processing', (req, res) => proxyAgent10Request(req, res, '/configure-parallel-processing', 'POST'));
+    
+    // Results and History
+    app.get('/a2a/agent10/v1/calculation-history', (req, res) => proxyAgent10Request(req, res, '/calculation-history'));
+    app.get('/a2a/agent10/v1/performance-metrics/:taskId', (req, res) => 
+        proxyAgent10Request(req, res, `/performance-metrics/${req.params.taskId}`));
+    app.post('/a2a/agent10/v1/export-results/:taskId', (req, res) => 
+        proxyAgent10Request(req, res, `/export-results/${req.params.taskId}`, 'POST'));
+    
+    // Cache Management
+    app.post('/a2a/agent10/v1/clear-cache', (req, res) => proxyAgent10Request(req, res, '/clear-cache', 'POST'));
+    
+    // Health Check
+    app.get('/a2a/agent10/v1/health', (req, res) => proxyAgent10Request(req, res, '/health'));
+    
+    // Agent 10 OData Service Proxy - Convert REST to OData format
+    app.get('/a2a/agent10/v1/odata/CalculationTasks', async (req, res) => {
+        try {
+            const response = await axios.get(`${AGENT10_BASE_URL}/api/agent10/v1/calculation-tasks`);
+            
+            const odataResponse = {
+                "@odata.context": "$metadata#CalculationTasks",
+                "value": response.data.map(task => ({
+                    ID: task.id,
+                    taskName: task.task_name,
+                    description: task.description,
+                    calculationType: task.calculation_type?.toUpperCase(),
+                    formula: task.formula,
+                    inputParameters: JSON.stringify(task.input_parameters || {}),
+                    calculationMethod: task.calculation_method?.toUpperCase(),
+                    precisionType: task.precision_type || 'DECIMAL64',
+                    requiredAccuracy: task.required_accuracy || 0.000001,
+                    maxIterations: task.max_iterations || 1000,
+                    timeout: task.timeout || 60000,
+                    enableSelfHealing: task.enable_self_healing !== false,
+                    verificationRounds: task.verification_rounds || 3,
+                    useParallelProcessing: task.use_parallel_processing !== false,
+                    cacheResults: task.cache_results !== false,
+                    priority: task.priority?.toUpperCase() || 'MEDIUM',
+                    status: task.status?.toUpperCase() || 'PENDING',
+                    progress: task.progress || 0,
+                    startTime: task.start_time,
+                    endTime: task.end_time,
+                    executionTime: task.execution_time,
+                    result: JSON.stringify(task.result || {}),
+                    errorMessage: task.error_message,
+                    selfHealingLog: JSON.stringify(task.self_healing_log || {}),
+                    performanceMetrics: JSON.stringify(task.performance_metrics || {}),
+                    metadata: JSON.stringify(task.metadata || {}),
+                    createdAt: task.created_at,
+                    modifiedAt: task.modified_at
+                }))
+            };
+            
+            res.json(odataResponse);
+        } catch (error) {
+            res.status(503).json({
+                error: {
+                    code: "SERVICE_UNAVAILABLE",
+                    message: "Agent 10 backend not available"
+                }
+            });
+        }
+    });
+    
+    log.info('Agent 10 API proxy routes initialized');
+    
+    // ===== AGENT 11 PROXY ROUTES - SQL Engine =====
+    const AGENT11_BASE_URL = process.env.AGENT11_BASE_URL || 'http://localhost:8011';
+    
+    // Agent 11 proxy function
+    const proxyAgent11Request = async (req, res, endpoint, method = 'GET') => {
+        try {
+            const config = {
+                method,
+                url: `${AGENT11_BASE_URL}/api/agent11/v1${endpoint}`,
+                timeout: 60000, // Longer timeout for complex SQL operations
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            };
+            
+            if (method !== 'GET' && req.body) {
+                config.data = req.body;
+            }
+            
+            if (req.query && Object.keys(req.query).length > 0) {
+                config.params = req.query;
+            }
+            
+            const response = await axios(config);
+            res.status(response.status).json(response.data);
+        } catch (error) {
+            log.error('Agent 11 proxy error:', {
+                endpoint,
+                method,
+                error: error.message,
+                status: error.response?.status,
+                data: error.response?.data
+            });
+            
+            res.status(error.response?.status || 500).json({
+                error: 'Agent 11 service unavailable',
+                message: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    };
+    
+    // SQL Query Tasks Management
+    app.get('/a2a/agent11/v1/sql-queries', (req, res) => proxyAgent11Request(req, res, '/sql-queries'));
+    app.post('/a2a/agent11/v1/sql-queries', (req, res) => proxyAgent11Request(req, res, '/sql-queries', 'POST'));
+    app.get('/a2a/agent11/v1/sql-queries/:queryId', (req, res) => 
+        proxyAgent11Request(req, res, `/sql-queries/${req.params.queryId}`));
+    app.put('/a2a/agent11/v1/sql-queries/:queryId', (req, res) => 
+        proxyAgent11Request(req, res, `/sql-queries/${req.params.queryId}`, 'PUT'));
+    app.delete('/a2a/agent11/v1/sql-queries/:queryId', (req, res) => 
+        proxyAgent11Request(req, res, `/sql-queries/${req.params.queryId}`, 'DELETE'));
+    
+    // SQL Query Actions
+    app.post('/a2a/agent11/v1/sql-queries/:queryId/execute', (req, res) => 
+        proxyAgent11Request(req, res, `/sql-queries/${req.params.queryId}/execute`, 'POST'));
+    app.post('/a2a/agent11/v1/sql-queries/:queryId/validate', (req, res) => 
+        proxyAgent11Request(req, res, `/sql-queries/${req.params.queryId}/validate`, 'POST'));
+    app.post('/a2a/agent11/v1/sql-queries/:queryId/optimize', (req, res) => 
+        proxyAgent11Request(req, res, `/sql-queries/${req.params.queryId}/optimize`, 'POST'));
+    app.post('/a2a/agent11/v1/sql-queries/:queryId/explain', (req, res) => 
+        proxyAgent11Request(req, res, `/sql-queries/${req.params.queryId}/explain`, 'POST'));
+    app.post('/a2a/agent11/v1/sql-queries/:queryId/approve', (req, res) => 
+        proxyAgent11Request(req, res, `/sql-queries/${req.params.queryId}/approve`, 'POST'));
+    
+    // Natural Language to SQL
+    app.post('/a2a/agent11/v1/translate-nl', (req, res) => proxyAgent11Request(req, res, '/translate-nl', 'POST'));
+    app.post('/a2a/agent11/v1/generate-from-nl', (req, res) => proxyAgent11Request(req, res, '/generate-from-nl', 'POST'));
+    
+    // SQL Operations
+    app.post('/a2a/agent11/v1/execute-sql', (req, res) => proxyAgent11Request(req, res, '/execute-sql', 'POST'));
+    app.post('/a2a/agent11/v1/validate-sql', (req, res) => proxyAgent11Request(req, res, '/validate-sql', 'POST'));
+    app.post('/a2a/agent11/v1/optimize-sql', (req, res) => proxyAgent11Request(req, res, '/optimize-sql', 'POST'));
+    app.post('/a2a/agent11/v1/explain-plan', (req, res) => proxyAgent11Request(req, res, '/explain-plan', 'POST'));
+    
+    // Schema and Database Information
+    app.get('/a2a/agent11/v1/schema-info/:database', (req, res) => 
+        proxyAgent11Request(req, res, `/schema-info/${req.params.database}`));
+    app.get('/a2a/agent11/v1/table-info/:database/:table', (req, res) => 
+        proxyAgent11Request(req, res, `/table-info/${req.params.database}/${req.params.table}`));
+    app.get('/a2a/agent11/v1/databases', (req, res) => proxyAgent11Request(req, res, '/databases'));
+    app.get('/a2a/agent11/v1/dialects', (req, res) => proxyAgent11Request(req, res, '/dialects'));
+    
+    // Query History and Performance
+    app.get('/a2a/agent11/v1/query-history', (req, res) => proxyAgent11Request(req, res, '/query-history'));
+    app.get('/a2a/agent11/v1/performance-analysis/:queryId', (req, res) => 
+        proxyAgent11Request(req, res, `/performance-analysis/${req.params.queryId}`));
+    app.post('/a2a/agent11/v1/suggest-indexes', (req, res) => proxyAgent11Request(req, res, '/suggest-indexes', 'POST'));
+    
+    // Query Templates
+    app.get('/a2a/agent11/v1/query-templates', (req, res) => proxyAgent11Request(req, res, '/query-templates'));
+    app.post('/a2a/agent11/v1/query-templates', (req, res) => proxyAgent11Request(req, res, '/query-templates', 'POST'));
+    app.get('/a2a/agent11/v1/query-templates/:templateId', (req, res) => 
+        proxyAgent11Request(req, res, `/query-templates/${req.params.templateId}`));
+    
+    // Database Connection Management
+    app.get('/a2a/agent11/v1/connections', (req, res) => proxyAgent11Request(req, res, '/connections'));
+    app.post('/a2a/agent11/v1/connections', (req, res) => proxyAgent11Request(req, res, '/connections', 'POST'));
+    app.post('/a2a/agent11/v1/connections/test', (req, res) => proxyAgent11Request(req, res, '/connections/test', 'POST'));
+    
+    // Export and Backup
+    app.post('/a2a/agent11/v1/export-results/:queryId', (req, res) => 
+        proxyAgent11Request(req, res, `/export-results/${req.params.queryId}`, 'POST'));
+    app.post('/a2a/agent11/v1/backup-query/:queryId', (req, res) => 
+        proxyAgent11Request(req, res, `/backup-query/${req.params.queryId}`, 'POST'));
+    app.post('/a2a/agent11/v1/restore-query', (req, res) => proxyAgent11Request(req, res, '/restore-query', 'POST'));
+    
+    // Health Check
+    app.get('/a2a/agent11/v1/health', (req, res) => proxyAgent11Request(req, res, '/health'));
+    
+    // Agent 11 OData Service Proxy - Convert REST to OData format
+    app.get('/a2a/agent11/v1/odata/SQLQueryTasks', async (req, res) => {
+        try {
+            const response = await axios.get(`${AGENT11_BASE_URL}/api/agent11/v1/sql-queries`);
+            
+            const odataResponse = {
+                "@odata.context": "$metadata#SQLQueryTasks",
+                "value": response.data.map(query => ({
+                    ID: query.id,
+                    queryName: query.query_name,
+                    description: query.description,
+                    queryType: query.query_type?.toUpperCase(),
+                    naturalLanguageQuery: query.natural_language_query,
+                    generatedSQL: query.generated_sql,
+                    originalSQL: query.original_sql,
+                    optimizedSQL: query.optimized_sql,
+                    databaseConnection: query.database_connection,
+                    sqlDialect: query.sql_dialect?.toUpperCase() || 'HANA',
+                    queryParameters: JSON.stringify(query.query_parameters || {}),
+                    executionContext: JSON.stringify(query.execution_context || {}),
+                    priority: query.priority?.toUpperCase() || 'MEDIUM',
+                    status: query.status?.toUpperCase() || 'DRAFT',
+                    executionTime: query.execution_time,
+                    rowsAffected: query.rows_affected,
+                    resultRowCount: query.result_row_count,
+                    isOptimized: query.is_optimized !== false,
+                    autoGenerated: query.auto_generated !== false,
+                    requiresApproval: query.requires_approval !== false,
+                    isApproved: query.is_approved !== false,
+                    approvedBy: query.approved_by,
+                    approvalTimestamp: query.approval_timestamp,
+                    startTime: query.start_time,
+                    endTime: query.end_time,
+                    errorMessage: query.error_message,
+                    queryResults: JSON.stringify(query.query_results || {}),
+                    executionPlan: JSON.stringify(query.execution_plan || {}),
+                    performanceMetrics: JSON.stringify(query.performance_metrics || {}),
+                    securityContext: JSON.stringify(query.security_context || {}),
+                    metadata: JSON.stringify(query.metadata || {}),
+                    createdAt: query.created_at,
+                    modifiedAt: query.modified_at
+                }))
+            };
+            
+            res.json(odataResponse);
+        } catch (error) {
+            res.status(503).json({
+                error: {
+                    code: "SERVICE_UNAVAILABLE",
+                    message: "Agent 11 backend not available"
+                }
+            });
+        }
+    });
+    
+    log.info('Agent 11 API proxy routes initialized');
+    
+    // ===== AGENT 12 PROXY ROUTES - Catalog Manager =====
+    const AGENT12_BASE_URL = process.env.AGENT12_BASE_URL || 'http://localhost:8012';
+    
+    // Agent 12 proxy function
+    const proxyAgent12Request = async (req, res, endpoint, method = 'GET') => {
+        try {
+            const config = {
+                method,
+                url: `${AGENT12_BASE_URL}/api/agent12/v1${endpoint}`,
+                timeout: 30000, // Timeout for catalog operations
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            };
+            
+            if (method !== 'GET' && req.body) {
+                config.data = req.body;
+            }
+            
+            if (req.query && Object.keys(req.query).length > 0) {
+                config.params = req.query;
+            }
+            
+            const response = await axios(config);
+            res.status(response.status).json(response.data);
+        } catch (error) {
+            log.error('Agent 12 proxy error:', {
+                endpoint,
+                method,
+                error: error.message,
+                status: error.response?.status,
+                data: error.response?.data
+            });
+            
+            res.status(error.response?.status || 500).json({
+                error: 'Agent 12 service unavailable',
+                message: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    };
+    
+    // Catalog Entry Management
+    app.get('/a2a/agent12/v1/catalog-entries', (req, res) => proxyAgent12Request(req, res, '/catalog-entries'));
+    app.post('/a2a/agent12/v1/catalog-entries', (req, res) => proxyAgent12Request(req, res, '/catalog-entries', 'POST'));
+    app.get('/a2a/agent12/v1/catalog-entries/:entryId', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}`));
+    app.put('/a2a/agent12/v1/catalog-entries/:entryId', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}`, 'PUT'));
+    app.delete('/a2a/agent12/v1/catalog-entries/:entryId', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}`, 'DELETE'));
+    
+    // Catalog Entry Actions
+    app.post('/a2a/agent12/v1/catalog-entries/:entryId/publish', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/publish`, 'POST'));
+    app.post('/a2a/agent12/v1/catalog-entries/:entryId/deprecate', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/deprecate`, 'POST'));
+    app.post('/a2a/agent12/v1/catalog-entries/:entryId/archive', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/archive`, 'POST'));
+    app.post('/a2a/agent12/v1/catalog-entries/:entryId/validate', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/validate`, 'POST'));
+    app.post('/a2a/agent12/v1/catalog-entries/:entryId/duplicate', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/duplicate`, 'POST'));
+    app.post('/a2a/agent12/v1/catalog-entries/:entryId/export', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/export`, 'POST'));
+    app.post('/a2a/agent12/v1/catalog-entries/:entryId/generate-docs', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/generate-docs`, 'POST'));
+    
+    // Dependencies Management
+    app.get('/a2a/agent12/v1/catalog-dependencies', (req, res) => proxyAgent12Request(req, res, '/catalog-dependencies'));
+    app.post('/a2a/agent12/v1/catalog-dependencies', (req, res) => proxyAgent12Request(req, res, '/catalog-dependencies', 'POST'));
+    app.get('/a2a/agent12/v1/catalog-dependencies/:entryId', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-dependencies/${req.params.entryId}`));
+    app.delete('/a2a/agent12/v1/catalog-dependencies/:depId', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-dependencies/${req.params.depId}`, 'DELETE'));
+    
+    // Reviews and Ratings
+    app.get('/a2a/agent12/v1/catalog-reviews', (req, res) => proxyAgent12Request(req, res, '/catalog-reviews'));
+    app.post('/a2a/agent12/v1/catalog-reviews', (req, res) => proxyAgent12Request(req, res, '/catalog-reviews', 'POST'));
+    app.get('/a2a/agent12/v1/catalog-reviews/:entryId', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-reviews/${req.params.entryId}`));
+    app.post('/a2a/agent12/v1/catalog-reviews/:reviewId/approve', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-reviews/${req.params.reviewId}/approve`, 'POST'));
+    app.post('/a2a/agent12/v1/catalog-reviews/:reviewId/reject', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-reviews/${req.params.reviewId}/reject`, 'POST'));
+    app.post('/a2a/agent12/v1/catalog-reviews/:reviewId/flag', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-reviews/${req.params.reviewId}/flag`, 'POST'));
+    
+    // Metadata Management
+    app.get('/a2a/agent12/v1/catalog-metadata/:entryId', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-metadata/${req.params.entryId}`));
+    app.post('/a2a/agent12/v1/catalog-metadata', (req, res) => proxyAgent12Request(req, res, '/catalog-metadata', 'POST'));
+    app.put('/a2a/agent12/v1/catalog-metadata/:metadataId', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-metadata/${req.params.metadataId}`, 'PUT'));
+    app.delete('/a2a/agent12/v1/catalog-metadata/:metadataId', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-metadata/${req.params.metadataId}`, 'DELETE'));
+    
+    // Search and Discovery
+    app.get('/a2a/agent12/v1/search', (req, res) => proxyAgent12Request(req, res, '/search'));
+    app.post('/a2a/agent12/v1/search', (req, res) => proxyAgent12Request(req, res, '/search', 'POST'));
+    app.post('/a2a/agent12/v1/search/advanced', (req, res) => proxyAgent12Request(req, res, '/search/advanced', 'POST'));
+    app.post('/a2a/agent12/v1/discover-services', (req, res) => proxyAgent12Request(req, res, '/discover-services', 'POST'));
+    app.get('/a2a/agent12/v1/search-history', (req, res) => proxyAgent12Request(req, res, '/search-history'));
+    
+    // Service Registration
+    app.post('/a2a/agent12/v1/register-service', (req, res) => proxyAgent12Request(req, res, '/register-service', 'POST'));
+    app.post('/a2a/agent12/v1/update-service-health', (req, res) => proxyAgent12Request(req, res, '/update-service-health', 'POST'));
+    app.get('/a2a/agent12/v1/services/:serviceId/health', (req, res) => 
+        proxyAgent12Request(req, res, `/services/${req.params.serviceId}/health`));
+    
+    // Registry Management
+    app.get('/a2a/agent12/v1/registries', (req, res) => proxyAgent12Request(req, res, '/registries'));
+    app.post('/a2a/agent12/v1/registries', (req, res) => proxyAgent12Request(req, res, '/registries', 'POST'));
+    app.get('/a2a/agent12/v1/registries/:registryId', (req, res) => 
+        proxyAgent12Request(req, res, `/registries/${req.params.registryId}`));
+    app.put('/a2a/agent12/v1/registries/:registryId', (req, res) => 
+        proxyAgent12Request(req, res, `/registries/${req.params.registryId}`, 'PUT'));
+    app.post('/a2a/agent12/v1/registries/:registryId/sync', (req, res) => 
+        proxyAgent12Request(req, res, `/registries/${req.params.registryId}/sync`, 'POST'));
+    app.post('/a2a/agent12/v1/registries/:registryId/test', (req, res) => 
+        proxyAgent12Request(req, res, `/registries/${req.params.registryId}/test`, 'POST'));
+    app.post('/a2a/agent12/v1/registries/:registryId/reset', (req, res) => 
+        proxyAgent12Request(req, res, `/registries/${req.params.registryId}/reset`, 'POST'));
+    
+    // Analysis and Reporting
+    app.post('/a2a/agent12/v1/analyze-dependencies', (req, res) => proxyAgent12Request(req, res, '/analyze-dependencies', 'POST'));
+    app.post('/a2a/agent12/v1/validate-metadata', (req, res) => proxyAgent12Request(req, res, '/validate-metadata', 'POST'));
+    app.post('/a2a/agent12/v1/generate-report', (req, res) => proxyAgent12Request(req, res, '/generate-report', 'POST'));
+    app.get('/a2a/agent12/v1/statistics', (req, res) => proxyAgent12Request(req, res, '/statistics'));
+    app.get('/a2a/agent12/v1/analytics', (req, res) => proxyAgent12Request(req, res, '/analytics'));
+    
+    // Bulk Operations
+    app.post('/a2a/agent12/v1/bulk-import', (req, res) => proxyAgent12Request(req, res, '/bulk-import', 'POST'));
+    app.post('/a2a/agent12/v1/bulk-export', (req, res) => proxyAgent12Request(req, res, '/bulk-export', 'POST'));
+    app.post('/a2a/agent12/v1/bulk-update', (req, res) => proxyAgent12Request(req, res, '/bulk-update', 'POST'));
+    app.post('/a2a/agent12/v1/bulk-delete', (req, res) => proxyAgent12Request(req, res, '/bulk-delete', 'POST'));
+    
+    // External Catalog Integration  
+    app.post('/a2a/agent12/v1/sync-external-catalog', (req, res) => proxyAgent12Request(req, res, '/sync-external-catalog', 'POST'));
+    app.get('/a2a/agent12/v1/external-catalogs', (req, res) => proxyAgent12Request(req, res, '/external-catalogs'));
+    app.post('/a2a/agent12/v1/external-catalogs/test', (req, res) => proxyAgent12Request(req, res, '/external-catalogs/test', 'POST'));
+    
+    // Categories and Tags
+    app.get('/a2a/agent12/v1/categories', (req, res) => proxyAgent12Request(req, res, '/categories'));
+    app.post('/a2a/agent12/v1/categories', (req, res) => proxyAgent12Request(req, res, '/categories', 'POST'));
+    app.get('/a2a/agent12/v1/tags', (req, res) => proxyAgent12Request(req, res, '/tags'));
+    app.get('/a2a/agent12/v1/popular-tags', (req, res) => proxyAgent12Request(req, res, '/popular-tags'));
+    
+    // Recommendations and AI features
+    app.post('/a2a/agent12/v1/recommendations', (req, res) => proxyAgent12Request(req, res, '/recommendations', 'POST'));
+    app.post('/a2a/agent12/v1/optimize-search-index', (req, res) => proxyAgent12Request(req, res, '/optimize-search-index', 'POST'));
+    app.post('/a2a/agent12/v1/rebuild-catalog', (req, res) => proxyAgent12Request(req, res, '/rebuild-catalog', 'POST'));
+    
+    // Versioning
+    app.get('/a2a/agent12/v1/catalog-entries/:entryId/versions', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/versions`));
+    app.post('/a2a/agent12/v1/catalog-entries/:entryId/versions', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/versions`, 'POST'));
+    app.get('/a2a/agent12/v1/catalog-entries/:entryId/versions/:version', (req, res) => 
+        proxyAgent12Request(req, res, `/catalog-entries/${req.params.entryId}/versions/${req.params.version}`));
+    
+    // Health Check
+    app.get('/a2a/agent12/v1/health', (req, res) => proxyAgent12Request(req, res, '/health'));
+    
+    // Agent 12 OData Service Proxy - Convert REST to OData format
+    app.get('/a2a/agent12/v1/odata/CatalogEntries', async (req, res) => {
+        try {
+            const response = await axios.get(`${AGENT12_BASE_URL}/api/agent12/v1/catalog-entries`);
+            
+            const odataResponse = {
+                "@odata.context": "$metadata#CatalogEntries",
+                "value": response.data.map(entry => ({
+                    ID: entry.id,
+                    entryName: entry.entry_name,
+                    description: entry.description,
+                    category: entry.category?.toUpperCase() || 'SERVICE',
+                    subCategory: entry.sub_category,
+                    version: entry.version,
+                    status: entry.status?.toUpperCase() || 'DRAFT',
+                    visibility: entry.visibility?.toUpperCase() || 'PRIVATE',
+                    entryType: entry.entry_type?.toUpperCase() || 'MICROSERVICE',
+                    provider: entry.provider,
+                    owner: entry.owner,
+                    contactEmail: entry.contact_email,
+                    documentationUrl: entry.documentation_url,
+                    sourceUrl: entry.source_url,
+                    apiEndpoint: entry.api_endpoint,
+                    healthCheckUrl: entry.health_check_url,
+                    tags: entry.tags,
+                    keywords: entry.keywords,
+                    rating: entry.rating || 0.0,
+                    usageCount: entry.usage_count || 0,
+                    downloadCount: entry.download_count || 0,
+                    isFeatured: entry.is_featured !== false,
+                    isVerified: entry.is_verified !== false,
+                    lastAccessed: entry.last_accessed,
+                    metadata: entry.metadata,
+                    configurationSchema: entry.configuration_schema,
+                    exampleUsage: entry.example_usage,
+                    license: entry.license,
+                    securityLevel: entry.security_level?.toUpperCase() || 'INTERNAL',
+                    createdAt: entry.created_at,
+                    modifiedAt: entry.modified_at
+                }))
+            };
+            
+            res.json(odataResponse);
+        } catch (error) {
+            log.error('Agent 12 OData proxy error:', error);
+            res.status(500).json({
+                error: 'Failed to fetch catalog entries',
+                message: error.message
+            });
+        }
+    });
+    
+    log.info('Agent 12 API proxy routes initialized');
+    
     // Agent 3 OData Service Proxy - Convert REST to OData format
     app.get('/a2a/agent3/v1/odata/VectorProcessingTasks', async (req, res) => {
         try {
@@ -2731,6 +3516,320 @@ cds.on('listening', async (info) => {
         log.error('Failed to perform launchpad health check:', error);
         log.warn('Server will continue but launchpad status is unknown');
     }
+
+    // ============================================
+    // AGENT 13 - AGENT BUILDER PROXY ROUTES
+    // ============================================
+    
+    const AGENT13_BASE_URL = process.env.AGENT13_BASE_URL || 'http://localhost:8013';
+    
+    // Agent 13 proxy function
+    const proxyAgent13Request = async (req, res, endpoint, method = 'GET') => {
+        try {
+            const config = {
+                method,
+                url: `${AGENT13_BASE_URL}/api/agent13/v1${endpoint}`,
+                timeout: 45000, // Extended timeout for builds and deployments
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            };
+            
+            if (method !== 'GET' && req.body) {
+                config.data = req.body;
+            }
+            
+            if (req.query && Object.keys(req.query).length > 0) {
+                config.params = req.query;
+            }
+            
+            const response = await axios(config);
+            res.status(response.status).json(response.data);
+        } catch (error) {
+            log.error('Agent 13 proxy error:', {
+                endpoint,
+                method,
+                error: error.message,
+                status: error.response?.status,
+                data: error.response?.data
+            });
+            
+            res.status(error.response?.status || 500).json({
+                error: error.response?.data || { message: 'Agent 13 service error' }
+            });
+        }
+    };
+    
+    // Template Management
+    app.get('/a2a/agent13/v1/templates', (req, res) => proxyAgent13Request(req, res, '/templates'));
+    app.post('/a2a/agent13/v1/templates', (req, res) => proxyAgent13Request(req, res, '/templates', 'POST'));
+    app.get('/a2a/agent13/v1/templates/:templateId', (req, res) => 
+        proxyAgent13Request(req, res, `/templates/${req.params.templateId}`));
+    app.put('/a2a/agent13/v1/templates/:templateId', (req, res) => 
+        proxyAgent13Request(req, res, `/templates/${req.params.templateId}`, 'PUT'));
+    app.delete('/a2a/agent13/v1/templates/:templateId', (req, res) => 
+        proxyAgent13Request(req, res, `/templates/${req.params.templateId}`, 'DELETE'));
+    
+    // Template Actions
+    app.post('/a2a/agent13/v1/templates/:templateId/clone', (req, res) => 
+        proxyAgent13Request(req, res, `/templates/${req.params.templateId}/clone`, 'POST'));
+    app.post('/a2a/agent13/v1/templates/:templateId/validate', (req, res) => 
+        proxyAgent13Request(req, res, `/templates/${req.params.templateId}/validate`, 'POST'));
+    app.post('/a2a/agent13/v1/templates/:templateId/generate', (req, res) => 
+        proxyAgent13Request(req, res, `/templates/${req.params.templateId}/generate`, 'POST'));
+    app.post('/a2a/agent13/v1/templates/:templateId/export', (req, res) => 
+        proxyAgent13Request(req, res, `/templates/${req.params.templateId}/export`, 'POST'));
+    app.post('/a2a/agent13/v1/templates/:templateId/import', (req, res) => 
+        proxyAgent13Request(req, res, `/templates/${req.params.templateId}/import`, 'POST'));
+    
+    // Agent Build Management
+    app.get('/a2a/agent13/v1/builds', (req, res) => proxyAgent13Request(req, res, '/builds'));
+    app.post('/a2a/agent13/v1/builds', (req, res) => proxyAgent13Request(req, res, '/builds', 'POST'));
+    app.get('/a2a/agent13/v1/builds/:buildId', (req, res) => 
+        proxyAgent13Request(req, res, `/builds/${req.params.buildId}`));
+    app.delete('/a2a/agent13/v1/builds/:buildId', (req, res) => 
+        proxyAgent13Request(req, res, `/builds/${req.params.buildId}`, 'DELETE'));
+    
+    // Build Actions
+    app.post('/a2a/agent13/v1/builds/:buildId/start', (req, res) => 
+        proxyAgent13Request(req, res, `/builds/${req.params.buildId}/start`, 'POST'));
+    app.post('/a2a/agent13/v1/builds/:buildId/stop', (req, res) => 
+        proxyAgent13Request(req, res, `/builds/${req.params.buildId}/stop`, 'POST'));
+    app.post('/a2a/agent13/v1/builds/:buildId/restart', (req, res) => 
+        proxyAgent13Request(req, res, `/builds/${req.params.buildId}/restart`, 'POST'));
+    app.get('/a2a/agent13/v1/builds/:buildId/logs', (req, res) => 
+        proxyAgent13Request(req, res, `/builds/${req.params.buildId}/logs`));
+    app.get('/a2a/agent13/v1/builds/:buildId/artifacts', (req, res) => 
+        proxyAgent13Request(req, res, `/builds/${req.params.buildId}/artifacts`));
+    app.post('/a2a/agent13/v1/builds/:buildId/test', (req, res) => 
+        proxyAgent13Request(req, res, `/builds/${req.params.buildId}/test`, 'POST'));
+    
+    // Deployment Management
+    app.get('/a2a/agent13/v1/deployments', (req, res) => proxyAgent13Request(req, res, '/deployments'));
+    app.post('/a2a/agent13/v1/deployments', (req, res) => proxyAgent13Request(req, res, '/deployments', 'POST'));
+    app.get('/a2a/agent13/v1/deployments/:deploymentId', (req, res) => 
+        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}`));
+    app.put('/a2a/agent13/v1/deployments/:deploymentId', (req, res) => 
+        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}`, 'PUT'));
+    app.delete('/a2a/agent13/v1/deployments/:deploymentId', (req, res) => 
+        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}`, 'DELETE'));
+    
+    // Deployment Actions
+    app.post('/a2a/agent13/v1/deployments/:deploymentId/start', (req, res) => 
+        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}/start`, 'POST'));
+    app.post('/a2a/agent13/v1/deployments/:deploymentId/stop', (req, res) => 
+        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}/stop`, 'POST'));
+    app.post('/a2a/agent13/v1/deployments/:deploymentId/restart', (req, res) => 
+        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}/restart`, 'POST'));
+    app.post('/a2a/agent13/v1/deployments/:deploymentId/scale', (req, res) => 
+        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}/scale`, 'POST'));
+    app.get('/a2a/agent13/v1/deployments/:deploymentId/status', (req, res) => 
+        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}/status`));
+    app.get('/a2a/agent13/v1/deployments/:deploymentId/logs', (req, res) => 
+        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}/logs`));
+    app.get('/a2a/agent13/v1/deployments/:deploymentId/metrics', (req, res) => 
+        proxyAgent13Request(req, res, `/deployments/${req.params.deploymentId}/metrics`));
+    
+    // Template Component Management
+    app.get('/a2a/agent13/v1/components', (req, res) => proxyAgent13Request(req, res, '/components'));
+    app.post('/a2a/agent13/v1/components', (req, res) => proxyAgent13Request(req, res, '/components', 'POST'));
+    app.get('/a2a/agent13/v1/components/:componentId', (req, res) => 
+        proxyAgent13Request(req, res, `/components/${req.params.componentId}`));
+    app.put('/a2a/agent13/v1/components/:componentId', (req, res) => 
+        proxyAgent13Request(req, res, `/components/${req.params.componentId}`, 'PUT'));
+    app.delete('/a2a/agent13/v1/components/:componentId', (req, res) => 
+        proxyAgent13Request(req, res, `/components/${req.params.componentId}`, 'DELETE'));
+    
+    // Component Actions
+    app.post('/a2a/agent13/v1/components/:componentId/validate', (req, res) => 
+        proxyAgent13Request(req, res, `/components/${req.params.componentId}/validate`, 'POST'));
+    app.post('/a2a/agent13/v1/components/:componentId/test', (req, res) => 
+        proxyAgent13Request(req, res, `/components/${req.params.componentId}/test`, 'POST'));
+    app.get('/a2a/agent13/v1/templates/:templateId/components', (req, res) => 
+        proxyAgent13Request(req, res, `/templates/${req.params.templateId}/components`));
+    
+    // Build Pipeline Management
+    app.get('/a2a/agent13/v1/pipelines', (req, res) => proxyAgent13Request(req, res, '/pipelines'));
+    app.post('/a2a/agent13/v1/pipelines', (req, res) => proxyAgent13Request(req, res, '/pipelines', 'POST'));
+    app.get('/a2a/agent13/v1/pipelines/:pipelineId', (req, res) => 
+        proxyAgent13Request(req, res, `/pipelines/${req.params.pipelineId}`));
+    app.put('/a2a/agent13/v1/pipelines/:pipelineId', (req, res) => 
+        proxyAgent13Request(req, res, `/pipelines/${req.params.pipelineId}`, 'PUT'));
+    app.delete('/a2a/agent13/v1/pipelines/:pipelineId', (req, res) => 
+        proxyAgent13Request(req, res, `/pipelines/${req.params.pipelineId}`, 'DELETE'));
+    
+    // Pipeline Actions
+    app.post('/a2a/agent13/v1/pipelines/:pipelineId/trigger', (req, res) => 
+        proxyAgent13Request(req, res, `/pipelines/${req.params.pipelineId}/trigger`, 'POST'));
+    app.post('/a2a/agent13/v1/pipelines/:pipelineId/stop', (req, res) => 
+        proxyAgent13Request(req, res, `/pipelines/${req.params.pipelineId}/stop`, 'POST'));
+    app.get('/a2a/agent13/v1/pipelines/:pipelineId/status', (req, res) => 
+        proxyAgent13Request(req, res, `/pipelines/${req.params.pipelineId}/status`));
+    app.get('/a2a/agent13/v1/pipelines/:pipelineId/logs', (req, res) => 
+        proxyAgent13Request(req, res, `/pipelines/${req.params.pipelineId}/logs`));
+    app.get('/a2a/agent13/v1/pipelines/:pipelineId/history', (req, res) => 
+        proxyAgent13Request(req, res, `/pipelines/${req.params.pipelineId}/history`));
+    
+    // Code Generation
+    app.post('/a2a/agent13/v1/generate-code', (req, res) => proxyAgent13Request(req, res, '/generate-code', 'POST'));
+    app.post('/a2a/agent13/v1/validate-code', (req, res) => proxyAgent13Request(req, res, '/validate-code', 'POST'));
+    app.post('/a2a/agent13/v1/optimize-code', (req, res) => proxyAgent13Request(req, res, '/optimize-code', 'POST'));
+    app.post('/a2a/agent13/v1/analyze-dependencies', (req, res) => proxyAgent13Request(req, res, '/analyze-dependencies', 'POST'));
+    
+    // Batch Operations
+    app.post('/a2a/agent13/v1/batch-build', (req, res) => proxyAgent13Request(req, res, '/batch-build', 'POST'));
+    app.post('/a2a/agent13/v1/batch-deploy', (req, res) => proxyAgent13Request(req, res, '/batch-deploy', 'POST'));
+    app.post('/a2a/agent13/v1/batch-test', (req, res) => proxyAgent13Request(req, res, '/batch-test', 'POST'));
+    app.get('/a2a/agent13/v1/batch-status/:batchId', (req, res) => 
+        proxyAgent13Request(req, res, `/batch-status/${req.params.batchId}`));
+    
+    // Statistics and Analytics
+    app.get('/a2a/agent13/v1/statistics', (req, res) => proxyAgent13Request(req, res, '/statistics'));
+    app.get('/a2a/agent13/v1/analytics', (req, res) => proxyAgent13Request(req, res, '/analytics'));
+    app.get('/a2a/agent13/v1/build-metrics', (req, res) => proxyAgent13Request(req, res, '/build-metrics'));
+    app.get('/a2a/agent13/v1/deployment-metrics', (req, res) => proxyAgent13Request(req, res, '/deployment-metrics'));
+    app.get('/a2a/agent13/v1/template-usage', (req, res) => proxyAgent13Request(req, res, '/template-usage'));
+    
+    // Configuration and Settings
+    app.get('/a2a/agent13/v1/config', (req, res) => proxyAgent13Request(req, res, '/config'));
+    app.put('/a2a/agent13/v1/config', (req, res) => proxyAgent13Request(req, res, '/config', 'PUT'));
+    app.get('/a2a/agent13/v1/environments', (req, res) => proxyAgent13Request(req, res, '/environments'));
+    app.get('/a2a/agent13/v1/deployment-targets', (req, res) => proxyAgent13Request(req, res, '/deployment-targets'));
+    
+    // Resource Management  
+    app.get('/a2a/agent13/v1/resources', (req, res) => proxyAgent13Request(req, res, '/resources'));
+    app.get('/a2a/agent13/v1/resource-usage', (req, res) => proxyAgent13Request(req, res, '/resource-usage'));
+    app.post('/a2a/agent13/v1/cleanup-resources', (req, res) => proxyAgent13Request(req, res, '/cleanup-resources', 'POST'));
+    
+    // Templates and Documentation
+    app.get('/a2a/agent13/v1/template-types', (req, res) => proxyAgent13Request(req, res, '/template-types'));
+    app.get('/a2a/agent13/v1/frameworks', (req, res) => proxyAgent13Request(req, res, '/frameworks'));
+    app.get('/a2a/agent13/v1/documentation/:templateId', (req, res) => 
+        proxyAgent13Request(req, res, `/documentation/${req.params.templateId}`));
+    app.post('/a2a/agent13/v1/generate-docs', (req, res) => proxyAgent13Request(req, res, '/generate-docs', 'POST'));
+    
+    // Health and Status
+    app.get('/a2a/agent13/v1/health', (req, res) => proxyAgent13Request(req, res, '/health'));
+    app.get('/a2a/agent13/v1/status', (req, res) => proxyAgent13Request(req, res, '/status'));
+    
+    // Agent 13 OData Service Proxy - Convert REST to OData format
+    app.get('/a2a/agent13/v1/odata/AgentTemplates', async (req, res) => {
+        try {
+            const response = await axios.get(`${AGENT13_BASE_URL}/api/agent13/v1/templates`);
+            
+            const odataResponse = {
+                "@odata.context": "$metadata#AgentTemplates",
+                "value": response.data.map(template => ({
+                    ID: template.id,
+                    templateName: template.template_name,
+                    agentType: template.agent_type?.toUpperCase() || 'CUSTOM',
+                    version: template.version,
+                    baseTemplate: template.base_template,
+                    capabilities: template.capabilities,
+                    configuration: template.configuration,
+                    description: template.description,
+                    status: template.status?.toUpperCase() || 'DRAFT',
+                    isPublic: template.is_public !== false,
+                    tags: template.tags,
+                    framework: template.framework,
+                    language: template.language?.toUpperCase() || 'JAVASCRIPT',
+                    buildCount: template.build_count || 0,
+                    successRate: template.success_rate || 0.0,
+                    lastBuildAt: template.last_build_at,
+                    createdBy: template.created_by,
+                    createdAt: template.created_at,
+                    modifiedAt: template.modified_at
+                }))
+            };
+            
+            res.json(odataResponse);
+        } catch (error) {
+            res.status(503).json({
+                error: {
+                    code: "SERVICE_UNAVAILABLE",
+                    message: "Agent 13 backend not available"
+                }
+            });
+        }
+    });
+    
+    app.get('/a2a/agent13/v1/odata/AgentBuilds', async (req, res) => {
+        try {
+            const response = await axios.get(`${AGENT13_BASE_URL}/api/agent13/v1/builds`);
+            
+            const odataResponse = {
+                "@odata.context": "$metadata#AgentBuilds",
+                "value": response.data.map(build => ({
+                    ID: build.id,
+                    templateId: build.template_id,
+                    buildNumber: build.build_number,
+                    agentName: build.agent_name,
+                    buildType: build.build_type?.toUpperCase() || 'STANDARD',
+                    status: build.status?.toUpperCase() || 'PENDING',
+                    targetEnvironment: build.target_environment?.toUpperCase() || 'DEVELOPMENT',
+                    buildConfig: build.build_config,
+                    artifacts: build.artifacts,
+                    buildLogs: build.build_logs,
+                    testResults: build.test_results,
+                    duration: build.duration || 0,
+                    startedAt: build.started_at,
+                    completedAt: build.completed_at,
+                    createdBy: build.created_by,
+                    createdAt: build.created_at,
+                    modifiedAt: build.modified_at
+                }))
+            };
+            
+            res.json(odataResponse);
+        } catch (error) {
+            res.status(503).json({
+                error: {
+                    code: "SERVICE_UNAVAILABLE",
+                    message: "Agent 13 backend not available"
+                }
+            });
+        }
+    });
+    
+    app.get('/a2a/agent13/v1/odata/AgentDeployments', async (req, res) => {
+        try {
+            const response = await axios.get(`${AGENT13_BASE_URL}/api/agent13/v1/deployments`);
+            
+            const odataResponse = {
+                "@odata.context": "$metadata#AgentDeployments", 
+                "value": response.data.map(deployment => ({
+                    ID: deployment.id,
+                    buildId: deployment.build_id,
+                    deploymentName: deployment.deployment_name,
+                    targetEnvironment: deployment.target_environment?.toUpperCase() || 'DEVELOPMENT',
+                    deploymentType: deployment.deployment_type?.toUpperCase() || 'CONTAINER',
+                    status: deployment.status?.toUpperCase() || 'PENDING',
+                    endpoint: deployment.endpoint,
+                    replicas: deployment.replicas || 1,
+                    resources: deployment.resources,
+                    environmentVariables: deployment.environment_variables,
+                    healthCheckUrl: deployment.health_check_url,
+                    isActive: deployment.is_active !== false,
+                    autoRestart: deployment.auto_restart !== false,
+                    deployedAt: deployment.deployed_at,
+                    lastHealthCheck: deployment.last_health_check,
+                    deployedBy: deployment.deployed_by,
+                    createdAt: deployment.created_at,
+                    modifiedAt: deployment.modified_at
+                }))
+            };
+            
+            res.json(odataResponse);
+        } catch (error) {
+            res.status(503).json({
+                error: {
+                    code: "SERVICE_UNAVAILABLE",
+                    message: "Agent 13 backend not available"
+                }
+            });
+        }
+    });
     
     log.info(`SAP CAP server listening on port ${info.port} - OpenTelemetry monitoring: ENABLED`);
 });

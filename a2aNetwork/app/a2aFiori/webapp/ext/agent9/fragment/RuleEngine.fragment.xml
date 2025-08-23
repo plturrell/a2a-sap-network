@@ -1,0 +1,475 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="ruleEngineDialog"
+        title="Rule Engine Configuration"
+        contentWidth="90%"
+        contentHeight="85%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Rule Configuration ---->
+                    <IconTabFilter text="Engine Config" icon="sap-icon://settings">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Engine Settings ---->
+                            <Panel headerText="Rule Engine Settings" class="sapUiMediumMarginBottom">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    class="sapUiMediumMargin">
+                                    <form:content>
+                                        <Label text="Reasoning Engine Type"/>
+                                        <Select selectedKey="{ruleEngine>/config/engineType}">
+                                            <items>
+                                                <core:Item key="FORWARD_CHAINING" text="Forward Chaining"/>
+                                                <core:Item key="BACKWARD_CHAINING" text="Backward Chaining"/>
+                                                <core:Item key="HYBRID" text="Hybrid Approach"/>
+                                                <core:Item key="BAYESIAN" text="Bayesian Network"/>
+                                                <core:Item key="FUZZY" text="Fuzzy Logic"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Chaining Strategy"/>
+                                        <Select selectedKey="{ruleEngine>/config/chainingStrategy}">
+                                            <items>
+                                                <core:Item key="BREADTH_FIRST" text="Breadth-First"/>
+                                                <core:Item key="DEPTH_FIRST" text="Depth-First"/>
+                                                <core:Item key="BEST_FIRST" text="Best-First"/>
+                                                <core:Item key="HILL_CLIMBING" text="Hill Climbing"/>
+                                                <core:Item key="BEAM_SEARCH" text="Beam Search"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Uncertainty Handling"/>
+                                        <Select selectedKey="{ruleEngine>/config/uncertaintyHandling}">
+                                            <items>
+                                                <core:Item key="CRISP" text="Crisp Logic"/>
+                                                <core:Item key="FUZZY" text="Fuzzy Logic"/>
+                                                <core:Item key="PROBABILISTIC" text="Probabilistic"/>
+                                                <core:Item key="POSSIBILISTIC" text="Possibilistic"/>
+                                                <core:Item key="EVIDENTIAL" text="Evidential"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Confidence Threshold"/>
+                                        <Slider 
+                                            value="{ruleEngine>/config/confidenceThreshold}"
+                                            min="0.1"
+                                            max="1.0"
+                                            step="0.05"
+                                            width="300px"
+                                            enableTickmarks="true"
+                                            liveChange=".onConfidenceThresholdChange"/>
+                                        <Text text="{ruleEngine>/config/confidenceThreshold}" class="sapUiTinyMarginTop"/>
+                                        
+                                        <Label text="Maximum Inference Depth"/>
+                                        <Slider 
+                                            value="{ruleEngine>/config/maxInferenceDepth}"
+                                            min="1"
+                                            max="50"
+                                            step="1"
+                                            width="300px"
+                                            enableTickmarks="true"
+                                            liveChange=".onMaxDepthChange"/>
+                                        <Text text="{ruleEngine>/config/maxInferenceDepth}" class="sapUiTinyMarginTop"/>
+                                        
+                                        <Label text="Parallel Reasoning"/>
+                                        <Switch state="{ruleEngine>/config/parallelReasoning}" change=".onParallelReasoningChange"/>
+                                        
+                                        <Label text="Memory Limit (MB)"/>
+                                        <Slider 
+                                            value="{ruleEngine>/config/memoryLimit}"
+                                            min="64"
+                                            max="2048"
+                                            step="64"
+                                            width="300px"
+                                            enableTickmarks="true"/>
+                                        <Text text="{ruleEngine>/config/memoryLimit} MB" class="sapUiTinyMarginTop"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                            </Panel>
+                            
+                            <!-- Performance Metrics ---->
+                            <Panel headerText="Engine Performance" class="sapUiMediumMarginBottom">
+                                <HBox class="sapUiMediumMargin">
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Efficiency Score" level="H5"/>
+                                        <mc:RadialMicroChart
+                                            size="L"
+                                            percentage="{ruleEngine>/performance/efficiency}"
+                                            valueColor="{= ${ruleEngine>/performance/efficiency} >= 80 ? 'Good' : ${ruleEngine>/performance/efficiency} >= 60 ? 'Critical' : 'Error'}"/>
+                                        <Text text="{ruleEngine>/performance/efficiency}%" class="sapUiLargeMarginTop"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Memory Usage" level="H5"/>
+                                        <ProgressIndicator 
+                                            percentValue="{ruleEngine>/performance/memoryUsage}"
+                                            displayValue="{ruleEngine>/performance/memoryUsage}%"
+                                            state="{= ${ruleEngine>/performance/memoryUsage} >= 90 ? 'Error' : ${ruleEngine>/performance/memoryUsage} >= 70 ? 'Warning' : 'Success'}"
+                                            width="150px"/>
+                                        <Text text="{ruleEngine>/performance/memoryUsedMB} MB" class="sapUiTinyMarginTop"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Avg Response Time" level="H5"/>
+                                        <ObjectNumber 
+                                            number="{ruleEngine>/performance/avgResponseTime}"
+                                            unit="ms"
+                                            state="{= ${ruleEngine>/performance/avgResponseTime} <= 100 ? 'Success' : ${ruleEngine>/performance/avgResponseTime} <= 500 ? 'Warning' : 'Error'}"
+                                            emphasized="true"/>
+                                    </VBox>
+                                    <VBox>
+                                        <Title text="Rules Fired Today" level="H5"/>
+                                        <ObjectNumber 
+                                            number="{ruleEngine>/performance/rulesFiredToday}"
+                                            state="Information"
+                                            emphasized="true"/>
+                                    </VBox>
+                                </HBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Active Rules ---->
+                    <IconTabFilter text="Active Rules" icon="sap-icon://decision">
+                        <VBox class="sapUiMediumMargin">
+                            <Table 
+                                items="{ruleEngine>/activeRules}"
+                                mode="SingleSelect"
+                                growing="true"
+                                growingThreshold="50">
+                                <headerToolbar>
+                                    <Toolbar>
+                                        <Title text="Rule Repository"/>
+                                        <ToolbarSpacer/>
+                                        <SearchField 
+                                            width="20rem"
+                                            placeholder="Search rules..."
+                                            search=".onSearchRules"/>
+                                        <Button 
+                                            text="Create Rule"
+                                            icon="sap-icon://add"
+                                            press=".onCreateRule"
+                                            type="Emphasized"/>
+                                        <Button 
+                                            text="Import Rules"
+                                            icon="sap-icon://upload"
+                                            press=".onImportRules"/>
+                                        <Button 
+                                            text="Test All"
+                                            icon="sap-icon://test"
+                                            press=".onTestAllRules"/>
+                                    </Toolbar>
+                                </headerToolbar>
+                                <columns>
+                                    <Column>
+                                        <Text text="Rule"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Type"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Priority"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Success Rate"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Applications"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Status"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Actions"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <VBox>
+                                                <Text text="{ruleName}" class="sapThemeHighlight-asTextColor"/>
+                                                <Text text="{description}" maxLines="2" class="sapThemeTextSecondary"/>
+                                                <Text text="IF {condition} THEN {conclusion}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <ObjectStatus 
+                                                text="{ruleType}"
+                                                state="Information"
+                                                icon="{= ${ruleType} === 'DEDUCTIVE' ? 'sap-icon://decision' : ${ruleType} === 'INDUCTIVE' ? 'sap-icon://learning-assistant' : ${ruleType} === 'ABDUCTIVE' ? 'sap-icon://question-mark' : 'sap-icon://detail-view'}"/>
+                                            <VBox>
+                                                <ObjectNumber 
+                                                    number="{priority}"
+                                                    state="{= ${priority} >= 90 ? 'Error' : ${priority} >= 70 ? 'Warning' : 'Success'}"
+                                                    emphasized="true"/>
+                                                <Text text="Weight: {weight}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <VBox>
+                                                <ProgressIndicator 
+                                                    percentValue="{successRate}"
+                                                    displayValue="{successRate}%"
+                                                    state="{= ${successRate} >= 80 ? 'Success' : ${successRate} >= 60 ? 'Warning' : 'Error'}"
+                                                    width="100px"/>
+                                                <Text text="Avg: {avgConfidence}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <VBox>
+                                                <Text text="{applicationsCount} times"/>
+                                                <Text text="Last: {lastApplied}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <ObjectStatus 
+                                                text="{status}"
+                                                state="{= ${status} === 'ACTIVE' ? 'Success' : ${status} === 'TESTING' ? 'Warning' : 'Error'}"
+                                                icon="{= ${status} === 'ACTIVE' ? 'sap-icon://status-positive' : ${status} === 'TESTING' ? 'sap-icon://pending' : 'sap-icon://status-negative'}"/>
+                                            <HBox>
+                                                <Button 
+                                                    icon="sap-icon://edit"
+                                                    tooltip="Edit Rule"
+                                                    press=".onEditRule"/>
+                                                <Button 
+                                                    icon="sap-icon://test"
+                                                    tooltip="Test Rule"
+                                                    press=".onTestRule"/>
+                                                <Button 
+                                                    icon="sap-icon://detail-view"
+                                                    tooltip="View Details"
+                                                    press=".onViewRuleDetails"/>
+                                                <Button 
+                                                    icon="sap-icon://delete"
+                                                    tooltip="Delete Rule"
+                                                    press=".onDeleteRule"/>
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Rule Builder ---->
+                    <IconTabFilter text="Rule Builder" icon="sap-icon://create">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="Create New Rule" class="sapUiMediumMarginBottom">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    class="sapUiMediumMargin">
+                                    <form:content>
+                                        <Label text="Rule Name"/>
+                                        <Input value="{ruleBuilder>/ruleName}" placeholder="Enter rule name"/>
+                                        
+                                        <Label text="Rule Type"/>
+                                        <Select selectedKey="{ruleBuilder>/ruleType}">
+                                            <items>
+                                                <core:Item key="DEDUCTIVE" text="Deductive Rule"/>
+                                                <core:Item key="INDUCTIVE" text="Inductive Rule"/>
+                                                <core:Item key="ABDUCTIVE" text="Abductive Rule"/>
+                                                <core:Item key="ANALOGICAL" text="Analogical Rule"/>
+                                                <core:Item key="CAUSAL" text="Causal Rule"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Priority"/>
+                                        <Slider 
+                                            value="{ruleBuilder>/priority}"
+                                            min="1"
+                                            max="100"
+                                            step="1"
+                                            width="300px"/>
+                                        
+                                        <Label text="Description"/>
+                                        <TextArea 
+                                            value="{ruleBuilder>/description}"
+                                            rows="3"
+                                            placeholder="Describe what this rule does"/>
+                                        
+                                        <Label text="Conditions (IF)"/>
+                                        <VBox>
+                                            <TextArea 
+                                                value="{ruleBuilder>/conditions}"
+                                                rows="4"
+                                                placeholder="Enter rule conditions (e.g., animal(X) AND has_wings(X))"/>
+                                            <HBox class="sapUiTinyMarginTop">
+                                                <Button 
+                                                    text="Add Condition"
+                                                    icon="sap-icon://add"
+                                                    press=".onAddCondition"/>
+                                                <Button 
+                                                    text="Validate Syntax"
+                                                    icon="sap-icon://validate"
+                                                    press=".onValidateConditions"/>
+                                            </HBox>
+                                        </VBox>
+                                        
+                                        <Label text="Conclusions (THEN)"/>
+                                        <VBox>
+                                            <TextArea 
+                                                value="{ruleBuilder>/conclusions}"
+                                                rows="3"
+                                                placeholder="Enter rule conclusions (e.g., can_fly(X))"/>
+                                            <HBox class="sapUiTinyMarginTop">
+                                                <Button 
+                                                    text="Add Conclusion"
+                                                    icon="sap-icon://add"
+                                                    press=".onAddConclusion"/>
+                                                <Button 
+                                                    text="Validate Syntax"
+                                                    icon="sap-icon://validate"
+                                                    press=".onValidateConclusions"/>
+                                            </HBox>
+                                        </VBox>
+                                        
+                                        <Label text="Confidence Factor"/>
+                                        <Slider 
+                                            value="{ruleBuilder>/confidenceFactor}"
+                                            min="0.1"
+                                            max="1.0"
+                                            step="0.05"
+                                            width="300px"/>
+                                        <Text text="{ruleBuilder>/confidenceFactor}" class="sapUiTinyMarginTop"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                                
+                                <HBox class="sapUiMediumMargin">
+                                    <Button 
+                                        text="Test Rule"
+                                        icon="sap-icon://test"
+                                        press=".onTestNewRule"
+                                        class="sapUiMediumMarginEnd"/>
+                                    <Button 
+                                        text="Save Rule"
+                                        icon="sap-icon://save"
+                                        press=".onSaveRule"
+                                        type="Emphasized"
+                                        class="sapUiMediumMarginEnd"/>
+                                    <Button 
+                                        text="Clear"
+                                        icon="sap-icon://clear-all"
+                                        press=".onClearRuleBuilder"/>
+                                </HBox>
+                            </Panel>
+                            
+                            <!-- Rule Templates ---->
+                            <Panel headerText="Rule Templates" expandable="true" expanded="false">
+                                <List items="{ruleEngine>/templates}">
+                                    <StandardListItem
+                                        title="{templateName}"
+                                        description="{description}"
+                                        info="{category}"
+                                        press=".onSelectTemplate"/>
+                                </List>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Execution Log ---->
+                    <IconTabFilter text="Execution Log" icon="sap-icon://log">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="Rule Execution History">
+                                <Table 
+                                    items="{ruleEngine>/executionLog}"
+                                    mode="None"
+                                    growing="true"
+                                    growingThreshold="100">
+                                    <headerToolbar>
+                                        <Toolbar>
+                                            <Title text="Recent Executions"/>
+                                            <ToolbarSpacer/>
+                                            <Button 
+                                                text="Clear Log"
+                                                icon="sap-icon://clear-all"
+                                                press=".onClearExecutionLog"/>
+                                            <Button 
+                                                text="Export Log"
+                                                icon="sap-icon://download"
+                                                press=".onExportExecutionLog"/>
+                                        </Toolbar>
+                                    </headerToolbar>
+                                    <columns>
+                                        <Column>
+                                            <Text text="Timestamp"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Rule"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Input Facts"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Output"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Confidence"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Duration"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Status"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="{timestamp}"/>
+                                                <VBox>
+                                                    <Text text="{ruleName}" class="sapThemeHighlight-asTextColor"/>
+                                                    <Text text="{ruleType}" class="sapThemeTextSecondary"/>
+                                                </VBox>
+                                                <VBox>
+                                                    <Text text="{inputFactsCount} facts"/>
+                                                    <Text text="{inputSample}" maxLines="1" class="sapThemeTextSecondary"/>
+                                                </VBox>
+                                                <VBox>
+                                                    <Text text="{outputInferences} inferences"/>
+                                                    <Text text="{outputSample}" maxLines="1" class="sapThemeTextSecondary"/>
+                                                </VBox>
+                                                <ProgressIndicator 
+                                                    percentValue="{= ${confidence} * 100}"
+                                                    displayValue="{confidence}"
+                                                    state="{= ${confidence} >= 0.8 ? 'Success' : ${confidence} >= 0.6 ? 'Warning' : 'Error'}"
+                                                    width="80px"/>
+                                                <Text text="{duration}ms"/>
+                                                <ObjectStatus 
+                                                    text="{executionStatus}"
+                                                    state="{= ${executionStatus} === 'SUCCESS' ? 'Success' : ${executionStatus} === 'PARTIAL' ? 'Warning' : 'Error'}"
+                                                    icon="{= ${executionStatus} === 'SUCCESS' ? 'sap-icon://status-positive' : ${executionStatus} === 'PARTIAL' ? 'sap-icon://pending' : 'sap-icon://status-negative'}"/>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Apply Configuration"
+                icon="sap-icon://save"
+                press=".onApplyRuleEngineConfig"
+                type="Emphasized"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Export Rules"
+                    icon="sap-icon://download"
+                    press=".onExportRules"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseRuleEngine"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

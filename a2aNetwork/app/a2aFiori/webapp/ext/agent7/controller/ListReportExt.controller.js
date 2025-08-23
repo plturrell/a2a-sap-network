@@ -7,27 +7,289 @@ sap.ui.define([
 ], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel) {
     "use strict";
 
+    /**
+     * @class a2a.network.agent7.ext.controller.ListReportExt
+     * @extends sap.ui.core.mvc.ControllerExtension
+     * @description Controller extension for Agent 7 List Report - Agent Management and Orchestration.
+     * Provides agent lifecycle management, health monitoring, performance analysis, and coordination features.
+     */
     return ControllerExtension.extend("a2a.network.agent7.ext.controller.ListReportExt", {
         
         override: {
+            /**
+             * @function onInit
+             * @description Initializes the controller with real-time updates and performance optimizations.
+             * @override
+             */
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
+                this._initializeDeviceModel();
+                this._initializeDialogCache();
+                this._initializePerformanceOptimizations();
                 this._startRealtimeUpdates();
+            },
+            
+            /**
+             * @function onExit
+             * @description Cleanup resources on controller destruction.
+             * @override
+             */
+            onExit: function() {
+                this._cleanupResources();
+                if (this.base.onExit) {
+                    this.base.onExit.apply(this, arguments);
+                }
             }
         },
-
-        onCreateManagementTask: function() {
-            var oView = this.base.getView();
+        
+        // Dialog caching for performance
+        _dialogCache: {},
+        
+        // Error recovery configuration
+        _errorRecoveryConfig: {
+            maxRetries: 3,
+            retryDelay: 1000,
+            exponentialBackoff: true
+        },
+        
+        /**
+         * @function _initializeDeviceModel
+         * @description Sets up device model for responsive design.
+         * @private
+         */
+        _initializeDeviceModel: function() {
+            var oDeviceModel = new sap.ui.model.json.JSONModel(sap.ui.Device);
+            this.base.getView().setModel(oDeviceModel, "device");
+        },
+        
+        /**
+         * @function _initializeDialogCache
+         * @description Initializes dialog cache for performance.
+         * @private
+         */
+        _initializeDialogCache: function() {
+            this._dialogCache = {};
+        },
+        
+        /**
+         * @function _initializePerformanceOptimizations
+         * @description Sets up performance optimization features.
+         * @private
+         */
+        _initializePerformanceOptimizations: function() {
+            // Throttle dashboard updates
+            this._throttledDashboardUpdate = this._throttle(this._loadDashboardData.bind(this), 1000);
+            // Debounce search operations
+            this._debouncedSearch = this._debounce(this._performSearch.bind(this), 300);
+        },
+        
+        /**
+         * @function _throttle
+         * @description Creates a throttled function.
+         * @param {Function} fn - Function to throttle
+         * @param {number} limit - Time limit in milliseconds
+         * @returns {Function} Throttled function
+         * @private
+         */
+        _throttle: function(fn, limit) {
+            var inThrottle;
+            return function() {
+                var args = arguments;
+                var context = this;
+                if (!inThrottle) {
+                    fn.apply(context, args);
+                    inThrottle = true;
+                    setTimeout(function() { inThrottle = false; }, limit);
+                }
+            };
+        },
+        
+        /**
+         * @function _debounce
+         * @description Creates a debounced function.
+         * @param {Function} fn - Function to debounce
+         * @param {number} delay - Delay in milliseconds
+         * @returns {Function} Debounced function
+         * @private
+         */
+        _debounce: function(fn, delay) {
+            var timeoutId;
+            return function() {
+                var context = this;
+                var args = arguments;
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(function() {
+                    fn.apply(context, args);
+                }, delay);
+            };
+        },
+        
+        /**
+         * @function _performSearch
+         * @description Performs search operation (placeholder for search functionality).
+         * @param {string} sQuery - Search query
+         * @private
+         */
+        _performSearch: function(sQuery) {
+            // Implement search logic
+        },
+        
+        /**
+         * @function _getOrCreateDialog
+         * @description Gets cached dialog or creates new one.
+         * @param {string} sDialogId - Dialog identifier
+         * @param {string} sFragmentName - Fragment name
+         * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog
+         * @private
+         */
+        _getOrCreateDialog: function(sDialogId, sFragmentName) {
+            var that = this;
             
-            if (!this._oCreateDialog) {
-                Fragment.load({
-                    id: oView.getId(),
-                    name: "a2a.network.agent7.ext.fragment.CreateManagementTask",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._oCreateDialog = oDialog;
-                    oView.addDependent(this._oCreateDialog);
+            if (this._dialogCache[sDialogId]) {
+                return Promise.resolve(this._dialogCache[sDialogId]);
+            }
+            
+            return Fragment.load({
+                id: this.base.getView().getId(),
+                name: sFragmentName,
+                controller: this
+            }).then(function(oDialog) {
+                that._dialogCache[sDialogId] = oDialog;
+                that.base.getView().addDependent(oDialog);
+                
+                // Enable accessibility
+                that._enableDialogAccessibility(oDialog);
+                
+                // Optimize for mobile
+                that._optimizeDialogForDevice(oDialog);
+                
+                return oDialog;
+            });
+        },
+        
+        /**
+         * @function _enableDialogAccessibility
+         * @description Adds accessibility features to dialog.
+         * @param {sap.m.Dialog} oDialog - Dialog to enhance
+         * @private
+         */
+        _enableDialogAccessibility: function(oDialog) {
+            oDialog.addEventDelegate({
+                onAfterRendering: function() {
+                    var $dialog = oDialog.$();
                     
+                    // Set tabindex for focusable elements
+                    $dialog.find("input, button, select, textarea").attr("tabindex", "0");
+                    
+                    // Handle escape key
+                    $dialog.on("keydown", function(e) {
+                        if (e.key === "Escape") {
+                            oDialog.close();
+                        }
+                    });
+                    
+                    // Focus first input on open
+                    setTimeout(function() {
+                        $dialog.find("input:visible:first").focus();
+                    }, 100);
+                }
+            });
+        },
+        
+        /**
+         * @function _optimizeDialogForDevice
+         * @description Optimizes dialog for current device.
+         * @param {sap.m.Dialog} oDialog - Dialog to optimize
+         * @private
+         */
+        _optimizeDialogForDevice: function(oDialog) {
+            if (sap.ui.Device.system.phone) {
+                oDialog.setStretch(true);
+                oDialog.setContentWidth("100%");
+                oDialog.setContentHeight("100%");
+            } else if (sap.ui.Device.system.tablet) {
+                oDialog.setContentWidth("95%");
+                oDialog.setContentHeight("90%");
+            }
+        },
+        
+        /**
+         * @function _withErrorRecovery
+         * @description Wraps operation with error recovery.
+         * @param {Function} fnOperation - Operation to execute
+         * @param {Object} oOptions - Recovery options
+         * @returns {Promise} Promise with error recovery
+         * @private
+         */
+        _withErrorRecovery: function(fnOperation, oOptions) {
+            var that = this;
+            var oConfig = Object.assign({}, this._errorRecoveryConfig, oOptions);
+            
+            function attempt(retriesLeft, delay) {
+                return fnOperation().catch(function(error) {
+                    if (retriesLeft > 0) {
+                        var oBundle = that.base.getView().getModel("i18n").getResourceBundle();
+                        var sRetryMsg = oBundle.getText("recovery.retrying");
+                        MessageToast.show(sRetryMsg);
+                        
+                        return new Promise(function(resolve) {
+                            setTimeout(resolve, delay);
+                        }).then(function() {
+                            var nextDelay = oConfig.exponentialBackoff ? delay * 2 : delay;
+                            return attempt(retriesLeft - 1, nextDelay);
+                        });
+                    }
+                    throw error;
+                });
+            }
+            
+            return attempt(oConfig.maxRetries, oConfig.retryDelay);
+        },
+        
+        /**
+         * @function _cleanupResources
+         * @description Cleans up resources to prevent memory leaks.
+         * @private
+         */
+        _cleanupResources: function() {
+            // Clean up event sources
+            if (this._realtimeEventSource) {
+                this._realtimeEventSource.close();
+                this._realtimeEventSource = null;
+            }
+            if (this._healthEventSource) {
+                this._healthEventSource.close();
+                this._healthEventSource = null;
+            }
+            
+            // Clean up cached dialogs
+            Object.keys(this._dialogCache).forEach(function(key) {
+                if (this._dialogCache[key]) {
+                    this._dialogCache[key].destroy();
+                }
+            }.bind(this));
+            this._dialogCache = {};
+            
+            // Clean up legacy dialog references
+            var aDialogs = ["_oCreateDialog", "_oDashboard", "_oRegisterDialog", 
+                           "_oHealthMonitor", "_oPerformanceDialog", "_oCoordinatorDialog", 
+                           "_oBulkDialog"];
+            aDialogs.forEach(function(sDialog) {
+                if (this[sDialog]) {
+                    this[sDialog].destroy();
+                    this[sDialog] = null;
+                }
+            }.bind(this));
+        },
+
+        /**
+         * @function onCreateManagementTask
+         * @description Opens dialog to create new agent management task.
+         * @public
+         */
+        onCreateManagementTask: function() {
+            this._getOrCreateDialog("createManagementTask", "a2a.network.agent7.ext.fragment.CreateManagementTask")
+                .then(function(oDialog) {
                     var oModel = new JSONModel({
                         taskName: "",
                         description: "",
@@ -38,89 +300,114 @@ sap.ui.define([
                         parameters: {},
                         notifyOnCompletion: true
                     });
-                    this._oCreateDialog.setModel(oModel, "create");
-                    this._oCreateDialog.open();
-                    this._loadAvailableAgents();
+                    oDialog.setModel(oModel, "create");
+                    oDialog.open();
+                    this._loadAvailableAgents(oDialog);
                 }.bind(this));
-            } else {
-                this._oCreateDialog.open();
-                this._loadAvailableAgents();
-            }
         },
 
-        _loadAvailableAgents: function() {
-            jQuery.ajax({
-                url: "/a2a/agent7/v1/registered-agents",
-                type: "GET",
-                success: function(data) {
-                    var oModel = this._oCreateDialog.getModel("create");
-                    var oData = oModel.getData();
-                    oData.availableAgents = data.agents;
-                    oData.availableOperations = data.operations;
-                    oModel.setData(oData);
-                }.bind(this),
-                error: function(xhr) {
-                    MessageBox.error("Failed to load available agents: " + xhr.responseText);
-                }.bind(this)
-            });
-        },
-
-        onAgentDashboard: function() {
-            var oView = this.base.getView();
+        /**
+         * @function _loadAvailableAgents
+         * @description Loads available agents for selection.
+         * @private
+         */
+        _loadAvailableAgents: function(oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["createManagementTask"];
+            if (!oTargetDialog) return;
             
-            if (!this._oDashboard) {
-                Fragment.load({
-                    id: oView.getId(),
-                    name: "a2a.network.agent7.ext.fragment.AgentDashboard",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._oDashboard = oDialog;
-                    oView.addDependent(this._oDashboard);
-                    this._oDashboard.open();
-                    this._loadDashboardData();
-                }.bind(this));
-            } else {
-                this._oDashboard.open();
-                this._loadDashboardData();
-            }
-        },
-
-        _loadDashboardData: function() {
-            this._oDashboard.setBusy(true);
-            
-            jQuery.ajax({
-                url: "/a2a/agent7/v1/dashboard",
-                type: "GET",
-                success: function(data) {
-                    this._oDashboard.setBusy(false);
-                    
-                    var oDashboardModel = new JSONModel({
-                        summary: data.summary,
-                        agentHealth: data.agentHealth,
-                        performance: data.performance,
-                        operations: data.operations,
-                        alerts: data.alerts,
-                        trends: data.trends
+            this._withErrorRecovery(function() {
+                return new Promise(function(resolve, reject) {
+                    jQuery.ajax({
+                        url: "/a2a/agent7/v1/registered-agents",
+                        type: "GET",
+                        success: function(data) {
+                            var oModel = oTargetDialog.getModel("create");
+                            var oData = oModel.getData();
+                            oData.availableAgents = data.agents;
+                            oData.availableOperations = data.operations;
+                            oModel.setData(oData);
+                            resolve(data);
+                        },
+                        error: function(xhr) {
+                            reject(new Error("Failed to load available agents: " + xhr.responseText));
+                        }
                     });
-                    
-                    this._oDashboard.setModel(oDashboardModel, "dashboard");
-                    this._createDashboardCharts(data);
-                }.bind(this),
-                error: function(xhr) {
-                    this._oDashboard.setBusy(false);
-                    MessageBox.error("Failed to load dashboard data: " + xhr.responseText);
-                }.bind(this)
+                });
+            }).catch(function(error) {
+                MessageBox.error(error.message);
             });
         },
 
-        _createDashboardCharts: function(data) {
-            this._createAgentHealthChart(data.agentHealth);
-            this._createPerformanceChart(data.performance);
-            this._createOperationsChart(data.operations);
+        /**
+         * @function onAgentDashboard
+         * @description Opens agent management dashboard.
+         * @public
+         */
+        onAgentDashboard: function() {
+            this._getOrCreateDialog("agentDashboard", "a2a.network.agent7.ext.fragment.AgentDashboard")
+                .then(function(oDialog) {
+                    oDialog.open();
+                    this._loadDashboardData(oDialog);
+                }.bind(this));
         },
 
-        _createAgentHealthChart: function(healthData) {
-            var oVizFrame = this._oDashboard.byId("agentHealthChart");
+        /**
+         * @function _loadDashboardData
+         * @description Loads dashboard data with metrics and charts.
+         * @private
+         */
+        _loadDashboardData: function(oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["agentDashboard"];
+            if (!oTargetDialog) return;
+            
+            oTargetDialog.setBusy(true);
+            
+            this._withErrorRecovery(function() {
+                return new Promise(function(resolve, reject) {
+                    jQuery.ajax({
+                        url: "/a2a/agent7/v1/dashboard",
+                        type: "GET",
+                        success: function(data) {
+                            var oDashboardModel = new JSONModel({
+                                summary: data.summary,
+                                agentHealth: data.agentHealth,
+                                performance: data.performance,
+                                operations: data.operations,
+                                alerts: data.alerts,
+                                trends: data.trends
+                            });
+                            
+                            oTargetDialog.setModel(oDashboardModel, "dashboard");
+                            resolve(data);
+                        },
+                        error: function(xhr) {
+                            reject(new Error("Failed to load dashboard data: " + xhr.responseText));
+                        }
+                    });
+                });
+            }).then(function(data) {
+                oTargetDialog.setBusy(false);
+                this._createDashboardCharts(data, oTargetDialog);
+            }.bind(this)).catch(function(error) {
+                oTargetDialog.setBusy(false);
+                MessageBox.error(error.message);
+            });
+        },
+
+        _createDashboardCharts: function(data, oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["agentDashboard"];
+            if (!oTargetDialog) return;
+            
+            this._createAgentHealthChart(data.agentHealth, oTargetDialog);
+            this._createPerformanceChart(data.performance, oTargetDialog);
+            this._createOperationsChart(data.operations, oTargetDialog);
+        },
+
+        _createAgentHealthChart: function(healthData, oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["agentDashboard"];
+            if (!oTargetDialog) return;
+            
+            var oVizFrame = oTargetDialog.byId("agentHealthChart");
             if (!oVizFrame || !healthData) return;
             
             var aChartData = healthData.map(function(agent) {
@@ -150,18 +437,14 @@ sap.ui.define([
             });
         },
 
+        /**
+         * @function onRegisterAgent
+         * @description Opens dialog to register new agent.
+         * @public
+         */
         onRegisterAgent: function() {
-            var oView = this.base.getView();
-            
-            if (!this._oRegisterDialog) {
-                Fragment.load({
-                    id: oView.getId(),
-                    name: "a2a.network.agent7.ext.fragment.RegisterAgent",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._oRegisterDialog = oDialog;
-                    oView.addDependent(this._oRegisterDialog);
-                    
+            this._getOrCreateDialog("registerAgent", "a2a.network.agent7.ext.fragment.RegisterAgent")
+                .then(function(oDialog) {
                     var oModel = new JSONModel({
                         agentName: "",
                         agentType: "",
@@ -173,88 +456,106 @@ sap.ui.define([
                         configuration: {},
                         autoStart: true
                     });
-                    this._oRegisterDialog.setModel(oModel, "register");
-                    this._oRegisterDialog.open();
-                    this._loadAgentTypes();
+                    oDialog.setModel(oModel, "register");
+                    oDialog.open();
+                    this._loadAgentTypes(oDialog);
                 }.bind(this));
-            } else {
-                this._oRegisterDialog.open();
-                this._loadAgentTypes();
-            }
         },
 
-        _loadAgentTypes: function() {
-            jQuery.ajax({
-                url: "/a2a/agent7/v1/agent-types",
-                type: "GET",
-                success: function(data) {
-                    var oModel = this._oRegisterDialog.getModel("register");
-                    var oData = oModel.getData();
-                    oData.availableTypes = data.types;
-                    oData.availableCapabilities = data.capabilities;
-                    oModel.setData(oData);
-                }.bind(this),
-                error: function(xhr) {
-                    MessageBox.error("Failed to load agent types: " + xhr.responseText);
-                }.bind(this)
-            });
-        },
-
-        onHealthMonitor: function() {
-            var oView = this.base.getView();
+        _loadAgentTypes: function(oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["registerAgent"];
+            if (!oTargetDialog) return;
             
-            if (!this._oHealthMonitor) {
-                Fragment.load({
-                    id: oView.getId(),
-                    name: "a2a.network.agent7.ext.fragment.HealthMonitor",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._oHealthMonitor = oDialog;
-                    oView.addDependent(this._oHealthMonitor);
-                    this._oHealthMonitor.open();
-                    this._loadHealthData();
-                    this._startHealthMonitoring();
-                }.bind(this));
-            } else {
-                this._oHealthMonitor.open();
-                this._loadHealthData();
-            }
-        },
-
-        _loadHealthData: function() {
-            jQuery.ajax({
-                url: "/a2a/agent7/v1/health-status",
-                type: "GET",
-                success: function(data) {
-                    var oModel = new JSONModel({
-                        healthChecks: data.healthChecks,
-                        systemHealth: data.systemHealth,
-                        alerts: data.alerts,
-                        recommendations: data.recommendations
+            this._withErrorRecovery(function() {
+                return new Promise(function(resolve, reject) {
+                    jQuery.ajax({
+                        url: "/a2a/agent7/v1/agent-types",
+                        type: "GET",
+                        success: function(data) {
+                            var oModel = oTargetDialog.getModel("register");
+                            var oData = oModel.getData();
+                            oData.availableTypes = data.types;
+                            oData.availableCapabilities = data.capabilities;
+                            oModel.setData(oData);
+                            resolve(data);
+                        },
+                        error: function(xhr) {
+                            reject(new Error("Failed to load agent types: " + xhr.responseText));
+                        }
                     });
-                    this._oHealthMonitor.setModel(oModel, "health");
-                }.bind(this),
-                error: function(xhr) {
-                    MessageBox.error("Failed to load health data: " + xhr.responseText);
-                }.bind(this)
+                });
+            }).catch(function(error) {
+                MessageBox.error(error.message);
             });
         },
 
-        _startHealthMonitoring: function() {
+        /**
+         * @function onHealthMonitor
+         * @description Opens real-time health monitoring interface.
+         * @public
+         */
+        onHealthMonitor: function() {
+            this._getOrCreateDialog("healthMonitor", "a2a.network.agent7.ext.fragment.HealthMonitor")
+                .then(function(oDialog) {
+                    oDialog.open();
+                    this._loadHealthData(oDialog);
+                    this._startHealthMonitoring(oDialog);
+                }.bind(this));
+        },
+
+        _loadHealthData: function(oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["healthMonitor"];
+            if (!oTargetDialog) return;
+            
+            this._withErrorRecovery(function() {
+                return new Promise(function(resolve, reject) {
+                    jQuery.ajax({
+                        url: "/a2a/agent7/v1/health-status",
+                        type: "GET",
+                        success: function(data) {
+                            var oModel = new JSONModel({
+                                healthChecks: data.healthChecks,
+                                systemHealth: data.systemHealth,
+                                alerts: data.alerts,
+                                recommendations: data.recommendations
+                            });
+                            oTargetDialog.setModel(oModel, "health");
+                            resolve(data);
+                        },
+                        error: function(xhr) {
+                            reject(new Error("Failed to load health data: " + xhr.responseText));
+                        }
+                    });
+                });
+            }).catch(function(error) {
+                MessageBox.error(error.message);
+            });
+        },
+
+        _startHealthMonitoring: function(oDialog) {
+            if (this._healthEventSource) {
+                this._healthEventSource.close();
+            }
+            
             this._healthEventSource = new EventSource("/a2a/agent7/v1/health-stream");
             
             this._healthEventSource.onmessage = function(event) {
                 var data = JSON.parse(event.data);
-                this._updateHealthDisplay(data);
+                this._updateHealthDisplay(data, oDialog);
             }.bind(this);
             
             this._healthEventSource.onerror = function() {
-                MessageToast.show("Health monitoring connection lost");
+                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                var sErrorMsg = oBundle.getText("error.healthMonitoringLost") || "Health monitoring connection lost";
+                MessageToast.show(sErrorMsg);
             }.bind(this);
         },
 
-        _updateHealthDisplay: function(healthData) {
-            var oModel = this._oHealthMonitor.getModel("health");
+        _updateHealthDisplay: function(healthData, oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["healthMonitor"];
+            if (!oTargetDialog) return;
+            
+            var oModel = oTargetDialog.getModel("health");
             if (!oModel) return;
             
             var oData = oModel.getData();
@@ -281,49 +582,56 @@ sap.ui.define([
             }
         },
 
+        /**
+         * @function onPerformanceAnalyzer
+         * @description Opens performance analysis dialog.
+         * @public
+         */
         onPerformanceAnalyzer: function() {
-            var oView = this.base.getView();
-            
-            if (!this._oPerformanceDialog) {
-                Fragment.load({
-                    id: oView.getId(),
-                    name: "a2a.network.agent7.ext.fragment.PerformanceAnalyzer",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._oPerformanceDialog = oDialog;
-                    oView.addDependent(this._oPerformanceDialog);
-                    this._oPerformanceDialog.open();
-                    this._loadPerformanceData();
+            this._getOrCreateDialog("performanceAnalyzer", "a2a.network.agent7.ext.fragment.PerformanceAnalyzer")
+                .then(function(oDialog) {
+                    oDialog.open();
+                    this._loadPerformanceData(oDialog);
                 }.bind(this));
-            } else {
-                this._oPerformanceDialog.open();
-                this._loadPerformanceData();
-            }
         },
 
-        _loadPerformanceData: function() {
-            jQuery.ajax({
-                url: "/a2a/agent7/v1/performance-metrics",
-                type: "GET",
-                success: function(data) {
-                    var oModel = new JSONModel({
-                        metrics: data.metrics,
-                        trends: data.trends,
-                        benchmarks: data.benchmarks,
-                        recommendations: data.recommendations
+        _loadPerformanceData: function(oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["performanceAnalyzer"];
+            if (!oTargetDialog) return;
+            
+            this._withErrorRecovery(function() {
+                return new Promise(function(resolve, reject) {
+                    jQuery.ajax({
+                        url: "/a2a/agent7/v1/performance-metrics",
+                        type: "GET",
+                        success: function(data) {
+                            var oModel = new JSONModel({
+                                metrics: data.metrics,
+                                trends: data.trends,
+                                benchmarks: data.benchmarks,
+                                recommendations: data.recommendations
+                            });
+                            oTargetDialog.setModel(oModel, "performance");
+                            resolve(data);
+                        },
+                        error: function(xhr) {
+                            reject(new Error("Failed to load performance data: " + xhr.responseText));
+                        }
                     });
-                    this._oPerformanceDialog.setModel(oModel, "performance");
-                    this._createPerformanceCharts(data);
-                }.bind(this),
-                error: function(xhr) {
-                    MessageBox.error("Failed to load performance data: " + xhr.responseText);
-                }.bind(this)
+                });
+            }).then(function(data) {
+                this._createPerformanceCharts(data, oTargetDialog);
+            }.bind(this)).catch(function(error) {
+                MessageBox.error(error.message);
             });
         },
 
-        _createPerformanceCharts: function(data) {
-            var oResponseTimeChart = this._oPerformanceDialog.byId("responseTimeChart");
-            var oThroughputChart = this._oPerformanceDialog.byId("throughputChart");
+        _createPerformanceCharts: function(data, oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["performanceAnalyzer"];
+            if (!oTargetDialog) return;
+            
+            var oResponseTimeChart = oTargetDialog.byId("responseTimeChart");
+            var oThroughputChart = oTargetDialog.byId("throughputChart");
             
             if (oResponseTimeChart && data.trends) {
                 var aResponseData = data.trends.map(function(trend) {
@@ -354,65 +662,66 @@ sap.ui.define([
             }
         },
 
+        /**
+         * @function onAgentCoordinator
+         * @description Opens agent coordination management interface.
+         * @public
+         */
         onAgentCoordinator: function() {
-            var oView = this.base.getView();
-            
-            if (!this._oCoordinatorDialog) {
-                Fragment.load({
-                    id: oView.getId(),
-                    name: "a2a.network.agent7.ext.fragment.AgentCoordinator",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._oCoordinatorDialog = oDialog;
-                    oView.addDependent(this._oCoordinatorDialog);
-                    this._oCoordinatorDialog.open();
-                    this._loadCoordinationData();
+            this._getOrCreateDialog("agentCoordinator", "a2a.network.agent7.ext.fragment.AgentCoordinator")
+                .then(function(oDialog) {
+                    oDialog.open();
+                    this._loadCoordinationData(oDialog);
                 }.bind(this));
-            } else {
-                this._oCoordinatorDialog.open();
-                this._loadCoordinationData();
-            }
         },
 
-        _loadCoordinationData: function() {
-            jQuery.ajax({
-                url: "/a2a/agent7/v1/coordination-status",
-                type: "GET",
-                success: function(data) {
-                    var oModel = new JSONModel({
-                        activeConnections: data.activeConnections,
-                        workflowStatus: data.workflowStatus,
-                        loadBalancing: data.loadBalancing,
-                        failoverStatus: data.failoverStatus
+        _loadCoordinationData: function(oDialog) {
+            var oTargetDialog = oDialog || this._dialogCache["agentCoordinator"];
+            if (!oTargetDialog) return;
+            
+            this._withErrorRecovery(function() {
+                return new Promise(function(resolve, reject) {
+                    jQuery.ajax({
+                        url: "/a2a/agent7/v1/coordination-status",
+                        type: "GET",
+                        success: function(data) {
+                            var oModel = new JSONModel({
+                                activeConnections: data.activeConnections,
+                                workflowStatus: data.workflowStatus,
+                                loadBalancing: data.loadBalancing,
+                                failoverStatus: data.failoverStatus
+                            });
+                            oTargetDialog.setModel(oModel, "coordination");
+                            resolve(data);
+                        },
+                        error: function(xhr) {
+                            reject(new Error("Failed to load coordination data: " + xhr.responseText));
+                        }
                     });
-                    this._oCoordinatorDialog.setModel(oModel, "coordination");
-                }.bind(this),
-                error: function(xhr) {
-                    MessageBox.error("Failed to load coordination data: " + xhr.responseText);
-                }.bind(this)
+                });
+            }).catch(function(error) {
+                MessageBox.error(error.message);
             });
         },
 
+        /**
+         * @function onBulkOperations
+         * @description Opens bulk operations dialog for selected agents.
+         * @public
+         */
         onBulkOperations: function() {
             var oTable = this._extensionAPI.getTable();
             var aSelectedContexts = oTable.getSelectedContexts();
             
             if (aSelectedContexts.length === 0) {
-                MessageBox.warning("Please select at least one agent for bulk operations.");
+                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                var sWarningMsg = oBundle.getText("msg.selectAgentsForBulk") || "Please select at least one agent for bulk operations.";
+                MessageBox.warning(sWarningMsg);
                 return;
             }
             
-            var oView = this.base.getView();
-            
-            if (!this._oBulkDialog) {
-                Fragment.load({
-                    id: oView.getId(),
-                    name: "a2a.network.agent7.ext.fragment.BulkOperations",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._oBulkDialog = oDialog;
-                    oView.addDependent(this._oBulkDialog);
-                    
+            this._getOrCreateDialog("bulkOperations", "a2a.network.agent7.ext.fragment.BulkOperations")
+                .then(function(oDialog) {
                     var aAgentIds = aSelectedContexts.map(function(oContext) {
                         return oContext.getProperty("managedAgent");
                     });
@@ -424,14 +733,16 @@ sap.ui.define([
                         executeInParallel: true,
                         rollbackOnFailure: true
                     });
-                    this._oBulkDialog.setModel(oModel, "bulk");
-                    this._oBulkDialog.open();
+                    oDialog.setModel(oModel, "bulk");
+                    oDialog.open();
                 }.bind(this));
-            } else {
-                this._oBulkDialog.open();
-            }
         },
 
+        /**
+         * @function _startRealtimeUpdates
+         * @description Establishes EventSource connection for real-time updates.
+         * @private
+         */
         _startRealtimeUpdates: function() {
             this._realtimeEventSource = new EventSource("/a2a/agent7/v1/realtime-updates");
             
@@ -451,74 +762,300 @@ sap.ui.define([
             }.bind(this);
         },
 
+        /**
+         * @function onConfirmCreateTask
+         * @description Confirms and creates management task.
+         * @public
+         */
         onConfirmCreateTask: function() {
-            var oModel = this._oCreateDialog.getModel("create");
+            var oDialog = this._dialogCache["createManagementTask"];
+            if (!oDialog) return;
+            
+            var oModel = oDialog.getModel("create");
             var oData = oModel.getData();
             
-            if (!oData.taskName || !oData.managedAgent || !oData.operationType) {
-                MessageBox.error("Please fill all required fields");
+            if (!this._validateInput(oData.taskName) || !this._validateInput(oData.managedAgent) || !this._validateInput(oData.operationType)) {
+                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                var sErrorMsg = oBundle.getText("validation.requiredFields") || "Please fill all required fields";
+                MessageBox.error(sErrorMsg);
                 return;
             }
             
-            this._oCreateDialog.setBusy(true);
+            var sanitizedData = this._sanitizeObject(oData);
+            oDialog.setBusy(true);
             
-            jQuery.ajax({
-                url: "/a2a/agent7/v1/management-tasks",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(oData),
-                success: function(data) {
-                    this._oCreateDialog.setBusy(false);
-                    this._oCreateDialog.close();
-                    MessageToast.show("Management task created successfully");
-                    this._extensionAPI.refresh();
-                }.bind(this),
-                error: function(xhr) {
-                    this._oCreateDialog.setBusy(false);
-                    MessageBox.error("Failed to create task: " + xhr.responseText);
-                }.bind(this)
+            this._withErrorRecovery(function() {
+                return new Promise(function(resolve, reject) {
+                    jQuery.ajax({
+                        url: "/a2a/agent7/v1/management-tasks",
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify(sanitizedData),
+                        success: function(data) {
+                            resolve(data);
+                        },
+                        error: function(xhr) {
+                            reject(new Error("Failed to create task: " + xhr.responseText));
+                        }
+                    });
+                });
+            }).then(function(data) {
+                oDialog.setBusy(false);
+                oDialog.close();
+                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                var sSuccessMsg = oBundle.getText("success.taskCreated") || "Management task created successfully";
+                MessageToast.show(sSuccessMsg);
+                this._extensionAPI.refresh();
+            }.bind(this)).catch(function(error) {
+                oDialog.setBusy(false);
+                MessageBox.error(error.message);
             });
         },
 
+        /**
+         * @function onConfirmRegisterAgent
+         * @description Confirms and registers new agent.
+         * @public
+         */
         onConfirmRegisterAgent: function() {
             var oModel = this._oRegisterDialog.getModel("register");
             var oData = oModel.getData();
             
-            if (!oData.agentName || !oData.agentType || !oData.endpoint) {
-                MessageBox.error("Please fill all required fields");
+            if (!this._validateInput(oData.agentName, 'agentName')) {
+                MessageBox.error("Invalid agent name. Use only alphanumeric characters, spaces, hyphens, and underscores (max 50 chars)");
                 return;
             }
             
+            if (!this._validateInput(oData.agentType)) {
+                MessageBox.error("Invalid agent type");
+                return;
+            }
+            
+            if (!this._validateInput(oData.endpoint, 'endpoint')) {
+                MessageBox.error("Invalid endpoint URL format");
+                return;
+            }
+            
+            const sanitizedData = {
+                agentName: this._sanitizeInput(oData.agentName),
+                agentType: this._sanitizeInput(oData.agentType),
+                version: this._sanitizeInput(oData.version),
+                endpoint: this._sanitizeInput(oData.endpoint),
+                port: Math.max(1, Math.min(65535, parseInt(oData.port) || 8000)),
+                capabilities: this._sanitizeArray(oData.capabilities),
+                dependencies: this._sanitizeArray(oData.dependencies),
+                configuration: this._sanitizeObject(oData.configuration),
+                autoStart: Boolean(oData.autoStart)
+            };
+            
             this._oRegisterDialog.setBusy(true);
             
-            jQuery.ajax({
+            this._secureAjaxCall({
                 url: "/a2a/agent7/v1/register-agent",
                 type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(oData),
-                success: function(data) {
-                    this._oRegisterDialog.setBusy(false);
-                    this._oRegisterDialog.close();
-                    MessageBox.success(
-                        "Agent registered successfully!\\n" +
-                        "Agent ID: " + data.agentId + "\\n" +
-                        "Registration Block: " + data.blockNumber
-                    );
-                    this._extensionAPI.refresh();
-                }.bind(this),
-                error: function(xhr) {
-                    this._oRegisterDialog.setBusy(false);
-                    MessageBox.error("Agent registration failed: " + xhr.responseText);
-                }.bind(this)
+                data: JSON.stringify(sanitizedData)
+            }).then(result => {
+                this._oRegisterDialog.setBusy(false);
+                this._oRegisterDialog.close();
+                
+                const data = result.data;
+                MessageBox.success(
+                    "Agent registered successfully!\\n" +
+                    "Agent ID: " + this._sanitizeInput(data.agentId) + "\\n" +
+                    "Registration Block: " + this._sanitizeInput(data.blockNumber)
+                );
+                this._extensionAPI.refresh();
+                
+                this._auditLogger.log("AGENT_REGISTERED", {
+                    agentName: sanitizedData.agentName,
+                    agentType: sanitizedData.agentType,
+                    agentId: data.agentId
+                });
+            }).catch(error => {
+                this._oRegisterDialog.setBusy(false);
+                const errorMsg = this._sanitizeInput(error.xhr?.responseText || "Unknown error");
+                MessageBox.error("Agent registration failed: " + errorMsg);
+                this._auditLogger.log("AGENT_REGISTRATION_FAILED", { error: errorMsg });
             });
         },
 
         onCancelCreateTask: function() {
-            this._oCreateDialog.close();
+            var oDialog = this._dialogCache["createManagementTask"];
+            if (oDialog) {
+                oDialog.close();
+            }
         },
 
         onCancelRegisterAgent: function() {
-            this._oRegisterDialog.close();
+            var oDialog = this._dialogCache["registerAgent"];
+            if (oDialog) {
+                oDialog.close();
+            }
+        },
+        
+        _sanitizeObject: function(obj) {
+            if (!obj || typeof obj !== 'object') return {};
+            const sanitized = {};
+            Object.keys(obj).forEach(key => {
+                if (typeof obj[key] === 'string') {
+                    sanitized[key] = this._sanitizeInput(obj[key]);
+                } else if (Array.isArray(obj[key])) {
+                    sanitized[key] = this._sanitizeArray(obj[key]);
+                } else if (typeof obj[key] === 'object') {
+                    sanitized[key] = this._sanitizeObject(obj[key]);
+                } else {
+                    sanitized[key] = obj[key];
+                }
+            });
+            return sanitized;
+        },
+        
+        _sanitizeArray: function(arr) {
+            if (!Array.isArray(arr)) return [];
+            return arr.map(item => {
+                if (typeof item === 'string') {
+                    return this._sanitizeInput(item);
+                } else if (typeof item === 'object') {
+                    return this._sanitizeObject(item);
+                } else {
+                    return item;
+                }
+            });
+        },
+        
+        /**
+         * @function _validateInput
+         * @description Validates input strings for security and format.
+         * @param {string} input - Input to validate
+         * @param {string} type - Validation type (optional)
+         * @returns {boolean} True if valid
+         * @private
+         */
+        _validateInput: function(input, type) {
+            if (!input || typeof input !== 'string') return false;
+            
+            switch(type) {
+                case 'agentName':
+                    return /^[a-zA-Z0-9\s\-_]{1,50}$/.test(input);
+                case 'endpoint':
+                    return /^https?:\/\/[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+$/.test(input);
+                default:
+                    return input.length > 0 && input.length <= 255;
+            }
+        },
+        
+        /**
+         * @function _sanitizeInput
+         * @description Sanitizes user input to prevent XSS attacks.
+         * @param {string} input - Input to sanitize
+         * @returns {string} Sanitized input
+         * @private
+         */
+        _sanitizeInput: function(input) {
+            if (!input) return "";
+            return sap.base.security.encodeXML(input.toString().trim());
+        },
+        
+        /**
+         * @function _sanitizeObject
+         * @description Recursively sanitizes object properties.
+         * @param {Object} obj - Object to sanitize
+         * @returns {Object} Sanitized object
+         * @private
+         */
+        _sanitizeObject: function(obj) {
+            if (!obj || typeof obj !== 'object') return {};
+            const sanitized = {};
+            Object.keys(obj).forEach(function(key) {
+                if (typeof obj[key] === 'string') {
+                    sanitized[key] = this._sanitizeInput(obj[key]);
+                } else if (Array.isArray(obj[key])) {
+                    sanitized[key] = this._sanitizeArray(obj[key]);
+                } else if (typeof obj[key] === 'object') {
+                    sanitized[key] = this._sanitizeObject(obj[key]);
+                } else {
+                    sanitized[key] = obj[key];
+                }
+            }.bind(this));
+            return sanitized;
+        },
+        
+        /**
+         * @function _sanitizeArray
+         * @description Sanitizes array elements.
+         * @param {Array} arr - Array to sanitize
+         * @returns {Array} Sanitized array
+         * @private
+         */
+        _sanitizeArray: function(arr) {
+            if (!Array.isArray(arr)) return [];
+            return arr.map(function(item) {
+                if (typeof item === 'string') {
+                    return this._sanitizeInput(item);
+                } else if (typeof item === 'object') {
+                    return this._sanitizeObject(item);
+                } else {
+                    return item;
+                }
+            }.bind(this));
+        },
+        
+        /**
+         * @function _createPerformanceChart
+         * @description Creates performance visualization chart.
+         * @param {Object} data - Performance data
+         * @param {sap.m.Dialog} oDialog - Target dialog
+         * @private
+         */
+        _createPerformanceChart: function(data, oDialog) {
+            // Implementation placeholder for performance chart creation
+            // This would create charts for CPU, memory, and other performance metrics
+        },
+        
+        /**
+         * @function _createOperationsChart
+         * @description Creates operations visualization chart.
+         * @param {Object} data - Operations data
+         * @param {sap.m.Dialog} oDialog - Target dialog
+         * @private
+         */
+        _createOperationsChart: function(data, oDialog) {
+            // Implementation placeholder for operations chart creation
+            // This would create charts for operation counts, success rates, etc.
+        },
+        
+        /**
+         * @function _startRealtimeUpdates
+         * @description Establishes EventSource connection for real-time updates.
+         * @private
+         */
+        _startRealtimeUpdates: function() {
+            if (this._realtimeEventSource) {
+                this._realtimeEventSource.close();
+            }
+            
+            this._realtimeEventSource = new EventSource("/a2a/agent7/v1/realtime-updates");
+            
+            this._realtimeEventSource.onmessage = function(event) {
+                var data = JSON.parse(event.data);
+                
+                if (data.type === "agent_status_change") {
+                    this._throttledDashboardUpdate();
+                    var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                    var sStatusMsg = oBundle.getText("msg.agentStatusChanged") || "Agent status changed";
+                    MessageToast.show(sStatusMsg.replace("{0}", data.agentName).replace("{1}", data.status));
+                } else if (data.type === "performance_alert") {
+                    var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                    var sAlertMsg = oBundle.getText("msg.performanceAlert") || "Performance Alert";
+                    MessageToast.show(sAlertMsg + ": " + data.message);
+                }
+            }.bind(this);
+            
+            this._realtimeEventSource.onerror = function() {
+                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                var sErrorMsg = oBundle.getText("error.realtimeDisconnected") || "Real-time updates disconnected";
+                MessageToast.show(sErrorMsg);
+            }.bind(this);
         }
     });
 });

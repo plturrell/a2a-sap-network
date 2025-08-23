@@ -1,0 +1,433 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.ui.layout.form">
+    
+    <Dialog
+        id="registryManagerDialog"
+        title="{i18n>registryManager}"
+        contentWidth="80%"
+        contentHeight="85%"
+        verticalScrolling="true">
+        
+        <content>
+            <IconTabBar id="registryTabBar" expandable="false">
+                <!-- Registry List Tab -->
+                <items>
+                    <IconTabFilter text="{i18n>registries}" icon="sap-icon://database" iconColor="Positive" count="{/registryCount}">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Registry Actions -->
+                            <HBox class="sapUiSmallMarginBottom" justifyContent="SpaceBetween">
+                                <HBox>
+                                    <Button
+                                        text="{i18n>addRegistry}"
+                                        icon="sap-icon://add"
+                                        press=".onAddRegistry"
+                                        type="Emphasized"/>
+                                    <Button
+                                        text="{i18n>syncAll}"
+                                        icon="sap-icon://synchronize"
+                                        press=".onSyncAllRegistries"
+                                        type="Transparent"/>
+                                    <Button
+                                        text="{i18n>refreshList}"
+                                        icon="sap-icon://refresh"
+                                        press=".onRefreshRegistries"
+                                        type="Transparent"/>
+                                </HBox>
+                                <SearchField
+                                    placeholder="{i18n>searchRegistries}"
+                                    search=".onSearchRegistries"
+                                    width="250px"/>
+                            </HBox>
+                            
+                            <!-- Registry Table -->
+                            <Table
+                                id="registriesTable"
+                                items="{/registries}"
+                                mode="SingleSelect"
+                                selectionChange=".onRegistrySelectionChange"
+                                growing="true"
+                                growingThreshold="50">
+                                
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>registryName}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>registryType}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>status}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>lastSync}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>entries}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>actions}"/>
+                                    </Column>
+                                </columns>
+                                
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <VBox>
+                                                <Text text="{registryName}" emphasized="true"/>
+                                                <Text text="{registryUrl}" class="sapUiTinyMarginTop"/>
+                                            </VBox>
+                                            <Text text="{registryType}"/>
+                                            <ObjectStatus
+                                                text="{status}"
+                                                state="{= ${status} === 'ACTIVE' ? 'Success' : ${status} === 'SYNCING' ? 'Warning' : 'Error' }"
+                                                icon="{= ${status} === 'ACTIVE' ? 'sap-icon://status-positive' : ${status} === 'SYNCING' ? 'sap-icon://synchronize' : 'sap-icon://status-negative' }"/>
+                                            <Text text="{lastSync}"/>
+                                            <VBox>
+                                                <Text text="{= ${activeEntries} + '/' + ${totalEntries} }" emphasized="true"/>
+                                                <Text text="{i18n>activeTotal}" class="sapUiTinyMarginTop"/>
+                                            </VBox>
+                                            <HBox>
+                                                <Button
+                                                    icon="sap-icon://synchronize"
+                                                    tooltip="{i18n>syncRegistry}"
+                                                    press=".onSyncRegistry"
+                                                    type="Transparent"/>
+                                                <Button
+                                                    icon="sap-icon://test"
+                                                    tooltip="{i18n>testConnection}"
+                                                    press=".onTestRegistryConnection"
+                                                    type="Transparent"/>
+                                                <Button
+                                                    icon="sap-icon://edit"
+                                                    tooltip="{i18n>editRegistry}"
+                                                    press=".onEditRegistry"
+                                                    type="Transparent"/>
+                                                <Button
+                                                    icon="sap-icon://delete"
+                                                    tooltip="{i18n>deleteRegistry}"
+                                                    press=".onDeleteRegistry"
+                                                    type="Transparent"/>
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Registry Details Tab -->
+                    <IconTabFilter text="{i18n>registryDetails}" icon="sap-icon://detail-view" iconColor="Neutral">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Registry Information -->
+                            <Panel headerText="{i18n>registryInformation}">
+                                <f:SimpleForm
+                                    editable="{/editMode}"
+                                    layout="ResponsiveGridLayout">
+                                    <f:content>
+                                        <Label text="{i18n>registryName}:"/>
+                                        <Input
+                                            value="{/selectedRegistry/registryName}"
+                                            enabled="{/editMode}"
+                                            width="100%"/>
+                                        
+                                        <Label text="{i18n>registryType}:"/>
+                                        <Select
+                                            selectedKey="{/selectedRegistry/registryType}"
+                                            enabled="{/editMode}">
+                                            <items>
+                                                <core:Item key="SERVICE_REGISTRY" text="{i18n>serviceRegistry}"/>
+                                                <core:Item key="API_REGISTRY" text="{i18n>apiRegistry}"/>
+                                                <core:Item key="SCHEMA_REGISTRY" text="{i18n>schemaRegistry}"/>
+                                                <core:Item key="ARTIFACT_REGISTRY" text="{i18n>artifactRegistry}"/>
+                                                <core:Item key="MODEL_REGISTRY" text="{i18n>modelRegistry}"/>
+                                                <core:Item key="WORKFLOW_REGISTRY" text="{i18n>workflowRegistry}"/>
+                                                <core:Item key="AGENT_REGISTRY" text="{i18n>agentRegistry}"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="{i18n>registryUrl}:"/>
+                                        <Input
+                                            value="{/selectedRegistry/registryUrl}"
+                                            enabled="{/editMode}"
+                                            width="100%"/>
+                                        
+                                        <Label text="{i18n>healthCheckUrl}:"/>
+                                        <Input
+                                            value="{/selectedRegistry/healthCheckUrl}"
+                                            enabled="{/editMode}"
+                                            width="100%"/>
+                                        
+                                        <Label text="{i18n>syncFrequency}:"/>
+                                        <Select
+                                            selectedKey="{/selectedRegistry/syncFrequency}"
+                                            enabled="{/editMode}">
+                                            <items>
+                                                <core:Item key="REAL_TIME" text="{i18n>realTime}"/>
+                                                <core:Item key="HOURLY" text="{i18n>hourly}"/>
+                                                <core:Item key="DAILY" text="{i18n>daily}"/>
+                                                <core:Item key="WEEKLY" text="{i18n>weekly}"/>
+                                                <core:Item key="MANUAL" text="{i18n>manual}"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="{i18n>authenticationType}:"/>
+                                        <Select
+                                            selectedKey="{/selectedRegistry/authenticationType}"
+                                            enabled="{/editMode}"
+                                            change=".onAuthenticationTypeChange">
+                                            <items>
+                                                <core:Item key="NONE" text="{i18n>noAuthentication}"/>
+                                                <core:Item key="BASIC" text="{i18n>basicAuth}"/>
+                                                <core:Item key="OAUTH" text="{i18n>oauthAuth}"/>
+                                                <core:Item key="API_KEY" text="{i18n>apiKeyAuth}"/>
+                                                <core:Item key="CERTIFICATE" text="{i18n>certificateAuth}"/>
+                                            </items>
+                                        </Select>
+                                    </f:content>
+                                </f:SimpleForm>
+                            </Panel>
+                            
+                            <!-- Authentication Configuration -->
+                            <Panel
+                                headerText="{i18n>authenticationConfiguration}"
+                                class="sapUiMediumMarginTop"
+                                visible="{= ${/selectedRegistry/authenticationType} && ${/selectedRegistry/authenticationType} !== 'NONE' }">
+                                <f:SimpleForm
+                                    editable="{/editMode}"
+                                    layout="ResponsiveGridLayout">
+                                    <f:content>
+                                        <!-- Basic Auth -->
+                                        <Label text="{i18n>username}:" visible="{= ${/selectedRegistry/authenticationType} === 'BASIC' }"/>
+                                        <Input
+                                            value="{/selectedRegistry/authConfig/username}"
+                                            enabled="{/editMode}"
+                                            visible="{= ${/selectedRegistry/authenticationType} === 'BASIC' }"/>
+                                        
+                                        <Label text="{i18n>password}:" visible="{= ${/selectedRegistry/authenticationType} === 'BASIC' }"/>
+                                        <Input
+                                            type="Password"
+                                            value="{/selectedRegistry/authConfig/password}"
+                                            enabled="{/editMode}"
+                                            visible="{= ${/selectedRegistry/authenticationType} === 'BASIC' }"/>
+                                        
+                                        <!-- API Key -->
+                                        <Label text="{i18n>apiKey}:" visible="{= ${/selectedRegistry/authenticationType} === 'API_KEY' }"/>
+                                        <Input
+                                            type="Password"
+                                            value="{/selectedRegistry/authConfig/apiKey}"
+                                            enabled="{/editMode}"
+                                            visible="{= ${/selectedRegistry/authenticationType} === 'API_KEY' }"/>
+                                        
+                                        <Label text="{i18n>apiKeyHeader}:" visible="{= ${/selectedRegistry/authenticationType} === 'API_KEY' }"/>
+                                        <Input
+                                            value="{/selectedRegistry/authConfig/apiKeyHeader}"
+                                            enabled="{/editMode}"
+                                            placeholder="X-API-Key"
+                                            visible="{= ${/selectedRegistry/authenticationType} === 'API_KEY' }"/>
+                                        
+                                        <!-- OAuth -->
+                                        <Label text="{i18n>clientId}:" visible="{= ${/selectedRegistry/authenticationType} === 'OAUTH' }"/>
+                                        <Input
+                                            value="{/selectedRegistry/authConfig/clientId}"
+                                            enabled="{/editMode}"
+                                            visible="{= ${/selectedRegistry/authenticationType} === 'OAUTH' }"/>
+                                        
+                                        <Label text="{i18n>clientSecret}:" visible="{= ${/selectedRegistry/authenticationType} === 'OAUTH' }"/>
+                                        <Input
+                                            type="Password"
+                                            value="{/selectedRegistry/authConfig/clientSecret}"
+                                            enabled="{/editMode}"
+                                            visible="{= ${/selectedRegistry/authenticationType} === 'OAUTH' }"/>
+                                        
+                                        <Label text="{i18n>oauthUrl}:" visible="{= ${/selectedRegistry/authenticationType} === 'OAUTH' }"/>
+                                        <Input
+                                            value="{/selectedRegistry/authConfig/oauthUrl}"
+                                            enabled="{/editMode}"
+                                            visible="{= ${/selectedRegistry/authenticationType} === 'OAUTH' }"/>
+                                    </f:content>
+                                </f:SimpleForm>
+                            </Panel>
+                            
+                            <!-- Registry Statistics -->
+                            <Panel
+                                headerText="{i18n>registryStatistics}"
+                                class="sapUiMediumMarginTop">
+                                <l:Grid defaultSpan="L3 M6 S12" class="sapUiSmallMargin">
+                                    <ObjectStatus
+                                        title="{i18n>totalEntries}"
+                                        text="{/selectedRegistry/totalEntries}"
+                                        state="Information"
+                                        icon="sap-icon://sum"/>
+                                    <ObjectStatus
+                                        title="{i18n>activeEntries}"
+                                        text="{/selectedRegistry/activeEntries}"
+                                        state="Success"
+                                        icon="sap-icon://status-positive"/>
+                                    <ObjectStatus
+                                        title="{i18n>lastSync}"
+                                        text="{/selectedRegistry/lastSync}"
+                                        state="None"
+                                        icon="sap-icon://synchronize"/>
+                                    <ObjectStatus
+                                        title="{i18n>syncDuration}"
+                                        text="{/selectedRegistry/lastSyncDuration}ms"
+                                        state="None"
+                                        icon="sap-icon://timesheet"/>
+                                </l:Grid>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Sync Operations Tab -->
+                    <IconTabFilter text="{i18n>syncOperations}" icon="sap-icon://synchronize" iconColor="Critical">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Sync Controls -->
+                            <Panel headerText="{i18n>syncControls}">
+                                <VBox class="sapUiSmallMargin">
+                                    <HBox class="sapUiSmallMarginBottom" justifyContent="SpaceBetween">
+                                        <HBox>
+                                            <Button
+                                                text="{i18n>startSync}"
+                                                icon="sap-icon://synchronize"
+                                                press=".onStartManualSync"
+                                                type="Emphasized"
+                                                enabled="{= !${/syncInProgress} }"/>
+                                            <Button
+                                                text="{i18n>stopSync}"
+                                                icon="sap-icon://stop"
+                                                press=".onStopSync"
+                                                type="Transparent"
+                                                enabled="{/syncInProgress}"/>
+                                            <Button
+                                                text="{i18n>scheduledSync}"
+                                                icon="sap-icon://appointment"
+                                                press=".onConfigureScheduledSync"
+                                                type="Transparent"/>
+                                        </HBox>
+                                        <ObjectStatus
+                                            text="{/syncStatus/status}"
+                                            state="{= ${/syncStatus/status} === 'SYNCING' ? 'Warning' : 'Information' }"
+                                            icon="{= ${/syncStatus/status} === 'SYNCING' ? 'sap-icon://synchronize' : 'sap-icon://status-completed' }"/>
+                                    </HBox>
+                                    
+                                    <!-- Sync Progress -->
+                                    <ProgressIndicator
+                                        percentValue="{/syncStatus/progress}"
+                                        displayValue="{= ${/syncStatus/progress} + '% - ' + ${/syncStatus/currentOperation} }"
+                                        visible="{/syncInProgress}"/>
+                                    
+                                    <!-- Sync Statistics -->
+                                    <l:Grid defaultSpan="L4 M6 S12" class="sapUiSmallMarginTop">
+                                        <ObjectStatus
+                                            title="{i18n>entriesProcessed}"
+                                            text="{/syncStatus/entriesProcessed}"
+                                            state="None"/>
+                                        <ObjectStatus
+                                            title="{i18n>entriesAdded}"
+                                            text="{/syncStatus/entriesAdded}"
+                                            state="Success"/>
+                                        <ObjectStatus
+                                            title="{i18n>entriesUpdated}"
+                                            text="{/syncStatus/entriesUpdated}"
+                                            state="Warning"/>
+                                        <ObjectStatus
+                                            title="{i18n>errors}"
+                                            text="{/syncStatus/errors}"
+                                            state="Error"/>
+                                    </l:Grid>
+                                </VBox>
+                            </Panel>
+                            
+                            <!-- Sync Log -->
+                            <Panel
+                                headerText="{i18n>syncLog}"
+                                expandable="true"
+                                expanded="false"
+                                class="sapUiMediumMarginTop">
+                                <List items="{/syncLog}">
+                                    <StandardListItem
+                                        title="{timestamp}"
+                                        description="{message}"
+                                        icon="{= ${level} === 'ERROR' ? 'sap-icon://error' : ${level} === 'WARNING' ? 'sap-icon://warning' : 'sap-icon://information' }"
+                                        iconInset="false"
+                                        type="Inactive"/>
+                                </List>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Configuration Tab -->
+                    <IconTabFilter text="{i18n>configuration}" icon="sap-icon://settings" iconColor="Neutral">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="{i18n>globalSettings}">
+                                <f:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout">
+                                    <f:content>
+                                        <Label text="{i18n>defaultSyncFrequency}:"/>
+                                        <Select selectedKey="{/globalConfig/defaultSyncFrequency}">
+                                            <items>
+                                                <core:Item key="HOURLY" text="{i18n>hourly}"/>
+                                                <core:Item key="DAILY" text="{i18n>daily}"/>
+                                                <core:Item key="WEEKLY" text="{i18n>weekly}"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="{i18n>maxConcurrentSyncs}:"/>
+                                        <StepInput
+                                            value="{/globalConfig/maxConcurrentSyncs}"
+                                            min="1"
+                                            max="10"/>
+                                        
+                                        <Label text="{i18n>syncTimeout}:"/>
+                                        <StepInput
+                                            value="{/globalConfig/syncTimeout}"
+                                            min="30"
+                                            max="3600"
+                                            step="30"
+                                            description="{i18n>seconds}"/>
+                                        
+                                        <Label text="{i18n>retryAttempts}:"/>
+                                        <StepInput
+                                            value="{/globalConfig/retryAttempts}"
+                                            min="0"
+                                            max="5"/>
+                                        
+                                        <Label text="{i18n>enableNotifications}:"/>
+                                        <CheckBox selected="{/globalConfig/enableNotifications}"/>
+                                        
+                                        <Label text="{i18n>logLevel}:"/>
+                                        <Select selectedKey="{/globalConfig/logLevel}">
+                                            <items>
+                                                <core:Item key="ERROR" text="{i18n>errorOnly}"/>
+                                                <core:Item key="WARNING" text="{i18n>warningAndError}"/>
+                                                <core:Item key="INFO" text="{i18n>allMessages}"/>
+                                            </items>
+                                        </Select>
+                                    </f:content>
+                                </f:SimpleForm>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button
+                text="{= ${/editMode} ? ${i18n>save} : ${i18n>edit} }"
+                type="Emphasized"
+                icon="{= ${/editMode} ? 'sap-icon://save' : 'sap-icon://edit' }"
+                press=".onToggleEditMode"/>
+        </beginButton>
+        
+        <endButton>
+            <Button
+                text="{i18n>close}"
+                press=".onCloseRegistryManager"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

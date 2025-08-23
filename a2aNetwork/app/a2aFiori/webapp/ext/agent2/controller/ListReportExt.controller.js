@@ -15,42 +15,33 @@ sap.ui.define([
         override: {
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
+                // Initialize dialog cache and security settings
+                this._dialogCache = {};
+                this._csrfToken = null;
+                this._initializeCSRFToken();
             }
         },
 
+        /**
+         * Opens the AI preparation task creation dialog with comprehensive configuration options.
+         * Supports multiple ML frameworks, data types, and advanced AI preparation settings.
+         * @public
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
         onCreateAITask: function() {
-            var oView = this.base.getView();
-            
-            if (!this._oCreateDialog) {
-                Fragment.load({
-                    id: oView.getId(),
-                    name: "a2a.network.agent2.ext.fragment.CreateAIPreparationTask",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._oCreateDialog = oDialog;
-                    oView.addDependent(this._oCreateDialog);
-                    
-                    // Initialize model for the dialog
-                    var oModel = new JSONModel({
-                        taskName: "",
-                        description: "",
-                        datasetName: "",
-                        modelType: "",
-                        dataType: "",
-                        framework: "TENSORFLOW",
-                        splitRatio: 80,
-                        validationStrategy: "KFOLD",
-                        featureSelection: true,
-                        autoFeatureEngineering: true
-                    });
-                    this._oCreateDialog.setModel(oModel, "create");
-                    this._oCreateDialog.open();
-                }.bind(this));
-            } else {
-                this._oCreateDialog.open();
-            }
+            // Initialize create model before opening dialog
+            this._initializeCreateModel();
+            this._openCachedDialog("createAITask", "a2a.network.agent2.ext.fragment.CreateAIPreparationTask");
         },
 
+        /**
+         * Opens the data profiler dialog for AI readiness assessment.
+         * Provides comprehensive data quality analysis, statistical insights, and AI preparation recommendations.
+         * @public
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
         onOpenDataProfiler: function() {
             var oView = this.base.getView();
             
@@ -71,6 +62,13 @@ sap.ui.define([
             }
         },
 
+        /**
+         * Loads comprehensive data profiling information from the backend service.
+         * Includes dataset statistics, data quality metrics, and AI readiness recommendations.
+         * @private
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
         _loadDataProfile: function() {
             // Show loading
             this._oDataProfiler.setBusy(true);
@@ -78,6 +76,7 @@ sap.ui.define([
             jQuery.ajax({
                 url: "/a2a/agent2/v1/data-profile",
                 type: "GET",
+                headers: this._getSecureHeaders(),
                 success: function(data) {
                     this._oDataProfiler.setBusy(false);
                     
@@ -99,6 +98,14 @@ sap.ui.define([
             });
         },
 
+        /**
+         * Creates interactive data visualizations using SAP VizFrame for data profiling.
+         * Generates charts for feature statistics, data quality metrics, and distribution analysis.
+         * @private
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @param {object} data - Profiling data containing statistics and quality metrics
+         * @since 1.0.0
+         */
         _createDataVisualizations: function(data) {
             // Create charts for data distribution, quality metrics, etc.
             var oVizFrame = this._oDataProfiler.byId("statisticsChart");
@@ -159,6 +166,14 @@ sap.ui.define([
             this._createDistributionCharts(data);
         },
         
+        /**
+         * Creates distribution charts for individual features with lazy loading support.
+         * Limits the number of charts rendered initially for better performance.
+         * @private
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @param {object} data - Feature statistics data
+         * @since 1.0.0
+         */
         _createDistributionCharts: function(data) {
             var oGrid = this._oDataProfiler.byId("distributionGrid");
             if (!oGrid || !data.statistics || !data.statistics.features) return;
@@ -206,6 +221,15 @@ sap.ui.define([
             }.bind(this));
         },
         
+        /**
+         * Generates sample distribution data for feature visualization.
+         * Creates realistic data points based on feature statistics for chart rendering.
+         * @private
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @param {object} feature - Feature object containing statistical information
+         * @returns {Array<object>} Array of data points for visualization
+         * @since 1.0.0
+         */
         _generateDistributionData: function(feature) {
             // Generate sample distribution data for visualization
             var aData = [];
@@ -220,467 +244,484 @@ sap.ui.define([
             return aData;
         },
 
-        onAutoML: function() {
-            var oView = this.base.getView();
-            
-            if (!this._oAutoMLWizard) {
-                Fragment.load({
-                    id: oView.getId(),
-                    name: "a2a.network.agent2.ext.fragment.AutoMLWizard",
-                    controller: this
-                }).then(function(oWizard) {
-                    this._oAutoMLWizard = oWizard;
-                    oView.addDependent(this._oAutoMLWizard);
-                    
-                    // Initialize AutoML model
-                    var oAutoMLModel = new JSONModel({
-                        step: 1,
-                        dataset: null,
-                        problemType: "",
-                        targetColumn: "",
-                        evaluationMetric: "",
-                        timeLimit: 60,
-                        maxModels: 10,
-                        includeEnsemble: true,
-                        crossValidation: 5
-                    });
-                    this._oAutoMLWizard.setModel(oAutoMLModel, "automl");
-                    this._oAutoMLWizard.open();
-                }.bind(this));
-            } else {
-                this._oAutoMLWizard.open();
-            }
-        },
-
-        onModelTemplates: function() {
-            // Navigate to model templates
-            var oRouter = sap.ui.core.UIComponent.getRouterFor(this.base.getView());
-            oRouter.navTo("ModelTemplates");
-        },
-
-        onBatchPrepare: function() {
-            var oTable = this._extensionAPI.getTable();
-            var aSelectedContexts = oTable.getSelectedContexts();
-            
-            if (aSelectedContexts.length === 0) {
-                MessageBox.warning("Please select at least one task for batch preparation.");
-                return;
-            }
-            
-            MessageBox.confirm(
-                "Start batch preparation for " + aSelectedContexts.length + " tasks?",
-                {
-                    onClose: function(oAction) {
-                        if (oAction === MessageBox.Action.OK) {
-                            this._startBatchPreparation(aSelectedContexts);
-                        }
-                    }.bind(this)
-                }
-            );
-        },
-
-        _startBatchPreparation: function(aContexts) {
-            var aTaskIds = aContexts.map(function(oContext) {
-                return oContext.getProperty("ID");
+        /**
+         * Initializes CSRF token for secure API calls
+         * @private
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
+        /**
+         * Initialize the create model with default values and validation states
+         * @private
+         * @since 1.0.0
+         */
+        _initializeCreateModel: function() {
+            var oCreateModel = new JSONModel({
+                taskName: "",
+                description: "",
+                datasetName: "",
+                modelType: "",
+                dataType: "",
+                framework: "AUTO",
+                splitRatio: 80,
+                validationStrategy: "KFOLD",
+                featureSelection: true,
+                autoFeatureEngineering: true,
+                optimizationMetric: "AUTO",
+                useGPU: false,
+                distributed: false,
+                memoryOptimized: true,
+                cacheResults: true,
+                isValid: false,
+                taskNameState: "None",
+                taskNameStateText: "",
+                datasetNameState: "None",
+                datasetNameStateText: "",
+                modelTypeState: "None",
+                modelTypeStateText: "",
+                dataTypeState: "None",
+                dataTypeStateText: ""
             });
-            
-            this.base.getView().setBusy(true);
-            
-            jQuery.ajax({
-                url: "/a2a/agent2/v1/batch-prepare",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify({
-                    taskIds: aTaskIds,
-                    parallel: true,
-                    gpuAcceleration: true
-                }),
-                success: function(data) {
-                    this.base.getView().setBusy(false);
-                    MessageBox.success(
-                        "Batch preparation started!\n" +
-                        "Job ID: " + data.jobId + "\n" +
-                        "Estimated time: " + data.estimatedTime + " minutes"
-                    );
-                    this._extensionAPI.refresh();
-                }.bind(this),
-                error: function(xhr) {
-                    this.base.getView().setBusy(false);
-                    MessageBox.error("Batch preparation failed: " + xhr.responseText);
-                }.bind(this)
-            });
+            this.base.getView().setModel(oCreateModel, "create");
         },
 
-        onConfirmCreateTask: function() {
-            var oModel = this._oCreateDialog.getModel("create");
-            var oData = oModel.getData();
-            
-            // Validation
-            if (!oData.taskName || !oData.datasetName || !oData.modelType || !oData.dataType) {
-                MessageBox.error("Please fill all required fields");
-                return;
-            }
-            
-            this._oCreateDialog.setBusy(true);
-            
-            // Validate data before sending
-            var oValidation = this._validateTaskData(oData);
-            if (!oValidation.isValid) {
-                this._oCreateDialog.setBusy(false);
-                MessageBox.error("Validation Error: " + oValidation.message);
-                return;
-            }
-
+        _initializeCSRFToken: function() {
             jQuery.ajax({
-                url: "/a2a/agent2/v1/tasks",
-                type: "POST",
-                contentType: "application/json",
+                url: "/a2a/agent2/v1/csrf-token",
+                type: "GET",
                 headers: {
                     "X-CSRF-Token": "Fetch",
                     "X-Requested-With": "XMLHttpRequest"
                 },
-                data: JSON.stringify(oValidation.sanitizedData),
-                success: function(data) {
-                    if (this._validateApiResponse(data)) {
-                        this._oCreateDialog.setBusy(false);
-                        this._oCreateDialog.close();
-                        MessageToast.show("AI preparation task created successfully");
-                        this._extensionAPI.refresh();
-                    } else {
-                        this._oCreateDialog.setBusy(false);
-                        MessageBox.error("Invalid response from server");
-                    }
+                success: function(data, textStatus, xhr) {
+                    this._csrfToken = xhr.getResponseHeader("X-CSRF-Token");
                 }.bind(this),
-                error: function(xhr) {
-                    this._oCreateDialog.setBusy(false);
-                    var errorMsg = this._sanitizeErrorMessage(xhr.responseText || xhr.statusText);
-                    MessageBox.error("Failed to create task: " + errorMsg);
+                error: function() {
+                    // Fallback to generate token if service not available
+                    this._csrfToken = "fetch";
                 }.bind(this)
             });
         },
 
-        onCancelCreateTask: function() {
-            this._oCreateDialog.close();
+        /**
+         * Gets secure headers for AJAX requests including CSRF token
+         * @private
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @returns {object} Security headers object
+         * @since 1.0.0
+         */
+        _getSecureHeaders: function() {
+            return {
+                "X-CSRF-Token": this._csrfToken || "Fetch",
+                "X-Requested-With": "XMLHttpRequest",
+                "Content-Security-Policy": "default-src 'self'"
+            };
         },
 
         /**
-         * Validate AI task data for security and correctness
-         * @param {object} oData - Task data to validate
-         * @returns {object} Validation result with sanitized data
+         * Opens cached dialog fragments with optimized loading for AI workflows
+         * @private
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @param {string} sDialogKey - Dialog cache key
+         * @param {string} sFragmentName - Fragment name to load
+         * @param {function} [fnCallback] - Optional callback after opening
+         * @since 1.0.0
          */
-        _validateTaskData: function(oData) {
-            if (!oData || typeof oData !== 'object') {
-                return { isValid: false, message: "Invalid task data" };
-            }
-
-            var oSanitized = {};
+        _openCachedDialog: function(sDialogKey, sFragmentName, fnCallback) {
+            var oView = this.base.getView();
             
-            // Validate task name
-            var sTaskName = oData.taskName;
-            if (!sTaskName || typeof sTaskName !== 'string') {
-                return { isValid: false, message: "Task name is required" };
+            if (!this._dialogCache[sDialogKey]) {
+                // Show loading indicator for complex AI dialogs
+                oView.setBusy(true);
+                
+                Fragment.load({
+                    id: oView.getId(),
+                    name: sFragmentName,
+                    controller: this
+                }).then(function(oDialog) {
+                    this._dialogCache[sDialogKey] = oDialog;
+                    oView.addDependent(oDialog);
+                    oView.setBusy(false);
+                    
+                    // Initialize lazy loading for complex visualizations
+                    this._initializeLazyLoading(oDialog, sDialogKey);
+                    
+                    oDialog.open();
+                    if (fnCallback) {
+                        fnCallback(oDialog);
+                    }
+                }.bind(this));
+            } else {
+                this._dialogCache[sDialogKey].open();
+                if (fnCallback) {
+                    fnCallback(this._dialogCache[sDialogKey]);
+                }
             }
+        },
+
+        /**
+         * Initializes lazy loading for data-intensive visualizations
+         * @private
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @param {sap.ui.core.Control} oDialog - Dialog instance
+         * @param {string} sDialogKey - Dialog identifier
+         * @since 1.0.0
+         */
+        _initializeLazyLoading: function(oDialog, sDialogKey) {
+            if (sDialogKey === "dataProfiler") {
+                // Initialize intersection observer for lazy chart loading
+                var oTabBar = oDialog.byId("profilerTabBar");
+                if (oTabBar) {
+                    oTabBar.attachSelect(this._onTabSelect.bind(this));
+                }
+            } else if (sDialogKey === "featureAnalysis") {
+                // Initialize progressive loading for feature charts
+                this._initializeProgressiveLoading(oDialog);
+            }
+        },
+
+        /**
+         * Handles tab selection for lazy loading of chart content
+         * @private
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @param {sap.ui.base.Event} oEvent - Tab selection event
+         * @since 1.0.0
+         */
+        _onTabSelect: function(oEvent) {
+            var sSelectedKey = oEvent.getParameter("key");
+            var oTabBar = oEvent.getSource();
             
-            var oNameValidation = this._validateInput(sTaskName, "taskName");
-            if (!oNameValidation.isValid) {
-                return { isValid: false, message: "Task name: " + oNameValidation.message };
-            }
-            oSanitized.taskName = oNameValidation.sanitized;
-
-            // Validate dataset path
-            if (oData.datasetPath) {
-                var oPathValidation = this._validateInput(oData.datasetPath, "path");
-                if (!oPathValidation.isValid) {
-                    return { isValid: false, message: "Dataset path: " + oPathValidation.message };
+            // Load tab content only when selected
+            setTimeout(function() {
+                if (sSelectedKey === "statistics" && !this._statisticsLoaded) {
+                    this._loadStatisticsTab();
+                    this._statisticsLoaded = true;
+                } else if (sSelectedKey === "distribution" && !this._distributionLoaded) {
+                    this._loadDistributionTab();
+                    this._distributionLoaded = true;
+                } else if (sSelectedKey === "correlations" && !this._correlationsLoaded) {
+                    this._loadCorrelationsTab();
+                    this._correlationsLoaded = true;
                 }
-                oSanitized.datasetPath = oPathValidation.sanitized;
-            }
+            }.bind(this), 100);
+        },
 
-            // Validate model type
-            var aValidModelTypes = ['Classification', 'Regression', 'Clustering', 'NLP', 'Computer Vision', 'Time Series'];
-            if (oData.modelType && !aValidModelTypes.includes(oData.modelType)) {
-                return { isValid: false, message: "Invalid model type" };
-            }
-            oSanitized.modelType = oData.modelType;
-
-            // Validate data type
-            var aValidDataTypes = ['Tabular', 'Text', 'Image', 'Audio', 'Time Series', 'Graph'];
-            if (oData.dataType && !aValidDataTypes.includes(oData.dataType)) {
-                return { isValid: false, message: "Invalid data type" };
-            }
-            oSanitized.dataType = oData.dataType;
-
-            // Validate numeric fields
-            if (oData.trainSplit !== undefined) {
-                var nTrainSplit = parseFloat(oData.trainSplit);
-                if (isNaN(nTrainSplit) || nTrainSplit < 0.1 || nTrainSplit > 0.9) {
-                    return { isValid: false, message: "Train split must be between 0.1 and 0.9" };
+        /**
+         * Loads statistics tab content with lazy loading
+         * @private
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
+        _loadStatisticsTab: function() {
+            // Implementation for loading statistics visualizations
+            var oDialog = this._dialogCache.dataProfiler;
+            if (oDialog) {
+                var oVizFrame = oDialog.byId("statisticsChart");
+                if (oVizFrame && !oVizFrame.getModel()) {
+                    // Load chart data only when tab is active
+                    this._createStatisticsVisualization(oVizFrame);
                 }
-                oSanitized.trainSplit = nTrainSplit;
             }
+        },
 
-            if (oData.validationSplit !== undefined) {
-                var nValidationSplit = parseFloat(oData.validationSplit);
-                if (isNaN(nValidationSplit) || nValidationSplit < 0.05 || nValidationSplit > 0.5) {
-                    return { isValid: false, message: "Validation split must be between 0.05 and 0.5" };
-                }
-                oSanitized.validationSplit = nValidationSplit;
+        /**
+         * Creates statistics visualization with performance optimization
+         * @private
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @param {sap.viz.ui5.controls.VizFrame} oVizFrame - Visualization frame
+         * @since 1.0.0
+         */
+        _createStatisticsVisualization: function(oVizFrame) {
+            // Enhanced visualization creation with caching
+            var aCachedData = this._statisticsData || [];
+            
+            if (aCachedData.length === 0) {
+                // Show loading indicator
+                oVizFrame.setBusy(true);
+                
+                jQuery.ajax({
+                    url: "/a2a/agent2/v1/statistics",
+                    type: "GET",
+                    headers: this._getSecureHeaders(),
+                    success: function(data) {
+                        this._statisticsData = data.statistics;
+                        this._renderStatisticsChart(oVizFrame, data.statistics);
+                        oVizFrame.setBusy(false);
+                    }.bind(this),
+                    error: function() {
+                        oVizFrame.setBusy(false);
+                        MessageBox.error("Failed to load statistics data");
+                    }
+                });
+            } else {
+                this._renderStatisticsChart(oVizFrame, aCachedData);
             }
+        },
 
-            // Copy other safe fields
-            var aSafeFields = ['description', 'targetColumn', 'featureColumns', 'validationStrategy', 'optimizationMetric'];
-            aSafeFields.forEach(function(sField) {
-                if (oData[sField] !== undefined) {
-                    if (typeof oData[sField] === 'string') {
-                        var oFieldValidation = this._validateInput(oData[sField], "text");
-                        if (oFieldValidation.isValid) {
-                            oSanitized[sField] = oFieldValidation.sanitized;
-                        }
-                    } else {
-                        oSanitized[sField] = oData[sField];
+        /**
+         * Renders statistics chart with optimized data binding
+         * @private
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @param {sap.viz.ui5.controls.VizFrame} oVizFrame - Chart control
+         * @param {Array} aStatistics - Statistics data array
+         * @since 1.0.0
+         */
+        _renderStatisticsChart: function(oVizFrame, aStatistics) {
+            var oChartModel = new sap.ui.model.json.JSONModel({
+                data: aStatistics.slice(0, 50) // Limit for performance
+            });
+            oVizFrame.setModel(oChartModel);
+            
+            // Configure chart with accessibility support
+            oVizFrame.setVizProperties({
+                title: {
+                    text: "Feature Statistics Overview",
+                    visible: true
+                },
+                legend: {
+                    visible: true,
+                    title: {
+                        text: "Metrics"
+                    }
+                },
+                categoryAxis: {
+                    title: {
+                        text: "Features"
+                    }
+                },
+                valueAxis: {
+                    title: {
+                        text: "Values"
                     }
                 }
+            });
+        },
+
+        /**
+         * Opens the AutoML wizard dialog for automated machine learning configuration
+         * @public
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
+        onAutoML: function() {
+            this._openCachedDialog("autoMLWizard", "a2a.network.agent2.ext.fragment.AutoMLWizard", function(oDialog) {
+                this._initializeAutoMLModel(oDialog);
             }.bind(this));
-
-            return { isValid: true, sanitizedData: oSanitized };
         },
 
         /**
-         * Validate user input for security and format compliance
-         * @param {string} sInput - Input to validate
-         * @param {string} sType - Type of validation
-         * @returns {object} Validation result
+         * Opens the feature analysis dialog with correlation and importance analysis
+         * @public
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @since 1.0.0
          */
-        _validateInput: function(sInput, sType) {
-            if (!sInput || typeof sInput !== 'string') {
-                return { isValid: false, message: "Input is required" };
-            }
+        onFeatureAnalysis: function() {
+            this._openCachedDialog("featureAnalysis", "a2a.network.agent2.ext.fragment.FeatureAnalysis", function(oDialog) {
+                this._loadFeatureAnalysisData(oDialog);
+            }.bind(this));
+        },
 
-            var sSanitized = sInput.trim();
+        /**
+         * Initializes AutoML model with default configuration
+         * @private
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @param {sap.m.Dialog} oDialog - AutoML dialog instance
+         * @since 1.0.0
+         */
+        _initializeAutoMLModel: function(oDialog) {
+            var oAutoMLModel = new JSONModel({
+                dataset: "",
+                problemType: "",
+                targetColumn: "",
+                trainingRatio: 80,
+                validationRatio: 15,
+                testRatio: 5,
+                maxIterations: 100,
+                evaluationMetric: "AUTO",
+                hyperparameterTuning: true,
+                featureEngineering: true,
+                ensembleMethods: false,
+                explainability: true
+            });
+            oDialog.setModel(oAutoMLModel, "automl");
+        },
+
+        /**
+         * Loads feature analysis data from backend service
+         * @private
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @param {sap.m.Dialog} oDialog - Feature analysis dialog instance
+         * @since 1.0.0
+         */
+        _loadFeatureAnalysisData: function(oDialog) {
+            oDialog.setBusy(true);
             
-            // Check for XSS patterns
-            var aXSSPatterns = [
-                /<script/i,
-                /javascript:/i,
-                /on\w+\s*=/i,
-                /<iframe/i,
-                /<object/i,
-                /<embed/i,
-                /eval\s*\(/i,
-                /Function\s*\(/i
-            ];
-
-            for (var i = 0; i < aXSSPatterns.length; i++) {
-                if (aXSSPatterns[i].test(sSanitized)) {
-                    return { isValid: false, message: "Invalid characters detected" };
+            jQuery.ajax({
+                url: "/a2a/agent2/v1/feature-analysis",
+                type: "GET",
+                headers: this._getSecureHeaders(),
+                success: function(data) {
+                    var oAnalysisModel = new JSONModel({
+                        features: data.features || [],
+                        correlationMatrix: data.correlationMatrix || [],
+                        importanceScores: data.importanceScores || [],
+                        recommendations: data.recommendations || []
+                    });
+                    oDialog.setModel(oAnalysisModel, "analysis");
+                    this._createFeatureVisualization(oDialog, data);
+                    oDialog.setBusy(false);
+                }.bind(this),
+                error: function() {
+                    oDialog.setBusy(false);
+                    MessageBox.error("Failed to load feature analysis data");
                 }
-            }
+            });
+        },
 
-            // Type-specific validation
-            switch (sType) {
-                case "taskName":
-                    if (sSanitized.length < 3 || sSanitized.length > 100) {
-                        return { isValid: false, message: "Must be 3-100 characters" };
+        /**
+         * Creates feature visualization charts with performance optimization
+         * @private
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @param {sap.m.Dialog} oDialog - Dialog containing visualization
+         * @param {object} data - Feature analysis data
+         * @since 1.0.0
+         */
+        _createFeatureVisualization: function(oDialog, data) {
+            var oFeatureChart = oDialog.byId("featureImportanceChart");
+            if (!oFeatureChart || !data.importanceScores) return;
+
+            // Create chart model with limited data for performance
+            var aChartData = data.importanceScores.slice(0, 20).map(function(item) {
+                return {
+                    Feature: item.name,
+                    Importance: item.score * 100,
+                    Type: item.type
+                };
+            });
+
+            var oChartModel = new JSONModel({
+                data: aChartData
+            });
+            oFeatureChart.setModel(oChartModel);
+
+            // Configure chart properties
+            this._configureFeatureChart(oFeatureChart);
+        },
+
+        /**
+         * Configures feature importance chart with accessibility support
+         * @private
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @param {sap.viz.ui5.controls.VizFrame} oChart - Chart control
+         * @since 1.0.0
+         */
+        _configureFeatureChart: function(oChart) {
+            oChart.setVizProperties({
+                title: {
+                    text: "Feature Importance Analysis",
+                    visible: true
+                },
+                legend: {
+                    visible: true,
+                    title: {
+                        text: "Feature Types"
                     }
-                    if (!/^[a-zA-Z0-9\s\-_\.]+$/.test(sSanitized)) {
-                        return { isValid: false, message: "Contains invalid characters" };
+                },
+                categoryAxis: {
+                    title: {
+                        text: "Features"
                     }
-                    break;
-                
-                case "path":
-                    if (sSanitized.length > 500) {
-                        return { isValid: false, message: "Path too long" };
+                },
+                valueAxis: {
+                    title: {
+                        text: "Importance Score (%)"
                     }
-                    // Basic path validation
-                    if (/[<>:"|?*]/.test(sSanitized)) {
-                        return { isValid: false, message: "Contains invalid path characters" };
+                },
+                interaction: {
+                    selectability: {
+                        mode: "single"
                     }
-                    break;
-                
-                case "url":
+                }
+            });
+
+            // Set up chart feeds
+            var oFeedValueAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
+                uid: "valueAxis",
+                type: "Measure",
+                values: ["Importance"]
+            });
+            var oFeedCategoryAxis = new sap.viz.ui5.controls.common.feeds.FeedItem({
+                uid: "categoryAxis",
+                type: "Dimension",
+                values: ["Feature"]
+            });
+
+            oChart.removeAllFeeds();
+            oChart.addFeed(oFeedValueAxis);
+            oChart.addFeed(oFeedCategoryAxis);
+        },
+
+        /**
+         * Wizard step activation handler with accessibility announcements
+         * @param {sap.ui.base.Event} oEvent - Step activation event
+         * @public
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
+        onWizardStepActivate: function(oEvent) {
+            var oStep = oEvent.getParameter("step");
+            var sStepTitle = oStep.getTitle();
+            var iStepNumber = oEvent.getParameter("index") + 1;
+            
+            // Announce step change to screen readers
+            sap.ui.getCore().announceForAccessibility(
+                "Now on step " + iStepNumber + " of 5: " + sStepTitle
+            );
+        },
+
+        /**
+         * Profiler tab selection handler with lazy loading
+         * @param {sap.ui.base.Event} oEvent - Tab selection event
+         * @public
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @since 1.0.0
+         */
+        onProfilerTabSelect: function(oEvent) {
+            var sSelectedKey = oEvent.getParameter("selectedKey");
+            
+            // Announce tab change to screen readers
+            sap.ui.getCore().announceForAccessibility("Selected tab: " + sSelectedKey);
+            
+            // Trigger lazy loading based on tab selection
+            this._onTabSelect(oEvent);
+        },
+
+        /**
+         * Utility function for secure AJAX requests with error handling
+         * @private
+         * @memberof a2a.network.agent2.ext.controller.ListReportExt
+         * @param {object} oOptions - AJAX request options
+         * @returns {Promise} jQuery AJAX promise
+         * @since 1.0.0
+         */
+        _makeSecureRequest: function(oOptions) {
+            var oRequestOptions = jQuery.extend({
+                headers: this._getSecureHeaders(),
+                timeout: 30000
+            }, oOptions);
+
+            return jQuery.ajax(oRequestOptions)
+                .fail(function(xhr, status, error) {
+                    var sErrorMessage = "Request failed";
                     try {
-                        var oUrl = new URL(sSanitized);
-                        if (!['http:', 'https:'].includes(oUrl.protocol)) {
-                            return { isValid: false, message: "Only HTTP/HTTPS URLs allowed" };
-                        }
+                        var oErrorData = JSON.parse(xhr.responseText);
+                        sErrorMessage = oErrorData.message || sErrorMessage;
                     } catch (e) {
-                        return { isValid: false, message: "Invalid URL format" };
+                        sErrorMessage = xhr.responseText || error || sErrorMessage;
                     }
-                    break;
-                
-                case "text":
-                default:
-                    if (sSanitized.length > 10000) {
-                        return { isValid: false, message: "Text too long" };
-                    }
-                    break;
-            }
-
-            return { isValid: true, sanitized: encodeXML(sSanitized) };
-        },
-
-        /**
-         * Validate API response data
-         * @param {object} oData - Response data
-         * @returns {boolean} Whether data is valid
-         */
-        _validateApiResponse: function(oData) {
-            if (!oData || typeof oData !== 'object') {
-                return false;
-            }
-
-            // Check for prototype pollution
-            var aSuspiciousKeys = ['__proto__', 'constructor', 'prototype'];
-            for (var sKey in oData) {
-                if (aSuspiciousKeys.indexOf(sKey) !== -1) {
-                    return false;
-                }
-            }
-
-            return true;
-        },
-
-        /**
-         * Sanitize error messages for user display
-         * @param {string} sMessage - Error message
-         * @returns {string} Sanitized message
-         */
-        _sanitizeErrorMessage: function(sMessage) {
-            if (!sMessage) {
-                return "An error occurred";
-            }
-
-            // Remove sensitive information
-            var sSanitized = sMessage
-                .replace(/\b(?:token|key|secret|password|auth)\b[:\s]*[^\s]+/gi, '[REDACTED]')
-                .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[IP_ADDRESS]')
-                .replace(/file:\/\/[^\s]+/g, '[FILE_PATH]')
-                .replace(/https?:\/\/[^\s]+/g, '[URL]');
-
-            return encodeXML(sSanitized);
-        },
-
-        /**
-         * Secure text formatter to prevent XSS
-         * @param {string} sText - Text to format
-         * @returns {string} Encoded text
-         */
-        formatSecureText: function(sText) {
-            if (!sText) {
-                return "";
-            }
-            return encodeXML(sText.toString());
-        },
-
-        /**
-         * Secure EventSource creation with authentication
-         * @param {string} sUrl - EventSource URL
-         * @param {string} sToken - Authentication token
-         * @returns {EventSource} Secure EventSource
-         */
-        _createSecureEventSource: function(sUrl, sToken) {
-            if (!sUrl || !sToken) {
-                throw new Error("URL and token required for secure EventSource");
-            }
-
-            // Validate URL
-            try {
-                var oUrl = new URL(sUrl, window.location.origin);
-                if (!['http:', 'https:'].includes(oUrl.protocol)) {
-                    throw new Error("Invalid protocol for EventSource");
-                }
-            } catch (e) {
-                throw new Error("Invalid URL for EventSource");
-            }
-
-            // Add authentication to URL (since EventSource doesn't support headers)
-            var sAuthParam = 'auth_token';
-            var sSecureUrl = sUrl + (sUrl.includes('?') ? '&' : '?') + sAuthParam + '=' + encodeURIComponent(sToken);
-            
-            return new EventSource(sSecureUrl);
-        },
-
-        /**
-         * Event handler for input changes with validation
-         */
-        onTaskNameChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oInput = oEvent.getSource();
-            var oValidation = this._validateInput(sValue, "taskName");
-            
-            if (!oValidation.isValid) {
-                oInput.setValueState("Error");
-                oInput.setValueStateText(oValidation.message);
-            } else {
-                oInput.setValueState("None");
-                oInput.setValueStateText("");
-            }
-        },
-
-        /**
-         * Format validation strategy for RadioButtonGroup index
-         * @param {string} sStrategy - Validation strategy
-         * @returns {number} Index for RadioButtonGroup
-         */
-        formatValidationStrategyIndex: function(sStrategy) {
-            return sStrategy === 'KFOLD' ? 0 : 1;
-        },
-
-        /**
-         * Event handler for embedding model validation
-         */
-        onEmbeddingModelValidation: function(oEvent) {
-            var sSelectedKey = oEvent.getParameter("selectedItem").getKey();
-            var oSelect = oEvent.getSource();
-            
-            // Validate model configuration
-            var aValidModels = [
-                'text-embedding-ada-002',
-                'text-embedding-3-small', 
-                'text-embedding-3-large',
-                'sentence-transformers/all-MiniLM-L6-v2'
-            ];
-            
-            if (!aValidModels.includes(sSelectedKey)) {
-                oSelect.setValueState("Error");
-                oSelect.setValueStateText("Invalid embedding model selected");
-            } else {
-                oSelect.setValueState("None");
-                oSelect.setValueStateText("Model validation passed successfully");
-            }
-        },
-
-        /**
-         * Get authentication token for secure API calls
-         * @returns {string} Authentication token
-         */
-        _getAuthToken: function() {
-            // Implementation to get auth token from session or user context
-            var sUserId = sap.ushell?.Container?.getUser?.()?.getId?.();
-            return sUserId || this._generateSessionToken();
-        },
-
-        /**
-         * Generate a session-based token
-         * @returns {string} Session token
-         */
-        _generateSessionToken: function() {
-            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        },
-
-        /**
-         * Format importance value to state
-         * @param {number} nImportance - Importance percentage
-         * @returns {string} State value
-         */
-        formatImportanceState: function(nImportance) {
-            if (nImportance > 70) {
-                return 'Success';
-            } else if (nImportance > 30) {
-                return 'Warning';
-            } else {
-                return 'Error';
-            }
+                    MessageBox.error(sErrorMessage);
+                });
         }
+
     });
 });

@@ -16,7 +16,57 @@ sap.ui.define([
         override: {
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
+                
+                // Initialize device model for responsive behavior
+                var oDeviceModel = new JSONModel(sap.ui.Device);
+                oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
+                this.base.getView().setModel(oDeviceModel, "device");
+                
+                // Initialize dialog cache for better performance
+                this._dialogCache = {};
+                
+                // Initialize create model
+                this._initializeCreateModel();
             }
+        },
+
+        /**
+         * Initialize the create model with default values and validation states
+         * @private
+         * @since 1.0.0
+         */
+        _initializeCreateModel: function() {
+            var oCreateModel = new JSONModel({
+                taskName: "",
+                description: "",
+                dataSource: "",
+                dataType: "",
+                embeddingModel: "text-embedding-ada-002",
+                modelProvider: "OPENAI",
+                vectorDatabase: "PINECONE",
+                indexType: "HNSW",
+                distanceMetric: "COSINE",
+                dimensions: 1536,
+                chunkSize: 512,
+                chunkOverlap: 50,
+                normalization: true,
+                batchSize: 32,
+                parallelProcessing: true,
+                useGPU: false,
+                errorHandling: 1,
+                progressMonitoring: true,
+                incrementalUpdates: false,
+                collectionName: "",
+                metadataSchema: "",
+                isValid: false,
+                taskNameState: "None",
+                taskNameStateText: "",
+                dataSourceState: "None",
+                dataSourceStateText: "",
+                dataTypeState: "None",
+                dataTypeStateText: ""
+            });
+            this.base.getView().setModel(oCreateModel, "create");
         },
 
         onStartProcessing: function() {
@@ -923,6 +973,239 @@ sap.ui.define([
                 return "";
             }
             return encodeXML(sText.toString());
+        },
+
+        /**
+         * Enhanced task name change handler with real-time validation
+         * @param {sap.ui.base.Event} oEvent - Change event
+         * @public
+         * @since 1.0.0
+         */
+        onTaskNameChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.base.getView().getModel("create");
+            
+            if (!sValue || sValue.trim().length < 3) {
+                oCreateModel.setProperty("/taskNameState", "Error");
+                oCreateModel.setProperty("/taskNameStateText", "Task name must be at least 3 characters");
+            } else if (sValue.length > 100) {
+                oCreateModel.setProperty("/taskNameState", "Error");
+                oCreateModel.setProperty("/taskNameStateText", "Task name must not exceed 100 characters");
+            } else if (!/^[a-zA-Z0-9\s\-_\.]+$/.test(sValue)) {
+                oCreateModel.setProperty("/taskNameState", "Error");
+                oCreateModel.setProperty("/taskNameStateText", "Task name contains invalid characters");
+            } else {
+                oCreateModel.setProperty("/taskNameState", "Success");
+                oCreateModel.setProperty("/taskNameStateText", "Valid task name");
+            }
+            
+            this._validateForm();
+        },
+
+        /**
+         * Data source change handler with validation
+         * @param {sap.ui.base.Event} oEvent - Change event
+         * @public
+         * @since 1.0.0
+         */
+        onDataSourceChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.base.getView().getModel("create");
+            
+            if (!sValue || sValue.trim().length === 0) {
+                oCreateModel.setProperty("/dataSourceState", "Error");
+                oCreateModel.setProperty("/dataSourceStateText", "Data source is required");
+            } else if (!/^[a-zA-Z0-9\s\-_\.\/\\:]+$/.test(sValue)) {
+                oCreateModel.setProperty("/dataSourceState", "Error");
+                oCreateModel.setProperty("/dataSourceStateText", "Data source path contains invalid characters");
+            } else {
+                oCreateModel.setProperty("/dataSourceState", "Success");
+                oCreateModel.setProperty("/dataSourceStateText", "Valid data source path");
+            }
+            
+            this._validateForm();
+        },
+
+        /**
+         * Data type change handler
+         * @param {sap.ui.base.Event} oEvent - Change event
+         * @public
+         * @since 1.0.0
+         */
+        onDataTypeChange: function(oEvent) {
+            var sSelectedKey = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.base.getView().getModel("create");
+            
+            if (sSelectedKey) {
+                oCreateModel.setProperty("/dataTypeState", "None");
+                oCreateModel.setProperty("/dataTypeStateText", "");
+                
+                // Auto-suggest embedding model based on data type
+                this._suggestEmbeddingModel(sSelectedKey, oCreateModel);
+            } else {
+                oCreateModel.setProperty("/dataTypeState", "Error");
+                oCreateModel.setProperty("/dataTypeStateText", "Please select a data type");
+            }
+            
+            this._validateForm();
+        },
+
+        /**
+         * Suggests embedding model based on data type
+         * @param {string} sDataType - Selected data type
+         * @param {sap.ui.model.json.JSONModel} oModel - Create model
+         * @private
+         * @since 1.0.0
+         */
+        _suggestEmbeddingModel: function(sDataType, oModel) {
+            var mModelSuggestions = {
+                "TEXT": "text-embedding-ada-002",
+                "CODE": "text-embedding-3-large",
+                "STRUCTURED": "text-embedding-3-small",
+                "IMAGE": "clip-vit-base-patch32",
+                "AUDIO": "wav2vec2-base",
+                "MULTIMODAL": "clip-vit-large-patch14"
+            };
+            
+            var sSuggestedModel = mModelSuggestions[sDataType] || "text-embedding-ada-002";
+            oModel.setProperty("/embeddingModel", sSuggestedModel);
+            
+            // Update dimensions based on model
+            this._updateDimensionsForModel(sSuggestedModel, oModel);
+        },
+
+        /**
+         * Updates dimensions based on selected model
+         * @param {string} sModel - Selected embedding model
+         * @param {sap.ui.model.json.JSONModel} oModel - Create model
+         * @private
+         * @since 1.0.0
+         */
+        _updateDimensionsForModel: function(sModel, oModel) {
+            var mDimensions = {
+                "text-embedding-ada-002": 1536,
+                "text-embedding-3-small": 1536,
+                "text-embedding-3-large": 3072,
+                "all-MiniLM-L6-v2": 384,
+                "all-mpnet-base-v2": 768,
+                "clip-vit-base-patch32": 512,
+                "clip-vit-large-patch14": 768
+            };
+            
+            var nDimensions = mDimensions[sModel] || 1536;
+            oModel.setProperty("/dimensions", nDimensions);
+        },
+
+        /**
+         * Data source value help handler
+         * @public
+         * @since 1.0.0
+         */
+        onSelectDataSource: function() {
+            MessageToast.show("Opening data source browser...");
+            this._openDataSourceBrowser();
+        },
+
+        /**
+         * Opens data source browser dialog
+         * @private
+         * @since 1.0.0
+         */
+        _openDataSourceBrowser: function() {
+            if (!this._oDataSourceDialog) {
+                Fragment.load({
+                    id: this.base.getView().getId(),
+                    name: "a2a.network.agent3.ext.fragment.DataSourceBrowser",
+                    controller: this
+                }).then(function(oDialog) {
+                    this._oDataSourceDialog = oDialog;
+                    this.base.getView().addDependent(this._oDataSourceDialog);
+                    this._loadAvailableDataSources();
+                    this._oDataSourceDialog.open();
+                }.bind(this)).catch(function() {
+                    // Fallback if fragment doesn't exist
+                    MessageBox.information("Data source browser not yet implemented. Please enter data source path manually.");
+                });
+            } else {
+                this._oDataSourceDialog.open();
+            }
+        },
+
+        /**
+         * Loads available data sources for selection
+         * @private
+         * @since 1.0.0
+         */
+        _loadAvailableDataSources: function() {
+            // Implementation for loading data sources
+            MessageToast.show("Loading available data sources...");
+        },
+
+        /**
+         * Dialog after open event handler
+         * @public
+         * @since 1.0.0
+         */
+        onDialogAfterOpen: function() {
+            // Focus on first input field for accessibility
+            var oDialog = this.base.getView().byId("createVectorTaskDialog");
+            if (oDialog) {
+                var oFirstInput = oDialog.byId("taskNameInput");
+                if (oFirstInput) {
+                    setTimeout(function() {
+                        oFirstInput.focus();
+                    }, 100);
+                }
+            }
+        },
+
+        /**
+         * Dialog after close event handler
+         * @public
+         * @since 1.0.0
+         */
+        onDialogAfterClose: function() {
+            // Reset form when dialog closes
+            this._initializeCreateModel();
+        },
+
+        /**
+         * Validates the entire form and updates the isValid flag
+         * @private
+         * @since 1.0.0
+         */
+        _validateForm: function() {
+            var oCreateModel = this.base.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            var bIsValid = oData.taskName && 
+                          oData.taskName.trim().length >= 3 &&
+                          oData.dataSource &&
+                          oData.dataType &&
+                          oData.taskNameState !== "Error" &&
+                          oData.dataSourceState !== "Error" &&
+                          oData.dataTypeState !== "Error";
+            
+            oCreateModel.setProperty("/isValid", bIsValid);
+        },
+
+        /**
+         * Cancel create dialog handler
+         * @public
+         * @since 1.0.0
+         */
+        onCancelCreate: function() {
+            this._getCreateDialog().close();
+        },
+
+        /**
+         * Get or create the create dialog
+         * @private
+         * @returns {sap.m.Dialog} The create dialog
+         * @since 1.0.0
+         */
+        _getCreateDialog: function() {
+            return this.base.getView().byId("createVectorTaskDialog");
         },
 
         /**

@@ -6,67 +6,128 @@
     
     <Dialog
         id="createQATaskDialog"
-        title="Create QA Validation Task"
-        contentWidth="75%"
-        contentHeight="85%"
-        resizable="true">
+        title="{i18n>title.createQATask}"
+        contentWidth="75rem"
+        contentHeight="auto"
+        resizable="true"
+        draggable="true"
+        stretch="{device>/system/phone}"
+        ariaLabelledBy="createQATaskTitle"
+        ariaDescribedBy="createQATaskHelp"
+        class="sapUiResponsiveContentPadding"
+        afterOpen=".onDialogAfterOpen"
+        afterClose=".onDialogAfterClose">
+        
+        <core:InvisibleText id="createQATaskTitle" text="Create QA Validation Task Dialog"/>
+        <core:InvisibleText id="createQATaskHelp" text="Configure a new QA validation task by specifying test type, target application, test cases, and compliance requirements across multiple tabs."/>
         
         <content>
-            <IconTabBar expandable="false">
+            <IconTabBar 
+                id="qaTaskTabBar"
+                expandable="false"
+                stretchContentHeight="true"
+                ariaLabelledBy="qaTaskTabBarLabel">
+                <core:InvisibleText id="qaTaskTabBarLabel" text="QA task configuration sections: Basic Information, Test Configuration, Test Cases, and Compliance"/>
                 <items>
                     <!-- Basic Information Tab -->
-                    <IconTabFilter text="Basic Info" icon="sap-icon://hint">
+                    <IconTabFilter text="{i18n>tab.basicInfo}" icon="sap-icon://hint" ariaDescribedBy="basicInfoTabHelp">
+                        <core:InvisibleText id="basicInfoTabHelp" text="Basic task information including name, description, test type, and target application"/>
                         <form:SimpleForm
                             editable="true"
                             layout="ResponsiveGridLayout">
                             <form:content>
-                                <Label text="Task Name" required="true"/>
+                                <Label text="{i18n>taskName}" required="true" labelFor="taskNameInput"/>
                                 <Input 
+                                    id="taskNameInput"
                                     value="{create>/taskName}"
-                                    placeholder="Enter QA task name"/>
+                                    placeholder="{i18n>placeholder.taskName}"
+                                    maxLength="100"
+                                    liveChange=".onTaskNameChange"
+                                    required="true"
+                                    valueState="{create>/taskNameState}"
+                                    valueStateText="{create>/taskNameStateText}"
+                                    ariaDescribedBy="taskNameHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="taskNameHelp" text="Required field. Enter a unique name for this QA validation task using alphanumeric characters, spaces, hyphens, underscores, or periods only."/>
                                 
-                                <Label text="Description"/>
+                                <Label text="{i18n>description}" labelFor="descriptionInput"/>
                                 <TextArea 
+                                    id="descriptionInput"
                                     value="{create>/description}"
                                     rows="3"
-                                    placeholder="Describe the QA validation requirements"/>
+                                    growing="true"
+                                    growingMaxLines="5"
+                                    placeholder="{i18n>placeholder.description}"
+                                    maxLength="1000"
+                                    ariaDescribedBy="descriptionHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="descriptionHelp" text="Optional field. Provide additional details about the QA validation requirements and objectives."/>
                                 
-                                <Label text="Test Suite"/>
+                                <Label text="{i18n>testSuite}" labelFor="testSuiteInput"/>
                                 <Input 
+                                    id="testSuiteInput"
                                     value="{create>/testSuite}"
-                                    placeholder="Name of the test suite"
+                                    placeholder="{i18n>placeholder.testSuite}"
                                     showValueHelp="true"
-                                    valueHelpRequest=".onSelectTestSuite"/>
+                                    valueHelpRequest=".onSelectTestSuite"
+                                    maxLength="100"
+                                    ariaDescribedBy="testSuiteHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="testSuiteHelp" text="Select or enter the name of the test suite to execute. Click the help button to browse available test suites."/>
                                 
-                                <Label text="Test Type" required="true"/>
-                                <Select selectedKey="{create>/testType}">
+                                <Label text="{i18n>testType}" required="true" labelFor="testTypeSelect"/>
+                                <Select 
+                                    id="testTypeSelect"
+                                    selectedKey="{create>/testType}"
+                                    change=".onTestTypeChange"
+                                    required="true"
+                                    valueState="{create>/testTypeState}"
+                                    valueStateText="{create>/testTypeStateText}"
+                                    ariaDescribedBy="testTypeHelp"
+                                    class="sapUiMediumMarginBottom">
+                                <core:InvisibleText id="testTypeHelp" text="Required field. Select the type of testing to perform.">
                                     <items>
-                                        <core:Item key="UNIT" text="Unit Testing"/>
-                                        <core:Item key="INTEGRATION" text="Integration Testing"/>
-                                        <core:Item key="SYSTEM" text="System Testing"/>
-                                        <core:Item key="ACCEPTANCE" text="User Acceptance Testing"/>
-                                        <core:Item key="PERFORMANCE" text="Performance Testing"/>
-                                        <core:Item key="SECURITY" text="Security Testing"/>
-                                        <core:Item key="ACCESSIBILITY" text="Accessibility Testing"/>
-                                        <core:Item key="USABILITY" text="Usability Testing"/>
-                                        <core:Item key="REGRESSION" text="Regression Testing"/>
-                                        <core:Item key="SMOKE" text="Smoke Testing"/>
+                                        <core:Item key="" text="{i18n>placeholder.selectTestType}"/>
+                                        <core:Item key="UNIT" text="{i18n>typeUnit}" icon="sap-icon://puzzle"/>
+                                        <core:Item key="INTEGRATION" text="{i18n>typeIntegration}" icon="sap-icon://connected"/>
+                                        <core:Item key="SYSTEM" text="{i18n>typeSystem}" icon="sap-icon://system-hana"/>
+                                        <core:Item key="ACCEPTANCE" text="{i18n>typeAcceptance}" icon="sap-icon://user-settings"/>
+                                        <core:Item key="PERFORMANCE" text="{i18n>typePerformance}" icon="sap-icon://performance"/>
+                                        <core:Item key="SECURITY" text="{i18n>typeSecurity}" icon="sap-icon://shield"/>
+                                        <core:Item key="ACCESSIBILITY" text="{i18n>typeAccessibility}" icon="sap-icon://accessibility"/>
+                                        <core:Item key="USABILITY" text="{i18n>typeUsability}" icon="sap-icon://user-edit"/>
+                                        <core:Item key="REGRESSION" text="{i18n>typeRegression}" icon="sap-icon://synchronize"/>
+                                        <core:Item key="SMOKE" text="{i18n>typeSmoke}" icon="sap-icon://validate"/>
                                     </items>
                                 </Select>
                                 
-                                <Label text="Target Application" required="true"/>
+                                <Label text="{i18n>targetApplication}" required="true" labelFor="targetApplicationInput"/>
                                 <Input 
+                                    id="targetApplicationInput"
                                     value="{create>/targetApplication}"
-                                    placeholder="Application or system under test"/>
+                                    placeholder="{i18n>placeholder.targetApplication}"
+                                    maxLength="200"
+                                    liveChange=".onTargetApplicationChange"
+                                    required="true"
+                                    valueState="{create>/targetApplicationState}"
+                                    valueStateText="{create>/targetApplicationStateText}"
+                                    ariaDescribedBy="targetApplicationHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="targetApplicationHelp" text="Required field. Enter the name or identifier of the application or system to be tested."/>
                                 
-                                <Label text="Severity"/>
-                                <Select selectedKey="{create>/severity}">
+                                <Label text="{i18n>severity}" labelFor="severitySelect"/>
+                                <Select 
+                                    id="severitySelect"
+                                    selectedKey="{create>/severity}"
+                                    ariaDescribedBy="severityHelp"
+                                    class="sapUiMediumMarginBottom">
+                                <core:InvisibleText id="severityHelp" text="Set the severity level for this QA validation task.">
                                     <items>
-                                        <core:Item key="LOW" text="Low"/>
-                                        <core:Item key="MEDIUM" text="Medium"/>
-                                        <core:Item key="HIGH" text="High"/>
-                                        <core:Item key="CRITICAL" text="Critical"/>
-                                        <core:Item key="BLOCKER" text="Blocker"/>
+                                        <core:Item key="LOW" text="{i18n>severityLow}" icon="sap-icon://status-positive"/>
+                                        <core:Item key="MEDIUM" text="{i18n>severityMedium}" icon="sap-icon://status-inactive"/>
+                                        <core:Item key="HIGH" text="{i18n>severityHigh}" icon="sap-icon://status-negative"/>
+                                        <core:Item key="CRITICAL" text="{i18n>severityCritical}" icon="sap-icon://status-critical"/>
+                                        <core:Item key="BLOCKER" text="{i18n>severityBlocker}" icon="sap-icon://stop"/>
                                     </items>
                                 </Select>
                             </form:content>
@@ -74,94 +135,141 @@
                     </IconTabFilter>
                     
                     <!-- Test Configuration Tab -->
-                    <IconTabFilter text="Test Configuration" icon="sap-icon://settings">
+                    <IconTabFilter text="{i18n>tab.testConfiguration}" icon="sap-icon://settings" ariaDescribedBy="testConfigTabHelp">
+                        <core:InvisibleText id="testConfigTabHelp" text="Configure test framework, environment, automation level, and execution options"/>
                         <form:SimpleForm
                             editable="true"
-                            layout="ResponsiveGridLayout">
+                            layout="ResponsiveGridLayout"
+                            labelSpanXL="4"
+                            labelSpanL="4"
+                            labelSpanM="12"
+                            labelSpanS="12"
+                            adjustLabelSpan="false"
+                            emptySpanXL="0"
+                            emptySpanL="0"
+                            emptySpanM="0"
+                            columnsXL="2"
+                            columnsL="1"
+                            columnsM="1"
+                            class="sapUiResponsiveMargin">
                             <form:content>
-                                <Label text="Test Framework"/>
-                                <Select selectedKey="{create>/testFramework}">
+                                <Label text="{i18n>testFramework}" labelFor="frameworkSelect"/>
+                                <Select 
+                                    id="frameworkSelect"
+                                    selectedKey="{create>/testFramework}"
+                                    change=".onTestFrameworkChange"
+                                    ariaDescribedBy="frameworkHelp"
+                                    class="sapUiMediumMarginBottom">
+                                <core:InvisibleText id="frameworkHelp" text="Select the test automation framework to use for test execution.">
                                     <items>
-                                        <core:Item key="SELENIUM" text="Selenium WebDriver"/>
-                                        <core:Item key="CYPRESS" text="Cypress"/>
-                                        <core:Item key="JUNIT" text="JUnit"/>
-                                        <core:Item key="TESTNG" text="TestNG"/>
-                                        <core:Item key="PLAYWRIGHT" text="Playwright"/>
-                                        <core:Item key="JEST" text="Jest"/>
-                                        <core:Item key="JASMINE" text="Jasmine"/>
-                                        <core:Item key="MOCHA" text="Mocha"/>
+                                        <core:Item key="SELENIUM" text="{i18n>frameworkSelenium}" icon="sap-icon://web-cam"/>
+                                        <core:Item key="CYPRESS" text="{i18n>frameworkCypress}" icon="sap-icon://tree"/>
+                                        <core:Item key="JUNIT" text="{i18n>frameworkJUnit}" icon="sap-icon://lab"/>
+                                        <core:Item key="TESTNG" text="{i18n>frameworkTestNG}" icon="sap-icon://lab"/>
+                                        <core:Item key="PLAYWRIGHT" text="{i18n>frameworkPlaywright}" icon="sap-icon://theater"/>
+                                        <core:Item key="JEST" text="{i18n>frameworkJest}" icon="sap-icon://soccer"/>
+                                        <core:Item key="JASMINE" text="{i18n>frameworkJasmine}" icon="sap-icon://flower"/>
+                                        <core:Item key="MOCHA" text="{i18n>frameworkMocha}" icon="sap-icon://coffee"/>
                                     </items>
                                 </Select>
                                 
-                                <Label text="Test Environment"/>
-                                <Select selectedKey="{create>/testEnvironment}">
+                                <Label text="{i18n>testEnvironment}" labelFor="environmentSelect"/>
+                                <Select 
+                                    id="environmentSelect"
+                                    selectedKey="{create>/testEnvironment}"
+                                    ariaDescribedBy="environmentHelp"
+                                    class="sapUiMediumMarginBottom">
+                                <core:InvisibleText id="environmentHelp" text="Select the environment where tests will be executed.">
                                     <items>
-                                        <core:Item key="DEV" text="Development"/>
-                                        <core:Item key="TEST" text="Test"/>
-                                        <core:Item key="STAGING" text="Staging"/>
-                                        <core:Item key="PROD" text="Production"/>
+                                        <core:Item key="DEV" text="{i18n>environmentDev}" icon="sap-icon://developer-settings"/>
+                                        <core:Item key="TEST" text="{i18n>environmentTest}" icon="sap-icon://test"/>
+                                        <core:Item key="STAGING" text="{i18n>environmentStaging}" icon="sap-icon://simulate"/>
+                                        <core:Item key="PROD" text="{i18n>environmentProd}" icon="sap-icon://factory"/>
                                     </items>
                                 </Select>
                                 
-                                <Label text="Test Data Source"/>
+                                <Label text="{i18n>testDataSource}" labelFor="testDataInput"/>
                                 <Input 
+                                    id="testDataInput"
                                     value="{create>/testDataSource}"
-                                    placeholder="Path or connection to test data"
-                                    showValueHelp="true"/>
+                                    placeholder="{i18n>placeholder.testDataSource}"
+                                    showValueHelp="true"
+                                    valueHelpRequest=".onSelectTestDataSource"
+                                    maxLength="500"
+                                    ariaDescribedBy="testDataHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="testDataHelp" text="Specify the path or connection string to test data. Click the help button to browse available data sources."/>
                                 
-                                <Label text="Automation Level (%)"/>
+                                <Label text="{i18n>automationLevel}" labelFor="automationSlider"/>
                                 <Slider 
+                                    id="automationSlider"
                                     value="{create>/automationLevel}"
                                     min="0"
                                     max="100"
                                     step="10"
                                     enableTickmarks="true"
-                                    inputsAsTooltips="true"/>
+                                    inputsAsTooltips="true"
+                                    ariaDescribedBy="automationHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="automationHelp" text="Set the percentage of test cases that will be automated versus manual execution."/>
                                 
-                                <Label text="Execution Options"/>
-                                <VBox>
+                                <Label text="{i18n>executionOptions}" labelFor="executionOptionsBox"/>
+                                <VBox id="executionOptionsBox" ariaDescribedBy="executionOptionsHelp">
+                                <core:InvisibleText id="executionOptionsHelp" text="Select additional options for test execution.">
                                     <CheckBox 
-                                        text="Enable parallel execution"
-                                        selected="{create>/parallelExecution}"/>
+                                        text="{i18n>parallelExecution}"
+                                        selected="{create>/parallelExecution}"
+                                        ariaLabel="Enable parallel test execution for improved performance"/>
                                     <CheckBox 
-                                        text="Retry on failure"
-                                        selected="{create>/retryOnFailure}"/>
+                                        text="{i18n>retryOnFailure}"
+                                        selected="{create>/retryOnFailure}"
+                                        ariaLabel="Automatically retry failed tests to handle transient issues"/>
                                     <CheckBox 
-                                        text="Generate detailed logs"
-                                        selected="{create>/detailedLogs}"/>
+                                        text="{i18n>detailedLogs}"
+                                        selected="{create>/detailedLogs}"
+                                        ariaLabel="Generate comprehensive execution logs for debugging"/>
                                     <CheckBox 
-                                        text="Capture screenshots on failure"
-                                        selected="{create>/captureScreenshots}"/>
+                                        text="{i18n>captureScreenshots}"
+                                        selected="{create>/captureScreenshots}"
+                                        ariaLabel="Capture screenshots when test failures occur"/>
                                 </VBox>
                                 
-                                <Label text="Test Timeout (minutes)"/>
+                                <Label text="{i18n>testTimeout}" labelFor="timeoutInput"/>
                                 <StepInput 
+                                    id="timeoutInput"
                                     value="{create>/testTimeout}"
                                     min="1"
                                     max="480"
-                                    step="5"/>
+                                    step="5"
+                                    ariaDescribedBy="timeoutHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="timeoutHelp" text="Set the maximum time in minutes allowed for test execution before timeout."/>
                             </form:content>
                         </form:SimpleForm>
                     </IconTabFilter>
                     
                     <!-- Test Cases Tab -->
-                    <IconTabFilter text="Test Cases" icon="sap-icon://checklist">
+                    <IconTabFilter text="{i18n>tab.testCases}" icon="sap-icon://checklist" ariaDescribedBy="testCasesTabHelp">
+                        <core:InvisibleText id="testCasesTabHelp" text="Add and configure individual test cases with priority, category, and automation level"/>
                         <VBox>
                             <Toolbar>
-                                <Title text="Test Cases"/>
+                                <Title text="{i18n>testCases}" level="H3"/>
                                 <ToolbarSpacer/>
                                 <Button 
-                                    text="Add Test Case"
+                                    text="{i18n>addTestCase}"
                                     icon="sap-icon://add"
-                                    press=".onAddTestCase"/>
+                                    press=".onAddTestCase"
+                                    ariaLabel="Add a new test case to the suite"/>
                                 <Button 
-                                    text="Import from File"
+                                    text="{i18n>importTestCases}"
                                     icon="sap-icon://upload"
-                                    press=".onImportTestCases"/>
+                                    press=".onImportTestCases"
+                                    ariaLabel="Import test cases from an external file"/>
                                 <Button 
-                                    text="Generate from Template"
+                                    text="{i18n>generateFromTemplate}"
                                     icon="sap-icon://template"
-                                    press=".onGenerateFromTemplate"/>
+                                    press=".onGenerateFromTemplate"
+                                    ariaLabel="Generate test cases from predefined templates"/>
                             </Toolbar>
                             
                             <Table
@@ -169,22 +277,22 @@
                                 mode="Delete">
                                 <columns>
                                     <Column width="25%">
-                                        <Text text="Test Name"/>
+                                        <Text text="{i18n>testName}"/>
                                     </Column>
                                     <Column width="30%">
-                                        <Text text="Description"/>
+                                        <Text text="{i18n>description}"/>
                                     </Column>
                                     <Column width="15%">
-                                        <Text text="Category"/>
+                                        <Text text="{i18n>testCategory}"/>
                                     </Column>
                                     <Column width="10%">
-                                        <Text text="Priority"/>
+                                        <Text text="{i18n>priority}"/>
                                     </Column>
                                     <Column width="15%">
-                                        <Text text="Automation"/>
+                                        <Text text="{i18n>automationLevel}"/>
                                     </Column>
                                     <Column width="5%">
-                                        <Text text="Actions"/>
+                                        <Text text="{i18n>actions}"/>
                                     </Column>
                                 </columns>
                                 <items>
@@ -192,39 +300,43 @@
                                         <cells>
                                             <Input 
                                                 value="{create>testName}"
-                                                placeholder="Test case name"/>
+                                                placeholder="{i18n>placeholder.testCaseName}"
+                                                liveChange=".onTestCaseNameChange"
+                                                ariaLabel="Enter test case name"/>
                                             <TextArea 
                                                 value="{create>description}"
                                                 rows="2"
-                                                placeholder="Test description"/>
+                                                placeholder="{i18n>placeholder.testCaseDescription}"
+                                                ariaLabel="Enter test case description"/>
                                             <Select selectedKey="{create>category}">
                                                 <items>
-                                                    <core:Item key="FUNCTIONAL" text="Functional"/>
-                                                    <core:Item key="NON_FUNCTIONAL" text="Non-Functional"/>
-                                                    <core:Item key="REGRESSION" text="Regression"/>
-                                                    <core:Item key="SMOKE" text="Smoke"/>
-                                                    <core:Item key="SANITY" text="Sanity"/>
+                                                    <core:Item key="FUNCTIONAL" text="{i18n>categoryFunctional}"/>
+                                                    <core:Item key="NON_FUNCTIONAL" text="{i18n>categoryNonFunctional}"/>
+                                                    <core:Item key="REGRESSION" text="{i18n>categoryRegression}"/>
+                                                    <core:Item key="SMOKE" text="{i18n>categorySmoke}"/>
+                                                    <core:Item key="SANITY" text="{i18n>categorySanity}"/>
                                                 </items>
                                             </Select>
                                             <Select selectedKey="{create>priority}">
                                                 <items>
-                                                    <core:Item key="P1" text="P1 - Critical"/>
-                                                    <core:Item key="P2" text="P2 - High"/>
-                                                    <core:Item key="P3" text="P3 - Medium"/>
-                                                    <core:Item key="P4" text="P4 - Low"/>
+                                                    <core:Item key="P1" text="{i18n>priorityP1}"/>
+                                                    <core:Item key="P2" text="{i18n>priorityP2}"/>
+                                                    <core:Item key="P3" text="{i18n>priorityP3}"/>
+                                                    <core:Item key="P4" text="{i18n>priorityP4}"/>
                                                 </items>
                                             </Select>
                                             <Select selectedKey="{create>automationLevel}">
                                                 <items>
-                                                    <core:Item key="MANUAL" text="Manual"/>
-                                                    <core:Item key="SEMI_AUTO" text="Semi-Automated"/>
-                                                    <core:Item key="AUTOMATED" text="Automated"/>
+                                                    <core:Item key="MANUAL" text="{i18n>automationManual}"/>
+                                                    <core:Item key="SEMI_AUTO" text="{i18n>automationSemiAuto}"/>
+                                                    <core:Item key="AUTOMATED" text="{i18n>automationAutomated}"/>
                                                 </items>
                                             </Select>
                                             <Button 
                                                 icon="sap-icon://edit"
-                                                tooltip="Edit test steps"
-                                                press=".onEditTestSteps"/>
+                                                tooltip="{i18n>editTestSteps}"
+                                                press=".onEditTestSteps"
+                                                ariaLabel="Edit test steps for this test case"/>
                                         </cells>
                                     </ColumnListItem>
                                 </items>
@@ -233,72 +345,103 @@
                     </IconTabFilter>
                     
                     <!-- Compliance Tab -->
-                    <IconTabFilter text="Compliance" icon="sap-icon://shield">
+                    <IconTabFilter text="{i18n>tab.compliance}" icon="sap-icon://shield" ariaDescribedBy="complianceTabHelp">
+                        <core:InvisibleText id="complianceTabHelp" text="Configure compliance standards, quality gates, and regulatory requirements"/>
                         <form:SimpleForm
                             editable="true"
-                            layout="ResponsiveGridLayout">
+                            layout="ResponsiveGridLayout"
+                            labelSpanXL="4"
+                            labelSpanL="4"
+                            labelSpanM="12"
+                            labelSpanS="12"
+                            adjustLabelSpan="false"
+                            emptySpanXL="0"
+                            emptySpanL="0"
+                            emptySpanM="0"
+                            columnsXL="2"
+                            columnsL="1"
+                            columnsM="1"
+                            class="sapUiResponsiveMargin">
                             <form:content>
-                                <Label text="Compliance Standard"/>
-                                <Select selectedKey="{create>/complianceStandard}">
+                                <Label text="{i18n>complianceStandard}" labelFor="complianceSelect"/>
+                                <Select 
+                                    id="complianceSelect"
+                                    selectedKey="{create>/complianceStandard}"
+                                    change=".onComplianceStandardChange"
+                                    ariaDescribedBy="complianceSelectHelp"
+                                    class="sapUiMediumMarginBottom">
+                                <core:InvisibleText id="complianceSelectHelp" text="Select the compliance standard that this test must adhere to.">
                                     <items>
-                                        <core:Item key="" text="None"/>
-                                        <core:Item key="ISO27001" text="ISO 27001"/>
-                                        <core:Item key="SOX" text="Sarbanes-Oxley"/>
-                                        <core:Item key="GDPR" text="GDPR"/>
-                                        <core:Item key="HIPAA" text="HIPAA"/>
-                                        <core:Item key="PCI" text="PCI DSS"/>
-                                        <core:Item key="FISMA" text="FISMA"/>
-                                        <core:Item key="WCAG" text="WCAG 2.1"/>
+                                        <core:Item key="" text="{i18n>noneSelected}"/>
+                                        <core:Item key="ISO27001" text="{i18n>standardISO27001}" icon="sap-icon://locked"/>
+                                        <core:Item key="SOX" text="{i18n>standardSOX}" icon="sap-icon://accounting-document-verification"/>
+                                        <core:Item key="GDPR" text="{i18n>standardGDPR}" icon="sap-icon://shield"/>
+                                        <core:Item key="HIPAA" text="{i18n>standardHIPAA}" icon="sap-icon://stethoscope"/>
+                                        <core:Item key="PCI" text="{i18n>standardPCI}" icon="sap-icon://credit-card"/>
+                                        <core:Item key="FISMA" text="{i18n>standardFISMA}" icon="sap-icon://official-service"/>
+                                        <core:Item key="WCAG" text="{i18n>standardWCAG}" icon="sap-icon://accessibility"/>
                                     </items>
                                 </Select>
                                 
-                                <Label text="Compliance Requirements"/>
-                                <VBox>
+                                <Label text="{i18n>complianceRequirements}" labelFor="complianceRequirementsBox"/>
+                                <VBox id="complianceRequirementsBox" ariaDescribedBy="complianceRequirementsHelp">
+                                <core:InvisibleText id="complianceRequirementsHelp" text="Select the compliance requirements that apply to this test.">
                                     <CheckBox 
-                                        text="Requires approval workflow"
-                                        selected="{create>/requiresApproval}"/>
+                                        text="{i18n>requiresApproval}"
+                                        selected="{create>/requiresApproval}"
+                                        ariaLabel="Test execution requires approval workflow"/>
                                     <CheckBox 
-                                        text="Maintain audit trail"
-                                        selected="{create>/auditTrail}"/>
+                                        text="{i18n>auditTrail}"
+                                        selected="{create>/auditTrail}"
+                                        ariaLabel="Maintain complete audit trail of all test activities"/>
                                     <CheckBox 
-                                        text="Regulatory compliance validation"
-                                        selected="{create>/regulatoryCompliance}"/>
+                                        text="{i18n>regulatoryCompliance}"
+                                        selected="{create>/regulatoryCompliance}"
+                                        ariaLabel="Validate regulatory compliance requirements"/>
                                     <CheckBox 
-                                        text="Security validation"
-                                        selected="{create>/securityValidation}"/>
+                                        text="{i18n>securityValidation}"
+                                        selected="{create>/securityValidation}"
+                                        ariaLabel="Perform security validation tests"/>
                                     <CheckBox 
-                                        text="Performance validation"
-                                        selected="{create>/performanceValidation}"/>
+                                        text="{i18n>performanceValidation}"
+                                        selected="{create>/performanceValidation}"
+                                        ariaLabel="Validate performance requirements"/>
                                     <CheckBox 
-                                        text="Accessibility testing"
-                                        selected="{create>/accessibilityTesting}"/>
+                                        text="{i18n>accessibilityTesting}"
+                                        selected="{create>/accessibilityTesting}"
+                                        ariaLabel="Perform accessibility compliance testing"/>
                                     <CheckBox 
-                                        text="Usability testing"
-                                        selected="{create>/usabilityTesting}"/>
+                                        text="{i18n>usabilityTesting}"
+                                        selected="{create>/usabilityTesting}"
+                                        ariaLabel="Conduct usability testing"/>
                                 </VBox>
                                 
-                                <Label text="Quality Gates"/>
-                                <VBox>
+                                <Label text="{i18n>qualityGates}" labelFor="qualityGatesBox"/>
+                                <VBox id="qualityGatesBox" ariaDescribedBy="qualityGatesHelp">
+                                <core:InvisibleText id="qualityGatesHelp" text="Define quality thresholds that must be met for successful test completion.">
                                     <HBox>
-                                        <Label text="Minimum pass rate (%):" width="200px"/>
+                                        <Label text="{i18n>minPassRate}" width="200px"/>
                                         <Input 
                                             value="{create>/minPassRate}"
                                             type="Number"
-                                            width="100px"/>
+                                            width="100px"
+                                            ariaLabel="Minimum percentage of tests that must pass"/>
                                     </HBox>
                                     <HBox>
-                                        <Label text="Max execution time (hours):" width="200px"/>
+                                        <Label text="{i18n>maxExecutionTime}" width="200px"/>
                                         <Input 
                                             value="{create>/maxExecutionTime}"
                                             type="Number"
-                                            width="100px"/>
+                                            width="100px"
+                                            ariaLabel="Maximum allowed execution time in hours"/>
                                     </HBox>
                                     <HBox>
-                                        <Label text="Code coverage threshold (%):" width="200px"/>
+                                        <Label text="{i18n>coverageThreshold}" width="200px"/>
                                         <Input 
                                             value="{create>/coverageThreshold}"
                                             type="Number"
-                                            width="100px"/>
+                                            width="100px"
+                                            ariaLabel="Minimum code coverage percentage required"/>
                                     </HBox>
                                 </VBox>
                             </form:content>
@@ -310,16 +453,18 @@
         
         <beginButton>
             <Button 
-                text="Cancel"
-                press=".onCancelCreateTask"/>
+                text="{i18n>button.cancel}"
+                press=".onCancelCreateTask"
+                ariaLabel="Cancel and close the dialog without creating a task"/>
         </beginButton>
         
         <endButton>
             <Button 
-                text="Create"
+                text="{i18n>button.create}"
                 type="Emphasized"
                 press=".onConfirmCreateTask"
-                enabled="{= ${create>/taskName} &amp;&amp; ${create>/testType} &amp;&amp; ${create>/targetApplication} }"/>
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/testType} &amp;&amp; ${create>/targetApplication} &amp;&amp; ${create>/isValid} }"
+                ariaLabel="Create QA validation task with the configured settings"/>
         </endButton>
         
     </Dialog>

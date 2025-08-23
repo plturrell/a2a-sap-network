@@ -6,44 +6,68 @@
     
     <Dialog
         id="createStandardizationDialog"
-        title="Create Standardization Task"
-        contentWidth="50%"
-        resizable="true">
+        title="{i18n>title.createTask}"
+        contentWidth="60rem"
+        contentHeight="auto"
+        resizable="true"
+        draggable="true"
+        stretch="{device>/system/phone}"
+        ariaLabelledBy="createDialogTitle"
+        ariaDescribedBy="createDialogHelp"
+        class="sapUiResponsiveContentPadding">
+        
+        <core:InvisibleText id="createDialogTitle" text="Create New Data Standardization Task Dialog"/>
+        <core:InvisibleText id="createDialogHelp" text="Configure a new data standardization task by specifying source format, target format, validation settings, and processing options."/>
         
         <content>
             <form:SimpleForm
                 editable="true"
                 layout="ResponsiveGridLayout"
-                labelSpanXL="3"
-                labelSpanL="3"
+                labelSpanXL="4"
+                labelSpanL="4"
                 labelSpanM="12"
                 labelSpanS="12"
                 adjustLabelSpan="false"
-                columnsXL="1"
+                emptySpanXL="0"
+                emptySpanL="0"
+                emptySpanM="0"
+                columnsXL="2"
                 columnsL="1"
-                columnsM="1">
+                columnsM="1"
+                class="sapUiResponsiveMargin">
                 
                 <form:content>
-                    <Label text="Task Name" required="true"/>
+                    <Label text="Task Name" required="true" labelFor="taskNameInput"/>
                     <Input 
                         id="taskNameInput"
-                        value="{path: 'create>/taskName', formatter: '.formatSecureText'}"
+                        value="{create>/taskName}"
                         maxLength="100"
-                        placeholder="Enter task name"
-                        liveChange=".onTaskNameChange"/>
+                        placeholder="{i18n>placeholder.taskName}"
+                        liveChange=".onTaskNameChange"
+                        required="true"
+                        valueState="{create>/taskNameState}"
+                        valueStateText="{create>/taskNameStateText}"
+                        ariaDescribedBy="taskNameHelp"
+                        class="sapUiMediumMarginBottom"/>
+                    <core:InvisibleText id="taskNameHelp" text="Required field. Enter a unique name for this standardization task using alphanumeric characters, spaces, hyphens, underscores, or periods only."/>
                     
-                    <Label text="Description"/>
+                    <Label text="Description" labelFor="descriptionArea"/>
                     <TextArea 
+                        id="descriptionArea"
                         value="{path: 'create>/description', formatter: '.formatSecureText'}"
                         rows="2"
                         maxLength="1000"
-                        placeholder="Describe the standardization task"/>
+                        placeholder="Optional description of the standardization task purpose and scope"
+                        ariaDescribedBy="descriptionHelp"/>
+                    <core:InvisibleText id="descriptionHelp" text="Optional field. Provide additional details about what this task will accomplish and any special requirements."/>
                     
-                    <Label text="Source Format" required="true"/>
+                    <Label text="Source Format" required="true" labelFor="sourceFormatSelect"/>
                     <Select 
                         id="sourceFormatSelect"
                         selectedKey="{create>/sourceFormat}"
-                        change=".onSourceFormatChange">
+                        change=".onSourceFormatChange"
+                        ariaDescribedBy="sourceFormatHelp">
+                    <core:InvisibleText id="sourceFormatHelp" text="Required field. Select the format of your input data files that need to be standardized."/>
                         <items>
                             <core:Item key="" text="Select format..."/>
                             <core:Item key="CSV" text="CSV"/>
@@ -56,10 +80,13 @@
                         </items>
                     </Select>
                     
-                    <Label text="Target Format" required="true"/>
+                    <Label text="Target Format" required="true" labelFor="targetFormatSelect"/>
                     <Select 
+                        id="targetFormatSelect"
                         selectedKey="{create>/targetFormat}"
-                        change=".onTargetFormatChange">
+                        change=".onTargetFormatChange"
+                        ariaDescribedBy="targetFormatHelp">
+                    <core:InvisibleText id="targetFormatHelp" text="Required field. Select the desired output format for standardized data."/>
                         <items>
                             <core:Item key="" text="Select format..."/>
                             <core:Item key="CSV" text="CSV"/>
@@ -70,11 +97,13 @@
                         </items>
                     </Select>
                     
-                    <Label text="Schema Template"/>
+                    <Label text="Schema Template" labelFor="schemaTemplateSelect"/>
                     <HBox>
                         <Select 
+                            id="schemaTemplateSelect"
                             selectedKey="{create>/schemaTemplateId}"
-                            width="100%">
+                            width="100%"
+                            ariaDescribedBy="schemaTemplateHelp">
                             <items>
                                 <core:Item key="" text="No template"/>
                                 <core:Item key="RETAIL_PRODUCT" text="Retail Product"/>
@@ -86,36 +115,64 @@
                         </Select>
                         <Button 
                             icon="sap-icon://upload"
-                            tooltip="Upload custom template"
-                            press=".onUploadTemplate"/>
+                            tooltip="Upload custom schema template file"
+                            text="Upload"
+                            press=".onUploadTemplate"
+                            ariaDescribedBy="uploadTemplateHelp"/>
+                    <core:InvisibleText id="schemaTemplateHelp" text="Optional. Choose a predefined schema template or upload your own to define data structure and validation rules."/>
+                    <core:InvisibleText id="uploadTemplateHelp" text="Upload a JSON schema file to define custom data structure and validation rules."/>
                     </HBox>
                     
-                    <Label text="Validation Settings"/>
-                    <VBox>
+                    <Label text="Validation Settings" labelFor="validationGroup"/>
+                    <VBox id="validationGroup" ariaLabelledBy="validationGroupLabel">
+                        <core:InvisibleText id="validationGroupLabel" text="Validation settings group. Select which validation checks to perform during standardization."/>
                         <CheckBox 
+                            id="schemaValidationCheck"
                             text="Enable schema validation"
-                            selected="{create>/schemaValidation}"/>
+                            selected="{create>/schemaValidation}"
+                            ariaDescribedBy="schemaValidationHelp"/>
+                        <core:InvisibleText id="schemaValidationHelp" text="Validates data structure against defined schema rules"/>
                         <CheckBox 
+                            id="dataTypeValidationCheck"
                             text="Enable data type validation"
-                            selected="{create>/dataTypeValidation}"/>
+                            selected="{create>/dataTypeValidation}"
+                            ariaDescribedBy="dataTypeValidationHelp"/>
+                        <core:InvisibleText id="dataTypeValidationHelp" text="Ensures field values match expected data types like numbers, dates, or text"/>
                         <CheckBox 
+                            id="formatValidationCheck"
                             text="Enable format validation"
-                            selected="{create>/formatValidation}"/>
+                            selected="{create>/formatValidation}"
+                            ariaDescribedBy="formatValidationHelp"/>
+                        <core:InvisibleText id="formatValidationHelp" text="Validates specific format patterns like email addresses, phone numbers, or custom formats"/>
                     </VBox>
                     
-                    <Label text="Processing Options"/>
-                    <VBox>
-                        <RadioButtonGroup selectedIndex="{create>/processingMode}">
-                            <RadioButton text="Process entire file"/>
-                            <RadioButton text="Process in batches"/>
+                    <Label text="Processing Options" labelFor="processingGroup"/>
+                    <VBox id="processingGroup" ariaLabelledBy="processingGroupLabel">
+                        <core:InvisibleText id="processingGroupLabel" text="Processing options group. Choose how to handle large data files during standardization."/>
+                        <RadioButtonGroup 
+                            selectedIndex="{create>/processingMode}"
+                            ariaDescribedBy="processingModeHelp">
+                            <RadioButton 
+                                text="Process entire file"
+                                ariaDescribedBy="entireFileHelp"/>
+                            <RadioButton 
+                                text="Process in batches"
+                                ariaDescribedBy="batchModeHelp"/>
                         </RadioButtonGroup>
-                        <HBox visible="{= ${create>/processingMode} === 1 }">
-                            <Label text="Batch size:" width="100px"/>
+                        <core:InvisibleText id="processingModeHelp" text="Choose processing method based on file size and memory constraints"/>
+                        <core:InvisibleText id="entireFileHelp" text="Loads and processes the complete file in memory. Best for smaller files under 100MB."/>
+                        <core:InvisibleText id="batchModeHelp" text="Processes data in smaller chunks to manage memory usage. Recommended for large files."/>
+                        <HBox visible="{= ${create>/processingMode} === 1 }" class="sapUiTinyMarginTop">
+                            <Label text="Batch size:" width="100px" labelFor="batchSizeInput"/>
                             <Input 
+                                id="batchSizeInput"
                                 value="{create>/batchSize}"
                                 type="Number"
-                                width="100px"/>
+                                width="100px"
+                                placeholder="1000"
+                                ariaDescribedBy="batchSizeHelp"/>
                         </HBox>
+                        <core:InvisibleText id="batchSizeHelp" text="Number of records to process per batch. Recommended range: 100-10000 depending on data complexity."/>
                     </VBox>
                 </form:content>
             </form:SimpleForm>
@@ -123,16 +180,16 @@
         
         <beginButton>
             <Button 
-                text="Cancel"
+                text="{i18n>button.cancel}"
                 press=".onCancelCreate"/>
         </beginButton>
         
         <endButton>
             <Button 
-                text="Create"
+                text="{i18n>button.create}"
                 type="Emphasized"
                 press=".onConfirmCreate"
-                enabled="{= ${create>/taskName} &amp;&amp; ${create>/sourceFormat} &amp;&amp; ${create>/targetFormat} }"/>
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/sourceFormat} &amp;&amp; ${create>/targetFormat} &amp;&amp; ${create>/isValid} }"/>
         </endButton>
         
     </Dialog>

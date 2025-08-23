@@ -1,0 +1,152 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:u="sap.ui.unified">
+    
+    <Dialog
+        id="formulaEditorDialog"
+        title="{i18n>formulaEditorTitle}"
+        contentWidth="60%"
+        contentHeight="70%"
+        verticalScrolling="false"
+        horizontalScrolling="false">
+        
+        <content>
+            <l:SplitPane id="formulaEditorSplitPane" requiredParentWidth="800">
+                <!-- Formula Input Section -->
+                <VBox class="sapUiMediumMargin">
+                    <Label text="{i18n>formulaExpression}:" required="true" />
+                    <u:CodeEditor
+                        id="formulaCodeEditor"
+                        type="javascript"
+                        value="{/formula}"
+                        height="200px"
+                        width="100%"
+                        syntaxHints="true"
+                        colorTheme="default"
+                        liveChange=".onFormulaChange" />
+                    
+                    <HBox class="sapUiSmallMarginTop">
+                        <Button
+                            text="{i18n>insertFunction}"
+                            icon="sap-icon://add"
+                            press=".onInsertFunction" />
+                        <Button
+                            text="{i18n>insertOperator}"
+                            icon="sap-icon://sys-add"
+                            press=".onInsertOperator" />
+                        <Button
+                            text="{i18n>insertVariable}"
+                            icon="sap-icon://tag"
+                            press=".onInsertVariable" />
+                    </HBox>
+                    
+                    <!-- Variables Definition -->
+                    <VBox class="sapUiMediumMarginTop">
+                        <HBox justifyContent="SpaceBetween">
+                            <Label text="{i18n>variableDefinitions}:" />
+                            <Button
+                                icon="sap-icon://add"
+                                tooltip="{i18n>addVariable}"
+                                press=".onAddVariable"
+                                type="Transparent" />
+                        </HBox>
+                        
+                        <Table
+                            id="variablesTable"
+                            items="{/variables}"
+                            mode="Delete"
+                            delete=".onDeleteVariable">
+                            <columns>
+                                <Column width="30%">
+                                    <Text text="{i18n>variableName}" />
+                                </Column>
+                                <Column width="30%">
+                                    <Text text="{i18n>dataType}" />
+                                </Column>
+                                <Column width="40%">
+                                    <Text text="{i18n>sampleValue}" />
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Input value="{name}" placeholder="{i18n>enterVariableName}" />
+                                        <Select selectedKey="{type}">
+                                            <items>
+                                                <core:Item key="number" text="{i18n>number}" />
+                                                <core:Item key="array" text="{i18n>array}" />
+                                                <core:Item key="matrix" text="{i18n>matrix}" />
+                                                <core:Item key="boolean" text="{i18n>boolean}" />
+                                            </items>
+                                        </Select>
+                                        <Input value="{sampleValue}" placeholder="{i18n>enterSampleValue}" />
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </VBox>
+                </VBox>
+                
+                <!-- Function Reference -->
+                <VBox class="sapUiMediumMargin">
+                    <Label text="{i18n>functionReference}:" />
+                    <SearchField
+                        id="functionSearchField"
+                        placeholder="{i18n>searchFunctions}"
+                        search=".onSearchFunction"
+                        width="100%" />
+                    
+                    <List
+                        id="functionsList"
+                        items="{/availableFunctions}"
+                        growing="true"
+                        growingThreshold="20">
+                        <StandardListItem
+                            title="{name}"
+                            description="{description}"
+                            info="{syntax}"
+                            type="Active"
+                            press=".onSelectFunction" />
+                    </List>
+                    
+                    <!-- Function Details -->
+                    <Panel
+                        id="functionDetailsPanel"
+                        headerText="{i18n>functionDetails}"
+                        visible="{= ${/selectedFunction} !== null }"
+                        class="sapUiSmallMarginTop">
+                        <VBox class="sapUiSmallMargin">
+                            <ObjectStatus
+                                title="{i18n>syntax}"
+                                text="{/selectedFunction/syntax}"
+                                state="Information" />
+                            <Text text="{/selectedFunction/description}" class="sapUiSmallMarginTop" />
+                            <MessageStrip
+                                text="{/selectedFunction/example}"
+                                type="Information"
+                                showIcon="true"
+                                class="sapUiSmallMarginTop" />
+                        </VBox>
+                    </Panel>
+                </VBox>
+            </l:SplitPane>
+        </content>
+        
+        <beginButton>
+            <Button
+                text="{i18n>validateFormula}"
+                type="Emphasized"
+                icon="sap-icon://accept"
+                press=".onValidateFormula" />
+        </beginButton>
+        
+        <endButton>
+            <Button
+                text="{i18n>cancel}"
+                press=".onCancelFormulaEditor" />
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

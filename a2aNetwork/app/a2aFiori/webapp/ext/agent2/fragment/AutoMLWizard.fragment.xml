@@ -10,17 +10,30 @@
         contentWidth="80%"
         contentHeight="85%"
         resizable="true"
-        ariaLabel="AutoML Wizard Dialog for automated machine learning setup">
+        stretch="{device>/system/phone}"
+        ariaLabelledBy="autoMLWizardTitle"
+        ariaDescribedBy="autoMLWizardHelp"
+        class="sapUiResponsiveContentPadding">
+        
+        <core:InvisibleText id="autoMLWizardTitle" text="AutoML Wizard Dialog for Automated Machine Learning Setup"/>
+        <core:InvisibleText id="autoMLWizardHelp" text="Step-by-step wizard to configure automated machine learning pipeline. Use arrow keys to navigate between steps and tab key to move between form fields."/>
         
         <content>
-            <Wizard id="autoMLWizard" complete=".onAutoMLComplete">
+            <Wizard 
+                id="autoMLWizard" 
+                complete=".onAutoMLComplete"
+                stepActivate=".onWizardStepActivate"
+                ariaLabelledBy="wizardLabel">
+                <core:InvisibleText id="wizardLabel" text="AutoML Configuration Wizard with 5 steps: Dataset Selection, Feature Configuration, Model Settings, Training Parameters, and Review"/>
                 
                 <!-- Step 1: Dataset Selection -->
                 <WizardStep
                     id="datasetStep"
                     title="Dataset Selection"
                     icon="sap-icon://database"
-                    validated="true">
+                    validated="true"
+                    ariaLabelledBy="datasetStepLabel">
+                    <core:InvisibleText id="datasetStepLabel" text="Step 1 of 5: Select dataset and define machine learning problem type"/>
                     
                     <MessageStrip
                         text="Select the dataset and define the machine learning problem type."
@@ -63,8 +76,12 @@
                                 </items>
                             </ComboBox>
                             
-                            <Label text="Problem Type" required="true"/>
-                            <Select selectedKey="{automl>/problemType}">
+                            <Label text="Problem Type" required="true" labelFor="problemTypeSelect"/>
+                            <Select 
+                                id="problemTypeSelect"
+                                selectedKey="{automl>/problemType}"
+                                ariaDescribedBy="problemTypeHelp"
+                                change=".onProblemTypeChange">
                                 <items>
                                     <core:Item key="" text="Select problem type..."/>
                                     <core:Item key="CLASSIFICATION" text="Classification"/>
@@ -75,11 +92,15 @@
                                 </items>
                             </Select>
                             
-                            <Label text="Target Column" required="true"/>
+                            <core:InvisibleText id="problemTypeHelp" text="Choose the type of machine learning problem you want to solve. This determines the algorithms and evaluation metrics used."/>
+                            
+                            <Label text="Target Column" required="true" labelFor="targetColumnCombo"/>
                             <ComboBox
+                                id="targetColumnCombo"
                                 value="{automl>/targetColumn}"
-                                placeholder="Select target column"
-                                enabled="{= ${automl>/problemType} !== 'CLUSTERING' }">
+                                placeholder="Select target column to predict"
+                                enabled="{= ${automl>/problemType} !== 'CLUSTERING' }"
+                                ariaDescribedBy="targetColumnHelp">
                                 <items>
                                     <core:Item key="revenue" text="Revenue"/>
                                     <core:Item key="category" text="Category"/>
@@ -89,11 +110,16 @@
                                 </items>
                             </ComboBox>
                             
-                            <Label text="Data Preview"/>
+                            <core:InvisibleText id="targetColumnHelp" text="Select the column that contains the values you want to predict or classify. Not required for unsupervised learning like clustering."/>
+                            
+                            <Label text="Data Preview" labelFor="previewButton"/>
                             <Button 
+                                id="previewButton"
                                 text="Preview Dataset" 
                                 icon="sap-icon://show"
-                                press=".onPreviewDataset"/>
+                                press=".onPreviewDataset"
+                                ariaDescribedBy="previewHelp"/>
+                            <core:InvisibleText id="previewHelp" text="View sample data from the selected dataset to understand its structure and contents."/>
                         </form:content>
                     </form:SimpleForm>
                 </WizardStep>

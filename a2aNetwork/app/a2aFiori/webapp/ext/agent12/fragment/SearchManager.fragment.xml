@@ -1,0 +1,519 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:viz="sap.viz.ui5.controls"
+    xmlns:vizData="sap.viz.ui5.data"
+    xmlns:vizFeeds="sap.viz.ui5.controls.common.feeds">
+    
+    <Dialog
+        id="searchManagerDialog"
+        title="{i18n>catalogSearch}"
+        contentWidth="85%"
+        contentHeight="90%"
+        verticalScrolling="true">
+        
+        <content>
+            <IconTabBar id="searchTabBar" expandable="false">
+                <!-- Search Tab -->
+                <items>
+                    <IconTabFilter text="{i18n>search}" icon="sap-icon://search" iconColor="Positive">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Search Form -->
+                            <Panel headerText="{i18n>searchCriteria}">
+                                <VBox class="sapUiSmallMargin">
+                                    <!-- Basic Search -->
+                                    <HBox class="sapUiSmallMarginBottom" alignItems="End">
+                                        <SearchField
+                                            id="catalogSearchField"
+                                            placeholder="{i18n>searchCatalogPlaceholder}"
+                                            value="{/searchQuery}"
+                                            search=".onCatalogSearch"
+                                            suggest=".onSearchSuggest"
+                                            width="400px"/>
+                                        <Button
+                                            text="{i18n>search}"
+                                            icon="sap-icon://search"
+                                            press=".onCatalogSearch"
+                                            type="Emphasized"/>
+                                        <Button
+                                            text="{i18n>advancedSearch}"
+                                            icon="sap-icon://filter"
+                                            press=".onToggleAdvancedSearch"
+                                            type="Transparent"/>
+                                        <Button
+                                            text="{i18n>clearSearch}"
+                                            icon="sap-icon://clear-all"
+                                            press=".onClearSearch"
+                                            type="Transparent"/>
+                                    </HBox>
+                                    
+                                    <!-- Advanced Search Filters -->
+                                    <Panel
+                                        headerText="{i18n>advancedFilters}"
+                                        expandable="true"
+                                        expanded="{/showAdvancedSearch}">
+                                        <l:Grid defaultSpan="L4 M6 S12" class="sapUiSmallMargin">
+                                            <!-- Category Filter -->
+                                            <VBox>
+                                                <Label text="{i18n>category}:"/>
+                                                <MultiComboBox
+                                                    selectedKeys="{/searchFilters/categories}"
+                                                    selectionChange=".onFilterChange">
+                                                    <core:Item key="SERVICE" text="{i18n>service}"/>
+                                                    <core:Item key="API" text="{i18n>api}"/>
+                                                    <core:Item key="DATABASE" text="{i18n>database}"/>
+                                                    <core:Item key="WORKFLOW" text="{i18n>workflow}"/>
+                                                    <core:Item key="AGENT" text="{i18n>agent}"/>
+                                                    <core:Item key="RESOURCE" text="{i18n>resource}"/>
+                                                    <core:Item key="TEMPLATE" text="{i18n>template}"/>
+                                                    <core:Item key="CONNECTOR" text="{i18n>connector}"/>
+                                                </MultiComboBox>
+                                            </VBox>
+                                            
+                                            <!-- Status Filter -->
+                                            <VBox>
+                                                <Label text="{i18n>status}:"/>
+                                                <MultiComboBox
+                                                    selectedKeys="{/searchFilters/statuses}"
+                                                    selectionChange=".onFilterChange">
+                                                    <core:Item key="PUBLISHED" text="{i18n>published}"/>
+                                                    <core:Item key="DRAFT" text="{i18n>draft}"/>
+                                                    <core:Item key="DEPRECATED" text="{i18n>deprecated}"/>
+                                                    <core:Item key="ARCHIVED" text="{i18n>archived}"/>
+                                                </MultiComboBox>
+                                            </VBox>
+                                            
+                                            <!-- Provider Filter -->
+                                            <VBox>
+                                                <Label text="{i18n>provider}:"/>
+                                                <Input
+                                                    value="{/searchFilters/provider}"
+                                                    placeholder="{i18n>providerName}"
+                                                    change=".onFilterChange"/>
+                                            </VBox>
+                                            
+                                            <!-- Tags Filter -->
+                                            <VBox>
+                                                <Label text="{i18n>tags}:"/>
+                                                <Input
+                                                    value="{/searchFilters/tags}"
+                                                    placeholder="{i18n>commaSeparatedTags}"
+                                                    change=".onFilterChange"/>
+                                            </VBox>
+                                            
+                                            <!-- Rating Filter -->
+                                            <VBox>
+                                                <Label text="{i18n>minimumRating}:"/>
+                                                <RatingIndicator
+                                                    value="{/searchFilters/minRating}"
+                                                    maxValue="5"
+                                                    change=".onRatingFilter"/>
+                                            </VBox>
+                                            
+                                            <!-- Date Range -->
+                                            <VBox>
+                                                <Label text="{i18n>createdAfter}:"/>
+                                                <DatePicker
+                                                    value="{/searchFilters/createdAfter}"
+                                                    change=".onFilterChange"/>
+                                            </VBox>
+                                        </l:Grid>
+                                    </Panel>
+                                </VBox>
+                            </Panel>
+                            
+                            <!-- Search Results -->
+                            <Panel
+                                headerText="{i18n>searchResults}"
+                                class="sapUiMediumMarginTop">
+                                <content>
+                                    <!-- Search Status -->
+                                    <MessageStrip
+                                        text="{i18n>searchInProgress}"
+                                        type="Information"
+                                        showIcon="true"
+                                        visible="{/searchInProgress}"/>
+                                    
+                                    <MessageStrip
+                                        text="{= ${i18n>searchCompleted} + ' - ' + ${/searchResults/totalCount} + ' ' + ${i18n>resultsFound} }"
+                                        type="Success"
+                                        showIcon="true"
+                                        visible="{= ${/searchCompleted} && ${/searchResults/totalCount} > 0 }"/>
+                                    
+                                    <MessageStrip
+                                        text="{i18n>noResultsFound}"
+                                        type="Warning"
+                                        showIcon="true"
+                                        visible="{= ${/searchCompleted} && ${/searchResults/totalCount} === 0 }"/>
+                                    
+                                    <!-- Results Controls -->
+                                    <HBox class="sapUiSmallMargin" justifyContent="SpaceBetween" alignItems="Center">
+                                        <HBox alignItems="Center">
+                                            <Text text="{= ${i18n>showing} + ' ' + ${/searchResults/displayCount} + ' ' + ${i18n>of} + ' ' + ${/searchResults/totalCount} + ' ' + ${i18n>results} }"/>
+                                            <SegmentedButton selectedKey="{/viewMode}" selectionChange=".onViewModeChange">
+                                                <items>
+                                                    <SegmentedButtonItem key="list" icon="sap-icon://list"/>
+                                                    <SegmentedButtonItem key="grid" icon="sap-icon://grid"/>
+                                                </items>
+                                            </SegmentedButton>
+                                        </HBox>
+                                        <HBox>
+                                            <Label text="{i18n>sortBy}:"/>
+                                            <Select selectedKey="{/sortBy}" change=".onSortChange">
+                                                <items>
+                                                    <core:Item key="relevance" text="{i18n>relevance}"/>
+                                                    <core:Item key="name" text="{i18n>name}"/>
+                                                    <core:Item key="rating" text="{i18n>rating}"/>
+                                                    <core:Item key="usage" text="{i18n>usage}"/>
+                                                    <core:Item key="date" text="{i18n>dateModified}"/>
+                                                </items>
+                                            </Select>
+                                        </HBox>
+                                    </HBox>
+                                    
+                                    <!-- Results List View -->
+                                    <List
+                                        items="{/searchResults/entries}"
+                                        growing="true"
+                                        growingThreshold="20"
+                                        visible="{= ${/viewMode} === 'list' }">
+                                        <CustomListItem press=".onResultPress">
+                                            <VBox class="sapUiMediumMargin">
+                                                <HBox justifyContent="SpaceBetween" alignItems="Start">
+                                                    <VBox class="sapUiMediumMarginEnd">
+                                                        <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+                                                            <Text text="{entryName}" emphasized="true" class="sapUiMediumMarginEnd"/>
+                                                            <ObjectStatus
+                                                                text="{category}"
+                                                                state="Information"/>
+                                                            <ObjectStatus
+                                                                text="{status}"
+                                                                state="{= ${status} === 'PUBLISHED' ? 'Success' : 'Warning' }"
+                                                                class="sapUiTinyMarginBegin"/>
+                                                        </HBox>
+                                                        <Text text="{description}" maxLines="2" class="sapUiTinyMarginBottom"/>
+                                                        <HBox alignItems="Center">
+                                                            <Text text="{i18n>provider}: {provider}" class="sapUiSmallMarginEnd"/>
+                                                            <Text text="{i18n>version}: {version}" class="sapUiSmallMarginEnd"/>
+                                                            <RatingIndicator
+                                                                value="{rating}"
+                                                                maxValue="5"
+                                                                displayOnly="true"
+                                                                iconSize="1rem"
+                                                                class="sapUiSmallMarginEnd"/>
+                                                            <Text text="({usageCount})"/>
+                                                        </HBox>
+                                                    </VBox>
+                                                    <VBox alignItems="End">
+                                                        <HBox>
+                                                            <Button
+                                                                icon="sap-icon://detail-view"
+                                                                tooltip="{i18n>viewDetails}"
+                                                                press=".onViewDetails"
+                                                                type="Transparent"/>
+                                                            <Button
+                                                                icon="sap-icon://favorite"
+                                                                tooltip="{i18n>addToFavorites}"
+                                                                press=".onAddToFavorites"
+                                                                type="Transparent"/>
+                                                            <Button
+                                                                icon="sap-icon://share-2"
+                                                                tooltip="{i18n>share}"
+                                                                press=".onShareResult"
+                                                                type="Transparent"/>
+                                                        </HBox>
+                                                        <Text text="{modifiedAt}" class="sapUiTinyMarginTop"/>
+                                                    </VBox>
+                                                </HBox>
+                                                <HBox class="sapUiTinyMarginTop" visible="{= ${tags} && ${tags}.length > 0 }">
+                                                    <!-- Tags would be dynamically created here -->
+                                                </HBox>
+                                            </VBox>
+                                        </CustomListItem>
+                                    </List>
+                                    
+                                    <!-- Results Grid View -->
+                                    <l:Grid
+                                        defaultSpan="L4 M6 S12"
+                                        hSpacing="1"
+                                        vSpacing="1"
+                                        visible="{= ${/viewMode} === 'grid' }">
+                                        <!-- Grid items would be created dynamically -->
+                                    </l:Grid>
+                                </content>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Search Analytics Tab -->
+                    <IconTabFilter text="{i18n>analytics}" icon="sap-icon://bar-chart" iconColor="Critical">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Search Statistics -->
+                            <Panel headerText="{i18n>searchStatistics}">
+                                <l:Grid defaultSpan="L3 M6 S12" class="sapUiSmallMargin">
+                                    <ObjectStatus
+                                        title="{i18n>totalSearches}"
+                                        text="{/searchAnalytics/totalSearches}"
+                                        state="Information"
+                                        icon="sap-icon://search"/>
+                                    <ObjectStatus
+                                        title="{i18n>averageResults}"
+                                        text="{/searchAnalytics/averageResults}"
+                                        state="Success"
+                                        icon="sap-icon://chart"/>
+                                    <ObjectStatus
+                                        title="{i18n>averageSearchTime}"
+                                        text="{/searchAnalytics/averageSearchTime}ms"
+                                        state="None"
+                                        icon="sap-icon://timesheet"/>
+                                    <ObjectStatus
+                                        title="{i18n>popularCategory}"
+                                        text="{/searchAnalytics/popularCategory}"
+                                        state="Information"
+                                        icon="sap-icon://favorite"/>
+                                </l:Grid>
+                            </Panel>
+                            
+                            <!-- Search Trends Chart -->
+                            <Panel
+                                headerText="{i18n>searchTrends}"
+                                class="sapUiMediumMarginTop">
+                                <viz:Popover id="searchTrendsPopover"></viz:Popover>
+                                <viz:VizFrame
+                                    id="searchTrendsChart"
+                                    uiConfig="{applicationSet:'fiori'}"
+                                    height="300px"
+                                    width="100%"
+                                    vizType="line">
+                                    <viz:dataset>
+                                        <vizData:FlattenedDataset data="{/searchTrends}">
+                                            <vizData:dimensions>
+                                                <vizData:DimensionDefinition
+                                                    name="Date"
+                                                    value="{date}"/>
+                                            </vizData:dimensions>
+                                            <vizData:measures>
+                                                <vizData:MeasureDefinition
+                                                    name="Searches"
+                                                    value="{searchCount}"/>
+                                            </vizData:measures>
+                                        </vizData:FlattenedDataset>
+                                    </viz:dataset>
+                                    <viz:feeds>
+                                        <vizFeeds:FeedItem
+                                            uid="valueAxis"
+                                            type="Measure"
+                                            values="Searches"/>
+                                        <vizFeeds:FeedItem
+                                            uid="categoryAxis"
+                                            type="Dimension"
+                                            values="Date"/>
+                                    </viz:feeds>
+                                </viz:VizFrame>
+                            </Panel>
+                            
+                            <!-- Popular Search Terms -->
+                            <Panel
+                                headerText="{i18n>popularSearchTerms}"
+                                class="sapUiMediumMarginTop">
+                                <Table items="{/popularSearchTerms}">
+                                    <columns>
+                                        <Column>
+                                            <Text text="{i18n>searchTerm}"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>frequency}"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>averageResults}"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>lastUsed}"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="{term}"/>
+                                                <ObjectNumber
+                                                    number="{frequency}"
+                                                    state="Success"/>
+                                                <ObjectNumber
+                                                    number="{averageResults}"
+                                                    state="Information"/>
+                                                <Text text="{lastUsed}"/>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Saved Searches Tab -->
+                    <IconTabFilter text="{i18n>savedSearches}" icon="sap-icon://save" iconColor="Neutral">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Saved Searches Actions -->
+                            <HBox class="sapUiSmallMarginBottom" justifyContent="SpaceBetween">
+                                <Button
+                                    text="{i18n>saveCurrentSearch}"
+                                    icon="sap-icon://save"
+                                    press=".onSaveCurrentSearch"
+                                    type="Emphasized"/>
+                                <SearchField
+                                    placeholder="{i18n>searchSavedSearches}"
+                                    search=".onSearchSavedSearches"
+                                    width="250px"/>
+                            </HBox>
+                            
+                            <!-- Saved Searches List -->
+                            <Table
+                                items="{/savedSearches}"
+                                mode="Delete"
+                                delete=".onDeleteSavedSearch">
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>searchName}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>query}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>filters}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>created}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>lastUsed}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>actions}"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{name}" emphasized="true"/>
+                                            <Text text="{query}" maxLines="1"/>
+                                            <Text text="{filtersText}" maxLines="1"/>
+                                            <Text text="{created}"/>
+                                            <Text text="{lastUsed}"/>
+                                            <HBox>
+                                                <Button
+                                                    icon="sap-icon://play"
+                                                    tooltip="{i18n>executeSearch}"
+                                                    press=".onExecuteSavedSearch"
+                                                    type="Transparent"/>
+                                                <Button
+                                                    icon="sap-icon://edit"
+                                                    tooltip="{i18n>editSearch}"
+                                                    press=".onEditSavedSearch"
+                                                    type="Transparent"/>
+                                                <Button
+                                                    icon="sap-icon://share-2"
+                                                    tooltip="{i18n>shareSearch}"
+                                                    press=".onShareSavedSearch"
+                                                    type="Transparent"/>
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Search History Tab -->
+                    <IconTabFilter text="{i18n>searchHistory}" icon="sap-icon://history" iconColor="Neutral">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Search History Controls -->
+                            <HBox class="sapUiSmallMarginBottom" justifyContent="SpaceBetween">
+                                <HBox>
+                                    <Button
+                                        text="{i18n>clearHistory}"
+                                        icon="sap-icon://clear-all"
+                                        press=".onClearSearchHistory"
+                                        type="Transparent"/>
+                                    <Button
+                                        text="{i18n>exportHistory}"
+                                        icon="sap-icon://download"
+                                        press=".onExportSearchHistory"
+                                        type="Transparent"/>
+                                </HBox>
+                                <DateRangeSelection
+                                    value="{/historyDateRange}"
+                                    change=".onHistoryDateRangeChange"/>
+                            </HBox>
+                            
+                            <!-- Search History Table -->
+                            <Table
+                                items="{/searchHistory}"
+                                growing="true"
+                                growingThreshold="50">
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>timestamp}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>query}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>results}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>searchTime}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>actions}"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{timestamp}"/>
+                                            <Text text="{searchQuery}" maxLines="1"/>
+                                            <ObjectNumber
+                                                number="{resultsCount}"
+                                                state="{= ${resultsCount} > 0 ? 'Success' : 'Error' }"/>
+                                            <ObjectNumber
+                                                number="{searchTime}"
+                                                unit="ms"
+                                                state="Information"/>
+                                            <HBox>
+                                                <Button
+                                                    icon="sap-icon://refresh"
+                                                    tooltip="{i18n>repeatSearch}"
+                                                    press=".onRepeatSearch"
+                                                    type="Transparent"/>
+                                                <Button
+                                                    icon="sap-icon://save"
+                                                    tooltip="{i18n>saveSearch}"
+                                                    press=".onSaveFromHistory"
+                                                    type="Transparent"/>
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button
+                text="{i18n>newSearch}"
+                type="Emphasized"
+                icon="sap-icon://add"
+                press=".onNewSearch"/>
+        </beginButton>
+        
+        <endButton>
+            <Button
+                text="{i18n>close}"
+                press=".onCloseSearchManager"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

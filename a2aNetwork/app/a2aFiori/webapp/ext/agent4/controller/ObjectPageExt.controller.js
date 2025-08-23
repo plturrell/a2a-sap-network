@@ -3,8 +3,12 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/m/MessageToast",
     "sap/ui/core/Fragment",
-    "sap/ui/model/json/JSONModel"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel) {
+    "sap/ui/model/json/JSONModel",
+    "sap/base/security/encodeXML",
+    "sap/base/strings/escapeRegExp",
+    "sap/base/security/sanitizeHTML",
+    "sap/base/Log"
+], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent4.ext.controller.ObjectPageExt", {
@@ -12,6 +16,20 @@ sap.ui.define([
         override: {
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
+                
+                // Initialize device model for responsive behavior
+                var oDeviceModel = new JSONModel(sap.ui.Device);
+                oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
+                this.base.getView().setModel(oDeviceModel, "device");
+                
+                // Initialize dialog cache for better performance
+                this._dialogCache = {};
+                
+                // Initialize create model
+                this._initializeCreateModel();
+                
+                // Initialize resource bundle for i18n
+                this._oResourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
             },
 
             onExit: function() {
@@ -19,6 +37,13 @@ sap.ui.define([
                 if (this._validationInterval) {
                     clearInterval(this._validationInterval);
                 }
+                // Clean up cached dialogs
+                for (var sKey in this._dialogCache) {
+                    if (this._dialogCache.hasOwnProperty(sKey)) {
+                        this._dialogCache[sKey].destroy();
+                    }
+                }
+                // Clean up any other dialogs
                 if (this._oFormulaValidationDialog) {
                     this._oFormulaValidationDialog.destroy();
                 }
@@ -29,6 +54,247 @@ sap.ui.define([
                     this._oOptimizationDialog.destroy();
                 }
             }
+        },
+
+        /**
+         * Initialize the create model with default values and validation states
+         * @private
+         * @since 1.0.0
+         */
+        _initializeCreateModel: function() {
+            var oCreateModel = new JSONModel({
+                taskName: "",
+                description: "",
+                calculationType: "",
+                dataSource: "",
+                priority: "MEDIUM",
+                validationMode: "STANDARD",
+                precisionThreshold: 0.00001,
+                toleranceLevel: 0.001,
+                comparisonMethod: 0,
+                enableCrossValidation: false,
+                enableStatisticalTests: false,
+                parallelProcessing: true,
+                detailedLogs: false,
+                formulas: [],
+                customValidationRules: "",
+                benchmarkDataset: "",
+                maxExecutionTime: 300,
+                memoryLimit: 1024,
+                errorHandling: 1,
+                emailNotification: false,
+                progressUpdates: true,
+                isValid: false,
+                taskNameState: "None",
+                taskNameStateText: "",
+                calculationTypeState: "None",
+                calculationTypeStateText: "",
+                dataSourceState: "None",
+                dataSourceStateText: "",
+                templates: [
+                    { name: "Simple Arithmetic", formula: "a + b * c", category: "ARITHMETIC" },
+                    { name: "Compound Interest", formula: "P * (1 + r/n)^(n*t)", category: "FINANCIAL" },
+                    { name: "Standard Deviation", formula: "sqrt(sum((x - mean)^2) / n)", category: "STATISTICAL" },
+                    { name: "Pythagorean Theorem", formula: "sqrt(a^2 + b^2)", category: "MATHEMATICAL" },
+                    { name: "Sine Wave", formula: "A * sin(2 * PI * f * t + phase)", category: "TRIGONOMETRIC" }
+                ]
+            });
+            this.base.getView().setModel(oCreateModel, "create");
+        },
+
+        /**
+         * Validation handler for task name changes
+         * @param {sap.ui.base.Event} oEvent - Input change event
+         * @public
+         * @since 1.0.0
+         */
+        onTaskNameChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oModel = this.base.getView().getModel("create");
+            
+            if (!sValue || sValue.trim().length === 0) {
+                oModel.setProperty("/taskNameState", "Error");
+                oModel.setProperty("/taskNameStateText", this._oResourceBundle.getText("validation.taskNameRequired"));
+            } else if (sValue.length < 3) {
+                oModel.setProperty("/taskNameState", "Error");
+                oModel.setProperty("/taskNameStateText", this._oResourceBundle.getText("validation.taskNameTooShort"));
+            } else if (sValue.length > 100) {
+                oModel.setProperty("/taskNameState", "Error");
+                oModel.setProperty("/taskNameStateText", this._oResourceBundle.getText("validation.taskNameTooLong"));
+            } else if (!/^[a-zA-Z0-9\s\-_\.]+$/.test(sValue)) {
+                oModel.setProperty("/taskNameState", "Error");
+                oModel.setProperty("/taskNameStateText", this._oResourceBundle.getText("validation.taskNameInvalid"));
+            } else {
+                oModel.setProperty("/taskNameState", "Success");
+                oModel.setProperty("/taskNameStateText", "");
+            }
+            
+            this._validateForm();
+        },
+
+        /**
+         * Handler for calculation type changes
+         * @param {sap.ui.base.Event} oEvent - Select change event
+         * @public
+         * @since 1.0.0
+         */
+        onCalculationTypeChange: function(oEvent) {
+            var sSelectedKey = oEvent.getParameter("selectedItem").getKey();
+            var oModel = this.base.getView().getModel("create");
+            
+            if (!sSelectedKey) {
+                oModel.setProperty("/calculationTypeState", "Error");
+                oModel.setProperty("/calculationTypeStateText", this._oResourceBundle.getText("validation.calculationTypeRequired"));
+            } else {
+                oModel.setProperty("/calculationTypeState", "Success");
+                oModel.setProperty("/calculationTypeStateText", "");
+                
+                // Auto-suggest validation mode based on calculation type
+                switch(sSelectedKey) {
+                    case "FINANCIAL":
+                    case "ACCOUNTING":
+                        oModel.setProperty("/validationMode", "STRICT");
+                        oModel.setProperty("/precisionThreshold", 0.00001);
+                        break;
+                    case "ENGINEERING":
+                    case "PHYSICS":
+                        oModel.setProperty("/validationMode", "STANDARD");
+                        oModel.setProperty("/precisionThreshold", 0.0001);
+                        break;
+                    case "STATISTICAL":
+                        oModel.setProperty("/enableStatisticalTests", true);
+                        break;
+                }
+            }
+            
+            this._validateForm();
+        },
+
+        /**
+         * Handler for data source changes
+         * @param {sap.ui.base.Event} oEvent - Input change event
+         * @public
+         * @since 1.0.0
+         */
+        onDataSourceChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oModel = this.base.getView().getModel("create");
+            
+            if (sValue && sValue.trim().length > 0) {
+                // Basic path validation
+                if (/[<>:"|?*]/.test(sValue)) {
+                    oModel.setProperty("/dataSourceState", "Error");
+                    oModel.setProperty("/dataSourceStateText", this._oResourceBundle.getText("validation.dataSourceInvalid"));
+                } else if (/\.\./.test(sValue)) {
+                    oModel.setProperty("/dataSourceState", "Error");
+                    oModel.setProperty("/dataSourceStateText", "Path traversal not allowed");
+                } else {
+                    oModel.setProperty("/dataSourceState", "Success");
+                    oModel.setProperty("/dataSourceStateText", "");
+                }
+            } else {
+                oModel.setProperty("/dataSourceState", "None");
+                oModel.setProperty("/dataSourceStateText", "");
+            }
+            
+            this._validateForm();
+        },
+
+        /**
+         * Handler for validation mode changes
+         * @param {sap.ui.base.Event} oEvent - Select change event
+         * @public
+         * @since 1.0.0
+         */
+        onValidationModeChange: function(oEvent) {
+            var sSelectedKey = oEvent.getParameter("selectedItem").getKey();
+            var oModel = this.base.getView().getModel("create");
+            
+            // Adjust settings based on validation mode
+            switch(sSelectedKey) {
+                case "STRICT":
+                    oModel.setProperty("/precisionThreshold", 0.000001);
+                    oModel.setProperty("/toleranceLevel", 0.0001);
+                    oModel.setProperty("/enableCrossValidation", true);
+                    break;
+                case "BENCHMARK":
+                    oModel.setProperty("/enableStatisticalTests", true);
+                    oModel.setProperty("/detailedLogs", true);
+                    break;
+                case "CUSTOM":
+                    // Show custom rules text area
+                    MessageToast.show("Configure custom validation rules in the Advanced tab");
+                    break;
+            }
+        },
+
+        /**
+         * Handler for adding new formulas
+         * @public
+         * @since 1.0.0
+         */
+        onAddFormula: function() {
+            var oModel = this.base.getView().getModel("create");
+            var aFormulas = oModel.getProperty("/formulas");
+            
+            aFormulas.push({
+                expression: "",
+                expectedResult: 0,
+                type: "ARITHMETIC",
+                testData: "",
+                id: Date.now()
+            });
+            
+            oModel.setProperty("/formulas", aFormulas);
+            this._validateForm();
+        },
+
+        /**
+         * Handler for formula expression changes
+         * @param {sap.ui.base.Event} oEvent - TextArea change event
+         * @public
+         * @since 1.0.0
+         */
+        onFormulaExpressionChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oSource = oEvent.getSource();
+            var oContext = oSource.getBindingContext("create");
+            
+            if (oContext) {
+                var sPath = oContext.getPath();
+                var oModel = this.base.getView().getModel("create");
+                
+                // Basic formula validation
+                if (sValue && sValue.trim().length > 0) {
+                    // Check for common formula syntax
+                    if (/[a-zA-Z0-9\+\-\*\/\^\(\)\s\.]+/.test(sValue)) {
+                        oModel.setProperty(sPath + "/isValid", true);
+                    } else {
+                        oModel.setProperty(sPath + "/isValid", false);
+                    }
+                }
+            }
+            
+            this._validateForm();
+        },
+
+        /**
+         * Validate the entire form
+         * @private
+         * @since 1.0.0
+         */
+        _validateForm: function() {
+            var oModel = this.base.getView().getModel("create");
+            var oData = oModel.getData();
+            
+            var bValid = oData.taskNameState === "Success" &&
+                        oData.calculationType &&
+                        oData.formulas.length > 0 &&
+                        oData.formulas.some(function(formula) {
+                            return formula.expression && formula.expression.trim().length > 0;
+                        });
+            
+            oModel.setProperty("/isValid", bValid);
         },
 
         // Security and validation utilities  

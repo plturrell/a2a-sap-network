@@ -6,81 +6,151 @@
     
     <Dialog
         id="createAITaskDialog"
-        title="Create AI Preparation Task"
-        contentWidth="60%"
-        contentHeight="70%"
-        resizable="true">
+        title="{i18n>title.createTask}"
+        contentWidth="70rem"
+        contentHeight="auto"
+        resizable="true"
+        draggable="true"
+        stretch="{device>/system/phone}"
+        ariaLabelledBy="createAITaskTitle"
+        ariaDescribedBy="createAITaskHelp"
+        class="sapUiResponsiveContentPadding"
+        afterOpen=".onDialogAfterOpen"
+        afterClose=".onDialogAfterClose">
+        
+        <core:InvisibleText id="createAITaskTitle" text="Create AI Preparation Task Dialog"/>
+        <core:InvisibleText id="createAITaskHelp" text="Configure a new AI preparation task by specifying dataset, model type, and training parameters across multiple tabs."/>
         
         <content>
-            <IconTabBar id="aiTaskTabBar" expandable="false">
+            <IconTabBar 
+                id="aiTaskTabBar" 
+                expandable="false"
+                stretchContentHeight="true"
+                ariaLabelledBy="aiTaskTabBarLabel">
+                <core:InvisibleText id="aiTaskTabBarLabel" text="AI task configuration sections: Basic Information, Model Configuration, Feature Settings, and Advanced Options"/>
                 
                 <!-- Basic Information Tab -->
                 <items>
-                    <IconTabFilter text="Basic Info" icon="sap-icon://hint">
+                    <IconTabFilter 
+                        text="Basic Info" 
+                        icon="sap-icon://hint"
+                        ariaDescribedBy="basicInfoTabHelp">
+                        <core:InvisibleText id="basicInfoTabHelp" text="Basic task information including name, description, dataset selection, and model type"/>
                         <form:SimpleForm
                             editable="true"
-                            layout="ResponsiveGridLayout">
+                            layout="ResponsiveGridLayout"
+                            labelSpanXL="4"
+                            labelSpanL="4"
+                            labelSpanM="12"
+                            labelSpanS="12"
+                            adjustLabelSpan="false"
+                            emptySpanXL="0"
+                            emptySpanL="0"
+                            emptySpanM="0"
+                            columnsXL="2"
+                            columnsL="1"
+                            columnsM="1"
+                            class="sapUiResponsiveMargin">
                             <form:content>
-                                <Label text="Task Name" required="true"/>
+                                <Label text="{i18n>taskName}" required="true" labelFor="aiTaskNameInput"/>
                                 <Input 
-                                    value="{path: 'create>/taskName', formatter: '.formatSecureText'}"
-                                    placeholder="Enter task name"
+                                    id="aiTaskNameInput"
+                                    value="{create>/taskName}"
+                                    placeholder="{i18n>placeholder.taskName}"
                                     maxLength="100"
-                                    liveChange=".onTaskNameChange"/>
+                                    liveChange=".onTaskNameChange"
+                                    required="true"
+                                    valueState="{create>/taskNameState}"
+                                    valueStateText="{create>/taskNameStateText}"
+                                    ariaDescribedBy="aiTaskNameHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="aiTaskNameHelp" text="Required field. Enter a unique name for this AI preparation task using alphanumeric characters, spaces, hyphens, underscores, or periods only."/>
                                 
-                                <Label text="Description"/>
+                                <Label text="{i18n>description}" labelFor="aiDescriptionArea"/>
                                 <TextArea 
-                                    value="{path: 'create>/description', formatter: '.formatSecureText'}"
+                                    id="aiDescriptionArea"
+                                    value="{create>/description}"
                                     maxLength="1000"
-                                    rows="2"
-                                    placeholder="Describe the AI preparation task"/>
+                                    rows="3"
+                                    growing="true"
+                                    growingMaxLines="5"
+                                    placeholder="{i18n>placeholder.description}"
+                                    ariaDescribedBy="aiDescriptionHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="aiDescriptionHelp" text="Optional field. Provide additional details about what this AI task will accomplish and any special requirements or considerations."/>
                                 
-                                <Label text="Dataset Name" required="true"/>
+                                <Label text="{i18n>datasetName}" required="true" labelFor="aiDatasetInput"/>
                                 <Input 
-                                    value="{path: 'create>/datasetName', formatter: '.formatSecureText'}"
-                                    placeholder="Select or enter dataset name"
+                                    id="aiDatasetInput"
+                                    value="{create>/datasetName}"
+                                    placeholder="{i18n>placeholder.datasetName}"
                                     maxLength="200"
                                     showValueHelp="true"
-                                    valueHelpRequest=".onSelectDataset"/>
+                                    valueHelpRequest=".onSelectDataset"
+                                    required="true"
+                                    valueState="{create>/datasetNameState}"
+                                    valueStateText="{create>/datasetNameStateText}"
+                                    ariaDescribedBy="aiDatasetHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="aiDatasetHelp" text="Required field. Select the dataset that will be used for training the AI model. Click the help button to browse available datasets."/>
                                 
-                                <Label text="Model Type" required="true"/>
-                                <Select selectedKey="{create>/modelType}">
+                                <Label text="{i18n>modelType}" required="true" labelFor="aiModelTypeSelect"/>
+                                <Select 
+                                    id="aiModelTypeSelect"
+                                    selectedKey="{create>/modelType}"
+                                    ariaDescribedBy="aiModelTypeHelp"
+                                    change=".onModelTypeChange"
+                                    required="true"
+                                    valueState="{create>/modelTypeState}"
+                                    valueStateText="{create>/modelTypeStateText}"
+                                    class="sapUiMediumMarginBottom">
+                                <core:InvisibleText id="aiModelTypeHelp" text="Required field. Choose the type of AI model based on your problem domain and expected outcomes."/>
                                     <items>
-                                        <core:Item key="" text="Select model type..."/>
-                                        <core:Item key="CLASSIFICATION" text="Classification"/>
-                                        <core:Item key="REGRESSION" text="Regression"/>
-                                        <core:Item key="CLUSTERING" text="Clustering"/>
-                                        <core:Item key="EMBEDDING" text="Embedding"/>
-                                        <core:Item key="LLM" text="Large Language Model"/>
-                                        <core:Item key="TIME_SERIES" text="Time Series"/>
-                                        <core:Item key="RECOMMENDATION" text="Recommendation"/>
-                                        <core:Item key="ANOMALY" text="Anomaly Detection"/>
+                                        <core:Item key="" text="{i18n>placeholder.selectModelType}"/>
+                                        <core:Item key="CLASSIFICATION" text="{i18n>modelTypeClassification}" icon="sap-icon://decision-tree"/>
+                                        <core:Item key="REGRESSION" text="{i18n>modelTypeRegression}" icon="sap-icon://line-chart"/>
+                                        <core:Item key="CLUSTERING" text="{i18n>modelTypeClustering}" icon="sap-icon://scatter-chart"/>
+                                        <core:Item key="EMBEDDING" text="{i18n>modelTypeEmbedding}" icon="sap-icon://mesh"/>
+                                        <core:Item key="LLM" text="{i18n>modelTypeLLM}" icon="sap-icon://discussion-2"/>
+                                        <core:Item key="TIME_SERIES" text="{i18n>modelTypeTimeSeries}" icon="sap-icon://line-chart-time-axis"/>
+                                        <core:Item key="RECOMMENDATION" text="{i18n>modelTypeRecommendation}" icon="sap-icon://thumb-up"/>
+                                        <core:Item key="ANOMALY" text="{i18n>modelTypeAnomaly}" icon="sap-icon://warning"/>
                                     </items>
                                 </Select>
                                 
-                                <Label text="Data Type" required="true"/>
-                                <Select selectedKey="{create>/dataType}">
+                                <Label text="{i18n>dataType}" required="true" labelFor="aiDataTypeSelect"/>
+                                <Select 
+                                    id="aiDataTypeSelect"
+                                    selectedKey="{create>/dataType}"
+                                    change=".onDataTypeChange"
+                                    required="true"
+                                    valueState="{create>/dataTypeState}"
+                                    valueStateText="{create>/dataTypeStateText}"
+                                    class="sapUiMediumMarginBottom">
                                     <items>
-                                        <core:Item key="" text="Select data type..."/>
-                                        <core:Item key="TABULAR" text="Tabular"/>
-                                        <core:Item key="TEXT" text="Text"/>
-                                        <core:Item key="IMAGE" text="Image"/>
-                                        <core:Item key="AUDIO" text="Audio"/>
-                                        <core:Item key="VIDEO" text="Video"/>
-                                        <core:Item key="TIME_SERIES" text="Time Series"/>
-                                        <core:Item key="GRAPH" text="Graph"/>
+                                        <core:Item key="" text="{i18n>placeholder.selectDataType}"/>
+                                        <core:Item key="TABULAR" text="{i18n>dataTypeTabular}" icon="sap-icon://table-view"/>
+                                        <core:Item key="TEXT" text="{i18n>dataTypeText}" icon="sap-icon://document-text"/>
+                                        <core:Item key="IMAGE" text="{i18n>dataTypeImage}" icon="sap-icon://picture"/>
+                                        <core:Item key="AUDIO" text="{i18n>dataTypeAudio}" icon="sap-icon://microphone"/>
+                                        <core:Item key="VIDEO" text="{i18n>dataTypeVideo}" icon="sap-icon://video"/>
+                                        <core:Item key="TIME_SERIES" text="{i18n>dataTypeTimeSeries}" icon="sap-icon://line-chart-time-axis"/>
+                                        <core:Item key="GRAPH" text="{i18n>dataTypeGraph}" icon="sap-icon://org-chart"/>
                                     </items>
                                 </Select>
                                 
-                                <Label text="ML Framework"/>
-                                <Select selectedKey="{create>/framework}">
+                                <Label text="{i18n>framework}" labelFor="aiFrameworkSelect"/>
+                                <Select 
+                                    id="aiFrameworkSelect"
+                                    selectedKey="{create>/framework}"
+                                    class="sapUiMediumMarginBottom">
                                     <items>
-                                        <core:Item key="TENSORFLOW" text="TensorFlow"/>
-                                        <core:Item key="PYTORCH" text="PyTorch"/>
-                                        <core:Item key="SCIKIT_LEARN" text="Scikit-learn"/>
-                                        <core:Item key="XGBOOST" text="XGBoost"/>
-                                        <core:Item key="HUGGINGFACE" text="Hugging Face"/>
-                                        <core:Item key="AUTO" text="Auto-select"/>
+                                        <core:Item key="AUTO" text="{i18n>framework.auto}" icon="sap-icon://workflow"/>
+                                        <core:Item key="TENSORFLOW" text="{i18n>framework.tensorflow}" icon="sap-icon://database"/>
+                                        <core:Item key="PYTORCH" text="{i18n>framework.pytorch}" icon="sap-icon://database"/>
+                                        <core:Item key="SCIKIT_LEARN" text="{i18n>framework.scikitLearn}" icon="sap-icon://analytics"/>
+                                        <core:Item key="XGBOOST" text="{i18n>framework.xgboost}" icon="sap-icon://decision-tree"/>
+                                        <core:Item key="HUGGINGFACE" text="{i18n>framework.huggingface}" icon="sap-icon://discussion-2"/>
                                     </items>
                                 </Select>
                             </form:content>
@@ -174,16 +244,16 @@
         
         <beginButton>
             <Button 
-                text="Cancel"
-                press=".onCancelCreateTask"/>
+                text="{i18n>button.cancel}"
+                press=".onCancelCreate"/>
         </beginButton>
         
         <endButton>
             <Button 
-                text="Create"
+                text="{i18n>button.create}"
                 type="Emphasized"
                 press=".onConfirmCreateTask"
-                enabled="{= ${create>/taskName} &amp;&amp; ${create>/datasetName} &amp;&amp; ${create>/modelType} &amp;&amp; ${create>/dataType} }"/>
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/datasetName} &amp;&amp; ${create>/modelType} &amp;&amp; ${create>/dataType} &amp;&amp; ${create>/isValid} }"/>
         </endButton>
         
     </Dialog>

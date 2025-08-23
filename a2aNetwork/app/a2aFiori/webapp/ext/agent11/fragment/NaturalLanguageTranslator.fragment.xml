@@ -1,0 +1,333 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.ui.layout.form">
+    
+    <Dialog
+        id="naturalLanguageTranslatorDialog"
+        title="{i18n>naturalLanguageTranslator}"
+        contentWidth="70%"
+        contentHeight="80%"
+        verticalScrolling="true">
+        
+        <content>
+            <IconTabBar id="nlTranslatorTabBar" expandable="false">
+                <!-- Input Tab -->
+                <items>
+                    <IconTabFilter text="{i18n>input}" icon="sap-icon://message" iconColor="Neutral">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Natural Language Input -->
+                            <Panel headerText="{i18n>naturalLanguageInput}">
+                                <VBox class="sapUiSmallMargin">
+                                    <Label text="{i18n>enterYourQuestion}:" />
+                                    <TextArea
+                                        id="naturalLanguageInput"
+                                        value="{/naturalLanguageQuery}"
+                                        placeholder="{i18n>nlInputPlaceholder}"
+                                        rows="4"
+                                        width="100%"
+                                        valueLiveUpdate="true"
+                                        liveChange=".onNaturalLanguageChange" />
+                                    
+                                    <MessageStrip
+                                        text="{i18n>nlInputHint}"
+                                        type="Information"
+                                        showIcon="true"
+                                        class="sapUiSmallMarginTop" />
+                                    
+                                    <!-- Example Questions -->
+                                    <VBox class="sapUiSmallMarginTop">
+                                        <Label text="{i18n>exampleQuestions}:" />
+                                        <List
+                                            items="{/exampleQuestions}"
+                                            mode="SingleSelect"
+                                            itemPress=".onExampleQuestionSelect">
+                                            <StandardListItem
+                                                title="{text}"
+                                                description="{description}"
+                                                type="Active"
+                                                icon="sap-icon://lightbulb" />
+                                        </List>
+                                    </VBox>
+                                </VBox>
+                            </Panel>
+                            
+                            <!-- Context Configuration -->
+                            <Panel
+                                headerText="{i18n>contextConfiguration}"
+                                expandable="true"
+                                expanded="false"
+                                class="sapUiMediumMarginTop">
+                                <f:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout">
+                                    <f:content>
+                                        <Label text="{i18n>targetDatabase}:" />
+                                        <Select
+                                            selectedKey="{/selectedDatabase}"
+                                            change=".onDatabaseChange">
+                                            <items>
+                                                <core:Item key="main_db" text="{i18n>mainDatabase}" />
+                                                <core:Item key="analytics_db" text="{i18n>analyticsDatabase}" />
+                                                <core:Item key="reporting_db" text="{i18n>reportingDatabase}" />
+                                                <core:Item key="archive_db" text="{i18n>archiveDatabase}" />
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="{i18n>preferredDialect}:" />
+                                        <Select selectedKey="{/sqlDialect}">
+                                            <items>
+                                                <core:Item key="HANA" text="SAP HANA" />
+                                                <core:Item key="POSTGRESQL" text="PostgreSQL" />
+                                                <core:Item key="MYSQL" text="MySQL" />
+                                                <core:Item key="SQLITE" text="SQLite" />
+                                                <core:Item key="ORACLE" text="Oracle" />
+                                                <core:Item key="SQLSERVER" text="SQL Server" />
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="{i18n>contextHints}:" />
+                                        <TextArea
+                                            value="{/contextHints}"
+                                            placeholder="{i18n>contextHintsPlaceholder}"
+                                            rows="3"
+                                            width="100%" />
+                                        
+                                        <Label text="{i18n>includeSchemaInfo}:" />
+                                        <CheckBox selected="{/includeSchemaInfo}" />
+                                        
+                                        <Label text="{i18n>allowApproximation}:" />
+                                        <CheckBox selected="{/allowApproximation}" />
+                                    </f:content>
+                                </f:SimpleForm>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Translation Results Tab -->
+                    <IconTabFilter text="{i18n>translation}" icon="sap-icon://syntax" iconColor="Positive">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Generated SQL -->
+                            <Panel headerText="{i18n>generatedSQL}">
+                                <VBox class="sapUiSmallMargin">
+                                    <HBox justifyContent="SpaceBetween">
+                                        <Label text="{i18n>sqlQuery}:" />
+                                        <HBox>
+                                            <Button
+                                                text="{i18n>copySQL}"
+                                                icon="sap-icon://copy"
+                                                press=".onCopySQL"
+                                                type="Transparent" />
+                                            <Button
+                                                text="{i18n>formatSQL}"
+                                                icon="sap-icon://syntax"
+                                                press=".onFormatSQL"
+                                                type="Transparent" />
+                                        </HBox>
+                                    </HBox>
+                                    
+                                    <CodeEditor
+                                        id="generatedSQLEditor"
+                                        type="sql"
+                                        value="{/generatedSQL}"
+                                        height="200px"
+                                        width="100%"
+                                        editable="true"
+                                        syntaxHints="true"
+                                        colorTheme="default" />
+                                    
+                                    <!-- Translation Metrics -->
+                                    <l:Grid defaultSpan="L3 M6 S12" class="sapUiSmallMarginTop">
+                                        <ObjectStatus
+                                            title="{i18n>confidence}"
+                                            text="{/translationMetrics/confidence}%"
+                                            state="{= ${/translationMetrics/confidence} > 80 ? 'Success' : 'Warning' }"
+                                            icon="sap-icon://chart" />
+                                        <ObjectStatus
+                                            title="{i18n>processingTime}"
+                                            text="{/translationMetrics/processingTime}ms"
+                                            state="Information"
+                                            icon="sap-icon://timesheet" />
+                                        <ObjectStatus
+                                            title="{i18n>complexity}"
+                                            text="{/translationMetrics/complexity}"
+                                            state="None"
+                                            icon="sap-icon://puzzle" />
+                                        <ObjectStatus
+                                            title="{i18n>dialect}"
+                                            text="{/translationMetrics/dialect}"
+                                            state="Information"
+                                            icon="sap-icon://database" />
+                                    </l:Grid>
+                                </VBox>
+                            </Panel>
+                            
+                            <!-- Alternative Translations -->
+                            <Panel
+                                headerText="{i18n>alternativeTranslations}"
+                                expandable="true"
+                                expanded="false"
+                                class="sapUiMediumMarginTop"
+                                visible="{= ${/alternatives} && ${/alternatives}.length > 0 }">
+                                <List items="{/alternatives}">
+                                    <CustomListItem>
+                                        <VBox class="sapUiSmallMargin">
+                                            <HBox justifyContent="SpaceBetween">
+                                                <VBox>
+                                                    <Text text="{approach}" emphasized="true" />
+                                                    <Text text="{description}" class="sapUiTinyMarginTop" />
+                                                </VBox>
+                                                <VBox>
+                                                    <ObjectStatus
+                                                        text="{confidence}%"
+                                                        state="{= ${confidence} > 70 ? 'Success' : 'Warning' }" />
+                                                    <Button
+                                                        text="{i18n>useThis}"
+                                                        press=".onSelectAlternative"
+                                                        type="Transparent" />
+                                                </VBox>
+                                            </HBox>
+                                            <CodeEditor
+                                                type="sql"
+                                                value="{sql}"
+                                                height="150px"
+                                                width="100%"
+                                                editable="false"
+                                                class="sapUiTinyMarginTop" />
+                                        </VBox>
+                                    </CustomListItem>
+                                </List>
+                            </Panel>
+                            
+                            <!-- Ambiguities and Clarifications -->
+                            <Panel
+                                headerText="{i18n>clarificationsNeeded}"
+                                expandable="true"
+                                expanded="true"
+                                class="sapUiMediumMarginTop"
+                                visible="{= ${/clarifications} && ${/clarifications}.length > 0 }">
+                                <MessageStrip
+                                    text="{i18n>clarificationMessage}"
+                                    type="Warning"
+                                    showIcon="true"
+                                    class="sapUiSmallMarginBottom" />
+                                
+                                <List items="{/clarifications}">
+                                    <StandardListItem
+                                        title="{question}"
+                                        description="{context}"
+                                        icon="sap-icon://question-mark"
+                                        type="Active"
+                                        press=".onClarificationPress" />
+                                </List>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Validation Tab -->
+                    <IconTabFilter text="{i18n>validation}" icon="sap-icon://accept" iconColor="Critical">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Validation Results -->
+                            <Panel headerText="{i18n>validationResults}">
+                                <VBox class="sapUiSmallMargin">
+                                    <MessageStrip
+                                        text="{= ${/validation/isValid} ? ${i18n>sqlIsValid} : ${i18n>sqlHasErrors} }"
+                                        type="{= ${/validation/isValid} ? 'Success' : 'Error' }"
+                                        showIcon="true" />
+                                    
+                                    <!-- Errors -->
+                                    <VBox visible="{= ${/validation/errors} && ${/validation/errors}.length > 0 }">
+                                        <Label text="{i18n>errors}:" class="sapUiSmallMarginTop" />
+                                        <List items="{/validation/errors}">
+                                            <StandardListItem
+                                                title="{message}"
+                                                description="{location}"
+                                                icon="sap-icon://error"
+                                                iconInset="false"
+                                                type="Inactive" />
+                                        </List>
+                                    </VBox>
+                                    
+                                    <!-- Warnings -->
+                                    <VBox visible="{= ${/validation/warnings} && ${/validation/warnings}.length > 0 }">
+                                        <Label text="{i18n>warnings}:" class="sapUiSmallMarginTop" />
+                                        <List items="{/validation/warnings}">
+                                            <StandardListItem
+                                                title="{message}"
+                                                description="{suggestion}"
+                                                icon="sap-icon://warning"
+                                                iconInset="false"
+                                                type="Inactive" />
+                                        </List>
+                                    </VBox>
+                                    
+                                    <!-- Suggestions -->
+                                    <VBox visible="{= ${/validation/suggestions} && ${/validation/suggestions}.length > 0 }">
+                                        <Label text="{i18n>suggestions}:" class="sapUiSmallMarginTop" />
+                                        <List items="{/validation/suggestions}">
+                                            <StandardListItem
+                                                title="{title}"
+                                                description="{description}"
+                                                icon="sap-icon://lightbulb"
+                                                iconInset="false"
+                                                type="Active"
+                                                press=".onApplySuggestion" />
+                                        </List>
+                                    </VBox>
+                                </VBox>
+                            </Panel>
+                            
+                            <!-- Execution Plan Preview -->
+                            <Panel
+                                headerText="{i18n>executionPlanPreview}"
+                                expandable="true"
+                                expanded="false"
+                                class="sapUiMediumMarginTop">
+                                <VBox class="sapUiSmallMargin">
+                                    <l:Grid defaultSpan="L6 M12 S12">
+                                        <VBox>
+                                            <Label text="{i18n>estimatedCost}:" />
+                                            <ObjectNumber
+                                                number="{/executionPlan/estimatedCost}"
+                                                unit="{i18n>units}"
+                                                state="Information" />
+                                        </VBox>
+                                        <VBox>
+                                            <Label text="{i18n>estimatedRows}:" />
+                                            <ObjectNumber
+                                                number="{/executionPlan/estimatedRows}"
+                                                state="None" />
+                                        </VBox>
+                                    </l:Grid>
+                                    
+                                    <TextArea
+                                        value="{/executionPlan/textPlan}"
+                                        rows="8"
+                                        editable="false"
+                                        width="100%"
+                                        class="sapUiSmallMarginTop" />
+                                </VBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button
+                text="{i18n>translateToSQL}"
+                type="Emphasized"
+                icon="sap-icon://convert"
+                press=".onTranslateToSQL"
+                enabled="{= ${/naturalLanguageQuery} !== '' }" />
+        </beginButton>
+        
+        <endButton>
+            <Button
+                text="{i18n>close}"
+                press=".onCloseNLTranslator" />
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

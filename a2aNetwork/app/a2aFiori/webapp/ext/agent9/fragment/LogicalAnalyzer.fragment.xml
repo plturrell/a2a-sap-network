@@ -1,0 +1,542 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="logicalAnalyzerDialog"
+        title="Logical Analyzer"
+        contentWidth="90%"
+        contentHeight="85%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Analysis Dashboard ---->
+                    <IconTabFilter text="Dashboard" icon="sap-icon://overview-chart">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Analysis Statistics ---->
+                            <Panel headerText="Logical Analysis Statistics" class="sapUiMediumMarginBottom">
+                                <HBox class="sapUiMediumMargin">
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Active Analyses" level="H4"/>
+                                        <ObjectNumber 
+                                            number="{logicalAnalyzer>/stats/activeAnalyses}"
+                                            state="Information"
+                                            emphasized="true"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Contradiction Rate" level="H4"/>
+                                        <mc:RadialMicroChart
+                                            size="L"
+                                            percentage="{logicalAnalyzer>/stats/contradictionRate}"
+                                            valueColor="{= ${logicalAnalyzer>/stats/contradictionRate} <= 10 ? 'Good' : ${logicalAnalyzer>/stats/contradictionRate} <= 25 ? 'Critical' : 'Error'}"/>
+                                        <Text text="{logicalAnalyzer>/stats/contradictionRate}%" class="sapUiLargeMarginTop"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Consistency Score" level="H4"/>
+                                        <ProgressIndicator 
+                                            percentValue="{logicalAnalyzer>/stats/consistencyScore}"
+                                            displayValue="{logicalAnalyzer>/stats/consistencyScore}%"
+                                            state="{= ${logicalAnalyzer>/stats/consistencyScore} >= 90 ? 'Success' : ${logicalAnalyzer>/stats/consistencyScore} >= 70 ? 'Warning' : 'Error'}"
+                                            width="150px"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Analyses Today" level="H4"/>
+                                        <ObjectNumber 
+                                            number="{logicalAnalyzer>/stats/analysesToday}"
+                                            state="Success"
+                                            emphasized="true"/>
+                                    </VBox>
+                                    <VBox>
+                                        <Title text="Avg Analysis Time" level="H4"/>
+                                        <ObjectNumber 
+                                            number="{logicalAnalyzer>/stats/avgAnalysisTime}"
+                                            unit="sec"
+                                            state="{= ${logicalAnalyzer>/stats/avgAnalysisTime} <= 30 ? 'Success' : ${logicalAnalyzer>/stats/avgAnalysisTime} <= 60 ? 'Warning' : 'Error'}"
+                                            emphasized="true"/>
+                                    </VBox>
+                                </HBox>
+                            </Panel>
+                            
+                            <!-- Logical Consistency Overview ---->
+                            <Panel headerText="Logical Consistency Overview" class="sapUiMediumMarginBottom">
+                                <HBox class="sapUiMediumMargin">
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Contradictions Found" level="H5"/>
+                                        <ObjectNumber 
+                                            number="{logicalAnalyzer>/consistency/contradictions}"
+                                            state="{= ${logicalAnalyzer>/consistency/contradictions} === 0 ? 'Success' : ${logicalAnalyzer>/consistency/contradictions} <= 5 ? 'Warning' : 'Error'}"
+                                            emphasized="true"/>
+                                        <List items="{logicalAnalyzer>/consistency/recentContradictions}" showSeparators="None">
+                                            <StandardListItem 
+                                                title="{contradiction}"
+                                                description="{source}"
+                                                info="{severity}"
+                                                infoState="{= ${severity} === 'HIGH' ? 'Error' : ${severity} === 'MEDIUM' ? 'Warning' : 'Success'}"/>
+                                        </List>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Logical Completeness" level="H5"/>
+                                        <mc:RadialMicroChart
+                                            size="M"
+                                            percentage="{logicalAnalyzer>/consistency/completeness}"
+                                            valueColor="Good"/>
+                                        <Text text="{logicalAnalyzer>/consistency/completeness}%" class="sapUiTinyMarginTop"/>
+                                    </VBox>
+                                    <VBox>
+                                        <Title text="Knowledge Gaps" level="H5"/>
+                                        <ObjectNumber 
+                                            number="{logicalAnalyzer>/consistency/knowledgeGaps}"
+                                            state="Warning"
+                                            emphasized="true"/>
+                                        <List items="{logicalAnalyzer>/consistency/criticalGaps}" showSeparators="None">
+                                            <StandardListItem 
+                                                title="{gap}"
+                                                description="{domain}"
+                                                info="{impact}"
+                                                infoState="Warning"/>
+                                        </List>
+                                    </VBox>
+                                </HBox>
+                            </Panel>
+                            
+                            <!-- Real-time Analysis Monitor ---->
+                            <Panel headerText="Real-time Analysis Monitor">
+                                <Table 
+                                    items="{logicalAnalyzer>/realtimeAnalyses}"
+                                    mode="None"
+                                    growing="true"
+                                    growingThreshold="15">
+                                    <headerToolbar>
+                                        <Toolbar>
+                                            <Title text="Live Analysis Stream"/>
+                                            <ToolbarSpacer/>
+                                            <Switch 
+                                                state="{logicalAnalyzer>/monitoring/enabled}"
+                                                customTextOn="Live"
+                                                customTextOff="Paused"
+                                                change=".onToggleAnalysisMonitoring"/>
+                                        </Toolbar>
+                                    </headerToolbar>
+                                    <columns>
+                                        <Column>
+                                            <Text text="Analysis"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Type"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Result"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Confidence"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Time"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <VBox>
+                                                    <Text text="{analysisTarget}" class="sapThemeHighlight-asTextColor"/>
+                                                    <Text text="{description}" maxLines="2" class="sapThemeTextSecondary"/>
+                                                </VBox>
+                                                <ObjectStatus 
+                                                    text="{analysisType}"
+                                                    state="Information"
+                                                    icon="{= ${analysisType} === 'CONTRADICTION' ? 'sap-icon://alert' : ${analysisType} === 'CONSISTENCY' ? 'sap-icon://validate' : ${analysisType} === 'COMPLETENESS' ? 'sap-icon://checklist' : 'sap-icon://question-mark'}"/>
+                                                <ObjectStatus 
+                                                    text="{result}"
+                                                    state="{= ${result} === 'CONSISTENT' ? 'Success' : ${result} === 'CONTRADICTION' ? 'Error' : ${result} === 'INCOMPLETE' ? 'Warning' : 'None'}"
+                                                    icon="{= ${result} === 'CONSISTENT' ? 'sap-icon://status-positive' : ${result} === 'CONTRADICTION' ? 'sap-icon://status-negative' : ${result} === 'INCOMPLETE' ? 'sap-icon://pending' : 'sap-icon://question-mark'}"/>
+                                                <ProgressIndicator 
+                                                    percentValue="{= ${confidence} * 100}"
+                                                    displayValue="{confidence}"
+                                                    state="{= ${confidence} >= 0.8 ? 'Success' : ${confidence} >= 0.6 ? 'Warning' : 'Error'}"
+                                                    width="100px"/>
+                                                <Text text="{timestamp}"/>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Contradiction Analysis ---->
+                    <IconTabFilter text="Contradictions" icon="sap-icon://alert">
+                        <VBox class="sapUiMediumMargin">
+                            <Table 
+                                items="{logicalAnalyzer>/contradictions}"
+                                mode="SingleSelect"
+                                growing="true"
+                                growingThreshold="50">
+                                <headerToolbar>
+                                    <Toolbar>
+                                        <Title text="Contradiction Repository"/>
+                                        <ToolbarSpacer/>
+                                        <SearchField 
+                                            width="20rem"
+                                            placeholder="Search contradictions..."
+                                            search=".onSearchContradictions"/>
+                                        <Button 
+                                            text="Analyze All"
+                                            icon="sap-icon://inspect"
+                                            press=".onAnalyzeAllContradictions"
+                                            type="Emphasized"/>
+                                        <Button 
+                                            text="Resolve Selected"
+                                            icon="sap-icon://validate"
+                                            press=".onResolveContradictions"/>
+                                        <Button 
+                                            text="Export"
+                                            icon="sap-icon://download"
+                                            press=".onExportContradictions"/>
+                                    </Toolbar>
+                                </headerToolbar>
+                                <columns>
+                                    <Column>
+                                        <Text text="Contradiction"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Statements"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Severity"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Source"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Resolution"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Status"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Actions"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <VBox>
+                                                <Text text="{contradictionTitle}" class="sapThemeHighlight-asTextColor"/>
+                                                <Text text="{description}" maxLines="2" class="sapThemeTextSecondary"/>
+                                                <Text text="Detected: {detectionTime}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <VBox>
+                                                <Text text="Statement A: {statementA}" maxLines="1" class="sapThemeTextSecondary"/>
+                                                <Text text="Statement B: {statementB}" maxLines="1" class="sapThemeTextSecondary"/>
+                                                <Text text="Conflict: {conflictType}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <ObjectStatus 
+                                                text="{severity}"
+                                                state="{= ${severity} === 'CRITICAL' ? 'Error' : ${severity} === 'HIGH' ? 'Warning' : 'Success'}"
+                                                icon="{= ${severity} === 'CRITICAL' ? 'sap-icon://alert' : ${severity} === 'HIGH' ? 'sap-icon://warning' : 'sap-icon://status-positive'}"/>
+                                            <VBox>
+                                                <Text text="{sourceRule}" class="sapThemeHighlight-asTextColor"/>
+                                                <Text text="Domain: {domain}" class="sapThemeTextSecondary"/>
+                                                <Text text="Context: {context}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <VBox>
+                                                <Text text="{resolutionStrategy}" maxLines="1"/>
+                                                <Text text="Confidence: {resolutionConfidence}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <ObjectStatus 
+                                                text="{status}"
+                                                state="{= ${status} === 'RESOLVED' ? 'Success' : ${status} === 'ANALYZING' ? 'Warning' : ${status} === 'UNRESOLVED' ? 'Error' : 'None'}"
+                                                icon="{= ${status} === 'RESOLVED' ? 'sap-icon://status-positive' : ${status} === 'ANALYZING' ? 'sap-icon://pending' : ${status} === 'UNRESOLVED' ? 'sap-icon://status-negative' : 'sap-icon://question-mark'}"/>
+                                            <HBox>
+                                                <Button 
+                                                    icon="sap-icon://detail-view"
+                                                    tooltip="View Details"
+                                                    press=".onViewContradictionDetails"/>
+                                                <Button 
+                                                    icon="sap-icon://validate"
+                                                    tooltip="Resolve"
+                                                    press=".onResolveContradiction"/>
+                                                <Button 
+                                                    icon="sap-icon://explain"
+                                                    tooltip="Explain"
+                                                    press=".onExplainContradiction"/>
+                                                <Button 
+                                                    icon="sap-icon://delete"
+                                                    tooltip="Dismiss"
+                                                    press=".onDismissContradiction"/>
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Consistency Check ---->
+                    <IconTabFilter text="Consistency" icon="sap-icon://validate">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="Knowledge Base Consistency Check" class="sapUiMediumMarginBottom">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    class="sapUiMediumMargin">
+                                    <form:content>
+                                        <Label text="Analysis Scope"/>
+                                        <Select selectedKey="{consistencyChecker>/scope}">
+                                            <items>
+                                                <core:Item key="FULL_KB" text="Full Knowledge Base"/>
+                                                <core:Item key="DOMAIN_SPECIFIC" text="Domain Specific"/>
+                                                <core:Item key="RECENT_CHANGES" text="Recent Changes Only"/>
+                                                <core:Item key="SELECTED_RULES" text="Selected Rules"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Domain Filter"/>
+                                        <MultiComboBox selectedKeys="{consistencyChecker>/domains}">
+                                            <items>
+                                                <core:Item key="MEDICAL" text="Medical"/>
+                                                <core:Item key="LEGAL" text="Legal"/>
+                                                <core:Item key="TECHNICAL" text="Technical"/>
+                                                <core:Item key="BUSINESS" text="Business"/>
+                                                <core:Item key="SCIENTIFIC" text="Scientific"/>
+                                            </items>
+                                        </MultiComboBox>
+                                        
+                                        <Label text="Consistency Level"/>
+                                        <Select selectedKey="{consistencyChecker>/level}">
+                                            <items>
+                                                <core:Item key="SYNTACTIC" text="Syntactic Consistency"/>
+                                                <core:Item key="SEMANTIC" text="Semantic Consistency"/>
+                                                <core:Item key="PRAGMATIC" text="Pragmatic Consistency"/>
+                                                <core:Item key="FULL" text="Full Consistency Check"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Check Depth"/>
+                                        <Slider 
+                                            value="{consistencyChecker>/depth}"
+                                            min="1"
+                                            max="10"
+                                            step="1"
+                                            width="300px"
+                                            enableTickmarks="true"/>
+                                        <Text text="{consistencyChecker>/depth} levels" class="sapUiTinyMarginTop"/>
+                                        
+                                        <Label text="Include Probabilistic Rules"/>
+                                        <Switch state="{consistencyChecker>/includeProbabilistic}"/>
+                                        
+                                        <Label text="Conflict Resolution Strategy"/>
+                                        <Select selectedKey="{consistencyChecker>/conflictResolution}">
+                                            <items>
+                                                <core:Item key="REPORT_ONLY" text="Report Only"/>
+                                                <core:Item key="AUTO_RESOLVE" text="Auto Resolve"/>
+                                                <core:Item key="SUGGEST_RESOLUTION" text="Suggest Resolution"/>
+                                                <core:Item key="MANUAL_REVIEW" text="Manual Review"/>
+                                            </items>
+                                        </Select>
+                                    </form:content>
+                                </form:SimpleForm>
+                                
+                                <HBox class="sapUiMediumMargin">
+                                    <Button 
+                                        text="Start Consistency Check"
+                                        icon="sap-icon://validate"
+                                        press=".onStartConsistencyCheck"
+                                        type="Emphasized"
+                                        class="sapUiMediumMarginEnd"/>
+                                    <Button 
+                                        text="Quick Check"
+                                        icon="sap-icon://inspect"
+                                        press=".onQuickConsistencyCheck"
+                                        class="sapUiMediumMarginEnd"/>
+                                    <Button 
+                                        text="Schedule Check"
+                                        icon="sap-icon://calendar"
+                                        press=".onScheduleConsistencyCheck"/>
+                                </HBox>
+                            </Panel>
+                            
+                            <!-- Consistency Results ---->
+                            <Panel headerText="Consistency Check Results" class="sapUiMediumMarginBottom">
+                                <VBox class="sapUiMediumMargin">
+                                    <HBox class="sapUiMediumMarginBottom">
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Title text="Overall Score" level="H5"/>
+                                            <mc:RadialMicroChart
+                                                size="L"
+                                                percentage="{consistencyChecker>/results/overallScore}"
+                                                valueColor="{= ${consistencyChecker>/results/overallScore} >= 90 ? 'Good' : ${consistencyChecker>/results/overallScore} >= 70 ? 'Critical' : 'Error'}"/>
+                                            <Text text="{consistencyChecker>/results/overallScore}%" class="sapUiLargeMarginTop"/>
+                                        </VBox>
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Title text="Issues Found" level="H5"/>
+                                            <HBox>
+                                                <VBox class="sapUiSmallMarginEnd">
+                                                    <Text text="Critical" class="sapThemeTextSecondary"/>
+                                                    <ObjectNumber number="{consistencyChecker>/results/criticalIssues}" state="Error"/>
+                                                </VBox>
+                                                <VBox class="sapUiSmallMarginEnd">
+                                                    <Text text="Warning" class="sapThemeTextSecondary"/>
+                                                    <ObjectNumber number="{consistencyChecker>/results/warningIssues}" state="Warning"/>
+                                                </VBox>
+                                                <VBox>
+                                                    <Text text="Info" class="sapThemeTextSecondary"/>
+                                                    <ObjectNumber number="{consistencyChecker>/results/infoIssues}" state="Information"/>
+                                                </VBox>
+                                            </HBox>
+                                        </VBox>
+                                        <VBox>
+                                            <Title text="Check Progress" level="H5"/>
+                                            <ProgressIndicator 
+                                                percentValue="{consistencyChecker>/results/progress}"
+                                                displayValue="{consistencyChecker>/results/progress}%"
+                                                state="Information"
+                                                width="200px"/>
+                                            <Text text="Status: {consistencyChecker>/results/status}" class="sapUiTinyMarginTop"/>
+                                        </VBox>
+                                    </HBox>
+                                    
+                                    <Table items="{consistencyChecker>/results/issues}">
+                                        <headerToolbar>
+                                            <Toolbar>
+                                                <Title text="Detailed Issues"/>
+                                                <ToolbarSpacer/>
+                                                <Button 
+                                                    text="Fix All"
+                                                    icon="sap-icon://validate"
+                                                    press=".onFixAllIssues"/>
+                                            </Toolbar>
+                                        </headerToolbar>
+                                        <columns>
+                                            <Column><Text text="Issue"/></Column>
+                                            <Column><Text text="Severity"/></Column>
+                                            <Column><Text text="Location"/></Column>
+                                            <Column><Text text="Suggestion"/></Column>
+                                            <Column><Text text="Actions"/></Column>
+                                        </columns>
+                                        <items>
+                                            <ColumnListItem>
+                                                <cells>
+                                                    <VBox>
+                                                        <Text text="{issueType}" class="sapThemeHighlight-asTextColor"/>
+                                                        <Text text="{description}" maxLines="2" class="sapThemeTextSecondary"/>
+                                                    </VBox>
+                                                    <ObjectStatus 
+                                                        text="{severity}"
+                                                        state="{= ${severity} === 'CRITICAL' ? 'Error' : ${severity} === 'WARNING' ? 'Warning' : 'Information'}"
+                                                        icon="{= ${severity} === 'CRITICAL' ? 'sap-icon://alert' : ${severity} === 'WARNING' ? 'sap-icon://warning' : 'sap-icon://information'}"/>
+                                                    <VBox>
+                                                        <Text text="{location}"/>
+                                                        <Text text="Rule: {ruleId}" class="sapThemeTextSecondary"/>
+                                                    </VBox>
+                                                    <Text text="{suggestion}" maxLines="2"/>
+                                                    <HBox>
+                                                        <Button 
+                                                            icon="sap-icon://validate"
+                                                            tooltip="Fix Issue"
+                                                            press=".onFixIssue"/>
+                                                        <Button 
+                                                            icon="sap-icon://detail-view"
+                                                            tooltip="View Details"
+                                                            press=".onViewIssueDetails"/>
+                                                    </HBox>
+                                                </cells>
+                                            </ColumnListItem>
+                                        </items>
+                                    </Table>
+                                </VBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Analytics ---->
+                    <IconTabFilter text="Analytics" icon="sap-icon://bar-chart">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Analysis Trends ---->
+                            <Panel headerText="Logical Analysis Trends" class="sapUiMediumMarginBottom">
+                                <core:HTML 
+                                    id="logicalAnalysisChart"
+                                    content='<div id="logicalAnalysisChartDiv" style="width: 100%; height: 300px;"></div>'
+                                    preferDOM="true"/>
+                            </Panel>
+                            
+                            <!-- Quality Metrics ---->
+                            <Panel headerText="Knowledge Base Quality Metrics">
+                                <HBox class="sapUiMediumMargin">
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Domain Consistency" level="H5"/>
+                                        <mc:ColumnMicroChart
+                                            size="M"
+                                            columns="{logicalAnalyzer>/analytics/domainConsistency}">
+                                            <mc:columns>
+                                                <mc:ColumnMicroChartData 
+                                                    value="{consistency}"
+                                                    color="{= ${consistency} >= 90 ? 'Good' : ${consistency} >= 70 ? 'Critical' : 'Error'}"
+                                                    label="{domain}"/>
+                                            </mc:columns>
+                                        </mc:ColumnMicroChart>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Frequent Issues" level="H5"/>
+                                        <List items="{logicalAnalyzer>/analytics/frequentIssues}">
+                                            <StandardListItem
+                                                title="{issueType}"
+                                                description="{description}"
+                                                info="{frequency}"
+                                                infoState="Warning"/>
+                                        </List>
+                                    </VBox>
+                                    <VBox>
+                                        <Title text="Quality Indicators" level="H5"/>
+                                        <HBox>
+                                            <VBox class="sapUiSmallMarginEnd">
+                                                <Text text="Validity" class="sapThemeTextSecondary"/>
+                                                <ObjectNumber number="{logicalAnalyzer>/analytics/validity}%" state="Success"/>
+                                            </VBox>
+                                            <VBox class="sapUiSmallMarginEnd">
+                                                <Text text="Completeness" class="sapThemeTextSecondary"/>
+                                                <ObjectNumber number="{logicalAnalyzer>/analytics/completeness}%" state="Warning"/>
+                                            </VBox>
+                                            <VBox>
+                                                <Text text="Coherence" class="sapThemeTextSecondary"/>
+                                                <ObjectNumber number="{logicalAnalyzer>/analytics/coherence}%" state="Success"/>
+                                            </VBox>
+                                        </HBox>
+                                    </VBox>
+                                </HBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Quick Analysis"
+                icon="sap-icon://inspect"
+                press=".onQuickLogicalAnalysis"
+                type="Emphasized"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Export Report"
+                    icon="sap-icon://download"
+                    press=".onExportAnalysisReport"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseLogicalAnalyzer"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

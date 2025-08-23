@@ -6,42 +6,58 @@
     <Dialog
         id="validationResultsDialog"
         title="Calculation Validation Results"
-        contentWidth="90%"
-        contentHeight="85%"
+        contentWidth="70rem"
+        contentHeight="auto"
         resizable="true"
-        draggable="true">
+        draggable="true"
+        stretch="{device>/system/phone}"
+        ariaLabelledBy="validationResultsTitle"
+        ariaDescribedBy="validationResultsHelp"
+        class="sapUiResponsiveContentPadding">
+        
+        <core:InvisibleText id="validationResultsTitle" text="Calculation Validation Results Dialog"/>
+        <core:InvisibleText id="validationResultsHelp" text="Comprehensive validation results including overall score, method comparisons, step-by-step solutions, and analysis charts."/>
         
         <content>
             <VBox>
                 <!-- Results Summary -->
-                <Panel headerText="Validation Summary" class="sapUiResponsiveMargin">
-                    <HBox class="sapUiMediumMargin">
-                        <VBox class="sapUiMediumMarginEnd">
-                            <Title text="Overall Score" level="H3"/>
+                <Panel 
+                    headerText="Validation Summary" 
+                    class="sapUiResponsiveMargin"
+                    ariaLabelledBy="validationSummaryTitle">
+                    <core:InvisibleText id="validationSummaryTitle" text="Validation summary showing overall score, confidence level, methods used, validation time, and status"/>
+                    <HBox class="sapUiMediumMargin" wrap="Wrap">
+                        <VBox class="sapUiMediumMarginEnd sapUiMediumMarginBottom">
+                            <Title text="Overall Score" level="H3" ariaDescribedBy="overallScoreHelp"/>
+                            <core:InvisibleText id="overallScoreHelp" text="Overall validation score as percentage based on all validation methods"/>
                             <ObjectNumber 
                                 number="{results>/overallScore}"
                                 unit="%"
                                 state="{= ${results>/overallScore} >= 95 ? 'Success' : ${results>/overallScore} >= 80 ? 'Warning' : 'Error'}"
                                 emphasized="true"/>
                         </VBox>
-                        <VBox class="sapUiMediumMarginEnd">
-                            <Title text="Confidence" level="H3"/>
+                        <VBox class="sapUiMediumMarginEnd sapUiMediumMarginBottom">
+                            <Title text="Confidence" level="H3" ariaDescribedBy="confidenceHelp"/>
+                            <core:InvisibleText id="confidenceHelp" text="Confidence level in the validation results based on method consistency"/>
                             <ObjectNumber 
                                 number="{results>/confidenceLevel}"
                                 unit="%"
                                 state="{= ${results>/confidenceLevel} >= 90 ? 'Success' : ${results>/confidenceLevel} >= 70 ? 'Warning' : 'Error'}"
                                 emphasized="true"/>
                         </VBox>
-                        <VBox class="sapUiMediumMarginEnd">
-                            <Title text="Methods Used" level="H3"/>
+                        <VBox class="sapUiMediumMarginEnd sapUiMediumMarginBottom">
+                            <Title text="Methods Used" level="H3" ariaDescribedBy="methodsUsedHelp"/>
+                            <core:InvisibleText id="methodsUsedHelp" text="Number of different validation methods applied"/>
                             <Text text="{results>/methodsCount}"/>
                         </VBox>
-                        <VBox class="sapUiMediumMarginEnd">
-                            <Title text="Validation Time" level="H3"/>
+                        <VBox class="sapUiMediumMarginEnd sapUiMediumMarginBottom">
+                            <Title text="Validation Time" level="H3" ariaDescribedBy="validationTimeHelp"/>
+                            <core:InvisibleText id="validationTimeHelp" text="Total time taken to complete validation across all methods"/>
                             <Text text="{results>/totalTime} ms"/>
                         </VBox>
-                        <VBox>
-                            <Title text="Status" level="H3"/>
+                        <VBox class="sapUiMediumMarginBottom">
+                            <Title text="Status" level="H3" ariaDescribedBy="validationStatusHelp"/>
+                            <core:InvisibleText id="validationStatusHelp" text="Overall validation process status"/>
                             <ObjectStatus 
                                 text="{results>/status}"
                                 state="{= ${results>/status} === 'COMPLETED' ? 'Success' : ${results>/status} === 'FAILED' ? 'Error' : 'Warning'}"/>
@@ -50,7 +66,11 @@
                 </Panel>
                 
                 <!-- Expression and Result -->
-                <Panel headerText="Expression and Computed Result" class="sapUiResponsiveMargin">
+                <Panel 
+                    headerText="Expression and Computed Result" 
+                    class="sapUiResponsiveMargin"
+                    ariaLabelledBy="expressionResultTitle">
+                    <core:InvisibleText id="expressionResultTitle" text="Original expression, expected result, computed result, and match status comparison"/>
                     <VBox class="sapUiMediumMargin">
                         <VBox class="sapUiMediumMarginBottom">
                             <Title text="Original Expression" level="H4"/>
@@ -60,19 +80,22 @@
                                 wrapping="true"/>
                         </VBox>
                         
-                        <HBox>
-                            <VBox class="sapUiMediumMarginEnd">
-                                <Title text="Expected Result" level="H4"/>
+                        <HBox wrap="Wrap">
+                            <VBox class="sapUiMediumMarginEnd sapUiMediumMarginBottom">
+                                <Title text="Expected Result" level="H4" ariaDescribedBy="expectedResultHelp"/>
+                                <core:InvisibleText id="expectedResultHelp" text="Expected result value as specified in the validation task"/>
                                 <Text text="{results>/expectedResult}"/>
                             </VBox>
-                            <VBox class="sapUiMediumMarginEnd">
-                                <Title text="Computed Result" level="H4"/>
+                            <VBox class="sapUiMediumMarginEnd sapUiMediumMarginBottom">
+                                <Title text="Computed Result" level="H4" ariaDescribedBy="computedResultHelp"/>
+                                <core:InvisibleText id="computedResultHelp" text="Result calculated by the validation engine"/>
                                 <Text 
                                     text="{results>/computedResult}"
                                     class="{= ${results>/isCorrect} ? 'sapThemeHighlight-AsColor' : 'sapNegativeColor'}"/>
                             </VBox>
-                            <VBox>
-                                <Title text="Match Status" level="H4"/>
+                            <VBox class="sapUiMediumMarginBottom">
+                                <Title text="Match Status" level="H4" ariaDescribedBy="matchStatusHelp"/>
+                                <core:InvisibleText id="matchStatusHelp" text="Indicates whether computed result matches expected result"/>
                                 <ObjectStatus 
                                     text="{= ${results>/isCorrect} ? 'Match' : 'Mismatch'}"
                                     state="{= ${results>/isCorrect} ? 'Success' : 'Error'}"/>
@@ -82,11 +105,18 @@
                 </Panel>
                 
                 <!-- Method Results Detail -->
-                <Panel headerText="Validation Method Results" class="sapUiResponsiveMargin">
+                <Panel 
+                    headerText="Validation Method Results" 
+                    class="sapUiResponsiveMargin"
+                    ariaLabelledBy="methodResultsTitle">
+                    <core:InvisibleText id="methodResultsTitle" text="Detailed results from each validation method showing results, confidence scores, processing time, and status"/>
                     <Table 
                         items="{results>/methodResults}"
                         growing="true"
-                        growingThreshold="20">
+                        growingThreshold="20"
+                        mode="SingleSelect"
+                        ariaLabelledBy="methodResultsTableLabel">
+                        <core:InvisibleText id="methodResultsTableLabel" text="Validation method results table with columns for method, result, confidence, time, status, and details"/>
                         <columns>
                             <Column>
                                 <Text text="Method"/>
@@ -285,10 +315,14 @@
                     expandable="true"
                     expanded="false"
                     class="sapUiResponsiveMargin">
-                    <HBox class="sapUiMediumMargin">
-                        <VBox class="sapUiMediumMarginEnd">
-                            <Label text="Export Format"/>
-                            <Select selectedKey="{results>/exportFormat}">
+                    <HBox class="sapUiMediumMargin" wrap="Wrap">
+                        <VBox class="sapUiMediumMarginEnd sapUiMediumMarginBottom">
+                            <Label text="Export Format" labelFor="exportFormatSelect"/>
+                            <Select 
+                                id="exportFormatSelect"
+                                selectedKey="{results>/exportFormat}"
+                                ariaDescribedBy="exportFormatHelp">
+                                <core:InvisibleText id="exportFormatHelp" text="Choose export format for validation results report"/>
                                 <items>
                                     <core:Item key="PDF" text="PDF Report"/>
                                     <core:Item key="EXCEL" text="Excel Spreadsheet"/>
@@ -298,29 +332,42 @@
                                 </items>
                             </Select>
                         </VBox>
-                        <VBox class="sapUiMediumMarginEnd">
-                            <Label text="Include Options"/>
+                        <VBox class="sapUiMediumMarginEnd sapUiMediumMarginBottom">
+                            <Label text="Include Options" ariaDescribedBy="includeOptionsHelp"/>
+                            <core:InvisibleText id="includeOptionsHelp" text="Select which sections to include in the exported report"/>
                             <VBox>
                                 <CheckBox 
                                     text="Include step-by-step solution"
-                                    selected="{results>/includeSteps}"/>
+                                    selected="{results>/includeSteps}"
+                                    ariaDescribedBy="includeStepsHelp"/>
+                                <core:InvisibleText id="includeStepsHelp" text="Include detailed step-by-step calculation process in export"/>
                                 <CheckBox 
                                     text="Include method details"
-                                    selected="{results>/includeMethodDetails}"/>
+                                    selected="{results>/includeMethodDetails}"
+                                    ariaDescribedBy="includeMethodDetailsHelp"/>
+                                <core:InvisibleText id="includeMethodDetailsHelp" text="Include detailed information about each validation method used"/>
                                 <CheckBox 
                                     text="Include charts"
-                                    selected="{results>/includeCharts}"/>
+                                    selected="{results>/includeCharts}"
+                                    ariaDescribedBy="includeChartsHelp"/>
+                                <core:InvisibleText id="includeChartsHelp" text="Include visualization charts and graphs in export"/>
                                 <CheckBox 
                                     text="Include recommendations"
-                                    selected="{results>/includeRecommendations}"/>
+                                    selected="{results>/includeRecommendations}"
+                                    ariaDescribedBy="includeRecommendationsHelp"/>
+                                <core:InvisibleText id="includeRecommendationsHelp" text="Include improvement recommendations and suggestions"/>
                             </VBox>
                         </VBox>
-                        <VBox>
-                            <Label text=" "/>
+                        <VBox class="sapUiMediumMarginBottom">
+                            <Label text=" " visible="false"/>
                             <Button 
                                 text="Export Report"
                                 icon="sap-icon://download"
-                                press=".onExportResults"/>
+                                type="Emphasized"
+                                press=".onExportResults"
+                                tooltip="Export validation results with selected options"
+                                ariaDescribedBy="exportButtonHelp"/>
+                            <core:InvisibleText id="exportButtonHelp" text="Generate and download validation report in selected format with chosen sections"/>
                         </VBox>
                     </HBox>
                 </Panel>

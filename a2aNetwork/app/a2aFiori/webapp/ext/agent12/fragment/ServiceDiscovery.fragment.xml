@@ -1,0 +1,313 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.ui.layout.form">
+    
+    <Dialog
+        id="serviceDiscoveryDialog"
+        title="{i18n>serviceDiscovery}"
+        contentWidth="75%"
+        contentHeight="80%"
+        verticalScrolling="true">
+        
+        <content>
+            <IconTabBar id="discoveryTabBar" expandable="false">
+                <!-- Discovery Configuration Tab -->
+                <items>
+                    <IconTabFilter text="{i18n>configuration}" icon="sap-icon://settings" iconColor="Neutral">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="{i18n>discoverySettings}">
+                                <f:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout">
+                                    <f:content>
+                                        <Label text="{i18n>registryType}:"/>
+                                        <Select
+                                            selectedKey="{/discoveryConfig/registryType}"
+                                            change=".onRegistryTypeChange">
+                                            <items>
+                                                <core:Item key="SERVICE_REGISTRY" text="{i18n>serviceRegistry}"/>
+                                                <core:Item key="API_REGISTRY" text="{i18n>apiRegistry}"/>
+                                                <core:Item key="SCHEMA_REGISTRY" text="{i18n>schemaRegistry}"/>
+                                                <core:Item key="ARTIFACT_REGISTRY" text="{i18n>artifactRegistry}"/>
+                                                <core:Item key="MODEL_REGISTRY" text="{i18n>modelRegistry}"/>
+                                                <core:Item key="WORKFLOW_REGISTRY" text="{i18n>workflowRegistry}"/>
+                                                <core:Item key="AGENT_REGISTRY" text="{i18n>agentRegistry}"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="{i18n>registryUrl}:"/>
+                                        <Input
+                                            value="{/discoveryConfig/registryUrl}"
+                                            placeholder="{i18n>registryUrlPlaceholder}"
+                                            width="100%"/>
+                                        
+                                        <Label text="{i18n>authenticationMethod}:"/>
+                                        <Select selectedKey="{/discoveryConfig/authMethod}">
+                                            <items>
+                                                <core:Item key="NONE" text="{i18n>noAuthentication}"/>
+                                                <core:Item key="BASIC" text="{i18n>basicAuth}"/>
+                                                <core:Item key="OAUTH" text="{i18n>oauthAuth}"/>
+                                                <core:Item key="API_KEY" text="{i18n>apiKeyAuth}"/>
+                                                <core:Item key="CERTIFICATE" text="{i18n>certificateAuth}"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="{i18n>discoveryFilters}:"/>
+                                        <TextArea
+                                            value="{/discoveryConfig/filters}"
+                                            placeholder="{i18n>filtersPlaceholder}"
+                                            rows="3"
+                                            width="100%"/>
+                                        
+                                        <Label text="{i18n>autoRegister}:"/>
+                                        <CheckBox selected="{/discoveryConfig/autoRegister}"/>
+                                        
+                                        <Label text="{i18n>includeMetadata}:"/>
+                                        <CheckBox selected="{/discoveryConfig/includeMetadata}"/>
+                                    </f:content>
+                                </f:SimpleForm>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Discovery Results Tab -->
+                    <IconTabFilter text="{i18n>discoveredServices}" icon="sap-icon://list" iconColor="Positive" count="{/discoveryResults/count}">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Discovery Status -->
+                            <MessageStrip
+                                text="{i18n>discoveryInProgress}"
+                                type="Information"
+                                showIcon="true"
+                                visible="{/discoveryStatus/inProgress}"/>
+                            
+                            <MessageStrip
+                                text="{= ${i18n>discoveryCompleted} + ' - ' + ${/discoveryResults/count} + ' ' + ${i18n>servicesFound} }"
+                                type="Success"
+                                showIcon="true"
+                                visible="{= ${/discoveryStatus/completed} && ${/discoveryResults/count} > 0 }"/>
+                            
+                            <MessageStrip
+                                text="{i18n>noServicesFound}"
+                                type="Warning"
+                                showIcon="true"
+                                visible="{= ${/discoveryStatus/completed} && ${/discoveryResults/count} === 0 }"/>
+                            
+                            <!-- Results Table -->
+                            <Panel
+                                headerText="{i18n>discoveredServicesList}"
+                                class="sapUiMediumMarginTop">
+                                <content>
+                                    <Table
+                                        id="discoveredServicesTable"
+                                        items="{/discoveryResults/services}"
+                                        mode="MultiSelect"
+                                        growing="true"
+                                        growingThreshold="50">
+                                        
+                                        <headerToolbar>
+                                            <Toolbar>
+                                                <Title text="{i18n>discoveredServices}" level="H3"/>
+                                                <ToolbarSpacer/>
+                                                <SearchField
+                                                    placeholder="{i18n>searchServices}"
+                                                    search=".onSearchServices"
+                                                    width="200px"/>
+                                                <Button
+                                                    text="{i18n>selectAll}"
+                                                    press=".onSelectAllServices"
+                                                    type="Transparent"/>
+                                                <Button
+                                                    text="{i18n>registerSelected}"
+                                                    icon="sap-icon://add"
+                                                    press=".onRegisterSelectedServices"
+                                                    type="Emphasized"/>
+                                            </Toolbar>
+                                        </headerToolbar>
+                                        
+                                        <columns>
+                                            <Column>
+                                                <Text text="{i18n>serviceName}"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>serviceType}"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>version}"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>provider}"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>status}"/>
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>healthStatus}"/>
+                                            </Column>
+                                        </columns>
+                                        
+                                        <items>
+                                            <ColumnListItem>
+                                                <cells>
+                                                    <VBox>
+                                                        <Text text="{name}" emphasized="true"/>
+                                                        <Text text="{description}" class="sapUiTinyMarginTop"/>
+                                                    </VBox>
+                                                    <Text text="{serviceType}"/>
+                                                    <Text text="{version}"/>
+                                                    <Text text="{provider}"/>
+                                                    <ObjectStatus
+                                                        text="{status}"
+                                                        state="{= ${status} === 'ACTIVE' ? 'Success' : 'Error' }"/>
+                                                    <ObjectStatus
+                                                        text="{healthStatus}"
+                                                        state="{= ${healthStatus} === 'HEALTHY' ? 'Success' : 'Warning' }"
+                                                        icon="sap-icon://sys-monitor"/>
+                                                </cells>
+                                            </ColumnListItem>
+                                        </items>
+                                    </Table>
+                                </content>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Registry Status Tab -->
+                    <IconTabFilter text="{i18n>registryStatus}" icon="sap-icon://status-in-process" iconColor="Critical">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="{i18n>registryConnection}">
+                                <VBox class="sapUiSmallMargin">
+                                    <!-- Connection Test -->
+                                    <HBox justifyContent="SpaceBetween" alignItems="Center">
+                                        <Label text="{i18n>connectionStatus}:"/>
+                                        <HBox>
+                                            <ObjectStatus
+                                                text="{/registryStatus/connectionStatus}"
+                                                state="{= ${/registryStatus/connectionStatus} === 'CONNECTED' ? 'Success' : 'Error' }"
+                                                icon="sap-icon://connected"/>
+                                            <Button
+                                                text="{i18n>testConnection}"
+                                                icon="sap-icon://test"
+                                                press=".onTestRegistryConnection"
+                                                type="Transparent"/>
+                                        </HBox>
+                                    </HBox>
+                                    
+                                    <!-- Registry Information -->
+                                    <l:Grid defaultSpan="L6 M12 S12" class="sapUiSmallMarginTop">
+                                        <VBox>
+                                            <Label text="{i18n>registryName}:"/>
+                                            <Text text="{/registryStatus/registryName}"/>
+                                        </VBox>
+                                        <VBox>
+                                            <Label text="{i18n>registryVersion}:"/>
+                                            <Text text="{/registryStatus/version}"/>
+                                        </VBox>
+                                        <VBox>
+                                            <Label text="{i18n>lastSync}:"/>
+                                            <Text text="{/registryStatus/lastSync}"/>
+                                        </VBox>
+                                        <VBox>
+                                            <Label text="{i18n>totalServices}:"/>
+                                            <Text text="{/registryStatus/totalServices}"/>
+                                        </VBox>
+                                    </l:Grid>
+                                    
+                                    <!-- Registry Capabilities -->
+                                    <VBox class="sapUiSmallMarginTop">
+                                        <Label text="{i18n>supportedCapabilities}:" emphasized="true"/>
+                                        <List items="{/registryStatus/capabilities}">
+                                            <StandardListItem
+                                                title="{name}"
+                                                description="{description}"
+                                                icon="sap-icon://accept"
+                                                type="Inactive"/>
+                                        </List>
+                                    </VBox>
+                                </VBox>
+                            </Panel>
+                            
+                            <!-- Error Log -->
+                            <Panel
+                                headerText="{i18n>errorLog}"
+                                expandable="true"
+                                expanded="false"
+                                class="sapUiMediumMarginTop"
+                                visible="{= ${/registryStatus/errors} && ${/registryStatus/errors}.length > 0 }">
+                                <List items="{/registryStatus/errors}">
+                                    <StandardListItem
+                                        title="{timestamp}"
+                                        description="{message}"
+                                        icon="sap-icon://error"
+                                        iconInset="false"
+                                        type="Inactive"/>
+                                </List>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Discovery History Tab -->
+                    <IconTabFilter text="{i18n>discoveryHistory}" icon="sap-icon://history" iconColor="Neutral">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="{i18n>recentDiscoveryRuns}">
+                                <Table
+                                    items="{/discoveryHistory}"
+                                    growing="true"
+                                    growingThreshold="20">
+                                    <columns>
+                                        <Column>
+                                            <Text text="{i18n>timestamp}"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>registryType}"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>servicesFound}"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>duration}"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>status}"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="{timestamp}"/>
+                                                <Text text="{registryType}"/>
+                                                <ObjectNumber
+                                                    number="{servicesFound}"
+                                                    state="Success"/>
+                                                <Text text="{duration}ms"/>
+                                                <ObjectStatus
+                                                    text="{status}"
+                                                    state="{= ${status} === 'SUCCESS' ? 'Success' : 'Error' }"/>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button
+                text="{i18n>startDiscovery}"
+                type="Emphasized"
+                icon="sap-icon://synchronize"
+                press=".onStartServiceDiscovery"
+                enabled="{= !${/discoveryStatus/inProgress} }"/>
+        </beginButton>
+        
+        <endButton>
+            <Button
+                text="{i18n>close}"
+                press=".onCloseServiceDiscovery"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

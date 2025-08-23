@@ -5,61 +5,93 @@
     
     <Dialog
         id="createDataTaskDialog"
-        title="Create Data Management Task"
-        contentWidth="70%"
-        contentHeight="75%"
-        resizable="true">
+        title="{i18n>dialog.createDataTask}"
+        contentWidth="75rem"
+        stretch="{device>/system/phone}"
+        resizable="true"
+        ariaLabelledBy="createDataTaskTitle">
+        
+        <customHeader>
+            <Bar>
+                <contentMiddle>
+                    <Title id="createDataTaskTitle" text="{i18n>dialog.createDataTask}" level="H2"/>
+                </contentMiddle>
+            </Bar>
+        </customHeader>
         
         <content>
             <IconTabBar expandable="false">
                 <items>
                     <!-- Basic Information Tab -->
-                    <IconTabFilter text="Basic Info" icon="sap-icon://hint">
+                    <IconTabFilter text="{i18n>tab.basicInfo}" icon="sap-icon://hint">
                         <form:SimpleForm
                             editable="true"
                             layout="ResponsiveGridLayout">
                             <form:content>
-                                <Label text="Task Name" required="true"/>
+                                <Label text="{i18n>field.taskName}" required="true" labelFor="taskNameInput"/>
                                 <Input 
+                                    id="taskNameInput"
                                     value="{create>/taskName}"
-                                    placeholder="Enter data management task name"/>
+                                    placeholder="{i18n>placeholder.taskName}"
+                                    aria-label="{i18n>aria.datasetNameInput}"
+                                    aria-required="true"
+                                    valueState="{create>/taskNameState}"
+                                    valueStateText="{create>/taskNameStateText}"
+                                    liveChange=".onTaskNameChange"/>
                                 
-                                <Label text="Description"/>
+                                <Label text="{i18n>field.description}" labelFor="descriptionInput"/>
                                 <TextArea 
+                                    id="descriptionInput"
                                     value="{create>/description}"
-                                    rows="3"
-                                    placeholder="Describe the data management task"/>
+                                    rows="{= ${device>/system/phone} ? 2 : 3 }"
+                                    placeholder="{i18n>placeholder.description}"
+                                    aria-label="{i18n>aria.descriptionInput}"/>
                                 
-                                <Label text="Dataset Name" required="true"/>
+                                <Label text="{i18n>field.datasetName}" required="true" labelFor="datasetNameInput"/>
                                 <Input 
+                                    id="datasetNameInput"
                                     value="{create>/datasetName}"
-                                    placeholder="Name of the dataset"
+                                    placeholder="{i18n>placeholder.datasetName}"
                                     showValueHelp="true"
-                                    valueHelpRequest=".onSelectDataset"/>
+                                    valueHelpRequest=".onSelectDataset"
+                                    aria-label="{i18n>aria.datasetNameInput}"
+                                    aria-required="true"
+                                    valueState="{create>/datasetNameState}"
+                                    valueStateText="{create>/datasetNameStateText}"
+                                    liveChange=".onDatasetNameChange"/>
                                 
-                                <Label text="Operation Type" required="true"/>
-                                <Select selectedKey="{create>/operationType}">
-                                    <items>
-                                        <core:Item key="STORE" text="Store Data"/>
-                                        <core:Item key="RETRIEVE" text="Retrieve Data"/>
-                                        <core:Item key="UPDATE" text="Update Data"/>
-                                        <core:Item key="DELETE" text="Delete Data"/>
-                                        <core:Item key="BACKUP" text="Backup Data"/>
-                                        <core:Item key="RESTORE" text="Restore Data"/>
-                                        <core:Item key="MIGRATE" text="Migrate Data"/>
-                                        <core:Item key="COMPRESS" text="Compress Data"/>
-                                        <core:Item key="CACHE" text="Cache Data"/>
-                                        <core:Item key="VALIDATE" text="Validate Data"/>
-                                    </items>
+                                <Label text="{i18n>field.operationType}" required="true" labelFor="operationTypeSelect"/>
+                                <Select 
+                                    id="operationTypeSelect"
+                                    selectedKey="{create>/operationType}"
+                                    aria-label="{i18n>aria.operationTypeSelect}"
+                                    aria-required="true"
+                                    valueState="{create>/operationTypeState}"
+                                    valueStateText="{create>/operationTypeStateText}"
+                                    change=".onOperationTypeChange">
+                                    <core:Item key="" text="{i18n>placeholder.selectOperation}"/>
+                                    <core:Item key="STORE" text="{i18n>operation.store}"/>
+                                    <core:Item key="RETRIEVE" text="{i18n>operation.retrieve}"/>
+                                    <core:Item key="UPDATE" text="{i18n>operation.update}"/>
+                                    <core:Item key="DELETE" text="{i18n>operation.delete}"/>
+                                    <core:Item key="BACKUP" text="{i18n>operation.backup}"/>
+                                    <core:Item key="RESTORE" text="{i18n>operation.restore}"/>
+                                    <core:Item key="MIGRATE" text="{i18n>operation.migrate}"/>
+                                    <core:Item key="COMPRESS" text="{i18n>operation.compress}"/>
+                                    <core:Item key="CACHE" text="{i18n>operation.cache}"/>
+                                    <core:Item key="VALIDATE" text="{i18n>operation.validate}"/>
                                 </Select>
                                 
-                                <Label text="Priority"/>
-                                <Select selectedKey="{create>/priority}">
+                                <Label text="{i18n>field.priority}" labelFor="prioritySelect"/>
+                                <Select 
+                                    id="prioritySelect"
+                                    selectedKey="{create>/priority}"
+                                    aria-label="{i18n>aria.prioritySelect}">
                                     <items>
-                                        <core:Item key="LOW" text="Low"/>
-                                        <core:Item key="MEDIUM" text="Medium"/>
-                                        <core:Item key="HIGH" text="High"/>
-                                        <core:Item key="CRITICAL" text="Critical"/>
+                                        <core:Item key="LOW" text="{i18n>priority.low}"/>
+                                        <core:Item key="MEDIUM" text="{i18n>priority.medium}"/>
+                                        <core:Item key="HIGH" text="{i18n>priority.high}"/>
+                                        <core:Item key="CRITICAL" text="{i18n>priority.critical}"/>
                                     </items>
                                 </Select>
                             </form:content>
@@ -67,25 +99,25 @@
                     </IconTabFilter>
                     
                     <!-- Storage Configuration Tab -->
-                    <IconTabFilter text="Storage Config" icon="sap-icon://database">
+                    <IconTabFilter text="{i18n>tab.storageConfig}" icon="sap-icon://database">
                         <form:SimpleForm
                             editable="true"
                             layout="ResponsiveGridLayout">
                             <form:content>
-                                <Label text="Storage Type"/>
+                                <Label text="{i18n>field.storageType}"/>
                                 <Select selectedKey="{create>/storageType}">
                                     <items>
-                                        <core:Item key="HANA" text="SAP HANA"/>
-                                        <core:Item key="SQLITE" text="SQLite"/>
-                                        <core:Item key="S3" text="Amazon S3"/>
-                                        <core:Item key="REDIS" text="Redis"/>
-                                        <core:Item key="MEMORY" text="Memory"/>
-                                        <core:Item key="FILE" text="File System"/>
-                                        <core:Item key="DISTRIBUTED" text="Distributed Storage"/>
+                                        <core:Item key="HANA" text="{i18n>storage.hana}"/>
+                                        <core:Item key="SQLITE" text="{i18n>storage.sqlite}"/>
+                                        <core:Item key="S3" text="{i18n>storage.s3}"/>
+                                        <core:Item key="REDIS" text="{i18n>storage.redis}"/>
+                                        <core:Item key="MEMORY" text="{i18n>storage.memory}"/>
+                                        <core:Item key="FILE" text="{i18n>storage.file}"/>
+                                        <core:Item key="DISTRIBUTED" text="{i18n>storage.distributed}"/>
                                     </items>
                                 </Select>
                                 
-                                <Label text="Storage Backend"/>
+                                <Label text="{i18n>field.storageBackend}"/>
                                 <Select 
                                     selectedKey="{create>/storageBackend}"
                                     items="{create>/availableBackends}">
@@ -94,10 +126,10 @@
                                         text="{create>backendName} ({create>backendType})"/>
                                 </Select>
                                 
-                                <Label text="Compression"/>
+                                <Label text="{i18n>field.compression}"/>
                                 <VBox>
                                     <CheckBox 
-                                        text="Enable compression"
+                                        text="{i18n>option.enableCompression}"
                                         selected="{create>/compressionEnabled}"/>
                                     <Select 
                                         selectedKey="{create>/compressionType}"
@@ -111,10 +143,10 @@
                                     </Select>
                                 </VBox>
                                 
-                                <Label text="Encryption"/>
+                                <Label text="{i18n>field.encryption}"/>
                                 <VBox>
                                     <CheckBox 
-                                        text="Enable encryption"
+                                        text="{i18n>option.enableEncryption}"
                                         selected="{create>/encryptionEnabled}"/>
                                     <Select 
                                         selectedKey="{create>/encryptionType}"
@@ -127,14 +159,14 @@
                                     </Select>
                                 </VBox>
                                 
-                                <Label text="Partitioning Strategy"/>
+                                <Label text="{i18n>field.partitionStrategy}"/>
                                 <Select selectedKey="{create>/partitionStrategy}">
                                     <items>
-                                        <core:Item key="NONE" text="No Partitioning"/>
-                                        <core:Item key="DATE" text="Date-based"/>
-                                        <core:Item key="SIZE" text="Size-based"/>
-                                        <core:Item key="HASH" text="Hash-based"/>
-                                        <core:Item key="RANGE" text="Range-based"/>
+                                        <core:Item key="NONE" text="{i18n>partition.none}"/>
+                                        <core:Item key="DATE" text="{i18n>partition.date}"/>
+                                        <core:Item key="SIZE" text="{i18n>partition.size}"/>
+                                        <core:Item key="HASH" text="{i18n>partition.hash}"/>
+                                        <core:Item key="RANGE" text="{i18n>partition.range}"/>
                                     </items>
                                 </Select>
                             </form:content>
@@ -142,35 +174,35 @@
                     </IconTabFilter>
                     
                     <!-- Cache Configuration Tab -->
-                    <IconTabFilter text="Cache Config" icon="sap-icon://performance">
+                    <IconTabFilter text="{i18n>tab.cacheConfig}" icon="sap-icon://performance">
                         <form:SimpleForm
                             editable="true"
                             layout="ResponsiveGridLayout">
                             <form:content>
-                                <Label text="Cache Settings"/>
+                                <Label text="{i18n>field.cacheSettings}"/>
                                 <VBox>
                                     <CheckBox 
-                                        text="Enable caching"
+                                        text="{i18n>option.enableCaching}"
                                         selected="{create>/cacheEnabled}"/>
                                     <CheckBox 
-                                        text="Auto-warm cache"
+                                        text="{i18n>option.autoWarmCache}"
                                         selected="{create>/autoWarmCache}"
                                         visible="{create>/cacheEnabled}"/>
                                     <CheckBox 
-                                        text="Cache on write"
+                                        text="{i18n>option.cacheOnWrite}"
                                         selected="{create>/cacheOnWrite}"
                                         visible="{create>/cacheEnabled}"/>
                                 </VBox>
                                 
-                                <Label text="Cache Level"/>
+                                <Label text="{i18n>field.cacheLevel}"/>
                                 <Select 
                                     selectedKey="{create>/cacheLevel}"
                                     visible="{create>/cacheEnabled}">
                                     <items>
-                                        <core:Item key="MEMORY" text="Memory Cache Only"/>
-                                        <core:Item key="REDIS" text="Redis Cache Only"/>
-                                        <core:Item key="BOTH" text="Memory + Redis"/>
-                                        <core:Item key="MULTI_TIER" text="Multi-tier Cache"/>
+                                        <core:Item key="MEMORY" text="{i18n>cache.memoryOnly}"/>
+                                        <core:Item key="REDIS" text="{i18n>cache.redisOnly}"/>
+                                        <core:Item key="BOTH" text="{i18n>cache.memoryRedis}"/>
+                                        <core:Item key="MULTI_TIER" text="{i18n>cache.multiTier}"/>
                                     </items>
                                 </Select>
                                 
@@ -379,16 +411,19 @@
         
         <beginButton>
             <Button 
-                text="Cancel"
-                press=".onCancelCreateTask"/>
+                text="{i18n>button.cancel}"
+                press=".onCancelCreateTask"
+                ariaLabel="{i18n>aria.closeDialog}"/>
         </beginButton>
         
         <endButton>
             <Button 
-                text="Create"
+                text="{i18n>button.create}"
                 type="Emphasized"
                 press=".onConfirmCreateTask"
-                enabled="{= ${create>/taskName} &amp;&amp; ${create>/datasetName} &amp;&amp; ${create>/operationType} }"/>
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/datasetName} &amp;&amp; ${create>/operationType} }"
+                ariaLabel="{i18n>aria.saveConfiguration}"
+                tooltip="{i18n>tooltip.create}"/>
         </endButton>
         
     </Dialog>

@@ -1,0 +1,419 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="updateKnowledgeDialog"
+        title="Update Knowledge Base"
+        contentWidth="80%"
+        contentHeight="75%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Add Knowledge ---->
+                    <IconTabFilter text="Add Knowledge" icon="sap-icon://add">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="Add New Knowledge Element" class="sapUiMediumMarginBottom">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    class="sapUiMediumMargin">
+                                    <form:content>
+                                        <Label text="Element Type"/>
+                                        <Select selectedKey="{updateKnowledge>/add/elementType}">
+                                            <items>
+                                                <core:Item key="FACT" text="Fact"/>
+                                                <core:Item key="RULE" text="Rule"/>
+                                                <core:Item key="ONTOLOGY" text="Ontology"/>
+                                                <core:Item key="CONSTRAINT" text="Constraint"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Element Name"/>
+                                        <Input value="{updateKnowledge>/add/elementName}" placeholder="Enter element name"/>
+                                        
+                                        <Label text="Domain"/>
+                                        <Select selectedKey="{updateKnowledge>/add/domain}">
+                                            <items>
+                                                <core:Item key="GENERAL" text="General Knowledge"/>
+                                                <core:Item key="MEDICAL" text="Medical Domain"/>
+                                                <core:Item key="LEGAL" text="Legal Domain"/>
+                                                <core:Item key="TECHNICAL" text="Technical Domain"/>
+                                                <core:Item key="BUSINESS" text="Business Domain"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Content"/>
+                                        <TextArea 
+                                            value="{updateKnowledge>/add/content}"
+                                            rows="4"
+                                            placeholder="Enter the knowledge content"/>
+                                        
+                                        <Label text="Confidence Level"/>
+                                        <Slider 
+                                            value="{updateKnowledge>/add/confidenceLevel}"
+                                            min="1"
+                                            max="5"
+                                            step="1"
+                                            width="300px"
+                                            enableTickmarks="true"/>
+                                        <Text text="{updateKnowledge>/add/confidenceLevel}/5" class="sapUiTinyMarginTop"/>
+                                        
+                                        <Label text="Priority Weight"/>
+                                        <Slider 
+                                            value="{updateKnowledge>/add/priorityWeight}"
+                                            min="0.1"
+                                            max="1.0"
+                                            step="0.1"
+                                            width="300px"/>
+                                        <Text text="{updateKnowledge>/add/priorityWeight}" class="sapUiTinyMarginTop"/>
+                                        
+                                        <Label text="Source"/>
+                                        <Input value="{updateKnowledge>/add/source}" placeholder="Enter knowledge source"/>
+                                        
+                                        <Label text="Active"/>
+                                        <Switch state="{updateKnowledge>/add/isActive}"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                                
+                                <HBox class="sapUiMediumMargin">
+                                    <Button 
+                                        text="Validate"
+                                        icon="sap-icon://validate"
+                                        press=".onValidateNewKnowledge"
+                                        class="sapUiMediumMarginEnd"/>
+                                    <Button 
+                                        text="Add Knowledge"
+                                        icon="sap-icon://add"
+                                        press=".onAddKnowledgeElement"
+                                        type="Emphasized"
+                                        class="sapUiMediumMarginEnd"/>
+                                    <Button 
+                                        text="Clear"
+                                        icon="sap-icon://clear-all"
+                                        press=".onClearAddForm"/>
+                                </HBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Update Existing ---->
+                    <IconTabFilter text="Update Existing" icon="sap-icon://edit">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="Select Knowledge Element to Update" class="sapUiMediumMarginBottom">
+                                <VBox class="sapUiMediumMargin">
+                                    <HBox class="sapUiMediumMarginBottom">
+                                        <SearchField 
+                                            width="300px"
+                                            placeholder="Search knowledge elements..."
+                                            value="{updateKnowledge>/update/searchTerm}"
+                                            search=".onSearchKnowledgeElements"/>
+                                        <Select 
+                                            selectedKey="{updateKnowledge>/update/filterType}"
+                                            class="sapUiMediumMarginBegin">
+                                            <items>
+                                                <core:Item key="ALL" text="All Types"/>
+                                                <core:Item key="FACT" text="Facts Only"/>
+                                                <core:Item key="RULE" text="Rules Only"/>
+                                                <core:Item key="ONTOLOGY" text="Ontologies Only"/>
+                                            </items>
+                                        </Select>
+                                    </HBox>
+                                    
+                                    <Table 
+                                        items="{updateKnowledge>/update/searchResults}"
+                                        mode="SingleSelect"
+                                        selectionChange=".onSelectKnowledgeElement">
+                                        <columns>
+                                            <Column><Text text="Element"/></Column>
+                                            <Column><Text text="Type"/></Column>
+                                            <Column><Text text="Domain"/></Column>
+                                            <Column><Text text="Last Updated"/></Column>
+                                        </columns>
+                                        <items>
+                                            <ColumnListItem>
+                                                <cells>
+                                                    <VBox>
+                                                        <Text text="{elementName}" class="sapThemeHighlight-asTextColor"/>
+                                                        <Text text="{content}" maxLines="1" class="sapThemeTextSecondary"/>
+                                                    </VBox>
+                                                    <ObjectStatus text="{elementType}" state="Information"/>
+                                                    <Text text="{domain}"/>
+                                                    <Text text="{lastUpdated}"/>
+                                                </cells>
+                                            </ColumnListItem>
+                                        </items>
+                                    </Table>
+                                </VBox>
+                            </Panel>
+                            
+                            <Panel headerText="Update Selected Element" class="sapUiMediumMarginBottom">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    class="sapUiMediumMargin">
+                                    <form:content>
+                                        <Label text="Element Name"/>
+                                        <Input value="{updateKnowledge>/update/selectedElement/elementName}" enabled="{updateKnowledge>/update/hasSelection}"/>
+                                        
+                                        <Label text="Content"/>
+                                        <TextArea 
+                                            value="{updateKnowledge>/update/selectedElement/content}"
+                                            rows="4"
+                                            enabled="{updateKnowledge>/update/hasSelection}"/>
+                                        
+                                        <Label text="Confidence Level"/>
+                                        <Slider 
+                                            value="{updateKnowledge>/update/selectedElement/confidenceLevel}"
+                                            min="1"
+                                            max="5"
+                                            step="1"
+                                            width="300px"
+                                            enabled="{updateKnowledge>/update/hasSelection}"/>
+                                        
+                                        <Label text="Priority Weight"/>
+                                        <Slider 
+                                            value="{updateKnowledge>/update/selectedElement/priorityWeight}"
+                                            min="0.1"
+                                            max="1.0"
+                                            step="0.1"
+                                            width="300px"
+                                            enabled="{updateKnowledge>/update/hasSelection}"/>
+                                        
+                                        <Label text="Active"/>
+                                        <Switch 
+                                            state="{updateKnowledge>/update/selectedElement/isActive}"
+                                            enabled="{updateKnowledge>/update/hasSelection}"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                                
+                                <HBox class="sapUiMediumMargin">
+                                    <Button 
+                                        text="Update"
+                                        icon="sap-icon://save"
+                                        press=".onUpdateKnowledgeElement"
+                                        type="Emphasized"
+                                        enabled="{updateKnowledge>/update/hasSelection}"
+                                        class="sapUiMediumMarginEnd"/>
+                                    <Button 
+                                        text="Delete"
+                                        icon="sap-icon://delete"
+                                        press=".onDeleteKnowledgeElement"
+                                        enabled="{updateKnowledge>/update/hasSelection}"/>
+                                </HBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Bulk Import ---->
+                    <IconTabFilter text="Bulk Import" icon="sap-icon://upload">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="Import Knowledge from File" class="sapUiMediumMarginBottom">
+                                <VBox class="sapUiMediumMargin">
+                                    <HBox class="sapUiMediumMarginBottom">
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Label text="Import Format"/>
+                                            <Select selectedKey="{updateKnowledge>/import/format}">
+                                                <items>
+                                                    <core:Item key="JSON" text="JSON Format"/>
+                                                    <core:Item key="XML" text="XML Format"/>
+                                                    <core:Item key="CSV" text="CSV Format"/>
+                                                    <core:Item key="OWL" text="OWL Ontology"/>
+                                                    <core:Item key="RDF" text="RDF/Turtle"/>
+                                                </items>
+                                            </Select>
+                                        </VBox>
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Label text="Target Domain"/>
+                                            <Select selectedKey="{updateKnowledge>/import/targetDomain}">
+                                                <items>
+                                                    <core:Item key="GENERAL" text="General Knowledge"/>
+                                                    <core:Item key="MEDICAL" text="Medical Domain"/>
+                                                    <core:Item key="LEGAL" text="Legal Domain"/>
+                                                    <core:Item key="TECHNICAL" text="Technical Domain"/>
+                                                    <core:Item key="BUSINESS" text="Business Domain"/>
+                                                </items>
+                                            </Select>
+                                        </VBox>
+                                        <VBox>
+                                            <Label text="Validation Mode"/>
+                                            <Select selectedKey="{updateKnowledge>/import/validationMode}">
+                                                <items>
+                                                    <core:Item key="STRICT" text="Strict Validation"/>
+                                                    <core:Item key="MODERATE" text="Moderate Validation"/>
+                                                    <core:Item key="LENIENT" text="Lenient Validation"/>
+                                                </items>
+                                            </Select>
+                                        </VBox>
+                                    </HBox>
+                                    
+                                    <VBox class="sapUiMediumMarginBottom">
+                                        <Label text="File Upload"/>
+                                        <HBox>
+                                            <Input 
+                                                value="{updateKnowledge>/import/fileName}"
+                                                placeholder="Choose file to import..."
+                                                width="300px"
+                                                class="sapUiMediumMarginEnd"/>
+                                            <Button 
+                                                text="Browse"
+                                                icon="sap-icon://open-folder"
+                                                press=".onBrowseImportFile"
+                                                class="sapUiMediumMarginEnd"/>
+                                            <Button 
+                                                text="Upload & Validate"
+                                                icon="sap-icon://upload"
+                                                press=".onUploadKnowledgeFile"
+                                                type="Emphasized"/>
+                                        </HBox>
+                                    </VBox>
+                                    
+                                    <!-- Import Preview ---->
+                                    <Panel headerText="Import Preview" expandable="true" expanded="false">
+                                        <Table items="{updateKnowledge>/import/preview}">
+                                            <columns>
+                                                <Column><Text text="Element"/></Column>
+                                                <Column><Text text="Type"/></Column>
+                                                <Column><Text text="Content Preview"/></Column>
+                                                <Column><Text text="Validation"/></Column>
+                                            </columns>
+                                            <items>
+                                                <ColumnListItem>
+                                                    <cells>
+                                                        <Text text="{elementName}"/>
+                                                        <ObjectStatus text="{elementType}" state="Information"/>
+                                                        <Text text="{contentPreview}" maxLines="2"/>
+                                                        <ObjectStatus 
+                                                            text="{validationResult}"
+                                                            state="{= ${validationResult} === 'VALID' ? 'Success' : ${validationResult} === 'WARNING' ? 'Warning' : 'Error'}"
+                                                            icon="{= ${validationResult} === 'VALID' ? 'sap-icon://status-positive' : ${validationResult} === 'WARNING' ? 'sap-icon://warning' : 'sap-icon://status-negative'}"/>
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+                                        </Table>
+                                        
+                                        <HBox class="sapUiMediumMarginTop">
+                                            <Button 
+                                                text="Import All Valid"
+                                                icon="sap-icon://accept"
+                                                press=".onImportValidKnowledge"
+                                                type="Emphasized"
+                                                class="sapUiMediumMarginEnd"/>
+                                            <Button 
+                                                text="Import Selected"
+                                                icon="sap-icon://multiselect-all"
+                                                press=".onImportSelectedKnowledge"/>
+                                        </HBox>
+                                    </Panel>
+                                </VBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Knowledge Maintenance ---->
+                    <IconTabFilter text="Maintenance" icon="sap-icon://wrench">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="Knowledge Base Maintenance" class="sapUiMediumMarginBottom">
+                                <VBox class="sapUiMediumMargin">
+                                    <HBox class="sapUiMediumMarginBottom">
+                                        <Button 
+                                            text="Optimize Knowledge Base"
+                                            icon="sap-icon://settings"
+                                            press=".onOptimizeKnowledgeBase"
+                                            type="Emphasized"
+                                            class="sapUiMediumMarginEnd"/>
+                                        <Button 
+                                            text="Remove Duplicates"
+                                            icon="sap-icon://duplicate"
+                                            press=".onRemoveDuplicates"
+                                            class="sapUiMediumMarginEnd"/>
+                                        <Button 
+                                            text="Validate Consistency"
+                                            icon="sap-icon://validate"
+                                            press=".onValidateConsistency"
+                                            class="sapUiMediumMarginEnd"/>
+                                        <Button 
+                                            text="Update Indices"
+                                            icon="sap-icon://refresh"
+                                            press=".onUpdateIndices"/>
+                                    </HBox>
+                                    
+                                    <HBox class="sapUiMediumMarginBottom">
+                                        <Button 
+                                            text="Backup Knowledge Base"
+                                            icon="sap-icon://save"
+                                            press=".onBackupKnowledgeBase"
+                                            class="sapUiMediumMarginEnd"/>
+                                        <Button 
+                                            text="Export Knowledge Base"
+                                            icon="sap-icon://download"
+                                            press=".onExportKnowledgeBase"
+                                            class="sapUiMediumMarginEnd"/>
+                                        <Button 
+                                            text="Generate Statistics"
+                                            icon="sap-icon://bar-chart"
+                                            press=".onGenerateKBStatistics"/>
+                                    </HBox>
+                                </VBox>
+                            </Panel>
+                            
+                            <!-- Maintenance Results ---->
+                            <Panel headerText="Maintenance Results" class="sapUiMediumMarginBottom">
+                                <VBox class="sapUiMediumMargin">
+                                    <HBox class="sapUiMediumMarginBottom">
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Title text="Last Operation" level="H5"/>
+                                            <Text text="{updateKnowledge>/maintenance/lastOperation}"/>
+                                        </VBox>
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Title text="Status" level="H5"/>
+                                            <ObjectStatus 
+                                                text="{updateKnowledge>/maintenance/status}"
+                                                state="{= ${updateKnowledge>/maintenance/status} === 'SUCCESS' ? 'Success' : ${updateKnowledge>/maintenance/status} === 'WARNING' ? 'Warning' : 'Error'}"/>
+                                        </VBox>
+                                        <VBox>
+                                            <Title text="Duration" level="H5"/>
+                                            <Text text="{updateKnowledge>/maintenance/duration}"/>
+                                        </VBox>
+                                    </HBox>
+                                    
+                                    <TextArea 
+                                        value="{updateKnowledge>/maintenance/details}"
+                                        rows="5"
+                                        editable="false"/>
+                                </VBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Save Changes"
+                icon="sap-icon://save"
+                press=".onSaveKnowledgeChanges"
+                type="Emphasized"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Export Updates"
+                    icon="sap-icon://download"
+                    press=".onExportKnowledgeUpdates"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseUpdateKnowledge"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

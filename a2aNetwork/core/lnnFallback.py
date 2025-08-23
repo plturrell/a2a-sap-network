@@ -581,6 +581,8 @@ class LNNFallbackClient:
         self.model_path = model_path or os.path.join(
             os.path.dirname(__file__), 'models', 'lnn_fallback.pth'
         )
+        # Alias for backward compatibility
+        self.lnn_path = self.model_path
         self.config = config or self._default_config()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         

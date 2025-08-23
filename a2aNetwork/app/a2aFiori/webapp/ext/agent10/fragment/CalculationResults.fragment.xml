@@ -1,0 +1,295 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.ui.layout.form">
+    
+    <Dialog
+        id="calculationResultsDialog"
+        title="{i18n>calculationResults}"
+        contentWidth="70%"
+        contentHeight="80%"
+        verticalScrolling="true">
+        
+        <content>
+            <IconTabBar id="resultsTabBar" expandable="false">
+                <!-- Main Results Tab -->
+                <items>
+                    <IconTabFilter text="{i18n>results}" icon="sap-icon://chart" iconColor="Positive">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Result Summary -->
+                            <MessageStrip
+                                text="{i18n>calculationCompleted}"
+                                type="Success"
+                                showIcon="true"
+                                visible="{= ${/status} === 'COMPLETED' }" />
+                            
+                            <Panel headerText="{i18n>resultSummary}">
+                                <f:SimpleForm
+                                    editable="false"
+                                    layout="ResponsiveGridLayout"
+                                    labelSpanXL="4"
+                                    labelSpanL="4"
+                                    labelSpanM="4"
+                                    labelSpanS="12"
+                                    adjustLabelSpan="false"
+                                    columnsXL="2"
+                                    columnsL="2"
+                                    columnsM="1">
+                                    <f:content>
+                                        <Label text="{i18n>taskName}:" />
+                                        <Text text="{/taskName}" />
+                                        
+                                        <Label text="{i18n>calculationType}:" />
+                                        <ObjectStatus text="{/calculationType}" state="Information" />
+                                        
+                                        <Label text="{i18n>executionTime}:" />
+                                        <ObjectNumber
+                                            number="{/executionTime}"
+                                            unit="ms"
+                                            state="Success" />
+                                        
+                                        <Label text="{i18n>accuracy}:" />
+                                        <ProgressIndicator
+                                            percentValue="{/accuracy}"
+                                            displayValue="{/accuracy}%"
+                                            state="Success"
+                                            width="200px" />
+                                        
+                                        <Label text="{i18n>formula}:" />
+                                        <Text text="{/formula}" />
+                                        
+                                        <Label text="{i18n>finalResult}:" />
+                                        <ObjectStatus
+                                            text="{/result}"
+                                            state="Success"
+                                            emphasized="true" />
+                                    </f:content>
+                                </f:SimpleForm>
+                            </Panel>
+                            
+                            <!-- Detailed Results -->
+                            <Panel
+                                headerText="{i18n>detailedResults}"
+                                expandable="true"
+                                expanded="false"
+                                class="sapUiMediumMarginTop">
+                                <VBox>
+                                    <TextArea
+                                        value="{/resultDetails}"
+                                        rows="10"
+                                        editable="false"
+                                        width="100%" />
+                                </VBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Calculation Steps Tab -->
+                    <IconTabFilter text="{i18n>calculationSteps}" icon="sap-icon://step" count="{/stepsCount}">
+                        <Table
+                            id="calculationStepsTable"
+                            items="{/calculationSteps}"
+                            sticky="ColumnHeaders"
+                            class="sapUiMediumMargin">
+                            <headerToolbar>
+                                <Toolbar>
+                                    <Title text="{i18n>stepByStepBreakdown}" level="H3" />
+                                    <ToolbarSpacer />
+                                    <Label text="{i18n>totalSteps}: {/stepsCount}" />
+                                </Toolbar>
+                            </headerToolbar>
+                            <columns>
+                                <Column width="80px">
+                                    <Text text="{i18n>stepNumber}" />
+                                </Column>
+                                <Column>
+                                    <Text text="{i18n>operation}" />
+                                </Column>
+                                <Column>
+                                    <Text text="{i18n>input}" />
+                                </Column>
+                                <Column>
+                                    <Text text="{i18n>output}" />
+                                </Column>
+                                <Column width="100px">
+                                    <Text text="{i18n>duration}" />
+                                </Column>
+                                <Column width="80px">
+                                    <Text text="{i18n>status}" />
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <ObjectNumber number="{stepNumber}" emphasized="false" />
+                                        <Text text="{operation}" />
+                                        <Text text="{inputValues}" />
+                                        <Text text="{intermediateResult}" />
+                                        <ObjectNumber number="{processingTime}" unit="ms" />
+                                        <ObjectStatus
+                                            text="{verificationStatus}"
+                                            state="{= ${verificationStatus} === 'VERIFIED' ? 'Success' : 'Warning' }"
+                                            icon="{= ${verificationStatus} === 'VERIFIED' ? 'sap-icon://accept' : 'sap-icon://alert' }" />
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </IconTabFilter>
+                    
+                    <!-- Self-Healing Tab -->
+                    <IconTabFilter
+                        text="{i18n>selfHealing}"
+                        icon="sap-icon://wrench"
+                        iconColor="Critical"
+                        count="{/correctionsCount}"
+                        visible="{= ${/correctionsCount} > 0 }">
+                        <VBox class="sapUiMediumMargin">
+                            <MessageStrip
+                                text="{i18n>selfHealingApplied}"
+                                type="Warning"
+                                showIcon="true" />
+                            
+                            <Table
+                                id="errorCorrectionsTable"
+                                items="{/errorCorrections}"
+                                class="sapUiMediumMarginTop">
+                                <headerToolbar>
+                                    <Toolbar>
+                                        <Title text="{i18n>errorCorrections}" level="H3" />
+                                        <ToolbarSpacer />
+                                        <Label text="{i18n>totalCorrections}: {/correctionsCount}" />
+                                    </Toolbar>
+                                </headerToolbar>
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>errorType}" />
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>detection}" />
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>originalValue}" />
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>correctedValue}" />
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>strategy}" />
+                                    </Column>
+                                    <Column width="100px">
+                                        <Text text="{i18n>confidence}" />
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <ObjectStatus
+                                                text="{errorType}"
+                                                state="Error"
+                                                icon="sap-icon://error" />
+                                            <Text text="{detectionMethod}" />
+                                            <Text text="{originalValue}" />
+                                            <ObjectStatus
+                                                text="{correctedValue}"
+                                                state="Success" />
+                                            <Text text="{correctionStrategy}" />
+                                            <ProgressIndicator
+                                                percentValue="{correctionConfidence}"
+                                                displayValue="{correctionConfidence}%"
+                                                state="{= ${correctionConfidence} > 80 ? 'Success' : 'Warning' }"
+                                                width="100px" />
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Performance Metrics Tab -->
+                    <IconTabFilter text="{i18n>performance}" icon="sap-icon://performance">
+                        <VBox class="sapUiMediumMargin">
+                            <l:Grid defaultSpan="L6 M12 S12">
+                                <Panel headerText="{i18n>executionMetrics}">
+                                    <VBox class="sapUiSmallMargin">
+                                        <HBox justifyContent="SpaceBetween">
+                                            <Label text="{i18n>totalExecutionTime}:" />
+                                            <ObjectNumber
+                                                number="{/performanceMetrics/totalTime}"
+                                                unit="ms"
+                                                state="Information" />
+                                        </HBox>
+                                        <HBox justifyContent="SpaceBetween">
+                                            <Label text="{i18n>calculationTime}:" />
+                                            <ObjectNumber
+                                                number="{/performanceMetrics/calculationTime}"
+                                                unit="ms" />
+                                        </HBox>
+                                        <HBox justifyContent="SpaceBetween">
+                                            <Label text="{i18n>validationTime}:" />
+                                            <ObjectNumber
+                                                number="{/performanceMetrics/validationTime}"
+                                                unit="ms" />
+                                        </HBox>
+                                        <HBox justifyContent="SpaceBetween">
+                                            <Label text="{i18n>selfHealingTime}:" />
+                                            <ObjectNumber
+                                                number="{/performanceMetrics/selfHealingTime}"
+                                                unit="ms" />
+                                        </HBox>
+                                    </VBox>
+                                </Panel>
+                                
+                                <Panel headerText="{i18n>resourceUsage}">
+                                    <VBox class="sapUiSmallMargin">
+                                        <HBox justifyContent="SpaceBetween">
+                                            <Label text="{i18n>cpuUsage}:" />
+                                            <ProgressIndicator
+                                                percentValue="{/performanceMetrics/cpuUsage}"
+                                                displayValue="{/performanceMetrics/cpuUsage}%"
+                                                state="{= ${/performanceMetrics/cpuUsage} > 80 ? 'Error' : 'Success' }"
+                                                width="150px" />
+                                        </HBox>
+                                        <HBox justifyContent="SpaceBetween">
+                                            <Label text="{i18n>memoryUsage}:" />
+                                            <ProgressIndicator
+                                                percentValue="{/performanceMetrics/memoryUsage}"
+                                                displayValue="{/performanceMetrics/memoryUsage}%"
+                                                state="{= ${/performanceMetrics/memoryUsage} > 80 ? 'Error' : 'Success' }"
+                                                width="150px" />
+                                        </HBox>
+                                        <HBox justifyContent="SpaceBetween">
+                                            <Label text="{i18n>threadsUsed}:" />
+                                            <ObjectNumber
+                                                number="{/performanceMetrics/threadsUsed}" />
+                                        </HBox>
+                                        <HBox justifyContent="SpaceBetween">
+                                            <Label text="{i18n>cacheHits}:" />
+                                            <ObjectNumber
+                                                number="{/performanceMetrics/cacheHits}"
+                                                unit="%" />
+                                        </HBox>
+                                    </VBox>
+                                </Panel>
+                            </l:Grid>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button
+                text="{i18n>exportResults}"
+                type="Emphasized"
+                icon="sap-icon://download"
+                press=".onExportResults" />
+        </beginButton>
+        
+        <endButton>
+            <Button
+                text="{i18n>close}"
+                press=".onCloseResults" />
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

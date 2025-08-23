@@ -6,59 +6,128 @@
     
     <Dialog
         id="createValidationTaskDialog"
-        title="Create Calculation Validation Task"
-        contentWidth="70%"
-        contentHeight="80%"
-        resizable="true">
+        title="{i18n>title.createValidationTask}"
+        contentWidth="75rem"
+        contentHeight="auto"
+        resizable="true"
+        draggable="true"
+        stretch="{device>/system/phone}"
+        ariaLabelledBy="createValidationTaskTitle"
+        ariaDescribedBy="createValidationTaskHelp"
+        class="sapUiResponsiveContentPadding"
+        afterOpen=".onDialogAfterOpen"
+        afterClose=".onDialogAfterClose">
+        
+        <core:InvisibleText id="createValidationTaskTitle" text="Create Calculation Validation Task Dialog"/>
+        <core:InvisibleText id="createValidationTaskHelp" text="Configure a new calculation validation task with formulas, validation settings, and processing options."/>
         
         <content>
-            <IconTabBar expandable="false">
+            <IconTabBar 
+                expandable="false"
+                stretchContentHeight="true"
+                ariaLabelledBy="validationTaskTabBarLabel">
+                <core:InvisibleText id="validationTaskTabBarLabel" text="Validation task configuration sections: Basic Information, Validation Settings, Formulas, and Advanced Options"/>
                 <items>
                     <!-- Basic Information Tab -->
-                    <IconTabFilter text="Basic Info" icon="sap-icon://hint">
+                    <IconTabFilter 
+                        text="{i18n>tab.basicInfo}" 
+                        icon="sap-icon://hint"
+                        ariaDescribedBy="basicInfoTabHelp">
+                        <core:InvisibleText id="basicInfoTabHelp" text="Basic task information including name, description, calculation type, and data source"/>
                         <form:SimpleForm
                             editable="true"
-                            layout="ResponsiveGridLayout">
+                            layout="ResponsiveGridLayout"
+                            labelSpanXL="4"
+                            labelSpanL="4"
+                            labelSpanM="12"
+                            labelSpanS="12"
+                            adjustLabelSpan="false"
+                            emptySpanXL="0"
+                            emptySpanL="0"
+                            emptySpanM="0"
+                            columnsXL="2"
+                            columnsL="1"
+                            columnsM="1"
+                            class="sapUiResponsiveMargin">
                             <form:content>
-                                <Label text="Task Name" required="true"/>
+                                <Label text="{i18n>taskName}" required="true" labelFor="taskNameInput"/>
                                 <Input 
+                                    id="taskNameInput"
                                     value="{create>/taskName}"
-                                    placeholder="Enter validation task name"/>
+                                    placeholder="{i18n>placeholder.taskName}"
+                                    maxLength="100"
+                                    liveChange=".onTaskNameChange"
+                                    required="true"
+                                    valueState="{create>/taskNameState}"
+                                    valueStateText="{create>/taskNameStateText}"
+                                    ariaDescribedBy="taskNameHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="taskNameHelp" text="Required field. Enter a unique name for this validation task using alphanumeric characters, spaces, hyphens, underscores, or periods only."/>
                                 
-                                <Label text="Description"/>
+                                <Label text="{i18n>description}" labelFor="descriptionInput"/>
                                 <TextArea 
+                                    id="descriptionInput"
                                     value="{create>/description}"
-                                    rows="2"
-                                    placeholder="Describe the validation requirements"/>
+                                    rows="3"
+                                    growing="true"
+                                    growingMaxLines="5"
+                                    placeholder="{i18n>placeholder.description}"
+                                    maxLength="1000"
+                                    ariaDescribedBy="descriptionHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="descriptionHelp" text="Optional field. Provide additional details about the validation task requirements and objectives."/>
                                 
-                                <Label text="Calculation Type" required="true"/>
-                                <Select selectedKey="{create>/calculationType}">
+                                <Label text="{i18n>calculationType}" required="true" labelFor="calculationTypeSelect"/>
+                                <Select 
+                                    id="calculationTypeSelect"
+                                    selectedKey="{create>/calculationType}"
+                                    change=".onCalculationTypeChange"
+                                    required="true"
+                                    valueState="{create>/calculationTypeState}"
+                                    valueStateText="{create>/calculationTypeStateText}"
+                                    ariaDescribedBy="calculationTypeHelp"
+                                    class="sapUiMediumMarginBottom">
+                                <core:InvisibleText id="calculationTypeHelp" text="Required field. Select the type of calculations to validate.">
                                     <items>
-                                        <core:Item key="FINANCIAL" text="Financial Calculations"/>
-                                        <core:Item key="MATHEMATICAL" text="Mathematical Functions"/>
-                                        <core:Item key="STATISTICAL" text="Statistical Analysis"/>
-                                        <core:Item key="ENGINEERING" text="Engineering Formulas"/>
-                                        <core:Item key="SCIENTIFIC" text="Scientific Computations"/>
-                                        <core:Item key="ACTUARIAL" text="Actuarial Models"/>
-                                        <core:Item key="ACCOUNTING" text="Accounting Rules"/>
-                                        <core:Item key="PHYSICS" text="Physics Equations"/>
+                                        <core:Item key="" text="{i18n>placeholder.selectCalculationType}"/>
+                                        <core:Item key="FINANCIAL" text="{i18n>typeFinancial}" icon="sap-icon://money-bills"/>
+                                        <core:Item key="MATHEMATICAL" text="{i18n>typeMathematical}" icon="sap-icon://function-hierarchy"/>
+                                        <core:Item key="STATISTICAL" text="{i18n>typeStatistical}" icon="sap-icon://chart-axis"/>
+                                        <core:Item key="ENGINEERING" text="{i18n>typeEngineering}" icon="sap-icon://settings"/>
+                                        <core:Item key="SCIENTIFIC" text="{i18n>typeScientific}" icon="sap-icon://lab"/>
+                                        <core:Item key="ACTUARIAL" text="{i18n>typeActuarial}" icon="sap-icon://insurance-life"/>
+                                        <core:Item key="ACCOUNTING" text="{i18n>typeAccounting}" icon="sap-icon://accounting-document-verification"/>
+                                        <core:Item key="PHYSICS" text="{i18n>typePhysics}" icon="sap-icon://physical-activity"/>
                                     </items>
                                 </Select>
                                 
-                                <Label text="Data Source"/>
+                                <Label text="{i18n>dataSource}" labelFor="dataSourceInput"/>
                                 <Input 
+                                    id="dataSourceInput"
                                     value="{create>/dataSource}"
-                                    placeholder="Path to calculation data"
+                                    placeholder="{i18n>placeholder.dataSource}"
                                     showValueHelp="true"
-                                    valueHelpRequest=".onSelectDataSource"/>
+                                    valueHelpRequest=".onSelectDataSource"
+                                    maxLength="500"
+                                    liveChange=".onDataSourceChange"
+                                    valueState="{create>/dataSourceState}"
+                                    valueStateText="{create>/dataSourceStateText}"
+                                    ariaDescribedBy="dataSourceHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="dataSourceHelp" text="Optional field. Specify the path to your calculation data source. Click the help button to browse available data sources."/>
                                 
-                                <Label text="Priority"/>
-                                <Select selectedKey="{create>/priority}">
+                                <Label text="{i18n>priority}" labelFor="prioritySelect"/>
+                                <Select 
+                                    id="prioritySelect"
+                                    selectedKey="{create>/priority}"
+                                    ariaDescribedBy="priorityHelp"
+                                    class="sapUiMediumMarginBottom">
+                                <core:InvisibleText id="priorityHelp" text="Set the priority level for this validation task.">
                                     <items>
-                                        <core:Item key="LOW" text="Low"/>
-                                        <core:Item key="MEDIUM" text="Medium"/>
-                                        <core:Item key="HIGH" text="High"/>
-                                        <core:Item key="URGENT" text="Urgent"/>
+                                        <core:Item key="LOW" text="{i18n>priorityLow}" icon="sap-icon://status-positive"/>
+                                        <core:Item key="MEDIUM" text="{i18n>priorityMedium}" icon="sap-icon://status-inactive"/>
+                                        <core:Item key="HIGH" text="{i18n>priorityHigh}" icon="sap-icon://status-negative"/>
+                                        <core:Item key="URGENT" text="{i18n>priorityUrgent}" icon="sap-icon://alert"/>
                                     </items>
                                 </Select>
                             </form:content>
@@ -66,78 +135,106 @@
                     </IconTabFilter>
                     
                     <!-- Validation Settings Tab -->
-                    <IconTabFilter text="Validation Settings" icon="sap-icon://settings">
+                    <IconTabFilter text="{i18n>tab.validationSettings}" icon="sap-icon://settings" ariaDescribedBy="validationSettingsTabHelp">
+                        <core:InvisibleText id="validationSettingsTabHelp" text="Configure validation parameters including mode, precision, tolerance, and comparison methods"/>
                         <form:SimpleForm
                             editable="true"
                             layout="ResponsiveGridLayout">
                             <form:content>
-                                <Label text="Validation Mode"/>
-                                <Select selectedKey="{create>/validationMode}">
+                                <Label text="{i18n>validationMode}" labelFor="validationModeSelect"/>
+                                <Select 
+                                    id="validationModeSelect"
+                                    selectedKey="{create>/validationMode}"
+                                    change=".onValidationModeChange"
+                                    ariaDescribedBy="validationModeHelp"
+                                    class="sapUiMediumMarginBottom">
+                                <core:InvisibleText id="validationModeHelp" text="Select the validation mode that determines how strictly formulas are evaluated.">
                                     <items>
-                                        <core:Item key="STANDARD" text="Standard Validation"/>
-                                        <core:Item key="STRICT" text="Strict Validation"/>
-                                        <core:Item key="CUSTOM" text="Custom Rules"/>
-                                        <core:Item key="BENCHMARK" text="Benchmark Mode"/>
+                                        <core:Item key="STANDARD" text="{i18n>modeStandard}" icon="sap-icon://accept"/>
+                                        <core:Item key="STRICT" text="{i18n>modeStrict}" icon="sap-icon://locked"/>
+                                        <core:Item key="CUSTOM" text="{i18n>modeCustom}" icon="sap-icon://customize"/>
+                                        <core:Item key="BENCHMARK" text="{i18n>modeBenchmark}" icon="sap-icon://performance"/>
                                     </items>
                                 </Select>
                                 
-                                <Label text="Precision Threshold"/>
+                                <Label text="{i18n>precisionThreshold}" labelFor="precisionInput"/>
                                 <StepInput 
+                                    id="precisionInput"
                                     value="{create>/precisionThreshold}"
                                     min="0.00001"
                                     max="1"
                                     step="0.00001"
-                                    displayValuePrecision="5"/>
+                                    displayValuePrecision="5"
+                                    ariaDescribedBy="precisionHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="precisionHelp" text="Set the precision threshold for calculation validation. Lower values mean stricter validation."/>
                                 
-                                <Label text="Tolerance Level"/>
+                                <Label text="{i18n>toleranceLevel}" labelFor="toleranceSlider"/>
                                 <Slider 
+                                    id="toleranceSlider"
                                     value="{create>/toleranceLevel}"
                                     min="0"
                                     max="0.1"
                                     step="0.001"
                                     enableTickmarks="true"
-                                    inputsAsTooltips="true"/>
+                                    inputsAsTooltips="true"
+                                    ariaDescribedBy="toleranceHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="toleranceHelp" text="Adjust the tolerance level for acceptable calculation differences."/>
                                 
-                                <Label text="Comparison Method"/>
-                                <RadioButtonGroup selectedIndex="{create>/comparisonMethod}">
-                                    <RadioButton text="Absolute Difference"/>
-                                    <RadioButton text="Relative Error"/>
-                                    <RadioButton text="Statistical Test"/>
+                                <Label text="{i18n>comparisonMethod}" labelFor="comparisonGroup"/>
+                                <RadioButtonGroup 
+                                    id="comparisonGroup"
+                                    selectedIndex="{create>/comparisonMethod}"
+                                    ariaDescribedBy="comparisonHelp"
+                                    class="sapUiMediumMarginBottom">
+                                <core:InvisibleText id="comparisonHelp" text="Choose how calculation results will be compared against expected values.">
+                                    <RadioButton text="{i18n>comparisonAbsolute}" ariaLabel="Compare using absolute difference between values"/>
+                                    <RadioButton text="{i18n>comparisonRelative}" ariaLabel="Compare using relative error percentage"/>
+                                    <RadioButton text="{i18n>comparisonStatistical}" ariaLabel="Compare using statistical significance tests"/>
                                 </RadioButtonGroup>
                                 
-                                <Label text="Advanced Options"/>
-                                <VBox>
+                                <Label text="{i18n>advancedOptions}" labelFor="advancedOptionsBox"/>
+                                <VBox id="advancedOptionsBox" ariaDescribedBy="advancedOptionsHelp">
+                                <core:InvisibleText id="advancedOptionsHelp" text="Select additional validation options to enhance the validation process."/>
                                     <CheckBox 
-                                        text="Enable cross-validation"
-                                        selected="{create>/enableCrossValidation}"/>
+                                        text="{i18n>enableCrossValidation}"
+                                        selected="{create>/enableCrossValidation}"
+                                        ariaLabel="Enable cross-validation to verify calculation consistency across different methods"/>
                                     <CheckBox 
-                                        text="Enable statistical tests"
-                                        selected="{create>/enableStatisticalTests}"/>
+                                        text="{i18n>enableStatisticalTests}"
+                                        selected="{create>/enableStatisticalTests}"
+                                        ariaLabel="Enable statistical tests for enhanced validation accuracy"/>
                                     <CheckBox 
-                                        text="Parallel processing"
-                                        selected="{create>/parallelProcessing}"/>
+                                        text="{i18n>parallelProcessing}"
+                                        selected="{create>/parallelProcessing}"
+                                        ariaLabel="Enable parallel processing to improve validation performance"/>
                                     <CheckBox 
-                                        text="Generate detailed logs"
-                                        selected="{create>/detailedLogs}"/>
+                                        text="{i18n>detailedLogs}"
+                                        selected="{create>/detailedLogs}"
+                                        ariaLabel="Generate detailed validation logs for debugging and audit purposes"/>
                                 </VBox>
                             </form:content>
                         </form:SimpleForm>
                     </IconTabFilter>
                     
                     <!-- Formulas Tab -->
-                    <IconTabFilter text="Formulas" icon="sap-icon://functional-location">
+                    <IconTabFilter text="{i18n>tab.formulas}" icon="sap-icon://functional-location" ariaDescribedBy="formulasTabHelp">
+                        <core:InvisibleText id="formulasTabHelp" text="Add and configure formulas to validate with test data and expected results"/>
                         <VBox>
                             <Toolbar>
-                                <Title text="Formulas to Validate"/>
+                                <Title text="{i18n>formulasToValidate}" level="H3"/>
                                 <ToolbarSpacer/>
                                 <Button 
-                                    text="Add Formula"
+                                    text="{i18n>addFormula}"
                                     icon="sap-icon://add"
-                                    press=".onAddFormula"/>
+                                    press=".onAddFormula"
+                                    ariaLabel="Add a new formula to validate"/>
                                 <Button 
-                                    text="Import from File"
+                                    text="{i18n>importFormulas}"
                                     icon="sap-icon://upload"
-                                    press=".onImportFormulas"/>
+                                    press=".onImportFormulas"
+                                    ariaLabel="Import formulas from an external file"/>
                             </Toolbar>
                             
                             <Table
@@ -145,19 +242,19 @@
                                 mode="Delete">
                                 <columns>
                                     <Column width="30%">
-                                        <Text text="Formula Expression"/>
+                                        <Text text="{i18n>formulaExpression}"/>
                                     </Column>
                                     <Column width="20%">
-                                        <Text text="Expected Result"/>
+                                        <Text text="{i18n>expectedValue}"/>
                                     </Column>
                                     <Column width="15%">
-                                        <Text text="Type"/>
+                                        <Text text="{i18n>formulaType}"/>
                                     </Column>
                                     <Column width="25%">
-                                        <Text text="Test Data"/>
+                                        <Text text="{i18n>testData}"/>
                                     </Column>
                                     <Column width="10%">
-                                        <Text text="Actions"/>
+                                        <Text text="{i18n>actions}"/>
                                     </Column>
                                 </columns>
                                 <items>
@@ -166,28 +263,33 @@
                                             <TextArea 
                                                 value="{create>expression}"
                                                 rows="2"
-                                                placeholder="Enter formula expression"/>
+                                                placeholder="{i18n>placeholder.formulaExpression}"
+                                                liveChange=".onFormulaExpressionChange"
+                                                ariaLabel="Enter the formula expression to validate"/>
                                             <Input 
                                                 value="{create>expectedResult}"
                                                 type="Number"
-                                                placeholder="Expected value"/>
+                                                placeholder="{i18n>placeholder.expectedResult}"
+                                                ariaLabel="Enter the expected result value"/>
                                             <Select selectedKey="{create>type}">
                                                 <items>
-                                                    <core:Item key="ARITHMETIC" text="Arithmetic"/>
-                                                    <core:Item key="TRIGONOMETRIC" text="Trigonometric"/>
-                                                    <core:Item key="LOGARITHMIC" text="Logarithmic"/>
-                                                    <core:Item key="STATISTICAL" text="Statistical"/>
-                                                    <core:Item key="FINANCIAL" text="Financial"/>
+                                                    <core:Item key="ARITHMETIC" text="{i18n>formulaTypeArithmetic}"/>
+                                                    <core:Item key="TRIGONOMETRIC" text="{i18n>formulaTypeTrigonometric}"/>
+                                                    <core:Item key="LOGARITHMIC" text="{i18n>formulaTypeLogarithmic}"/>
+                                                    <core:Item key="STATISTICAL" text="{i18n>formulaTypeStatistical}"/>
+                                                    <core:Item key="FINANCIAL" text="{i18n>formulaTypeFinancial}"/>
                                                 </items>
                                             </Select>
                                             <TextArea 
                                                 value="{create>testData}"
                                                 rows="2"
-                                                placeholder='{"x": 5, "y": 10}'/> 
+                                                placeholder="{i18n>placeholder.testData}"
+                                                ariaLabel="Enter test data in JSON format"/>
                                             <Button 
                                                 icon="sap-icon://validate"
-                                                tooltip="Test formula"
-                                                press=".onTestFormula"/>
+                                                tooltip="{i18n>testFormula}"
+                                                press=".onTestFormula"
+                                                ariaLabel="Test this formula with the provided test data"/>
                                         </cells>
                                     </ColumnListItem>
                                 </items>
@@ -195,9 +297,10 @@
                             
                             <!-- Formula Templates -->
                             <Panel 
-                                headerText="Formula Templates"
+                                headerText="{i18n>formulaTemplates}"
                                 expandable="true"
-                                expanded="false">
+                                expanded="false"
+                                ariaLabel="Expandable panel containing formula templates">
                                 <List items="{create>/templates}">
                                     <StandardListItem
                                         title="{create>name}"
@@ -210,56 +313,77 @@
                     </IconTabFilter>
                     
                     <!-- Advanced Options Tab -->
-                    <IconTabFilter text="Advanced" icon="sap-icon://wrench">
+                    <IconTabFilter text="{i18n>tab.advanced}" icon="sap-icon://wrench" ariaDescribedBy="advancedTabHelp">
+                        <core:InvisibleText id="advancedTabHelp" text="Configure advanced validation options including custom rules, benchmarks, and performance settings"/>
                         <form:SimpleForm
                             editable="true"
                             layout="ResponsiveGridLayout">
                             <form:content>
-                                <Label text="Custom Validation Rules"/>
+                                <Label text="{i18n>customValidationRules}" labelFor="customRulesInput"/>
                                 <TextArea
+                                    id="customRulesInput"
                                     value="{create>/customValidationRules}"
                                     rows="4"
-                                    placeholder="Enter custom validation logic (JavaScript)"/>
+                                    placeholder="{i18n>placeholder.customValidationRules}"
+                                    ariaDescribedBy="customRulesHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="customRulesHelp" text="Enter custom validation logic using JavaScript. This code will be executed securely in a sandboxed environment."/>
                                 
-                                <Label text="Benchmark Dataset"/>
+                                <Label text="{i18n>benchmarkDataset}" labelFor="benchmarkInput"/>
                                 <Input 
+                                    id="benchmarkInput"
                                     value="{create>/benchmarkDataset}"
-                                    placeholder="Reference dataset for comparison"
-                                    showValueHelp="true"/>
+                                    placeholder="{i18n>placeholder.benchmarkDataset}"
+                                    showValueHelp="true"
+                                    valueHelpRequest=".onSelectBenchmarkDataset"
+                                    ariaDescribedBy="benchmarkHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="benchmarkHelp" text="Select a reference dataset to compare validation results against known benchmarks."/>
                                 
-                                <Label text="Performance Settings"/>
-                                <VBox>
+                                <Label text="{i18n>performanceSettings}" labelFor="performanceBox"/>
+                                <VBox id="performanceBox" ariaDescribedBy="performanceHelp">
+                                <core:InvisibleText id="performanceHelp" text="Configure performance limits for validation execution."/>
                                     <HBox>
-                                        <Label text="Max execution time (seconds):" width="200px"/>
+                                        <Label text="{i18n>maxExecutionTime}" width="200px"/>
                                         <Input 
                                             value="{create>/maxExecutionTime}"
                                             type="Number"
-                                            width="100px"/>
+                                            width="100px"
+                                            ariaLabel="Maximum execution time in seconds"/>
                                     </HBox>
                                     <HBox>
-                                        <Label text="Memory limit (MB):" width="200px"/>
+                                        <Label text="{i18n>memoryLimit}" width="200px"/>
                                         <Input 
                                             value="{create>/memoryLimit}"
                                             type="Number"
-                                            width="100px"/>
+                                            width="100px"
+                                            ariaLabel="Memory limit in megabytes"/>
                                     </HBox>
                                 </VBox>
                                 
-                                <Label text="Error Handling"/>
-                                <RadioButtonGroup selectedIndex="{create>/errorHandling}">
-                                    <RadioButton text="Stop on first error"/>
-                                    <RadioButton text="Continue with warnings"/>
-                                    <RadioButton text="Skip invalid formulas"/>
+                                <Label text="{i18n>errorHandling}" labelFor="errorHandlingGroup"/>
+                                <RadioButtonGroup 
+                                    id="errorHandlingGroup"
+                                    selectedIndex="{create>/errorHandling}"
+                                    ariaDescribedBy="errorHandlingHelp"
+                                    class="sapUiMediumMarginBottom">
+                                <core:InvisibleText id="errorHandlingHelp" text="Select how validation errors should be handled during execution."/>
+                                    <RadioButton text="{i18n>errorHandlingStop}" ariaLabel="Stop validation process when first error occurs"/>
+                                    <RadioButton text="{i18n>errorHandlingContinue}" ariaLabel="Continue validation and collect all errors as warnings"/>
+                                    <RadioButton text="{i18n>errorHandlingSkip}" ariaLabel="Skip invalid formulas and continue with valid ones"/>
                                 </RadioButtonGroup>
                                 
-                                <Label text="Notification Settings"/>
-                                <VBox>
+                                <Label text="{i18n>notificationSettings}" labelFor="notificationBox"/>
+                                <VBox id="notificationBox" ariaDescribedBy="notificationHelp">
+                                <core:InvisibleText id="notificationHelp" text="Configure how you want to be notified about validation progress and results."/>
                                     <CheckBox 
-                                        text="Email notification on completion"
-                                        selected="{create>/emailNotification}"/>
+                                        text="{i18n>emailNotification}"
+                                        selected="{create>/emailNotification}"
+                                        ariaLabel="Send email notification when validation completes"/>
                                     <CheckBox 
-                                        text="Real-time progress updates"
-                                        selected="{create>/progressUpdates}"/>
+                                        text="{i18n>progressUpdates}"
+                                        selected="{create>/progressUpdates}"
+                                        ariaLabel="Enable real-time progress updates during validation"/>
                                 </VBox>
                             </form:content>
                         </form:SimpleForm>
@@ -270,16 +394,18 @@
         
         <beginButton>
             <Button 
-                text="Cancel"
-                press=".onCancelCreateTask"/>
+                text="{i18n>button.cancel}"
+                press=".onCancelCreateTask"
+                ariaLabel="Cancel and close the dialog without creating a task"/>
         </beginButton>
         
         <endButton>
             <Button 
-                text="Create"
+                text="{i18n>button.create}"
                 type="Emphasized"
                 press=".onConfirmCreateTask"
-                enabled="{= ${create>/taskName} &amp;&amp; ${create>/calculationType} &amp;&amp; ${create>/formulas}.length > 0 }"/>
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/calculationType} &amp;&amp; ${create>/isValid} }"
+                ariaLabel="Create validation task with the configured settings"/>
         </endButton>
         
     </Dialog>

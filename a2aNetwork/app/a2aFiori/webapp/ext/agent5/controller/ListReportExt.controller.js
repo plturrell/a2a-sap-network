@@ -3,8 +3,12 @@ sap.ui.define([
     "sap/ui/core/Fragment",
     "sap/m/MessageBox",
     "sap/m/MessageToast",
-    "sap/ui/model/json/JSONModel"
-], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel) {
+    "sap/ui/model/json/JSONModel",
+    "sap/base/security/encodeXML",
+    "sap/base/strings/escapeRegExp",
+    "sap/base/security/sanitizeHTML",
+    "sap/base/Log"
+], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, encodeXML, escapeRegExp, sanitizeHTML, Log) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent5.ext.controller.ListReportExt", {
@@ -14,10 +18,27 @@ sap.ui.define([
                 this._extensionAPI = this.base.getExtensionAPI();
                 // Initialize debounced validation for performance
                 this._debouncedValidation = this._debounce(this._validateTestData.bind(this), 300);
+                
+                // Initialize device model for responsive behavior
+                var oDeviceModel = new JSONModel(sap.ui.Device);
+                oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
+                this.base.getView().setModel(oDeviceModel, "device");
+                
+                // Initialize dialog cache for better performance
+                this._dialogCache = {};
+                
+                // Initialize resource bundle for i18n
+                this._oResourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
             },
 
             onExit: function() {
                 // Cleanup resources to prevent memory leaks
+                for (var sKey in this._dialogCache) {
+                    if (this._dialogCache.hasOwnProperty(sKey)) {
+                        this._dialogCache[sKey].destroy();
+                    }
+                }
+                // Cleanup legacy dialogs
                 if (this._oCreateDialog) {
                     this._oCreateDialog.destroy();
                 }

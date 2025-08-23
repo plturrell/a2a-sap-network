@@ -5,6 +5,34 @@
         "type": "application",
         "applicationVersion": {
             "version": "1.0.0"
+        },
+        "crossNavigation": {
+            "inbounds": {
+                "agent10-display": {
+                    "semanticObject": "CalculationAgent",
+                    "action": "display",
+                    "title": "{{agent.name}}",
+                    "signature": {
+                        "parameters": {},
+                        "additionalParameters": "allowed"
+                    }
+                }
+            }
+        },
+        "dataSources": {
+            "mainService": {
+                "uri": "/sap/opu/odata/sap/ZA2A_AGENT10_SRV/",
+                "type": "OData",
+                "settings": {
+                    "annotations": [],
+                    "localUri": "localService/metadata.xml",
+                    "odataVersion": "2.0"
+                }
+            },
+            "i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "uri": "i18n/i18n.properties"
+            }
         }
     },
     "sap.ui": {
@@ -35,15 +63,40 @@
                 "sap.suite.ui.microchart": {},
                 "sap.viz": {},
                 "sap.ui.table": {},
-                "sap.ui.codeeditor": {}
+                "sap.ui.codeeditor": {},
+                "sap.base": {}
             }
         },
+        "contentDensities": {
+            "compact": true,
+            "cozy": true
+        },
+        "flexEnabled": false,
+        "handleValidation": true,
         "models": {
             "i18n": {
                 "dataSource": "i18n",
                 "type": "sap.ui.model.resource.ResourceModel",
                 "settings": {
-                    "bundleName": "a2a.network.agent10.ext.i18n.i18n"
+                    "bundleName": "a2a.network.agent10.ext.i18n.i18n",
+                    "supportedLocales": ["en", "de", "fr", "es"],
+                    "fallbackLocale": "en"
+                }
+            },
+            "": {
+                "dataSource": "mainService",
+                "type": "sap.ui.model.odata.v2.ODataModel",
+                "settings": {
+                    "defaultOperationMode": "Server",
+                    "defaultBindingMode": "TwoWay",
+                    "defaultCountMode": "Request",
+                    "refreshAfterChange": false,
+                    "metadataUrlParams": {
+                        "sap-value-list": "none"
+                    },
+                    "headers": {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
                 }
             }
         }
@@ -56,8 +109,14 @@
         "registrationIds": [],
         "archeType": "transactional"
     },
+    "sap.platform.abap": {
+        "uri": "/sap/bc/ui5_ui5/sap/za2a_agent10/"
+    },
+    "sap.platform.hcp": {
+        "uri": ""
+    },
     "sap.cloud": {
-        "public": true,
+        "public": false,
         "service": "a2aAgents"
     }
 }

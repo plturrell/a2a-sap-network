@@ -1,0 +1,199 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.ui.layout.form">
+    
+    <Dialog
+        id="selfHealingConfigDialog"
+        title="{i18n>selfHealingConfiguration}"
+        contentWidth="50%"
+        contentHeight="60%"
+        verticalScrolling="true">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <!-- Self-Healing Settings -->
+                <Panel headerText="{i18n>generalSettings}">
+                    <f:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="4"
+                        labelSpanL="4"
+                        labelSpanM="4"
+                        labelSpanS="12">
+                        <f:content>
+                            <Label text="{i18n>enableSelfHealing}:" />
+                            <Switch
+                                state="{/enableSelfHealing}"
+                                customTextOn="{i18n>enabled}"
+                                customTextOff="{i18n>disabled}"
+                                change=".onSelfHealingToggle" />
+                            
+                            <Label text="{i18n>verificationRounds}:" />
+                            <StepInput
+                                value="{/verificationRounds}"
+                                min="1"
+                                max="10"
+                                step="1"
+                                width="150px"
+                                enabled="{/enableSelfHealing}" />
+                            
+                            <Label text="{i18n>errorThreshold}:" />
+                            <Slider
+                                value="{/errorThreshold}"
+                                min="0.00001"
+                                max="0.1"
+                                step="0.00001"
+                                enableTickmarks="true"
+                                inputsAsTooltips="true"
+                                showHandleTooltip="true"
+                                width="100%"
+                                enabled="{/enableSelfHealing}" />
+                            
+                            <Label text="{i18n>maxRetries}:" />
+                            <StepInput
+                                value="{/maxRetries}"
+                                min="1"
+                                max="5"
+                                step="1"
+                                width="150px"
+                                enabled="{/enableSelfHealing}" />
+                        </f:content>
+                    </f:SimpleForm>
+                </Panel>
+                
+                <!-- Strategy Selection -->
+                <Panel
+                    headerText="{i18n>healingStrategies}"
+                    class="sapUiMediumMarginTop"
+                    expandable="true">
+                    <VBox>
+                        <MessageStrip
+                            text="{i18n>strategySelectionHint}"
+                            type="Information"
+                            showIcon="true"
+                            class="sapUiSmallMarginBottom" />
+                        
+                        <List
+                            id="strategyList"
+                            mode="MultiSelect"
+                            includeItemInSelection="true"
+                            items="{/availableStrategies}">
+                            <StandardListItem
+                                title="{name}"
+                                description="{description}"
+                                icon="{icon}"
+                                selected="{enabled}"
+                                type="Active"
+                                info="{applicableFor}" />
+                        </List>
+                    </VBox>
+                </Panel>
+                
+                <!-- Error Type Configuration -->
+                <Panel
+                    headerText="{i18n>errorTypeHandling}"
+                    class="sapUiMediumMarginTop"
+                    expandable="true"
+                    expanded="false">
+                    <Table
+                        id="errorTypeTable"
+                        items="{/errorTypeConfigs}">
+                        <columns>
+                            <Column>
+                                <Text text="{i18n>errorType}" />
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>detectionMethod}" />
+                            </Column>
+                            <Column>
+                                <Text text="{i18n>preferredStrategy}" />
+                            </Column>
+                            <Column width="100px">
+                                <Text text="{i18n>autoFix}" />
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem>
+                                <cells>
+                                    <Text text="{errorType}" />
+                                    <Select selectedKey="{detectionMethod}" enabled="{/enableSelfHealing}">
+                                        <items>
+                                            <core:Item key="BOUNDARY_CHECK" text="{i18n>boundaryCheck}" />
+                                            <core:Item key="CONSISTENCY_CHECK" text="{i18n>consistencyCheck}" />
+                                            <core:Item key="REDUNDANT_CALC" text="{i18n>redundantCalc}" />
+                                            <core:Item key="PATTERN_ANALYSIS" text="{i18n>patternAnalysis}" />
+                                            <core:Item key="STATISTICAL_ANOMALY" text="{i18n>statisticalAnomaly}" />
+                                        </items>
+                                    </Select>
+                                    <Select selectedKey="{preferredStrategy}" enabled="{/enableSelfHealing}">
+                                        <items>
+                                            <core:Item key="PRECISION_ADJUSTMENT" text="{i18n>precisionAdjustment}" />
+                                            <core:Item key="SCALING" text="{i18n>scaling}" />
+                                            <core:Item key="APPROXIMATION" text="{i18n>approximation}" />
+                                            <core:Item key="ALTERNATIVE_METHOD" text="{i18n>alternativeMethod}" />
+                                            <core:Item key="ITERATIVE_REFINEMENT" text="{i18n>iterativeRefinement}" />
+                                        </items>
+                                    </Select>
+                                    <Switch state="{autoFix}" enabled="{/enableSelfHealing}" />
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                    </Table>
+                </Panel>
+                
+                <!-- Advanced Options -->
+                <Panel
+                    headerText="{i18n>advancedOptions}"
+                    class="sapUiMediumMarginTop"
+                    expandable="true"
+                    expanded="false">
+                    <f:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout">
+                        <f:content>
+                            <Label text="{i18n>logVerbosity}:" />
+                            <SegmentedButton selectedKey="{/logVerbosity}">
+                                <items>
+                                    <SegmentedButtonItem key="ERROR" text="{i18n>errors}" />
+                                    <SegmentedButtonItem key="WARNING" text="{i18n>warnings}" />
+                                    <SegmentedButtonItem key="INFO" text="{i18n>info}" />
+                                    <SegmentedButtonItem key="DEBUG" text="{i18n>debug}" />
+                                </items>
+                            </SegmentedButton>
+                            
+                            <Label text="{i18n>performanceMode}:" />
+                            <RadioButtonGroup columns="2" selectedIndex="{/performanceMode}">
+                                <RadioButton text="{i18n>balanced}" />
+                                <RadioButton text="{i18n>aggressive}" />
+                                <RadioButton text="{i18n>conservative}" />
+                                <RadioButton text="{i18n>custom}" />
+                            </RadioButtonGroup>
+                            
+                            <Label text="{i18n>notifyOnCorrection}:" />
+                            <CheckBox selected="{/notifyOnCorrection}" />
+                            
+                            <Label text="{i18n>saveCorrectionsLog}:" />
+                            <CheckBox selected="{/saveCorrectionsLog}" />
+                        </f:content>
+                    </f:SimpleForm>
+                </Panel>
+            </VBox>
+        </content>
+        
+        <beginButton>
+            <Button
+                text="{i18n>save}"
+                type="Emphasized"
+                icon="sap-icon://save"
+                press=".onSaveSelfHealingConfig" />
+        </beginButton>
+        
+        <endButton>
+            <Button
+                text="{i18n>cancel}"
+                press=".onCancelSelfHealingConfig" />
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

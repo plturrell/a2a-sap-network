@@ -3,8 +3,9 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/m/MessageToast",
     "sap/ui/core/Fragment",
-    "sap/ui/model/json/JSONModel"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel) {
+    "sap/ui/model/json/JSONModel",
+    "a2a/network/agent9/ext/utils/SecurityUtils"
+], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent9.ext.controller.ObjectPageExt", {
@@ -12,15 +13,282 @@ sap.ui.define([
         override: {
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
+                this._securityUtils = SecurityUtils;
+                this._initializeCreateModel();
             }
         },
+
+        _initializeCreateModel: function() {
+            var oCreateData = {
+                taskName: "",
+                description: "",
+                reasoningType: "",
+                problemDomain: "",
+                priority: "MEDIUM",
+                taskNameState: "",
+                taskNameStateText: "",
+                reasoningTypeState: "",
+                reasoningTypeStateText: "",
+                problemDomainState: "",
+                problemDomainStateText: "",
+                reasoningEngine: "",
+                confidenceThreshold: 0.8,
+                maxInferenceDepth: 10,
+                chainingStrategy: "BREADTH_FIRST",
+                uncertaintyHandling: "PROBABILISTIC",
+                parallelReasoning: false,
+                cacheResults: true,
+                generateExplanations: true,
+                validateConsistency: true,
+                problemDomains: [],
+                availableEngines: []
+            };
+            var oCreateModel = new JSONModel(oCreateData);
+            this.base.getView().setModel(oCreateModel, "create");
+        },
+
+        onCreateReasoningTask: function() {
+            var oView = this.base.getView();
+            
+            if (!this._oCreateDialog) {
+                Fragment.load({
+                    id: oView.getId(),
+                    name: "a2a.network.agent9.ext.fragment.CreateReasoningTask",
+                    controller: this
+                }).then(function(oDialog) {
+                    this._oCreateDialog = oDialog;
+                    oView.addDependent(this._oCreateDialog);
+                    this._loadCreateDialogData();
+                    this._oCreateDialog.open();
+                }.bind(this));
+            } else {
+                this._loadCreateDialogData();
+                this._oCreateDialog.open();
+            }
+        },
+
+        _loadCreateDialogData: function() {
+            var oCreateModel = this.base.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            // Load problem domains
+            oData.problemDomains = [
+                { domainId: "GENERAL", domainName: "General Problem Solving", complexity: "Low" },
+                { domainId: "BUSINESS", domainName: "Business Logic", complexity: "Medium" },
+                { domainId: "TECHNICAL", domainName: "Technical Analysis", complexity: "High" },
+                { domainId: "SCIENTIFIC", domainName: "Scientific Research", complexity: "Very High" }
+            ];
+            
+            // Load available engines
+            oData.availableEngines = [
+                { engineId: "FORWARD", engineName: "Forward Chaining", engineType: "Rule-based" },
+                { engineId: "BACKWARD", engineName: "Backward Chaining", engineType: "Goal-driven" },
+                { engineId: "BAYESIAN", engineName: "Bayesian Network", engineType: "Probabilistic" },
+                { engineId: "FUZZY", engineName: "Fuzzy Logic", engineType: "Approximate" }
+            ];
+            
+            oCreateModel.setData(oData);
+        },
+
+        onTaskNameChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.base.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            if (!sValue || sValue.length < 3) {
+                oData.taskNameState = "Error";
+                oData.taskNameStateText = "Task name must be at least 3 characters";
+            } else if (sValue.length > 100) {
+                oData.taskNameState = "Error";
+                oData.taskNameStateText = "Task name must not exceed 100 characters";
+            } else {
+                oData.taskNameState = "Success";
+                oData.taskNameStateText = "Valid task name";
+            }
+            
+            oCreateModel.setData(oData);
+        },
+
+        onReasoningTypeChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.base.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            if (sValue) {
+                oData.reasoningTypeState = "Success";
+                oData.reasoningTypeStateText = "Reasoning type selected";
+                
+                // Smart suggestions based on reasoning type
+                switch (sValue) {
+                    case "DEDUCTIVE":
+                        oData.reasoningEngine = "FORWARD";
+                        oData.chainingStrategy = "BREADTH_FIRST";
+                        oData.uncertaintyHandling = "CRISP";
+                        break;
+                    case "INDUCTIVE":
+                        oData.reasoningEngine = "BAYESIAN";
+                        oData.chainingStrategy = "BEST_FIRST";
+                        oData.uncertaintyHandling = "PROBABILISTIC";
+                        break;
+                    case "PROBABILISTIC":
+                        oData.reasoningEngine = "BAYESIAN";
+                        oData.uncertaintyHandling = "PROBABILISTIC";
+                        oData.confidenceThreshold = 0.7;
+                        break;
+                    case "FUZZY":
+                        oData.reasoningEngine = "FUZZY";
+                        oData.uncertaintyHandling = "FUZZY";
+                        break;
+                }
+            } else {
+                oData.reasoningTypeState = "Error";
+                oData.reasoningTypeStateText = "Please select a reasoning type";
+            }
+            
+            oCreateModel.setData(oData);
+        },
+
+        onProblemDomainChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.base.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            if (sValue) {
+                oData.problemDomainState = "Success";
+                oData.problemDomainStateText = "Problem domain selected";
+                
+                // Adjust settings based on domain complexity
+                switch (sValue) {
+                    case "GENERAL":
+                        oData.maxInferenceDepth = 5;
+                        oData.confidenceThreshold = 0.9;
+                        break;
+                    case "BUSINESS":
+                        oData.maxInferenceDepth = 10;
+                        oData.confidenceThreshold = 0.8;
+                        break;
+                    case "TECHNICAL":
+                        oData.maxInferenceDepth = 20;
+                        oData.confidenceThreshold = 0.7;
+                        oData.parallelReasoning = true;
+                        break;
+                    case "SCIENTIFIC":
+                        oData.maxInferenceDepth = 50;
+                        oData.confidenceThreshold = 0.6;
+                        oData.parallelReasoning = true;
+                        oData.generateExplanations = true;
+                        break;
+                }
+            } else {
+                oData.problemDomainState = "Error";
+                oData.problemDomainStateText = "Please select a problem domain";
+            }
+            
+            oCreateModel.setData(oData);
+        },
+
+        onCancelCreateReasoningTask: function() {
+            this._oCreateDialog.close();
+            this._resetCreateModel();
+        },
+
+        onConfirmCreateReasoningTask: function() {
+            var oCreateModel = this.base.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            // Final validation
+            if (!this._validateCreateData(oData)) {
+                return;
+            }
+            
+            this._oCreateDialog.setBusy(true);
+            
+            // Sanitize data for security
+            var oSanitizedData = {
+                taskName: this._securityUtils.sanitizeInput(oData.taskName),
+                description: this._securityUtils.sanitizeInput(oData.description),
+                reasoningType: oData.reasoningType,
+                problemDomain: oData.problemDomain,
+                priority: oData.priority,
+                reasoningEngine: oData.reasoningEngine,
+                confidenceThreshold: parseFloat(oData.confidenceThreshold) || 0.8,
+                maxInferenceDepth: parseInt(oData.maxInferenceDepth) || 10,
+                chainingStrategy: oData.chainingStrategy,
+                uncertaintyHandling: oData.uncertaintyHandling,
+                parallelReasoning: !!oData.parallelReasoning,
+                cacheResults: !!oData.cacheResults,
+                generateExplanations: !!oData.generateExplanations,
+                validateConsistency: !!oData.validateConsistency
+            };
+            
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent9/v1/tasks",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(oSanitizedData),
+                success: function(data) {
+                    this._oCreateDialog.setBusy(false);
+                    this._oCreateDialog.close();
+                    MessageToast.show("Reasoning task created successfully");
+                    this._extensionAPI.refresh();
+                    this._resetCreateModel();
+                }.bind(this),
+                error: function(xhr) {
+                    this._oCreateDialog.setBusy(false);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Failed to create reasoning task: " + errorMsg);
+                }.bind(this)
+            });
+            
+            jQuery.ajax(ajaxConfig);
+        },
+
+        _validateCreateData: function(oData) {
+            if (!oData.taskName || oData.taskName.length < 3) {
+                MessageBox.error("Task name is required and must be at least 3 characters");
+                return false;
+            }
+            
+            if (!oData.reasoningType) {
+                MessageBox.error("Reasoning type is required");
+                return false;
+            }
+            
+            if (!oData.problemDomain) {
+                MessageBox.error("Problem domain is required");
+                return false;
+            }
+            
+            return true;
+        },
+
+        _resetCreateModel: function() {
+            var oCreateModel = this.base.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.taskName = "";
+            oData.description = "";
+            oData.reasoningType = "";
+            oData.problemDomain = "";
+            oData.priority = "MEDIUM";
+            oData.taskNameState = "";
+            oData.taskNameStateText = "";
+            oData.reasoningTypeState = "";
+            oData.reasoningTypeStateText = "";
+            oData.problemDomainState = "";
+            oData.problemDomainStateText = "";
+            
+            oCreateModel.setData(oData);
+        },
+
 
         onStartReasoning: function() {
             var oContext = this._extensionAPI.getBindingContext();
             var sTaskId = oContext.getProperty("ID");
             var sTaskName = oContext.getProperty("taskName");
             
-            MessageBox.confirm("Start reasoning process for '" + sTaskName + "'?", {
+            const safeTaskName = this._securityUtils.encodeHTML(sTaskName);
+            MessageBox.confirm("Start reasoning process for '" + safeTaskName + "'?", {
                 onClose: function(oAction) {
                     if (oAction === MessageBox.Action.OK) {
                         this._startReasoningProcess(sTaskId);
@@ -32,8 +300,8 @@ sap.ui.define([
         _startReasoningProcess: function(sTaskId) {
             this._extensionAPI.getView().setBusy(true);
             
-            jQuery.ajax({
-                url: "/a2a/agent9/v1/tasks/" + sTaskId + "/reason",
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent9/v1/tasks/" + encodeURIComponent(sTaskId) + "/reason",
                 type: "POST",
                 success: function(data) {
                     this._extensionAPI.getView().setBusy(false);
@@ -44,9 +312,12 @@ sap.ui.define([
                 }.bind(this),
                 error: function(xhr) {
                     this._extensionAPI.getView().setBusy(false);
-                    MessageBox.error("Failed to start reasoning: " + xhr.responseText);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Failed to start reasoning: " + errorMsg);
                 }.bind(this)
             });
+            
+            jQuery.ajax(ajaxConfig);
         },
 
         _startReasoningMonitoring: function(sTaskId) {
@@ -58,14 +329,16 @@ sap.ui.define([
                 if (data.type === "progress") {
                     this._updateReasoningProgress(data);
                 } else if (data.type === "inference") {
-                    MessageToast.show("New inference: " + data.conclusion);
+                    const safeConclusion = this._securityUtils.encodeHTML(data.conclusion || 'Unknown conclusion');
+                    MessageToast.show("New inference: " + safeConclusion);
                 } else if (data.type === "complete") {
                     this._reasoningEventSource.close();
                     this._extensionAPI.refresh();
                     this._showReasoningResults(data.results);
                 } else if (data.type === "error") {
                     this._reasoningEventSource.close();
-                    MessageBox.error("Reasoning failed: " + data.error);
+                    const safeError = this._securityUtils.sanitizeErrorMessage(data.error);
+                    MessageBox.error("Reasoning failed: " + safeError);
                 }
             }.bind(this);
             
@@ -76,7 +349,10 @@ sap.ui.define([
         },
 
         _updateReasoningProgress: function(data) {
-            MessageToast.show(data.stage + ": " + data.progress + "% (Confidence: " + data.confidence + "%)");
+            const safeStage = this._securityUtils.encodeHTML(data.stage || 'Processing');
+            const safeProgress = parseInt(data.progress) || 0;
+            const safeConfidence = parseFloat(data.confidence) || 0;
+            MessageToast.show(safeStage + ": " + safeProgress + "% (Confidence: " + safeConfidence + "%)");
         },
 
         _showReasoningResults: function(results) {
@@ -125,7 +401,8 @@ sap.ui.define([
                 }.bind(this),
                 error: function(xhr) {
                     this._extensionAPI.getView().setBusy(false);
-                    MessageBox.error("Inference generation failed: " + xhr.responseText);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Inference generation failed: " + errorMsg);
                 }.bind(this)
             });
         },
@@ -198,7 +475,8 @@ sap.ui.define([
                     oModel.setData(oData);
                 }.bind(this),
                 error: function(xhr) {
-                    MessageBox.error("Failed to load decision options: " + xhr.responseText);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Failed to load decision options: " + errorMsg);
                 }.bind(this)
             });
         },
@@ -218,7 +496,8 @@ sap.ui.define([
                 }.bind(this),
                 error: function(xhr) {
                     this._extensionAPI.getView().setBusy(false);
-                    MessageBox.error("Validation failed: " + xhr.responseText);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Validation failed: " + errorMsg);
                 }.bind(this)
             });
         },
@@ -226,23 +505,26 @@ sap.ui.define([
         _showValidationResults: function(validationData) {
             var sMessage = "Conclusion Validation Results:\\n\\n";
             
-            sMessage += "Validation Status: " + validationData.status + "\\n";
-            sMessage += "Confidence Score: " + validationData.confidence + "%\\n";
-            sMessage += "Logical Consistency: " + validationData.consistency + "\\n";
-            sMessage += "Supporting Evidence: " + validationData.supportingEvidence + " facts\\n\\n";
+            sMessage += "Validation Status: " + this._securityUtils.encodeHTML(validationData.status || 'Unknown') + "\\n";
+            sMessage += "Confidence Score: " + (parseFloat(validationData.confidence) || 0) + "%\\n";
+            sMessage += "Logical Consistency: " + this._securityUtils.encodeHTML(validationData.consistency || 'Unknown') + "\\n";
+            sMessage += "Supporting Evidence: " + (parseInt(validationData.supportingEvidence) || 0) + " facts\\n\\n";
             
             if (validationData.issues && validationData.issues.length > 0) {
                 sMessage += "Validation Issues:\\n";
                 validationData.issues.forEach(function(issue) {
-                    sMessage += "• " + issue.type + ": " + issue.description + "\\n";
-                });
+                    const safeType = this._securityUtils.encodeHTML(issue.type || 'Unknown');
+                    const safeDesc = this._securityUtils.encodeHTML(issue.description || 'No description');
+                    sMessage += "• " + safeType + ": " + safeDesc + "\\n";
+                }.bind(this));
             }
             
             if (validationData.recommendations && validationData.recommendations.length > 0) {
                 sMessage += "\\nRecommendations:\\n";
                 validationData.recommendations.forEach(function(rec) {
-                    sMessage += "• " + rec + "\\n";
-                });
+                    const safeRec = this._securityUtils.encodeHTML(rec || '');
+                    sMessage += "• " + safeRec + "\\n";
+                }.bind(this));
             }
             
             MessageBox.information(sMessage);
@@ -285,7 +567,8 @@ sap.ui.define([
                     this._createExplanationVisualizations(data);
                 }.bind(this),
                 error: function(xhr) {
-                    MessageBox.error("Failed to load explanation: " + xhr.responseText);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Failed to load explanation: " + errorMsg);
                 }.bind(this)
             });
         },
@@ -325,16 +608,20 @@ sap.ui.define([
                     constraintHandling: "SOFT"
                 }),
                 success: function(data) {
+                    const safePerformance = parseFloat(data.performanceImprovement) || 0;
+                    const safeMemory = parseFloat(data.memoryReduction) || 0;
+                    const safeAccuracy = parseFloat(data.accuracyMaintained) || 0;
                     MessageBox.success(
                         "Engine optimization completed!\\n" +
-                        "Performance improvement: " + data.performanceImprovement + "%\\n" +
-                        "Memory reduction: " + data.memoryReduction + "%\\n" +
-                        "Accuracy maintained: " + data.accuracyMaintained + "%"
+                        "Performance improvement: " + safePerformance + "%\\n" +
+                        "Memory reduction: " + safeMemory + "%\\n" +
+                        "Accuracy maintained: " + safeAccuracy + "%"
                     );
                     this._extensionAPI.refresh();
                 }.bind(this),
                 error: function(xhr) {
-                    MessageBox.error("Engine optimization failed: " + xhr.responseText);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Engine optimization failed: " + errorMsg);
                 }.bind(this)
             });
         },
@@ -382,7 +669,8 @@ sap.ui.define([
                 }.bind(this),
                 error: function(xhr) {
                     this._extensionAPI.getView().setBusy(false);
-                    MessageBox.error("Contradiction analysis failed: " + xhr.responseText);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Contradiction analysis failed: " + errorMsg);
                 }.bind(this)
             });
         },
@@ -392,15 +680,21 @@ sap.ui.define([
             
             if (analysisData.contradictions.length === 0) {
                 sMessage += "No contradictions found in the knowledge base.\\n";
-                sMessage += "Logical consistency: " + analysisData.consistencyScore + "%";
+                sMessage += "Logical consistency: " + (parseFloat(analysisData.consistencyScore) || 0) + "%";
             } else {
                 sMessage += "Found " + analysisData.contradictions.length + " contradictions:\\n\\n";
                 
                 analysisData.contradictions.slice(0, 5).forEach(function(contradiction, index) {
-                    sMessage += (index + 1) + ". " + contradiction.description + "\\n";
-                    sMessage += "   Conflicting facts: " + contradiction.facts.join(", ") + "\\n";
-                    sMessage += "   Severity: " + contradiction.severity + "\\n\\n";
-                });
+                    const safeDesc = this._securityUtils.encodeHTML(contradiction.description || 'Unknown contradiction');
+                    const safeFacts = contradiction.facts ? 
+                        contradiction.facts.map(f => this._securityUtils.encodeHTML(f)).join(", ") : 
+                        'No facts';
+                    const safeSeverity = this._securityUtils.encodeHTML(contradiction.severity || 'Unknown');
+                    
+                    sMessage += (index + 1) + ". " + safeDesc + "\\n";
+                    sMessage += "   Conflicting facts: " + safeFacts + "\\n";
+                    sMessage += "   Severity: " + safeSeverity + "\\n\\n";
+                }.bind(this));
                 
                 if (analysisData.contradictions.length > 5) {
                     sMessage += "... and " + (analysisData.contradictions.length - 5) + " more contradictions\\n\\n";
@@ -408,8 +702,9 @@ sap.ui.define([
                 
                 sMessage += "Resolution strategies:\\n";
                 analysisData.resolutionStrategies.forEach(function(strategy) {
-                    sMessage += "• " + strategy + "\\n";
-                });
+                    const safeStrategy = this._securityUtils.encodeHTML(strategy || '');
+                    sMessage += "• " + safeStrategy + "\\n";
+                }.bind(this));
             }
             
             MessageBox.information(sMessage, {
@@ -436,16 +731,20 @@ sap.ui.define([
                     preserveConsistency: true
                 }),
                 success: function(data) {
+                    const safeResolved = parseInt(data.resolvedCount) || 0;
+                    const safeRemaining = parseInt(data.remainingCount) || 0;
+                    const safeConsistency = parseFloat(data.newConsistencyScore) || 0;
                     MessageBox.success(
                         "Contradictions resolved successfully!\\n" +
-                        "Resolved: " + data.resolvedCount + "\\n" +
-                        "Remaining: " + data.remainingCount + "\\n" +
-                        "Consistency improved to: " + data.newConsistencyScore + "%"
+                        "Resolved: " + safeResolved + "\\n" +
+                        "Remaining: " + safeRemaining + "\\n" +
+                        "Consistency improved to: " + safeConsistency + "%"
                     );
                     this._extensionAPI.refresh();
                 }.bind(this),
                 error: function(xhr) {
-                    MessageBox.error("Failed to resolve contradictions: " + xhr.responseText);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Failed to resolve contradictions: " + errorMsg);
                 }.bind(this)
             });
         },
@@ -470,18 +769,22 @@ sap.ui.define([
                     this._oDecisionDialog.setBusy(false);
                     this._oDecisionDialog.close();
                     
+                    const safeAction = this._securityUtils.encodeHTML(data.recommendedAction || 'Unknown');
+                    const safeConfidence = parseFloat(data.confidence) || 0;
+                    const safeOutcome = this._securityUtils.encodeHTML(data.expectedOutcome || 'Unknown');
                     MessageBox.success(
                         "Decision made successfully!\\n" +
-                        "Recommended action: " + data.recommendedAction + "\\n" +
-                        "Confidence: " + data.confidence + "%\\n" +
-                        "Expected outcome: " + data.expectedOutcome
+                        "Recommended action: " + safeAction + "\\n" +
+                        "Confidence: " + safeConfidence + "%\\n" +
+                        "Expected outcome: " + safeOutcome
                     );
                     
                     this._extensionAPI.refresh();
                 }.bind(this),
                 error: function(xhr) {
                     this._oDecisionDialog.setBusy(false);
-                    MessageBox.error("Decision making failed: " + xhr.responseText);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Decision making failed: " + errorMsg);
                 }.bind(this)
             });
         },
@@ -501,18 +804,22 @@ sap.ui.define([
                     this._oKnowledgeUpdateDialog.setBusy(false);
                     this._oKnowledgeUpdateDialog.close();
                     
+                    const safeFacts = parseInt(data.factsAdded) || 0;
+                    const safeRules = parseInt(data.rulesUpdated) || 0;
+                    const safeScore = parseFloat(data.consistencyScore) || 0;
                     MessageBox.success(
                         "Knowledge base updated successfully!\\n" +
-                        "New facts added: " + data.factsAdded + "\\n" +
-                        "Rules updated: " + data.rulesUpdated + "\\n" +
-                        "Consistency score: " + data.consistencyScore + "%"
+                        "New facts added: " + safeFacts + "\\n" +
+                        "Rules updated: " + safeRules + "\\n" +
+                        "Consistency score: " + safeScore + "%"
                     );
                     
                     this._extensionAPI.refresh();
                 }.bind(this),
                 error: function(xhr) {
                     this._oKnowledgeUpdateDialog.setBusy(false);
-                    MessageBox.error("Knowledge update failed: " + xhr.responseText);
+                    const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
+                    MessageBox.error("Knowledge update failed: " + errorMsg);
                 }.bind(this)
             });
         },

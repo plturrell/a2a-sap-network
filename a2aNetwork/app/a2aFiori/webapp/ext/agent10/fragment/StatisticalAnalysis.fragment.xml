@@ -1,0 +1,319 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:viz="sap.viz.ui5.controls"
+    xmlns:vizData="sap.viz.ui5.data"
+    xmlns:vizFeeds="sap.viz.ui5.controls.common.feeds">
+    
+    <Dialog
+        id="statisticalAnalysisDialog"
+        title="{i18n>statisticalAnalysisTitle}"
+        contentWidth="80%"
+        contentHeight="80%"
+        verticalScrolling="true">
+        
+        <content>
+            <IconTabBar id="statisticalTabBar" expandable="false">
+                <!-- Configuration Tab -->
+                <items>
+                    <IconTabFilter text="{i18n>configuration}" icon="sap-icon://settings">
+                        <f:SimpleForm
+                            editable="true"
+                            layout="ResponsiveGridLayout"
+                            labelSpanXL="3"
+                            labelSpanL="3"
+                            labelSpanM="3"
+                            labelSpanS="12"
+                            adjustLabelSpan="false"
+                            emptySpanXL="0"
+                            emptySpanL="0"
+                            emptySpanM="0"
+                            emptySpanS="0"
+                            columnsXL="2"
+                            columnsL="2"
+                            columnsM="1"
+                            singleContainerFullSize="false">
+                            
+                            <f:content>
+                                <Label text="{i18n>analysisType}:" required="true" />
+                                <Select id="analysisTypeSelect" selectedKey="{/analysisType}" change=".onAnalysisTypeChange">
+                                    <items>
+                                        <core:Item key="DESCRIPTIVE" text="{i18n>descriptiveStatistics}" />
+                                        <core:Item key="INFERENTIAL" text="{i18n>inferentialStatistics}" />
+                                        <core:Item key="PREDICTIVE" text="{i18n>predictiveAnalytics}" />
+                                        <core:Item key="TIME_SERIES" text="{i18n>timeSeriesAnalysis}" />
+                                        <core:Item key="REGRESSION" text="{i18n>regressionAnalysis}" />
+                                        <core:Item key="CORRELATION" text="{i18n>correlationAnalysis}" />
+                                        <core:Item key="HYPOTHESIS_TEST" text="{i18n>hypothesisTesting}" />
+                                    </items>
+                                </Select>
+                                
+                                <Label text="{i18n>dataSource}:" required="true" />
+                                <HBox>
+                                    <RadioButtonGroup columns="3" selectedIndex="{/dataSourceType}">
+                                        <RadioButton text="{i18n>uploadFile}" />
+                                        <RadioButton text="{i18n>enterManually}" />
+                                        <RadioButton text="{i18n>fromDatabase}" />
+                                    </RadioButtonGroup>
+                                </HBox>
+                                
+                                <Label text="{i18n>datasetName}:" />
+                                <Input value="{/datasetName}" placeholder="{i18n>enterDatasetName}" />
+                                
+                                <Label text="{i18n>confidenceLevel}:" />
+                                <Slider
+                                    id="confidenceSlider"
+                                    value="{/confidenceLevel}"
+                                    min="80"
+                                    max="99.9"
+                                    step="0.1"
+                                    enableTickmarks="true"
+                                    inputsAsTooltips="true"
+                                    showHandleTooltip="true"
+                                    width="100%" />
+                                
+                                <Label text="{i18n>significanceLevel}:" />
+                                <Select selectedKey="{/significanceLevel}">
+                                    <items>
+                                        <core:Item key="0.01" text="0.01 (99%)" />
+                                        <core:Item key="0.05" text="0.05 (95%)" />
+                                        <core:Item key="0.10" text="0.10 (90%)" />
+                                    </items>
+                                </Select>
+                                
+                                <Label text="{i18n>sampleSize}:" />
+                                <StepInput
+                                    value="{/sampleSize}"
+                                    min="2"
+                                    max="100000"
+                                    step="1"
+                                    width="200px" />
+                            </f:content>
+                        </f:SimpleForm>
+                    </IconTabFilter>
+                    
+                    <!-- Data Input Tab -->
+                    <IconTabFilter text="{i18n>dataInput}" icon="sap-icon://excel-attachment">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="{i18n>dataEntry}">
+                                <VBox visible="{= ${/dataSourceType} === 0 }">
+                                    <upload:UploadCollection
+                                        id="dataFileUploader"
+                                        maximumFilenameLength="55"
+                                        maximumFileSize="10"
+                                        multiple="false"
+                                        sameFilenameAllowed="false"
+                                        instantUpload="false"
+                                        fileType="csv,xlsx,json"
+                                        change=".onFileChange"
+                                        beforeUploadStarts=".onBeforeUploadStarts">
+                                        <upload:toolbar>
+                                            <OverflowToolbar>
+                                                <Title text="{i18n>uploadDataFile}" />
+                                                <ToolbarSpacer />
+                                                <Button
+                                                    text="{i18n>uploadFile}"
+                                                    type="Transparent"
+                                                    press=".onUploadFile"
+                                                    enabled="{= ${/fileSelected} === true }" />
+                                            </OverflowToolbar>
+                                        </upload:toolbar>
+                                    </upload:UploadCollection>
+                                </VBox>
+                                
+                                <VBox visible="{= ${/dataSourceType} === 1 }">
+                                    <Label text="{i18n>enterDataValues}:" />
+                                    <TextArea
+                                        id="dataTextArea"
+                                        value="{/dataValues}"
+                                        placeholder="{i18n>enterDataPlaceholder}"
+                                        rows="10"
+                                        width="100%"
+                                        valueLiveUpdate="true" />
+                                    <MessageStrip
+                                        text="{i18n>dataFormatHint}"
+                                        type="Information"
+                                        showIcon="true"
+                                        class="sapUiSmallMarginTop" />
+                                </VBox>
+                                
+                                <VBox visible="{= ${/dataSourceType} === 2 }">
+                                    <Select
+                                        id="databaseTableSelect"
+                                        selectedKey="{/selectedTable}"
+                                        width="100%">
+                                        <items>
+                                            <core:Item key="calculations" text="{i18n>calculationHistory}" />
+                                            <core:Item key="metrics" text="{i18n>performanceMetrics}" />
+                                            <core:Item key="custom" text="{i18n>customQuery}" />
+                                        </items>
+                                    </Select>
+                                </VBox>
+                            </Panel>
+                            
+                            <!-- Data Preview -->
+                            <Panel
+                                headerText="{i18n>dataPreview}"
+                                expandable="true"
+                                expanded="false"
+                                class="sapUiMediumMarginTop">
+                                <Table
+                                    id="dataPreviewTable"
+                                    items="{/dataPreview}"
+                                    growing="true"
+                                    growingThreshold="10">
+                                    <columns>
+                                        <Column>
+                                            <Text text="{i18n>index}" />
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>value}" />
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>category}" />
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="{index}" />
+                                                <Text text="{value}" />
+                                                <Text text="{category}" />
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Results Tab -->
+                    <IconTabFilter text="{i18n>results}" icon="sap-icon://bar-chart" iconColor="Positive">
+                        <ScrollContainer height="100%" width="100%" vertical="true">
+                            <VBox class="sapUiMediumMargin">
+                                <!-- Summary Statistics -->
+                                <Panel headerText="{i18n>summaryStatistics}" expandable="true">
+                                    <l:Grid defaultSpan="L3 M6 S12" class="sapUiSmallMarginTop">
+                                        <ObjectStatus
+                                            title="{i18n>mean}"
+                                            text="{/results/mean}"
+                                            state="Information"
+                                            icon="sap-icon://average" />
+                                        <ObjectStatus
+                                            title="{i18n>median}"
+                                            text="{/results/median}"
+                                            state="Information"
+                                            icon="sap-icon://chart-axis" />
+                                        <ObjectStatus
+                                            title="{i18n>mode}"
+                                            text="{/results/mode}"
+                                            state="Information"
+                                            icon="sap-icon://bar-chart" />
+                                        <ObjectStatus
+                                            title="{i18n>standardDeviation}"
+                                            text="{/results/standardDeviation}"
+                                            state="Warning"
+                                            icon="sap-icon://scatter-chart" />
+                                        <ObjectStatus
+                                            title="{i18n>variance}"
+                                            text="{/results/variance}"
+                                            state="Warning"
+                                            icon="sap-icon://business-objects-experience" />
+                                        <ObjectStatus
+                                            title="{i18n>range}"
+                                            text="{/results/range}"
+                                            state="Success"
+                                            icon="sap-icon://horizontal-bar-chart" />
+                                        <ObjectStatus
+                                            title="{i18n>sampleSize}"
+                                            text="{/results/sampleSize}"
+                                            state="None"
+                                            icon="sap-icon://sum" />
+                                        <ObjectStatus
+                                            title="{i18n>confidenceInterval}"
+                                            text="{/results/confidenceInterval}"
+                                            state="Success"
+                                            icon="sap-icon://line-chart" />
+                                    </l:Grid>
+                                </Panel>
+                                
+                                <!-- Visualization -->
+                                <Panel headerText="{i18n>dataVisualization}" expandable="true" expanded="true">
+                                    <viz:Popover id="idPopOver"></viz:Popover>
+                                    <viz:VizFrame
+                                        id="statisticalVizFrame"
+                                        uiConfig="{applicationSet:'fiori'}"
+                                        height="400px"
+                                        width="100%"
+                                        vizType="column">
+                                        <viz:dataset>
+                                            <vizData:FlattenedDataset data="{/visualizationData}">
+                                                <vizData:dimensions>
+                                                    <vizData:DimensionDefinition
+                                                        name="Category"
+                                                        value="{category}" />
+                                                </vizData:dimensions>
+                                                <vizData:measures>
+                                                    <vizData:MeasureDefinition
+                                                        name="Value"
+                                                        value="{value}" />
+                                                </vizData:measures>
+                                            </vizData:FlattenedDataset>
+                                        </viz:dataset>
+                                        <viz:feeds>
+                                            <vizFeeds:FeedItem
+                                                uid="valueAxis"
+                                                type="Measure"
+                                                values="Value" />
+                                            <vizFeeds:FeedItem
+                                                uid="categoryAxis"
+                                                type="Dimension"
+                                                values="Category" />
+                                        </viz:feeds>
+                                    </viz:VizFrame>
+                                </Panel>
+                                
+                                <!-- Interpretation -->
+                                <Panel headerText="{i18n>interpretation}" expandable="true">
+                                    <MessageStrip
+                                        text="{/results/interpretation}"
+                                        type="{/results/interpretationType}"
+                                        showIcon="true"
+                                        enableFormattedText="true" />
+                                    
+                                    <List
+                                        headerText="{i18n>keyFindings}"
+                                        items="{/results/findings}"
+                                        class="sapUiMediumMarginTop">
+                                        <StandardListItem
+                                            title="{title}"
+                                            description="{description}"
+                                            icon="{icon}"
+                                            iconInset="false" />
+                                    </List>
+                                </Panel>
+                            </VBox>
+                        </ScrollContainer>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button
+                text="{i18n>runAnalysis}"
+                type="Emphasized"
+                icon="sap-icon://line-chart"
+                press=".onRunStatisticalAnalysis"
+                enabled="{= ${/dataReady} === true }" />
+        </beginButton>
+        
+        <endButton>
+            <Button
+                text="{i18n>close}"
+                press=".onCloseStatisticalAnalysis" />
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

@@ -15,7 +15,43 @@ sap.ui.define([
                 this._extensionAPI = this.base.getExtensionAPI();
                 // Initialize dialog cache for better performance
                 this._dialogCache = {};
+                
+                // Initialize device model for responsive behavior
+                var oDeviceModel = new sap.ui.model.json.JSONModel(sap.ui.Device);
+                oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
+                this.base.getView().setModel(oDeviceModel, "device");
+                
+                // Initialize resource bundle for i18n
+                this._oResourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
             }
+        },
+
+        /**
+         * Initialize the create model with default values and validation states
+         * @private
+         * @since 1.0.0
+         */
+        _initializeCreateModel: function() {
+            var oCreateModel = new sap.ui.model.json.JSONModel({
+                taskName: "",
+                description: "",
+                sourceFormat: "",
+                targetFormat: "",
+                schemaTemplateId: "",
+                schemaValidation: true,
+                dataTypeValidation: true,
+                formatValidation: false,
+                processingMode: 0,
+                batchSize: 1000,
+                isValid: false,
+                taskNameState: "None",
+                taskNameStateText: "",
+                sourceFormatState: "None",
+                sourceFormatStateText: "",
+                targetFormatState: "None",
+                targetFormatStateText: ""
+            });
+            this.base.getView().setModel(oCreateModel, "create");
         },
 
         /**
@@ -26,6 +62,8 @@ sap.ui.define([
          * @since 1.0.0
          */
         onCreateStandardizationTask: function() {
+            // Initialize create model before opening dialog
+            this._initializeCreateModel();
             this._openCachedDialog("CreateStandardizationTask", "a2a.network.agent1.ext.fragment.CreateStandardizationTask");
         },
 

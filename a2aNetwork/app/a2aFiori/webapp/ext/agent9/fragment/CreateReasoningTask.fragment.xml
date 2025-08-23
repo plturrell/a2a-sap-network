@@ -5,10 +5,11 @@
     
     <Dialog
         id="createReasoningTaskDialog"
-        title="Create Reasoning Task"
-        contentWidth="70%"
+        title="{i18n>dialog.createReasoningTask}"
+        contentWidth="75rem"
         contentHeight="80%"
-        resizable="true">
+        resizable="true"
+        stretch="{device>/system/phone}">
         
         <content>
             <IconTabBar expandable="false">
@@ -19,47 +20,60 @@
                             editable="true"
                             layout="ResponsiveGridLayout">
                             <form:content>
-                                <Label text="Task Name" required="true"/>
+                                <Label text="{i18n>field.taskName}" required="true"/>
                                 <Input 
                                     value="{create>/taskName}"
-                                    placeholder="Enter reasoning task name"/>
+                                    placeholder="{i18n>placeholder.taskName}"
+                                    valueState="{create>/taskNameState}"
+                                    valueStateText="{create>/taskNameStateText}"
+                                    liveChange=".onTaskNameChange"
+                                    ariaLabelledBy="taskNameLabel"/>
                                 
-                                <Label text="Description"/>
+                                <Label text="{i18n>field.description}"/>
                                 <TextArea 
                                     value="{create>/description}"
                                     rows="3"
-                                    placeholder="Describe the reasoning problem"/>
+                                    placeholder="{i18n>placeholder.description}"
+                                    maxLength="500"
+                                    showExceededText="true"/>
                                 
-                                <Label text="Reasoning Type" required="true"/>
-                                <Select selectedKey="{create>/reasoningType}">
+                                <Label text="{i18n>field.reasoningType}" required="true"/>
+                                <Select 
+                                    selectedKey="{create>/reasoningType}"
+                                    valueState="{create>/reasoningTypeState}"
+                                    valueStateText="{create>/reasoningTypeStateText}"
+                                    change=".onReasoningTypeChange">
                                     <items>
-                                        <core:Item key="DEDUCTIVE" text="Deductive Reasoning"/>
-                                        <core:Item key="INDUCTIVE" text="Inductive Reasoning"/>
-                                        <core:Item key="ABDUCTIVE" text="Abductive Reasoning"/>
-                                        <core:Item key="ANALOGICAL" text="Analogical Reasoning"/>
-                                        <core:Item key="PROBABILISTIC" text="Probabilistic Reasoning"/>
-                                        <core:Item key="CAUSAL" text="Causal Reasoning"/>
-                                        <core:Item key="TEMPORAL" text="Temporal Reasoning"/>
-                                        <core:Item key="MODAL" text="Modal Reasoning"/>
+                                        <core:Item key="DEDUCTIVE" text="{i18n>reasoning.deductive}"/>
+                                        <core:Item key="INDUCTIVE" text="{i18n>reasoning.inductive}"/>
+                                        <core:Item key="ABDUCTIVE" text="{i18n>reasoning.abductive}"/>
+                                        <core:Item key="ANALOGICAL" text="{i18n>reasoning.analogical}"/>
+                                        <core:Item key="PROBABILISTIC" text="{i18n>reasoning.probabilistic}"/>
+                                        <core:Item key="CAUSAL" text="{i18n>reasoning.causal}"/>
+                                        <core:Item key="TEMPORAL" text="{i18n>reasoning.temporal}"/>
+                                        <core:Item key="MODAL" text="{i18n>reasoning.modal}"/>
                                     </items>
                                 </Select>
                                 
-                                <Label text="Problem Domain" required="true"/>
+                                <Label text="{i18n>field.problemDomain}" required="true"/>
                                 <Select 
                                     selectedKey="{create>/problemDomain}"
-                                    items="{create>/problemDomains}">
+                                    valueState="{create>/problemDomainState}"
+                                    valueStateText="{create>/problemDomainStateText}"
+                                    items="{create>/problemDomains}"
+                                    change=".onProblemDomainChange">
                                     <core:ListItem 
                                         key="{create>domainId}"
                                         text="{create>domainName} ({create>complexity})"/>
                                 </Select>
                                 
-                                <Label text="Priority"/>
+                                <Label text="{i18n>field.priority}"/>
                                 <Select selectedKey="{create>/priority}">
                                     <items>
-                                        <core:Item key="LOW" text="Low"/>
-                                        <core:Item key="MEDIUM" text="Medium"/>
-                                        <core:Item key="HIGH" text="High"/>
-                                        <core:Item key="CRITICAL" text="Critical"/>
+                                        <core:Item key="LOW" text="{i18n>priority.low}"/>
+                                        <core:Item key="MEDIUM" text="{i18n>priority.medium}"/>
+                                        <core:Item key="HIGH" text="{i18n>priority.high}"/>
+                                        <core:Item key="CRITICAL" text="{i18n>priority.critical}"/>
                                     </items>
                                 </Select>
                             </form:content>
@@ -423,16 +437,16 @@
         
         <beginButton>
             <Button 
-                text="Cancel"
-                press=".onCancelCreateTask"/>
+                text="{i18n>btn.cancel}"
+                press=".onCancelCreateReasoningTask"/>
         </beginButton>
         
         <endButton>
             <Button 
-                text="Create"
+                text="{i18n>btn.create}"
                 type="Emphasized"
-                press=".onConfirmCreateTask"
-                enabled="{= ${create>/taskName} &amp;&amp; ${create>/reasoningType} &amp;&amp; ${create>/problemDomain} }"/>
+                press=".onConfirmCreateReasoningTask"
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/reasoningType} &amp;&amp; ${create>/problemDomain} &amp;&amp; !${create>/taskNameState} &amp;&amp; !${create>/reasoningTypeState} &amp;&amp; !${create>/problemDomainState} }"/>
         </endButton>
         
     </Dialog>

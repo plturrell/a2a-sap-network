@@ -10,14 +10,30 @@
         title="Data Profiler - AI Readiness Assessment"
         contentWidth="90%"
         contentHeight="90%"
-        resizable="true">
+        resizable="true"
+        stretch="{device>/system/phone}"
+        ariaLabelledBy="profilerDialogTitle"
+        ariaDescribedBy="profilerDialogHelp"
+        class="sapUiResponsiveContentPadding">
+        
+        <core:InvisibleText id="profilerDialogTitle" text="Data Profiler Dialog for AI Readiness Assessment"/>
+        <core:InvisibleText id="profilerDialogHelp" text="Comprehensive data quality analysis and AI preparation recommendations. Navigate between tabs to explore different aspects of your data."/>
         
         <content>
-            <IconTabBar id="profilerTabBar" expandable="false">
+            <IconTabBar 
+                id="profilerTabBar" 
+                expandable="false"
+                select=".onProfilerTabSelect"
+                ariaLabelledBy="profilerTabBarLabel">
+                <core:InvisibleText id="profilerTabBarLabel" text="Data profiler analysis sections: Overview, Statistics, Quality, Correlations, and Recommendations"/>
                 
                 <!-- Overview Tab -->
                 <items>
-                    <IconTabFilter text="Overview" icon="sap-icon://chart">
+                    <IconTabFilter 
+                        text="Overview" 
+                        icon="sap-icon://chart"
+                        ariaDescribedBy="overviewTabHelp">
+                        <core:InvisibleText id="overviewTabHelp" text="Dataset overview with summary statistics and AI readiness scores for all available datasets"/>
                         <l:Grid defaultSpan="L6 M12 S12">
                             <l:content>
                                 <!-- Dataset Summary Card -->
@@ -26,16 +42,21 @@
                                         <CardHeader title="Dataset Summary" subtitle="Available datasets"/>
                                     </header>
                                     <content>
-                                        <List items="{profile>/datasets}">
+                                        <List 
+                                            items="{profile>/datasets}"
+                                            ariaLabelledBy="datasetListLabel">
+                                            <core:InvisibleText id="datasetListLabel" text="List of available datasets with AI readiness scores"/>
                                             <CustomListItem>
                                                 <HBox alignItems="Center" justifyContent="SpaceBetween">
                                                     <VBox>
                                                         <Title text="{path: 'profile>name', formatter: '.formatSecureText'}" level="H4"/>
-                                                        <Label text="Records: {profile>recordCount} | Features: {profile>featureCount}"/>
+                                                        <Label text="Records: {profile>recordCount} | Features: {profile>featureCount}" ariaLabel="Dataset statistics: {profile>recordCount} records with {profile>featureCount} features"/>
                                                     </VBox>
                                                     <mc:RadialMicroChart
                                                         percentage="{profile>aiReadinessScore}"
-                                                        press=".onDatasetPress"/>
+                                                        press=".onDatasetPress"
+                                                        ariaLabel="AI Readiness Score: {profile>aiReadinessScore} percent"
+                                                        tooltip="AI Readiness Score: {profile>aiReadinessScore}%. Click for detailed analysis."/>
                                                 </HBox>
                                             </CustomListItem>
                                         </List>

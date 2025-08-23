@@ -6,58 +6,111 @@
     
     <Dialog
         id="createVectorTaskDialog"
-        title="Create Vector Processing Task"
-        contentWidth="70%"
-        contentHeight="80%"
-        resizable="true">
+        title="{i18n>title.createVectorTask}"
+        contentWidth="75rem"
+        contentHeight="auto"
+        resizable="true"
+        draggable="true"
+        stretch="{device>/system/phone}"
+        ariaLabelledBy="createVectorTaskTitle"
+        ariaDescribedBy="createVectorTaskHelp"
+        class="sapUiResponsiveContentPadding"
+        afterOpen=".onDialogAfterOpen"
+        afterClose=".onDialogAfterClose">
+        
+        <core:InvisibleText id="createVectorTaskTitle" text="Create Vector Processing Task Dialog"/>
+        <core:InvisibleText id="createVectorTaskHelp" text="Configure a new vector processing task by specifying data source, embedding model, vector database, and processing parameters across multiple tabs."/>
         
         <content>
-            <IconTabBar expandable="false">
+            <IconTabBar 
+                id="vectorTaskTabBar"
+                expandable="false"
+                stretchContentHeight="true"
+                ariaLabelledBy="vectorTaskTabBarLabel">
+                <core:InvisibleText id="vectorTaskTabBarLabel" text="Vector task configuration sections: Basic Information, Embedding Model, Vector Database, and Processing Options"/>
+                
                 <items>
                     <!-- Basic Configuration Tab -->
-                    <IconTabFilter text="Basic Info" icon="sap-icon://hint">
+                    <IconTabFilter text="{i18n>tab.basicInfo}" icon="sap-icon://hint" ariaDescribedBy="basicInfoTabHelp">
+                        <core:InvisibleText id="basicInfoTabHelp" text="Basic task information including name, description, data source, and data type"/>
                         <form:SimpleForm
                             editable="true"
-                            layout="ResponsiveGridLayout">
+                            layout="ResponsiveGridLayout"
+                            labelSpanXL="4"
+                            labelSpanL="4"
+                            labelSpanM="12"
+                            labelSpanS="12"
+                            adjustLabelSpan="false"
+                            emptySpanXL="0"
+                            emptySpanL="0"
+                            emptySpanM="0"
+                            columnsXL="2"
+                            columnsL="1"
+                            columnsM="1"
+                            class="sapUiResponsiveMargin">
                             <form:content>
-                                <Label text="Task Name" required="true" labelFor="taskNameInput"/>
+                                <Label text="{i18n>taskName}" required="true" labelFor="taskNameInput"/>
                                 <Input 
                                     id="taskNameInput"
                                     value="{create>/taskName}"
-                                    placeholder="Enter task name"
+                                    placeholder="{i18n>placeholder.taskName}"
                                     maxLength="100"
-                                    change=".onTaskNameChange"
-                                    ariaLabel="Task name input"/>
+                                    liveChange=".onTaskNameChange"
+                                    required="true"
+                                    valueState="{create>/taskNameState}"
+                                    valueStateText="{create>/taskNameStateText}"
+                                    ariaDescribedBy="taskNameHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="taskNameHelp" text="Required field. Enter a unique name for this vector processing task using alphanumeric characters, spaces, hyphens, underscores, or periods only."/>
                                 
-                                <Label text="Description" labelFor="descriptionInput"/>
+                                <Label text="{i18n>description}" labelFor="descriptionInput"/>
                                 <TextArea 
                                     id="descriptionInput"
                                     value="{create>/description}"
-                                    rows="2"
-                                    placeholder="Describe the vector processing task"
-                                    maxLength="500"
-                                    ariaLabel="Task description"/>
+                                    rows="3"
+                                    growing="true"
+                                    growingMaxLines="5"
+                                    placeholder="{i18n>placeholder.description}"
+                                    maxLength="1000"
+                                    ariaDescribedBy="descriptionHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="descriptionHelp" text="Optional field. Provide additional details about what this vector processing task will accomplish and any special requirements."/>
                                 
-                                <Label text="Data Source" required="true" labelFor="dataSourceInput"/>
+                                <Label text="{i18n>dataSource}" required="true" labelFor="dataSourceInput"/>
                                 <Input 
                                     id="dataSourceInput"
                                     value="{create>/dataSource}"
-                                    placeholder="Path to data source"
+                                    placeholder="{i18n>placeholder.dataSource}"
                                     showValueHelp="true"
                                     valueHelpRequest=".onSelectDataSource"
                                     maxLength="500"
-                                    change=".onDataSourceChange"
-                                    ariaLabel="Data source path"/>
+                                    liveChange=".onDataSourceChange"
+                                    required="true"
+                                    valueState="{create>/dataSourceState}"
+                                    valueStateText="{create>/dataSourceStateText}"
+                                    ariaDescribedBy="dataSourceHelp"
+                                    class="sapUiMediumMarginBottom"/>
+                                <core:InvisibleText id="dataSourceHelp" text="Required field. Specify the path to your data source. Click the help button to browse available data sources."/>
                                 
-                                <Label text="Data Type"/>
-                                <Select selectedKey="{create>/dataType}">
+                                <Label text="{i18n>dataType}" required="true" labelFor="dataTypeSelect"/>
+                                <Select 
+                                    id="dataTypeSelect"
+                                    selectedKey="{create>/dataType}"
+                                    change=".onDataTypeChange"
+                                    required="true"
+                                    valueState="{create>/dataTypeState}"
+                                    valueStateText="{create>/dataTypeStateText}"
+                                    ariaDescribedBy="dataTypeHelp"
+                                    class="sapUiMediumMarginBottom">
+                                <core:InvisibleText id="dataTypeHelp" text="Required field. Select the type of data you want to process for vector embeddings."/>
                                     <items>
-                                        <core:Item key="TEXT" text="Text Documents"/>
-                                        <core:Item key="CODE" text="Source Code"/>
-                                        <core:Item key="STRUCTURED" text="Structured Data"/>
-                                        <core:Item key="IMAGE" text="Images"/>
-                                        <core:Item key="AUDIO" text="Audio"/>
-                                        <core:Item key="MULTIMODAL" text="Multimodal"/>
+                                        <core:Item key="" text="{i18n>placeholder.selectDataType}"/>
+                                        <core:Item key="TEXT" text="{i18n>dataType.text}" icon="sap-icon://document-text"/>
+                                        <core:Item key="CODE" text="{i18n>dataType.code}" icon="sap-icon://syntax"/>
+                                        <core:Item key="STRUCTURED" text="{i18n>dataType.structured}" icon="sap-icon://table-view"/>
+                                        <core:Item key="IMAGE" text="{i18n>dataType.image}" icon="sap-icon://picture"/>
+                                        <core:Item key="AUDIO" text="{i18n>dataType.audio}" icon="sap-icon://microphone"/>
+                                        <core:Item key="MULTIMODAL" text="{i18n>dataType.multimodal}" icon="sap-icon://multiple-pie-chart"/>
                                     </items>
                                 </Select>
                             </form:content>
@@ -236,16 +289,16 @@
         
         <beginButton>
             <Button 
-                text="Cancel"
+                text="{i18n>button.cancel}"
                 press=".onCancelCreateTask"/>
         </beginButton>
         
         <endButton>
             <Button 
-                text="Create"
+                text="{i18n>button.create}"
                 type="Emphasized"
                 press=".onConfirmCreateTask"
-                enabled="{= ${create>/taskName} &amp;&amp; ${create>/dataSource} }"/>
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/dataSource} &amp;&amp; ${create>/dataType} &amp;&amp; ${create>/isValid} }"/>
         </endButton>
         
     </Dialog>

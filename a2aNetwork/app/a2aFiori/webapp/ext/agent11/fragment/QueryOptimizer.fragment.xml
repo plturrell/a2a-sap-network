@@ -1,0 +1,349 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.ui.layout.form">
+    
+    <Dialog
+        id="queryOptimizerDialog"
+        title="{i18n>queryOptimizer}"
+        contentWidth="80%"
+        contentHeight="80%"
+        verticalScrolling="true">
+        
+        <content>
+            <IconTabBar id="optimizerTabBar" expandable="false">
+                <!-- Original Query Tab -->
+                <items>
+                    <IconTabFilter text="{i18n>originalQuery}" icon="sap-icon://document" iconColor="Neutral">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="{i18n>currentQuery}">
+                                <VBox class="sapUiSmallMargin">
+                                    <CodeEditor
+                                        id="originalQueryEditor"
+                                        type="sql"
+                                        value="{/originalSQL}"
+                                        height="250px"
+                                        width="100%"
+                                        editable="false"
+                                        syntaxHints="true"
+                                        colorTheme="default" />
+                                    
+                                    <!-- Current Performance Metrics -->
+                                    <l:Grid defaultSpan="L3 M6 S12" class="sapUiSmallMarginTop">
+                                        <ObjectStatus
+                                            title="{i18n>executionTime}"
+                                            text="{/currentMetrics/executionTime}ms"
+                                            state="Warning"
+                                            icon="sap-icon://timesheet" />
+                                        <ObjectStatus
+                                            title="{i18n>cost}"
+                                            text="{/currentMetrics/cost}"
+                                            state="Error"
+                                            icon="sap-icon://currency" />
+                                        <ObjectStatus
+                                            title="{i18n>complexity}"
+                                            text="{/currentMetrics/complexity}"
+                                            state="Information"
+                                            icon="sap-icon://puzzle" />
+                                        <ObjectStatus
+                                            title="{i18n>cacheHitRatio}"
+                                            text="{/currentMetrics/cacheHitRatio}%"
+                                            state="None"
+                                            icon="sap-icon://database" />
+                                    </l:Grid>
+                                </VBox>
+                            </Panel>
+                            
+                            <!-- Optimization Analysis -->
+                            <Panel
+                                headerText="{i18n>optimizationAnalysis}"
+                                class="sapUiMediumMarginTop">
+                                <VBox class="sapUiSmallMargin">
+                                    <MessageStrip
+                                        text="{i18n>analyzingQuery}"
+                                        type="Information"
+                                        showIcon="true"
+                                        visible="{/analyzing}" />
+                                    
+                                    <!-- Issues Found -->
+                                    <VBox visible="{= ${/issues} && ${/issues}.length > 0 }">
+                                        <Label text="{i18n>performanceIssues}:" />
+                                        <List items="{/issues}">
+                                            <StandardListItem
+                                                title="{title}"
+                                                description="{description}"
+                                                icon="{icon}"
+                                                iconInset="false"
+                                                info="{severity}"
+                                                infoState="{= ${severity} === 'Critical' ? 'Error' : 'Warning' }"
+                                                type="Inactive" />
+                                        </List>
+                                    </VBox>
+                                    
+                                    <!-- Optimization Opportunities -->
+                                    <VBox
+                                        visible="{= ${/opportunities} && ${/opportunities}.length > 0 }"
+                                        class="sapUiSmallMarginTop">
+                                        <Label text="{i18n>optimizationOpportunities}:" />
+                                        <List items="{/opportunities}">
+                                            <StandardListItem
+                                                title="{title}"
+                                                description="{description}"
+                                                icon="sap-icon://lightbulb"
+                                                iconInset="false"
+                                                info="{expectedImprovement}%"
+                                                infoState="Success"
+                                                type="Active"
+                                                press=".onSelectOptimization" />
+                                        </List>
+                                    </VBox>
+                                </VBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Optimized Query Tab -->
+                    <IconTabFilter text="{i18n>optimizedQuery}" icon="sap-icon://accelerated" iconColor="Positive">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="{i18n>optimizedSQL}">
+                                <VBox class="sapUiSmallMargin">
+                                    <HBox justifyContent="SpaceBetween">
+                                        <Label text="{i18n>improvedQuery}:" />
+                                        <HBox>
+                                            <Button
+                                                text="{i18n>showDifferences}"
+                                                icon="sap-icon://compare"
+                                                press=".onShowDifferences"
+                                                type="Transparent" />
+                                            <Button
+                                                text="{i18n>copyOptimized}"
+                                                icon="sap-icon://copy"
+                                                press=".onCopyOptimized"
+                                                type="Transparent" />
+                                        </HBox>
+                                    </HBox>
+                                    
+                                    <CodeEditor
+                                        id="optimizedQueryEditor"
+                                        type="sql"
+                                        value="{/optimizedSQL}"
+                                        height="250px"
+                                        width="100%"
+                                        editable="true"
+                                        syntaxHints="true"
+                                        colorTheme="default" />
+                                    
+                                    <!-- Optimized Performance Metrics -->
+                                    <l:Grid defaultSpan="L3 M6 S12" class="sapUiSmallMarginTop">
+                                        <ObjectStatus
+                                            title="{i18n>executionTime}"
+                                            text="{/optimizedMetrics/executionTime}ms"
+                                            state="Success"
+                                            icon="sap-icon://timesheet" />
+                                        <ObjectStatus
+                                            title="{i18n>cost}"
+                                            text="{/optimizedMetrics/cost}"
+                                            state="Success"
+                                            icon="sap-icon://currency" />
+                                        <ObjectStatus
+                                            title="{i18n>improvement}"
+                                            text="{/optimizedMetrics/improvement}%"
+                                            state="Success"
+                                            icon="sap-icon://trend-up" />
+                                        <ObjectStatus
+                                            title="{i18n>confidence}"
+                                            text="{/optimizedMetrics/confidence}%"
+                                            state="Information"
+                                            icon="sap-icon://accept" />
+                                    </l:Grid>
+                                </VBox>
+                            </Panel>
+                            
+                            <!-- Applied Optimizations -->
+                            <Panel
+                                headerText="{i18n>appliedOptimizations}"
+                                class="sapUiMediumMarginTop">
+                                <List items="{/appliedOptimizations}">
+                                    <StandardListItem
+                                        title="{title}"
+                                        description="{description}"
+                                        icon="sap-icon://accept"
+                                        iconInset="false"
+                                        info="{improvement}%"
+                                        infoState="Success"
+                                        type="Inactive" />
+                                </List>
+                            </Panel>
+                            
+                            <!-- Comparison View -->
+                            <Panel
+                                headerText="{i18n>beforeAfterComparison}"
+                                expandable="true"
+                                expanded="false"
+                                class="sapUiMediumMarginTop">
+                                <l:Splitter height="400px">
+                                    <VBox>
+                                        <Label text="{i18n>before}:" emphasized="true" />
+                                        <CodeEditor
+                                            type="sql"
+                                            value="{/originalSQL}"
+                                            height="100%"
+                                            width="100%"
+                                            editable="false" />
+                                    </VBox>
+                                    <VBox>
+                                        <Label text="{i18n>after}:" emphasized="true" />
+                                        <CodeEditor
+                                            type="sql"
+                                            value="{/optimizedSQL}"
+                                            height="100%"
+                                            width="100%"
+                                            editable="false" />
+                                    </VBox>
+                                </l:Splitter>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Execution Plans Tab -->
+                    <IconTabFilter text="{i18n>executionPlans}" icon="sap-icon://chart-tree-map" iconColor="Critical">
+                        <VBox class="sapUiMediumMargin">
+                            <l:Splitter orientation="Horizontal" height="600px">
+                                <!-- Original Plan -->
+                                <VBox>
+                                    <Panel headerText="{i18n>originalExecutionPlan}">
+                                        <VBox class="sapUiSmallMargin">
+                                            <l:Grid defaultSpan="L6 M12 S12">
+                                                <ObjectStatus
+                                                    title="{i18n>totalCost}"
+                                                    text="{/originalPlan/totalCost}"
+                                                    state="Error" />
+                                                <ObjectStatus
+                                                    title="{i18n>operations}"
+                                                    text="{/originalPlan/operationCount}"
+                                                    state="None" />
+                                            </l:Grid>
+                                            
+                                            <TextArea
+                                                value="{/originalPlan/textPlan}"
+                                                rows="20"
+                                                editable="false"
+                                                width="100%" />
+                                        </VBox>
+                                    </Panel>
+                                </VBox>
+                                
+                                <!-- Optimized Plan -->
+                                <VBox>
+                                    <Panel headerText="{i18n>optimizedExecutionPlan}">
+                                        <VBox class="sapUiSmallMargin">
+                                            <l:Grid defaultSpan="L6 M12 S12">
+                                                <ObjectStatus
+                                                    title="{i18n>totalCost}"
+                                                    text="{/optimizedPlan/totalCost}"
+                                                    state="Success" />
+                                                <ObjectStatus
+                                                    title="{i18n>operations}"
+                                                    text="{/optimizedPlan/operationCount}"
+                                                    state="None" />
+                                            </l:Grid>
+                                            
+                                            <TextArea
+                                                value="{/optimizedPlan/textPlan}"
+                                                rows="20"
+                                                editable="false"
+                                                width="100%" />
+                                        </VBox>
+                                    </Panel>
+                                </VBox>
+                            </l:Splitter>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Index Suggestions Tab -->
+                    <IconTabFilter text="{i18n>indexSuggestions}" icon="sap-icon://database" iconColor="Neutral">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="{i18n>recommendedIndexes}">
+                                <VBox class="sapUiSmallMargin">
+                                    <MessageStrip
+                                        text="{i18n>indexSuggestionMessage}"
+                                        type="Information"
+                                        showIcon="true" />
+                                    
+                                    <Table
+                                        items="{/indexSuggestions}"
+                                        mode="MultiSelect"
+                                        class="sapUiSmallMarginTop">
+                                        <columns>
+                                            <Column>
+                                                <Text text="{i18n>table}" />
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>columns}" />
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>indexType}" />
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>expectedImprovement}" />
+                                            </Column>
+                                            <Column>
+                                                <Text text="{i18n>impact}" />
+                                            </Column>
+                                        </columns>
+                                        <items>
+                                            <ColumnListItem selected="{recommended}">
+                                                <cells>
+                                                    <Text text="{tableName}" />
+                                                    <Text text="{columns}" />
+                                                    <Text text="{indexType}" />
+                                                    <ObjectNumber
+                                                        number="{improvement}"
+                                                        unit="%"
+                                                        state="Success" />
+                                                    <ObjectStatus
+                                                        text="{impact}"
+                                                        state="{= ${impact} === 'High' ? 'Success' : 'Information' }" />
+                                                </cells>
+                                            </ColumnListItem>
+                                        </items>
+                                    </Table>
+                                    
+                                    <HBox class="sapUiSmallMarginTop">
+                                        <Button
+                                            text="{i18n>selectAll}"
+                                            press=".onSelectAllIndexes"
+                                            type="Transparent" />
+                                        <Button
+                                            text="{i18n>selectRecommended}"
+                                            press=".onSelectRecommendedIndexes"
+                                            type="Transparent" />
+                                        <Button
+                                            text="{i18n>generateIndexSQL}"
+                                            press=".onGenerateIndexSQL"
+                                            type="Emphasized" />
+                                    </HBox>
+                                </VBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button
+                text="{i18n>optimizeQuery}"
+                type="Emphasized"
+                icon="sap-icon://accelerated"
+                press=".onOptimizeQuery" />
+        </beginButton>
+        
+        <endButton>
+            <Button
+                text="{i18n>close}"
+                press=".onCloseOptimizer" />
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

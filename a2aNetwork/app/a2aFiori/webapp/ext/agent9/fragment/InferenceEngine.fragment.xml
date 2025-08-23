@@ -1,0 +1,521 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="inferenceEngineDialog"
+        title="Inference Engine"
+        contentWidth="90%"
+        contentHeight="85%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Inference Dashboard ---->
+                    <IconTabFilter text="Dashboard" icon="sap-icon://overview-chart">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Inference Statistics ---->
+                            <Panel headerText="Inference Statistics" class="sapUiMediumMarginBottom">
+                                <HBox class="sapUiMediumMargin">
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Active Inferences" level="H4"/>
+                                        <ObjectNumber 
+                                            number="{inference>/stats/activeInferences}"
+                                            state="Information"
+                                            emphasized="true"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Success Rate" level="H4"/>
+                                        <mc:RadialMicroChart
+                                            size="L"
+                                            percentage="{inference>/stats/successRate}"
+                                            valueColor="{= ${inference>/stats/successRate} >= 90 ? 'Good' : ${inference>/stats/successRate} >= 70 ? 'Critical' : 'Error'}"/>
+                                        <Text text="{inference>/stats/successRate}%" class="sapUiLargeMarginTop"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Avg Confidence" level="H4"/>
+                                        <ProgressIndicator 
+                                            percentValue="{= ${inference>/stats/avgConfidence} * 100}"
+                                            displayValue="{inference>/stats/avgConfidence}"
+                                            state="{= ${inference>/stats/avgConfidence} >= 0.8 ? 'Success' : ${inference>/stats/avgConfidence} >= 0.6 ? 'Warning' : 'Error'}"
+                                            width="150px"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Processed Today" level="H4"/>
+                                        <ObjectNumber 
+                                            number="{inference>/stats/processedToday}"
+                                            state="Success"
+                                            emphasized="true"/>
+                                    </VBox>
+                                    <VBox>
+                                        <Title text="Avg Processing Time" level="H4"/>
+                                        <ObjectNumber 
+                                            number="{inference>/stats/avgProcessingTime}"
+                                            unit="ms"
+                                            state="{= ${inference>/stats/avgProcessingTime} <= 100 ? 'Success' : ${inference>/stats/avgProcessingTime} <= 500 ? 'Warning' : 'Error'}"
+                                            emphasized="true"/>
+                                    </VBox>
+                                </HBox>
+                            </Panel>
+                            
+                            <!-- Inference Types Distribution ---->
+                            <Panel headerText="Inference Types Distribution" class="sapUiMediumMarginBottom">
+                                <core:HTML 
+                                    id="inferenceTypesChart"
+                                    content='<div id="inferenceTypesChartDiv" style="width: 100%; height: 300px;"></div>'
+                                    preferDOM="true"/>
+                            </Panel>
+                            
+                            <!-- Real-time Inference Monitor ---->
+                            <Panel headerText="Real-time Inference Monitor">
+                                <Table 
+                                    items="{inference>/realtimeInferences}"
+                                    mode="None"
+                                    growing="true"
+                                    growingThreshold="20">
+                                    <headerToolbar>
+                                        <Toolbar>
+                                            <Title text="Live Inference Stream"/>
+                                            <ToolbarSpacer/>
+                                            <Switch 
+                                                state="{inference>/monitoring/enabled}"
+                                                customTextOn="Live"
+                                                customTextOff="Paused"
+                                                change=".onToggleMonitoring"/>
+                                        </Toolbar>
+                                    </headerToolbar>
+                                    <columns>
+                                        <Column>
+                                            <Text text="Time"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Inference"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Type"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Confidence"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Source"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Status"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="{timestamp}"/>
+                                                <VBox>
+                                                    <Text text="{conclusion}" class="sapThemeHighlight-asTextColor"/>
+                                                    <Text text="{premise}" maxLines="2" class="sapThemeTextSecondary"/>
+                                                </VBox>
+                                                <ObjectStatus 
+                                                    text="{inferenceType}"
+                                                    state="Information"
+                                                    icon="{= ${inferenceType} === 'DEDUCTIVE' ? 'sap-icon://decision' : ${inferenceType} === 'INDUCTIVE' ? 'sap-icon://learning-assistant' : 'sap-icon://question-mark'}"/>
+                                                <ProgressIndicator 
+                                                    percentValue="{= ${confidence} * 100}"
+                                                    displayValue="{confidence}"
+                                                    state="{= ${confidence} >= 0.8 ? 'Success' : ${confidence} >= 0.6 ? 'Warning' : 'Error'}"
+                                                    width="100px"/>
+                                                <Text text="{sourceRule}"/>
+                                                <ObjectStatus 
+                                                    text="{status}"
+                                                    state="{= ${status} === 'VERIFIED' ? 'Success' : ${status} === 'PENDING' ? 'Warning' : 'Error'}"
+                                                    icon="{= ${status} === 'VERIFIED' ? 'sap-icon://status-positive' : ${status} === 'PENDING' ? 'sap-icon://pending' : 'sap-icon://status-negative'}"/>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Generated Inferences ---->
+                    <IconTabFilter text="Generated Inferences" icon="sap-icon://learning-assistant">
+                        <VBox class="sapUiMediumMargin">
+                            <Table 
+                                items="{inference>/generatedInferences}"
+                                mode="MultiSelect"
+                                growing="true"
+                                growingThreshold="50">
+                                <headerToolbar>
+                                    <Toolbar>
+                                        <Title text="Inference Repository"/>
+                                        <ToolbarSpacer/>
+                                        <SearchField 
+                                            width="20rem"
+                                            placeholder="Search inferences..."
+                                            search=".onSearchInferences"/>
+                                        <Button 
+                                            text="Generate New"
+                                            icon="sap-icon://add"
+                                            press=".onGenerateInference"
+                                            type="Emphasized"/>
+                                        <Button 
+                                            text="Validate Selected"
+                                            icon="sap-icon://validate"
+                                            press=".onValidateSelectedInferences"/>
+                                        <Button 
+                                            text="Export"
+                                            icon="sap-icon://download"
+                                            press=".onExportInferences"/>
+                                    </Toolbar>
+                                </headerToolbar>
+                                <columns>
+                                    <Column>
+                                        <Text text="Inference"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Type"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Confidence"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Sources"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Validation"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Usage"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Actions"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <VBox>
+                                                <Text text="{conclusion}" class="sapThemeHighlight-asTextColor"/>
+                                                <Text text="{premise}" maxLines="2" class="sapThemeTextSecondary"/>
+                                                <Text text="Derived: {derivationPath}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <ObjectStatus 
+                                                text="{inferenceType}"
+                                                state="Information"
+                                                icon="{= ${inferenceType} === 'DEDUCTIVE' ? 'sap-icon://decision' : ${inferenceType} === 'INDUCTIVE' ? 'sap-icon://learning-assistant' : ${inferenceType} === 'ABDUCTIVE' ? 'sap-icon://question-mark' : 'sap-icon://detail-view'}"/>
+                                            <VBox>
+                                                <ProgressIndicator 
+                                                    percentValue="{= ${confidence} * 100}"
+                                                    displayValue="{confidence}"
+                                                    state="{= ${confidence} >= 0.8 ? 'Success' : ${confidence} >= 0.6 ? 'Warning' : 'Error'}"
+                                                    width="100px"/>
+                                                <Text text="Certainty: {certaintyLevel}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <VBox>
+                                                <Text text="{sourceRules} rules"/>
+                                                <Text text="{sourceFacts} facts"/>
+                                                <Text text="Depth: {derivationDepth}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <VBox>
+                                                <ObjectStatus 
+                                                    text="{validationStatus}"
+                                                    state="{= ${validationStatus} === 'VERIFIED' ? 'Success' : ${validationStatus} === 'PENDING' ? 'Warning' : ${validationStatus} === 'CONTRADICTED' ? 'Error' : 'None'}"
+                                                    icon="{= ${validationStatus} === 'VERIFIED' ? 'sap-icon://status-positive' : ${validationStatus} === 'PENDING' ? 'sap-icon://pending' : ${validationStatus} === 'CONTRADICTED' ? 'sap-icon://status-negative' : 'sap-icon://question-mark'}"/>
+                                                <Text text="By: {validator}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <VBox>
+                                                <Text text="{usageCount} times"/>
+                                                <Text text="Last: {lastUsed}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <HBox>
+                                                <Button 
+                                                    icon="sap-icon://detail-view"
+                                                    tooltip="View Details"
+                                                    press=".onViewInferenceDetails"/>
+                                                <Button 
+                                                    icon="sap-icon://validate"
+                                                    tooltip="Validate"
+                                                    press=".onValidateInference"/>
+                                                <Button 
+                                                    icon="sap-icon://explain"
+                                                    tooltip="Explain"
+                                                    press=".onExplainInference"/>
+                                                <Button 
+                                                    icon="sap-icon://delete"
+                                                    tooltip="Delete"
+                                                    press=".onDeleteInference"/>
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Inference Generator ---->
+                    <IconTabFilter text="Generator" icon="sap-icon://create">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="Generate New Inference" class="sapUiMediumMarginBottom">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    class="sapUiMediumMargin">
+                                    <form:content>
+                                        <Label text="Inference Type"/>
+                                        <Select selectedKey="{inferenceGenerator>/type}">
+                                            <items>
+                                                <core:Item key="DEDUCTIVE" text="Deductive Inference"/>
+                                                <core:Item key="INDUCTIVE" text="Inductive Inference"/>
+                                                <core:Item key="ABDUCTIVE" text="Abductive Inference"/>
+                                                <core:Item key="ANALOGICAL" text="Analogical Inference"/>
+                                                <core:Item key="CAUSAL" text="Causal Inference"/>
+                                                <core:Item key="TEMPORAL" text="Temporal Inference"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Source Facts"/>
+                                        <VBox>
+                                            <TextArea 
+                                                value="{inferenceGenerator>/sourceFacts}"
+                                                rows="4"
+                                                placeholder="Enter known facts or premises"/>
+                                            <HBox class="sapUiTinyMarginTop">
+                                                <Button 
+                                                    text="Load from KB"
+                                                    icon="sap-icon://learning-assistant"
+                                                    press=".onLoadFactsFromKB"/>
+                                                <Button 
+                                                    text="Validate Facts"
+                                                    icon="sap-icon://validate"
+                                                    press=".onValidateFacts"/>
+                                            </HBox>
+                                        </VBox>
+                                        
+                                        <Label text="Target Domain"/>
+                                        <Select selectedKey="{inferenceGenerator>/domain}">
+                                            <items>
+                                                <core:Item key="GENERAL" text="General Knowledge"/>
+                                                <core:Item key="MEDICAL" text="Medical Domain"/>
+                                                <core:Item key="LEGAL" text="Legal Domain"/>
+                                                <core:Item key="TECHNICAL" text="Technical Domain"/>
+                                                <core:Item key="BUSINESS" text="Business Domain"/>
+                                                <core:Item key="SCIENTIFIC" text="Scientific Domain"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Reasoning Engine"/>
+                                        <Select selectedKey="{inferenceGenerator>/engine}">
+                                            <items>
+                                                <core:Item key="FORWARD_CHAINING" text="Forward Chaining"/>
+                                                <core:Item key="BACKWARD_CHAINING" text="Backward Chaining"/>
+                                                <core:Item key="BAYESIAN" text="Bayesian Network"/>
+                                                <core:Item key="FUZZY" text="Fuzzy Logic"/>
+                                                <core:Item key="NEURAL" text="Neural Reasoning"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Maximum Depth"/>
+                                        <Slider 
+                                            value="{inferenceGenerator>/maxDepth}"
+                                            min="1"
+                                            max="20"
+                                            step="1"
+                                            width="300px"
+                                            enableTickmarks="true"/>
+                                        <Text text="{inferenceGenerator>/maxDepth}" class="sapUiTinyMarginTop"/>
+                                        
+                                        <Label text="Minimum Confidence"/>
+                                        <Slider 
+                                            value="{inferenceGenerator>/minConfidence}"
+                                            min="0.1"
+                                            max="1.0"
+                                            step="0.05"
+                                            width="300px"
+                                            enableTickmarks="true"/>
+                                        <Text text="{inferenceGenerator>/minConfidence}" class="sapUiTinyMarginTop"/>
+                                        
+                                        <Label text="Max Results"/>
+                                        <Slider 
+                                            value="{inferenceGenerator>/maxResults}"
+                                            min="1"
+                                            max="100"
+                                            step="1"
+                                            width="300px"
+                                            enableTickmarks="true"/>
+                                        <Text text="{inferenceGenerator>/maxResults}" class="sapUiTinyMarginTop"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                                
+                                <HBox class="sapUiMediumMargin">
+                                    <Button 
+                                        text="Generate Inferences"
+                                        icon="sap-icon://learning-assistant"
+                                        press=".onGenerateInferences"
+                                        type="Emphasized"
+                                        class="sapUiMediumMarginEnd"/>
+                                    <Button 
+                                        text="Preview"
+                                        icon="sap-icon://preview"
+                                        press=".onPreviewInferences"
+                                        class="sapUiMediumMarginEnd"/>
+                                    <Button 
+                                        text="Clear"
+                                        icon="sap-icon://clear-all"
+                                        press=".onClearGenerator"/>
+                                </HBox>
+                            </Panel>
+                            
+                            <!-- Generation Results ---->
+                            <Panel headerText="Generation Results" class="sapUiMediumMarginBottom">
+                                <Table 
+                                    items="{inferenceGenerator>/results}"
+                                    mode="MultiSelect">
+                                    <headerToolbar>
+                                        <Toolbar>
+                                            <Title text="Generated Inferences"/>
+                                            <ToolbarSpacer/>
+                                            <Button 
+                                                text="Accept Selected"
+                                                icon="sap-icon://accept"
+                                                press=".onAcceptSelectedInferences"/>
+                                            <Button 
+                                                text="Reject Selected"
+                                                icon="sap-icon://decline"
+                                                press=".onRejectSelectedInferences"/>
+                                        </Toolbar>
+                                    </headerToolbar>
+                                    <columns>
+                                        <Column>
+                                            <Text text="Inference"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Confidence"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Derivation"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Actions"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <VBox>
+                                                    <Text text="{conclusion}" class="sapThemeHighlight-asTextColor"/>
+                                                    <Text text="{explanation}" maxLines="2" class="sapThemeTextSecondary"/>
+                                                </VBox>
+                                                <ProgressIndicator 
+                                                    percentValue="{= ${confidence} * 100}"
+                                                    displayValue="{confidence}"
+                                                    state="{= ${confidence} >= 0.8 ? 'Success' : ${confidence} >= 0.6 ? 'Warning' : 'Error'}"
+                                                    width="100px"/>
+                                                <VBox>
+                                                    <Text text="Steps: {derivationSteps}"/>
+                                                    <Text text="Rules: {rulesUsed}" class="sapThemeTextSecondary"/>
+                                                </VBox>
+                                                <HBox>
+                                                    <Button 
+                                                        icon="sap-icon://detail-view"
+                                                        tooltip="View Details"
+                                                        press=".onViewGeneratedInferenceDetails"/>
+                                                    <Button 
+                                                        icon="sap-icon://explain"
+                                                        tooltip="Explain Derivation"
+                                                        press=".onExplainDerivation"/>
+                                                </HBox>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Analytics ---->
+                    <IconTabFilter text="Analytics" icon="sap-icon://bar-chart">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Inference Performance ---->
+                            <Panel headerText="Inference Performance Trends" class="sapUiMediumMarginBottom">
+                                <core:HTML 
+                                    id="inferencePerformanceChart"
+                                    content='<div id="inferencePerformanceChartDiv" style="width: 100%; height: 300px;"></div>'
+                                    preferDOM="true"/>
+                            </Panel>
+                            
+                            <!-- Engine Comparison ---->
+                            <Panel headerText="Engine Performance Comparison" class="sapUiMediumMarginBottom">
+                                <HBox class="sapUiMediumMargin">
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Best Performing Engine" level="H5"/>
+                                        <List items="{inference>/analytics/bestEngines}">
+                                            <StandardListItem
+                                                title="{engineName}"
+                                                description="{engineType}"
+                                                info="{successRate}%"
+                                                infoState="Success"/>
+                                        </List>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Most Used Types" level="H5"/>
+                                        <mc:ColumnMicroChart
+                                            size="M"
+                                            columns="{inference>/analytics/inferenceTypes}">
+                                            <mc:columns>
+                                                <mc:ColumnMicroChartData 
+                                                    value="{count}"
+                                                    color="Good"
+                                                    label="{type}"/>
+                                            </mc:columns>
+                                        </mc:ColumnMicroChart>
+                                    </VBox>
+                                    <VBox>
+                                        <Title text="Quality Metrics" level="H5"/>
+                                        <HBox>
+                                            <VBox class="sapUiSmallMarginEnd">
+                                                <Text text="Accuracy" class="sapThemeTextSecondary"/>
+                                                <ObjectNumber number="{inference>/analytics/accuracy}%" state="Success"/>
+                                            </VBox>
+                                            <VBox class="sapUiSmallMarginEnd">
+                                                <Text text="Precision" class="sapThemeTextSecondary"/>
+                                                <ObjectNumber number="{inference>/analytics/precision}%" state="Success"/>
+                                            </VBox>
+                                            <VBox>
+                                                <Text text="Recall" class="sapThemeTextSecondary"/>
+                                                <ObjectNumber number="{inference>/analytics/recall}%" state="Warning"/>
+                                            </VBox>
+                                        </HBox>
+                                    </VBox>
+                                </HBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Start Inference Session"
+                icon="sap-icon://learning-assistant"
+                press=".onStartInferenceSession"
+                type="Emphasized"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Export Report"
+                    icon="sap-icon://download"
+                    press=".onExportInferenceReport"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseInferenceEngine"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

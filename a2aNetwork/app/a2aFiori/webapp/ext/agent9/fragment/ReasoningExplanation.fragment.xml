@@ -1,0 +1,242 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="reasoningExplanationDialog"
+        title="Reasoning Explanation"
+        contentWidth="85%"
+        contentHeight="80%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Step-by-Step Explanation ---->
+                    <IconTabFilter text="Step-by-Step" icon="sap-icon://workflow-tasks">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="Reasoning Process Overview" class="sapUiMediumMarginBottom">
+                                <HBox class="sapUiMediumMargin">
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Total Steps" level="H5"/>
+                                        <ObjectNumber 
+                                            number="{reasoningExplanation>/overview/totalSteps}"
+                                            state="Information"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Reasoning Type" level="H5"/>
+                                        <Text text="{reasoningExplanation>/overview/reasoningType}" class="sapThemeHighlight-asTextColor"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Engine Used" level="H5"/>
+                                        <Text text="{reasoningExplanation>/overview/engine}"/>
+                                    </VBox>
+                                    <VBox>
+                                        <Title text="Processing Time" level="H5"/>
+                                        <Text text="{reasoningExplanation>/overview/processingTime}ms"/>
+                                    </VBox>
+                                </HBox>
+                            </Panel>
+                            
+                            <Panel headerText="Reasoning Steps">
+                                <List items="{reasoningExplanation>/steps}">
+                                    <CustomListItem>
+                                        <VBox class="sapUiMediumMargin">
+                                            <HBox class="sapUiMediumMarginBottom">
+                                                <core:Icon 
+                                                    src="{= ${stepType} === 'PREMISE' ? 'sap-icon://documents' : ${stepType} === 'RULE_APPLICATION' ? 'sap-icon://decision' : ${stepType} === 'INFERENCE' ? 'sap-icon://learning-assistant' : ${stepType} === 'CONCLUSION' ? 'sap-icon://accept' : 'sap-icon://detail-view'}"
+                                                    size="1rem"
+                                                    color="{= ${stepType} === 'CONCLUSION' ? 'Positive' : 'Default'}"
+                                                    class="sapUiMediumMarginEnd"/>
+                                                <VBox>
+                                                    <Title text="Step {stepNumber}: {stepType}" level="H5"/>
+                                                    <Text text="{description}" class="sapUiMediumMarginBottom"/>
+                                                    <HBox>
+                                                        <VBox class="sapUiMediumMarginEnd">
+                                                            <Text text="Input:" class="sapThemeTextSecondary"/>
+                                                            <Text text="{input}"/>
+                                                        </VBox>
+                                                        <VBox class="sapUiMediumMarginEnd">
+                                                            <Text text="Rule Applied:" class="sapThemeTextSecondary"/>
+                                                            <Text text="{ruleApplied}"/>
+                                                        </VBox>
+                                                        <VBox>
+                                                            <Text text="Output:" class="sapThemeTextSecondary"/>
+                                                            <Text text="{output}" class="sapThemeHighlight-asTextColor"/>
+                                                        </VBox>
+                                                    </HBox>
+                                                    <HBox class="sapUiMediumMarginTop">
+                                                        <Text text="Confidence: " class="sapThemeTextSecondary"/>
+                                                        <Text text="{confidence}" class="sapUiTinyMarginEnd"/>
+                                                        <Text text="Duration: " class="sapThemeTextSecondary"/>
+                                                        <Text text="{duration}ms"/>
+                                                    </HBox>
+                                                </VBox>
+                                            </HBox>
+                                        </VBox>
+                                    </CustomListItem>
+                                </List>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Causal Chain ---->
+                    <IconTabFilter text="Causal Chain" icon="sap-icon://chain-link">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="Causal Relationships" class="sapUiMediumMarginBottom">
+                                <core:HTML 
+                                    id="causalChainVisualization"
+                                    content='<div id="causalChainVizDiv" style="width: 100%; height: 400px;"></div>'
+                                    preferDOM="true"/>
+                            </Panel>
+                            
+                            <Panel headerText="Causal Factors">
+                                <Table items="{reasoningExplanation>/causalFactors}">
+                                    <columns>
+                                        <Column><Text text="Factor"/></Column>
+                                        <Column><Text text="Influence"/></Column>
+                                        <Column><Text text="Evidence"/></Column>
+                                        <Column><Text text="Confidence"/></Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <VBox>
+                                                    <Text text="{factor}" class="sapThemeHighlight-asTextColor"/>
+                                                    <Text text="{description}" maxLines="2" class="sapThemeTextSecondary"/>
+                                                </VBox>
+                                                <ObjectStatus 
+                                                    text="{influence}"
+                                                    state="{= ${influence} === 'STRONG_POSITIVE' ? 'Success' : ${influence} === 'WEAK_POSITIVE' ? 'Information' : ${influence} === 'STRONG_NEGATIVE' ? 'Error' : ${influence} === 'WEAK_NEGATIVE' ? 'Warning' : 'None'}"
+                                                    icon="{= ${influence} === 'STRONG_POSITIVE' ? 'sap-icon://arrow-top' : ${influence} === 'WEAK_POSITIVE' ? 'sap-icon://trend-up' : ${influence} === 'STRONG_NEGATIVE' ? 'sap-icon://arrow-bottom' : ${influence} === 'WEAK_NEGATIVE' ? 'sap-icon://trend-down' : 'sap-icon://horizontal-grip'}"/>
+                                                <Text text="{evidenceCount} pieces"/>
+                                                <ProgressIndicator 
+                                                    percentValue="{= ${confidence} * 100}"
+                                                    displayValue="{confidence}"
+                                                    width="100px"/>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Rule Application ---->
+                    <IconTabFilter text="Rule Application" icon="sap-icon://decision">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="Applied Rules">
+                                <Table items="{reasoningExplanation>/appliedRules}">
+                                    <columns>
+                                        <Column><Text text="Rule"/></Column>
+                                        <Column><Text text="Application"/></Column>
+                                        <Column><Text text="Match"/></Column>
+                                        <Column><Text text="Result"/></Column>
+                                        <Column><Text text="Confidence"/></Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <VBox>
+                                                    <Text text="{ruleName}" class="sapThemeHighlight-asTextColor"/>
+                                                    <Text text="IF {condition} THEN {conclusion}" class="sapThemeTextSecondary"/>
+                                                </VBox>
+                                                <VBox>
+                                                    <Text text="Step {applicationStep}"/>
+                                                    <Text text="{applicationContext}" class="sapThemeTextSecondary"/>
+                                                </VBox>
+                                                <ProgressIndicator 
+                                                    percentValue="{= ${matchScore} * 100}"
+                                                    displayValue="{= (${matchScore} * 100).toFixed(1)}%"
+                                                    state="{= ${matchScore} >= 0.8 ? 'Success' : ${matchScore} >= 0.6 ? 'Warning' : 'Error'}"
+                                                    width="100px"/>
+                                                <VBox>
+                                                    <Text text="{ruleResult}" class="sapThemeHighlight-asTextColor"/>
+                                                    <Text text="Impact: {impact}" class="sapThemeTextSecondary"/>
+                                                </VBox>
+                                                <ProgressIndicator 
+                                                    percentValue="{= ${confidence} * 100}"
+                                                    displayValue="{confidence}"
+                                                    width="100px"/>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Evidence & Sources ---->
+                    <IconTabFilter text="Evidence" icon="sap-icon://documents">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="Supporting Evidence">
+                                <Table items="{reasoningExplanation>/evidence}">
+                                    <columns>
+                                        <Column><Text text="Evidence"/></Column>
+                                        <Column><Text text="Type"/></Column>
+                                        <Column><Text text="Source"/></Column>
+                                        <Column><Text text="Reliability"/></Column>
+                                        <Column><Text text="Relevance"/></Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <VBox>
+                                                    <Text text="{evidenceStatement}" class="sapThemeHighlight-asTextColor"/>
+                                                    <Text text="{description}" maxLines="2" class="sapThemeTextSecondary"/>
+                                                </VBox>
+                                                <ObjectStatus 
+                                                    text="{evidenceType}"
+                                                    state="Information"
+                                                    icon="{= ${evidenceType} === 'FACT' ? 'sap-icon://documents' : ${evidenceType} === 'OBSERVATION' ? 'sap-icon://inspect' : ${evidenceType} === 'TESTIMONY' ? 'sap-icon://discussion' : 'sap-icon://detail-view'}"/>
+                                                <VBox>
+                                                    <Text text="{source}"/>
+                                                    <Text text="Domain: {domain}" class="sapThemeTextSecondary"/>
+                                                </VBox>
+                                                <ProgressIndicator 
+                                                    percentValue="{= ${reliability} * 100}"
+                                                    displayValue="{reliability}"
+                                                    state="{= ${reliability} >= 0.8 ? 'Success' : ${reliability} >= 0.6 ? 'Warning' : 'Error'}"
+                                                    width="100px"/>
+                                                <ProgressIndicator 
+                                                    percentValue="{= ${relevance} * 100}"
+                                                    displayValue="{relevance}"
+                                                    state="{= ${relevance} >= 0.8 ? 'Success' : ${relevance} >= 0.6 ? 'Warning' : 'Error'}"
+                                                    width="100px"/>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Generate Detailed Report"
+                icon="sap-icon://document"
+                press=".onGenerateExplanationReport"
+                type="Emphasized"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Export Explanation"
+                    icon="sap-icon://download"
+                    press=".onExportReasoningExplanation"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseReasoningExplanation"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

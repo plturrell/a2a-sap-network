@@ -16,50 +16,94 @@ sap.ui.define([
         override: {
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
+                
+                // Initialize device model for responsive behavior
+                var oDeviceModel = new JSONModel(sap.ui.Device);
+                oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
+                this.base.getView().setModel(oDeviceModel, "device");
+                
+                // Initialize dialog cache for better performance
+                this._dialogCache = {};
+                
+                // Initialize resource bundle for i18n
+                this._oResourceBundle = this.base.getView().getModel("i18n").getResourceBundle();
             }
         },
 
         onCreateVectorTask: function() {
+            // Initialize create model before opening dialog
+            this._initializeCreateModel();
+            this._openCachedDialog("createVectorTask", "a2a.network.agent3.ext.fragment.CreateVectorTask");
+        },
+
+        /**
+         * Initialize the create model with default values and validation states
+         * @private
+         * @since 1.0.0
+         */
+        _initializeCreateModel: function() {
+            var oCreateModel = new JSONModel({
+                taskName: "",
+                description: "",
+                dataSource: "",
+                dataType: "",
+                embeddingModel: "text-embedding-ada-002",
+                modelProvider: "OPENAI",
+                vectorDatabase: "PINECONE",
+                indexType: "HNSW",
+                distanceMetric: "COSINE",
+                dimensions: 1536,
+                chunkSize: 512,
+                chunkOverlap: 50,
+                normalization: true,
+                batchSize: 32,
+                parallelProcessing: true,
+                useGPU: false,
+                errorHandling: 1,
+                progressMonitoring: true,
+                incrementalUpdates: false,
+                collectionName: "",
+                metadataSchema: "",
+                isValid: false,
+                taskNameState: "None",
+                taskNameStateText: "",
+                dataSourceState: "None",
+                dataSourceStateText: "",
+                dataTypeState: "None",
+                dataTypeStateText: ""
+            });
+            this.base.getView().setModel(oCreateModel, "create");
+        },
+
+        /**
+         * Opens cached dialog fragments with optimized loading
+         * @private
+         * @param {string} sDialogKey - Dialog cache key
+         * @param {string} sFragmentName - Fragment name to load
+         * @param {function} [fnCallback] - Optional callback after opening
+         * @since 1.0.0
+         */
+        _openCachedDialog: function(sDialogKey, sFragmentName, fnCallback) {
             var oView = this.base.getView();
             
-            if (!this._oCreateDialog) {
+            if (!this._dialogCache[sDialogKey]) {
                 Fragment.load({
                     id: oView.getId(),
-                    name: "a2a.network.agent3.ext.fragment.CreateVectorTask",
+                    name: sFragmentName,
                     controller: this
                 }).then(function(oDialog) {
-                    this._oCreateDialog = oDialog;
-                    oView.addDependent(this._oCreateDialog);
-                    
-                    // Initialize model with secure defaults
-                    var oModel = new JSONModel({
-                        taskName: "",
-                        description: "",
-                        dataSource: "",
-                        dataType: "TEXT",
-                        embeddingModel: "text-embedding-ada-002",
-                        modelProvider: "OPENAI",
-                        vectorDatabase: "PINECONE",
-                        indexType: "HNSW",
-                        distanceMetric: "COSINE",
-                        dimensions: 1536,
-                        chunkSize: 512,
-                        chunkOverlap: 50,
-                        normalization: true,
-                        batchSize: 32,
-                        parallelProcessing: true,
-                        useGPU: false,
-                        errorHandling: 1,
-                        progressMonitoring: true,
-                        incrementalUpdates: false,
-                        collectionName: "",
-                        metadataSchema: ""
-                    });
-                    this._oCreateDialog.setModel(oModel, "create");
-                    this._oCreateDialog.open();
+                    this._dialogCache[sDialogKey] = oDialog;
+                    oView.addDependent(oDialog);
+                    oDialog.open();
+                    if (fnCallback) {
+                        fnCallback(oDialog);
+                    }
                 }.bind(this));
             } else {
-                this._oCreateDialog.open();
+                this._dialogCache[sDialogKey].open();
+                if (fnCallback) {
+                    fnCallback(this._dialogCache[sDialogKey]);
+                }
             }
         },
 

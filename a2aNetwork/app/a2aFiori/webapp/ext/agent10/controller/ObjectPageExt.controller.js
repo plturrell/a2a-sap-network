@@ -2,32 +2,383 @@ sap.ui.define([
     "sap/ui/core/mvc/ControllerExtension",
     "sap/m/MessageToast",
     "sap/m/MessageBox",
-    "sap/ui/core/Fragment"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment) {
+    "sap/ui/core/Fragment",
+    "sap/ui/model/json/JSONModel",
+    "a2a/network/agent10/ext/utils/SecurityUtils"
+], function(ControllerExtension, MessageToast, MessageBox, Fragment, JSONModel, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent10.ext.controller.ObjectPageExt", {
-        
-        // Execute Calculation Action
-        onExecuteCalculation: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
+
+        override: {
+            onInit: function () {
+                this._initializeCreateModel();
+            }
+        },
+
+        _initializeCreateModel: function() {
+            var oCreateData = {
+                taskName: "",
+                description: "",
+                calculationType: "",
+                formulaCategory: "",
+                priority: "medium",
+                taskNameState: "",
+                taskNameStateText: "",
+                calculationTypeState: "",
+                calculationTypeStateText: "",
+                formulaCategoryState: "",
+                formulaCategoryStateText: "",
+                formulaExpression: "",
+                formulaLanguage: "javascript",
+                expectedDataType: "number",
+                formulaComplexity: "medium",
+                formulaSource: "custom",
+                precisionLevel: "double",
+                calculationEngine: "numpy",
+                parallelProcessing: false,
+                threadCount: 4,
+                gpuAcceleration: false,
+                cachingEnabled: true,
+                resultValidation: true,
+                confidenceInterval: 95,
+                selfHealingEnabled: true
+            };
+            var oCreateModel = new JSONModel(oCreateData);
+            this.getView().setModel(oCreateModel, "create");
+        },
+
+        onCreateCalculationTask: function() {
+            var oView = this.getView();
             
-            if (oData.status === 'calculating') {
-                MessageToast.show(this.getResourceBundle().getText("msg.calculationAlreadyRunning"));
+            if (!this._oCreateDialog) {
+                Fragment.load({
+                    id: oView.getId(),
+                    name: "a2a.network.agent10.ext.fragment.CreateCalculationTask",
+                    controller: this
+                }).then(function(oDialog) {
+                    this._oCreateDialog = oDialog;
+                    oView.addDependent(this._oCreateDialog);
+                    this._oCreateDialog.open();
+                }.bind(this));
+            } else {
+                this._oCreateDialog.open();
+            }
+        },
+
+        onTaskNameChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            if (!sValue || sValue.length < 3) {
+                oData.taskNameState = "Error";
+                oData.taskNameStateText = "Task name must be at least 3 characters";
+            } else if (sValue.length > 100) {
+                oData.taskNameState = "Error";
+                oData.taskNameStateText = "Task name must not exceed 100 characters";
+            } else {
+                oData.taskNameState = "Success";
+                oData.taskNameStateText = "Valid task name";
+            }
+            
+            oCreateModel.setData(oData);
+        },
+
+        onCalculationTypeChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            if (sValue) {
+                oData.calculationTypeState = "Success";
+                oData.calculationTypeStateText = "Calculation type selected";
+                
+                // Smart suggestions based on calculation type
+                switch (sValue) {
+                    case "basic":
+                        oData.calculationEngine = "numpy";
+                        oData.precisionLevel = "double";
+                        oData.parallelProcessing = false;
+                        break;
+                    case "advanced":
+                    case "scientific":
+                        oData.calculationEngine = "scipy";
+                        oData.precisionLevel = "extended";
+                        oData.parallelProcessing = true;
+                        oData.threadCount = 8;
+                        break;
+                    case "statistical":
+                        oData.calculationEngine = "scipy";
+                        oData.formulaCategory = "statistical";
+                        oData.resultValidation = true;
+                        break;
+                    case "financial":
+                        oData.calculationEngine = "numpy";
+                        oData.formulaCategory = "financial";
+                        oData.precisionLevel = "decimal128";
+                        break;
+                    case "matrix_operations":
+                        oData.calculationEngine = "numpy";
+                        oData.gpuAcceleration = true;
+                        oData.parallelProcessing = true;
+                        break;
+                    case "optimization":
+                        oData.calculationEngine = "scipy";
+                        oData.precisionLevel = "quadruple";
+                        oData.parallelProcessing = true;
+                        break;
+                }
+            } else {
+                oData.calculationTypeState = "Error";
+                oData.calculationTypeStateText = "Please select a calculation type";
+            }
+            
+            oCreateModel.setData(oData);
+        },
+
+        onFormulaCategoryChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            if (sValue) {
+                oData.formulaCategoryState = "Success";
+                oData.formulaCategoryStateText = "Formula category selected";
+                
+                // Adjust engine based on formula category
+                switch (sValue) {
+                    case "trigonometric":
+                    case "logarithmic":
+                    case "exponential":
+                        oData.calculationEngine = "numpy";
+                        oData.precisionLevel = "extended";
+                        break;
+                    case "statistical":
+                        oData.calculationEngine = "scipy";
+                        oData.resultValidation = true;
+                        oData.confidenceInterval = 95;
+                        break;
+                    case "financial":
+                        oData.precisionLevel = "decimal128";
+                        oData.resultValidation = true;
+                        break;
+                    case "custom":
+                        oData.calculationEngine = "custom";
+                        oData.selfHealingEnabled = true;
+                        break;
+                }
+            } else {
+                oData.formulaCategoryState = "Error";
+                oData.formulaCategoryStateText = "Please select a formula category";
+            }
+            
+            oCreateModel.setData(oData);
+        },
+
+        onPriorityChange: function(oEvent) {
+            var sValue = oEvent.getParameter("item").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            // Adjust resource allocation based on priority
+            switch (sValue) {
+                case "high":
+                    oData.threadCount = Math.min(16, oData.threadCount * 2);
+                    oData.parallelProcessing = true;
+                    oData.cachingEnabled = true;
+                    break;
+                case "medium":
+                    oData.threadCount = 4;
+                    break;
+                case "low":
+                    oData.threadCount = Math.max(1, Math.floor(oData.threadCount / 2));
+                    oData.parallelProcessing = false;
+                    break;
+            }
+            
+            oCreateModel.setData(oData);
+        },
+
+        onCancelCreateCalculationTask: function() {
+            this._oCreateDialog.close();
+            this._resetCreateModel();
+        },
+
+        onConfirmCreateCalculationTask: function() {
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            // Final validation
+            if (!this._validateCreateData(oData)) {
                 return;
             }
+            
+            this._oCreateDialog.setBusy(true);
+            
+            // Sanitize data for security
+            var oSanitizedData = {
+                taskName: SecurityUtils.sanitizeInput(oData.taskName),
+                description: SecurityUtils.sanitizeInput(oData.description),
+                calculationType: oData.calculationType,
+                formulaCategory: oData.formulaCategory,
+                priority: oData.priority,
+                precisionLevel: oData.precisionLevel,
+                calculationEngine: oData.calculationEngine,
+                parallelProcessing: !!oData.parallelProcessing,
+                threadCount: parseInt(oData.threadCount) || 4,
+                gpuAcceleration: !!oData.gpuAcceleration,
+                cachingEnabled: !!oData.cachingEnabled,
+                resultValidation: !!oData.resultValidation,
+                confidenceInterval: parseFloat(oData.confidenceInterval) || 95,
+                selfHealingEnabled: !!oData.selfHealingEnabled
+            };
+            
+            SecurityUtils.secureCallFunction(this.getView().getModel(), "/CreateCalculationTask", {
+                urlParameters: oSanitizedData,
+                success: function(data) {
+                    this._oCreateDialog.setBusy(false);
+                    this._oCreateDialog.close();
+                    MessageToast.show(this.getResourceBundle().getText("msg.calculationTaskCreated"));
+                    this._refreshTaskData();
+                    this._resetCreateModel();
+                }.bind(this),
+                error: function(error) {
+                    this._oCreateDialog.setBusy(false);
+                    var errorMsg = SecurityUtils.escapeHTML(error.message || "Unknown error");
+                    MessageBox.error(this.getResourceBundle().getText("error.createTaskFailed") + ": " + errorMsg);
+                }.bind(this)
+            });
+        },
 
-            MessageBox.confirm(
-                this.getResourceBundle().getText("msg.executeCalculationConfirm"),
-                {
-                    onClose: function(oAction) {
-                        if (oAction === MessageBox.Action.OK) {
-                            this._executeCalculation(oContext);
+        _validateCreateData: function(oData) {
+            if (!oData.taskName || oData.taskName.length < 3) {
+                MessageBox.error(this.getResourceBundle().getText("validation.taskNameRequired"));
+                return false;
+            }
+            
+            if (!oData.calculationType) {
+                MessageBox.error(this.getResourceBundle().getText("validation.calculationTypeRequired"));
+                return false;
+            }
+            
+            if (!oData.formulaCategory) {
+                MessageBox.error(this.getResourceBundle().getText("validation.formulaCategoryRequired"));
+                return false;
+            }
+            
+            return true;
+        },
+
+        _resetCreateModel: function() {
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            oData.taskName = "";
+            oData.description = "";
+            oData.calculationType = "";
+            oData.formulaCategory = "";
+            oData.priority = "medium";
+            oData.taskNameState = "";
+            oData.taskNameStateText = "";
+            oData.calculationTypeState = "";
+            oData.calculationTypeStateText = "";
+            oData.formulaCategoryState = "";
+            oData.formulaCategoryStateText = "";
+            oData.formulaExpression = "";
+            oData.formulaLanguage = "javascript";
+            oData.expectedDataType = "number";
+            oData.formulaComplexity = "medium";
+            oData.formulaSource = "custom";
+            
+            oCreateModel.setData(oData);
+        },
+
+        onFormulaChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            // Basic formula validation
+            if (sValue && sValue.length > 0) {
+                // Check for basic syntax errors
+                try {
+                    // Simple validation - actual validation would be more complex
+                    if (oData.formulaLanguage === "javascript") {
+                        // Check for balanced parentheses and brackets
+                        var openParen = (sValue.match(/\(/g) || []).length;
+                        var closeParen = (sValue.match(/\)/g) || []).length;
+                        var openBracket = (sValue.match(/\[/g) || []).length;
+                        var closeBracket = (sValue.match(/\]/g) || []).length;
+                        var openBrace = (sValue.match(/\{/g) || []).length;
+                        var closeBrace = (sValue.match(/\}/g) || []).length;
+                        
+                        if (openParen !== closeParen || openBracket !== closeBracket || openBrace !== closeBrace) {
+                            MessageToast.show("Warning: Unbalanced parentheses or brackets");
                         }
-                    }.bind(this)
+                    }
+                } catch (e) {
+                    MessageToast.show("Formula syntax error");
                 }
-            );
+            }
+            
+            oCreateModel.setData(oData);
+        },
+
+        onFormulaLanguageChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            // Update code editor type based on language
+            var oCodeEditor = this.getView().byId("formulaEditor");
+            if (oCodeEditor) {
+                switch (sValue) {
+                    case "python":
+                        oCodeEditor.setType("python");
+                        break;
+                    case "r":
+                        oCodeEditor.setType("r");
+                        break;
+                    case "sql":
+                        oCodeEditor.setType("sql");
+                        break;
+                    default:
+                        oCodeEditor.setType("javascript");
+                }
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+
+        // Execute Calculation Action
+        onExecuteCalculation: function() {
+            SecurityUtils.checkCalculationAuth('execute').then(function(authorized) {
+                if (!authorized) {
+                    MessageToast.show(this.getResourceBundle().getText("error.notAuthorized"));
+                    return;
+                }
+                
+                const oContext = this.base.getView().getBindingContext();
+                const oData = oContext.getObject();
+                
+                if (oData.status === 'calculating') {
+                    MessageToast.show(this.getResourceBundle().getText("msg.calculationAlreadyRunning"));
+                    return;
+                }
+
+                MessageBox.confirm(
+                    this.getResourceBundle().getText("msg.executeCalculationConfirm"),
+                    {
+                        onClose: function(oAction) {
+                            if (oAction === MessageBox.Action.OK) {
+                                this._executeCalculation(oContext);
+                            }
+                        }.bind(this)
+                    }
+                );
+            }.bind(this));
         },
 
         // Validate Result Action
@@ -195,26 +546,22 @@ sap.ui.define([
             }
 
             try {
-                this._eventSource = new EventSource(`http://localhost:8010/calculations/${taskId}/stream`);
+                this._eventSource = SecurityUtils.createSecureEventSource(`http://localhost:8010/calculations/${taskId}/stream`);
                 
                 this._eventSource.addEventListener('calculation-progress', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._updateCalculationProgress(data);
+                    this._updateCalculationProgress(event.data);
                 });
 
                 this._eventSource.addEventListener('calculation-completed', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._handleCalculationCompleted(data);
+                    this._handleCalculationCompleted(event.data);
                 });
 
                 this._eventSource.addEventListener('calculation-error', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._handleCalculationError(data);
+                    this._handleCalculationError(event.data);
                 });
 
                 this._eventSource.addEventListener('self-healing', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._handleSelfHealingUpdate(data);
+                    this._handleSelfHealingUpdate(event.data);
                 });
 
             } catch (error) {
@@ -235,7 +582,7 @@ sap.ui.define([
             
             MessageToast.show(this.getResourceBundle().getText("msg.calculationStarted"));
             
-            oModel.callFunction("/ExecuteCalculation", {
+            SecurityUtils.secureCallFunction(oModel, "/ExecuteCalculation", {
                 urlParameters: {
                     taskId: sTaskId
                 },
@@ -244,7 +591,7 @@ sap.ui.define([
                     this._refreshTaskData();
                 }.bind(this),
                 error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.calculationFailed", [error.message]));
+                    MessageToast.show(this.getResourceBundle().getText("error.calculationFailed", [SecurityUtils.escapeHTML(error.message)]));
                 }.bind(this)
             });
         },
@@ -253,7 +600,7 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const sTaskId = oContext.getObject().taskId;
             
-            oModel.callFunction("/ValidateResult", {
+            SecurityUtils.secureCallFunction(oModel, "/ValidateResult", {
                 urlParameters: {
                     taskId: sTaskId
                 },
@@ -273,7 +620,7 @@ sap.ui.define([
             
             MessageToast.show(this.getResourceBundle().getText("msg.precisionTestStarted"));
             
-            oModel.callFunction("/TestPrecision", {
+            SecurityUtils.secureCallFunction(oModel, "/TestPrecision", {
                 urlParameters: {
                     taskId: sTaskId
                 },
@@ -293,7 +640,7 @@ sap.ui.define([
             
             MessageToast.show(this.getResourceBundle().getText("msg.selfHealingTriggered"));
             
-            oModel.callFunction("/RunSelfHealing", {
+            SecurityUtils.secureCallFunction(oModel, "/RunSelfHealing", {
                 urlParameters: {
                     taskId: sTaskId
                 },
@@ -311,7 +658,7 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const sTaskId = oContext.getObject().taskId;
             
-            oModel.callFunction("/GetOptimizationSuggestions", {
+            SecurityUtils.secureCallFunction(oModel, "/GetOptimizationSuggestions", {
                 urlParameters: {
                     taskId: sTaskId
                 },
@@ -328,7 +675,7 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const sTaskId = oContext.getObject().taskId;
             
-            oModel.callFunction("/GetPerformanceAnalysis", {
+            SecurityUtils.secureCallFunction(oModel, "/GetPerformanceAnalysis", {
                 urlParameters: {
                     taskId: sTaskId
                 },
@@ -345,7 +692,7 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const sTaskId = oContext.getObject().taskId;
             
-            oModel.callFunction("/GetVisualizationData", {
+            SecurityUtils.secureCallFunction(oModel, "/GetVisualizationData", {
                 urlParameters: {
                     taskId: sTaskId
                 },
@@ -378,7 +725,7 @@ sap.ui.define([
         },
 
         _handleCalculationError: function(data) {
-            MessageBox.error(this.getResourceBundle().getText("error.calculationFailed", [data.error]));
+            MessageBox.error(this.getResourceBundle().getText("error.calculationFailed", [SecurityUtils.escapeHTML(data.error)]));
             this._refreshTaskData();
         },
 

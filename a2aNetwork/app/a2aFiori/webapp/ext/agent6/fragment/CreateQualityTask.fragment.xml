@@ -5,95 +5,141 @@
     
     <Dialog
         id="createQualityTaskDialog"
-        title="Create Quality Control Task"
-        contentWidth="70%"
-        contentHeight="80%"
-        resizable="true">
+        title="{i18n>dialog.createQualityTask}"
+        contentWidth="75rem"
+        resizable="true"
+        stretch="{device>/system/phone}"
+        aria-label="{i18n>aria.createQualityTaskDialog}"
+        role="dialog">
         
         <content>
             <IconTabBar expandable="false">
                 <items>
                     <!-- Basic Information Tab -->
-                    <IconTabFilter text="Basic Info" icon="sap-icon://hint">
+                    <IconTabFilter text="{i18n>tab.basicInfo}" icon="sap-icon://hint">
                         <form:SimpleForm
                             editable="true"
                             layout="ResponsiveGridLayout">
                             <form:content>
-                                <Label text="Task Name" required="true"/>
+                                <Label text="{i18n>taskName}" required="true" labelFor="taskNameInput"/>
                                 <Input 
+                                    id="taskNameInput"
                                     value="{create>/taskName}"
-                                    placeholder="Enter quality control task name"/>
+                                    placeholder="{i18n>placeholder.taskName}"
+                                    aria-label="{i18n>aria.taskNameInput}"
+                                    aria-required="true"
+                                    valueState="{create>/taskNameState}"
+                                    valueStateText="{create>/taskNameStateText}"
+                                    liveChange=".onTaskNameChange"/>
                                 
-                                <Label text="Description"/>
+                                <Label text="{i18n>description}" labelFor="descriptionInput"/>
                                 <TextArea 
+                                    id="descriptionInput"
                                     value="{create>/description}"
-                                    rows="3"
-                                    placeholder="Describe the quality control requirements"/>
+                                    rows="{= ${device>/system/phone} ? 2 : 3 }"
+                                    placeholder="{i18n>placeholder.description}"
+                                    aria-label="{i18n>aria.descriptionInput}"/>
                                 
-                                <Label text="Quality Gate" required="true"/>
-                                <Input 
-                                    value="{create>/qualityGate}"
-                                    placeholder="Select quality gate"
-                                    showValueHelp="true"
-                                    valueHelpRequest=".onSelectQualityGate"/>
+                                <Label text="{i18n>qualityGate}" required="true" labelFor="qualityGateSelect"/>
+                                <Select 
+                                    id="qualityGateSelect"
+                                    selectedKey="{create>/qualityGate}"
+                                    aria-label="{i18n>aria.qualityGateInput}"
+                                    aria-required="true"
+                                    tooltip="{i18n>tooltip.qualityGate}"
+                                    valueState="{create>/qualityGateState}"
+                                    valueStateText="{create>/qualityGateStateText}"
+                                    change=".onQualityGateChange">
+                                    <core:Item key="" text="{i18n>placeholder.qualityGate}"/>
+                                    <core:Item key="COMPLIANCE" text="{i18n>quality.gate.compliance}"/>
+                                    <core:Item key="PERFORMANCE" text="{i18n>quality.gate.performance}"/>
+                                    <core:Item key="SECURITY" text="{i18n>quality.gate.security}"/>
+                                    <core:Item key="RELIABILITY" text="{i18n>quality.gate.reliability}"/>
+                                    <core:Item key="USABILITY" text="{i18n>quality.gate.usability}"/>
+                                    <core:Item key="MAINTAINABILITY" text="{i18n>quality.gate.maintainability}"/>
+                                </Select>
                                 
-                                <Label text="Data Source"/>
+                                <Label text="{i18n>dataSource}" labelFor="dataSourceInput"/>
                                 <Input 
+                                    id="dataSourceInput"
                                     value="{create>/dataSource}"
-                                    placeholder="Source of data to evaluate"/>
+                                    placeholder="{i18n>placeholder.dataSource}"
+                                    valueState="{create>/dataSourceState}"
+                                    valueStateText="{create>/dataSourceStateText}"
+                                    liveChange=".onDataSourceChange"/>
                                 
-                                <Label text="Processing Pipeline"/>
+                                <Label text="{i18n>processingPipeline}" labelFor="processingPipelineInput"/>
                                 <Input 
+                                    id="processingPipelineInput"
                                     value="{create>/processingPipeline}"
-                                    placeholder="Pipeline or workflow to assess"/>
+                                    placeholder="{i18n>placeholder.processingPipeline}"/>
                             </form:content>
                         </form:SimpleForm>
                     </IconTabFilter>
                     
                     <!-- Evaluation Criteria Tab -->
-                    <IconTabFilter text="Evaluation Criteria" icon="sap-icon://checklist">
+                    <IconTabFilter text="{i18n>tab.evaluationCriteria}" icon="sap-icon://checklist" ariaDescribedBy="evaluationTabHelp">
+                        <core:InvisibleText id="evaluationTabHelp" text="Configure quality evaluation components, thresholds, and assessment criteria"/>
                         <form:SimpleForm
                             editable="true"
-                            layout="ResponsiveGridLayout">
+                            layout="ResponsiveGridLayout"
+                            labelSpanXL="4"
+                            labelSpanL="4"
+                            labelSpanM="12"
+                            labelSpanS="12"
+                            adjustLabelSpan="false"
+                            emptySpanXL="0"
+                            emptySpanL="0"
+                            emptySpanM="0"
+                            columnsXL="2"
+                            columnsL="1"
+                            columnsM="1"
+                            class="sapUiResponsiveMargin">
                             <form:content>
                                 <Label text="Quality Components to Evaluate"/>
                                 <VBox>
                                     <CheckBox 
-                                        text="Compliance Assessment"
-                                        selected="{create>/evaluationCriteria/compliance}"/>
+                                        text="{i18n>evaluation.compliance}"
+                                        selected="{create>/evaluationCriteria/compliance}"
+                                        aria-label="{i18n>aria.complianceCheckbox}"/>
                                     <CheckBox 
-                                        text="Performance Evaluation"
+                                        text="{i18n>evaluation.performance}"
                                         selected="{create>/evaluationCriteria/performance}"/>
                                     <CheckBox 
-                                        text="Security Analysis"
+                                        text="{i18n>evaluation.security}"
                                         selected="{create>/evaluationCriteria/security}"/>
                                     <CheckBox 
-                                        text="Reliability Testing"
+                                        text="{i18n>evaluation.reliability}"
                                         selected="{create>/evaluationCriteria/reliability}"/>
                                     <CheckBox 
-                                        text="Usability Assessment"
+                                        text="{i18n>evaluation.usability}"
                                         selected="{create>/evaluationCriteria/usability}"/>
                                     <CheckBox 
-                                        text="Maintainability Review"
+                                        text="{i18n>evaluation.maintainability}"
                                         selected="{create>/evaluationCriteria/maintainability}"/>
                                 </VBox>
                                 
                                 <Label text="Quality Thresholds"/>
                                 <VBox>
                                     <HBox>
-                                        <Label text="Minimum Quality Score (%):"/>
+                                        <Label text="{i18n>threshold.minQualityScore}" labelFor="minQualitySlider"/>
                                         <Slider 
+                                            id="minQualitySlider"
                                             value="{create>/thresholds/minQualityScore}"
                                             min="0"
                                             max="100"
                                             step="5"
-                                            width="200px"
+                                            width="{= ${device>/system/phone} ? '150px' : '200px' }"
                                             enableTickmarks="true"
-                                            inputsAsTooltips="true"/>
+                                            inputsAsTooltips="true"
+                                            aria-label="{i18n>aria.minQualitySlider}"
+                                            aria-valuemin="0"
+                                            aria-valuemax="100"
+                                            aria-valuenow="{create>/thresholds/minQualityScore}"/>
                                     </HBox>
                                     
                                     <HBox>
-                                        <Label text="Maximum Issues Allowed:"/>
+                                        <Label text="{i18n>threshold.maxIssues}"/>
                                         <StepInput 
                                             value="{create>/thresholds/maxIssues}"
                                             min="0"
@@ -103,7 +149,7 @@
                                     </HBox>
                                     
                                     <HBox>
-                                        <Label text="Minimum Trust Score (%):"/>
+                                        <Label text="{i18n>threshold.minTrustScore}"/>
                                         <Slider 
                                             value="{create>/thresholds/minTrustScore}"
                                             min="0"
@@ -119,19 +165,36 @@
                     </IconTabFilter>
                     
                     <!-- Routing Configuration Tab -->
-                    <IconTabFilter text="Routing Config" icon="sap-icon://activity-2">
+                    <IconTabFilter text="{i18n>tab.routingConfig}" icon="sap-icon://activity-2" ariaDescribedBy="routingTabHelp">
+                        <core:InvisibleText id="routingTabHelp" text="Configure routing strategy, thresholds, fallback options, and priority weighting"/>
                         <form:SimpleForm
                             editable="true"
-                            layout="ResponsiveGridLayout">
+                            layout="ResponsiveGridLayout"
+                            labelSpanXL="4"
+                            labelSpanL="4"
+                            labelSpanM="12"
+                            labelSpanS="12"
+                            adjustLabelSpan="false"
+                            emptySpanXL="0"
+                            emptySpanL="0"
+                            emptySpanM="0"
+                            columnsXL="2"
+                            columnsL="1"
+                            columnsM="1"
+                            class="sapUiResponsiveMargin">
                             <form:content>
-                                <Label text="Routing Strategy"/>
-                                <Select selectedKey="{create>/routingStrategy}">
+                                <Label text="{i18n>routing.strategy}" labelFor="routingStrategySelect"/>
+                                <Select 
+                                    id="routingStrategySelect"
+                                    selectedKey="{create>/routingStrategy}"
+                                    aria-label="{i18n>aria.routingStrategySelect}"
+                                    change=".onRoutingStrategyChange">
                                     <items>
-                                        <core:Item key="QUALITY_BASED" text="Quality Score Based"/>
-                                        <core:Item key="LOAD_BALANCED" text="Load Balanced"/>
-                                        <core:Item key="ROUND_ROBIN" text="Round Robin"/>
-                                        <core:Item key="WEIGHTED" text="Weighted Distribution"/>
-                                        <core:Item key="MANUAL" text="Manual Decision Only"/>
+                                        <core:Item key="QUALITY_BASED" text="{i18n>routingQualityBased}"/>
+                                        <core:Item key="LOAD_BALANCED" text="{i18n>routingLoadBalanced}"/>
+                                        <core:Item key="ROUND_ROBIN" text="{i18n>routingRoundRobin}"/>
+                                        <core:Item key="WEIGHTED" text="{i18n>routingWeighted}"/>
+                                        <core:Item key="MANUAL" text="{i18n>routingManual}"/>
                                     </items>
                                 </Select>
                                 
@@ -144,23 +207,23 @@
                                     enableTickmarks="true"
                                     inputsAsTooltips="true"/>
                                 
-                                <Label text="Fallback Options"/>
+                                <Label text="{i18n>fallbackOptions}"/>
                                 <VBox>
                                     <CheckBox 
-                                        text="Enable automatic fallback routing"
+                                        text="{i18n>enableFallbackRouting}"
                                         selected="{create>/enableFallback}"/>
                                     <CheckBox 
-                                        text="Require manual approval for critical tasks"
+                                        text="{i18n>requireManualApproval}"
                                         selected="{create>/requireManualApproval}"/>
                                     <CheckBox 
-                                        text="Send notifications on routing decisions"
+                                        text="{i18n>notifyOnRouting}"
                                         selected="{create>/notifyOnRouting}"/>
                                 </VBox>
                                 
-                                <Label text="Priority Weighting"/>
+                                <Label text="{i18n>priorityWeighting}"/>
                                 <VBox>
                                     <HBox>
-                                        <Label text="Quality Score Weight:"/>
+                                        <Label text="{i18n>qualityWeight}"/>
                                         <Slider 
                                             value="{create>/weights/quality}"
                                             min="0"
@@ -169,7 +232,7 @@
                                             width="150px"/>
                                     </HBox>
                                     <HBox>
-                                        <Label text="Performance Weight:"/>
+                                        <Label text="{i18n>performanceWeight}"/>
                                         <Slider 
                                             value="{create>/weights/performance}"
                                             min="0"
@@ -178,7 +241,7 @@
                                             width="150px"/>
                                     </HBox>
                                     <HBox>
-                                        <Label text="Trust Score Weight:"/>
+                                        <Label text="{i18n>trustWeight}"/>
                                         <Slider 
                                             value="{create>/weights/trust}"
                                             min="0"
@@ -192,44 +255,59 @@
                     </IconTabFilter>
                     
                     <!-- Trust & Verification Tab -->
-                    <IconTabFilter text="Trust & Verification" icon="sap-icon://key">
+                    <IconTabFilter text="{i18n>tab.trustVerification}" icon="sap-icon://key" ariaDescribedBy="trustTabHelp">
+                        <core:InvisibleText id="trustTabHelp" text="Configure trust verification level, requirements, and trust factors for quality assessment"/>
                         <form:SimpleForm
                             editable="true"
-                            layout="ResponsiveGridLayout">
+                            layout="ResponsiveGridLayout"
+                            labelSpanXL="4"
+                            labelSpanL="4"
+                            labelSpanM="12"
+                            labelSpanS="12"
+                            adjustLabelSpan="false"
+                            emptySpanXL="0"
+                            emptySpanL="0"
+                            emptySpanM="0"
+                            columnsXL="2"
+                            columnsL="1"
+                            columnsM="1"
+                            class="sapUiResponsiveMargin">
                             <form:content>
-                                <Label text="Trust Verification Level"/>
-                                <Select selectedKey="{create>/trustLevel}">
+                                <Label text="{i18n>trustVerificationLevel}"/>
+                                <Select 
+                                    selectedKey="{create>/trustLevel}"
+                                    change=".onTrustLevelChange">
                                     <items>
-                                        <core:Item key="BASIC" text="Basic Verification"/>
-                                        <core:Item key="STANDARD" text="Standard Verification"/>
-                                        <core:Item key="ENHANCED" text="Enhanced Verification"/>
-                                        <core:Item key="MAXIMUM" text="Maximum Security"/>
+                                        <core:Item key="BASIC" text="{i18n>trustLevelBasic}"/>
+                                        <core:Item key="STANDARD" text="{i18n>trustLevelStandard}"/>
+                                        <core:Item key="ENHANCED" text="{i18n>trustLevelEnhanced}"/>
+                                        <core:Item key="MAXIMUM" text="{i18n>trustLevelMaximum}"/>
                                     </items>
                                 </Select>
                                 
-                                <Label text="Verification Requirements"/>
+                                <Label text="{i18n>verificationRequirements}"/>
                                 <VBox>
                                     <CheckBox 
-                                        text="Blockchain verification required"
+                                        text="{i18n>blockchainVerification}"
                                         selected="{create>/verification/blockchain}"/>
                                     <CheckBox 
-                                        text="Reputation check required"
+                                        text="{i18n>reputationCheck}"
                                         selected="{create>/verification/reputation}"/>
                                     <CheckBox 
-                                        text="Integrity validation required"
+                                        text="{i18n>integrityValidation}"
                                         selected="{create>/verification/integrity}"/>
                                     <CheckBox 
-                                        text="Consensus mechanism required"
+                                        text="{i18n>consensusRequired}"
                                         selected="{create>/verification/consensus}"/>
                                     <CheckBox 
-                                        text="Digital signature validation"
+                                        text="{i18n>signatureValidation}"
                                         selected="{create>/verification/signature}"/>
                                 </VBox>
                                 
-                                <Label text="Trust Factors"/>
+                                <Label text="{i18n>trustFactors}"/>
                                 <VBox>
                                     <HBox>
-                                        <Label text="Historical Performance Weight:"/>
+                                        <Label text="{i18n>historicalPerformanceWeight}"/>
                                         <Slider 
                                             value="{create>/trustFactors/performance}"
                                             min="0"
@@ -238,7 +316,7 @@
                                             width="150px"/>
                                     </HBox>
                                     <HBox>
-                                        <Label text="Data Quality Weight:"/>
+                                        <Label text="{i18n>dataQualityWeight}"/>
                                         <Slider 
                                             value="{create>/trustFactors/dataQuality}"
                                             min="0"
@@ -247,7 +325,7 @@
                                             width="150px"/>
                                     </HBox>
                                     <HBox>
-                                        <Label text="Security Compliance Weight:"/>
+                                        <Label text="{i18n>securityComplianceWeight}"/>
                                         <Slider 
                                             value="{create>/trustFactors/security}"
                                             min="0"
@@ -265,16 +343,18 @@
         
         <beginButton>
             <Button 
-                text="Cancel"
-                press=".onCancelCreateTask"/>
+                text="{i18n>button.cancel}"
+                press=".onCancelCreateTask"
+                aria-label="{i18n>aria.cancelButton}"/>
         </beginButton>
         
         <endButton>
             <Button 
-                text="Create"
+                text="{i18n>button.create}"
                 type="Emphasized"
                 press=".onConfirmCreateTask"
-                enabled="{= ${create>/taskName} &amp;&amp; ${create>/qualityGate} }"/>
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/qualityGate} }"
+                aria-label="{i18n>aria.createButton}"/>
         </endButton>
         
     </Dialog>

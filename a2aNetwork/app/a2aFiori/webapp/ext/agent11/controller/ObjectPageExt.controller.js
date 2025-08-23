@@ -2,37 +2,63 @@ sap.ui.define([
     "sap/ui/core/mvc/ControllerExtension",
     "sap/m/MessageToast",
     "sap/m/MessageBox",
-    "sap/ui/core/Fragment"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment) {
+    "sap/ui/core/Fragment",
+    "a2a/network/agent11/ext/utils/SecurityUtils"
+], function(ControllerExtension, MessageToast, MessageBox, Fragment, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent11.ext.controller.ObjectPageExt", {
         
         // Execute Query Action
         onExecuteQuery: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
-            
-            if (oData.executionStatus === 'executing') {
-                MessageToast.show(this.getResourceBundle().getText("msg.queryAlreadyExecuting"));
-                return;
-            }
-
-            if (!oData.sqlStatement || oData.sqlStatement.trim() === '') {
-                MessageToast.show(this.getResourceBundle().getText("error.noSQLStatement"));
-                return;
-            }
-
-            MessageBox.confirm(
-                this.getResourceBundle().getText("msg.executeQueryConfirm"),
-                {
-                    onClose: function(oAction) {
-                        if (oAction === MessageBox.Action.OK) {
-                            this._executeQuery(oContext);
-                        }
-                    }.bind(this)
+            SecurityUtils.checkSQLAuth('execute', 'query').then(function(authorized) {
+                if (!authorized) {
+                    MessageToast.show(this.getResourceBundle().getText("error.notAuthorized"));
+                    return;
                 }
-            );
+                
+                const oContext = this.base.getView().getBindingContext();
+                const oData = oContext.getObject();
+                
+                if (oData.executionStatus === 'executing') {
+                    MessageToast.show(this.getResourceBundle().getText("msg.queryAlreadyExecuting"));
+                    return;
+                }
+
+                if (!oData.sqlStatement || oData.sqlStatement.trim() === '') {
+                    MessageToast.show(this.getResourceBundle().getText("error.noSQLStatement"));
+                    return;
+                }
+                
+                // Validate SQL before execution
+                const validation = SecurityUtils.validateSQL(oData.sqlStatement);
+                if (!validation.isValid) {
+                    MessageBox.error(
+                        this.getResourceBundle().getText("error.sqlValidationFailed", [validation.errors.join(', ')])
+                    );
+                    return;
+                }
+                
+                // Check query complexity
+                const complexity = SecurityUtils.validateQueryComplexity(oData.sqlStatement);
+                if (!complexity.isValid) {
+                    MessageBox.error(
+                        this.getResourceBundle().getText("error.queryTooComplex", [complexity.issues.join(', ')])
+                    );
+                    return;
+                }
+
+                MessageBox.confirm(
+                    this.getResourceBundle().getText("msg.executeQueryConfirm"),
+                    {
+                        onClose: function(oAction) {
+                            if (oAction === MessageBox.Action.OK) {
+                                this._executeQuery(oContext);
+                            }
+                        }.bind(this)
+                    }
+                );
+            }.bind(this));
         },
 
         // Validate Query Action
@@ -207,26 +233,23 @@ sap.ui.define([
             }
 
             try {
-                this._eventSource = new EventSource(`http://localhost:8011/sql/${queryId}/stream`);
+                const sanitizedQueryId = SecurityUtils.sanitizeSQLParameter(queryId);
+                this._eventSource = SecurityUtils.createSecureEventSource(`http://localhost:8011/sql/${sanitizedQueryId}/stream`);
                 
                 this._eventSource.addEventListener('query-progress', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._updateQueryProgress(data);
+                    this._updateQueryProgress(event.data);
                 });
 
                 this._eventSource.addEventListener('query-completed', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._handleQueryCompleted(data);
+                    this._handleQueryCompleted(event.data);
                 });
 
                 this._eventSource.addEventListener('query-error', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._handleQueryError(data);
+                    this._handleQueryError(event.data);
                 });
 
                 this._eventSource.addEventListener('optimization-update', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._handleOptimizationUpdate(data);
+                    this._handleOptimizationUpdate(event.data);
                 });
 
             } catch (error) {
@@ -243,11 +266,11 @@ sap.ui.define([
 
         _executeQuery: function(oContext) {
             const oModel = this.getView().getModel();
-            const sQueryId = oContext.getObject().queryId;
+            const sQueryId = SecurityUtils.sanitizeSQLParameter(oContext.getObject().queryId);
             
             MessageToast.show(this.getResourceBundle().getText("msg.queryExecutionStarted"));
             
-            oModel.callFunction("/ExecuteQuery", {
+            SecurityUtils.secureCallFunction(oModel, "/ExecuteQuery", {
                 urlParameters: {
                     queryId: sQueryId
                 },
@@ -256,18 +279,18 @@ sap.ui.define([
                     this._refreshQueryData();
                 }.bind(this),
                 error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.queryExecutionFailed", [error.message]));
+                    MessageToast.show(this.getResourceBundle().getText("error.queryExecutionFailed", [SecurityUtils.escapeHTML(error.message)]));
                 }.bind(this)
             });
         },
 
         _validateQuery: function(oContext) {
             const oModel = this.getView().getModel();
-            const sQueryId = oContext.getObject().queryId;
+            const sQueryId = SecurityUtils.sanitizeSQLParameter(oContext.getObject().queryId);
             
             MessageToast.show(this.getResourceBundle().getText("msg.queryValidationStarted"));
             
-            oModel.callFunction("/ValidateQuery", {
+            SecurityUtils.secureCallFunction(oModel, "/ValidateQuery", {
                 urlParameters: {
                     queryId: sQueryId
                 },
@@ -283,9 +306,9 @@ sap.ui.define([
 
         _formatQuery: function(oContext) {
             const oModel = this.getView().getModel();
-            const sQueryId = oContext.getObject().queryId;
+            const sQueryId = SecurityUtils.sanitizeSQLParameter(oContext.getObject().queryId);
             
-            oModel.callFunction("/FormatQuery", {
+            SecurityUtils.secureCallFunction(oModel, "/FormatQuery", {
                 urlParameters: {
                     queryId: sQueryId
                 },
@@ -301,9 +324,9 @@ sap.ui.define([
 
         _loadOptimizationData: function(oContext) {
             const oModel = this.getView().getModel();
-            const sQueryId = oContext.getObject().queryId;
+            const sQueryId = SecurityUtils.sanitizeSQLParameter(oContext.getObject().queryId);
             
-            oModel.callFunction("/GetOptimizationSuggestions", {
+            SecurityUtils.secureCallFunction(oModel, "/GetOptimizationSuggestions", {
                 urlParameters: {
                     queryId: sQueryId
                 },
@@ -318,9 +341,9 @@ sap.ui.define([
 
         _generateExplainPlan: function(oContext) {
             const oModel = this.getView().getModel();
-            const sQueryId = oContext.getObject().queryId;
+            const sQueryId = SecurityUtils.sanitizeSQLParameter(oContext.getObject().queryId);
             
-            oModel.callFunction("/GenerateExplainPlan", {
+            SecurityUtils.secureCallFunction(oModel, "/GenerateExplainPlan", {
                 urlParameters: {
                     queryId: sQueryId
                 },
@@ -353,7 +376,7 @@ sap.ui.define([
         },
 
         _handleQueryError: function(data) {
-            MessageBox.error(this.getResourceBundle().getText("error.queryExecutionFailed", [data.error]));
+            MessageBox.error(this.getResourceBundle().getText("error.queryExecutionFailed", [SecurityUtils.escapeHTML(data.error)]));
             this._refreshQueryData();
         },
 

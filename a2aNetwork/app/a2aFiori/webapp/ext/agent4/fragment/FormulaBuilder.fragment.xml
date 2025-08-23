@@ -6,27 +6,43 @@
     <Dialog
         id="formulaBuilderDialog"
         title="Formula Builder & Calculator"
-        contentWidth="85%"
-        contentHeight="85%"
-        resizable="true">
+        contentWidth="60rem"
+        contentHeight="auto"
+        resizable="true"
+        draggable="true"
+        stretch="{device>/system/phone}"
+        ariaLabelledBy="formulaBuilderTitle"
+        ariaDescribedBy="formulaBuilderHelp"
+        class="sapUiResponsiveContentPadding">
+        
+        <core:InvisibleText id="formulaBuilderTitle" text="Formula Builder and Calculator Dialog"/>
+        <core:InvisibleText id="formulaBuilderHelp" text="Build and test mathematical formulas using the editor panel on the left and results panel on the right. Include functions, operators, and variables to create complex calculations."/>
         
         <content>
             <l:Splitter height="100%" orientation="Horizontal">
                 <l:contentAreas>
                     <!-- Formula Editor Panel -->
-                    <Panel headerText="Formula Editor" width="60%">
+                    <Panel 
+                        headerText="Formula Editor" 
+                        width="60%"
+                        ariaLabelledBy="formulaEditorPanelTitle"
+                        class="sapUiResponsiveContentPadding">
+                        <core:InvisibleText id="formulaEditorPanelTitle" text="Formula Editor Panel with input area, function library, operators, and variable manager"/>
                         <content>
                             <VBox>
                                 <!-- Formula Input -->
                                 <VBox class="sapUiMediumMargin">
-                                    <Label text="Formula Expression"/>
+                                    <Label text="Formula Expression" required="true" labelFor="formulaInput"/>
                                     <TextArea
                                         id="formulaInput"
                                         value="{formula>/currentFormula}"
                                         rows="4"
                                         width="100%"
                                         placeholder="Enter your formula here..."
-                                        liveChange=".onFormulaChange"/>
+                                        liveChange=".onFormulaChange"
+                                        ariaDescribedBy="formulaInputHelp"
+                                        class="sapUiMediumMarginBottom"/>
+                                    <core:InvisibleText id="formulaInputHelp" text="Enter mathematical expressions using functions, operators, and variables. Syntax validation is performed in real-time."/>
                                     
                                     <HBox>
                                         <Text 
@@ -44,26 +60,42 @@
                                 <Panel 
                                     headerText="Function Library"
                                     expandable="true"
-                                    expanded="true">
-                                    <l:Grid defaultSpan="L2 M3 S6">
+                                    expanded="true"
+                                    ariaDescribedBy="functionLibraryHelp"
+                                    class="sapUiMediumMarginBottom">
+                                    <core:InvisibleText id="functionLibraryHelp" text="Available mathematical functions including trigonometric, logarithmic, statistical, and financial functions"/>
+                                    <l:Grid 
+                                        defaultSpan="L2 M3 S6"
+                                        hSpacing="0.25rem"
+                                        vSpacing="0.25rem">
                                         <Button 
                                             text="{formula>}"
                                             press=".onAddFunction"
-                                            class="sapUiTinyMargin"/>
+                                            class="sapUiTinyMargin"
+                                            ariaDescribedBy="functionButtonHelp"/>
                                     </l:Grid>
+                                    <core:InvisibleText id="functionButtonHelp" text="Click to insert function into formula expression"/>
                                 </Panel>
                                 
                                 <!-- Operators -->
                                 <Panel 
                                     headerText="Operators"
                                     expandable="true"
-                                    expanded="true">
-                                    <l:Grid defaultSpan="L1 M2 S3">
+                                    expanded="true"
+                                    ariaDescribedBy="operatorsHelp"
+                                    class="sapUiMediumMarginBottom">
+                                    <core:InvisibleText id="operatorsHelp" text="Mathematical operators including arithmetic, comparison, and logical operators"/>
+                                    <l:Grid 
+                                        defaultSpan="L1 M2 S3"
+                                        hSpacing="0.25rem"
+                                        vSpacing="0.25rem">
                                         <Button 
                                             text="{formula>}"
                                             press=".onAddOperator"
-                                            class="sapUiTinyMargin"/>
+                                            class="sapUiTinyMargin"
+                                            ariaDescribedBy="operatorButtonHelp"/>
                                     </l:Grid>
+                                    <core:InvisibleText id="operatorButtonHelp" text="Click to insert operator into formula expression"/>
                                 </Panel>
                                 
                                 <!-- Variable Manager -->
@@ -72,19 +104,25 @@
                                     expandable="true"
                                     expanded="false">
                                     <VBox>
-                                        <Toolbar>
+                                        <Toolbar ariaLabelledBy="variableToolbarLabel">
+                                            <core:InvisibleText id="variableToolbarLabel" text="Add new variable with name and default value"/>
                                             <Input 
                                                 id="newVariableName"
                                                 placeholder="Variable name"
-                                                width="150px"/>
+                                                width="150px"
+                                                ariaLabelledBy="newVariableNameLabel"/>
+                                            <Label id="newVariableNameLabel" text="Variable name" visible="false"/>
                                             <Input 
                                                 id="newVariableValue"
                                                 placeholder="Default value"
                                                 type="Number"
-                                                width="100px"/>
+                                                width="100px"
+                                                ariaLabelledBy="newVariableValueLabel"/>
+                                            <Label id="newVariableValueLabel" text="Default value" visible="false"/>
                                             <Button 
                                                 text="Add"
-                                                press=".onAddVariable"/>
+                                                press=".onAddVariable"
+                                                tooltip="Add new variable to formula"/>
                                         </Toolbar>
                                         
                                         <Table
@@ -114,17 +152,26 @@
                     </Panel>
                     
                     <!-- Testing & Results Panel -->
-                    <Panel headerText="Testing & Results" width="40%">
+                    <Panel 
+                        headerText="Testing & Results" 
+                        width="40%"
+                        ariaLabelledBy="testingPanelTitle"
+                        class="sapUiResponsiveContentPadding">
+                        <core:InvisibleText id="testingPanelTitle" text="Testing and Results Panel with test execution, results display, examples, and formula history"/>
                         <content>
                             <VBox class="sapUiMediumMargin">
                                 <!-- Quick Test -->
-                                <VBox>
-                                    <Label text="Quick Test"/>
+                                <VBox class="sapUiMediumMarginBottom">
+                                    <Label text="Quick Test" labelFor="testFormulaButton"/>
                                     <Button 
+                                        id="testFormulaButton"
                                         text="Test Formula"
                                         type="Emphasized"
                                         press=".onTestFormula"
-                                        enabled="{formula>/syntaxValid}"/>
+                                        enabled="{formula>/syntaxValid}"
+                                        tooltip="Execute formula test with current variables"
+                                        ariaDescribedBy="testFormulaHelp"/>
+                                    <core:InvisibleText id="testFormulaHelp" text="Test the current formula expression with defined variables and view results in the table below"/>
                                 </VBox>
                                 
                                 <!-- Test Results -->

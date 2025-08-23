@@ -2,8 +2,9 @@ sap.ui.define([
     "sap/ui/core/mvc/ControllerExtension",
     "sap/m/MessageToast",
     "sap/m/MessageBox",
-    "sap/ui/core/Fragment"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment) {
+    "sap/ui/core/Fragment",
+    "a2a/network/agent12/ext/utils/SecurityUtils"
+], function(ControllerExtension, MessageToast, MessageBox, Fragment, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent12.ext.controller.ObjectPageExt", {
@@ -184,27 +185,35 @@ sap.ui.define([
             }
 
             try {
-                this._eventSource = new EventSource(`http://localhost:8012/catalog/${entryId}/stream`);
+                this._eventSource = SecurityUtils.createSecureEventSource(`https://localhost:8012/catalog/${entryId}/stream`, {});
                 
-                this._eventSource.addEventListener('validation-progress', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._updateValidationProgress(data);
-                });
+                if (this._eventSource) {
+                    this._eventSource.addEventListener('validation-progress', (event) => {
+                        const data = JSON.parse(event.data);
+                        this._updateValidationProgress(data);
+                    });
+                }
 
-                this._eventSource.addEventListener('discovery-progress', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._updateDiscoveryProgress(data);
-                });
+                if (this._eventSource) {
+                    this._eventSource.addEventListener('discovery-progress', (event) => {
+                        const data = JSON.parse(event.data);
+                        this._updateDiscoveryProgress(data);
+                    });
+                }
 
-                this._eventSource.addEventListener('metadata-updated', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._handleMetadataUpdate(data);
-                });
+                if (this._eventSource) {
+                    this._eventSource.addEventListener('metadata-updated', (event) => {
+                        const data = JSON.parse(event.data);
+                        this._handleMetadataUpdate(data);
+                    });
+                }
 
-                this._eventSource.addEventListener('status-changed', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._handleStatusChange(data);
-                });
+                if (this._eventSource) {
+                    this._eventSource.addEventListener('status-changed', (event) => {
+                        const data = JSON.parse(event.data);
+                        this._handleStatusChange(data);
+                    });
+                }
 
             } catch (error) {
                 console.warn("Server-Sent Events not available, using polling");
@@ -224,7 +233,11 @@ sap.ui.define([
             
             MessageToast.show(this.getResourceBundle().getText("msg.registrationStarted"));
             
-            oModel.callFunction("/RegisterResource", {
+            if (!SecurityUtils.checkCatalogAuth('RegisterResource', {})) {
+                return;
+            }
+
+            SecurityUtils.secureCallFunction(oModel, "/RegisterResource", {
                 urlParameters: {
                     entryId: sEntryId
                 },
@@ -244,7 +257,11 @@ sap.ui.define([
             
             MessageToast.show(this.getResourceBundle().getText("msg.validationStarted"));
             
-            oModel.callFunction("/ValidateEntry", {
+            if (!SecurityUtils.checkCatalogAuth('ValidateEntry', {})) {
+                return;
+            }
+
+            SecurityUtils.secureCallFunction(oModel, "/ValidateEntry", {
                 urlParameters: {
                     entryId: sEntryId
                 },
@@ -264,7 +281,11 @@ sap.ui.define([
             
             MessageToast.show(this.getResourceBundle().getText("msg.publishingStarted"));
             
-            oModel.callFunction("/PublishEntry", {
+            if (!SecurityUtils.checkCatalogAuth('PublishEntry', {})) {
+                return;
+            }
+
+            SecurityUtils.secureCallFunction(oModel, "/PublishEntry", {
                 urlParameters: {
                     entryId: sEntryId
                 },
@@ -284,7 +305,11 @@ sap.ui.define([
             
             MessageToast.show(this.getResourceBundle().getText("msg.indexingStarted"));
             
-            oModel.callFunction("/IndexResource", {
+            if (!SecurityUtils.checkCatalogAuth('IndexResource', {})) {
+                return;
+            }
+
+            SecurityUtils.secureCallFunction(oModel, "/IndexResource", {
                 urlParameters: {
                     entryId: sEntryId
                 },
@@ -304,7 +329,11 @@ sap.ui.define([
             
             MessageToast.show(this.getResourceBundle().getText("msg.dependencyDiscoveryStarted"));
             
-            oModel.callFunction("/DiscoverDependencies", {
+            if (!SecurityUtils.checkCatalogAuth('DiscoverDependencies', {})) {
+                return;
+            }
+
+            SecurityUtils.secureCallFunction(oModel, "/DiscoverDependencies", {
                 urlParameters: {
                     entryId: sEntryId
                 },
@@ -325,7 +354,11 @@ sap.ui.define([
             
             MessageToast.show(this.getResourceBundle().getText("msg.registrySyncStarted"));
             
-            oModel.callFunction("/SyncRegistryEntry", {
+            if (!SecurityUtils.checkCatalogAuth('SyncRegistryEntry', {})) {
+                return;
+            }
+
+            SecurityUtils.secureCallFunction(oModel, "/SyncRegistryEntry", {
                 urlParameters: {
                     entryId: sEntryId
                 },
@@ -343,7 +376,7 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const sEntryId = oContext.getObject().entryId;
             
-            oModel.callFunction("/GetMetadataProperties", {
+            SecurityUtils.secureCallFunction(oModel, "/GetMetadataProperties", {
                 urlParameters: {
                     entryId: sEntryId
                 },
@@ -375,6 +408,8 @@ sap.ui.define([
         },
 
         _handleMetadataUpdate: function(data) {
+            // Sanitize metadata update data
+            const sanitizedData = SecurityUtils.sanitizeCatalogData(JSON.stringify(data));
             MessageToast.show(this.getResourceBundle().getText("msg.metadataUpdated"));
             this._refreshEntryData();
         },

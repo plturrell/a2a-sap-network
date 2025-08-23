@@ -5,56 +5,95 @@
     
     <Dialog
         id="createManagementTaskDialog"
-        title="Create Agent Management Task"
-        contentWidth="70%"
-        contentHeight="75%"
-        resizable="true">
+        title="{i18n>dialog.createManagementTask}"
+        contentWidth="75rem"
+        stretch="{device>/system/phone}"
+        resizable="true"
+        ariaLabelledBy="createTaskTitle">
+        
+        <customHeader>
+            <Bar>
+                <contentMiddle>
+                    <Title id="createTaskTitle" text="{i18n>dialog.createManagementTask}" level="H2"/>
+                </contentMiddle>
+            </Bar>
+        </customHeader>
         
         <content>
             <IconTabBar expandable="false">
                 <items>
                     <!-- Basic Information Tab -->
-                    <IconTabFilter text="Basic Info" icon="sap-icon://hint">
+                    <IconTabFilter text="{i18n>tab.basicInfo}" icon="sap-icon://hint">
                         <form:SimpleForm
                             editable="true"
                             layout="ResponsiveGridLayout">
                             <form:content>
-                                <Label text="Task Name" required="true"/>
+                                <Label text="{i18n>field.taskName}" required="true" labelFor="taskNameInput"/>
                                 <Input 
+                                    id="taskNameInput"
                                     value="{create>/taskName}"
-                                    placeholder="Enter management task name"/>
+                                    placeholder="{i18n>placeholder.taskName}"
+                                    aria-label="{i18n>aria.agentNameInput}"
+                                    aria-required="true"
+                                    valueState="{create>/taskNameState}"
+                                    valueStateText="{create>/taskNameStateText}"
+                                    liveChange=".onTaskNameChange"/>
                                 
-                                <Label text="Description"/>
+                                <Label text="{i18n>field.description}" labelFor="descriptionInput"/>
                                 <TextArea 
+                                    id="descriptionInput"
                                     value="{create>/description}"
-                                    rows="3"
-                                    placeholder="Describe the management task"/>
+                                    rows="{= ${device>/system/phone} ? 2 : 3 }"
+                                    placeholder="{i18n>placeholder.description}"
+                                    aria-label="{i18n>aria.descriptionInput}"/>
                                 
-                                <Label text="Managed Agent" required="true"/>
+                                <Label text="{i18n>field.managedAgent}" required="true" labelFor="managedAgentSelect"/>
                                 <Select 
+                                    id="managedAgentSelect"
                                     selectedKey="{create>/managedAgent}"
-                                    items="{create>/availableAgents}">
+                                    items="{create>/availableAgents}"
+                                    aria-label="{i18n>aria.agentTypeSelect}"
+                                    aria-required="true"
+                                    valueState="{create>/managedAgentState}"
+                                    valueStateText="{create>/managedAgentStateText}"
+                                    change=".onManagedAgentChange">
+                                    <core:Item key="" text="{i18n>placeholder.selectAgent}"/>
                                     <core:ListItem 
                                         key="{create>agentId}"
                                         text="{create>agentName} ({create>agentType})"/>
                                 </Select>
                                 
-                                <Label text="Operation Type" required="true"/>
+                                <Label text="{i18n>field.operationType}" required="true" labelFor="operationTypeSelect"/>
                                 <Select 
+                                    id="operationTypeSelect"
                                     selectedKey="{create>/operationType}"
-                                    items="{create>/availableOperations}">
-                                    <core:ListItem 
-                                        key="{create>operationKey}"
-                                        text="{create>operationName}"/>
+                                    aria-label="{i18n>aria.operationTypeSelect}"
+                                    aria-required="true"
+                                    valueState="{create>/operationTypeState}"
+                                    valueStateText="{create>/operationTypeStateText}"
+                                    change=".onOperationTypeChange">
+                                    <core:Item key="" text="{i18n>placeholder.selectOperation}"/>
+                                    <core:Item key="START" text="{i18n>operation.start}"/>
+                                    <core:Item key="STOP" text="{i18n>operation.stop}"/>
+                                    <core:Item key="RESTART" text="{i18n>operation.restart}"/>
+                                    <core:Item key="UPDATE" text="{i18n>operation.update}"/>
+                                    <core:Item key="CONFIGURE" text="{i18n>operation.configure}"/>
+                                    <core:Item key="REGISTER" text="{i18n>operation.register}"/>
+                                    <core:Item key="DEREGISTER" text="{i18n>operation.deregister}"/>
+                                    <core:Item key="HEALTH_CHECK" text="{i18n>operation.healthCheck}"/>
+                                    <core:Item key="PERFORMANCE_CHECK" text="{i18n>operation.performanceCheck}"/>
                                 </Select>
                                 
-                                <Label text="Priority"/>
-                                <Select selectedKey="{create>/priority}">
+                                <Label text="{i18n>field.priority}" labelFor="prioritySelect"/>
+                                <Select 
+                                    id="prioritySelect" 
+                                    selectedKey="{create>/priority}" 
+                                    aria-label="{i18n>aria.prioritySelect}">
                                     <items>
-                                        <core:Item key="LOW" text="Low"/>
-                                        <core:Item key="MEDIUM" text="Medium"/>
-                                        <core:Item key="HIGH" text="High"/>
-                                        <core:Item key="CRITICAL" text="Critical"/>
+                                        <core:Item key="LOW" text="{i18n>priority.low}"/>
+                                        <core:Item key="MEDIUM" text="{i18n>priority.medium}"/>
+                                        <core:Item key="HIGH" text="{i18n>priority.high}"/>
+                                        <core:Item key="CRITICAL" text="{i18n>priority.critical}"/>
                                     </items>
                                 </Select>
                             </form:content>
@@ -62,52 +101,52 @@
                     </IconTabFilter>
                     
                     <!-- Operation Configuration Tab -->
-                    <IconTabFilter text="Operation Config" icon="sap-icon://settings">
+                    <IconTabFilter text="{i18n>tab.operationConfig}" icon="sap-icon://settings">
                         <form:SimpleForm
                             editable="true"
                             layout="ResponsiveGridLayout">
                             <form:content>
-                                <Label text="Execution Mode"/>
+                                <Label text="{i18n>field.executionMode}"/>
                                 <Select selectedKey="{create>/executionMode}">
                                     <items>
-                                        <core:Item key="IMMEDIATE" text="Execute Immediately"/>
-                                        <core:Item key="SCHEDULED" text="Schedule for Later"/>
-                                        <core:Item key="CONDITIONAL" text="Execute When Condition Met"/>
+                                        <core:Item key="IMMEDIATE" text="{i18n>execution.immediate}"/>
+                                        <core:Item key="SCHEDULED" text="{i18n>execution.scheduled}"/>
+                                        <core:Item key="CONDITIONAL" text="{i18n>execution.conditional}"/>
                                     </items>
                                 </Select>
                                 
-                                <Label text="Scheduled Time"/>
+                                <Label text="{i18n>field.scheduledTime}"/>
                                 <DateTimePicker 
                                     value="{create>/scheduledTime}"
                                     visible="{= ${create>/executionMode} === 'SCHEDULED' }"/>
                                 
-                                <Label text="Timeout (minutes)"/>
+                                <Label text="{i18n>field.timeout}"/>
                                 <StepInput 
                                     value="{create>/timeout}"
                                     min="1"
                                     max="1440"
                                     step="5"/>
                                 
-                                <Label text="Retry Attempts"/>
+                                <Label text="{i18n>field.retryAttempts}"/>
                                 <StepInput 
                                     value="{create>/retryAttempts}"
                                     min="0"
                                     max="10"
                                     step="1"/>
                                 
-                                <Label text="Operation Options"/>
+                                <Label text="{i18n>field.operationOptions}"/>
                                 <VBox>
                                     <CheckBox 
-                                        text="Force execution (ignore warnings)"
+                                        text="{i18n>option.forceExecution}"
                                         selected="{create>/forceExecution}"/>
                                     <CheckBox 
-                                        text="Create backup before operation"
+                                        text="{i18n>option.createBackup}"
                                         selected="{create>/createBackup}"/>
                                     <CheckBox 
-                                        text="Rollback on failure"
+                                        text="{i18n>option.rollbackOnFailure}"
                                         selected="{create>/rollbackOnFailure}"/>
                                     <CheckBox 
-                                        text="Send notification on completion"
+                                        text="{i18n>option.notifyOnCompletion}"
                                         selected="{create>/notifyOnCompletion}"/>
                                 </VBox>
                             </form:content>
@@ -115,17 +154,17 @@
                     </IconTabFilter>
                     
                     <!-- Parameters Tab -->
-                    <IconTabFilter text="Parameters" icon="sap-icon://parameter">
+                    <IconTabFilter text="{i18n>tab.parameters}" icon="sap-icon://parameter">
                         <VBox>
                             <Toolbar>
-                                <Title text="Operation Parameters"/>
+                                <Title text="{i18n>field.operationParameters}"/>
                                 <ToolbarSpacer/>
                                 <Button 
-                                    text="Add Parameter"
+                                    text="{i18n>button.addParameter}"
                                     icon="sap-icon://add"
                                     press=".onAddParameter"/>
                                 <Button 
-                                    text="Load Template"
+                                    text="{i18n>button.loadTemplate}"
                                     icon="sap-icon://template"
                                     press=".onLoadParameterTemplate"/>
                             </Toolbar>
@@ -136,16 +175,16 @@
                                 delete=".onDeleteParameter">
                                 <columns>
                                     <Column width="30%">
-                                        <Text text="Parameter Name"/>
+                                        <Text text="{i18n>field.parameterName}"/>
                                     </Column>
                                     <Column width="20%">
-                                        <Text text="Type"/>
+                                        <Text text="{i18n>field.type}"/>
                                     </Column>
                                     <Column width="40%">
-                                        <Text text="Value"/>
+                                        <Text text="{i18n>field.value}"/>
                                     </Column>
                                     <Column width="10%">
-                                        <Text text="Required"/>
+                                        <Text text="{i18n>field.required}"/>
                                     </Column>
                                 </columns>
                                 <items>
@@ -335,16 +374,19 @@
         
         <beginButton>
             <Button 
-                text="Cancel"
-                press=".onCancelCreateTask"/>
+                text="{i18n>button.cancel}"
+                press=".onCancelCreateTask"
+                ariaLabel="{i18n>aria.closeDialog}"/>
         </beginButton>
         
         <endButton>
             <Button 
-                text="Create"
+                text="{i18n>button.create}"
                 type="Emphasized"
                 press=".onConfirmCreateTask"
-                enabled="{= ${create>/taskName} &amp;&amp; ${create>/managedAgent} &amp;&amp; ${create>/operationType} }"/>
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/managedAgent} &amp;&amp; ${create>/operationType} }"
+                ariaLabel="{i18n>aria.saveConfiguration}"
+                tooltip="{i18n>tooltip.create}"/>
         </endButton>
         
     </Dialog>

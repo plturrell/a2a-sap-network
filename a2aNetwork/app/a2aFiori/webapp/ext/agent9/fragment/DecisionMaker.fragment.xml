@@ -1,0 +1,505 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="decisionMakerDialog"
+        title="Decision Maker"
+        contentWidth="90%"
+        contentHeight="85%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Decision Dashboard ---->
+                    <IconTabFilter text="Dashboard" icon="sap-icon://decision">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Decision Statistics ---->
+                            <Panel headerText="Decision Statistics" class="sapUiMediumMarginBottom">
+                                <HBox class="sapUiMediumMargin">
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Decisions Made Today" level="H4"/>
+                                        <ObjectNumber 
+                                            number="{decision>/stats/decisionsToday}"
+                                            state="Information"
+                                            emphasized="true"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Success Rate" level="H4"/>
+                                        <mc:RadialMicroChart
+                                            size="L"
+                                            percentage="{decision>/stats/successRate}"
+                                            valueColor="{= ${decision>/stats/successRate} >= 90 ? 'Good' : ${decision>/stats/successRate} >= 70 ? 'Critical' : 'Error'}"/>
+                                        <Text text="{decision>/stats/successRate}%" class="sapUiLargeMarginTop"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Avg Confidence" level="H4"/>
+                                        <ProgressIndicator 
+                                            percentValue="{= ${decision>/stats/avgConfidence} * 100}"
+                                            displayValue="{decision>/stats/avgConfidence}"
+                                            state="{= ${decision>/stats/avgConfidence} >= 0.8 ? 'Success' : ${decision>/stats/avgConfidence} >= 0.6 ? 'Warning' : 'Error'}"
+                                            width="150px"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Pending Decisions" level="H4"/>
+                                        <ObjectNumber 
+                                            number="{decision>/stats/pendingDecisions}"
+                                            state="{= ${decision>/stats/pendingDecisions} === 0 ? 'Success' : ${decision>/stats/pendingDecisions} <= 5 ? 'Warning' : 'Error'}"
+                                            emphasized="true"/>
+                                    </VBox>
+                                    <VBox>
+                                        <Title text="Avg Decision Time" level="H4"/>
+                                        <ObjectNumber 
+                                            number="{decision>/stats/avgDecisionTime}"
+                                            unit="min"
+                                            state="{= ${decision>/stats/avgDecisionTime} <= 5 ? 'Success' : ${decision>/stats/avgDecisionTime} <= 15 ? 'Warning' : 'Error'}"
+                                            emphasized="true"/>
+                                    </VBox>
+                                </HBox>
+                            </Panel>
+                            
+                            <!-- Decision Types Distribution ---->
+                            <Panel headerText="Decision Types Distribution" class="sapUiMediumMarginBottom">
+                                <core:HTML 
+                                    id="decisionTypesChart"
+                                    content='<div id="decisionTypesChartDiv" style="width: 100%; height: 300px;"></div>'
+                                    preferDOM="true"/>
+                            </Panel>
+                            
+                            <!-- Recent Decisions ---->
+                            <Panel headerText="Recent Decisions">
+                                <Table 
+                                    items="{decision>/recentDecisions}"
+                                    mode="None"
+                                    growing="true"
+                                    growingThreshold="10">
+                                    <headerToolbar>
+                                        <Toolbar>
+                                            <Title text="Latest Decision Activity"/>
+                                            <ToolbarSpacer/>
+                                            <Button 
+                                                text="Refresh"
+                                                icon="sap-icon://refresh"
+                                                press=".onRefreshRecentDecisions"/>
+                                        </Toolbar>
+                                    </headerToolbar>
+                                    <columns>
+                                        <Column>
+                                            <Text text="Decision"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Type"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Confidence"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Outcome"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Time"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem press=".onSelectRecentDecision">
+                                            <cells>
+                                                <VBox>
+                                                    <Text text="{decisionTitle}" class="sapThemeHighlight-asTextColor"/>
+                                                    <Text text="{recommendedAction}" maxLines="2" class="sapThemeTextSecondary"/>
+                                                </VBox>
+                                                <ObjectStatus 
+                                                    text="{decisionType}"
+                                                    state="Information"
+                                                    icon="sap-icon://decision"/>
+                                                <ProgressIndicator 
+                                                    percentValue="{= ${confidence} * 100}"
+                                                    displayValue="{confidence}"
+                                                    state="{= ${confidence} >= 0.8 ? 'Success' : ${confidence} >= 0.6 ? 'Warning' : 'Error'}"
+                                                    width="100px"/>
+                                                <ObjectStatus 
+                                                    text="{outcome}"
+                                                    state="{= ${outcome} === 'SUCCESS' ? 'Success' : ${outcome} === 'PENDING' ? 'Warning' : ${outcome} === 'FAILED' ? 'Error' : 'None'}"
+                                                    icon="{= ${outcome} === 'SUCCESS' ? 'sap-icon://status-positive' : ${outcome} === 'PENDING' ? 'sap-icon://pending' : ${outcome} === 'FAILED' ? 'sap-icon://status-negative' : 'sap-icon://question-mark'}"/>
+                                                <Text text="{timestamp}"/>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Decision Records ---->
+                    <IconTabFilter text="Decision Records" icon="sap-icon://documents">
+                        <VBox class="sapUiMediumMargin">
+                            <Table 
+                                items="{decision>/decisionRecords}"
+                                mode="SingleSelect"
+                                growing="true"
+                                growingThreshold="50">
+                                <headerToolbar>
+                                    <Toolbar>
+                                        <Title text="Decision History"/>
+                                        <ToolbarSpacer/>
+                                        <SearchField 
+                                            width="20rem"
+                                            placeholder="Search decisions..."
+                                            search=".onSearchDecisions"/>
+                                        <Button 
+                                            text="New Decision"
+                                            icon="sap-icon://add"
+                                            press=".onCreateDecision"
+                                            type="Emphasized"/>
+                                        <Button 
+                                            text="Export"
+                                            icon="sap-icon://download"
+                                            press=".onExportDecisions"/>
+                                    </Toolbar>
+                                </headerToolbar>
+                                <columns>
+                                    <Column>
+                                        <Text text="Decision"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Context"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Alternatives"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Confidence"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Risk"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Status"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Actions"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <VBox>
+                                                <Text text="{decisionTitle}" class="sapThemeHighlight-asTextColor"/>
+                                                <Text text="{recommendedAction}" maxLines="2" class="sapThemeTextSecondary"/>
+                                                <Text text="Made: {timestamp}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <VBox>
+                                                <Text text="{decisionContext}" maxLines="2"/>
+                                                <Text text="Domain: {problemDomain}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <VBox>
+                                                <Text text="{alternativesEvaluated} alternatives"/>
+                                                <Text text="Best: {bestAlternative}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <VBox>
+                                                <ProgressIndicator 
+                                                    percentValue="{= ${confidence} * 100}"
+                                                    displayValue="{confidence}"
+                                                    state="{= ${confidence} >= 0.8 ? 'Success' : ${confidence} >= 0.6 ? 'Warning' : 'Error'}"
+                                                    width="100px"/>
+                                                <Text text="Certainty: {certaintyLevel}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <VBox>
+                                                <ObjectStatus 
+                                                    text="{riskLevel}"
+                                                    state="{= ${riskLevel} === 'LOW' ? 'Success' : ${riskLevel} === 'MEDIUM' ? 'Warning' : 'Error'}"
+                                                    icon="{= ${riskLevel} === 'LOW' ? 'sap-icon://status-positive' : ${riskLevel} === 'MEDIUM' ? 'sap-icon://pending' : 'sap-icon://status-negative'}"/>
+                                                <Text text="Impact: {impactLevel}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <ObjectStatus 
+                                                text="{status}"
+                                                state="{= ${status} === 'IMPLEMENTED' ? 'Success' : ${status} === 'PENDING' ? 'Warning' : ${status} === 'REJECTED' ? 'Error' : 'None'}"
+                                                icon="{= ${status} === 'IMPLEMENTED' ? 'sap-icon://status-positive' : ${status} === 'PENDING' ? 'sap-icon://pending' : ${status} === 'REJECTED' ? 'sap-icon://status-negative' : 'sap-icon://question-mark'}"/>
+                                            <HBox>
+                                                <Button 
+                                                    icon="sap-icon://detail-view"
+                                                    tooltip="View Details"
+                                                    press=".onViewDecisionDetails"/>
+                                                <Button 
+                                                    icon="sap-icon://explain"
+                                                    tooltip="Explain Decision"
+                                                    press=".onExplainDecision"/>
+                                                <Button 
+                                                    icon="sap-icon://edit"
+                                                    tooltip="Review Decision"
+                                                    press=".onReviewDecision"/>
+                                                <Button 
+                                                    icon="sap-icon://validate"
+                                                    tooltip="Validate Outcome"
+                                                    press=".onValidateDecisionOutcome"/>
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Decision Maker ---->
+                    <IconTabFilter text="Make Decision" icon="sap-icon://create">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="New Decision Request" class="sapUiMediumMarginBottom">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    class="sapUiMediumMargin">
+                                    <form:content>
+                                        <Label text="Decision Title"/>
+                                        <Input value="{decisionMaker>/title}" placeholder="Enter decision title"/>
+                                        
+                                        <Label text="Problem Domain"/>
+                                        <Select selectedKey="{decisionMaker>/domain}">
+                                            <items>
+                                                <core:Item key="STRATEGIC" text="Strategic Decision"/>
+                                                <core:Item key="OPERATIONAL" text="Operational Decision"/>
+                                                <core:Item key="TACTICAL" text="Tactical Decision"/>
+                                                <core:Item key="POLICY" text="Policy Decision"/>
+                                                <core:Item key="RESOURCE" text="Resource Allocation"/>
+                                                <core:Item key="RISK" text="Risk Management"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Decision Context"/>
+                                        <TextArea 
+                                            value="{decisionMaker>/context}"
+                                            rows="4"
+                                            placeholder="Describe the situation requiring a decision"/>
+                                        
+                                        <Label text="Decision Criteria"/>
+                                        <VBox>
+                                            <TextArea 
+                                                value="{decisionMaker>/criteria}"
+                                                rows="3"
+                                                placeholder="Enter decision criteria and constraints"/>
+                                            <HBox class="sapUiTinyMarginTop">
+                                                <Button 
+                                                    text="Add Criterion"
+                                                    icon="sap-icon://add"
+                                                    press=".onAddCriterion"/>
+                                                <Button 
+                                                    text="Load Templates"
+                                                    icon="sap-icon://documents"
+                                                    press=".onLoadCriteriaTemplates"/>
+                                            </HBox>
+                                        </VBox>
+                                        
+                                        <Label text="Available Alternatives"/>
+                                        <VBox>
+                                            <TextArea 
+                                                value="{decisionMaker>/alternatives}"
+                                                rows="4"
+                                                placeholder="List possible alternatives or options"/>
+                                            <HBox class="sapUiTinyMarginTop">
+                                                <Button 
+                                                    text="Generate Alternatives"
+                                                    icon="sap-icon://create"
+                                                    press=".onGenerateAlternatives"/>
+                                                <Button 
+                                                    text="Evaluate Alternatives"
+                                                    icon="sap-icon://inspect"
+                                                    press=".onEvaluateAlternatives"/>
+                                            </HBox>
+                                        </VBox>
+                                        
+                                        <Label text="Risk Tolerance"/>
+                                        <Select selectedKey="{decisionMaker>/riskTolerance}">
+                                            <items>
+                                                <core:Item key="CONSERVATIVE" text="Conservative (Low Risk)"/>
+                                                <core:Item key="MODERATE" text="Moderate (Medium Risk)"/>
+                                                <core:Item key="AGGRESSIVE" text="Aggressive (High Risk)"/>
+                                                <core:Item key="ADAPTIVE" text="Adaptive (Context Dependent)"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Time Constraint"/>
+                                        <Select selectedKey="{decisionMaker>/timeConstraint}">
+                                            <items>
+                                                <core:Item key="IMMEDIATE" text="Immediate (< 1 hour)"/>
+                                                <core:Item key="URGENT" text="Urgent (< 24 hours)"/>
+                                                <core:Item key="MODERATE" text="Moderate (< 1 week)"/>
+                                                <core:Item key="FLEXIBLE" text="Flexible (> 1 week)"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Impact Level"/>
+                                        <Select selectedKey="{decisionMaker>/impactLevel}">
+                                            <items>
+                                                <core:Item key="LOW" text="Low Impact"/>
+                                                <core:Item key="MEDIUM" text="Medium Impact"/>
+                                                <core:Item key="HIGH" text="High Impact"/>
+                                                <core:Item key="CRITICAL" text="Critical Impact"/>
+                                            </items>
+                                        </Select>
+                                    </form:content>
+                                </form:SimpleForm>
+                                
+                                <HBox class="sapUiMediumMargin">
+                                    <Button 
+                                        text="Analyze Decision"
+                                        icon="sap-icon://inspect"
+                                        press=".onAnalyzeDecision"
+                                        class="sapUiMediumMarginEnd"/>
+                                    <Button 
+                                        text="Make Decision"
+                                        icon="sap-icon://decision"
+                                        press=".onMakeDecision"
+                                        type="Emphasized"
+                                        class="sapUiMediumMarginEnd"/>
+                                    <Button 
+                                        text="Clear"
+                                        icon="sap-icon://clear-all"
+                                        press=".onClearDecisionMaker"/>
+                                </HBox>
+                            </Panel>
+                            
+                            <!-- Decision Analysis Results ---->
+                            <Panel headerText="Decision Analysis" class="sapUiMediumMarginBottom">
+                                <VBox class="sapUiMediumMargin">
+                                    <HBox class="sapUiMediumMarginBottom">
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Title text="Recommended Action" level="H5"/>
+                                            <Text text="{decisionMaker>/result/recommendedAction}" class="sapThemeHighlight-asTextColor"/>
+                                        </VBox>
+                                        <VBox class="sapUiMediumMarginEnd">
+                                            <Title text="Confidence" level="H5"/>
+                                            <ProgressIndicator 
+                                                percentValue="{= ${decisionMaker>/result/confidence} * 100}"
+                                                displayValue="{decisionMaker>/result/confidence}"
+                                                state="{= ${decisionMaker>/result/confidence} >= 0.8 ? 'Success' : ${decisionMaker>/result/confidence} >= 0.6 ? 'Warning' : 'Error'}"
+                                                width="150px"/>
+                                        </VBox>
+                                        <VBox>
+                                            <Title text="Risk Assessment" level="H5"/>
+                                            <ObjectStatus 
+                                                text="{decisionMaker>/result/riskLevel}"
+                                                state="{= ${decisionMaker>/result/riskLevel} === 'LOW' ? 'Success' : ${decisionMaker>/result/riskLevel} === 'MEDIUM' ? 'Warning' : 'Error'}"
+                                                icon="{= ${decisionMaker>/result/riskLevel} === 'LOW' ? 'sap-icon://status-positive' : ${decisionMaker>/result/riskLevel} === 'MEDIUM' ? 'sap-icon://pending' : 'sap-icon://status-negative'}"/>
+                                        </VBox>
+                                    </HBox>
+                                    
+                                    <Panel headerText="Justification" expandable="true" expanded="false">
+                                        <Text text="{decisionMaker>/result/justification}"/>
+                                    </Panel>
+                                    
+                                    <Panel headerText="Alternative Analysis" expandable="true" expanded="false">
+                                        <Table items="{decisionMaker>/result/alternatives}">
+                                            <columns>
+                                                <Column><Text text="Alternative"/></Column>
+                                                <Column><Text text="Score"/></Column>
+                                                <Column><Text text="Pros"/></Column>
+                                                <Column><Text text="Cons"/></Column>
+                                            </columns>
+                                            <items>
+                                                <ColumnListItem>
+                                                    <cells>
+                                                        <Text text="{alternative}"/>
+                                                        <ProgressIndicator 
+                                                            percentValue="{score}"
+                                                            displayValue="{score}%"
+                                                            width="100px"/>
+                                                        <Text text="{pros}"/>
+                                                        <Text text="{cons}"/>
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+                                        </Table>
+                                    </Panel>
+                                </VBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Analytics ---->
+                    <IconTabFilter text="Analytics" icon="sap-icon://bar-chart">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Decision Success Trends ---->
+                            <Panel headerText="Decision Success Trends" class="sapUiMediumMarginBottom">
+                                <core:HTML 
+                                    id="decisionSuccessChart"
+                                    content='<div id="decisionSuccessChartDiv" style="width: 100%; height: 300px;"></div>'
+                                    preferDOM="true"/>
+                            </Panel>
+                            
+                            <!-- Performance Metrics ---->
+                            <Panel headerText="Decision Making Performance">
+                                <HBox class="sapUiMediumMargin">
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Top Decision Types" level="H5"/>
+                                        <List items="{decision>/analytics/topTypes}">
+                                            <StandardListItem
+                                                title="{type}"
+                                                description="{domain}"
+                                                info="{count} decisions"
+                                                infoState="Information"/>
+                                        </List>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Success by Domain" level="H5"/>
+                                        <mc:ColumnMicroChart
+                                            size="M"
+                                            columns="{decision>/analytics/successByDomain}">
+                                            <mc:columns>
+                                                <mc:ColumnMicroChartData 
+                                                    value="{successRate}"
+                                                    color="{= ${successRate} >= 80 ? 'Good' : ${successRate} >= 60 ? 'Critical' : 'Error'}"
+                                                    label="{domain}"/>
+                                            </mc:columns>
+                                        </mc:ColumnMicroChart>
+                                    </VBox>
+                                    <VBox>
+                                        <Title text="Quality Indicators" level="H5"/>
+                                        <HBox>
+                                            <VBox class="sapUiSmallMarginEnd">
+                                                <Text text="Accuracy" class="sapThemeTextSecondary"/>
+                                                <ObjectNumber number="{decision>/analytics/accuracy}%" state="Success"/>
+                                            </VBox>
+                                            <VBox class="sapUiSmallMarginEnd">
+                                                <Text text="Consistency" class="sapThemeTextSecondary"/>
+                                                <ObjectNumber number="{decision>/analytics/consistency}%" state="Success"/>
+                                            </VBox>
+                                            <VBox>
+                                                <Text text="Adaptability" class="sapThemeTextSecondary"/>
+                                                <ObjectNumber number="{decision>/analytics/adaptability}%" state="Warning"/>
+                                            </VBox>
+                                        </HBox>
+                                    </VBox>
+                                </HBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Quick Decision"
+                icon="sap-icon://decision"
+                press=".onQuickDecision"
+                type="Emphasized"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Export Analysis"
+                    icon="sap-icon://download"
+                    press=".onExportDecisionAnalysis"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseDecisionMaker"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

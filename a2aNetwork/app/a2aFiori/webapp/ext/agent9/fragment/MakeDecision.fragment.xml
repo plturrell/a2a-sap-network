@@ -1,0 +1,162 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form">
+    
+    <Dialog
+        id="makeDecisionDialog"
+        title="Make Decision"
+        contentWidth="80%"
+        contentHeight="70%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <!-- Decision Request Form ---->
+                <Panel headerText="Decision Request" class="sapUiMediumMarginBottom">
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        class="sapUiMediumMargin">
+                        <form:content>
+                            <Label text="Decision Title"/>
+                            <Input value="{makeDecision>/title}" placeholder="Enter decision title"/>
+                            
+                            <Label text="Context"/>
+                            <TextArea 
+                                value="{makeDecision>/context}"
+                                rows="3"
+                                placeholder="Describe the decision context and background"/>
+                            
+                            <Label text="Decision Type"/>
+                            <Select selectedKey="{makeDecision>/type}">
+                                <items>
+                                    <core:Item key="STRATEGIC" text="Strategic Decision"/>
+                                    <core:Item key="OPERATIONAL" text="Operational Decision"/>
+                                    <core:Item key="TACTICAL" text="Tactical Decision"/>
+                                    <core:Item key="RESOURCE" text="Resource Allocation"/>
+                                    <core:Item key="RISK" text="Risk Management"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Criteria"/>
+                            <TextArea 
+                                value="{makeDecision>/criteria}"
+                                rows="3"
+                                placeholder="Enter decision criteria and constraints"/>
+                            
+                            <Label text="Available Options"/>
+                            <TextArea 
+                                value="{makeDecision>/options}"
+                                rows="4"
+                                placeholder="List available alternatives or options"/>
+                            
+                            <Label text="Priority"/>
+                            <Select selectedKey="{makeDecision>/priority}">
+                                <items>
+                                    <core:Item key="LOW" text="Low Priority"/>
+                                    <core:Item key="MEDIUM" text="Medium Priority"/>
+                                    <core:Item key="HIGH" text="High Priority"/>
+                                    <core:Item key="CRITICAL" text="Critical Priority"/>
+                                </items>
+                            </Select>
+                            
+                            <Label text="Time Constraint"/>
+                            <Select selectedKey="{makeDecision>/timeConstraint}">
+                                <items>
+                                    <core:Item key="IMMEDIATE" text="Immediate (< 1 hour)"/>
+                                    <core:Item key="URGENT" text="Urgent (< 24 hours)"/>
+                                    <core:Item key="MODERATE" text="Moderate (< 1 week)"/>
+                                    <core:Item key="FLEXIBLE" text="Flexible (> 1 week)"/>
+                                </items>
+                            </Select>
+                        </form:content>
+                    </form:SimpleForm>
+                </Panel>
+                
+                <!-- Decision Analysis ---->
+                <Panel headerText="Decision Analysis" class="sapUiMediumMarginBottom">
+                    <VBox class="sapUiMediumMargin">
+                        <HBox class="sapUiMediumMarginBottom">
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Recommended Action" level="H5"/>
+                                <Text text="{makeDecision>/result/recommendedAction}" class="sapThemeHighlight-asTextColor"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd">
+                                <Title text="Confidence" level="H5"/>
+                                <ProgressIndicator 
+                                    percentValue="{= ${makeDecision>/result/confidence} * 100}"
+                                    displayValue="{makeDecision>/result/confidence}"
+                                    state="{= ${makeDecision>/result/confidence} >= 0.8 ? 'Success' : ${makeDecision>/result/confidence} >= 0.6 ? 'Warning' : 'Error'}"
+                                    width="150px"/>
+                            </VBox>
+                            <VBox>
+                                <Title text="Risk Level" level="H5"/>
+                                <ObjectStatus 
+                                    text="{makeDecision>/result/riskLevel}"
+                                    state="{= ${makeDecision>/result/riskLevel} === 'LOW' ? 'Success' : ${makeDecision>/result/riskLevel} === 'MEDIUM' ? 'Warning' : 'Error'}"
+                                    icon="{= ${makeDecision>/result/riskLevel} === 'LOW' ? 'sap-icon://status-positive' : ${makeDecision>/result/riskLevel} === 'MEDIUM' ? 'sap-icon://pending' : 'sap-icon://status-negative'}"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <Panel headerText="Justification" expandable="true" expanded="false">
+                            <Text text="{makeDecision>/result/justification}"/>
+                        </Panel>
+                        
+                        <Panel headerText="Alternative Analysis" expandable="true" expanded="false">
+                            <Table items="{makeDecision>/result/alternatives}">
+                                <columns>
+                                    <Column><Text text="Alternative"/></Column>
+                                    <Column><Text text="Score"/></Column>
+                                    <Column><Text text="Pros"/></Column>
+                                    <Column><Text text="Cons"/></Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{alternative}"/>
+                                            <ProgressIndicator 
+                                                percentValue="{score}"
+                                                displayValue="{score}%"
+                                                width="100px"/>
+                                            <Text text="{pros}"/>
+                                            <Text text="{cons}"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </Panel>
+                    </VBox>
+                </Panel>
+                
+                <!-- Action Buttons ---->
+                <HBox class="sapUiMediumMarginTop">
+                    <Button 
+                        text="Analyze Decision"
+                        icon="sap-icon://inspect"
+                        press=".onAnalyzeDecisionRequest"
+                        class="sapUiMediumMarginEnd"/>
+                    <Button 
+                        text="Make Decision"
+                        icon="sap-icon://decision"
+                        press=".onExecuteMakeDecision"
+                        type="Emphasized"
+                        class="sapUiMediumMarginEnd"/>
+                    <Button 
+                        text="Clear"
+                        icon="sap-icon://clear-all"
+                        press=".onClearMakeDecision"/>
+                </HBox>
+            </VBox>
+        </content>
+        
+        <endButton>
+            <Button 
+                text="Close"
+                press=".onCloseMakeDecision"/>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>

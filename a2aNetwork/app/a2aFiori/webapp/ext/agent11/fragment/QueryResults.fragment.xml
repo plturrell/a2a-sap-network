@@ -1,0 +1,326 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:viz="sap.viz.ui5.controls"
+    xmlns:vizData="sap.viz.ui5.data"
+    xmlns:vizFeeds="sap.viz.ui5.controls.common.feeds">
+    
+    <Dialog
+        id="queryResultsDialog"
+        title="{i18n>queryResults}"
+        contentWidth="90%"
+        contentHeight="85%"
+        verticalScrolling="true">
+        
+        <content>
+            <IconTabBar id="resultsTabBar" expandable="false">
+                <!-- Data Results Tab -->
+                <items>
+                    <IconTabFilter text="{i18n>data}" icon="sap-icon://table-view" iconColor="Positive" count="{/resultCount}">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Result Summary -->
+                            <MessageStrip
+                                text="{= ${i18n>queryExecutedSuccessfully} + ' ' + ${/resultCount} + ' ' + ${i18n>rowsReturned} }"
+                                type="Success"
+                                showIcon="true"
+                                visible="{= ${/executionStatus} === 'SUCCESS' }" />
+                            
+                            <MessageStrip
+                                text="{= ${i18n>queryFailed} + ': ' + ${/errorMessage} }"
+                                type="Error"
+                                showIcon="true"
+                                visible="{= ${/executionStatus} === 'FAILED' }" />
+                            
+                            <!-- Query Info -->
+                            <Panel headerText="{i18n>queryInformation}">
+                                <l:Grid defaultSpan="L3 M6 S12" class="sapUiSmallMargin">
+                                    <ObjectStatus
+                                        title="{i18n>executionTime}"
+                                        text="{/executionTime}ms"
+                                        state="Information"
+                                        icon="sap-icon://timesheet" />
+                                    <ObjectStatus
+                                        title="{i18n>rowsReturned}"
+                                        text="{/resultCount}"
+                                        state="Success"
+                                        icon="sap-icon://table-view" />
+                                    <ObjectStatus
+                                        title="{i18n>rowsAffected}"
+                                        text="{/rowsAffected}"
+                                        state="None"
+                                        icon="sap-icon://edit" />
+                                    <ObjectStatus
+                                        title="{i18n>database}"
+                                        text="{/database}"
+                                        state="Information"
+                                        icon="sap-icon://database" />
+                                </l:Grid>
+                            </Panel>
+                            
+                            <!-- Results Table -->
+                            <Panel
+                                headerText="{i18n>resultData}"
+                                class="sapUiMediumMarginTop">
+                                <content>
+                                    <Table
+                                        id="resultsTable"
+                                        items="{/resultData}"
+                                        growing="true"
+                                        growingThreshold="50"
+                                        sticky="ColumnHeaders">
+                                        
+                                        <headerToolbar>
+                                            <Toolbar>
+                                                <Title text="{i18n>queryResults}" level="H3" />
+                                                <ToolbarSpacer />
+                                                <SearchField
+                                                    placeholder="{i18n>searchResults}"
+                                                    search=".onSearchResults"
+                                                    width="200px" />
+                                                <Button
+                                                    text="{i18n>export}"
+                                                    icon="sap-icon://download"
+                                                    press=".onExportResults"
+                                                    type="Transparent" />
+                                                <Button
+                                                    text="{i18n>visualize}"
+                                                    icon="sap-icon://bar-chart"
+                                                    press=".onVisualizeResults"
+                                                    type="Transparent" />
+                                            </Toolbar>
+                                        </headerToolbar>
+                                        
+                                        <columns>
+                                            <!-- Dynamic columns will be created based on result schema -->
+                                        </columns>
+                                        
+                                        <items>
+                                            <ColumnListItem>
+                                                <cells>
+                                                    <!-- Dynamic cells will be created based on result data -->
+                                                </cells>
+                                            </ColumnListItem>
+                                        </items>
+                                    </Table>
+                                </content>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Execution Plan Tab -->
+                    <IconTabFilter text="{i18n>executionPlan}" icon="sap-icon://chart-tree-map" iconColor="Critical">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="{i18n>queryExecutionPlan}">
+                                <VBox class="sapUiSmallMargin">
+                                    <!-- Execution Plan Metrics -->
+                                    <l:Grid defaultSpan="L4 M6 S12">
+                                        <ObjectStatus
+                                            title="{i18n>totalCost}"
+                                            text="{/executionPlan/totalCost}"
+                                            state="Information"
+                                            icon="sap-icon://currency" />
+                                        <ObjectStatus
+                                            title="{i18n>actualRows}"
+                                            text="{/executionPlan/actualRows}"
+                                            state="None"
+                                            icon="sap-icon://table-view" />
+                                        <ObjectStatus
+                                            title="{i18n>planningTime}"
+                                            text="{/executionPlan/planningTime}ms"
+                                            state="Information"
+                                            icon="sap-icon://timesheet" />
+                                        <ObjectStatus
+                                            title="{i18n>bufferReads}"
+                                            text="{/executionPlan/bufferReads}"
+                                            state="None"
+                                            icon="sap-icon://database" />
+                                    </l:Grid>
+                                    
+                                    <!-- Plan Visualization -->
+                                    <IconTabBar class="sapUiMediumMarginTop">
+                                        <items>
+                                            <IconTabFilter text="{i18n>textPlan}" icon="sap-icon://document">
+                                                <TextArea
+                                                    value="{/executionPlan/textPlan}"
+                                                    rows="20"
+                                                    editable="false"
+                                                    width="100%" />
+                                            </IconTabFilter>
+                                            <IconTabFilter text="{i18n>jsonPlan}" icon="sap-icon://syntax">
+                                                <CodeEditor
+                                                    type="json"
+                                                    value="{/executionPlan/jsonPlan}"
+                                                    height="500px"
+                                                    width="100%"
+                                                    editable="false"
+                                                    syntaxHints="true" />
+                                            </IconTabFilter>
+                                        </items>
+                                    </IconTabBar>
+                                </VBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Performance Tab -->
+                    <IconTabFilter text="{i18n>performance}" icon="sap-icon://performance" iconColor="Neutral">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Performance Metrics -->
+                            <Panel headerText="{i18n>performanceMetrics}">
+                                <l:Grid defaultSpan="L3 M6 S12" class="sapUiSmallMargin">
+                                    <ObjectStatus
+                                        title="{i18n>cpuTime}"
+                                        text="{/performance/cpuTime}ms"
+                                        state="Information"
+                                        icon="sap-icon://activities" />
+                                    <ObjectStatus
+                                        title="{i18n>ioTime}"
+                                        text="{/performance/ioTime}ms"
+                                        state="None"
+                                        icon="sap-icon://database" />
+                                    <ObjectStatus
+                                        title="{i18n>memoryUsed}"
+                                        text="{/performance/memoryUsed}MB"
+                                        state="Warning"
+                                        icon="sap-icon://memory" />
+                                    <ObjectStatus
+                                        title="{i18n>lockWaitTime}"
+                                        text="{/performance/lockWaitTime}ms"
+                                        state="None"
+                                        icon="sap-icon://locked" />
+                                    <ObjectStatus
+                                        title="{i18n>cacheHits}"
+                                        text="{/performance/cacheHits}"
+                                        state="Success"
+                                        icon="sap-icon://cache" />
+                                    <ObjectStatus
+                                        title="{i18n>indexSeeks}"
+                                        text="{/performance/indexSeeks}"
+                                        state="Success"
+                                        icon="sap-icon://database" />
+                                </l:Grid>
+                            </Panel>
+                            
+                            <!-- Performance Chart -->
+                            <Panel
+                                headerText="{i18n>performanceBreakdown}"
+                                class="sapUiMediumMarginTop">
+                                <viz:Popover id="performancePopover"></viz:Popover>
+                                <viz:VizFrame
+                                    id="performanceChart"
+                                    uiConfig="{applicationSet:'fiori'}"
+                                    height="300px"
+                                    width="100%"
+                                    vizType="pie">
+                                    <viz:dataset>
+                                        <vizData:FlattenedDataset data="{/performanceBreakdown}">
+                                            <vizData:dimensions>
+                                                <vizData:DimensionDefinition
+                                                    name="Component"
+                                                    value="{component}" />
+                                            </vizData:dimensions>
+                                            <vizData:measures>
+                                                <vizData:MeasureDefinition
+                                                    name="Time"
+                                                    value="{time}" />
+                                            </vizData:measures>
+                                        </vizData:FlattenedDataset>
+                                    </viz:dataset>
+                                    <viz:feeds>
+                                        <vizFeeds:FeedItem
+                                            uid="size"
+                                            type="Measure"
+                                            values="Time" />
+                                        <vizFeeds:FeedItem
+                                            uid="color"
+                                            type="Dimension"
+                                            values="Component" />
+                                    </viz:feeds>
+                                </viz:VizFrame>
+                            </Panel>
+                            
+                            <!-- Performance Recommendations -->
+                            <Panel
+                                headerText="{i18n>performanceRecommendations}"
+                                class="sapUiMediumMarginTop"
+                                visible="{= ${/recommendations} && ${/recommendations}.length > 0 }">
+                                <List items="{/recommendations}">
+                                    <StandardListItem
+                                        title="{title}"
+                                        description="{description}"
+                                        icon="sap-icon://lightbulb"
+                                        iconInset="false"
+                                        info="{impact}"
+                                        infoState="{= ${impact} === 'High' ? 'Success' : 'Information' }"
+                                        type="Active"
+                                        press=".onApplyRecommendation" />
+                                </List>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- History Tab -->
+                    <IconTabFilter text="{i18n>history}" icon="sap-icon://history" iconColor="Neutral">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="{i18n>executionHistory}">
+                                <Table
+                                    items="{/executionHistory}"
+                                    growing="true"
+                                    growingThreshold="20">
+                                    <columns>
+                                        <Column>
+                                            <Text text="{i18n>timestamp}" />
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>duration}" />
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>rows}" />
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>status}" />
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>user}" />
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="{timestamp}" />
+                                                <ObjectNumber
+                                                    number="{duration}"
+                                                    unit="ms"
+                                                    state="{= ${duration} > 5000 ? 'Error' : 'Success' }" />
+                                                <Text text="{rows}" />
+                                                <ObjectStatus
+                                                    text="{status}"
+                                                    state="{= ${status} === 'SUCCESS' ? 'Success' : 'Error' }" />
+                                                <Text text="{user}" />
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button
+                text="{i18n>saveResults}"
+                type="Emphasized"
+                icon="sap-icon://save"
+                press=".onSaveResults" />
+        </beginButton>
+        
+        <endButton>
+            <Button
+                text="{i18n>close}"
+                press=".onCloseResults" />
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

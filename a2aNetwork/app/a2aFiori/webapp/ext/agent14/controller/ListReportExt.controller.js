@@ -2,8 +2,9 @@ sap.ui.define([
     "sap/ui/core/mvc/ControllerExtension",
     "sap/m/MessageToast",
     "sap/m/MessageBox",
-    "sap/ui/core/Fragment"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment) {
+    "sap/ui/core/Fragment",
+    "a2a/network/agent14/ext/utils/SecurityUtils"
+], function(ControllerExtension, MessageToast, MessageBox, Fragment, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent14.ext.controller.ListReportExt", {
@@ -207,16 +208,22 @@ sap.ui.define([
             if (this._ws) return;
 
             try {
-                this._ws = new WebSocket('ws://localhost:8014/embedding/updates');
+                this._ws = SecurityUtils.createSecureWebSocket('wss://localhost:8014/embedding/updates', {
+                    onmessage: function(event) {
+                        const data = JSON.parse(event.data);
+                        this._handleEmbeddingUpdate(data);
+                    }.bind(this),
+                    onerror: function(error) {
+                        console.warn("Secure WebSocket error:", error);
+                        this._initializePolling();
+                    }.bind(this)
+                });
                 
-                this._ws.onmessage = function(event) {
-                    const data = JSON.parse(event.data);
-                    this._handleEmbeddingUpdate(data);
-                }.bind(this);
-
-                this._ws.onclose = function() {
-                    setTimeout(() => this._initializeWebSocket(), 5000);
-                }.bind(this);
+                if (this._ws) {
+                    this._ws.onclose = function() {
+                        setTimeout(() => this._initializeWebSocket(), 5000);
+                    }.bind(this);
+                }
 
             } catch (error) {
                 console.warn("WebSocket connection failed, falling back to polling");
@@ -261,7 +268,7 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             
             // Load embedding statistics
-            oModel.callFunction("/GetEmbeddingStatistics", {
+            SecurityUtils.secureCallFunction(oModel, "/GetEmbeddingStatistics", {
                 success: function(data) {
                     this._updateDashboardCharts(data);
                 }.bind(this),
@@ -275,7 +282,11 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const sModelId = oContext.getObject().modelId;
             
-            oModel.callFunction("/GetModelConfiguration", {
+            if (!SecurityUtils.checkEmbeddingAuth('GetModelConfiguration', {})) {
+                return;
+            }
+
+            SecurityUtils.secureCallFunction(oModel, "/GetModelConfiguration", {
                 urlParameters: {
                     modelId: sModelId
                 },
@@ -292,7 +303,7 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const aModelIds = aSelectedContexts.map(ctx => ctx.getObject().modelId);
             
-            oModel.callFunction("/GetEvaluationMetrics", {
+            SecurityUtils.secureCallFunction(oModel, "/GetEvaluationMetrics", {
                 urlParameters: {
                     modelIds: aModelIds.join(',')
                 },
@@ -308,7 +319,7 @@ sap.ui.define([
         _loadBenchmarkSuites: function(aSelectedContexts) {
             const oModel = this.getView().getModel();
             
-            oModel.callFunction("/GetAvailableBenchmarks", {
+            SecurityUtils.secureCallFunction(oModel, "/GetAvailableBenchmarks", {
                 success: function(data) {
                     this._setupBenchmarkRunner(data, aSelectedContexts);
                 }.bind(this),
@@ -322,7 +333,11 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const sModelId = oContext.getObject().modelId;
             
-            oModel.callFunction("/GetHyperparameterSpace", {
+            if (!SecurityUtils.checkEmbeddingAuth('GetHyperparameterSpace', {})) {
+                return;
+            }
+
+            SecurityUtils.secureCallFunction(oModel, "/GetHyperparameterSpace", {
                 urlParameters: {
                     modelId: sModelId
                 },
@@ -338,7 +353,7 @@ sap.ui.define([
         _loadVectorDatabaseData: function() {
             const oModel = this.getView().getModel();
             
-            oModel.callFunction("/GetVectorDatabases", {
+            SecurityUtils.secureCallFunction(oModel, "/GetVectorDatabases", {
                 success: function(data) {
                     this._updateVectorDatabaseList(data);
                 }.bind(this),
@@ -352,7 +367,11 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const aModelIds = aSelectedContexts.map(ctx => ctx.getObject().modelId);
             
-            oModel.callFunction("/AnalyzeModelPerformance", {
+            if (!SecurityUtils.checkEmbeddingAuth('AnalyzeModelPerformance', {})) {
+                return;
+            }
+
+            SecurityUtils.secureCallFunction(oModel, "/AnalyzeModelPerformance", {
                 urlParameters: {
                     modelIds: aModelIds.join(',')
                 },

@@ -2,8 +2,9 @@ sap.ui.define([
     "sap/ui/core/mvc/ControllerExtension",
     "sap/m/MessageToast",
     "sap/m/MessageBox",
-    "sap/ui/core/Fragment"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment) {
+    "sap/ui/core/Fragment",
+    "a2a/network/agent14/ext/utils/SecurityUtils"
+], function(ControllerExtension, MessageToast, MessageBox, Fragment, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent14.ext.controller.ObjectPageExt", {
@@ -226,27 +227,26 @@ sap.ui.define([
             }
 
             try {
-                this._eventSource = new EventSource(`http://localhost:8014/embedding/${modelId}/stream`);
+                this._eventSource = SecurityUtils.createSecureEventSource(`https://localhost:8014/embedding/${modelId}/stream`, {
+                    'training-progress': (event) => {
+                        const data = JSON.parse(event.data);
+                        this._updateTrainingProgress(data);
+                    },
+                    'training-completed': (event) => {
+                        const data = JSON.parse(event.data);
+                        this._handleTrainingCompleted(data);
+                    },
+                    'evaluation-progress': (event) => {
+                        const data = JSON.parse(event.data);
+                        this._updateEvaluationProgress(data);
+                    },
+                    'optimization-progress': (event) => {
+                        const data = JSON.parse(event.data);
+                        this._updateOptimizationProgress(data);
+                    }
+                });
                 
-                this._eventSource.addEventListener('training-progress', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._updateTrainingProgress(data);
-                });
-
-                this._eventSource.addEventListener('training-completed', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._handleTrainingCompleted(data);
-                });
-
-                this._eventSource.addEventListener('evaluation-progress', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._updateEvaluationProgress(data);
-                });
-
-                this._eventSource.addEventListener('optimization-progress', (event) => {
-                    const data = JSON.parse(event.data);
-                    this._updateOptimizationProgress(data);
-                });
+                // Event handlers configured in createSecureEventSource
 
             } catch (error) {
                 console.warn("Server-Sent Events not available, using polling");
@@ -264,7 +264,11 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const sModelId = oContext.getObject().modelId;
             
-            oModel.callFunction("/GetFineTuningOptions", {
+            if (!SecurityUtils.checkEmbeddingAuth('GetFineTuningOptions', {})) {
+                return;
+            }
+
+            SecurityUtils.secureCallFunction(oModel, "/GetFineTuningOptions", {
                 urlParameters: {
                     modelId: sModelId
                 },
@@ -281,7 +285,7 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const sModelId = oContext.getObject().modelId;
             
-            oModel.callFunction("/GetEvaluationOptions", {
+            SecurityUtils.secureCallFunction(oModel, "/GetEvaluationOptions", {
                 urlParameters: {
                     modelId: sModelId
                 },
@@ -298,7 +302,11 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const sModelId = oContext.getObject().modelId;
             
-            oModel.callFunction("/GetOptimizationOptions", {
+            if (!SecurityUtils.checkEmbeddingAuth('GetOptimizationOptions', {})) {
+                return;
+            }
+
+            SecurityUtils.secureCallFunction(oModel, "/GetOptimizationOptions", {
                 urlParameters: {
                     modelId: sModelId
                 },
@@ -317,7 +325,11 @@ sap.ui.define([
             
             MessageToast.show(this.getResourceBundle().getText("msg.deploymentStarted"));
             
-            oModel.callFunction("/DeployModel", {
+            if (!SecurityUtils.checkEmbeddingAuth('DeployModel', {})) {
+                return;
+            }
+
+            SecurityUtils.secureCallFunction(oModel, "/DeployModel", {
                 urlParameters: {
                     modelId: sModelId
                 },
@@ -335,7 +347,7 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const sModelId = oContext.getObject().modelId;
             
-            oModel.callFunction("/GetModelComparisons", {
+            SecurityUtils.secureCallFunction(oModel, "/GetModelComparisons", {
                 urlParameters: {
                     modelId: sModelId
                 },
@@ -352,7 +364,7 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const sModelId = oContext.getObject().modelId;
             
-            oModel.callFunction("/GetEmbeddingVisualization", {
+            SecurityUtils.secureCallFunction(oModel, "/GetEmbeddingVisualization", {
                 urlParameters: {
                     modelId: sModelId
                 },
@@ -375,6 +387,13 @@ sap.ui.define([
         },
 
         _handleTrainingCompleted: function(data) {
+            // Validate model output for security
+            const validation = SecurityUtils.validateModelPath(data.modelPath);
+            if (!validation.isValid) {
+                MessageBox.error("Model validation failed: " + validation.errors.join(", "));
+                return;
+            }
+            
             MessageToast.show(this.getResourceBundle().getText("msg.fineTuningCompleted"));
             this._refreshModelData();
         },

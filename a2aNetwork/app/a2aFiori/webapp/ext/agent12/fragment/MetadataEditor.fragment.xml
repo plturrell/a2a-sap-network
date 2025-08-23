@@ -1,0 +1,464 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:viz="sap.viz.ui5.controls">
+    
+    <Dialog
+        id="metadataEditorDialog"
+        title="{i18n>metadataEditor}"
+        contentWidth="70%"
+        contentHeight="85%"
+        verticalScrolling="true">
+        
+        <content>
+            <IconTabBar id="metadataTabBar" expandable="false">
+                <!-- Metadata Properties Tab -->
+                <items>
+                    <IconTabFilter text="{i18n>properties}" icon="sap-icon://detail-view" iconColor="Positive" count="{/metadataCount}">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Metadata Actions -->
+                            <HBox class="sapUiSmallMarginBottom" justifyContent="SpaceBetween">
+                                <HBox>
+                                    <Button
+                                        text="{i18n>addProperty}"
+                                        icon="sap-icon://add"
+                                        press=".onAddMetadataProperty"
+                                        type="Emphasized"/>
+                                    <Button
+                                        text="{i18n>importMetadata}"
+                                        icon="sap-icon://upload"
+                                        press=".onImportMetadata"
+                                        type="Transparent"/>
+                                    <Button
+                                        text="{i18n>exportMetadata}"
+                                        icon="sap-icon://download"
+                                        press=".onExportMetadata"
+                                        type="Transparent"/>
+                                    <Button
+                                        text="{i18n>validateAll}"
+                                        icon="sap-icon://accept"
+                                        press=".onValidateAllMetadata"
+                                        type="Transparent"/>
+                                </HBox>
+                                <SearchField
+                                    placeholder="{i18n>searchMetadata}"
+                                    search=".onSearchMetadata"
+                                    width="250px"/>
+                            </HBox>
+                            
+                            <!-- Metadata Properties Table -->
+                            <Table
+                                id="metadataTable"
+                                items="{/metadata}"
+                                mode="Delete"
+                                delete=".onDeleteMetadataProperty"
+                                growing="true"
+                                growingThreshold="50">
+                                
+                                <headerToolbar>
+                                    <Toolbar>
+                                        <Title text="{i18n>metadataProperties}" level="H3"/>
+                                        <ToolbarSpacer/>
+                                        <SegmentedButton selectedKey="{/metadataViewMode}" selectionChange=".onMetadataViewModeChange">
+                                            <items>
+                                                <SegmentedButtonItem key="all" text="{i18n>all}"/>
+                                                <SegmentedButtonItem key="technical" text="{i18n>technical}"/>
+                                                <SegmentedButtonItem key="business" text="{i18n>business}"/>
+                                                <SegmentedButtonItem key="security" text="{i18n>security}"/>
+                                            </items>
+                                        </SegmentedButton>
+                                    </Toolbar>
+                                </headerToolbar>
+                                
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>property}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>value}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>type}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>category}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>searchable}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>order}"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="{i18n>actions}"/>
+                                    </Column>
+                                </columns>
+                                
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <VBox>
+                                                <Input
+                                                    value="{metadataKey}"
+                                                    enabled="{/editMode}"
+                                                    placeholder="{i18n>propertyName}"/>
+                                                <Text text="{i18n>required}" visible="{required}" class="sapUiTinyMarginTop"/>
+                                            </VBox>
+                                            <VBox>
+                                                <!-- Different input types based on valueType -->
+                                                <Input
+                                                    value="{metadataValue}"
+                                                    enabled="{/editMode}"
+                                                    placeholder="{i18n>propertyValue}"
+                                                    visible="{= ${valueType} === 'STRING' || ${valueType} === 'EMAIL' }"/>
+                                                <StepInput
+                                                    value="{metadataValue}"
+                                                    enabled="{/editMode}"
+                                                    visible="{= ${valueType} === 'NUMBER' }"/>
+                                                <CheckBox
+                                                    selected="{metadataValue}"
+                                                    enabled="{/editMode}"
+                                                    visible="{= ${valueType} === 'BOOLEAN' }"/>
+                                                <DatePicker
+                                                    value="{metadataValue}"
+                                                    enabled="{/editMode}"
+                                                    visible="{= ${valueType} === 'DATE' }"/>
+                                                <TextArea
+                                                    value="{metadataValue}"
+                                                    enabled="{/editMode}"
+                                                    rows="2"
+                                                    visible="{= ${valueType} === 'JSON' }"/>
+                                            </VBox>
+                                            <Select
+                                                selectedKey="{valueType}"
+                                                enabled="{/editMode}"
+                                                change=".onMetadataTypeChange">
+                                                <items>
+                                                    <core:Item key="STRING" text="{i18n>string}"/>
+                                                    <core:Item key="NUMBER" text="{i18n>number}"/>
+                                                    <core:Item key="BOOLEAN" text="{i18n>boolean}"/>
+                                                    <core:Item key="DATE" text="{i18n>date}"/>
+                                                    <core:Item key="JSON" text="{i18n>json}"/>
+                                                    <core:Item key="URL" text="{i18n>url}"/>
+                                                    <core:Item key="EMAIL" text="{i18n>email}"/>
+                                                </items>
+                                            </Select>
+                                            <Select
+                                                selectedKey="{category}"
+                                                enabled="{/editMode}">
+                                                <items>
+                                                    <core:Item key="TECHNICAL" text="{i18n>technical}"/>
+                                                    <core:Item key="BUSINESS" text="{i18n>business}"/>
+                                                    <core:Item key="OPERATIONAL" text="{i18n>operational}"/>
+                                                    <core:Item key="SECURITY" text="{i18n>security}"/>
+                                                    <core:Item key="COMPLIANCE" text="{i18n>compliance}"/>
+                                                </items>
+                                            </Select>
+                                            <CheckBox
+                                                selected="{isSearchable}"
+                                                enabled="{/editMode}"/>
+                                            <StepInput
+                                                value="{displayOrder}"
+                                                enabled="{/editMode}"
+                                                min="0"
+                                                max="999"/>
+                                            <HBox>
+                                                <Button
+                                                    icon="sap-icon://edit"
+                                                    tooltip="{i18n>edit}"
+                                                    press=".onEditMetadataProperty"
+                                                    type="Transparent"
+                                                    visible="{= !${/editMode} }"/>
+                                                <Button
+                                                    icon="sap-icon://validate"
+                                                    tooltip="{i18n>validate}"
+                                                    press=".onValidateMetadataProperty"
+                                                    type="Transparent"/>
+                                                <Button
+                                                    icon="sap-icon://duplicate"
+                                                    tooltip="{i18n>duplicate}"
+                                                    press=".onDuplicateMetadataProperty"
+                                                    type="Transparent"/>
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Schema Definition Tab -->
+                    <IconTabFilter text="{i18n>schema}" icon="sap-icon://workflow-tasks" iconColor="Critical">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Schema Actions -->
+                            <HBox class="sapUiSmallMarginBottom" justifyContent="SpaceBetween">
+                                <HBox>
+                                    <Button
+                                        text="{i18n>generateSchema}"
+                                        icon="sap-icon://generate-shortcut"
+                                        press=".onGenerateSchema"
+                                        type="Emphasized"/>
+                                    <Button
+                                        text="{i18n>validateSchema}"
+                                        icon="sap-icon://accept"
+                                        press=".onValidateSchema"
+                                        type="Transparent"/>
+                                    <Button
+                                        text="{i18n>importSchema}"
+                                        icon="sap-icon://upload"
+                                        press=".onImportSchema"
+                                        type="Transparent"/>
+                                    <Button
+                                        text="{i18n>exportSchema}"
+                                        icon="sap-icon://download"
+                                        press=".onExportSchema"
+                                        type="Transparent"/>
+                                </HBox>
+                                <Select selectedKey="{/schemaFormat}">
+                                    <items>
+                                        <core:Item key="JSON_SCHEMA" text="JSON Schema"/>
+                                        <core:Item key="XSD" text="XML Schema (XSD)"/>
+                                        <core:Item key="YAML" text="YAML Schema"/>
+                                        <core:Item key="AVRO" text="Avro Schema"/>
+                                    </items>
+                                </Select>
+                            </HBox>
+                            
+                            <!-- Schema Editor -->
+                            <Panel headerText="{i18n>schemaDefinition}">
+                                <CodeEditor
+                                    id="schemaEditor"
+                                    type="json"
+                                    value="{/schemaDefinition}"
+                                    height="400px"
+                                    width="100%"
+                                    editable="{/editMode}"
+                                    syntaxHints="true"
+                                    colorTheme="default"/>
+                            </Panel>
+                            
+                            <!-- Schema Validation Results -->
+                            <Panel
+                                headerText="{i18n>validationResults}"
+                                class="sapUiMediumMarginTop"
+                                visible="{= ${/schemaValidation} && (${/schemaValidation/errors}.length > 0 || ${/schemaValidation/warnings}.length > 0) }">
+                                <VBox class="sapUiSmallMargin">
+                                    <!-- Validation Summary -->
+                                    <MessageStrip
+                                        text="{= ${/schemaValidation/isValid} ? ${i18n>schemaValid} : ${i18n>schemaInvalid} }"
+                                        type="{= ${/schemaValidation/isValid} ? 'Success' : 'Error' }"
+                                        showIcon="true"/>
+                                    
+                                    <!-- Errors -->
+                                    <VBox visible="{= ${/schemaValidation/errors} && ${/schemaValidation/errors}.length > 0 }">
+                                        <Label text="{i18n>errors}:" emphasized="true" class="sapUiSmallMarginTop"/>
+                                        <List items="{/schemaValidation/errors}">
+                                            <StandardListItem
+                                                title="{message}"
+                                                description="{path}"
+                                                icon="sap-icon://error"
+                                                iconInset="false"
+                                                type="Inactive"/>
+                                        </List>
+                                    </VBox>
+                                    
+                                    <!-- Warnings -->
+                                    <VBox visible="{= ${/schemaValidation/warnings} && ${/schemaValidation/warnings}.length > 0 }">
+                                        <Label text="{i18n>warnings}:" emphasized="true" class="sapUiSmallMarginTop"/>
+                                        <List items="{/schemaValidation/warnings}">
+                                            <StandardListItem
+                                                title="{message}"
+                                                description="{path}"
+                                                icon="sap-icon://warning"
+                                                iconInset="false"
+                                                type="Inactive"/>
+                                        </List>
+                                    </VBox>
+                                </VBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Data Quality Tab -->
+                    <IconTabFilter text="{i18n>dataQuality}" icon="sap-icon://quality-issue" iconColor="Neutral">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Quality Metrics -->
+                            <Panel headerText="{i18n>qualityMetrics}">
+                                <l:Grid defaultSpan="L3 M6 S12" class="sapUiSmallMargin">
+                                    <ObjectStatus
+                                        title="{i18n>completeness}"
+                                        text="{/qualityMetrics/completeness}%"
+                                        state="{= ${/qualityMetrics/completeness} > 80 ? 'Success' : 'Warning' }"
+                                        icon="sap-icon://complete"/>
+                                    <ObjectStatus
+                                        title="{i18n>consistency}"
+                                        text="{/qualityMetrics/consistency}%"
+                                        state="{= ${/qualityMetrics/consistency} > 80 ? 'Success' : 'Warning' }"
+                                        icon="sap-icon://synchronize"/>
+                                    <ObjectStatus
+                                        title="{i18n>accuracy}"
+                                        text="{/qualityMetrics/accuracy}%"
+                                        state="{= ${/qualityMetrics/accuracy} > 80 ? 'Success' : 'Warning' }"
+                                        icon="sap-icon://target-group"/>
+                                    <ObjectStatus
+                                        title="{i18n>validity}"
+                                        text="{/qualityMetrics/validity}%"
+                                        state="{= ${/qualityMetrics/validity} > 80 ? 'Success' : 'Warning' }"
+                                        icon="sap-icon://accept"/>
+                                </l:Grid>
+                            </Panel>
+                            
+                            <!-- Quality Issues -->
+                            <Panel
+                                headerText="{i18n>qualityIssues}"
+                                class="sapUiMediumMarginTop">
+                                <Table items="{/qualityIssues}">
+                                    <columns>
+                                        <Column>
+                                            <Text text="{i18n>severity}"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>property}"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>issue}"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>recommendation}"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>actions}"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <ObjectStatus
+                                                    text="{severity}"
+                                                    state="{= ${severity} === 'HIGH' ? 'Error' : ${severity} === 'MEDIUM' ? 'Warning' : 'Information' }"
+                                                    icon="{= ${severity} === 'HIGH' ? 'sap-icon://error' : ${severity} === 'MEDIUM' ? 'sap-icon://warning' : 'sap-icon://information' }"/>
+                                                <Text text="{property}" emphasized="true"/>
+                                                <Text text="{issue}" maxLines="2"/>
+                                                <Text text="{recommendation}" maxLines="2"/>
+                                                <HBox>
+                                                    <Button
+                                                        icon="sap-icon://accept"
+                                                        tooltip="{i18n>applyFix}"
+                                                        press=".onApplyQualityFix"
+                                                        type="Transparent"/>
+                                                    <Button
+                                                        icon="sap-icon://decline"
+                                                        tooltip="{i18n>ignoreIssue}"
+                                                        press=".onIgnoreQualityIssue"
+                                                        type="Transparent"/>
+                                                </HBox>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                            
+                            <!-- Quality Rules -->
+                            <Panel
+                                headerText="{i18n>qualityRules}"
+                                expandable="true"
+                                expanded="false"
+                                class="sapUiMediumMarginTop">
+                                <Table items="{/qualityRules}">
+                                    <columns>
+                                        <Column>
+                                            <Text text="{i18n>ruleName}"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>category}"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>enabled}"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="{i18n>severity}"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="{ruleName}" emphasized="true"/>
+                                                <Text text="{category}"/>
+                                                <CheckBox selected="{enabled}" change=".onQualityRuleToggle"/>
+                                                <Select selectedKey="{severity}" change=".onQualityRuleSeverityChange">
+                                                    <items>
+                                                        <core:Item key="LOW" text="{i18n>low}"/>
+                                                        <core:Item key="MEDIUM" text="{i18n>medium}"/>
+                                                        <core:Item key="HIGH" text="{i18n>high}"/>
+                                                    </items>
+                                                </Select>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Preview Tab -->
+                    <IconTabFilter text="{i18n>preview}" icon="sap-icon://detail-view" iconColor="Neutral">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Metadata Preview -->
+                            <Panel headerText="{i18n>metadataPreview}">
+                                <VBox class="sapUiSmallMargin">
+                                    <!-- Rendered Metadata -->
+                                    <l:Grid defaultSpan="L6 M12 S12" hSpacing="1" vSpacing="1">
+                                        <!-- Technical Properties -->
+                                        <VBox class="sapUiSmallPadding">
+                                            <Title text="{i18n>technicalProperties}" level="H4"/>
+                                            <!-- Dynamic content based on technical metadata -->
+                                        </VBox>
+                                        
+                                        <!-- Business Properties -->
+                                        <VBox class="sapUiSmallPadding">
+                                            <Title text="{i18n>businessProperties}" level="H4"/>
+                                            <!-- Dynamic content based on business metadata -->
+                                        </VBox>
+                                    </l:Grid>
+                                    
+                                    <!-- JSON View -->
+                                    <Panel
+                                        headerText="{i18n>jsonView}"
+                                        expandable="true"
+                                        expanded="false"
+                                        class="sapUiMediumMarginTop">
+                                        <CodeEditor
+                                            id="metadataJsonPreview"
+                                            type="json"
+                                            value="{/metadataJson}"
+                                            height="300px"
+                                            width="100%"
+                                            editable="false"
+                                            syntaxHints="true"
+                                            colorTheme="default"/>
+                                    </Panel>
+                                </VBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button
+                text="{= ${/editMode} ? ${i18n>save} : ${i18n>edit} }"
+                type="Emphasized"
+                icon="{= ${/editMode} ? 'sap-icon://save' : 'sap-icon://edit' }"
+                press=".onToggleEditMode"/>
+        </beginButton>
+        
+        <endButton>
+            <Button
+                text="{i18n>close}"
+                press=".onCloseMetadataEditor"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

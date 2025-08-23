@@ -2,8 +2,9 @@ sap.ui.define([
     "sap/ui/core/mvc/ControllerExtension",
     "sap/m/MessageToast",
     "sap/m/MessageBox",
-    "sap/ui/core/Fragment"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment) {
+    "sap/ui/core/Fragment",
+    "a2a/network/agent11/ext/utils/SecurityUtils"
+], function(ControllerExtension, MessageToast, MessageBox, Fragment, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent11.ext.controller.ListReportExt", {
@@ -196,12 +197,11 @@ sap.ui.define([
             if (this._ws) return;
 
             try {
-                this._ws = new WebSocket('ws://localhost:8011/sql/updates');
-                
-                this._ws.onmessage = function(event) {
-                    const data = JSON.parse(event.data);
-                    this._handleSQLUpdate(data);
-                }.bind(this);
+                this._ws = SecurityUtils.createSecureWebSocket('ws://localhost:8011/sql/updates', {
+                    onMessage: function(data) {
+                        this._handleSQLUpdate(data);
+                    }.bind(this)
+                });
 
                 this._ws.onclose = function() {
                     setTimeout(() => this._initializeWebSocket(), 5000);
@@ -231,7 +231,7 @@ sap.ui.define([
                     this._refreshQueryData();
                     break;
                 case 'QUERY_FAILED':
-                    MessageToast.show(this.getResourceBundle().getText("error.queryExecutionFailed", [data.error]));
+                    MessageToast.show(this.getResourceBundle().getText("error.queryExecutionFailed", [SecurityUtils.escapeHTML(data.error)]));
                     break;
                 case 'CONNECTION_STATUS':
                     this._updateConnectionStatus(data.connections);
@@ -246,7 +246,7 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             
             // Load SQL execution statistics
-            oModel.callFunction("/GetSQLStatistics", {
+            SecurityUtils.secureCallFunction(oModel, "/GetSQLStatistics", {
                 success: function(data) {
                     this._updateDashboardCharts(data);
                 }.bind(this),
@@ -259,7 +259,7 @@ sap.ui.define([
         _loadSchemaData: function() {
             const oModel = this.getView().getModel();
             
-            oModel.callFunction("/GetDatabaseSchemas", {
+            SecurityUtils.secureCallFunction(oModel, "/GetDatabaseSchemas", {
                 success: function(data) {
                     this._updateSchemaData(data);
                 }.bind(this),
@@ -272,7 +272,7 @@ sap.ui.define([
         _loadConnectionData: function() {
             const oModel = this.getView().getModel();
             
-            oModel.callFunction("/GetConnectionStatus", {
+            SecurityUtils.secureCallFunction(oModel, "/GetConnectionStatus", {
                 success: function(data) {
                     this._updateConnectionData(data);
                 }.bind(this),
@@ -285,7 +285,7 @@ sap.ui.define([
         _loadTemplateData: function() {
             const oModel = this.getView().getModel();
             
-            oModel.callFunction("/GetQueryTemplates", {
+            SecurityUtils.secureCallFunction(oModel, "/GetQueryTemplates", {
                 success: function(data) {
                     this._updateTemplateData(data);
                 }.bind(this),
@@ -298,7 +298,7 @@ sap.ui.define([
         _loadPerformanceData: function() {
             const oModel = this.getView().getModel();
             
-            oModel.callFunction("/GetPerformanceMetrics", {
+            SecurityUtils.secureCallFunction(oModel, "/GetPerformanceMetrics", {
                 success: function(data) {
                     this._updatePerformanceCharts(data);
                 }.bind(this),
@@ -311,7 +311,7 @@ sap.ui.define([
         _loadSchemaStructure: function() {
             const oModel = this.getView().getModel();
             
-            oModel.callFunction("/GetSchemaStructure", {
+            SecurityUtils.secureCallFunction(oModel, "/GetSchemaStructure", {
                 success: function(data) {
                     this._updateSchemaTree(data);
                 }.bind(this),
@@ -327,9 +327,9 @@ sap.ui.define([
             
             MessageToast.show(this.getResourceBundle().getText("msg.optimizationStarted"));
             
-            oModel.callFunction("/OptimizeQueries", {
+            SecurityUtils.secureCallFunction(oModel, "/OptimizeQueries", {
                 urlParameters: {
-                    queryIds: aQueryIds.join(',')
+                    queryIds: SecurityUtils.sanitizeSQLParameter(aQueryIds.join(','))
                 },
                 success: function(data) {
                     MessageToast.show(this.getResourceBundle().getText("msg.queryOptimized"));
@@ -347,9 +347,9 @@ sap.ui.define([
             
             MessageToast.show(this.getResourceBundle().getText("msg.batchExecutionStarted", [aQueryIds.length]));
             
-            oModel.callFunction("/ExecuteBatchQueries", {
+            SecurityUtils.secureCallFunction(oModel, "/ExecuteBatchQueries", {
                 urlParameters: {
-                    queryIds: aQueryIds.join(',')
+                    queryIds: SecurityUtils.sanitizeSQLParameter(aQueryIds.join(','))
                 },
                 success: function(data) {
                     MessageToast.show(this.getResourceBundle().getText("msg.batchExecutionCompleted"));
@@ -365,9 +365,9 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const aQueryIds = aSelectedContexts.map(ctx => ctx.getObject().queryId);
             
-            oModel.callFunction("/ValidateQueries", {
+            SecurityUtils.secureCallFunction(oModel, "/ValidateQueries", {
                 urlParameters: {
-                    queryIds: aQueryIds.join(',')
+                    queryIds: SecurityUtils.sanitizeSQLParameter(aQueryIds.join(','))
                 },
                 success: function(data) {
                     MessageToast.show(this.getResourceBundle().getText("msg.queryValidated"));

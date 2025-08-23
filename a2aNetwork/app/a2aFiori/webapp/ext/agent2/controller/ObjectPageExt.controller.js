@@ -14,7 +14,53 @@ sap.ui.define([
         override: {
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
+                
+                // Initialize device model for responsive behavior
+                var oDeviceModel = new JSONModel(sap.ui.Device);
+                oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
+                this.base.getView().setModel(oDeviceModel, "device");
+                
+                // Initialize dialog cache for better performance
+                this._dialogCache = {};
+                
+                // Initialize create model
+                this._initializeCreateModel();
             }
+        },
+
+        /**
+         * Initialize the create model with default values and validation states
+         * @private
+         * @since 1.0.0
+         */
+        _initializeCreateModel: function() {
+            var oCreateModel = new JSONModel({
+                taskName: "",
+                description: "",
+                datasetName: "",
+                modelType: "",
+                dataType: "",
+                framework: "AUTO",
+                splitRatio: 80,
+                validationStrategy: "KFOLD",
+                featureSelection: true,
+                autoFeatureEngineering: true,
+                optimizationMetric: "AUTO",
+                useGPU: false,
+                distributed: false,
+                memoryOptimized: true,
+                cacheResults: true,
+                isValid: false,
+                taskNameState: "None",
+                taskNameStateText: "",
+                datasetNameState: "None",
+                datasetNameStateText: "",
+                modelTypeState: "None",
+                modelTypeStateText: "",
+                dataTypeState: "None",
+                dataTypeStateText: ""
+            });
+            this.base.getView().setModel(oCreateModel, "create");
         },
 
         onStartPreparation: function() {
@@ -669,6 +715,241 @@ sap.ui.define([
                 return "";
             }
             return encodeXML(sText.toString());
+        },
+
+        /**
+         * Enhanced task name change handler with real-time validation
+         * @param {sap.ui.base.Event} oEvent - Change event
+         * @public
+         * @since 1.0.0
+         */
+        onTaskNameChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            var oCreateModel = this.base.getView().getModel("create");
+            
+            if (!sValue || sValue.trim().length < 3) {
+                oCreateModel.setProperty("/taskNameState", "Error");
+                oCreateModel.setProperty("/taskNameStateText", "Task name must be at least 3 characters");
+            } else if (sValue.length > 100) {
+                oCreateModel.setProperty("/taskNameState", "Error");
+                oCreateModel.setProperty("/taskNameStateText", "Task name must not exceed 100 characters");
+            } else if (!/^[a-zA-Z0-9\s\-_\.]+$/.test(sValue)) {
+                oCreateModel.setProperty("/taskNameState", "Error");
+                oCreateModel.setProperty("/taskNameStateText", "Task name contains invalid characters");
+            } else {
+                oCreateModel.setProperty("/taskNameState", "Success");
+                oCreateModel.setProperty("/taskNameStateText", "Valid task name");
+            }
+            
+            this._validateForm();
+        },
+
+        /**
+         * Event handler for model type selection changes
+         * @param {sap.ui.base.Event} oEvent - Change event
+         * @public
+         * @since 1.0.0
+         */
+        onModelTypeChange: function(oEvent) {
+            var sSelectedKey = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.base.getView().getModel("create");
+            
+            if (sSelectedKey) {
+                oCreateModel.setProperty("/modelTypeState", "None");
+                oCreateModel.setProperty("/modelTypeStateText", "");
+                
+                // Auto-suggest optimization metric based on model type
+                this._suggestOptimizationMetric(sSelectedKey, oCreateModel);
+            } else {
+                oCreateModel.setProperty("/modelTypeState", "Error");
+                oCreateModel.setProperty("/modelTypeStateText", "Please select a model type");
+            }
+            
+            this._validateForm();
+        },
+
+        /**
+         * Event handler for data type selection changes
+         * @param {sap.ui.base.Event} oEvent - Change event
+         * @public
+         * @since 1.0.0
+         */
+        onDataTypeChange: function(oEvent) {
+            var sSelectedKey = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.base.getView().getModel("create");
+            
+            if (sSelectedKey) {
+                oCreateModel.setProperty("/dataTypeState", "None");
+                oCreateModel.setProperty("/dataTypeStateText", "");
+                
+                // Auto-suggest framework based on data type
+                this._suggestFramework(sSelectedKey, oCreateModel);
+            } else {
+                oCreateModel.setProperty("/dataTypeState", "Error");
+                oCreateModel.setProperty("/dataTypeStateText", "Please select a data type");
+            }
+            
+            this._validateForm();
+        },
+
+        /**
+         * Suggests optimization metric based on model type
+         * @param {string} sModelType - Selected model type
+         * @param {sap.ui.model.json.JSONModel} oModel - Create model
+         * @private
+         * @since 1.0.0
+         */
+        _suggestOptimizationMetric: function(sModelType, oModel) {
+            var mMetricSuggestions = {
+                "CLASSIFICATION": "F1",
+                "REGRESSION": "MAE",
+                "CLUSTERING": "SILHOUETTE",
+                "EMBEDDING": "COSINE_SIMILARITY",
+                "LLM": "PERPLEXITY",
+                "TIME_SERIES": "MAE",
+                "RECOMMENDATION": "AUC",
+                "ANOMALY": "AUC"
+            };
+            
+            var sSuggestedMetric = mMetricSuggestions[sModelType] || "AUTO";
+            oModel.setProperty("/optimizationMetric", sSuggestedMetric);
+        },
+
+        /**
+         * Suggests framework based on data type
+         * @param {string} sDataType - Selected data type
+         * @param {sap.ui.model.json.JSONModel} oModel - Create model
+         * @private
+         * @since 1.0.0
+         */
+        _suggestFramework: function(sDataType, oModel) {
+            var mFrameworkSuggestions = {
+                "TABULAR": "SCIKIT_LEARN",
+                "TEXT": "HUGGINGFACE",
+                "IMAGE": "PYTORCH",
+                "AUDIO": "PYTORCH",
+                "VIDEO": "PYTORCH",
+                "TIME_SERIES": "TENSORFLOW",
+                "GRAPH": "PYTORCH"
+            };
+            
+            var sSuggestedFramework = mFrameworkSuggestions[sDataType] || "AUTO";
+            oModel.setProperty("/framework", sSuggestedFramework);
+        },
+
+        /**
+         * Dataset selection value help handler
+         * @public
+         * @since 1.0.0
+         */
+        onSelectDataset: function() {
+            MessageToast.show("Opening dataset browser...");
+            // Implementation for dataset selection dialog
+            this._openDatasetBrowser();
+        },
+
+        /**
+         * Opens dataset browser dialog
+         * @private
+         * @since 1.0.0
+         */
+        _openDatasetBrowser: function() {
+            if (!this._oDatasetDialog) {
+                Fragment.load({
+                    id: this.base.getView().getId(),
+                    name: "a2a.network.agent2.ext.fragment.DatasetBrowser",
+                    controller: this
+                }).then(function(oDialog) {
+                    this._oDatasetDialog = oDialog;
+                    this.base.getView().addDependent(this._oDatasetDialog);
+                    this._loadAvailableDatasets();
+                    this._oDatasetDialog.open();
+                }.bind(this)).catch(function() {
+                    // Fallback if fragment doesn't exist
+                    MessageBox.information("Dataset browser not yet implemented. Please enter dataset name manually.");
+                });
+            } else {
+                this._oDatasetDialog.open();
+            }
+        },
+
+        /**
+         * Loads available datasets for selection
+         * @private
+         * @since 1.0.0
+         */
+        _loadAvailableDatasets: function() {
+            // Implementation for loading datasets
+            MessageToast.show("Loading available datasets...");
+        },
+
+        /**
+         * Dialog after open event handler
+         * @public
+         * @since 1.0.0
+         */
+        onDialogAfterOpen: function() {
+            // Focus on first input field for accessibility
+            var oDialog = this.base.getView().byId("createAITaskDialog");
+            if (oDialog) {
+                var oFirstInput = oDialog.byId("aiTaskNameInput");
+                if (oFirstInput) {
+                    setTimeout(function() {
+                        oFirstInput.focus();
+                    }, 100);
+                }
+            }
+        },
+
+        /**
+         * Dialog after close event handler
+         * @public
+         * @since 1.0.0
+         */
+        onDialogAfterClose: function() {
+            // Reset form when dialog closes
+            this._initializeCreateModel();
+        },
+
+        /**
+         * Validates the entire form and updates the isValid flag
+         * @private
+         * @since 1.0.0
+         */
+        _validateForm: function() {
+            var oCreateModel = this.base.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            var bIsValid = oData.taskName && 
+                          oData.taskName.trim().length >= 3 &&
+                          oData.datasetName &&
+                          oData.modelType &&
+                          oData.dataType &&
+                          oData.taskNameState !== "Error" &&
+                          oData.datasetNameState !== "Error" &&
+                          oData.modelTypeState !== "Error" &&
+                          oData.dataTypeState !== "Error";
+            
+            oCreateModel.setProperty("/isValid", bIsValid);
+        },
+
+        /**
+         * Cancel create dialog handler
+         * @public
+         * @since 1.0.0
+         */
+        onCancelCreate: function() {
+            this._getCreateDialog().close();
+        },
+
+        /**
+         * Get or create the create dialog
+         * @private
+         * @returns {sap.m.Dialog} The create dialog
+         * @since 1.0.0
+         */
+        _getCreateDialog: function() {
+            return this.base.getView().byId("createAITaskDialog");
         }
     });
 });

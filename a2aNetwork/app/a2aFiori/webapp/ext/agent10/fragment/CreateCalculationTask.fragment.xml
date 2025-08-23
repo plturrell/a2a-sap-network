@@ -6,12 +6,14 @@
     xmlns:codeeditor="sap.ui.codeeditor">
     
     <Dialog
+        id="createCalculationTaskDialog"
         title="{i18n>dialog.createCalculationTask.title}"
         class="sapUiMediumMargin"
-        contentWidth="80vw"
+        contentWidth="75rem"
         contentHeight="85vh"
         resizable="true"
-        draggable="true">
+        draggable="true"
+        stretch="{device>/system/phone}">
         
         <content>
             <Page showHeader="false">
@@ -32,19 +34,36 @@
                                             
                                             <!-- Task Name -->
                                             <Label text="{i18n>field.taskName}" required="true"/>
-                                            <Input id="taskNameInput" value="" placeholder="{i18n>placeholder.taskName}" required="true"/>
+                                            <Input 
+                                                id="taskNameInput" 
+                                                value="{create>/taskName}" 
+                                                placeholder="{i18n>placeholder.taskName}" 
+                                                required="true"
+                                                valueState="{create>/taskNameState}"
+                                                valueStateText="{create>/taskNameStateText}"
+                                                liveChange=".onTaskNameChange"
+                                                ariaLabelledBy="taskNameLabel"/>
                                             
                                             <!-- Description -->
                                             <Label text="{i18n>field.description}"/>
-                                            <TextArea id="descriptionInput" value="" rows="3" placeholder="{i18n>placeholder.description}"/>
+                                            <TextArea 
+                                                id="descriptionInput" 
+                                                value="{create>/description}" 
+                                                rows="3" 
+                                                placeholder="{i18n>placeholder.description}"
+                                                maxLength="500"
+                                                showExceededText="true"/>
                                             
                                             <!-- Calculation Type -->
                                             <Label text="{i18n>field.calculationType}" required="true"/>
                                             <ComboBox
                                                 id="calculationTypeCombo"
-                                                selectedKey=""
+                                                selectedKey="{create>/calculationType}"
                                                 placeholder="{i18n>placeholder.calculationType}"
-                                                required="true">
+                                                required="true"
+                                                valueState="{create>/calculationTypeState}"
+                                                valueStateText="{create>/calculationTypeStateText}"
+                                                selectionChange=".onCalculationTypeChange">
                                                 <core:Item key="basic" text="{i18n>calc.basic}"/>
                                                 <core:Item key="advanced" text="{i18n>calc.advanced}"/>
                                                 <core:Item key="statistical" text="{i18n>calc.statistical}"/>
@@ -61,9 +80,12 @@
                                             <Label text="{i18n>field.formulaCategory}" required="true"/>
                                             <ComboBox
                                                 id="formulaCategoryCombo"
-                                                selectedKey=""
+                                                selectedKey="{create>/formulaCategory}"
                                                 placeholder="{i18n>placeholder.formulaCategory}"
-                                                required="true">
+                                                required="true"
+                                                valueState="{create>/formulaCategoryState}"
+                                                valueStateText="{create>/formulaCategoryStateText}"
+                                                selectionChange=".onFormulaCategoryChange">
                                                 <core:Item key="arithmetic" text="{i18n>formula.arithmetic}"/>
                                                 <core:Item key="algebraic" text="{i18n>formula.algebraic}"/>
                                                 <core:Item key="trigonometric" text="{i18n>formula.trigonometric}"/>
@@ -77,7 +99,10 @@
                                             
                                             <!-- Priority -->
                                             <Label text="{i18n>field.priority}"/>
-                                            <SegmentedButton id="prioritySegmented" selectedKey="medium">
+                                            <SegmentedButton 
+                                                id="prioritySegmented" 
+                                                selectedKey="{create>/priority}"
+                                                selectionChange=".onPriorityChange">
                                                 <items>
                                                     <SegmentedButtonItem key="low" text="{i18n>priority.low}"/>
                                                     <SegmentedButtonItem key="medium" text="{i18n>priority.medium}"/>
@@ -102,15 +127,16 @@
                                             type="javascript"
                                             height="200px"
                                             width="100%"
-                                            value=""
-                                            class="sapUiSmallMarginBottom"/>
+                                            value="{create>/formulaExpression}"
+                                            class="sapUiSmallMarginBottom"
+                                            change=".onFormulaChange"/>
                                         
                                         <HBox class="sapUiSmallMarginBottom">
                                             <VBox class="sapUiMediumMarginEnd" width="50%">
                                                 
                                                 <!-- Formula Language -->
                                                 <Label text="{i18n>field.formulaLanguage}" class="sapUiSmallMarginBottom"/>
-                                                <ComboBox id="formulaLanguageCombo" selectedKey="javascript">
+                                                <ComboBox id="formulaLanguageCombo" selectedKey="{create>/formulaLanguage}" selectionChange=".onFormulaLanguageChange">
                                                     <core:Item key="javascript" text="JavaScript"/>
                                                     <core:Item key="python" text="Python"/>
                                                     <core:Item key="r" text="R"/>
@@ -121,7 +147,7 @@
                                                 
                                                 <!-- Expected Data Type -->
                                                 <Label text="{i18n>field.expectedDataType}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                                <ComboBox id="expectedDataTypeCombo" selectedKey="number">
+                                                <ComboBox id="expectedDataTypeCombo" selectedKey="{create>/expectedDataType}">
                                                     <core:Item key="number" text="Number"/>
                                                     <core:Item key="string" text="String"/>
                                                     <core:Item key="boolean" text="Boolean"/>
@@ -136,7 +162,7 @@
                                                 
                                                 <!-- Formula Complexity -->
                                                 <Label text="{i18n>field.formulaComplexity}" class="sapUiSmallMarginBottom"/>
-                                                <ComboBox id="formulaComplexityCombo" selectedKey="medium">
+                                                <ComboBox id="formulaComplexityCombo" selectedKey="{create>/formulaComplexity}">
                                                     <core:Item key="low" text="{i18n>complexity.low}"/>
                                                     <core:Item key="medium" text="{i18n>complexity.medium}"/>
                                                     <core:Item key="high" text="{i18n>complexity.high}"/>
@@ -145,7 +171,7 @@
                                                 
                                                 <!-- Formula Source -->
                                                 <Label text="{i18n>field.formulaSource}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                                <ComboBox id="formulaSourceCombo" selectedKey="custom">
+                                                <ComboBox id="formulaSourceCombo" selectedKey="{create>/formulaSource}">
                                                     <core:Item key="custom" text="{i18n>source.custom}"/>
                                                     <core:Item key="library" text="{i18n>source.library}"/>
                                                     <core:Item key="template" text="{i18n>source.template}"/>
@@ -214,7 +240,7 @@
                                             
                                             <!-- Precision Level -->
                                             <Label text="{i18n>field.precisionLevel}"/>
-                                            <ComboBox id="precisionLevelCombo" selectedKey="double">
+                                            <ComboBox id="precisionLevelCombo" selectedKey="{create>/precisionLevel}">
                                                 <core:Item key="single" text="{i18n>precision.single}"/>
                                                 <core:Item key="double" text="{i18n>precision.double}"/>
                                                 <core:Item key="extended" text="{i18n>precision.extended}"/>
@@ -225,7 +251,7 @@
                                             
                                             <!-- Calculation Engine -->
                                             <Label text="{i18n>field.calculationEngine}"/>
-                                            <ComboBox id="calculationEngineCombo" selectedKey="numpy">
+                                            <ComboBox id="calculationEngineCombo" selectedKey="{create>/calculationEngine}">
                                                 <core:Item key="numpy" text="{i18n>engine.numpy}"/>
                                                 <core:Item key="scipy" text="{i18n>engine.scipy}"/>
                                                 <core:Item key="sympy" text="{i18n>engine.sympy}"/>
@@ -236,31 +262,31 @@
                                             
                                             <!-- Parallel Processing -->
                                             <Label text="{i18n>field.parallelProcessing}"/>
-                                            <Switch id="parallelProcessingSwitch" state="false"/>
+                                            <Switch id="parallelProcessingSwitch" state="{create>/parallelProcessing}"/>
                                             
                                             <!-- Thread Count -->
                                             <Label text="{i18n>field.threadCount}"/>
-                                            <StepInput id="threadCountInput" value="4" min="1" max="32" step="1"/>
+                                            <StepInput id="threadCountInput" value="{create>/threadCount}" min="1" max="32" step="1"/>
                                             
                                             <!-- GPU Acceleration -->
                                             <Label text="{i18n>field.gpuAcceleration}"/>
-                                            <Switch id="gpuAccelerationSwitch" state="false"/>
+                                            <Switch id="gpuAccelerationSwitch" state="{create>/gpuAcceleration}"/>
                                             
                                             <!-- Caching Enabled -->
                                             <Label text="{i18n>field.cachingEnabled}"/>
-                                            <Switch id="cachingEnabledSwitch" state="true"/>
+                                            <Switch id="cachingEnabledSwitch" state="{create>/cachingEnabled}"/>
                                             
                                             <!-- Result Validation -->
                                             <Label text="{i18n>field.resultValidation}"/>
-                                            <Switch id="resultValidationSwitch" state="true"/>
+                                            <Switch id="resultValidationSwitch" state="{create>/resultValidation}"/>
                                             
                                             <!-- Confidence Interval -->
                                             <Label text="{i18n>field.confidenceInterval}"/>
-                                            <Slider id="confidenceIntervalSlider" value="95" min="90" max="99.9" step="0.1" enableTickmarks="true"/>
+                                            <Slider id="confidenceIntervalSlider" value="{create>/confidenceInterval}" min="90" max="99.9" step="0.1" enableTickmarks="true"/>
                                             
                                             <!-- Self-Healing Enabled -->
                                             <Label text="{i18n>field.selfHealingEnabled}"/>
-                                            <Switch id="selfHealingSwitch" state="true"/>
+                                            <Switch id="selfHealingSwitch" state="{create>/selfHealingEnabled}"/>
                                             
                                         </f:content>
                                     </f:SimpleForm>
@@ -345,10 +371,16 @@
         </content>
         
         <beginButton>
-            <Button text="{i18n>btn.createTask}" press="onCreateTask" type="Emphasized"/>
+            <Button 
+                text="{i18n>btn.cancel}" 
+                press=".onCancelCreateCalculationTask"/>
         </beginButton>
         <endButton>
-            <Button text="{i18n>btn.cancel}" press="onCancelCreateTask"/>
+            <Button 
+                text="{i18n>btn.create}" 
+                press=".onConfirmCreateCalculationTask" 
+                type="Emphasized"
+                enabled="{= ${create>/taskName} &amp;&amp; ${create>/calculationType} &amp;&amp; ${create>/formulaCategory} &amp;&amp; !${create>/taskNameState} &amp;&amp; !${create>/calculationTypeState} &amp;&amp; !${create>/formulaCategoryState} }"/>
         </endButton>
         
     </Dialog>

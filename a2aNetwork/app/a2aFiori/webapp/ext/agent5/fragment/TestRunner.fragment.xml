@@ -7,23 +7,32 @@
     <Dialog
         id="testRunnerDialog"
         title="Test Runner - Execution Control"
-        contentWidth="90%"
-        contentHeight="85%"
-        resizable="true">
+        contentWidth="{= ${device>/system/phone} ? '100%' : '90%' }"
+        contentHeight="{= ${device>/system/phone} ? '100%' : '85%' }"
+        resizable="{= !${device>/system/phone} }"
+        stretch="{device>/system/phone}"
+        aria-label="Test execution dialog for running and monitoring test suites"
+        role="dialog">
         
         <content>
             <l:Splitter height="100%" orientation="Horizontal">
                 <l:contentAreas>
                     <!-- Configuration Panel -->
-                    <Panel headerText="Execution Configuration" width="40%">
+                    <Panel 
+                        headerText="Execution Configuration" 
+                        width="{= ${device>/system/phone} ? '100%' : '40%' }"
+                        aria-label="Test execution configuration settings">
                         <content>
                             <VBox class="sapUiMediumMargin">
                                 <!-- Test Suite Selection -->
                                 <VBox>
-                                    <Label text="Test Suite"/>
+                                    <Label text="Test Suite" labelFor="testSuiteSelect"/>
                                     <Select 
+                                        id="testSuiteSelect"
                                         selectedKey="{runner>/selectedSuite}"
-                                        items="{runner>/availableSuites}">
+                                        items="{runner>/availableSuites}"
+                                        aria-label="Select test suite to execute"
+                                        tooltip="Choose the test suite you want to run">
                                         <core:ListItem 
                                             key="{runner>id}"
                                             text="{runner>name} ({runner>testCount} tests)"/>
@@ -32,17 +41,23 @@
                                 
                                 <!-- Execution Settings -->
                                 <VBox class="sapUiMediumMarginTop">
-                                    <Label text="Execution Mode"/>
+                                    <Label text="Execution Mode" labelFor="executionModeGroup"/>
                                     <RadioButtonGroup 
-                                        selectedIndex="{= ${runner>/executionMode} === 'SEQUENTIAL' ? 0 : 1 }">
+                                        id="executionModeGroup"
+                                        selectedIndex="{= ${runner>/executionMode} === 'SEQUENTIAL' ? 0 : 1 }"
+                                        aria-label="Select test execution mode">
                                         <RadioButton text="Sequential"/>
                                         <RadioButton text="Parallel"/>
                                     </RadioButtonGroup>
                                 </VBox>
                                 
                                 <VBox class="sapUiMediumMarginTop">
-                                    <Label text="Environment"/>
-                                    <Select selectedKey="{runner>/environment}">
+                                    <Label text="Environment" labelFor="environmentSelect"/>
+                                    <Select 
+                                        id="environmentSelect"
+                                        selectedKey="{runner>/environment}"
+                                        aria-label="Select test environment"
+                                        tooltip="Choose the environment where tests will run">
                                         <items>
                                             <core:Item key="DEV" text="Development"/>
                                             <core:Item key="TEST" text="Test"/>
@@ -53,24 +68,32 @@
                                 </VBox>
                                 
                                 <VBox class="sapUiMediumMarginTop">
-                                    <Label text="Parallel Threads"/>
+                                    <Label text="Parallel Threads" labelFor="parallelThreadsSlider"/>
                                     <Slider 
+                                        id="parallelThreadsSlider"
                                         value="{runner>/parallelThreads}"
                                         min="1"
                                         max="10"
                                         step="1"
                                         enableTickmarks="true"
                                         inputsAsTooltips="true"
-                                        visible="{= ${runner>/executionMode} === 'PARALLEL' }"/>
+                                        visible="{= ${runner>/executionMode} === 'PARALLEL' }"
+                                        aria-label="Number of parallel threads for test execution"
+                                        aria-valuemin="1"
+                                        aria-valuemax="10"
+                                        aria-valuenow="{runner>/parallelThreads}"/>
                                 </VBox>
                                 
                                 <VBox class="sapUiMediumMarginTop">
-                                    <Label text="Retry Attempts"/>
+                                    <Label text="Retry Attempts" labelFor="retryAttemptsInput"/>
                                     <StepInput 
+                                        id="retryAttemptsInput"
                                         value="{runner>/retryAttempts}"
                                         min="0"
                                         max="5"
-                                        step="1"/>
+                                        step="1"
+                                        aria-label="Number of retry attempts for failed tests"
+                                        tooltip="Set how many times to retry failed tests"/>
                                 </VBox>
                                 
                                 <!-- Test Filters -->
@@ -82,10 +105,12 @@
                                     <VBox>
                                         <CheckBox 
                                             text="Include smoke tests"
-                                            selected="{runner>/testFilters/includeSmoke}"/>
+                                            selected="{runner>/testFilters/includeSmoke}"
+                                            aria-label="Include smoke tests in execution"/>
                                         <CheckBox 
                                             text="Include regression tests"
-                                            selected="{runner>/testFilters/includeRegression}"/>
+                                            selected="{runner>/testFilters/includeRegression}"
+                                            aria-label="Include regression tests in execution"/>
                                         
                                         <Label text="Priority Filter"/>
                                         <Select selectedKey="{runner>/testFilters/priorityFilter}">
@@ -125,14 +150,20 @@
                                         type="Emphasized"
                                         icon="sap-icon://play"
                                         press=".onExecuteTestSuite"
-                                        enabled="{runner>/selectedSuite}"/>
+                                        enabled="{runner>/selectedSuite}"
+                                        aria-label="Start test suite execution"
+                                        tooltip="Begin running the selected test suite"/>
                                 </VBox>
                             </VBox>
                         </content>
                     </Panel>
                     
                     <!-- Execution Monitor Panel -->
-                    <Panel headerText="Execution Monitor" width="60%">
+                    <Panel 
+                        headerText="Execution Monitor" 
+                        width="{= ${device>/system/phone} ? '100%' : '60%' }"
+                        aria-label="Test execution monitoring and results"
+                        visible="{= !${device>/system/phone} || ${runner>/isRunning} }">
                         <content>
                             <VBox>
                                 <!-- Execution Summary -->
@@ -171,7 +202,9 @@
                                         items="{runner>/executionResults}"
                                         mode="None"
                                         growing="true"
-                                        growingThreshold="20">
+                                        growingThreshold="{= ${device>/system/phone} ? 10 : 20 }"
+                                        sticky="{= ${device>/system/desktop} ? 'ColumnHeaders' : '' }"
+                                        aria-label="Test execution results table">
                                         <columns>
                                             <Column>
                                                 <Text text="Test Name"/>
@@ -206,15 +239,19 @@
                                 <!-- Execution Controls -->
                                 <Toolbar class="sapUiMediumMarginTop">
                                     <Button 
-                                        text="Pause"
+                                        text="{= ${device>/system/phone} ? '' : 'Pause' }"
                                         icon="sap-icon://pause"
                                         press=".onPauseExecution"
-                                        enabled="{runner>/isRunning}"/>
+                                        enabled="{runner>/isRunning}"
+                                        aria-label="Pause test execution"
+                                        tooltip="Pause the current test execution"/>
                                     <Button 
-                                        text="Stop"
+                                        text="{= ${device>/system/phone} ? '' : 'Stop' }"
                                         icon="sap-icon://stop"
                                         press=".onStopExecution"
-                                        enabled="{runner>/isRunning}"/>
+                                        enabled="{runner>/isRunning}"
+                                        aria-label="Stop test execution"
+                                        tooltip="Stop the current test execution"/>
                                     <ToolbarSpacer/>
                                     <Button 
                                         text="View Logs"
@@ -233,13 +270,17 @@
         </content>
         
         <beginButton>
-            <Button text="Close" press=".onCloseTestRunner"/>
+            <Button 
+                text="Close" 
+                press=".onCloseTestRunner"
+                aria-label="Close test runner dialog"/>
         </beginButton>
         
         <endButton>
             <Button 
-                text="Save Configuration"
-                press=".onSaveConfiguration"/>
+                text="{= ${device>/system/phone} ? 'Save' : 'Save Configuration' }"
+                press=".onSaveConfiguration"
+                aria-label="Save test configuration settings"/>
         </endButton>
         
     </Dialog>

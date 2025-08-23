@@ -1,0 +1,554 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:mc="sap.suite.ui.microchart">
+    
+    <Dialog
+        id="problemSolverDialog"
+        title="Problem Solver"
+        contentWidth="90%"
+        contentHeight="85%"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <IconTabBar expandable="false">
+                <items>
+                    <!-- Problem Dashboard ---->
+                    <IconTabFilter text="Dashboard" icon="sap-icon://overview-chart">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Problem Statistics ---->
+                            <Panel headerText="Problem Solving Statistics" class="sapUiMediumMarginBottom">
+                                <HBox class="sapUiMediumMargin">
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Active Problems" level="H4"/>
+                                        <ObjectNumber 
+                                            number="{problemSolver>/stats/activeProblems}"
+                                            state="{= ${problemSolver>/stats/activeProblems} === 0 ? 'Success' : ${problemSolver>/stats/activeProblems} <= 5 ? 'Warning' : 'Error'}"
+                                            emphasized="true"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Success Rate" level="H4"/>
+                                        <mc:RadialMicroChart
+                                            size="L"
+                                            percentage="{problemSolver>/stats/successRate}"
+                                            valueColor="{= ${problemSolver>/stats/successRate} >= 90 ? 'Good' : ${problemSolver>/stats/successRate} >= 70 ? 'Critical' : 'Error'}"/>
+                                        <Text text="{problemSolver>/stats/successRate}%" class="sapUiLargeMarginTop"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Avg Solution Time" level="H4"/>
+                                        <ObjectNumber 
+                                            number="{problemSolver>/stats/avgSolutionTime}"
+                                            unit="min"
+                                            state="{= ${problemSolver>/stats/avgSolutionTime} <= 30 ? 'Success' : ${problemSolver>/stats/avgSolutionTime} <= 60 ? 'Warning' : 'Error'}"
+                                            emphasized="true"/>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Problems Solved Today" level="H4"/>
+                                        <ObjectNumber 
+                                            number="{problemSolver>/stats/solvedToday}"
+                                            state="Information"
+                                            emphasized="true"/>
+                                    </VBox>
+                                    <VBox>
+                                        <Title text="Solution Quality" level="H4"/>
+                                        <ProgressIndicator 
+                                            percentValue="{problemSolver>/stats/solutionQuality}"
+                                            displayValue="{problemSolver>/stats/solutionQuality}%"
+                                            state="{= ${problemSolver>/stats/solutionQuality} >= 80 ? 'Success' : ${problemSolver>/stats/solutionQuality} >= 60 ? 'Warning' : 'Error'}"
+                                            width="150px"/>
+                                    </VBox>
+                                </HBox>
+                            </Panel>
+                            
+                            <!-- Problem Types Distribution ---->
+                            <Panel headerText="Problem Types Distribution" class="sapUiMediumMarginBottom">
+                                <core:HTML 
+                                    id="problemTypesChart"
+                                    content='<div id="problemTypesChartDiv" style="width: 100%; height: 300px;"></div>'
+                                    preferDOM="true"/>
+                            </Panel>
+                            
+                            <!-- Active Problem Queue ---->
+                            <Panel headerText="Active Problem Queue">
+                                <Table 
+                                    items="{problemSolver>/activeProblemQueue}"
+                                    mode="SingleSelect"
+                                    growing="true"
+                                    growingThreshold="10">
+                                    <headerToolbar>
+                                        <Toolbar>
+                                            <Title text="Current Problem Queue"/>
+                                            <ToolbarSpacer/>
+                                            <Button 
+                                                text="Refresh Queue"
+                                                icon="sap-icon://refresh"
+                                                press=".onRefreshProblemQueue"/>
+                                            <Button 
+                                                text="Prioritize"
+                                                icon="sap-icon://sort"
+                                                press=".onPrioritizeProblems"/>
+                                        </Toolbar>
+                                    </headerToolbar>
+                                    <columns>
+                                        <Column>
+                                            <Text text="Problem"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Type"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Priority"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Progress"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Solver"/>
+                                        </Column>
+                                        <Column>
+                                            <Text text="Actions"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem press=".onSelectActiveProblem">
+                                            <cells>
+                                                <VBox>
+                                                    <Text text="{problemTitle}" class="sapThemeHighlight-asTextColor"/>
+                                                    <Text text="{description}" maxLines="2" class="sapThemeTextSecondary"/>
+                                                    <Text text="Started: {startTime}" class="sapThemeTextSecondary"/>
+                                                </VBox>
+                                                <ObjectStatus 
+                                                    text="{problemType}"
+                                                    state="Information"
+                                                    icon="{= ${problemType} === 'OPTIMIZATION' ? 'sap-icon://target-group' : ${problemType} === 'CLASSIFICATION' ? 'sap-icon://group' : ${problemType} === 'SEARCH' ? 'sap-icon://search' : 'sap-icon://question-mark'}"/>
+                                                <ObjectStatus 
+                                                    text="{priority}"
+                                                    state="{= ${priority} === 'HIGH' ? 'Error' : ${priority} === 'MEDIUM' ? 'Warning' : 'Success'}"
+                                                    icon="{= ${priority} === 'HIGH' ? 'sap-icon://alert' : ${priority} === 'MEDIUM' ? 'sap-icon://warning' : 'sap-icon://status-positive'}"/>
+                                                <ProgressIndicator 
+                                                    percentValue="{progress}"
+                                                    displayValue="{progress}%"
+                                                    state="{= ${progress} >= 80 ? 'Success' : ${progress} >= 40 ? 'Warning' : 'Error'}"
+                                                    width="100px"/>
+                                                <Text text="{solver}"/>
+                                                <HBox>
+                                                    <Button 
+                                                        icon="sap-icon://detail-view"
+                                                        tooltip="View Details"
+                                                        press=".onViewProblemDetails"/>
+                                                    <Button 
+                                                        icon="sap-icon://pause"
+                                                        tooltip="Pause Solving"
+                                                        press=".onPauseProblemSolving"/>
+                                                </HBox>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Problem Repository ---->
+                    <IconTabFilter text="Problem Repository" icon="sap-icon://documents">
+                        <VBox class="sapUiMediumMargin">
+                            <Table 
+                                items="{problemSolver>/problemRepository}"
+                                mode="SingleSelect"
+                                growing="true"
+                                growingThreshold="50">
+                                <headerToolbar>
+                                    <Toolbar>
+                                        <Title text="Problem History"/>
+                                        <ToolbarSpacer/>
+                                        <SearchField 
+                                            width="20rem"
+                                            placeholder="Search problems..."
+                                            search=".onSearchProblems"/>
+                                        <Button 
+                                            text="New Problem"
+                                            icon="sap-icon://add"
+                                            press=".onCreateProblem"
+                                            type="Emphasized"/>
+                                        <Button 
+                                            text="Import"
+                                            icon="sap-icon://upload"
+                                            press=".onImportProblems"/>
+                                        <Button 
+                                            text="Export"
+                                            icon="sap-icon://download"
+                                            press=".onExportProblems"/>
+                                    </Toolbar>
+                                </headerToolbar>
+                                <columns>
+                                    <Column>
+                                        <Text text="Problem"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Type"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Complexity"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Solution"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Quality"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Status"/>
+                                    </Column>
+                                    <Column>
+                                        <Text text="Actions"/>
+                                    </Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <VBox>
+                                                <Text text="{problemTitle}" class="sapThemeHighlight-asTextColor"/>
+                                                <Text text="{description}" maxLines="2" class="sapThemeTextSecondary"/>
+                                                <Text text="Domain: {problemDomain}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <ObjectStatus 
+                                                text="{problemType}"
+                                                state="Information"
+                                                icon="{= ${problemType} === 'OPTIMIZATION' ? 'sap-icon://target-group' : ${problemType} === 'CLASSIFICATION' ? 'sap-icon://group' : ${problemType} === 'SEARCH' ? 'sap-icon://search' : ${problemType} === 'CONSTRAINT' ? 'sap-icon://restrictions' : 'sap-icon://question-mark'}"/>
+                                            <VBox>
+                                                <ObjectStatus 
+                                                    text="{complexityLevel}"
+                                                    state="{= ${complexityLevel} === 'HIGH' ? 'Error' : ${complexityLevel} === 'MEDIUM' ? 'Warning' : 'Success'}"
+                                                    icon="{= ${complexityLevel} === 'HIGH' ? 'sap-icon://warning' : ${complexityLevel} === 'MEDIUM' ? 'sap-icon://pending' : 'sap-icon://status-positive'}"/>
+                                                <Text text="Score: {complexityScore}" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <VBox>
+                                                <Text text="{solutionApproach}" maxLines="1" class="sapThemeHighlight-asTextColor"/>
+                                                <Text text="Steps: {solutionSteps}" class="sapThemeTextSecondary"/>
+                                                <Text text="Time: {solutionTime}min" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <VBox>
+                                                <ProgressIndicator 
+                                                    percentValue="{solutionQuality}"
+                                                    displayValue="{solutionQuality}%"
+                                                    state="{= ${solutionQuality} >= 80 ? 'Success' : ${solutionQuality} >= 60 ? 'Warning' : 'Error'}"
+                                                    width="100px"/>
+                                                <Text text="Optimality: {solutionOptimality}%" class="sapThemeTextSecondary"/>
+                                            </VBox>
+                                            <ObjectStatus 
+                                                text="{status}"
+                                                state="{= ${status} === 'SOLVED' ? 'Success' : ${status} === 'SOLVING' ? 'Warning' : ${status} === 'FAILED' ? 'Error' : 'None'}"
+                                                icon="{= ${status} === 'SOLVED' ? 'sap-icon://status-positive' : ${status} === 'SOLVING' ? 'sap-icon://pending' : ${status} === 'FAILED' ? 'sap-icon://status-negative' : 'sap-icon://question-mark'}"/>
+                                            <HBox>
+                                                <Button 
+                                                    icon="sap-icon://detail-view"
+                                                    tooltip="View Details"
+                                                    press=".onViewProblemSolution"/>
+                                                <Button 
+                                                    icon="sap-icon://play"
+                                                    tooltip="Re-solve"
+                                                    press=".onResolveProblem"/>
+                                                <Button 
+                                                    icon="sap-icon://copy"
+                                                    tooltip="Clone Problem"
+                                                    press=".onCloneProblem"/>
+                                                <Button 
+                                                    icon="sap-icon://delete"
+                                                    tooltip="Delete"
+                                                    press=".onDeleteProblem"/>
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Problem Definition ---->
+                    <IconTabFilter text="Define Problem" icon="sap-icon://create">
+                        <VBox class="sapUiMediumMargin">
+                            <Panel headerText="Problem Definition" class="sapUiMediumMarginBottom">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    class="sapUiMediumMargin">
+                                    <form:content>
+                                        <Label text="Problem Title"/>
+                                        <Input value="{problemDefinition>/title}" placeholder="Enter problem title"/>
+                                        
+                                        <Label text="Problem Type"/>
+                                        <Select selectedKey="{problemDefinition>/type}">
+                                            <items>
+                                                <core:Item key="OPTIMIZATION" text="Optimization Problem"/>
+                                                <core:Item key="SEARCH" text="Search Problem"/>
+                                                <core:Item key="CLASSIFICATION" text="Classification Problem"/>
+                                                <core:Item key="CONSTRAINT" text="Constraint Satisfaction"/>
+                                                <core:Item key="PLANNING" text="Planning Problem"/>
+                                                <core:Item key="REASONING" text="Reasoning Problem"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Problem Domain"/>
+                                        <Select selectedKey="{problemDefinition>/domain}">
+                                            <items>
+                                                <core:Item key="LOGISTICS" text="Logistics & Transportation"/>
+                                                <core:Item key="SCHEDULING" text="Scheduling & Planning"/>
+                                                <core:Item key="RESOURCE_ALLOCATION" text="Resource Allocation"/>
+                                                <core:Item key="ROUTE_OPTIMIZATION" text="Route Optimization"/>
+                                                <core:Item key="DECISION_SUPPORT" text="Decision Support"/>
+                                                <core:Item key="PATTERN_RECOGNITION" text="Pattern Recognition"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Problem Description"/>
+                                        <TextArea 
+                                            value="{problemDefinition>/description}"
+                                            rows="4"
+                                            placeholder="Describe the problem in detail"/>
+                                        
+                                        <Label text="Constraints"/>
+                                        <VBox>
+                                            <TextArea 
+                                                value="{problemDefinition>/constraints}"
+                                                rows="3"
+                                                placeholder="Enter problem constraints and limitations"/>
+                                            <HBox class="sapUiTinyMarginTop">
+                                                <Button 
+                                                    text="Add Constraint"
+                                                    icon="sap-icon://add"
+                                                    press=".onAddConstraint"/>
+                                                <Button 
+                                                    text="Validate Constraints"
+                                                    icon="sap-icon://validate"
+                                                    press=".onValidateConstraints"/>
+                                            </HBox>
+                                        </VBox>
+                                        
+                                        <Label text="Objective Function"/>
+                                        <VBox>
+                                            <TextArea 
+                                                value="{problemDefinition>/objective}"
+                                                rows="3"
+                                                placeholder="Define what to optimize or achieve"/>
+                                            <HBox class="sapUiTinyMarginTop">
+                                                <Select selectedKey="{problemDefinition>/objectiveType}">
+                                                    <items>
+                                                        <core:Item key="MINIMIZE" text="Minimize"/>
+                                                        <core:Item key="MAXIMIZE" text="Maximize"/>
+                                                        <core:Item key="SATISFY" text="Satisfy"/>
+                                                    </items>
+                                                </Select>
+                                            </HBox>
+                                        </VBox>
+                                        
+                                        <Label text="Input Parameters"/>
+                                        <VBox>
+                                            <TextArea 
+                                                value="{problemDefinition>/parameters}"
+                                                rows="4"
+                                                placeholder="Enter input parameters and data"/>
+                                            <HBox class="sapUiTinyMarginTop">
+                                                <Button 
+                                                    text="Load Test Data"
+                                                    icon="sap-icon://upload"
+                                                    press=".onLoadTestData"/>
+                                                <Button 
+                                                    text="Generate Sample"
+                                                    icon="sap-icon://create"
+                                                    press=".onGenerateSampleData"/>
+                                            </HBox>
+                                        </VBox>
+                                        
+                                        <Label text="Priority"/>
+                                        <Select selectedKey="{problemDefinition>/priority}">
+                                            <items>
+                                                <core:Item key="LOW" text="Low Priority"/>
+                                                <core:Item key="MEDIUM" text="Medium Priority"/>
+                                                <core:Item key="HIGH" text="High Priority"/>
+                                                <core:Item key="CRITICAL" text="Critical Priority"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Time Limit"/>
+                                        <HBox>
+                                            <Slider 
+                                                value="{problemDefinition>/timeLimit}"
+                                                min="1"
+                                                max="1440"
+                                                step="1"
+                                                width="300px"/>
+                                            <Text text="{problemDefinition>/timeLimit} minutes" class="sapUiTinyMarginTop"/>
+                                        </HBox>
+                                    </form:content>
+                                </form:SimpleForm>
+                                
+                                <HBox class="sapUiMediumMargin">
+                                    <Button 
+                                        text="Validate Problem"
+                                        icon="sap-icon://validate"
+                                        press=".onValidateProblem"
+                                        class="sapUiMediumMarginEnd"/>
+                                    <Button 
+                                        text="Solve Problem"
+                                        icon="sap-icon://play"
+                                        press=".onSolveProblem"
+                                        type="Emphasized"
+                                        class="sapUiMediumMarginEnd"/>
+                                    <Button 
+                                        text="Clear"
+                                        icon="sap-icon://clear-all"
+                                        press=".onClearProblemDefinition"/>
+                                </HBox>
+                            </Panel>
+                            
+                            <!-- Solver Configuration ---->
+                            <Panel headerText="Solver Configuration" expandable="true" expanded="false">
+                                <form:SimpleForm
+                                    editable="true"
+                                    layout="ResponsiveGridLayout"
+                                    class="sapUiMediumMargin">
+                                    <form:content>
+                                        <Label text="Solver Algorithm"/>
+                                        <Select selectedKey="{problemDefinition>/solverAlgorithm}">
+                                            <items>
+                                                <core:Item key="GENETIC_ALGORITHM" text="Genetic Algorithm"/>
+                                                <core:Item key="SIMULATED_ANNEALING" text="Simulated Annealing"/>
+                                                <core:Item key="PARTICLE_SWARM" text="Particle Swarm Optimization"/>
+                                                <core:Item key="BRANCH_AND_BOUND" text="Branch and Bound"/>
+                                                <core:Item key="DYNAMIC_PROGRAMMING" text="Dynamic Programming"/>
+                                                <core:Item key="BACKTRACKING" text="Backtracking"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Search Strategy"/>
+                                        <Select selectedKey="{problemDefinition>/searchStrategy}">
+                                            <items>
+                                                <core:Item key="BREADTH_FIRST" text="Breadth-First Search"/>
+                                                <core:Item key="DEPTH_FIRST" text="Depth-First Search"/>
+                                                <core:Item key="BEST_FIRST" text="Best-First Search"/>
+                                                <core:Item key="A_STAR" text="A* Search"/>
+                                                <core:Item key="HILL_CLIMBING" text="Hill Climbing"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Heuristic Function"/>
+                                        <Select selectedKey="{problemDefinition>/heuristic}">
+                                            <items>
+                                                <core:Item key="MANHATTAN" text="Manhattan Distance"/>
+                                                <core:Item key="EUCLIDEAN" text="Euclidean Distance"/>
+                                                <core:Item key="HAMMING" text="Hamming Distance"/>
+                                                <core:Item key="CUSTOM" text="Custom Heuristic"/>
+                                            </items>
+                                        </Select>
+                                        
+                                        <Label text="Max Iterations"/>
+                                        <Slider 
+                                            value="{problemDefinition>/maxIterations}"
+                                            min="100"
+                                            max="10000"
+                                            step="100"
+                                            width="300px"/>
+                                        <Text text="{problemDefinition>/maxIterations}" class="sapUiTinyMarginTop"/>
+                                        
+                                        <Label text="Convergence Threshold"/>
+                                        <Slider 
+                                            value="{problemDefinition>/convergenceThreshold}"
+                                            min="0.001"
+                                            max="0.1"
+                                            step="0.001"
+                                            width="300px"/>
+                                        <Text text="{problemDefinition>/convergenceThreshold}" class="sapUiTinyMarginTop"/>
+                                    </form:content>
+                                </form:SimpleForm>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                    
+                    <!-- Analytics ---->
+                    <IconTabFilter text="Analytics" icon="sap-icon://bar-chart">
+                        <VBox class="sapUiMediumMargin">
+                            <!-- Problem Solving Performance ---->
+                            <Panel headerText="Problem Solving Performance Trends" class="sapUiMediumMarginBottom">
+                                <core:HTML 
+                                    id="problemSolvingPerformanceChart"
+                                    content='<div id="problemSolvingPerformanceChartDiv" style="width: 100%; height: 300px;"></div>'
+                                    preferDOM="true"/>
+                            </Panel>
+                            
+                            <!-- Algorithm Performance ---->
+                            <Panel headerText="Algorithm Performance Comparison">
+                                <HBox class="sapUiMediumMargin">
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Best Algorithms" level="H5"/>
+                                        <List items="{problemSolver>/analytics/bestAlgorithms}">
+                                            <StandardListItem
+                                                title="{algorithm}"
+                                                description="{problemType}"
+                                                info="{successRate}%"
+                                                infoState="Success"/>
+                                        </List>
+                                    </VBox>
+                                    <VBox class="sapUiMediumMarginEnd">
+                                        <Title text="Problem Complexity" level="H5"/>
+                                        <mc:DonutMicroChart
+                                            size="M"
+                                            segments="{problemSolver>/analytics/complexityDistribution}">
+                                            <mc:segments>
+                                                <mc:DonutMicroChartSegment 
+                                                    value="{value}"
+                                                    color="{color}"
+                                                    displayedValue="{label}"/>
+                                            </mc:segments>
+                                        </mc:DonutMicroChart>
+                                    </VBox>
+                                    <VBox>
+                                        <Title text="Solution Quality" level="H5"/>
+                                        <HBox>
+                                            <VBox class="sapUiSmallMarginEnd">
+                                                <Text text="Optimality" class="sapThemeTextSecondary"/>
+                                                <ObjectNumber number="{problemSolver>/analytics/optimality}%" state="Success"/>
+                                            </VBox>
+                                            <VBox class="sapUiSmallMarginEnd">
+                                                <Text text="Feasibility" class="sapThemeTextSecondary"/>
+                                                <ObjectNumber number="{problemSolver>/analytics/feasibility}%" state="Success"/>
+                                            </VBox>
+                                            <VBox>
+                                                <Text text="Efficiency" class="sapThemeTextSecondary"/>
+                                                <ObjectNumber number="{problemSolver>/analytics/efficiency}%" state="Warning"/>
+                                            </VBox>
+                                        </HBox>
+                                    </VBox>
+                                </HBox>
+                            </Panel>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        
+        <beginButton>
+            <Button 
+                text="Quick Solve"
+                icon="sap-icon://play"
+                press=".onQuickSolve"
+                type="Emphasized"/>
+        </beginButton>
+        
+        <endButton>
+            <HBox>
+                <Button 
+                    text="Export Solutions"
+                    icon="sap-icon://download"
+                    press=".onExportSolutions"
+                    class="sapUiMediumMarginEnd"/>
+                <Button 
+                    text="Close"
+                    press=".onCloseProblemSolver"/>
+            </HBox>
+        </endButton>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>
