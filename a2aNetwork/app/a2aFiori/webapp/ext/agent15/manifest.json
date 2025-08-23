@@ -1,7 +1,39 @@
 {
+    "_version": "1.49.0",
     "sap.app": {
         "id": "a2a.network.agent15.ext",
-        "type": "component"
+        "type": "application",
+        "applicationVersion": {
+            "version": "1.0.0"
+        },
+        "title": "{{appTitle}}",
+        "description": "{{appDescription}}",
+        "resources": "resources.json",
+        "ach": "AI-WF-ORC",
+        "dataSources": {
+            "mainService": {
+                "uri": "/sap/opu/odata/sap/ORCHESTRATOR_SRV/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "2.0",
+                    "localUri": "localService/metadata.xml"
+                }
+            },
+            "i18n": {
+                "uri": "i18n/i18n.properties",
+                "type": "properties"
+            }
+        },
+        "crossNavigation": {
+            "inbounds": {
+                "orchestratorAgent": {
+                    "semanticObject": "OrchestratorAgent",
+                    "action": "manage",
+                    "title": "{{appTitle}}",
+                    "subTitle": "{{appDescription}}"
+                }
+            }
+        }
     },
     "sap.ui5": {
         "dependencies": {
@@ -18,16 +50,35 @@
         },
         "models": {
             "i18n": {
+                "dataSource": "i18n",
                 "type": "sap.ui.model.resource.ResourceModel",
                 "settings": {
-                    "bundleName": "a2a.network.agent15.ext.i18n.i18n"
+                    "bundleName": "a2a.network.agent15.ext.i18n.i18n",
+                    "supportedLocales": [""],
+                    "fallbackLocale": ""
+                }
+            },
+            "": {
+                "dataSource": "mainService",
+                "type": "sap.ui.model.odata.v2.ODataModel",
+                "settings": {
+                    "defaultBindingMode": "TwoWay",
+                    "defaultCountMode": "Inline",
+                    "refreshAfterChange": true,
+                    "useBatch": true,
+                    "preliminaryContext": true,
+                    "headers": {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
                 }
             }
         },
         "contentDensities": {
             "compact": true,
             "cozy": true
-        }
+        },
+        "flexEnabled": true,
+        "handleValidation": true
     },
     "sap.fiori": {
         "registrationIds": ["F7015"],
@@ -73,6 +124,28 @@
     },
     "sap.platform.hcp": {
         "uri": ""
+    },
+    "sap.cloud": {
+        "public": true,
+        "service": "a2aAgents"
+    },
+    "sap.app/ui5/cors": {
+        "allowedMethods": ["GET", "POST", "PUT", "DELETE"],
+        "allowedOrigins": ["https://*.sap.com"],
+        "allowedHeaders": ["X-CSRF-Token", "Content-Type", "Authorization"],
+        "exposeHeaders": ["X-CSRF-Token"],
+        "maxAge": 3600
+    },
+    "sap.app/settings": {
+        "securityHeaders": {
+            "X-Frame-Options": "DENY",
+            "X-XSS-Protection": "1; mode=block",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://sapui5.hana.ondemand.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://localhost:8015 wss://localhost:8015; font-src 'self' data:; frame-ancestors 'none'",
+            "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+            "Referrer-Policy": "strict-origin-when-cross-origin",
+            "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
+        }
     },
     "sap.app/crossNavigation": {
         "inbounds": {

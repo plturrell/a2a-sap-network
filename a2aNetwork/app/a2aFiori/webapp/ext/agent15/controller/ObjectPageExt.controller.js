@@ -296,7 +296,7 @@ sap.ui.define([
             
             MessageToast.show(this.getResourceBundle().getText("msg.workflowStarting"));
             
-            oModel.callFunction("/ExecuteWorkflow", {
+            SecurityUtils.secureCallFunction(oModel, "/ExecuteWorkflow", {
                 urlParameters: {
                     workflowId: sWorkflowId
                 },
@@ -314,7 +314,7 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const sWorkflowId = oContext.getObject().workflowId;
             
-            oModel.callFunction("/PauseWorkflow", {
+            SecurityUtils.secureCallFunction(oModel, "/PauseWorkflow", {
                 urlParameters: {
                     workflowId: sWorkflowId
                 },
@@ -332,7 +332,7 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const sWorkflowId = oContext.getObject().workflowId;
             
-            oModel.callFunction("/ResumeWorkflow", {
+            SecurityUtils.secureCallFunction(oModel, "/ResumeWorkflow", {
                 urlParameters: {
                     workflowId: sWorkflowId
                 },

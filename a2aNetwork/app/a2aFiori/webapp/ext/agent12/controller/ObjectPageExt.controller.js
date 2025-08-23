@@ -462,6 +462,46 @@ sap.ui.define([
             oCreateModel.setData(oData);
         },
         
+        onMetadataSchemaChange: function(oEvent) {
+            var sValue = oEvent.getParameter("selectedItem").getKey();
+            var oCreateModel = this.getView().getModel("create");
+            var oData = oCreateModel.getData();
+            
+            // Adjust based on schema type
+            switch (sValue) {
+                case "openapi":
+                    // Suggest OpenAPI-specific fields
+                    if (!oData.swaggerUrl && oData.resourceUrl) {
+                        var baseUrl = oData.resourceUrl.replace(/\/[^\/]*$/, '');
+                        oData.swaggerUrl = baseUrl + "/swagger.json";
+                    }
+                    break;
+                case "schema_org":
+                    // Suggest structured data
+                    oData.searchable = true;
+                    break;
+            }
+            
+            oCreateModel.setData(oData);
+        },
+        
+        onDocumentationUrlChange: function(oEvent) {
+            var sValue = oEvent.getParameter("value");
+            
+            // Basic URL validation for documentation
+            if (sValue) {
+                try {
+                    new URL(sValue);
+                    // Auto-detect documentation type
+                    if (sValue.includes("swagger") || sValue.includes("openapi")) {
+                        MessageToast.show("OpenAPI documentation detected");
+                    }
+                } catch (e) {
+                    // Invalid URL - handled by main validation
+                }
+            }
+        },
+        
         onConfirmCreateCatalogEntry: function() {
             var oCreateModel = this.getView().getModel("create");
             var oData = oCreateModel.getData();
@@ -1040,6 +1080,9 @@ sap.ui.define([
             }
             if (this._pollInterval) {
                 clearInterval(this._pollInterval);
+            }
+            if (this._validationInterval) {
+                clearInterval(this._validationInterval);
             }
         }
     });

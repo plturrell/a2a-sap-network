@@ -9,10 +9,13 @@
     <Dialog
         title="{i18n>dialog.templateWizard.title}"
         class="sapUiMediumMargin"
-        contentWidth="90vw"
-        contentHeight="90vh"
+        contentWidth="75rem"
+        contentHeight="85vh"
         resizable="true"
-        draggable="true">
+        draggable="true"
+        stretch="{device>/system/phone}"
+        afterOpen=".onWizardDialogAfterOpen"
+        afterClose=".onWizardDialogAfterClose">
         
         <content>
             <Page showHeader="false">
@@ -38,19 +41,22 @@
                                     
                                     <!-- Template Name -->
                                     <Label text="{i18n>field.templateName}" required="true"/>
-                                    <Input id="templateNameInput" value="" placeholder="{i18n>placeholder.templateName}" required="true"/>
+                                    <Input id="templateNameInput" value="{wizard>/templateName}" placeholder="{i18n>placeholder.templateName}" required="true" valueState="{wizard>/templateNameState}" valueStateText="{wizard>/templateNameStateText}" liveChange=".onTemplateNameChange"/>
                                     
                                     <!-- Description -->
                                     <Label text="{i18n>field.description}"/>
-                                    <TextArea id="descriptionInput" value="" rows="3" placeholder="{i18n>placeholder.description}"/>
+                                    <TextArea id="descriptionInput" value="{wizard>/description}" rows="3" placeholder="{i18n>placeholder.description}" maxLength="500" showExceededText="true" liveChange=".onDescriptionChange"/>
                                     
                                     <!-- Template Type -->
                                     <Label text="{i18n>field.templateType}" required="true"/>
                                     <ComboBox
                                         id="templateTypeCombo"
-                                        selectedKey=""
+                                        selectedKey="{wizard>/templateType}"
                                         placeholder="{i18n>placeholder.templateType}"
-                                        required="true">
+                                        required="true"
+                                        valueState="{wizard>/templateTypeState}"
+                                        valueStateText="{wizard>/templateTypeStateText}"
+                                        selectionChange=".onTemplateTypeChange">
                                         <core:Item key="basic" text="{i18n>template.basic}"/>
                                         <core:Item key="reactive" text="{i18n>template.reactive}"/>
                                         <core:Item key="cognitive" text="{i18n>template.cognitive}"/>
@@ -67,9 +73,12 @@
                                     <Label text="{i18n>field.agentCategory}" required="true"/>
                                     <ComboBox
                                         id="agentCategoryCombo"
-                                        selectedKey=""
+                                        selectedKey="{wizard>/agentCategory}"
                                         placeholder="{i18n>placeholder.agentCategory}"
-                                        required="true">
+                                        required="true"
+                                        valueState="{wizard>/agentCategoryState}"
+                                        valueStateText="{wizard>/agentCategoryStateText}"
+                                        selectionChange=".onAgentCategoryChange">
                                         <core:Item key="data_processing" text="{i18n>category.data_processing}"/>
                                         <core:Item key="api_integration" text="{i18n>category.api_integration}"/>
                                         <core:Item key="workflow_automation" text="{i18n>category.workflow_automation}"/>
@@ -84,7 +93,7 @@
                                     
                                     <!-- Complexity -->
                                     <Label text="{i18n>field.complexity}"/>
-                                    <SegmentedButton id="complexitySegmented" selectedKey="moderate">
+                                    <SegmentedButton id="complexitySegmented" selectedKey="{wizard>/complexity}" selectionChange=".onComplexityChange">
                                         <items>
                                             <SegmentedButtonItem key="simple" text="{i18n>complexity.simple}"/>
                                             <SegmentedButtonItem key="moderate" text="{i18n>complexity.moderate}"/>
@@ -116,14 +125,17 @@
                                     <Label text="{i18n>field.baseTemplate}"/>
                                     <ComboBox
                                         id="baseTemplateCombo"
-                                        selectedKey=""
-                                        placeholder="{i18n>placeholder.baseTemplate}">
+                                        selectedKey="{wizard>/baseTemplate}"
+                                        placeholder="{i18n>placeholder.baseTemplate}"
+                                        items="{wizard>/baseTemplates}"
+                                        selectionChange=".onBaseTemplateChange">
+                                        <core:ListItem key="{wizard>templateId}" text="{wizard>templateName}"/>
                                         <!-- Base templates will be loaded dynamically -->
                                     </ComboBox>
                                     
                                     <!-- Template Language -->
                                     <Label text="{i18n>field.templateLanguage}"/>
-                                    <ComboBox id="templateLanguageCombo" selectedKey="handlebars">
+                                    <ComboBox id="templateLanguageCombo" selectedKey="{wizard>/templateLanguage}" selectionChange=".onTemplateLanguageChange">
                                         <core:Item key="handlebars" text="Handlebars"/>
                                         <core:Item key="ejs" text="EJS"/>
                                         <core:Item key="pug" text="Pug"/>
@@ -133,19 +145,19 @@
                                     
                                     <!-- Framework Version -->
                                     <Label text="{i18n>field.frameworkVersion}"/>
-                                    <Input id="frameworkVersionInput" value="" placeholder="{i18n>placeholder.frameworkVersion}"/>
+                                    <Input id="frameworkVersionInput" value="{wizard>/frameworkVersion}" placeholder="{i18n>placeholder.frameworkVersion}" liveChange=".onFrameworkVersionChange"/>
                                     
                                     <!-- Dependencies -->
                                     <Label text="{i18n>field.dependencies}"/>
-                                    <TextArea id="dependenciesInput" value="" rows="4" placeholder="{i18n>placeholder.dependencies}"/>
+                                    <TextArea id="dependenciesInput" value="{wizard>/dependencies}" rows="4" placeholder="{i18n>placeholder.dependencies}" liveChange=".onDependenciesChange"/>
                                     
                                     <!-- Prerequisites -->
                                     <Label text="{i18n>field.prerequisites}"/>
-                                    <TextArea id="prerequisitesInput" value="" rows="3" placeholder="{i18n>placeholder.prerequisites}"/>
+                                    <TextArea id="prerequisitesInput" value="{wizard>/prerequisites}" rows="3" placeholder="{i18n>placeholder.prerequisites}" liveChange=".onPrerequisitesChange"/>
                                     
                                     <!-- Customizable -->
                                     <Label text="{i18n>field.customizable}"/>
-                                    <Switch id="customizableSwitch" state="true"/>
+                                    <Switch id="customizableSwitch" state="{wizard>/customizable}" change=".onCustomizableChange"/>
                                     
                                 </f:content>
                             </f:SimpleForm>
@@ -165,7 +177,7 @@
                                         
                                         <!-- Code Language -->
                                         <Label text="{i18n>field.codeLanguage}" class="sapUiSmallMarginBottom"/>
-                                        <ComboBox id="codeLanguageCombo" selectedKey="python">
+                                        <ComboBox id="codeLanguageCombo" selectedKey="{wizard>/codeLanguage}" selectionChange=".onCodeLanguageChange">
                                             <core:Item key="python" text="{i18n>code.python}"/>
                                             <core:Item key="javascript" text="{i18n>code.javascript}"/>
                                             <core:Item key="typescript" text="{i18n>code.typescript}"/>
@@ -180,7 +192,7 @@
                                         
                                         <!-- Code Style -->
                                         <Label text="{i18n>field.codeStyle}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                        <ComboBox id="codeStyleCombo" selectedKey="standard">
+                                        <ComboBox id="codeStyleCombo" selectedKey="{wizard>/codeStyle}" selectionChange=".onCodeStyleChange">
                                             <core:Item key="standard" text="{i18n>style.standard}"/>
                                             <core:Item key="google" text="{i18n>style.google}"/>
                                             <core:Item key="airbnb" text="{i18n>style.airbnb}"/>
@@ -190,7 +202,7 @@
                                         
                                         <!-- Test Framework -->
                                         <Label text="{i18n>field.testFramework}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                        <ComboBox id="testFrameworkCombo" selectedKey="pytest">
+                                        <ComboBox id="testFrameworkCombo" selectedKey="{wizard>/testFramework}" selectionChange=".onTestFrameworkChange">
                                             <core:Item key="junit" text="{i18n>test.junit}"/>
                                             <core:Item key="pytest" text="{i18n>test.pytest}"/>
                                             <core:Item key="jest" text="{i18n>test.jest}"/>
@@ -209,7 +221,7 @@
                                         
                                         <!-- Documentation Style -->
                                         <Label text="{i18n>field.documentationStyle}" class="sapUiSmallMarginBottom"/>
-                                        <ComboBox id="documentationStyleCombo" selectedKey="sphinx">
+                                        <ComboBox id="documentationStyleCombo" selectedKey="{wizard>/documentationStyle}" selectionChange=".onDocumentationStyleChange">
                                             <core:Item key="sphinx" text="{i18n>docs.sphinx}"/>
                                             <core:Item key="mkdocs" text="{i18n>docs.mkdocs}"/>
                                             <core:Item key="jsdoc" text="{i18n>docs.jsdoc}"/>
@@ -221,15 +233,15 @@
                                         
                                         <!-- Code Quality Target -->
                                         <Label text="{i18n>field.codeQualityTarget}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                        <Slider id="codeQualityTargetSlider" value="85" min="0" max="100" step="5" enableTickmarks="true"/>
+                                        <Slider id="codeQualityTargetSlider" value="{wizard>/codeQualityTarget}" min="0" max="100" step="5" enableTickmarks="true" change=".onCodeQualityTargetChange"/>
                                         
                                         <!-- Auto Generate Tests -->
                                         <Label text="{i18n>field.autoGenerateTests}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                        <Switch id="autoGenerateTestsSwitch" state="true"/>
+                                        <Switch id="autoGenerateTestsSwitch" state="{wizard>/autoGenerateTests}" change=".onAutoGenerateTestsChange"/>
                                         
                                         <!-- Auto Generate Docs -->
                                         <Label text="{i18n>field.autoGenerateDocs}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                        <Switch id="autoGenerateDocsSwitch" state="true"/>
+                                        <Switch id="autoGenerateDocsSwitch" state="{wizard>/autoGenerateDocs}" change=".onAutoGenerateDocsChange"/>
                                         
                                     </VBox>
                                 </HBox>
@@ -238,10 +250,10 @@
                                 <Label text="{i18n>section.templatePreview}" class="sapUiMediumMarginTop sapUiSmallMarginBottom"/>
                                 <codeeditor:CodeEditor
                                     id="templateCodePreview"
-                                    type="javascript"
+                                    type="{wizard>/previewType}"
                                     height="200px"
                                     width="100%"
-                                    value=""
+                                    value="{wizard>/templatePreview}"
                                     editable="false"
                                     class="sapUiSmallMarginBottom"/>
                                 
@@ -264,7 +276,7 @@
                                     
                                     <!-- Deployment Target -->
                                     <Label text="{i18n>field.deploymentTarget}"/>
-                                    <ComboBox id="deploymentTargetCombo" selectedKey="kubernetes">
+                                    <ComboBox id="deploymentTargetCombo" selectedKey="{wizard>/deploymentTarget}" selectionChange=".onDeploymentTargetChange">
                                         <core:Item key="kubernetes" text="{i18n>target.kubernetes}"/>
                                         <core:Item key="docker" text="{i18n>target.docker}"/>
                                         <core:Item key="serverless" text="{i18n>target.serverless}"/>
@@ -277,15 +289,15 @@
                                     
                                     <!-- Container Image -->
                                     <Label text="{i18n>field.containerImage}"/>
-                                    <Input id="containerImageInput" value="" placeholder="{i18n>placeholder.containerImage}"/>
+                                    <Input id="containerImageInput" value="{wizard>/containerImage}" placeholder="{i18n>placeholder.containerImage}" liveChange=".onContainerImageChange"/>
                                     
                                     <!-- Resource Requirements -->
                                     <Label text="{i18n>field.resourceRequirements}"/>
-                                    <TextArea id="resourceRequirementsInput" value="" rows="3" placeholder="{i18n>placeholder.resourceRequirements}"/>
+                                    <TextArea id="resourceRequirementsInput" value="{wizard>/resourceRequirements}" rows="3" placeholder="{i18n>placeholder.resourceRequirements}" liveChange=".onResourceRequirementsChange"/>
                                     
                                     <!-- Scaling Policy -->
                                     <Label text="{i18n>field.scalingPolicy}"/>
-                                    <ComboBox id="scalingPolicyCombo" selectedKey="horizontal">
+                                    <ComboBox id="scalingPolicyCombo" selectedKey="{wizard>/scalingPolicy}" selectionChange=".onScalingPolicyChange">
                                         <core:Item key="manual" text="{i18n>scaling.manual}"/>
                                         <core:Item key="horizontal" text="{i18n>scaling.horizontal}"/>
                                         <core:Item key="vertical" text="{i18n>scaling.vertical}"/>
@@ -295,15 +307,15 @@
                                     
                                     <!-- Environment Variables -->
                                     <Label text="{i18n>field.environmentVariables}"/>
-                                    <TextArea id="environmentVariablesInput" value="" rows="4" placeholder="{i18n>placeholder.environmentVariables}"/>
+                                    <TextArea id="environmentVariablesInput" value="{wizard>/environmentVariables}" rows="4" placeholder="{i18n>placeholder.environmentVariables}" liveChange=".onEnvironmentVariablesChange"/>
                                     
                                     <!-- Health Check Config -->
                                     <Label text="{i18n>field.healthCheckConfig}"/>
-                                    <Input id="healthCheckConfigInput" value="" placeholder="{i18n>placeholder.healthCheckConfig}"/>
+                                    <Input id="healthCheckConfigInput" value="{wizard>/healthCheckConfig}" placeholder="{i18n>placeholder.healthCheckConfig}" liveChange=".onHealthCheckConfigChange"/>
                                     
                                     <!-- Monitoring Enabled -->
                                     <Label text="{i18n>field.monitoringEnabled}"/>
-                                    <Switch id="monitoringEnabledSwitch" state="true"/>
+                                    <Switch id="monitoringEnabledSwitch" state="{wizard>/monitoringEnabled}" change=".onMonitoringEnabledChange"/>
                                     
                                 </f:content>
                             </f:SimpleForm>
@@ -320,7 +332,7 @@
                                 
                                 <!-- Supported Protocols -->
                                 <Label text="{i18n>field.supportedProtocols}" class="sapUiSmallMarginBottom"/>
-                                <MultiComboBox id="supportedProtocolsMultiCombo">
+                                <MultiComboBox id="supportedProtocolsMultiCombo" selectedKeys="{wizard>/supportedProtocols}" selectionChange=".onSupportedProtocolsChange">
                                     <core:Item key="http" text="HTTP/HTTPS"/>
                                     <core:Item key="websocket" text="WebSocket"/>
                                     <core:Item key="grpc" text="gRPC"/>
@@ -332,7 +344,7 @@
                                 
                                 <!-- Communication Mode -->
                                 <Label text="{i18n>field.communicationMode}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                <ComboBox id="communicationModeCombo" selectedKey="asynchronous">
+                                <ComboBox id="communicationModeCombo" selectedKey="{wizard>/communicationMode}" selectionChange=".onCommunicationModeChange">
                                     <core:Item key="synchronous" text="{i18n>comm.synchronous}"/>
                                     <core:Item key="asynchronous" text="{i18n>comm.asynchronous}"/>
                                     <core:Item key="streaming" text="{i18n>comm.streaming}"/>
@@ -344,7 +356,7 @@
                                 
                                 <!-- Authentication Methods -->
                                 <Label text="{i18n>field.authenticationMethods}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                <MultiComboBox id="authenticationMethodsMultiCombo">
+                                <MultiComboBox id="authenticationMethodsMultiCombo" selectedKeys="{wizard>/authenticationMethods}" selectionChange=".onAuthenticationMethodsChange">
                                     <core:Item key="none" text="None"/>
                                     <core:Item key="basic" text="Basic Auth"/>
                                     <core:Item key="bearer" text="Bearer Token"/>
@@ -357,15 +369,15 @@
                                 
                                 <!-- Data Processing Capabilities -->
                                 <Label text="{i18n>field.dataProcessingCapabilities}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                <TextArea id="dataProcessingCapabilitiesInput" value="" rows="3" placeholder="{i18n>placeholder.dataProcessingCapabilities}"/>
+                                <TextArea id="dataProcessingCapabilitiesInput" value="{wizard>/dataProcessingCapabilities}" rows="3" placeholder="{i18n>placeholder.dataProcessingCapabilities}" liveChange=".onDataProcessingCapabilitiesChange"/>
                                 
                                 <!-- Integration Points -->
                                 <Label text="{i18n>field.integrationPoints}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                <TextArea id="integrationPointsInput" value="" rows="3" placeholder="{i18n>placeholder.integrationPoints}"/>
+                                <TextArea id="integrationPointsInput" value="{wizard>/integrationPoints}" rows="3" placeholder="{i18n>placeholder.integrationPoints}" liveChange=".onIntegrationPointsChange"/>
                                 
                                 <!-- Logging Level -->
                                 <Label text="{i18n>field.loggingLevel}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-                                <ComboBox id="loggingLevelCombo" selectedKey="info">
+                                <ComboBox id="loggingLevelCombo" selectedKey="{wizard>/loggingLevel}" selectionChange=".onLoggingLevelChange">
                                     <core:Item key="trace" text="{i18n>log.trace}"/>
                                     <core:Item key="debug" text="{i18n>log.debug}"/>
                                     <core:Item key="info" text="{i18n>log.info}"/>
@@ -385,10 +397,10 @@
         </content>
         
         <beginButton>
-            <Button text="{i18n>btn.previous}" press="onWizardPrevious" enabled="{= ${/currentStep} > 0}"/>
+            <Button text="{i18n>btn.cancel}" press=".onCancelTemplateWizard"/>
         </beginButton>
         <endButton>
-            <Button text="{i18n>btn.cancel}" press="onCancelWizard"/>
+            <Button text="{i18n>btn.create}" press=".onConfirmTemplateWizard" type="Emphasized" enabled="{wizard>/canCreate}"/>
         </endButton>
         
     </Dialog>
