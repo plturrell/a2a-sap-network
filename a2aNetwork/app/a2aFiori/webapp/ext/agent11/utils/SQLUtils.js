@@ -7,32 +7,42 @@ sap.ui.define([
 
     return {
         /**
-         * Validates SQL query syntax and security
+         * Comprehensive SQL query validation with enhanced security
          * @param {string} sql - The SQL query to validate
          * @param {string} dialect - The SQL dialect (HANA, POSTGRESQL, etc.)
-         * @returns {object} Validation result
+         * @param {object} options - Validation options
+         * @returns {object} Enhanced validation result
          */
-        validateSQL: function (sql, dialect) {
-            // Use SecurityUtils for comprehensive validation
-            const securityValidation = SecurityUtils.validateSQL(sql);
+        validateSQL: function (sql, dialect, options) {
+            options = options || {};
+            
+            // Use SecurityUtils for comprehensive security validation
+            const securityValidation = SecurityUtils.validateSQL(sql, options.parameters, {
+                allowLiterals: options.allowLiterals || false,
+                allowedOperations: options.allowedOperations,
+                minSecurityScore: options.minSecurityScore || 70
+            });
             
             if (!securityValidation.isValid) {
                 return {
                     isValid: false,
                     errors: securityValidation.errors,
-                    warnings: [],
+                    warnings: securityValidation.warnings || [],
                     suggestions: [],
-                    sanitized: securityValidation.sanitized
+                    sanitized: securityValidation.sanitized,
+                    securityScore: securityValidation.securityScore,
+                    riskLevel: securityValidation.riskLevel,
+                    detectedPatterns: securityValidation.detectedPatterns
                 };
             }
 
             const errors = [];
-            const warnings = [];
+            const warnings = [...(securityValidation.warnings || [])];
             const suggestions = [];
             const sanitizedSQL = securityValidation.sanitized;
 
-            // Basic syntax checks
-            const syntaxIssues = this._checkBasicSyntax(sanitizedSQL, dialect);
+            // Enhanced syntax checks with dialect-specific rules
+            const syntaxIssues = this._checkEnhancedSyntax(sanitizedSQL, dialect, options);
             if (syntaxIssues.errors.length > 0) {
                 errors.push(...syntaxIssues.errors);
             }
@@ -40,22 +50,37 @@ sap.ui.define([
                 warnings.push(...syntaxIssues.warnings);
             }
 
-            // Performance suggestions
-            const performanceSuggestions = this._getPerformanceSuggestions(sanitizedSQL);
+            // Enhanced performance suggestions
+            const performanceSuggestions = this._getEnhancedPerformanceSuggestions(sanitizedSQL, dialect);
             suggestions.push(...performanceSuggestions);
 
-            // Query complexity validation
-            const complexityValidation = SecurityUtils.validateQueryComplexity(sanitizedSQL);
+            // Advanced query complexity validation with resource limits
+            const complexityValidation = SecurityUtils.validateQueryComplexity(sanitizedSQL, options.complexityLimits);
             if (!complexityValidation.isValid) {
                 warnings.push(...complexityValidation.issues);
             }
 
+            // Add complexity metrics to result
+            const complexityMetrics = {
+                complexity: complexityValidation.complexity,
+                score: complexityValidation.score,
+                riskLevel: complexityValidation.riskLevel,
+                estimatedExecutionTime: complexityValidation.estimatedExecutionTime,
+                resourceRequirements: complexityValidation.resourceRequirements
+            };
+
             return {
-                isValid: errors.length === 0,
+                isValid: errors.length === 0 && securityValidation.securityScore >= (options.minSecurityScore || 70),
                 errors: errors,
                 warnings: warnings,
                 suggestions: suggestions,
-                sanitized: sanitizedSQL
+                sanitized: sanitizedSQL,
+                securityScore: securityValidation.securityScore,
+                riskLevel: securityValidation.riskLevel,
+                detectedPatterns: securityValidation.detectedPatterns,
+                complexity: complexityMetrics,
+                dialect: dialect,
+                queryHash: this._generateQueryFingerprint(sanitizedSQL)
             };
         },
 
@@ -519,6 +544,412 @@ sap.ui.define([
                 stringConcat: '||',
                 dateFormat: 'YYYY-MM-DD'
             };
+        },
+
+        /**
+         * Enhanced syntax checking with dialect-specific rules
+         * @private
+         */
+        _checkEnhancedSyntax: function(sql, dialect, options) {
+            const errors = [];
+            const warnings = [];
+            const lowerSQL = sql.toLowerCase();
+
+            // Check for balanced parentheses
+            const openParens = (sql.match(/\(/g) || []).length;
+            const closeParens = (sql.match(/\)/g) || []).length;
+            if (openParens !== closeParens) {
+                errors.push("Unbalanced parentheses in SQL query");
+            }
+
+            // Check for proper quotes
+            const singleQuotes = (sql.match(/'/g) || []).length;
+            const doubleQuotes = (sql.match(/"/g) || []).length;
+            if (singleQuotes % 2 !== 0) {
+                errors.push("Unmatched single quotes in SQL query");
+            }
+            if (doubleQuotes % 2 !== 0) {
+                errors.push("Unmatched double quotes in SQL query");
+            }
+
+            // Dialect-specific validations
+            if (dialect === 'HANA') {
+                if (lowerSQL.includes('dual') && !lowerSQL.includes('sys.dual')) {
+                    warnings.push("Use SYS.DUAL instead of DUAL in SAP HANA");
+                }
+            } else if (dialect === 'POSTGRESQL') {
+                if (lowerSQL.includes('limit') && lowerSQL.includes('top')) {
+                    errors.push("PostgreSQL uses LIMIT, not TOP");
+                }
+            } else if (dialect === 'SQLSERVER') {
+                if (lowerSQL.includes('limit') && !lowerSQL.includes('top')) {
+                    errors.push("SQL Server uses TOP, not LIMIT");
+                }
+            }
+
+            // Check for potentially dangerous patterns that SecurityUtils might miss
+            if (lowerSQL.includes('truncate table')) {
+                warnings.push("TRUNCATE TABLE operation detected - ensure proper permissions");
+            }
+
+            if (lowerSQL.includes('with recursive') && dialect !== 'POSTGRESQL') {
+                warnings.push("Recursive CTEs may not be supported in all databases");
+            }
+
+            return { errors, warnings };
+        },
+
+        /**
+         * Enhanced performance suggestions
+         * @private
+         */
+        _getEnhancedPerformanceSuggestions: function(sql, dialect) {
+            const suggestions = [];
+            const lowerSQL = sql.toLowerCase();
+
+            // Check for SELECT *
+            if (lowerSQL.includes('select *')) {
+                suggestions.push({
+                    type: "Performance",
+                    message: "Consider selecting specific columns instead of using SELECT *",
+                    impact: "Medium",
+                    suggestion: "Replace SELECT * with specific column names"
+                });
+            }
+
+            // Check for LIKE with leading wildcard
+            if (lowerSQL.includes("like '%")) {
+                suggestions.push({
+                    type: "Performance",
+                    message: "Leading wildcards in LIKE clauses prevent index usage",
+                    impact: "High",
+                    suggestion: "Consider full-text search or restructuring the query"
+                });
+            }
+
+            // Check for functions in WHERE clause
+            if (/where\s+\w*\s*\(/i.test(sql)) {
+                suggestions.push({
+                    type: "Performance",
+                    message: "Functions in WHERE clause may prevent index usage",
+                    impact: "Medium",
+                    suggestion: "Move functions to SELECT clause or use computed columns"
+                });
+            }
+
+            // Check for OR conditions
+            if ((sql.match(/\bor\b/gi) || []).length > 2) {
+                suggestions.push({
+                    type: "Performance",
+                    message: "Multiple OR conditions can be expensive",
+                    impact: "Medium",
+                    suggestion: "Consider using UNION or IN clauses"
+                });
+            }
+
+            // Check for subqueries that could be JOINs
+            if (lowerSQL.includes('in (select') && !lowerSQL.includes('exists')) {
+                suggestions.push({
+                    type: "Performance",
+                    message: "IN subqueries can often be optimized with EXISTS or JOINs",
+                    impact: "Medium",
+                    suggestion: "Consider rewriting with EXISTS or JOIN"
+                });
+            }
+
+            // Dialect-specific suggestions
+            if (dialect === 'HANA') {
+                if (lowerSQL.includes('group by') && !lowerSQL.includes('order by')) {
+                    suggestions.push({
+                        type: "Performance",
+                        message: "SAP HANA performs better with explicit ORDER BY after GROUP BY",
+                        impact: "Low",
+                        suggestion: "Add ORDER BY clause after GROUP BY"
+                    });
+                }
+            }
+
+            return suggestions;
+        },
+
+        /**
+         * Generate query fingerprint for caching and analysis
+         * @private
+         */
+        _generateQueryFingerprint: function(sql) {
+            // Normalize SQL for fingerprinting
+            const normalized = sql
+                .replace(/\s+/g, ' ')
+                .replace(/'/[^']*'/g, "'?'")
+                .replace(/\d+/g, '?')
+                .toLowerCase()
+                .trim();
+            
+            // Simple hash function
+            let hash = 0;
+            for (let i = 0; i < normalized.length; i++) {
+                const char = normalized.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return Math.abs(hash).toString(16);
+        },
+
+        /**
+         * Extract enhanced entities from natural language
+         * @private
+         */
+        _extractEnhancedEntities: function(query, context) {
+            const entities = [];
+            const lowerQuery = query.toLowerCase();
+            
+            // Enhanced table pattern recognition
+            const tablePatterns = [
+                /(?:from|in|on|table)\s+([a-z_][a-z0-9_]*)/gi,
+                /(?:users?|customers?|orders?|products?|employees?|sales?|invoices?|payments?)/gi
+            ];
+            
+            tablePatterns.forEach(pattern => {
+                let match;
+                while ((match = pattern.exec(query)) !== null) {
+                    const tableName = match[1] || match[0];
+                    if (!entities.find(e => e.value === tableName && e.type === 'TABLE')) {
+                        entities.push({
+                            type: 'TABLE',
+                            value: SecurityUtils.sanitizeSQLParameter(tableName),
+                            confidence: 75,
+                            position: match.index
+                        });
+                    }
+                }
+            });
+
+            // Column pattern recognition
+            const columnPatterns = [
+                /(?:select|where|order by)\s+([a-z_][a-z0-9_]*)/gi,
+                /(?:name|id|date|time|status|amount|price|quantity)/gi
+            ];
+
+            columnPatterns.forEach(pattern => {
+                let match;
+                while ((match = pattern.exec(query)) !== null) {
+                    const columnName = match[1] || match[0];
+                    if (!entities.find(e => e.value === columnName && e.type === 'COLUMN')) {
+                        entities.push({
+                            type: 'COLUMN',
+                            value: SecurityUtils.sanitizeSQLParameter(columnName),
+                            confidence: 60,
+                            position: match.index
+                        });
+                    }
+                }
+            });
+
+            // Date/time pattern recognition
+            const datePattern = /(?:today|yesterday|last week|this month|this year|\d{4}-\d{2}-\d{2})/gi;
+            let match;
+            while ((match = datePattern.exec(query)) !== null) {
+                entities.push({
+                    type: 'DATE',
+                    value: match[0],
+                    confidence: 85,
+                    position: match.index
+                });
+            }
+
+            return entities;
+        },
+
+        /**
+         * Generate secure SQL templates based on intent and entities
+         * @private
+         */
+        _generateSecureSQLTemplates: function(intent, entities, context) {
+            const templates = [];
+            const tables = entities.filter(e => e.type === 'TABLE').map(e => e.value);
+            const columns = entities.filter(e => e.type === 'COLUMN').map(e => e.value);
+            
+            if (!tables.length) {
+                return templates;
+            }
+
+            const primaryTable = tables[0];
+
+            switch (intent) {
+                case 'SELECT':
+                    templates.push({
+                        sql: `SELECT ${columns.length ? columns.join(', ') : '*'} FROM ${primaryTable}`,
+                        confidence: 80,
+                        parameters: {},
+                        description: 'Basic SELECT query'
+                    });
+                    
+                    if (columns.length > 0) {
+                        templates.push({
+                            sql: `SELECT ${columns[0]} FROM ${primaryTable} WHERE ${columns[0]} = ?`,
+                            confidence: 75,
+                            parameters: { param1: 'value' },
+                            description: 'SELECT with WHERE condition'
+                        });
+                    }
+                    break;
+
+                case 'COUNT':
+                    templates.push({
+                        sql: `SELECT COUNT(*) FROM ${primaryTable}`,
+                        confidence: 90,
+                        parameters: {},
+                        description: 'Count all records'
+                    });
+                    
+                    if (columns.length > 0) {
+                        templates.push({
+                            sql: `SELECT COUNT(*) FROM ${primaryTable} WHERE ${columns[0]} = ?`,
+                            confidence: 85,
+                            parameters: { param1: 'value' },
+                            description: 'Count with condition'
+                        });
+                    }
+                    break;
+
+                case 'INSERT':
+                    if (columns.length > 0) {
+                        const placeholders = columns.map(() => '?').join(', ');
+                        templates.push({
+                            sql: `INSERT INTO ${primaryTable} (${columns.join(', ')}) VALUES (${placeholders})`,
+                            confidence: 75,
+                            parameters: Object.fromEntries(columns.map((col, i) => [`param${i+1}`, 'value'])),
+                            description: 'Insert new record'
+                        });
+                    }
+                    break;
+
+                case 'UPDATE':
+                    if (columns.length > 1) {
+                        const setClause = columns.slice(1).map(col => `${col} = ?`).join(', ');
+                        templates.push({
+                            sql: `UPDATE ${primaryTable} SET ${setClause} WHERE ${columns[0]} = ?`,
+                            confidence: 70,
+                            parameters: Object.fromEntries(columns.map((col, i) => [`param${i+1}`, 'value'])),
+                            description: 'Update existing record'
+                        });
+                    }
+                    break;
+            }
+
+            return templates;
+        },
+
+        /**
+         * Assess natural language complexity
+         * @private
+         */
+        _assessNLComplexity: function(query) {
+            const indicators = {
+                simple: ['show', 'get', 'list'],
+                moderate: ['where', 'and', 'count', 'sum'],
+                complex: ['join', 'group by', 'having', 'subquery', 'union'],
+                veryComplex: ['recursive', 'window', 'pivot', 'case when']
+            };
+
+            const lowerQuery = query.toLowerCase();
+            let maxLevel = 'simple';
+
+            Object.entries(indicators).forEach(([level, words]) => {
+                if (words.some(word => lowerQuery.includes(word))) {
+                    maxLevel = level;
+                }
+            });
+
+            return maxLevel;
+        },
+
+        /**
+         * Sanitize pattern for SQL generation
+         * @private
+         */
+        _sanitizePattern: function(pattern) {
+            const errors = [];
+            
+            if (!pattern || typeof pattern !== 'object') {
+                return {
+                    isValid: false,
+                    errors: ['Pattern must be a valid object']
+                };
+            }
+
+            const sanitized = {
+                type: SecurityUtils.sanitizeSQLParameter(pattern.type || ''),
+                table: SecurityUtils.sanitizeSQLParameter(pattern.table || ''),
+                columns: pattern.columns ? SecurityUtils.sanitizeSQLParameter(pattern.columns) : '*',
+                condition: pattern.condition ? SecurityUtils.sanitizeSQLParameter(pattern.condition) : '',
+                values: pattern.values ? SecurityUtils.sanitizeSQLParameter(pattern.values) : '',
+                setClause: pattern.setClause ? SecurityUtils.sanitizeSQLParameter(pattern.setClause) : ''
+            };
+
+            if (!sanitized.type) {
+                errors.push('Pattern type is required');
+            }
+
+            if (!sanitized.table) {
+                errors.push('Table name is required');
+            }
+
+            return {
+                isValid: errors.length === 0,
+                pattern: sanitized,
+                errors: errors
+            };
+        },
+
+        /**
+         * Generate secure SQL template
+         * @private
+         */
+        _generateSecureTemplate: function(pattern, options) {
+            const templates = {
+                'SELECT_ALL': {
+                    template: 'SELECT * FROM :table',
+                    parameters: { table: pattern.table }
+                },
+                'SELECT_WHERE': {
+                    template: 'SELECT :columns FROM :table WHERE :condition',
+                    parameters: { 
+                        columns: pattern.columns || '*',
+                        table: pattern.table,
+                        condition: pattern.condition || '1=1'
+                    }
+                },
+                'COUNT': {
+                    template: 'SELECT COUNT(*) FROM :table',
+                    parameters: { table: pattern.table }
+                },
+                'INSERT': {
+                    template: 'INSERT INTO :table (:columns) VALUES (:values)',
+                    parameters: {
+                        table: pattern.table,
+                        columns: pattern.columns,
+                        values: pattern.values
+                    }
+                },
+                'UPDATE': {
+                    template: 'UPDATE :table SET :setClause WHERE :condition',
+                    parameters: {
+                        table: pattern.table,
+                        setClause: pattern.setClause,
+                        condition: pattern.condition || '1=0' // Safer default
+                    }
+                },
+                'DELETE': {
+                    template: 'DELETE FROM :table WHERE :condition',
+                    parameters: {
+                        table: pattern.table,
+                        condition: pattern.condition || '1=0' // Safer default
+                    }
+                }
+            };
+
+            return templates[pattern.type] || null;
         }
     };
 });

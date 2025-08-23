@@ -45,23 +45,41 @@ sap.ui.define([
             }
         },
 
-        // Query Builder Action
+        // Query Builder Action with rate limiting
         onQueryBuilder: function() {
-            if (!this._queryBuilder) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent11.ext.fragment.QueryBuilder",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._queryBuilder = oDialog;
-                    this.getView().addDependent(oDialog);
+            const userId = SecurityUtils._getCurrentUser();
+            
+            SecurityUtils.checkRateLimit(userId, 'query').then(function(allowed) {
+                if (!allowed) {
+                    MessageToast.show(this.getResourceBundle().getText("error.rateLimitExceeded"));
+                    return;
+                }
+                
+                if (!this._queryBuilder) {
+                    Fragment.load({
+                        id: this.getView().getId(),
+                        name: "a2a.network.agent11.ext.fragment.QueryBuilder",
+                        controller: this
+                    }).then(function(oDialog) {
+                        this._queryBuilder = oDialog;
+                        this.getView().addDependent(oDialog);
+                        this._loadSchemaData();
+                        oDialog.open();
+                    }.bind(this));
+                } else {
                     this._loadSchemaData();
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._loadSchemaData();
-                this._queryBuilder.open();
-            }
+                    this._queryBuilder.open();
+                }
+                
+                // Audit log the query builder access
+                SecurityUtils.auditLog('QUERY_BUILDER_ACCESS', {
+                    queryHash: 'N/A',
+                    queryType: 'BUILDER',
+                    databaseType: 'N/A',
+                    securityScore: 100,
+                    riskLevel: 'LOW'
+                }, 'SUCCESS');
+            }.bind(this));
         },
 
         // Connection Manager Action
@@ -343,22 +361,87 @@ sap.ui.define([
 
         _executeBatchQueries: function(aSelectedContexts) {
             const oModel = this.getView().getModel();
-            const aQueryIds = aSelectedContexts.map(ctx => ctx.getObject().queryId);
+            const userId = SecurityUtils._getCurrentUser();
+            const aQueryObjects = aSelectedContexts.map(ctx => ctx.getObject());
+            const aQueryIds = aQueryObjects.map(obj => obj.queryId);
             
-            MessageToast.show(this.getResourceBundle().getText("msg.batchExecutionStarted", [aQueryIds.length]));
-            
-            SecurityUtils.secureCallFunction(oModel, "/ExecuteBatchQueries", {
-                urlParameters: {
-                    queryIds: SecurityUtils.sanitizeSQLParameter(aQueryIds.join(','))
-                },
-                success: function(data) {
-                    MessageToast.show(this.getResourceBundle().getText("msg.batchExecutionCompleted"));
-                    this._refreshQueryData();
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.batchExecutionFailed"));
-                }.bind(this)
-            });
+            // Enhanced security validation for batch operations
+            SecurityUtils.checkRateLimit(userId, 'execute').then(function(allowed) {
+                if (!allowed) {
+                    MessageToast.show(this.getResourceBundle().getText("error.rateLimitExceeded"));
+                    return;
+                }
+                
+                // Validate each query for security before batch execution
+                const securityIssues = [];
+                const queryValidations = [];
+                
+                aQueryObjects.forEach(queryObj => {
+                    if (queryObj.sqlStatement) {
+                        const validation = SecurityUtils.validateSQL(queryObj.sqlStatement, {}, {
+                            minSecurityScore: 60,
+                            allowedOperations: ['SELECT', 'COUNT', 'DESCRIBE']
+                        });
+                        
+                        queryValidations.push({
+                            queryId: queryObj.queryId,
+                            validation: validation
+                        });
+                        
+                        if (!validation.isValid || validation.securityScore < 60) {
+                            securityIssues.push(`Query ${queryObj.queryName}: ${validation.errors.join(', ')}`);
+                        }
+                    }
+                });
+                
+                if (securityIssues.length > 0) {
+                    MessageBox.error(
+                        this.getResourceBundle().getText("error.batchSecurityValidationFailed") + 
+                        "\\n" + securityIssues.join("\\n")
+                    );
+                    return;
+                }
+                
+                MessageToast.show(this.getResourceBundle().getText("msg.batchExecutionStarted", [aQueryIds.length]));
+                
+                // Audit log batch execution attempt
+                SecurityUtils.auditLog('BATCH_EXECUTION_STARTED', {
+                    queryCount: aQueryIds.length,
+                    queryIds: aQueryIds,
+                    averageSecurityScore: queryValidations.reduce((sum, qv) => sum + qv.validation.securityScore, 0) / queryValidations.length
+                }, 'INITIATED');
+                
+                SecurityUtils.secureCallFunction(oModel, "/ExecuteBatchQueries", {
+                    urlParameters: {
+                        queryIds: SecurityUtils.sanitizeSQLParameter(aQueryIds.join(',')),
+                        validationResults: JSON.stringify(queryValidations.map(qv => ({
+                            queryId: qv.queryId,
+                            securityScore: qv.validation.securityScore,
+                            riskLevel: qv.validation.riskLevel
+                        })))
+                    },
+                    success: function(data) {
+                        MessageToast.show(this.getResourceBundle().getText("msg.batchExecutionCompleted"));
+                        this._refreshQueryData();
+                        
+                        // Audit log successful batch execution
+                        SecurityUtils.auditLog('BATCH_EXECUTION_COMPLETED', {
+                            queryCount: aQueryIds.length,
+                            executionResult: 'SUCCESS'
+                        }, 'SUCCESS');
+                    }.bind(this),
+                    error: function(error) {
+                        const sanitizedError = SecurityUtils.escapeHTML(error.message || 'Unknown error');
+                        MessageToast.show(this.getResourceBundle().getText("error.batchExecutionFailed"));
+                        
+                        // Audit log failed batch execution
+                        SecurityUtils.auditLog('BATCH_EXECUTION_FAILED', {
+                            queryCount: aQueryIds.length,
+                            errorMessage: sanitizedError
+                        }, 'FAILURE');
+                    }.bind(this)
+                });
+            }.bind(this));
         },
 
         _validateBatchQueries: function(aSelectedContexts) {

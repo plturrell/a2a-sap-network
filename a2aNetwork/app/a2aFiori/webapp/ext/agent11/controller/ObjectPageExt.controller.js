@@ -344,55 +344,109 @@ sap.ui.define([
         },
         
 
-        // Execute Query Action
+        // Enhanced Execute Query Action with comprehensive security
         onExecuteQuery: function() {
-            SecurityUtils.checkSQLAuth('execute', 'query').then(function(authorized) {
-                if (!authorized) {
-                    MessageToast.show(this.getResourceBundle().getText("error.notAuthorized"));
+            const userId = SecurityUtils._getCurrentUser();
+            
+            // Check rate limits first
+            SecurityUtils.checkRateLimit(userId, 'execute').then(function(allowed) {
+                if (!allowed) {
+                    MessageToast.show(this.getResourceBundle().getText("error.rateLimitExceeded"));
                     return;
                 }
                 
-                const oContext = this.base.getView().getBindingContext();
-                const oData = oContext.getObject();
-                
-                if (oData.executionStatus === 'executing') {
-                    MessageToast.show(this.getResourceBundle().getText("msg.queryAlreadyExecuting"));
-                    return;
-                }
+                SecurityUtils.checkSQLAuth('execute', 'query').then(function(authorized) {
+                    if (!authorized) {
+                        MessageToast.show(this.getResourceBundle().getText("error.notAuthorized"));
+                        return;
+                    }
+                    
+                    const oContext = this.base.getView().getBindingContext();
+                    const oData = oContext.getObject();
+                    
+                    if (oData.executionStatus === 'executing') {
+                        MessageToast.show(this.getResourceBundle().getText("msg.queryAlreadyExecuting"));
+                        return;
+                    }
 
-                if (!oData.sqlStatement || oData.sqlStatement.trim() === '') {
-                    MessageToast.show(this.getResourceBundle().getText("error.noSQLStatement"));
-                    return;
-                }
-                
-                // Validate SQL before execution
-                const validation = SecurityUtils.validateSQL(oData.sqlStatement);
-                if (!validation.isValid) {
-                    MessageBox.error(
-                        this.getResourceBundle().getText("error.sqlValidationFailed", [validation.errors.join(', ')])
-                    );
-                    return;
-                }
-                
-                // Check query complexity
-                const complexity = SecurityUtils.validateQueryComplexity(oData.sqlStatement);
-                if (!complexity.isValid) {
-                    MessageBox.error(
-                        this.getResourceBundle().getText("error.queryTooComplex", [complexity.issues.join(', ')])
-                    );
-                    return;
-                }
+                    if (!oData.sqlStatement || oData.sqlStatement.trim() === '') {
+                        MessageToast.show(this.getResourceBundle().getText("error.noSQLStatement"));
+                        return;
+                    }
+                    
+                    // Enhanced SQL validation with comprehensive security checks
+                    const validation = SecurityUtils.validateSQL(oData.sqlStatement, {}, {
+                        minSecurityScore: 70,
+                        allowedOperations: this._getAllowedOperationsForUser(userId),
+                        complexityLimits: {
+                            maxJoins: 8,
+                            maxSubqueries: 4,
+                            maxComplexity: 40
+                        }
+                    });
+                    
+                    if (!validation.isValid) {
+                        MessageBox.error(
+                            this.getResourceBundle().getText("error.sqlValidationFailed", [validation.errors.join(', ')]) +
+                            (validation.detectedPatterns.length > 0 ? 
+                                "\\nSecurity issues: " + validation.detectedPatterns.join(', ') : "")
+                        );
+                        
+                        // Audit log security validation failure
+                        SecurityUtils.auditLog('SQL_VALIDATION_FAILED', {
+                            queryId: oData.queryId,
+                            queryHash: validation.queryHash,
+                            securityScore: validation.securityScore,
+                            riskLevel: validation.riskLevel,
+                            errors: validation.errors,
+                            detectedPatterns: validation.detectedPatterns
+                        }, 'SECURITY_VIOLATION');
+                        
+                        return;
+                    }
+                    
+                    // Check query complexity with enhanced limits
+                    const complexity = SecurityUtils.validateQueryComplexity(oData.sqlStatement, {
+                        maxJoins: 10,
+                        maxSubqueries: 5,
+                        maxComplexity: 50,
+                        maxQueryLength: 5000
+                    });
+                    
+                    if (!complexity.isValid) {
+                        MessageBox.error(
+                            this.getResourceBundle().getText("error.queryTooComplex", [complexity.issues.join(', ')]) +
+                            "\\nComplexity Score: " + complexity.complexity + 
+                            "\\nEstimated Execution Time: " + complexity.estimatedExecutionTime + "ms"
+                        );
+                        
+                        // Audit log complexity validation failure
+                        SecurityUtils.auditLog('COMPLEXITY_VALIDATION_FAILED', {
+                            queryId: oData.queryId,
+                            complexityScore: complexity.complexity,
+                            riskLevel: complexity.riskLevel,
+                            issues: complexity.issues
+                        }, 'COMPLEXITY_EXCEEDED');
+                        
+                        return;
+                    }
 
-                MessageBox.confirm(
-                    this.getResourceBundle().getText("msg.executeQueryConfirm"),
-                    {
+                    // Show enhanced confirmation dialog with security information
+                    const confirmMessage = this.getResourceBundle().getText("msg.executeQueryConfirm") +
+                        "\\n\\nSecurity Score: " + validation.securityScore + "/100" +
+                        "\\nRisk Level: " + validation.riskLevel +
+                        "\\nComplexity: " + complexity.riskLevel +
+                        "\\nEstimated Time: " + complexity.estimatedExecutionTime + "ms";
+
+                    MessageBox.confirm(confirmMessage, {
+                        title: this.getResourceBundle().getText("dialog.executeQueryConfirm"),
                         onClose: function(oAction) {
                             if (oAction === MessageBox.Action.OK) {
-                                this._executeQuery(oContext);
+                                this._executeQuerySecure(oContext, validation, complexity);
                             }
                         }.bind(this)
-                    }
-                );
+                    });
+                }.bind(this));
             }.bind(this));
         },
 
@@ -746,6 +800,146 @@ sap.ui.define([
             if (this._pollInterval) {
                 clearInterval(this._pollInterval);
             }
+        },
+
+        /**
+         * Get allowed SQL operations for user based on role/permissions
+         * @private
+         */
+        _getAllowedOperationsForUser: function(userId) {
+            // In a real implementation, this would check user roles/permissions
+            // For now, return a default safe set
+            return ['SELECT', 'COUNT', 'SHOW', 'DESCRIBE', 'EXPLAIN'];
+        },
+
+        /**
+         * Enhanced secure query execution with comprehensive monitoring
+         * @private
+         */
+        _executeQuerySecure: function(oContext, validation, complexity) {
+            const oModel = this.getView().getModel();
+            const oData = oContext.getObject();
+            const sQueryId = SecurityUtils.sanitizeSQLParameter(oData.queryId);
+            const startTime = Date.now();
+            
+            // Pre-execution audit log
+            SecurityUtils.auditLog('QUERY_EXECUTION_STARTED', {
+                queryId: sQueryId,
+                queryHash: validation.queryHash,
+                queryType: this._detectQueryType(oData.sqlStatement),
+                securityScore: validation.securityScore,
+                riskLevel: validation.riskLevel,
+                complexityScore: complexity.complexity,
+                estimatedExecutionTime: complexity.estimatedExecutionTime,
+                tables: this._extractTableNames(oData.sqlStatement)
+            }, 'INITIATED');
+            
+            MessageToast.show(this.getResourceBundle().getText("msg.queryExecutionStarted"));
+            
+            SecurityUtils.secureCallFunction(oModel, "/ExecuteQuery", {
+                urlParameters: {
+                    queryId: sQueryId,
+                    securityScore: validation.securityScore,
+                    complexityScore: complexity.complexity,
+                    validationResult: JSON.stringify({
+                        isValid: validation.isValid,
+                        riskLevel: validation.riskLevel,
+                        queryHash: validation.queryHash
+                    })
+                },
+                success: function(data) {
+                    const executionTime = Date.now() - startTime;
+                    MessageToast.show(this.getResourceBundle().getText("msg.queryExecuted"));
+                    
+                    // Success audit log with execution metrics
+                    SecurityUtils.auditLog('QUERY_EXECUTION_COMPLETED', {
+                        queryId: sQueryId,
+                        executionTime: executionTime,
+                        rowsReturned: data.rowsReturned || 0,
+                        executionResult: 'SUCCESS'
+                    }, 'SUCCESS');
+                    
+                    this._refreshQueryData();
+                }.bind(this),
+                error: function(error) {
+                    const executionTime = Date.now() - startTime;
+                    const sanitizedError = SecurityUtils.escapeHTML(error.message || 'Unknown error');
+                    
+                    // Error audit log
+                    SecurityUtils.auditLog('QUERY_EXECUTION_FAILED', {
+                        queryId: sQueryId,
+                        executionTime: executionTime,
+                        errorMessage: sanitizedError,
+                        errorType: this._classifyError(error)
+                    }, 'FAILURE');
+                    
+                    MessageToast.show(this.getResourceBundle().getText("error.queryExecutionFailed", [sanitizedError]));
+                }.bind(this)
+            });
+        },
+
+        /**
+         * Detect query type from SQL statement
+         * @private
+         */
+        _detectQueryType: function(sql) {
+            const lowerSQL = sql.toLowerCase().trim();
+            if (lowerSQL.startsWith('select')) return 'SELECT';
+            if (lowerSQL.startsWith('insert')) return 'INSERT';
+            if (lowerSQL.startsWith('update')) return 'UPDATE';
+            if (lowerSQL.startsWith('delete')) return 'DELETE';
+            if (lowerSQL.startsWith('create')) return 'CREATE';
+            if (lowerSQL.startsWith('alter')) return 'ALTER';
+            if (lowerSQL.startsWith('drop')) return 'DROP';
+            if (lowerSQL.startsWith('show')) return 'SHOW';
+            if (lowerSQL.startsWith('describe')) return 'DESCRIBE';
+            return 'UNKNOWN';
+        },
+
+        /**
+         * Extract table names from SQL statement
+         * @private
+         */
+        _extractTableNames: function(sql) {
+            const tables = [];
+            const patterns = [
+                /from\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi,
+                /join\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi,
+                /into\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi,
+                /update\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi
+            ];
+            
+            patterns.forEach(pattern => {
+                let match;
+                while ((match = pattern.exec(sql)) !== null) {
+                    const tableName = match[1];
+                    if (!tables.includes(tableName)) {
+                        tables.push(tableName);
+                    }
+                }
+            });
+            
+            return tables;
+        },
+
+        /**
+         * Classify error type for better audit logging
+         * @private
+         */
+        _classifyError: function(error) {
+            if (!error || !error.message) return 'UNKNOWN_ERROR';
+            
+            const errorMsg = error.message.toLowerCase();
+            
+            if (errorMsg.includes('timeout')) return 'TIMEOUT_ERROR';
+            if (errorMsg.includes('permission') || errorMsg.includes('denied')) return 'PERMISSION_ERROR';
+            if (errorMsg.includes('syntax')) return 'SYNTAX_ERROR';
+            if (errorMsg.includes('table') && errorMsg.includes('not found')) return 'TABLE_NOT_FOUND';
+            if (errorMsg.includes('column') && errorMsg.includes('not found')) return 'COLUMN_NOT_FOUND';
+            if (errorMsg.includes('connection')) return 'CONNECTION_ERROR';
+            if (errorMsg.includes('resource')) return 'RESOURCE_ERROR';
+            
+            return 'EXECUTION_ERROR';
         }
     });
 });

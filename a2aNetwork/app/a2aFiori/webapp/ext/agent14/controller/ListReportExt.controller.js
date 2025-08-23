@@ -448,8 +448,10 @@ sap.ui.define([
             if (this._ws) return;
 
             // Validate WebSocket URL for security
-            if (!this._securityUtils.validateWebSocketUrl('wss://localhost:8014/embedding/updates')) {
-                MessageBox.error("Invalid WebSocket URL");
+            const wsUrl = 'wss://localhost:8014/embedding/updates';
+            if (!this._securityUtils.validateWebSocketUrl(wsUrl)) {
+                MessageBox.error("Invalid WebSocket URL for security reasons");
+                this._securityUtils.logSecureOperation('WEBSOCKET_VALIDATION_FAILED', 'ERROR', { url: wsUrl });
                 return;
             }
 
@@ -555,16 +557,28 @@ sap.ui.define([
             
             oTargetDialog.setBusy(true);
             
+            // Check authorization before loading statistics
+            if (!SecurityUtils.checkEmbeddingAuth('GetEmbeddingStatistics', {})) {
+                oTargetDialog.setBusy(false);
+                return;
+            }
+
             this._withErrorRecovery(function() {
                 return new Promise(function(resolve, reject) {
                     var oModel = this.base.getView().getModel();
                     SecurityUtils.secureCallFunction(oModel, "/GetEmbeddingStatistics", {
                         success: function(data) {
-                            resolve(data);
-                        },
+                            // Validate and sanitize response data
+                            if (this._validateStatisticsResponse(data)) {
+                                resolve(data);
+                            } else {
+                                reject(new Error("Invalid statistics response format"));
+                            }
+                        }.bind(this),
                         error: function(error) {
                             var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
                             var sErrorMsg = oBundle.getText("error.loadingStatistics") || "Error loading statistics";
+                            SecurityUtils.logSecureOperation('STATISTICS_LOAD_ERROR', 'ERROR', { error: error });
                             reject(new Error(sErrorMsg));
                         }.bind(this)
                     });
@@ -1233,6 +1247,193 @@ sap.ui.define([
          */
         getResourceBundle: function() {
             return this.base.getView().getModel("i18n").getResourceBundle();
+        },
+
+        /**
+         * @function _validateStatisticsResponse
+         * @description Validates statistics response data for security
+         * @param {object} data - Response data to validate
+         * @returns {boolean} True if valid
+         * @private
+         */
+        _validateStatisticsResponse: function(data) {
+            if (!data || typeof data !== 'object') {
+                return false;
+            }
+            
+            // Check for required properties and reasonable values
+            const requiredProps = ['trainingProgress', 'lossConvergence', 'performanceMetrics'];
+            for (const prop of requiredProps) {
+                if (!data[prop]) {
+                    SecurityUtils.logSecureOperation('INVALID_STATISTICS_RESPONSE', 'WARNING', { 
+                        missing: prop 
+                    });
+                    return false;
+                }
+            }
+            
+            // Validate numeric ranges
+            if (data.performanceMetrics && data.performanceMetrics.accuracy) {
+                const accuracy = parseFloat(data.performanceMetrics.accuracy);
+                if (isNaN(accuracy) || accuracy < 0 || accuracy > 1) {
+                    SecurityUtils.logSecureOperation('SUSPICIOUS_ACCURACY_VALUE', 'WARNING', { 
+                        accuracy: accuracy 
+                    });
+                    return false;
+                }
+            }
+            
+            return true;
+        },
+
+        /**
+         * @function _validateModelResponse
+         * @description Validates model response data for security
+         * @param {object} data - Response data to validate
+         * @returns {boolean} True if valid
+         * @private
+         */
+        _validateModelResponse: function(data) {
+            if (!data || typeof data !== 'object') {
+                return false;
+            }
+            
+            // Sanitize model configuration data
+            if (data.configuration) {
+                const validation = SecurityUtils.validateHyperparameters(data.configuration);
+                if (!validation.isValid) {
+                    SecurityUtils.logSecureOperation('INVALID_MODEL_CONFIG', 'ERROR', { 
+                        errors: validation.errors 
+                    });
+                    return false;
+                }
+            }
+            
+            return true;
+        },
+
+        /**
+         * @function _sanitizeTrainingData
+         * @description Sanitizes and validates training data
+         * @param {object} trainingData - Training data to sanitize
+         * @returns {object} Sanitized training data
+         * @private
+         */
+        _sanitizeTrainingData: function(trainingData) {
+            if (!trainingData) return {};
+            
+            const validation = SecurityUtils.validateTrainingData(trainingData);
+            if (!validation.isValid) {
+                SecurityUtils.logSecureOperation('TRAINING_DATA_VALIDATION_FAILED', 'ERROR', {
+                    errors: validation.errors,
+                    riskScore: validation.riskScore
+                });
+                return {};
+            }
+            
+            return validation.sanitized;
+        },
+
+        /**
+         * @function _validateModelPath
+         * @description Validates model path for security before operations
+         * @param {string} modelPath - Model path to validate
+         * @returns {boolean} True if valid
+         * @private
+         */
+        _validateModelPath: function(modelPath) {
+            const validation = SecurityUtils.validateModelPath(modelPath);
+            if (!validation.isValid) {
+                SecurityUtils.logSecureOperation('MODEL_PATH_VALIDATION_FAILED', 'ERROR', {
+                    path: modelPath,
+                    errors: validation.errors,
+                    riskScore: validation.riskScore
+                });
+                return false;
+            }
+            return true;
+        },
+
+        /**
+         * @function _secureModelOperation
+         * @description Wrapper for secure model operations
+         * @param {string} operation - Operation name
+         * @param {object} params - Operation parameters
+         * @param {function} callback - Success callback
+         * @param {function} errorCallback - Error callback
+         * @private
+         */
+        _secureModelOperation: function(operation, params, callback, errorCallback) {
+            // Check authorization
+            if (!SecurityUtils.checkEmbeddingAuth(operation, params)) {
+                if (errorCallback) {
+                    errorCallback(new Error('Insufficient permissions'));
+                }
+                return;
+            }
+            
+            // Validate and sanitize parameters
+            const sanitizedParams = this._sanitizeOperationParams(params);
+            
+            // Log operation attempt
+            SecurityUtils.logSecureOperation('MODEL_OPERATION_ATTEMPT', 'INFO', {
+                operation: operation,
+                params: Object.keys(sanitizedParams)
+            });
+            
+            // Execute with enhanced error handling
+            try {
+                var oModel = this.base.getView().getModel();
+                SecurityUtils.secureCallFunction(oModel, operation, {
+                    urlParameters: sanitizedParams,
+                    success: function(data) {
+                        SecurityUtils.logSecureOperation('MODEL_OPERATION_SUCCESS', 'INFO', {
+                            operation: operation
+                        });
+                        if (callback) callback(data);
+                    },
+                    error: function(error) {
+                        SecurityUtils.logSecureOperation('MODEL_OPERATION_ERROR', 'ERROR', {
+                            operation: operation,
+                            error: error
+                        });
+                        if (errorCallback) errorCallback(error);
+                    }
+                });
+            } catch (error) {
+                SecurityUtils.logSecureOperation('MODEL_OPERATION_EXCEPTION', 'ERROR', {
+                    operation: operation,
+                    error: error
+                });
+                if (errorCallback) errorCallback(error);
+            }
+        },
+
+        /**
+         * @function _sanitizeOperationParams
+         * @description Sanitizes operation parameters for security
+         * @param {object} params - Parameters to sanitize
+         * @returns {object} Sanitized parameters
+         * @private
+         */
+        _sanitizeOperationParams: function(params) {
+            if (!params || typeof params !== 'object') {
+                return {};
+            }
+            
+            const sanitized = {};
+            for (const [key, value] of Object.entries(params)) {
+                const cleanKey = SecurityUtils.sanitizeInput(key);
+                if (cleanKey && typeof value === 'string') {
+                    sanitized[cleanKey] = SecurityUtils.sanitizeInput(value);
+                } else if (cleanKey && typeof value === 'number' && isFinite(value)) {
+                    sanitized[cleanKey] = value;
+                } else if (cleanKey && typeof value === 'boolean') {
+                    sanitized[cleanKey] = value;
+                }
+            }
+            
+            return sanitized;
         }
     });
 });

@@ -36,7 +36,7 @@ services:
 
   # Agent 0 - Registry Server
   agent-0-registry:
-    image: finsightintelligence/a2a:latest
+    image: ghcr.io/plturrell/a2a-sap-network:latest
     restart: always
     mem_limit: 512m
     mem_reservation: 256m
@@ -59,7 +59,7 @@ services:
 
   # Agent 1 - Manager
   agent-1-manager:
-    image: finsightintelligence/a2a:latest
+    image: ghcr.io/plturrell/a2a-sap-network:latest
     restart: always
     mem_limit: 512m
     mem_reservation: 256m
@@ -79,7 +79,7 @@ services:
 
   # Agent 2 - Calculator
   agent-2-calculator:
-    image: finsightintelligence/a2a:latest
+    image: ghcr.io/plturrell/a2a-sap-network:latest
     restart: always
     mem_limit: 256m
     mem_reservation: 128m
@@ -99,7 +99,7 @@ services:
 
   # Agent 3 - Trust Manager
   agent-3-trust:
-    image: finsightintelligence/a2a:latest
+    image: ghcr.io/plturrell/a2a-sap-network:latest
     restart: always
     mem_limit: 256m
     mem_reservation: 128m
@@ -119,7 +119,7 @@ services:
 
   # Agent 4 - Security Monitor
   agent-4-security:
-    image: finsightintelligence/a2a:latest
+    image: ghcr.io/plturrell/a2a-sap-network:latest
     restart: always
     mem_limit: 256m
     mem_reservation: 128m
@@ -139,7 +139,7 @@ services:
 
   # Agent 5 - Persistence Manager
   agent-5-persistence:
-    image: finsightintelligence/a2a:latest
+    image: ghcr.io/plturrell/a2a-sap-network:latest
     restart: always
     mem_limit: 256m
     mem_reservation: 128m
@@ -159,7 +159,7 @@ services:
 
   # Agent 6 - Data Processor
   agent-6-data:
-    image: finsightintelligence/a2a:latest
+    image: ghcr.io/plturrell/a2a-sap-network:latest
     restart: always
     mem_limit: 256m
     mem_reservation: 128m
@@ -179,7 +179,7 @@ services:
 
   # Agent 7 - Analytics
   agent-7-analytics:
-    image: finsightintelligence/a2a:latest
+    image: ghcr.io/plturrell/a2a-sap-network:latest
     restart: always
     mem_limit: 256m
     mem_reservation: 128m
@@ -199,7 +199,7 @@ services:
 
   # Agent 8 - Communication Hub
   agent-8-comm:
-    image: finsightintelligence/a2a:latest
+    image: ghcr.io/plturrell/a2a-sap-network:latest
     restart: always
     mem_limit: 256m
     mem_reservation: 128m
@@ -219,7 +219,7 @@ services:
 
   # Agent 9 - Task Scheduler
   agent-9-scheduler:
-    image: finsightintelligence/a2a:latest
+    image: ghcr.io/plturrell/a2a-sap-network:latest
     restart: always
     mem_limit: 256m
     mem_reservation: 128m
@@ -239,7 +239,7 @@ services:
 
   # Agent 10 - Resource Monitor
   agent-10-resource:
-    image: finsightintelligence/a2a:latest
+    image: ghcr.io/plturrell/a2a-sap-network:latest
     restart: always
     mem_limit: 256m
     mem_reservation: 128m
@@ -259,7 +259,7 @@ services:
 
   # Agent 11 - Compliance Checker
   agent-11-compliance:
-    image: finsightintelligence/a2a:latest
+    image: ghcr.io/plturrell/a2a-sap-network:latest
     restart: always
     mem_limit: 256m
     mem_reservation: 128m
@@ -279,7 +279,7 @@ services:
 
   # Agent 12 - Integration Bridge
   agent-12-integration:
-    image: finsightintelligence/a2a:latest
+    image: ghcr.io/plturrell/a2a-sap-network:latest
     restart: always
     mem_limit: 256m
     mem_reservation: 128m
@@ -299,7 +299,7 @@ services:
 
   # Agent 13 - Backup Manager
   agent-13-backup:
-    image: finsightintelligence/a2a:latest
+    image: ghcr.io/plturrell/a2a-sap-network:latest
     restart: always
     mem_limit: 256m
     mem_reservation: 128m
@@ -319,7 +319,7 @@ services:
 
   # Agent 14 - Notification Service
   agent-14-notification:
-    image: finsightintelligence/a2a:latest
+    image: ghcr.io/plturrell/a2a-sap-network:latest
     restart: always
     mem_limit: 256m
     mem_reservation: 128m
@@ -339,7 +339,7 @@ services:
 
   # Agent 15 - Audit Logger
   agent-15-audit:
-    image: finsightintelligence/a2a:latest
+    image: ghcr.io/plturrell/a2a-sap-network:latest
     restart: always
     mem_limit: 256m
     mem_reservation: 128m

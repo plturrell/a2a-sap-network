@@ -96,7 +96,13 @@
                         "sap-value-list": "none"
                     },
                     "headers": {
-                        "X-Requested-With": "XMLHttpRequest"
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-Content-Type-Options": "nosniff",
+                        "X-Frame-Options": "DENY",
+                        "X-XSS-Protection": "1; mode=block",
+                        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+                        "Cache-Control": "no-store, no-cache, must-revalidate",
+                        "Pragma": "no-cache"
                     }
                 }
             }
@@ -119,5 +125,26 @@
     "sap.cloud": {
         "public": false,
         "service": "a2aAgents"
+    },
+    "security": {
+        "contentSecurityPolicy": {
+            "policy": "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; media-src 'none'; child-src 'none';",
+            "reportOnly": false
+        },
+        "frameOptions": "DENY",
+        "contentTypeOptions": "nosniff",
+        "downloadOptions": "noopen",
+        "crossOriginEmbedderPolicy": "require-corp",
+        "crossOriginOpenerPolicy": "same-origin",
+        "crossOriginResourcePolicy": "same-origin",
+        "sqlSecurity": {
+            "maxQueryComplexity": 50,
+            "maxExecutionsPerHour": 100,
+            "allowedOperations": ["SELECT", "COUNT", "SHOW", "DESCRIBE", "EXPLAIN"],
+            "auditLogging": true,
+            "rateLimiting": true,
+            "sqlInjectionPrevention": true,
+            "parameterValidation": true
+        }
     }
 }
