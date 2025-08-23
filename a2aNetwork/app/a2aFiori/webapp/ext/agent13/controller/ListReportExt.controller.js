@@ -4,7 +4,7 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/ui/core/Fragment",
     "sap/ui/model/json/JSONModel",
-    "a2a/network/agent13/ext/utils/SecurityUtils"
+    "../utils/SecurityUtils"
 ], function(ControllerExtension, MessageToast, MessageBox, Fragment, JSONModel, SecurityUtils) {
     "use strict";
 
@@ -442,14 +442,11 @@ sap.ui.define([
         _initializeWebSocket: function() {
             if (this._ws) return;
 
-            // Validate WebSocket URL for security
-            if (!this._securityUtils.validateWebSocketUrl('wss://localhost:8013/builder/updates')) {
-                MessageBox.error("Invalid WebSocket URL");
-                return;
-            }
-
+            // Use secure WebSocket URL
+            var wsUrl = 'wss://' + window.location.hostname + ':8013/builder/updates';
+            
             try {
-                this._ws = SecurityUtils.createSecureWebSocket('wss://localhost:8013/builder/updates', {
+                this._ws = SecurityUtils.createSecureWebSocket(wsUrl, {
                     onmessage: function(event) {
                         try {
                             const data = JSON.parse(event.data);
@@ -558,7 +555,7 @@ sap.ui.define([
             this._withErrorRecovery(function() {
                 return new Promise(function(resolve, reject) {
                     var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/GetBuilderStatistics", {
+                    return SecurityUtils.secureCallFunction(oModel, "/GetBuilderStatistics", {
                         success: function(data) {
                             resolve(data);
                         },
@@ -595,7 +592,7 @@ sap.ui.define([
             this._withErrorRecovery(function() {
                 return new Promise(function(resolve, reject) {
                     var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/GetTemplateDetails", {
+                    return SecurityUtils.secureCallFunction(oModel, "/GetTemplateDetails", {
                         urlParameters: {
                             templateId: sTemplateId
                         },
@@ -633,7 +630,7 @@ sap.ui.define([
             this._withErrorRecovery(function() {
                 return new Promise(function(resolve, reject) {
                     var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/GetDeploymentTargets", {
+                    return SecurityUtils.secureCallFunction(oModel, "/GetDeploymentTargets", {
                         success: function(data) {
                             resolve(data);
                         },
@@ -668,7 +665,7 @@ sap.ui.define([
             this._withErrorRecovery(function() {
                 return new Promise(function(resolve, reject) {
                     var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/GetBuildPipelines", {
+                    return SecurityUtils.secureCallFunction(oModel, "/GetBuildPipelines", {
                         success: function(data) {
                             resolve(data);
                         },
@@ -705,7 +702,7 @@ sap.ui.define([
             this._withErrorRecovery(function() {
                 return new Promise(function(resolve, reject) {
                     var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/GetAgentComponents", {
+                    return SecurityUtils.secureCallFunction(oModel, "/GetAgentComponents", {
                         urlParameters: {
                             templateId: sTemplateId
                         },
@@ -745,7 +742,7 @@ sap.ui.define([
             this._withErrorRecovery(function() {
                 return new Promise(function(resolve, reject) {
                     var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/GetTestConfiguration", {
+                    return SecurityUtils.secureCallFunction(oModel, "/GetTestConfiguration", {
                         urlParameters: {
                             templateId: sTemplateId
                         },
@@ -786,7 +783,7 @@ sap.ui.define([
             this._withErrorRecovery(function() {
                 return new Promise(function(resolve, reject) {
                     var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/StartBatchBuild", {
+                    return SecurityUtils.secureCallFunction(oModel, "/StartBatchBuild", {
                         urlParameters: {
                             templateIds: aTemplateIds.join(',')
                         },

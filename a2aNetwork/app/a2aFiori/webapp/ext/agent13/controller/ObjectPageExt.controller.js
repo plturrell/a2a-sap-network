@@ -4,7 +4,7 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/ui/core/Fragment",
     "sap/ui/model/json/JSONModel",
-    "a2a/network/agent13/ext/utils/SecurityUtils"
+    "../utils/SecurityUtils"
 ], function(ControllerExtension, MessageToast, MessageBox, Fragment, JSONModel, SecurityUtils) {
     "use strict";
 
@@ -613,6 +613,18 @@ class Agent {
             
             this._oTemplateWizard.setBusy(true);
             
+            // Validate code generation configuration
+            if (!SecurityUtils.validateCodeGeneration(oData)) {
+                MessageBox.error(this.getResourceBundle().getText("error.invalidConfiguration"));
+                return;
+            }
+            
+            // Validate deployment configuration
+            if (!SecurityUtils.validateDeploymentConfig(oData)) {
+                MessageBox.error(this.getResourceBundle().getText("error.invalidDeploymentConfig"));
+                return;
+            }
+            
             // Sanitize data for security
             var oSanitizedData = this._sanitizeWizardData(oData);
             
@@ -913,7 +925,9 @@ class Agent {
             }
 
             try {
-                this._eventSource = new EventSource(`http://localhost:8013/builder/${templateId}/stream`);
+                // Use secure HTTPS connection for EventSource
+                var eventSourceUrl = `https://${window.location.hostname}:8013/builder/${templateId}/stream`;
+                this._eventSource = new EventSource(eventSourceUrl);
                 
                 this._eventSource.addEventListener('generation-progress', (event) => {
                     const data = JSON.parse(event.data);
@@ -953,7 +967,7 @@ class Agent {
             
             MessageToast.show(this.getResourceBundle().getText("msg.generationStarted"));
             
-            oModel.callFunction("/GenerateAgent", {
+            SecurityUtils.secureCallFunction(oModel, "/GenerateAgent", {
                 urlParameters: {
                     templateId: sTemplateId
                 },
@@ -973,7 +987,7 @@ class Agent {
             
             MessageToast.show(this.getResourceBundle().getText("msg.buildStarted"));
             
-            oModel.callFunction("/BuildAgent", {
+            SecurityUtils.secureCallFunction(oModel, "/BuildAgent", {
                 urlParameters: {
                     templateId: sTemplateId
                 },
@@ -993,7 +1007,7 @@ class Agent {
             
             MessageToast.show(this.getResourceBundle().getText("msg.validationStarted"));
             
-            oModel.callFunction("/ValidateTemplate", {
+            SecurityUtils.secureCallFunction(oModel, "/ValidateTemplate", {
                 urlParameters: {
                     templateId: sTemplateId
                 },
@@ -1011,7 +1025,7 @@ class Agent {
             const oModel = this.getView().getModel();
             const sTemplateId = oContext.getObject().templateId;
             
-            oModel.callFunction("/CloneTemplate", {
+            SecurityUtils.secureCallFunction(oModel, "/CloneTemplate", {
                 urlParameters: {
                     templateId: sTemplateId
                 },
@@ -1029,7 +1043,7 @@ class Agent {
             const oModel = this.getView().getModel();
             const sTemplateId = oContext.getObject().templateId;
             
-            oModel.callFunction("/GetDeploymentOptions", {
+            SecurityUtils.secureCallFunction(oModel, "/GetDeploymentOptions", {
                 urlParameters: {
                     templateId: sTemplateId
                 },
@@ -1046,7 +1060,7 @@ class Agent {
             const oModel = this.getView().getModel();
             const sTemplateId = oContext.getObject().templateId;
             
-            oModel.callFunction("/GetTestSuite", {
+            SecurityUtils.secureCallFunction(oModel, "/GetTestSuite", {
                 urlParameters: {
                     templateId: sTemplateId
                 },
@@ -1063,7 +1077,7 @@ class Agent {
             const oModel = this.getView().getModel();
             const sTemplateId = oContext.getObject().templateId;
             
-            oModel.callFunction("/GetAgentConfiguration", {
+            SecurityUtils.secureCallFunction(oModel, "/GetAgentConfiguration", {
                 urlParameters: {
                     templateId: sTemplateId
                 },

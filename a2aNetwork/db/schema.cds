@@ -235,21 +235,20 @@ entity Agents : cuid, managed {
     @Common.Label: 'Performance Metrics'
     performance  : Composition of one AgentPerformance on performance.agent = $self;
     
-    // TODO: Re-enable these associations after entity order is fixed
-    // @Common.Label: 'Reputation Transactions'
-    // reputationTransactions : Composition of many ReputationTransactions on reputationTransactions.agent = $self;
+    @Common.Label: 'Reputation Transactions'
+    reputationTransactions : Composition of many ReputationTransactions on reputationTransactions.agent = $self;
     
-    // @Common.Label: 'Endorsements Received'  
-    // endorsementsReceived   : Composition of many PeerEndorsements on endorsementsReceived.toAgent = $self;
+    @Common.Label: 'Endorsements Received'  
+    endorsementsReceived   : Composition of many PeerEndorsements on endorsementsReceived.toAgent = $self;
     
-    // @Common.Label: 'Endorsements Given'
-    // endorsementsGiven      : Composition of many PeerEndorsements on endorsementsGiven.fromAgent = $self;
+    @Common.Label: 'Endorsements Given'
+    endorsementsGiven      : Composition of many PeerEndorsements on endorsementsGiven.fromAgent = $self;
     
-    // @Common.Label: 'Reputation Milestones'
-    // milestones            : Composition of many ReputationMilestones on milestones.agent = $self;
+    @Common.Label: 'Reputation Milestones'
+    milestones            : Composition of many ReputationMilestones on milestones.agent = $self;
     
-    // @Common.Label: 'Recovery Programs'
-    // recoveryPrograms      : Composition of many ReputationRecovery on recoveryPrograms.agent = $self;
+    @Common.Label: 'Recovery Programs'
+    recoveryPrograms      : Composition of many ReputationRecovery on recoveryPrograms.agent = $self;
     
     // Computed reputation fields
     @Common.Label: 'Current Badge'
@@ -855,17 +854,17 @@ entity AIPreparationTasks : cuid, managed {
     modelType       : String(50) @mandatory enum { 
         CLASSIFICATION; REGRESSION; CLUSTERING; EMBEDDING; 
         LLM; TIME_SERIES; RECOMMENDATION; ANOMALY; 
-;
+    };
     
     @Common.Label: 'Data Type'
     dataType        : String(50) @mandatory enum { 
         TABULAR; TEXT; IMAGE; AUDIO; VIDEO; TIME_SERIES; GRAPH; 
-;
+    };
     
     @Common.Label: 'ML Framework'
     framework       : String(50) enum { 
         TENSORFLOW; PYTORCH; SCIKIT_LEARN; XGBOOST; HUGGINGFACE; AUTO; 
- default 'TENSORFLOW';
+    } default 'TENSORFLOW';
     
     @Common.Label: 'Train/Test Split Ratio'
     @assert.range: [50, 90]
@@ -886,7 +885,7 @@ entity AIPreparationTasks : cuid, managed {
     @Common.Label: 'Optimization Metric'
     optimizationMetric : String(20) enum { 
         AUTO; ACCURACY; AUC; F1; MSE; MAE; PERPLEXITY; 
- default 'AUTO';
+    } default 'AUTO';
     
     @Common.Label: 'Use GPU Acceleration'
     useGPU          : Boolean default false;
@@ -985,169 +984,7 @@ entity AIPreparationFeatures : cuid {
     engineeringApplied : String(500);
 }
 
-// ================================
-// REPUTATION SYSTEM ENTITIES
-// ================================
 
-// Reputation transaction tracking
-entity ReputationTransactions : cuid, managed {
-    @Common.Label: 'Agent'
-    @assert.integrity
-    agent              : Association to Agents;
-    
-    @Common.Label: 'Transaction Type'
-    transactionType    : String(50) not null enum {
-        TASK_COMPLETION = 'TASK_COMPLETION';
-        SERVICE_RATING = 'SERVICE_RATING';
-        PEER_ENDORSEMENT = 'PEER_ENDORSEMENT';
-        QUALITY_BONUS = 'QUALITY_BONUS';
-        PENALTY = 'PENALTY';
-        MILESTONE_BONUS = 'MILESTONE_BONUS';
-        RECOVERY_REWARD = 'RECOVERY_REWARD';
-        WORKFLOW_PARTICIPATION = 'WORKFLOW_PARTICIPATION';
-        COLLABORATION_BONUS = 'COLLABORATION_BONUS';
-;
-    
-    @Common.Label: 'Amount'
-    @assert.range: [-50, 50]
-    amount            : Integer not null;
-    
-    @Common.Label: 'Reason'
-    reason            : String(200);
-    
-    @Common.Label: 'Context'
-    @Core.MediaType: 'application/json'
-    context           : LargeString;
-    
-    @Common.Label: 'Is Automated'
-    isAutomated       : Boolean default false;
-    
-    @Common.Label: 'Created By Agent'
-    createdByAgent    : Association to Agents;
-    
-    @Common.Label: 'Related Service Order'
-    serviceOrder      : Association to ServiceOrders;
-    
-    @Common.Label: 'Related Workflow'
-    workflow          : Association to Workflows;
-}
-
-// Peer-to-peer endorsements
-entity PeerEndorsements : cuid, managed {
-    @Common.Label: 'From Agent'
-    @assert.integrity
-    fromAgent         : Association to Agents not null;
-    
-    @Common.Label: 'To Agent'
-    @assert.integrity
-    toAgent           : Association to Agents not null;
-    
-    @Common.Label: 'Endorsement Amount'
-    @assert.range: [1, 10]
-    amount            : Integer not null;
-    
-    @Common.Label: 'Endorsement Reason'
-    reason            : String(50) not null enum {
-        EXCELLENT_COLLABORATION = 'EXCELLENT_COLLABORATION';
-        TIMELY_ASSISTANCE = 'TIMELY_ASSISTANCE';
-        HIGH_QUALITY_WORK = 'HIGH_QUALITY_WORK';
-        KNOWLEDGE_SHARING = 'KNOWLEDGE_SHARING';
-        PROBLEM_SOLVING = 'PROBLEM_SOLVING';
-        INNOVATION = 'INNOVATION';
-        MENTORING = 'MENTORING';
-        RELIABILITY = 'RELIABILITY';
-;
-    
-    @Common.Label: 'Context'
-    @Core.MediaType: 'application/json'
-    context           : LargeString;
-    
-    @Common.Label: 'Related Workflow'
-    workflow          : Association to Workflows;
-    
-    @Common.Label: 'Related Service Order'
-    serviceOrder      : Association to ServiceOrders;
-    
-    @Common.Label: 'Expires At'
-    expiresAt         : DateTime;
-    
-    @Common.Label: 'Is Reciprocal'
-    @readonly
-    isReciprocal      : Boolean default false;
-    
-    @Common.Label: 'Verification Hash'
-    verificationHash  : String(64);
-    
-    @Common.Label: 'Blockchain Transaction'
-    blockchainTx      : String(66);
-}
-
-// Reputation milestones and badges
-entity ReputationMilestones : cuid {
-    @Common.Label: 'Agent'
-    @assert.integrity
-    agent             : Association to Agents;
-    
-    @Common.Label: 'Milestone'
-    @assert.range: [50, 100, 150, 200]
-    milestone         : Integer not null;
-    
-    @Common.Label: 'Badge Name'
-    badgeName         : String(20) not null enum {
-        NEWCOMER = 'NEWCOMER';
-        ESTABLISHED = 'ESTABLISHED';
-        TRUSTED = 'TRUSTED';
-        EXPERT = 'EXPERT';
-        LEGENDARY = 'LEGENDARY';
-;
-    
-    @Common.Label: 'Achieved At'
-    achievedAt        : DateTime not null;
-    
-    @Common.Label: 'Badge Metadata'
-    @Core.MediaType: 'application/json'
-    badgeMetadata     : String(500);
-}
-
-// Reputation recovery programs
-entity ReputationRecovery : cuid, managed {
-    @Common.Label: 'Agent'
-    @assert.integrity
-    agent             : Association to Agents;
-    
-    @Common.Label: 'Recovery Type'
-    recoveryType      : String(30) not null enum {
-        PROBATION_TASKS = 'PROBATION_TASKS';
-        PEER_VOUCHING = 'PEER_VOUCHING';
-        TRAINING_COMPLETION = 'TRAINING_COMPLETION';
-        COMMUNITY_SERVICE = 'COMMUNITY_SERVICE';
-;
-    
-    @Common.Label: 'Status'
-    status            : String(20) enum {
-        PENDING = 'PENDING';
-        IN_PROGRESS = 'IN_PROGRESS';
-        COMPLETED = 'COMPLETED';
-        FAILED = 'FAILED';
- default 'PENDING';
-    
-    @Common.Label: 'Requirements'
-    @Core.MediaType: 'application/json'
-    requirements      : LargeString;
-    
-    @Common.Label: 'Progress'
-    @Core.MediaType: 'application/json'
-    progress          : LargeString;
-    
-    @Common.Label: 'Reputation Reward'
-    reputationReward  : Integer default 20;
-    
-    @Common.Label: 'Started At'
-    startedAt         : DateTime;
-    
-    @Common.Label: 'Completed At'
-    completedAt       : DateTime;
-}
 
 // Daily reputation limits tracking
 entity DailyReputationLimits : cuid {

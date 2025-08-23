@@ -387,83 +387,68 @@ class Agent14Adapter extends BaseAdapter {
     }
 
     async callPythonBackend(method, payload) {
-        // Simulate backend calls for now
-        // In production, this would make actual HTTP calls to the Python backend
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve(this._mockBackendResponse(method, payload));
-            }, 100);
-        });
-    }
-
-    _mockBackendResponse(method, payload) {
-        // Mock responses for different methods
-        switch (method) {
-            case 'create_embedding_model':
-                return {
-                    model_id: uuidv4(),
-                    status: 'created',
-                    base_model: payload.base_model,
-                    model_type: payload.model_type,
-                    optimization_strategy: payload.optimization_strategy
-                };
+        const axios = require('axios');
+        const baseUrl = process.env.AGENT14_BASE_URL || 'http://localhost:8014';
+        
+        try {
+            let response;
             
-            case 'start_fine_tuning':
-                return {
-                    job_id: uuidv4(),
-                    model_id: payload.model_id,
-                    status: 'started',
-                    estimated_duration_minutes: 45
-                };
-            
-            case 'get_training_status':
-                return {
-                    job_id: payload.job_id,
-                    model_id: uuidv4(),
-                    status: 'training',
-                    progress: {
-                        percentage: 35,
-                        current_epoch: 1,
-                        total_epochs: 3,
-                        current_step: 35,
-                        total_steps: 100
-                    },
-                    metrics: {
-                        current_loss: 0.45,
-                        evaluation_metrics: {
-                            accuracy: 0.82,
-                            f1_score: 0.79
-                        }
-                    },
-                    timing: {
-                        started_at: new Date().toISOString()
-                    }
-                };
-            
-            case 'evaluate_embedding_model':
-                return {
-                    model_id: payload.model_id,
-                    evaluation_results: {
-                        semantic_similarity: { pearson_correlation: 0.85 },
-                        classification: { accuracy: 0.89, f1_score: 0.87 }
-                    },
-                    overall_score: 0.86,
-                    evaluated_at: new Date().toISOString()
-                };
-            
-            case 'deploy_embedding_model':
-                return {
-                    model_id: payload.model_id,
-                    deployment_id: uuidv4(),
-                    endpoint_url: `https://api.example.com/embeddings/${uuidv4()}`,
-                    deployment_status: 'deployed',
-                    deployed_at: new Date().toISOString()
-                };
-            
-            default:
-                return { success: true };
+            switch (method) {
+                case 'list_embedding_models':
+                    response = await axios.get(`${baseUrl}/api/v1/embedding-models`, {
+                        params: { filters: JSON.stringify(payload.filters || {}) }
+                    });
+                    return response.data;
+                    
+                case 'create_embedding_model':
+                    response = await axios.post(`${baseUrl}/api/v1/embedding-models`, payload);
+                    return response.data;
+                    
+                case 'start_fine_tuning':
+                    response = await axios.post(`${baseUrl}/api/v1/fine-tuning/start`, payload);
+                    return response.data;
+                    
+                case 'stop_fine_tuning':
+                    response = await axios.post(`${baseUrl}/api/v1/fine-tuning/stop`, null, {
+                        params: { job_id: payload.job_id }
+                    });
+                    return response.data;
+                    
+                case 'get_training_status':
+                    response = await axios.get(`${baseUrl}/api/v1/fine-tuning/status`, {
+                        params: { job_id: payload.job_id }
+                    });
+                    return response.data;
+                    
+                case 'get_training_metrics':
+                    response = await axios.post(`${baseUrl}/api/v1/fine-tuning/metrics`, payload);
+                    return response.data;
+                    
+                case 'evaluate_embedding_model':
+                    response = await axios.post(`${baseUrl}/api/v1/embedding-models/evaluate`, payload);
+                    return response.data;
+                    
+                case 'deploy_embedding_model':
+                    response = await axios.post(`${baseUrl}/api/v1/embedding-models/deploy`, payload);
+                    return response.data;
+                    
+                case 'generate_embeddings':
+                    response = await axios.post(`${baseUrl}/api/v1/embedding-models/generate-embeddings`, {
+                        model_id: payload.model_id,
+                        texts: payload.texts
+                    });
+                    return response.data;
+                    
+                default:
+                    throw new Error(`Unknown method: ${method}`);
+            }
+        } catch (error) {
+            console.error(`Agent 14 backend call failed:`, error.message);
+            throw error;
         }
     }
+
+    // Removed mock response method - now using real backend
 }
 
 module.exports = Agent14Adapter;

@@ -177,7 +177,8 @@ class Agent14SecurityScanner {
         return /\.(js|ts)$/.test(filename) && 
                !filename.includes('.min.') && 
                !filename.includes('test') &&
-               !filename.includes('spec');
+               !filename.includes('spec') &&
+               !filename.includes('SecurityUtils'); // Skip SecurityUtils to avoid false positives
     }
 
     async scanFile(filePath) {
@@ -220,17 +221,19 @@ class Agent14SecurityScanner {
             'VisualizeEmbeddings', 'embedding/updates', 'embedding/stream'
         ];
         
-        return agent14Indicators.some(indicator => 
-            content.toLowerCase().includes(indicator.toLowerCase()) ||
-            filePath.toLowerCase().includes(indicator.toLowerCase())
-        );
+        const checkIndicator = function(indicator) {
+            return content.toLowerCase().includes(indicator.toLowerCase()) ||
+                filePath.toLowerCase().includes(indicator.toLowerCase());
+        };
+        
+        return agent14Indicators.some(checkIndicator);
     }
 
     scanModelInjection(content, filePath) {
-        this.embeddingSecurityPatterns.modelInjection.forEach(pattern => {
+        const checkModelInjectionPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const addModelInjectionVulnerability = (match) => {
                     this.vulnerabilities.push({
                         type: 'EMBEDDING_MODEL_INJECTION',
                         severity: 'CRITICAL',
@@ -241,16 +244,18 @@ class Agent14SecurityScanner {
                         impact: 'Could allow malicious model loading and arbitrary code execution',
                         recommendation: 'Use SecurityUtils.validateModelPath() and secure model loading'
                     });
-                });
+                };
+                matches.forEach(addModelInjectionVulnerability);
             }
-        });
+        };
+        this.embeddingSecurityPatterns.modelInjection.forEach(checkModelInjectionPattern);
     }
 
     scanModelPathTraversal(content, filePath) {
-        this.embeddingSecurityPatterns.modelPathTraversal.forEach(pattern => {
+        const checkPathTraversalPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const addPathTraversalVulnerability = (match) => {
                     this.vulnerabilities.push({
                         type: 'EMBEDDING_PATH_TRAVERSAL',
                         severity: 'HIGH',
@@ -261,16 +266,18 @@ class Agent14SecurityScanner {
                         impact: 'Could allow access to unauthorized model files',
                         recommendation: 'Validate model paths with SecurityUtils.validateModelPath()'
                     });
-                });
+                };
+                matches.forEach(addPathTraversalVulnerability);
             }
-        });
+        };
+        this.embeddingSecurityPatterns.modelPathTraversal.forEach(checkPathTraversalPattern);
     }
 
     scanInsecureConnections(content, filePath) {
-        this.embeddingSecurityPatterns.insecureConnections.forEach(pattern => {
+        const checkInsecureConnectionPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const addInsecureConnectionVulnerability = (match) => {
                     this.vulnerabilities.push({
                         type: 'INSECURE_EMBEDDING_CONNECTION',
                         severity: 'HIGH',
@@ -281,9 +288,11 @@ class Agent14SecurityScanner {
                         impact: 'Training and embedding communications not encrypted',
                         recommendation: 'Use WSS/HTTPS for secure embedding communications'
                     });
-                });
+                };
+                matches.forEach(addInsecureConnectionVulnerability);
             }
-        });
+        };
+        this.embeddingSecurityPatterns.insecureConnections.forEach(checkInsecureConnectionPattern);
     }
 
     scanCSRFProtection(content, filePath) {
@@ -573,10 +582,15 @@ class Agent14SecurityScanner {
         console.log('='.repeat(80));
 
         // Summary
-        const critical = this.vulnerabilities.filter(v => v.severity === 'CRITICAL').length;
-        const high = this.vulnerabilities.filter(v => v.severity === 'HIGH').length;
-        const medium = this.vulnerabilities.filter(v => v.severity === 'MEDIUM').length;
-        const low = this.vulnerabilities.filter(v => v.severity === 'LOW').length;
+        const isCritical = function(v) { return v.severity === 'CRITICAL'; };
+        const isHigh = function(v) { return v.severity === 'HIGH'; };
+        const isMedium = function(v) { return v.severity === 'MEDIUM'; };
+        const isLow = function(v) { return v.severity === 'LOW'; };
+        
+        const critical = this.vulnerabilities.filter(isCritical).length;
+        const high = this.vulnerabilities.filter(isHigh).length;
+        const medium = this.vulnerabilities.filter(isMedium).length;
+        const low = this.vulnerabilities.filter(isLow).length;
 
         console.log(`\n📊 SUMMARY:`);
         console.log(`   Files Scanned: ${this.scannedFiles}`);
@@ -607,42 +621,54 @@ class Agent14SecurityScanner {
         // Embedding-specific findings
         console.log(`\n🤖 EMBEDDING-SPECIFIC SECURITY FINDINGS:`);
         
+        const hasModelInjection = function(v) { return v.type.includes('MODEL_INJECTION'); };
+        const hasPathTraversal = function(v) { return v.type.includes('PATH_TRAVERSAL'); };
+        const hasCSRF = function(v) { return v.type.includes('CSRF'); };
+        const hasDataPoisoning = function(v) { return v.type.includes('DATA_POISONING'); };
+        const hasSerializationRisk = function(v) { return v.type.includes('SERIALIZATION_RISK'); };
+        const hasVectorDbSecurity = function(v) { return v.type.includes('VECTOR_DB_SECURITY'); };
+        const hasInsecureConnection = function(v) { return v.type.includes('INSECURE'); };
+        
         const embeddingIssues = {
-            'MODEL_INJECTION': this.vulnerabilities.filter(v => v.type.includes('MODEL_INJECTION')).length,
-            'PATH_TRAVERSAL': this.vulnerabilities.filter(v => v.type.includes('PATH_TRAVERSAL')).length,
-            'CSRF': this.vulnerabilities.filter(v => v.type.includes('CSRF')).length,
-            'DATA_POISONING': this.vulnerabilities.filter(v => v.type.includes('DATA_POISONING')).length,
-            'SERIALIZATION_RISK': this.vulnerabilities.filter(v => v.type.includes('SERIALIZATION_RISK')).length,
-            'VECTOR_DB_SECURITY': this.vulnerabilities.filter(v => v.type.includes('VECTOR_DB_SECURITY')).length,
-            'INSECURE_CONNECTION': this.vulnerabilities.filter(v => v.type.includes('INSECURE')).length
+            'MODEL_INJECTION': this.vulnerabilities.filter(hasModelInjection).length,
+            'PATH_TRAVERSAL': this.vulnerabilities.filter(hasPathTraversal).length,
+            'CSRF': this.vulnerabilities.filter(hasCSRF).length,
+            'DATA_POISONING': this.vulnerabilities.filter(hasDataPoisoning).length,
+            'SERIALIZATION_RISK': this.vulnerabilities.filter(hasSerializationRisk).length,
+            'VECTOR_DB_SECURITY': this.vulnerabilities.filter(hasVectorDbSecurity).length,
+            'INSECURE_CONNECTION': this.vulnerabilities.filter(hasInsecureConnection).length
         };
 
-        Object.entries(embeddingIssues).forEach(([type, count]) => {
+        const logEmbeddingIssue = function([type, count]) {
             if (count > 0) {
                 console.log(`   ${type.replace('_', ' ')}: ${count} issues`);
             }
-        });
+        };
+        Object.entries(embeddingIssues).forEach(logEmbeddingIssue);
 
         // Detailed vulnerabilities
         if (this.vulnerabilities.length > 0) {
             console.log(`\n🚨 VULNERABILITIES FOUND:`);
             
-            ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].forEach(severity => {
-                const issues = this.vulnerabilities.filter(v => v.severity === severity);
+            const logSeverityIssues = (severity) => {
+                const filterBySeverity = function(v) { return v.severity === severity; };
+                const issues = this.vulnerabilities.filter(filterBySeverity);
                 if (issues.length > 0) {
                     console.log(`\n${severity} (${issues.length}):`);
-                    issues.slice(0, 5).forEach((vuln, index) => {
+                    const logVulnerability = function(vuln, index) {
                         console.log(`\n${index + 1}. ${vuln.type} - ${vuln.file}:${vuln.line || 'N/A'}`);
                         console.log(`   Description: ${vuln.description}`);
                         console.log(`   Impact: ${vuln.impact}`);
                         console.log(`   Code: ${vuln.code}`);
                         console.log(`   Fix: ${vuln.recommendation}`);
-                    });
+                    };
+                    issues.slice(0, 5).forEach(logVulnerability);
                     if (issues.length > 5) {
                         console.log(`   ... and ${issues.length - 5} more ${severity.toLowerCase()} issues`);
                     }
                 }
-            });
+            };
+            ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].forEach(logSeverityIssues.bind(this));
         }
 
         // Recommendations

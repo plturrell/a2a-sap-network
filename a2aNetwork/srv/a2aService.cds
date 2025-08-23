@@ -8,7 +8,7 @@ service A2AService @(path: '/api/v1') {
     
     // Individual Agent Status (16 endpoints: /agents/0/status through /agents/15/status)
     @Common.Label: 'Agent Status'
-    action getAgentStatus(agentId: Integer) returns {
+    action getAgentStatus(agentId: String) returns {
         d: {
             title: String;
             number: String;
@@ -18,7 +18,7 @@ service A2AService @(path: '/api/v1') {
             stateArrow: String;
             info: String;
             status: String;
-            agent_id: String;
+            agentId: String;
             version: String;
             port: Integer;
             capabilities: {
