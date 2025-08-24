@@ -380,8 +380,8 @@ sap.ui.define([
         },
 
         _clearCache: function(sDatasetName) {
-            jQuery.ajax({
-                url: "/a2a/agent8/v1/datasets/" + sDatasetName + "/cache",
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent8/v1/datasets/" + encodeURIComponent(sDatasetName) + "/cache",
                 type: "DELETE",
                 success: function(data) {
                     const safeEntries = parseInt(data.entriesRemoved) || 0;
@@ -391,12 +391,22 @@ sap.ui.define([
                         safeMemory + " memory freed"
                     );
                     this._extensionAPI.refresh();
+                    this._securityUtils.auditLog("CACHE_CLEARED", { 
+                        dataset: sDatasetName,
+                        entriesRemoved: safeEntries
+                    });
                 }.bind(this),
                 error: function(xhr) {
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     MessageBox.error("Failed to clear cache: " + errorMsg);
+                    this._securityUtils.auditLog("CACHE_CLEAR_FAILED", { 
+                        dataset: sDatasetName,
+                        error: errorMsg
+                    });
                 }.bind(this)
             });
+            
+            jQuery.ajax(ajaxConfig);
         },
 
         onValidateData: function() {

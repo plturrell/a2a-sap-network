@@ -143,6 +143,12 @@ sap.ui.define([
          * @public
          */
         onCreateDataTask: function() {
+            if (!this._securityUtils.hasRole("DataManager")) {
+                MessageBox.error("Access denied: Data Manager role required");
+                this._securityUtils.auditLog("CREATE_DATA_TASK_ACCESS_DENIED", { action: "create_data_task" });
+                return;
+            }
+            
             var oView = this.base.getView();
             
             this._getOrCreateDialog("createDataTask", "a2a.network.agent8.ext.fragment.CreateDataTask")

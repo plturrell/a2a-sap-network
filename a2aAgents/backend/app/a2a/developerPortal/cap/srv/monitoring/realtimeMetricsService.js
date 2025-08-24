@@ -182,7 +182,7 @@ class RealtimeMetricsService extends EventEmitter {
             { id: 'blockchain_integration', endpoint: 'http://localhost:8015/health' }
         ];
 
-        const heartbeats = await Promise.all(agents.map(async (agent) => {
+        const collectAgentHeartbeat = async (agent) => {
             const cached = this.metricsCache.get(`heartbeat_${agent.id}`);
             const now = Date.now();
             
@@ -272,7 +272,9 @@ class RealtimeMetricsService extends EventEmitter {
                 
                 return heartbeat;
             }
-        }));
+        };
+        
+        const heartbeats = await Promise.all(agents.map(collectAgentHeartbeat));
 
         this._broadcastToSubscribers('heartbeats', {
             type: 'agent_heartbeats',
@@ -388,23 +390,26 @@ class RealtimeMetricsService extends EventEmitter {
         }
 
         // Generate latency matrix
-        agents.forEach(from => {
+        const generateLatencyForAgent = (from) => {
             communicationData.latencyMatrix[from] = {};
-            agents.forEach(to => {
+            const setLatencyToAgent = (to) => {
                 if (from !== to) {
                     communicationData.latencyMatrix[from][to] = 5 + Math.random() * 50;
                 }
-            });
-        });
+            };
+            agents.forEach(setLatencyToAgent);
+        };
+        agents.forEach(generateLatencyForAgent);
 
         // Queue depths
-        agents.forEach(agent => {
+        const setQueueDepth = (agent) => {
             communicationData.queueDepths[agent] = {
                 inbound: Math.floor(Math.random() * 100),
                 outbound: Math.floor(Math.random() * 50),
                 deadLetter: Math.floor(Math.random() * 5)
             };
-        });
+        };
+        agents.forEach(setQueueDepth);
 
         this._broadcastToSubscribers('communication', {
             type: 'communication_patterns',

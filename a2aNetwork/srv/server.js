@@ -354,16 +354,7 @@ cds.on('bootstrap', async (app) => {
     
     // Management task actions
     
-    // Health Check endpoints
-        // Server-Sent Events for real-time health monitoring
-        res.writeHead(200, {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-            'Access-Control-Allow-Origin': '*'
-        });
-        
-    });
+    // Health Check endpoints - migrated to CAP service
     
     // Performance Metrics endpoints
     
@@ -566,148 +557,6 @@ cds.on('bootstrap', async (app) => {
     
     // Health summary endpoint - migrated to CAP service
     
-    // Comprehensive UI Health Check endpoint - migrated to CAP service
-                Object.entries(AGENT_METADATA).map(async ([id, agent]) => {
-                    const health = await checkAgentHealth(agent.port);
-                    return health.status === 'healthy' ? health : null;
-                })
-            );
-            
-            const healthyAgents = healthChecks.filter(h => h !== null);
-            const totalSkills = healthyAgents.reduce((sum, agent) => sum + (agent.skills || 0), 0);
-            const totalHandlers = healthyAgents.reduce((sum, agent) => sum + (agent.handlers || 0), 0);
-            const totalMcpTools = healthyAgents.reduce((sum, agent) => sum + (agent.mcp_tools || 0), 0);
-            const totalMcpResources = healthyAgents.reduce((sum, agent) => sum + (agent.mcp_resources || 0), 0);
-            const totalServices = totalSkills + totalHandlers + totalMcpTools;
-            
-            const activeProviders = healthyAgents.length;
-            const totalProviders = Object.keys(AGENT_METADATA).length;
-            const providerHealthPercentage = Math.round((activeProviders / totalProviders) * 100);
-            
-            res.json({
-                d: {
-                    title: "Service Marketplace",
-                    number: totalServices.toString(),
-                    numberUnit: "available services",
-                    numberState: providerHealthPercentage > 80 ? "Positive" : providerHealthPercentage > 50 ? "Critical" : "Error",
-                    subtitle: `${activeProviders}/${totalProviders} providers active (${providerHealthPercentage}%)`,
-                    stateArrow: providerHealthPercentage > 80 ? "Up" : "Down",
-                    info: `${totalSkills} skills, ${totalHandlers} handlers, ${totalMcpTools} MCP tools`,
-                    service_breakdown: {
-                        agent_skills: totalSkills,
-                        agent_handlers: totalHandlers,
-                        mcp_tools: totalMcpTools,
-                        database_services: totalMcpResources,
-                        total_services: totalServices
-                    },
-                    provider_health: {
-                        active_providers: activeProviders,
-                        total_providers: totalProviders,
-                        provider_health_percentage: providerHealthPercentage
-                    },
-                    timestamp: new Date().toISOString()
-                }
-            });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    });
-
-    // Health summary endpoint
-        try {
-            const [healthChecks, blockchainHealth, mcpHealth] = await Promise.all([
-                Promise.all(
-                    Object.entries(AGENT_METADATA).map(async ([id, agent]) => {
-                        const health = await checkAgentHealth(agent.port);
-                        return { 
-                            id: parseInt(id), 
-                            status: health.status,
-                            cpu_usage: health.cpu_usage,
-                            memory_usage: health.memory_usage,
-                            success_rate: health.success_rate,
-                            error_rate: health.error_rate
-                        };
-                    })
-                ),
-                checkBlockchainHealth(),
-                checkMcpHealth()
-            ]);
-            
-            const healthyAgents = healthChecks.filter(h => h.status === 'healthy');
-            const totalAgents = healthChecks.length;
-            
-            const agentsHealth = Math.round((healthyAgents.length / totalAgents) * 100);
-            const blockchainHealth_score = blockchainHealth.status === 'healthy' ? 100 : 0;
-            const mcpHealth_score = mcpHealth.status === 'healthy' ? 100 : mcpHealth.status === 'offline' ? 0 : 50;
-            const apiHealth = 100;
-            
-            const validCpuUsages = healthyAgents.filter(a => a.cpu_usage !== null).map(a => a.cpu_usage);
-            const validMemoryUsages = healthyAgents.filter(a => a.memory_usage !== null).map(a => a.memory_usage);
-            const validErrorRates = healthyAgents.filter(a => a.error_rate !== null).map(a => a.error_rate);
-            
-            const avgCpuUsage = validCpuUsages.length > 0 ? 
-                validCpuUsages.reduce((sum, cpu) => sum + cpu, 0) / validCpuUsages.length : null;
-            const avgMemoryUsage = validMemoryUsages.length > 0 ? 
-                validMemoryUsages.reduce((sum, mem) => sum + mem, 0) / validMemoryUsages.length : null;
-            const avgErrorRate = validErrorRates.length > 0 ? 
-                validErrorRates.reduce((sum, err) => sum + err, 0) / validErrorRates.length : null;
-            
-            const overallHealth = Math.round((agentsHealth + blockchainHealth_score + mcpHealth_score + apiHealth) / 4);
-            
-            res.json({
-                d: {
-                    title: "System Health",
-                    number: overallHealth.toString(),
-                    numberUnit: "% system health",
-                    numberState: overallHealth > 80 ? "Positive" : overallHealth > 50 ? "Critical" : "Error",
-                    subtitle: `${healthyAgents.length}/${totalAgents} agents healthy`,
-                    stateArrow: overallHealth > 80 ? "Up" : "Down",
-                    info: `Agents: ${agentsHealth}%, Blockchain: ${blockchainHealth_score}%, MCP: ${mcpHealth_score}%`,
-                    component_health: {
-                        agents_health: agentsHealth,
-                        blockchain_health: blockchainHealth_score,
-                        mcp_health: mcpHealth_score,
-                        api_health: apiHealth
-                    },
-                    system_performance: {
-                        avg_cpu_usage: avgCpuUsage,
-                        avg_memory_usage: avgMemoryUsage,
-                        network_latency: 50
-                    },
-                    error_tracking: {
-                        agent_error_rate: avgErrorRate,
-                        blockchain_tx_failure_rate: blockchainHealth.status !== 'healthy' ? 100.0 : 0.0,
-                        api_error_rate: 0.0
-                    },
-                    timestamp: new Date().toISOString()
-                }
-            });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    });
-
-    // Comprehensive UI Health Check endpoint
-        try {
-            const UIHealthChecker = require('./lib/sapUiHealthCheck');
-            const port = process.env.PORT || 4004;
-            const healthCheckUrl = process.env.UI_HEALTH_CHECK_URL || `http://localhost:${port}`;
-            const healthChecker = new UIHealthChecker(healthCheckUrl);
-            
-            cds.log('server').info('Starting comprehensive UI health check...');
-            const results = await healthChecker.runFullHealthCheck();
-            
-            res.status(results.overall === 'HEALTHY' ? 200 : 
-                      results.overall === 'WARNING' ? 202 : 503).json(results);
-        } catch (error) {
-            res.status(500).json({
-                overall: 'ERROR',
-                message: 'Health check system failed',
-                error: error.message,
-                timestamp: new Date().toISOString()
-            });
-        }
-    });
 
     // NOTE: No HTTP server creation or return - CDS framework handles this
     log.info('SAP CAP server bootstrap completed successfully');
@@ -978,9 +827,7 @@ cds.on('listening', async (info) => {
     
     // Health and Status
     
-    // Agent 13 OData Service Proxy - Convert REST to OData format
-        try {
-            const response = await axios.get(`${AGENT13_BASE_URL}/api/agent13/v1/templates`);
+    // Agent 13 OData Service Proxy - migrated to CAP service
             
             const odataResponse = {
                 "@odata.context": "$metadata#AgentTemplates",

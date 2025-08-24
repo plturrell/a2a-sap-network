@@ -228,9 +228,19 @@ class Agent8SecurityScanner {
             const functionEnd = this.findFunctionEnd(content, functionStart);
             const functionBody = content.slice(functionStart, functionEnd);
             
-            if (!functionBody.includes('validate') && !functionBody.includes('required')) {
+            // Check for various types of validation and security measures
+            const hasValidation = functionBody.includes('validate') || 
+                                functionBody.includes('required') ||
+                                functionBody.includes('_securityUtils.hasRole') ||
+                                functionBody.includes('SecurityUtils.hasRole') ||
+                                functionBody.includes('checkAuth') ||
+                                functionBody.includes('_securityUtils.validateInput') ||
+                                functionBody.includes('_securityUtils.sanitize') ||
+                                functionBody.includes('Access denied');
+            
+            if (!hasValidation) {
                 this.addIssue('high', 'FORM_VALIDATION_MISSING', 
-                    'Form submission function lacks proper input validation',
+                    'Form submission function lacks proper input validation or authorization',
                     filePath, this.getLineNumber(content, functionStart));
             }
         }

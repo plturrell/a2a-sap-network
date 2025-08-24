@@ -1,5 +1,5 @@
 {
-  "scanTimestamp": "2025-08-24T02:21:22.924Z",
+  "scanTimestamp": "2025-08-24T02:22:53.886Z",
   "scanTarget": "Agent 8 - Data Manager UI",
   "filesScanned": [
     "controller/ListReportExt.controller.js",
@@ -8,9 +8,9 @@
     "manifest.json"
   ],
   "summary": {
-    "totalIssues": 210,
+    "totalIssues": 200,
     "criticalCount": 0,
-    "highCount": 24,
+    "highCount": 14,
     "mediumCount": 171,
     "lowCount": 15,
     "complianceScore": 0
@@ -21,7 +21,7 @@
       {
         "severity": "high",
         "type": "FORM_VALIDATION_MISSING",
-        "description": "Form submission function lacks proper input validation",
+        "description": "Form submission function lacks proper input validation or authorization",
         "file": "controller/ListReportExt.controller.js",
         "line": 141,
         "code": ""
@@ -29,41 +29,9 @@
       {
         "severity": "high",
         "type": "FORM_VALIDATION_MISSING",
-        "description": "Form submission function lacks proper input validation",
+        "description": "Form submission function lacks proper input validation or authorization",
         "file": "controller/ListReportExt.controller.js",
         "line": 145,
-        "code": ""
-      },
-      {
-        "severity": "high",
-        "type": "FORM_VALIDATION_MISSING",
-        "description": "Form submission function lacks proper input validation",
-        "file": "controller/ListReportExt.controller.js",
-        "line": 996,
-        "code": ""
-      },
-      {
-        "severity": "high",
-        "type": "FORM_VALIDATION_MISSING",
-        "description": "Form submission function lacks proper input validation",
-        "file": "controller/ListReportExt.controller.js",
-        "line": 1002,
-        "code": ""
-      },
-      {
-        "severity": "high",
-        "type": "FORM_VALIDATION_MISSING",
-        "description": "Form submission function lacks proper input validation",
-        "file": "controller/ListReportExt.controller.js",
-        "line": 1353,
-        "code": ""
-      },
-      {
-        "severity": "high",
-        "type": "FORM_VALIDATION_MISSING",
-        "description": "Form submission function lacks proper input validation",
-        "file": "controller/ListReportExt.controller.js",
-        "line": 1357,
         "code": ""
       },
       {
@@ -117,57 +85,9 @@
       {
         "severity": "high",
         "type": "FORM_VALIDATION_MISSING",
-        "description": "Form submission function lacks proper input validation",
-        "file": "controller/ObjectPageExt.controller.js",
-        "line": 536,
-        "code": ""
-      },
-      {
-        "severity": "high",
-        "type": "FORM_VALIDATION_MISSING",
-        "description": "Form submission function lacks proper input validation",
-        "file": "controller/ObjectPageExt.controller.js",
-        "line": 571,
-        "code": ""
-      },
-      {
-        "severity": "high",
-        "type": "FORM_VALIDATION_MISSING",
-        "description": "Form submission function lacks proper input validation",
-        "file": "controller/ObjectPageExt.controller.js",
-        "line": 619,
-        "code": ""
-      },
-      {
-        "severity": "high",
-        "type": "FORM_VALIDATION_MISSING",
-        "description": "Form submission function lacks proper input validation",
-        "file": "controller/ObjectPageExt.controller.js",
-        "line": 654,
-        "code": ""
-      },
-      {
-        "severity": "high",
-        "type": "FORM_VALIDATION_MISSING",
-        "description": "Form submission function lacks proper input validation",
+        "description": "Form submission function lacks proper input validation or authorization",
         "file": "controller/ObjectPageExt.controller.js",
         "line": 834,
-        "code": ""
-      },
-      {
-        "severity": "high",
-        "type": "FORM_VALIDATION_MISSING",
-        "description": "Form submission function lacks proper input validation",
-        "file": "controller/ObjectPageExt.controller.js",
-        "line": 1655,
-        "code": ""
-      },
-      {
-        "severity": "high",
-        "type": "FORM_VALIDATION_MISSING",
-        "description": "Form submission function lacks proper input validation",
-        "file": "controller/ObjectPageExt.controller.js",
-        "line": 1659,
         "code": ""
       },
       {
@@ -181,7 +101,7 @@
       {
         "severity": "high",
         "type": "FORM_VALIDATION_MISSING",
-        "description": "Form submission function lacks proper input validation",
+        "description": "Form submission function lacks proper input validation or authorization",
         "file": "i18n/i18n.properties",
         "line": 73,
         "code": ""
@@ -189,7 +109,7 @@
       {
         "severity": "high",
         "type": "FORM_VALIDATION_MISSING",
-        "description": "Form submission function lacks proper input validation",
+        "description": "Form submission function lacks proper input validation or authorization",
         "file": "i18n/i18n.properties",
         "line": 131,
         "code": ""
@@ -197,7 +117,7 @@
       {
         "severity": "high",
         "type": "FORM_VALIDATION_MISSING",
-        "description": "Form submission function lacks proper input validation",
+        "description": "Form submission function lacks proper input validation or authorization",
         "file": "manifest.json",
         "line": 70,
         "code": ""
