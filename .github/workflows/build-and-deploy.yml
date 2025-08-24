@@ -217,8 +217,18 @@ jobs:
         REMAINING=$(flyctl machines list --app a2a-platform --json | jq -r '.[].id' 2>/dev/null | wc -l || echo "0")
         echo "🧹 Remaining machines: $REMAINING"
         
+        # If cleanup failed, destroy and recreate the app (nuclear option)
+        if [ "$REMAINING" -gt "0" ]; then
+          echo "💥 Stuck machines detected, recreating app completely..."
+          flyctl apps destroy a2a-platform --yes || echo "App might not exist"
+          sleep 10
+          echo "🆕 Creating fresh app..."
+          flyctl apps create a2a-platform --org personal
+          sleep 5
+        fi
         
-        # Deploy to Fly.io with longer timeout for A2A platform startup (25 minutes for 18 agents)
+        # Deploy to Fly.io with timeout for A2A platform startup (25 minutes for 18 agents)
+        echo "🚀 Starting deployment..."
         flyctl deploy --remote-only --wait-timeout 1500
         
         # Get the deployed URL
