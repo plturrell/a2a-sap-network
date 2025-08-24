@@ -40,14 +40,14 @@ kill_timeout = "30s"
     
   [[services.tcp_checks]]
     interval = "30s"
-    timeout = "10s"
-    grace_period = "180s"
-    restart_limit = 3
+    timeout = "20s"
+    grace_period = "300s"
+    restart_limit = 2
 
 [[vm]]
-  cpu_kind = "shared"
-  cpus = 4
-  memory_mb = 4096
+  cpu_kind = "performance"
+  cpus = 8
+  memory_mb = 8192
 
 [processes]
   app = "complete"

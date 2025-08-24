@@ -192,8 +192,14 @@ jobs:
           flyctl apps create a2a-platform --org personal
         fi
         
-        # Deploy to Fly.io with longer timeout for A2A platform startup
-        flyctl deploy --remote-only --wait-timeout 600
+        # Clean up any problematic machines first
+        echo "🧹 Cleaning up any existing problematic machines..."
+        flyctl machines list --app a2a-platform || true
+        flyctl machines stop --app a2a-platform || true
+        flyctl machines destroy --app a2a-platform --force || true
+        
+        # Deploy to Fly.io with longer timeout for A2A platform startup (15 minutes for 18 agents)
+        flyctl deploy --remote-only --wait-timeout 900
         
         # Get the deployed URL
         APP_URL=$(flyctl info --json | jq -r '.Hostname')
