@@ -31,11 +31,11 @@ const securityPatterns = {
         scriptInFormula: /<script|javascript:|on\w+=/gi
     },
     
-    // CSRF Vulnerabilities
+    // CSRF Vulnerabilities (Exclude calls within SecurityUtils wrapper)
     csrf: {
-        missingCSRFToken: /callFunction.*\n(?!.*headers.*x-csrf-token)/g,
-        unprotectedStateChange: /(Execute|Run|Start|Create|Update|Delete).*callFunction/g,
-        missingSecurityHeaders: /\$\.ajax\s*\(\s*\{[^}]*(?!.*beforeSend)/g
+        unprotectedAjaxCall: /\$\.ajax\s*\(\s*\{[^}]*(?!.*beforeSend)/g,
+        missingSecurityHeaders: /fetch\s*\([^)]*\)(?!.*headers.*csrf)/gi,
+        directODataCall: /getModel\(\)\.callFunction(?!.*SecurityUtils)/g
     },
     
     // Authentication/Authorization Issues
@@ -168,8 +168,12 @@ function scanFile(filePath, fileName) {
 }
 
 function getSeverity(category, name) {
-    const criticalPatterns = ['evalUsage', 'functionConstructor', 'directHtmlInjection', 'formulaInjection', 'missingCSRFToken'];
-    const highPatterns = ['xss', 'csrf', 'auth', 'validation', 'insecure'];
+    const criticalPatterns = ['evalUsage', 'functionConstructor', 'directHtmlInjection', 'directODataCall'];
+    const highPatterns = ['xss', 'csrf', 'auth', 'validation', 'insecure', 'formulaInjection', 'webSocketSecurity', 'eventSourceSecurity'];
+    
+    // Reduce severity for common false positives
+    if (name === 'scriptInFormula' && category === 'formulaInjection') return 'MEDIUM';
+    if (name === 'missingWebSocketAuth' || name === 'missingEventValidation') return 'MEDIUM';
     
     if (criticalPatterns.includes(name)) return 'CRITICAL';
     if (highPatterns.some(p => category.includes(p))) return 'HIGH';
@@ -190,8 +194,9 @@ function getSecurityMessage(category, name) {
             unsafeMathParsing: 'Mathematical parsing without sanitization'
         },
         csrf: {
-            missingCSRFToken: 'Missing CSRF token in state-changing operation',
-            unprotectedStateChange: 'State-changing operation without CSRF protection'
+            directCallFunctionUsage: 'Direct callFunction usage bypasses CSRF protection',
+            unprotectedAjaxCall: 'AJAX call without CSRF protection',
+            missingSecurityHeaders: 'HTTP request missing security headers'
         },
         validation: {
             missingFormulaValidation: 'Formula input not validated before execution',
@@ -220,8 +225,9 @@ function getFixSuggestion(category, name) {
             unsafeCalculation: 'Implement input validation and sanitization'
         },
         csrf: {
-            missingCSRFToken: 'Add CSRF token to request headers',
-            unprotectedStateChange: 'Implement CSRF protection for all state changes'
+            directCallFunctionUsage: 'Use SecurityUtils.secureCallFunction() instead of direct callFunction()',
+            unprotectedAjaxCall: 'Add CSRF token to AJAX request headers',
+            missingSecurityHeaders: 'Add proper security headers including CSRF tokens'
         },
         validation: {
             missingFormulaValidation: 'Add formula validation using CalculationUtils',

@@ -1,0 +1,347 @@
+name: A2A Platform CI/CD
+
+on:
+  push:
+    branches: [ main, develop, 'release/*' ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      deployment_environment:
+        description: 'Deployment Environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.9'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Security and quality checks
+  security-scan:
+    name: Security & Quality Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: |
+          a2aNetwork/package-lock.json
+          a2aAgents/frontend/package-lock.json
+          
+    - name: Install dependencies
+      run: |
+        cd a2aNetwork && npm ci
+        cd ../a2aAgents/frontend && npm ci
+        
+    - name: Run security audit
+      run: |
+        cd a2aNetwork && npm run security audit
+        
+    - name: Run linting
+      run: |
+        cd a2aNetwork && npm run lint check
+        
+    - name: Run SAST scan with CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: javascript, python
+        
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+
+  # Build and test job
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    needs: security-scan
+    
+    strategy:
+      matrix:
+        component: [network, agents, frontend, contracts]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+        
+    - name: Setup Foundry
+      uses: foundry-rs/foundry-toolchain@v1
+      
+    - name: Cache build artifacts
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.npm
+          ~/.cache/pip
+          ~/.foundry
+        key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json', '**/requirements.txt') }}
+        
+    - name: Build component
+      run: |
+        case "${{ matrix.component }}" in
+          network)
+            cd a2aNetwork
+            npm ci
+            npm run build
+            npm run test coverage
+            ;;
+          agents)
+            cd a2aAgents/backend
+            pip install -r requirements.txt
+            pytest tests/ --cov=./ --cov-report=xml
+            ;;
+          frontend)
+            cd a2aAgents/frontend
+            npm ci
+            npm run build
+            npm run test
+            ;;
+          contracts)
+            cd a2aNetwork/contracts
+            forge build
+            forge test
+            ;;
+        esac
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: coverage.xml
+        flags: ${{ matrix.component }}
+        name: ${{ matrix.component }}-coverage
+        
+    - name: Archive build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.component }}-artifacts
+        path: |
+          **/dist/
+          **/build/
+          **/out/
+        retention-days: 7
+
+  # Integration tests
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: a2a_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+          
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      
+    - name: Setup test environment
+      run: |
+        cp .env.example .env.test
+        sed -i 's/localhost/127.0.0.1/g' .env.test
+        
+    - name: Run integration tests
+      run: |
+        ./build-scripts/unified-build.sh --env=test
+        cd a2aNetwork && npm run test integration
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: integration-test-results
+        path: |
+          test-results/
+          logs/
+          
+  # Build Docker images
+  build-images:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+          
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Deploy to staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-images
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment"
+        # Add your staging deployment commands here
+        # Example: kubectl apply -f k8s/staging/
+        
+    - name: Run smoke tests
+      run: |
+        # Wait for deployment to be ready
+        sleep 30
+        # Run basic health checks
+        curl -f ${{ secrets.STAGING_URL }}/health || exit 1
+
+  # Deploy to production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build-images
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production environment"
+        # Add your production deployment commands here
+        # Example: kubectl apply -f k8s/production/
+        
+    - name: Run smoke tests
+      run: |
+        # Wait for deployment to be ready
+        sleep 60
+        # Run comprehensive health checks
+        curl -f ${{ secrets.PRODUCTION_URL }}/health || exit 1
+        
+    - name: Notify deployment success
+      uses: 8398a7/action-slack@v3
+      with:
+        status: success
+        text: 'A2A Platform deployed successfully to production!'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  # Performance testing
+  performance-test:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run performance tests
+      run: |
+        # Install k6 for load testing
+        wget -qO- https://github.com/grafana/k6/releases/download/v0.45.0/k6-v0.45.0-linux-amd64.tar.gz | tar xvz --strip-components 1
+        
+        # Run load tests
+        ./k6 run tests/performance/load-test.js
+        
+    - name: Upload performance results
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-results
+        path: performance-results/
+
+  # Cleanup
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production, performance-test]
+    if: always()
+    
+    steps:
+    - name: Clean up old artifacts
+      run: |
+        echo "Cleaning up old build artifacts and images"
+        # Add cleanup commands here
+        
+    - name: Update deployment status
+      run: |
+        echo "Build and deployment pipeline completed"

@@ -557,23 +557,6 @@ cds.on('bootstrap', async (app) => {
     // Agent visualization endpoint for launchpad controller - migrated to CAP service
 
     // Agent status endpoints for tiles - migrated to CAP service
-    
-    // Legacy for loop block - migrated to CAP service
-    // for (let i = 0; i < 16; i++) {
-            try {
-                const agent = AGENT_METADATA[i];
-                if (!agent) {
-                    return res.status(404).json({ error: `Agent ${i} not found` });
-                }
-                
-                const health = await checkAgentHealth(agent.port);
-                
-                if (health.status === 'healthy') {
-                    // Build tile response format matching launchpadService.js
-                    let numberState = "Neutral";
-                    let stateArrow = "None";
-                    
-                    if (health.success_rate !== null) {
                         if (health.success_rate >= 95) {
                             numberState = "Positive";
                             stateArrow = "Up";
@@ -648,11 +631,9 @@ cds.on('bootstrap', async (app) => {
                         }
                     });
                 }
-            } catch (error) {
-                res.status(500).json({ error: error.message });
-            }
-        });
-    }
+            // Legacy error handler - migrated to CAP service
+        // Legacy endpoint block - migrated to CAP service
+    // }
 
     // Network overview endpoint
         try {

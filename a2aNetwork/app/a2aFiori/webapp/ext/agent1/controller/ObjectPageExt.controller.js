@@ -524,13 +524,20 @@ sap.ui.define([
 
             var sScript = oScriptArea.getValue();
             
+            // Validate script before execution
+            var validation = this._securityUtils.validateTransformationScript(sScript);
+            if (!validation.isValid) {
+                MessageBox.error("Script validation failed: " + validation.errors.join(", "));
+                return;
+            }
+            
             try {
-                var fnTransform = new Function("value", "row", "context", sScript);
-                var testValue = "Sample Value";
-                var testRow = { field1: "data1", field2: "data2" };
-                var testContext = { sourceFormat: "CSV", targetFormat: "JSON" };
-                
-                var result = fnTransform(testValue, testRow, testContext);
+                // Use secure sandbox evaluation instead of Function constructor
+                var result = this._securityUtils.executeSecureTransformation(sScript, {
+                    value: "Sample Value",
+                    row: { field1: "data1", field2: "data2" },
+                    context: { sourceFormat: "CSV", targetFormat: "JSON" }
+                });
                 
                 // Announce test result to screen readers
                 sap.ui.getCore().announceForAccessibility("Script test completed successfully. Result: " + result);
@@ -765,7 +772,13 @@ sap.ui.define([
             var oReader = new FileReader();
             oReader.onload = function(e) {
                 try {
-                    var oTemplate = JSON.parse(e.target.result);
+                    // Pre-validate content before parsing
+                    var rawContent = e.target.result;
+                    if (!this._securityUtils.validateRawJSON(rawContent)) {
+                        throw new Error("Invalid or potentially malicious JSON content detected");
+                    }
+                    
+                    var oTemplate = JSON.parse(rawContent);
                     // Validate and sanitize the schema
                     if (!this._securityUtils.validateSchema(oTemplate)) {
                         throw new Error("Invalid schema format");

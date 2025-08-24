@@ -222,17 +222,18 @@ class Agent13SecurityScanner {
             'TestHarness', 'builder/updates', 'builder/stream', 'BuilderDashboard'
         ];
         
-        return agent13Indicators.some(indicator => 
+        const checkAgent13Indicator = (indicator) => 
             content.toLowerCase().includes(indicator.toLowerCase()) ||
-            filePath.toLowerCase().includes(indicator.toLowerCase())
-        );
+            filePath.toLowerCase().includes(indicator.toLowerCase());
+        
+        return agent13Indicators.some(checkAgent13Indicator);
     }
 
     scanCodeInjection(content, filePath) {
-        this.builderSecurityPatterns.codeInjection.forEach(pattern => {
+        const checkCodeInjectionPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const processCodeInjectionMatch = (match) => {
                     // Skip false positives - check if it's using SecurityUtils
                     const functionStart = content.indexOf(match);
                     const functionBlock = content.substring(functionStart, functionStart + 500);
@@ -251,16 +252,18 @@ class Agent13SecurityScanner {
                             recommendation: 'Use secure code generation with SecurityUtils.validateAgentCode()'
                         });
                     }
-                });
+                };
+                matches.forEach(processCodeInjectionMatch);
             }
-        });
+        };
+        this.builderSecurityPatterns.codeInjection.forEach(checkCodeInjectionPattern);
     }
 
     scanTemplateInjection(content, filePath) {
-        this.builderSecurityPatterns.templateInjection.forEach(pattern => {
+        const checkTemplateInjectionPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const processTemplateInjectionMatch = (match) => {
                     this.vulnerabilities.push({
                         type: 'BUILDER_TEMPLATE_INJECTION',
                         severity: 'HIGH',
@@ -271,16 +274,18 @@ class Agent13SecurityScanner {
                         impact: 'Could allow script injection through agent templates',
                         recommendation: 'Use SecurityUtils.sanitizeTemplate() for template processing'
                     });
-                });
+                };
+                matches.forEach(processTemplateInjectionMatch);
             }
-        });
+        };
+        this.builderSecurityPatterns.templateInjection.forEach(checkTemplateInjectionPattern);
     }
 
     scanInsecureConnections(content, filePath) {
-        this.builderSecurityPatterns.insecureConnections.forEach(pattern => {
+        const checkInsecureConnectionPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const processInsecureConnectionMatch = (match) => {
                     this.vulnerabilities.push({
                         type: 'INSECURE_BUILDER_CONNECTION',
                         severity: 'HIGH',
@@ -291,16 +296,18 @@ class Agent13SecurityScanner {
                         impact: 'Builder communications not encrypted',
                         recommendation: 'Use WSS/HTTPS for secure builder communications'
                     });
-                });
+                };
+                matches.forEach(processInsecureConnectionMatch);
             }
-        });
+        };
+        this.builderSecurityPatterns.insecureConnections.forEach(checkInsecureConnectionPattern);
     }
 
     scanCSRFProtection(content, filePath) {
-        this.builderSecurityPatterns.csrfMissing.forEach(pattern => {
+        const checkCSRFPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const processCSRFMatch = (match) => {
                     // Check if CSRF token is present in the context
                     const functionStart = content.indexOf(match);
                     const functionBlock = content.substring(functionStart, functionStart + 500);
@@ -319,9 +326,11 @@ class Agent13SecurityScanner {
                             recommendation: 'Use SecurityUtils.secureCallFunction() for builder operations'
                         });
                     }
-                });
+                };
+                matches.forEach(processCSRFMatch);
             }
-        });
+        };
+        this.builderSecurityPatterns.csrfMissing.forEach(checkCSRFPattern);
     }
 
     scanDeploymentRisks(content, filePath) {

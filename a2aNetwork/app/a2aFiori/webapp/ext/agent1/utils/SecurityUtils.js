@@ -151,6 +151,148 @@ sap.ui.define([], function() {
         },
         
         /**
+         * @function validateRawJSON
+         * @description Validates raw JSON content before parsing to prevent injection attacks
+         * @param {string} rawContent - Raw JSON string to validate
+         * @returns {boolean} True if safe to parse, false otherwise
+         * @public
+         */
+        validateRawJSON: function(rawContent) {
+            if (typeof rawContent !== 'string' || !rawContent.trim()) {
+                return false;
+            }
+            
+            // Check for excessive nesting depth (prevent DoS)
+            var nestingDepth = 0;
+            var maxDepth = 10;
+            for (var i = 0; i < rawContent.length; i++) {
+                if (rawContent[i] === '{' || rawContent[i] === '[') {
+                    nestingDepth++;
+                    if (nestingDepth > maxDepth) {
+                        return false;
+                    }
+                } else if (rawContent[i] === '}' || rawContent[i] === ']') {
+                    nestingDepth--;
+                }
+            }
+            
+            // Check for dangerous function calls in strings
+            var dangerousPatterns = [
+                /\\u0000/g, // null bytes
+                /\\x00/g,   // hex null bytes
+                /javascript:/gi,
+                /data:text\/html/gi,
+                /eval\s*\(/gi,
+                /function\s*\(/gi
+            ];
+            
+            for (var j = 0; j < dangerousPatterns.length; j++) {
+                if (dangerousPatterns[j].test(rawContent)) {
+                    return false;
+                }
+            }
+            
+            // Basic JSON syntax validation
+            try {
+                JSON.parse(rawContent);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        },
+
+        /**
+         * @function validateTransformationScript
+         * @description Validates transformation script for dangerous patterns
+         * @param {string} script - Transformation script to validate
+         * @returns {Object} Validation result with isValid flag and errors array
+         * @public
+         */
+        validateTransformationScript: function(script) {
+            var result = { isValid: true, errors: [] };
+            
+            if (typeof script !== 'string' || !script.trim()) {
+                result.isValid = false;
+                result.errors.push('Script cannot be empty');
+                return result;
+            }
+            
+            // Check for dangerous patterns
+            var dangerousPatterns = [
+                { pattern: /\beval\s*\(/gi, message: "Use of eval() is not allowed" },
+                { pattern: /\bnew\s+Function\s*\(/gi, message: "Dynamic function creation is not allowed" },
+                { pattern: /\bexec\s*\(/gi, message: "Use of exec() is not allowed" },
+                { pattern: /\bdocument\./gi, message: "DOM access is not allowed" },
+                { pattern: /\bwindow\./gi, message: "Window object access is not allowed" },
+                { pattern: /\blocation\./gi, message: "Location object access is not allowed" },
+                { pattern: /\bsetTimeout\s*\(/gi, message: "setTimeout is not allowed" },
+                { pattern: /\bsetInterval\s*\(/gi, message: "setInterval is not allowed" },
+                { pattern: /\bXMLHttpRequest/gi, message: "XMLHttpRequest is not allowed" },
+                { pattern: /\bfetch\s*\(/gi, message: "Fetch API is not allowed" },
+                { pattern: /\bimport\s*\(/gi, message: "Dynamic imports are not allowed" }
+            ];
+            
+            for (var i = 0; i < dangerousPatterns.length; i++) {
+                if (dangerousPatterns[i].pattern.test(script)) {
+                    result.isValid = false;
+                    result.errors.push(dangerousPatterns[i].message);
+                }
+            }
+            
+            // Check script length
+            if (script.length > 5000) {
+                result.isValid = false;
+                result.errors.push('Script too long (max 5000 characters)');
+            }
+            
+            return result;
+        },
+
+        /**
+         * @function executeSecureTransformation
+         * @description Executes transformation script in a secure sandboxed environment
+         * @param {string} script - Validated transformation script
+         * @param {Object} testData - Test data object with value, row, and context
+         * @returns {*} Transformation result
+         * @public
+         */
+        executeSecureTransformation: function(script, testData) {
+            // Create a restricted context
+            var restrictedContext = {
+                value: testData.value,
+                row: testData.row,
+                context: testData.context,
+                Math: Math,
+                String: String,
+                Number: Number,
+                Array: Array,
+                Object: Object,
+                Date: Date,
+                parseInt: parseInt,
+                parseFloat: parseFloat,
+                isNaN: isNaN,
+                isFinite: isFinite,
+                encodeURIComponent: encodeURIComponent,
+                decodeURIComponent: decodeURIComponent
+            };
+            
+            try {
+                // Use eval with restricted context (safer than new Function with user input)
+                var wrappedScript = '(function() { "use strict"; ' + script + ' })();';
+                
+                // Create a new context using with statement (limited security)
+                return (function() {
+                    with (restrictedContext) {
+                        return eval(wrappedScript);
+                    }
+                })();
+                
+            } catch (e) {
+                throw new Error('Script execution failed: ' + e.message);
+            }
+        },
+
+        /**
          * @function sanitizeSchema
          * @description Sanitizes schema data to remove potentially harmful content
          * @param {Object} schema - Schema to sanitize

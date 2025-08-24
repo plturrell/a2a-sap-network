@@ -12,8 +12,159 @@ sap.ui.define([
 
         override: {
             onInit: function () {
+                this._extensionAPI = this.base.getExtensionAPI();
+                this._securityUtils = SecurityUtils;
                 this._initializeCreateModel();
+                this._initializeSecurity();
+                
+                // Initialize device model for responsive behavior
+                var oDeviceModel = new JSONModel(sap.ui.Device);
+                oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
+                this.base.getView().setModel(oDeviceModel, "device");
+            },
+            
+            onExit: function() {
+                this._cleanupResources();
+                if (this.base.onExit) {
+                    this.base.onExit.apply(this, arguments);
+                }
             }
+        },
+
+        /**
+         * @function onViewRealTimeMetrics
+         * @description Opens real-time metrics monitoring dashboard with live data streams.
+         * @public
+         */
+        onViewRealTimeMetrics: function() {
+            if (!this._hasRole("MonitoringUser")) {
+                MessageBox.error("Access denied. Monitoring User role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "ViewRealTimeMetrics", reason: "Insufficient permissions" });
+                return;
+            }
+
+            const oContext = this.base.getView().getBindingContext();
+            const sTaskId = oContext.getObject().taskId;
+            const sTaskName = oContext.getObject().taskName;
+            
+            this._auditLogger.log("VIEW_REALTIME_METRICS", { taskId: sTaskId, taskName: sTaskName });
+            
+            this._getOrCreateDialog("realtimeMetrics", "a2a.network.agent10.ext.fragment.RealtimeMetrics")
+                .then(function(oDialog) {
+                    oDialog.open();
+                    this._startMetricsMonitoring(sTaskId, oDialog);
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Real-time Metrics: " + error.message);
+                });
+        },
+
+        /**
+         * @function onExportMetrics
+         * @description Exports monitoring metrics and reports in various formats.
+         * @public
+         */
+        onExportMetrics: function() {
+            if (!this._hasRole("MonitoringUser")) {
+                MessageBox.error("Access denied. Monitoring User role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "ExportMetrics", reason: "Insufficient permissions" });
+                return;
+            }
+
+            const oContext = this.base.getView().getBindingContext();
+            const sTaskId = oContext.getObject().taskId;
+            const sTaskName = oContext.getObject().taskName;
+            
+            this._auditLogger.log("EXPORT_METRICS", { taskId: sTaskId, taskName: sTaskName });
+            
+            this._getOrCreateDialog("exportMetrics", "a2a.network.agent10.ext.fragment.ExportMetrics")
+                .then(function(oDialog) {
+                    var oExportModel = new JSONModel({
+                        taskId: sTaskId,
+                        taskName: sTaskName,
+                        exportFormat: "JSON",
+                        includeCharts: true,
+                        includeRawData: true,
+                        includeSummary: true,
+                        dateRange: "ALL",
+                        startDate: null,
+                        endDate: null,
+                        compressionEnabled: false
+                    });
+                    oDialog.setModel(oExportModel, "export");
+                    oDialog.open();
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Export Metrics: " + error.message);
+                });
+        },
+
+        /**
+         * @function onSetupAlerts
+         * @description Opens alert setup interface for configuring monitoring thresholds.
+         * @public
+         */
+        onSetupAlerts: function() {
+            if (!this._hasRole("MonitoringAdmin")) {
+                MessageBox.error("Access denied. Monitoring Administrator role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "SetupAlerts", reason: "Insufficient permissions" });
+                return;
+            }
+
+            const oContext = this.base.getView().getBindingContext();
+            const sTaskId = oContext.getObject().taskId;
+            const sTaskName = oContext.getObject().taskName;
+            
+            this._auditLogger.log("SETUP_ALERTS", { taskId: sTaskId, taskName: sTaskName });
+            
+            this._getOrCreateDialog("setupAlerts", "a2a.network.agent10.ext.fragment.SetupAlerts")
+                .then(function(oDialog) {
+                    oDialog.open();
+                    this._loadAlertSetupData(sTaskId, oDialog);
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Setup Alerts: " + error.message);
+                });
+        },
+
+        /**
+         * @function onViewLogs
+         * @description Opens monitoring logs viewer with filtering and search capabilities.
+         * @public
+         */
+        onViewLogs: function() {
+            if (!this._hasRole("MonitoringUser")) {
+                MessageBox.error("Access denied. Monitoring User role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "ViewLogs", reason: "Insufficient permissions" });
+                return;
+            }
+
+            const oContext = this.base.getView().getBindingContext();
+            const sTaskId = oContext.getObject().taskId;
+            const sTaskName = oContext.getObject().taskName;
+            
+            this._auditLogger.log("VIEW_LOGS", { taskId: sTaskId, taskName: sTaskName });
+            
+            this._getOrCreateDialog("viewLogs", "a2a.network.agent10.ext.fragment.ViewLogs")
+                .then(function(oDialog) {
+                    var oLogsModel = new JSONModel({
+                        taskId: sTaskId,
+                        taskName: sTaskName,
+                        logLevel: "INFO",
+                        dateRange: "TODAY",
+                        startDate: new Date(),
+                        endDate: new Date(),
+                        searchQuery: "",
+                        autoRefresh: true,
+                        refreshInterval: 5000
+                    });
+                    oDialog.setModel(oLogsModel, "logs");
+                    oDialog.open();
+                    this._loadMonitoringLogs(sTaskId, oDialog);
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open View Logs: " + error.message);
+                });
         },
 
         _initializeCreateModel: function() {
@@ -45,7 +196,7 @@ sap.ui.define([
                 selfHealingEnabled: true
             };
             var oCreateModel = new JSONModel(oCreateData);
-            this.getView().setModel(oCreateModel, "create");
+            this.base.getView().setModel(oCreateModel, "create");
         },
 
         onCreateCalculationTask: function() {
@@ -757,13 +908,418 @@ sap.ui.define([
             return this.getView().getModel("i18n").getResourceBundle();
         },
 
-        onExit: function() {
+        /**
+         * @function _startMetricsMonitoring
+         * @description Starts real-time metrics monitoring for a specific task.
+         * @param {string} sTaskId - Task ID to monitor
+         * @param {sap.m.Dialog} oDialog - Metrics dialog
+         * @private
+         */
+        _startMetricsMonitoring: function(sTaskId, oDialog) {
+            // Initialize metrics model
+            var oMetricsModel = new JSONModel({
+                taskId: sTaskId,
+                isMonitoring: true,
+                lastUpdated: new Date().toISOString(),
+                metrics: {
+                    cpu: { current: 0, average: 0, peak: 0 },
+                    memory: { current: 0, average: 0, peak: 0 },
+                    network: { inbound: 0, outbound: 0 },
+                    disk: { read: 0, write: 0 },
+                    responseTime: { current: 0, average: 0 },
+                    throughput: { current: 0, average: 0 },
+                    errorRate: { current: 0, average: 0 }
+                },
+                alerts: [],
+                events: []
+            });
+            oDialog.setModel(oMetricsModel, "metrics");
+            
+            // Start real-time monitoring
+            this._initializeMetricsStream(sTaskId, oDialog);
+        },
+
+        /**
+         * @function _initializeMetricsStream
+         * @description Initializes real-time metrics streaming.
+         * @param {string} sTaskId - Task ID to monitor
+         * @param {sap.m.Dialog} oDialog - Metrics dialog
+         * @private
+         */
+        _initializeMetricsStream: function(sTaskId, oDialog) {
+            if (this._metricsEventSource) {
+                this._metricsEventSource.close();
+            }
+            
+            try {
+                this._metricsEventSource = new EventSource(`/api/agent10/monitoring/${sTaskId}/metrics-stream`);
+                
+                this._metricsEventSource.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        this._updateMetricsDisplay(data, oDialog);
+                    } catch (error) {
+                        console.error('Error parsing metrics data:', error);
+                    }
+                }.bind(this);
+                
+                this._metricsEventSource.onerror = function(error) {
+                    console.warn('Metrics stream error, falling back to polling:', error);
+                    this._startMetricsPolling(sTaskId, oDialog);
+                }.bind(this);
+                
+            } catch (error) {
+                console.warn('EventSource not available, using polling fallback');
+                this._startMetricsPolling(sTaskId, oDialog);
+            }
+        },
+
+        /**
+         * @function _startMetricsPolling
+         * @description Starts polling fallback for metrics updates.
+         * @param {string} sTaskId - Task ID to monitor
+         * @param {sap.m.Dialog} oDialog - Metrics dialog
+         * @private
+         */
+        _startMetricsPolling: function(sTaskId, oDialog) {
+            if (this._metricsPollingInterval) {
+                clearInterval(this._metricsPollingInterval);
+            }
+            
+            this._metricsPollingInterval = setInterval(() => {
+                this._fetchMetricsData(sTaskId, oDialog);
+            }, 2000);
+        },
+
+        /**
+         * @function _fetchMetricsData
+         * @description Fetches metrics data via polling.
+         * @param {string} sTaskId - Task ID to monitor
+         * @param {sap.m.Dialog} oDialog - Metrics dialog
+         * @private
+         */
+        _fetchMetricsData: function(sTaskId, oDialog) {
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/GetTaskMetrics", {
+                urlParameters: { taskId: sTaskId },
+                success: function(data) {
+                    this._updateMetricsDisplay(data, oDialog);
+                }.bind(this),
+                error: function(error) {
+                    console.warn('Failed to fetch metrics data:', error);
+                }
+            });
+        },
+
+        /**
+         * @function _updateMetricsDisplay
+         * @description Updates metrics display with new data.
+         * @param {Object} data - Metrics data
+         * @param {sap.m.Dialog} oDialog - Metrics dialog
+         * @private
+         */
+        _updateMetricsDisplay: function(data, oDialog) {
+            if (!oDialog || !oDialog.isOpen()) return;
+            
+            var oMetricsModel = oDialog.getModel("metrics");
+            if (oMetricsModel) {
+                var oCurrentData = oMetricsModel.getData();
+                oCurrentData.metrics = data.metrics || oCurrentData.metrics;
+                oCurrentData.lastUpdated = new Date().toISOString();
+                
+                if (data.alerts && data.alerts.length > 0) {
+                    oCurrentData.alerts = data.alerts;
+                }
+                
+                if (data.events && data.events.length > 0) {
+                    oCurrentData.events = data.events.concat(oCurrentData.events).slice(0, 100); // Keep last 100 events
+                }
+                
+                oMetricsModel.setData(oCurrentData);
+            }
+        },
+
+        /**
+         * @function _loadAlertSetupData
+         * @description Loads alert setup configuration data.
+         * @param {string} sTaskId - Task ID
+         * @param {sap.m.Dialog} oDialog - Alert setup dialog
+         * @private
+         */
+        _loadAlertSetupData: function(sTaskId, oDialog) {
+            oDialog.setBusy(true);
+            
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/GetTaskAlertConfig", {
+                urlParameters: { taskId: sTaskId },
+                success: function(data) {
+                    var oAlertModel = new JSONModel({
+                        taskId: sTaskId,
+                        alerts: data.alerts || [],
+                        thresholds: data.thresholds || {
+                            cpu: { warning: 70, critical: 90 },
+                            memory: { warning: 80, critical: 95 },
+                            responseTime: { warning: 1000, critical: 5000 },
+                            errorRate: { warning: 1, critical: 5 }
+                        },
+                        notificationChannels: data.channels || [],
+                        escalationPolicies: data.escalationPolicies || []
+                    });
+                    oDialog.setModel(oAlertModel, "alertSetup");
+                    oDialog.setBusy(false);
+                }.bind(this),
+                error: function(error) {
+                    oDialog.setBusy(false);
+                    MessageBox.error("Failed to load alert configuration: " + error.message);
+                }
+            });
+        },
+
+        /**
+         * @function _loadMonitoringLogs
+         * @description Loads monitoring logs for a specific task.
+         * @param {string} sTaskId - Task ID
+         * @param {sap.m.Dialog} oDialog - Logs dialog
+         * @private
+         */
+        _loadMonitoringLogs: function(sTaskId, oDialog) {
+            oDialog.setBusy(true);
+            
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/GetTaskLogs", {
+                urlParameters: {
+                    taskId: sTaskId,
+                    limit: 100,
+                    level: "INFO"
+                },
+                success: function(data) {
+                    var oLogsModel = oDialog.getModel("logs");
+                    if (oLogsModel) {
+                        var oCurrentData = oLogsModel.getData();
+                        oCurrentData.logs = data.logs || [];
+                        oCurrentData.totalCount = data.totalCount || 0;
+                        oCurrentData.lastUpdated = new Date().toISOString();
+                        oLogsModel.setData(oCurrentData);
+                    }
+                    oDialog.setBusy(false);
+                    
+                    // Start auto-refresh if enabled
+                    var oLogsData = oDialog.getModel("logs").getData();
+                    if (oLogsData.autoRefresh) {
+                        this._startLogsAutoRefresh(sTaskId, oDialog);
+                    }
+                }.bind(this),
+                error: function(error) {
+                    oDialog.setBusy(false);
+                    MessageBox.error("Failed to load monitoring logs: " + error.message);
+                }
+            });
+        },
+
+        /**
+         * @function _startLogsAutoRefresh
+         * @description Starts auto-refresh for monitoring logs.
+         * @param {string} sTaskId - Task ID
+         * @param {sap.m.Dialog} oDialog - Logs dialog
+         * @private
+         */
+        _startLogsAutoRefresh: function(sTaskId, oDialog) {
+            if (this._logsRefreshInterval) {
+                clearInterval(this._logsRefreshInterval);
+            }
+            
+            var oLogsData = oDialog.getModel("logs").getData();
+            this._logsRefreshInterval = setInterval(() => {
+                if (oDialog.isOpen()) {
+                    this._loadMonitoringLogs(sTaskId, oDialog);
+                } else {
+                    clearInterval(this._logsRefreshInterval);
+                }
+            }, oLogsData.refreshInterval || 5000);
+        },
+
+        /**
+         * @function _getOrCreateDialog
+         * @description Gets cached dialog or creates new one with accessibility and responsive features.
+         * @param {string} sDialogId - Dialog identifier
+         * @param {string} sFragmentName - Fragment name
+         * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog
+         * @private
+         */
+        _getOrCreateDialog: function(sDialogId, sFragmentName) {
+            var that = this;
+            
+            if (this._dialogCache && this._dialogCache[sDialogId]) {
+                return Promise.resolve(this._dialogCache[sDialogId]);
+            }
+            
+            if (!this._dialogCache) {
+                this._dialogCache = {};
+            }
+            
+            return Fragment.load({
+                id: this.base.getView().getId(),
+                name: sFragmentName,
+                controller: this
+            }).then(function(oDialog) {
+                that._dialogCache[sDialogId] = oDialog;
+                that.base.getView().addDependent(oDialog);
+                
+                // Enable accessibility
+                that._enableDialogAccessibility(oDialog);
+                
+                // Optimize for mobile
+                that._optimizeDialogForDevice(oDialog);
+                
+                return oDialog;
+            });
+        },
+        
+        /**
+         * @function _enableDialogAccessibility
+         * @description Adds accessibility features to dialog.
+         * @param {sap.m.Dialog} oDialog - Dialog to enhance
+         * @private
+         */
+        _enableDialogAccessibility: function(oDialog) {
+            oDialog.addEventDelegate({
+                onAfterRendering: function() {
+                    var $dialog = oDialog.$();
+                    
+                    // Set tabindex for focusable elements
+                    $dialog.find("input, button, select, textarea").attr("tabindex", "0");
+                    
+                    // Handle escape key
+                    $dialog.on("keydown", function(e) {
+                        if (e.key === "Escape") {
+                            oDialog.close();
+                        }
+                    });
+                    
+                    // Focus first input on open
+                    setTimeout(function() {
+                        $dialog.find("input:visible:first").focus();
+                    }, 100);
+                }
+            });
+        },
+        
+        /**
+         * @function _optimizeDialogForDevice
+         * @description Optimizes dialog for current device.
+         * @param {sap.m.Dialog} oDialog - Dialog to optimize
+         * @private
+         */
+        _optimizeDialogForDevice: function(oDialog) {
+            if (sap.ui.Device.system.phone) {
+                oDialog.setStretch(true);
+                oDialog.setContentWidth("100%");
+                oDialog.setContentHeight("100%");
+            } else if (sap.ui.Device.system.tablet) {
+                oDialog.setContentWidth("95%");
+                oDialog.setContentHeight("90%");
+            }
+        },
+
+        /**
+         * @function _initializeSecurity
+         * @description Initializes security features and audit logging.
+         * @private
+         */
+        _initializeSecurity: function() {
+            this._auditLogger = {
+                log: function(action, details) {
+                    var user = this._getCurrentUser();
+                    var timestamp = new Date().toISOString();
+                    var logEntry = {
+                        timestamp: timestamp,
+                        user: user,
+                        agent: "Agent10_Monitoring",
+                        action: action,
+                        details: details || {}
+                    };
+                    console.info("AUDIT: " + JSON.stringify(logEntry));
+                }.bind(this)
+            };
+        },
+
+        /**
+         * @function _getCurrentUser
+         * @description Gets current user ID for audit logging.
+         * @returns {string} User ID or "anonymous"
+         * @private
+         */
+        _getCurrentUser: function() {
+            return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
+        },
+
+        /**
+         * @function _hasRole
+         * @description Checks if current user has specified role.
+         * @param {string} role - Role to check
+         * @returns {boolean} True if user has role
+         * @private
+         */
+        _hasRole: function(role) {
+            const user = sap.ushell?.Container?.getUser();
+            if (user && user.hasRole) {
+                return user.hasRole(role);
+            }
+            // Mock role validation for development/testing
+            const mockRoles = ["MonitoringAdmin", "MonitoringUser", "MonitoringOperator"];
+            return mockRoles.includes(role);
+        },
+
+        /**
+         * @function _cleanupResources
+         * @description Cleans up resources to prevent memory leaks.
+         * @private
+         */
+        _cleanupResources: function() {
+            // Clean up EventSource connections
+            if (this._metricsEventSource) {
+                this._metricsEventSource.close();
+                this._metricsEventSource = null;
+            }
+            
+            // Clean up polling intervals
+            if (this._metricsPollingInterval) {
+                clearInterval(this._metricsPollingInterval);
+                this._metricsPollingInterval = null;
+            }
+            
+            if (this._logsRefreshInterval) {
+                clearInterval(this._logsRefreshInterval);
+                this._logsRefreshInterval = null;
+            }
+            
+            // Clean up EventSource from original implementation
             if (this._eventSource) {
                 this._eventSource.close();
+                this._eventSource = null;
             }
+            
             if (this._pollInterval) {
                 clearInterval(this._pollInterval);
+                this._pollInterval = null;
             }
+            
+            // Clean up cached dialogs
+            if (this._dialogCache) {
+                Object.keys(this._dialogCache).forEach(function(key) {
+                    if (this._dialogCache[key]) {
+                        this._dialogCache[key].destroy();
+                    }
+                }.bind(this));
+                this._dialogCache = {};
+            }
+        },
+
+        onExit: function() {
+            this._cleanupResources();
         }
     });
 });

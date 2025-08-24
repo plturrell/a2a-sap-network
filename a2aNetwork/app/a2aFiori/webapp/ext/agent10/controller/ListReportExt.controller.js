@@ -138,6 +138,89 @@ sap.ui.define([
         },
 
         /**
+         * @function onStartMonitoring
+         * @description Starts monitoring for selected monitoring tasks with real-time updates.
+         * @public
+         */
+        onStartMonitoring: function() {
+            if (!this._hasRole("MonitoringAdmin")) {
+                MessageBox.error("Access denied. Monitoring Administrator role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "StartMonitoring", reason: "Insufficient permissions" });
+                return;
+            }
+
+            const oBinding = this.base.getView().byId("fe::table::MonitoringTasks::LineItem").getBinding("rows");
+            const aSelectedContexts = oBinding.getSelectedContexts();
+            
+            if (aSelectedContexts.length === 0) {
+                MessageToast.show(this.getResourceBundle().getText("msg.selectTasksFirst"));
+                return;
+            }
+
+            this._auditLogger.log("START_MONITORING", { taskCount: aSelectedContexts.length });
+            
+            MessageBox.confirm(
+                this.getResourceBundle().getText("msg.startMonitoringConfirm", [aSelectedContexts.length]),
+                {
+                    onClose: function(oAction) {
+                        if (oAction === MessageBox.Action.OK) {
+                            this._executeStartMonitoring(aSelectedContexts);
+                        }
+                    }.bind(this)
+                }
+            );
+        },
+
+        /**
+         * @function onViewDashboard
+         * @description Opens comprehensive monitoring dashboard with real-time metrics and analytics.
+         * @public
+         */
+        onViewDashboard: function() {
+            if (!this._hasRole("MonitoringUser")) {
+                MessageBox.error("Access denied. Monitoring User role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "ViewDashboard", reason: "Insufficient permissions" });
+                return;
+            }
+
+            this._auditLogger.log("VIEW_DASHBOARD", { action: "OpenMonitoringDashboard" });
+            
+            this._getOrCreateDialog("monitoringDashboard", "a2a.network.agent10.ext.fragment.MonitoringDashboard")
+                .then(function(oDialog) {
+                    oDialog.open();
+                    this._loadDashboardData(oDialog);
+                    this._startRealtimeMetricsStream(oDialog);
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Monitoring Dashboard: " + error.message);
+                });
+        },
+
+        /**
+         * @function onConfigureAlerts
+         * @description Opens alert configuration interface for monitoring thresholds and notifications.
+         * @public
+         */
+        onConfigureAlerts: function() {
+            if (!this._hasRole("MonitoringAdmin")) {
+                MessageBox.error("Access denied. Monitoring Administrator role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "ConfigureAlerts", reason: "Insufficient permissions" });
+                return;
+            }
+
+            this._auditLogger.log("CONFIGURE_ALERTS", { action: "OpenAlertConfiguration" });
+            
+            this._getOrCreateDialog("alertConfiguration", "a2a.network.agent10.ext.fragment.AlertConfiguration")
+                .then(function(oDialog) {
+                    oDialog.open();
+                    this._loadAlertConfigurations(oDialog);
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Alert Configuration: " + error.message);
+                });
+        },
+
+        /**
          * @function onCalculationDashboard
          * @description Opens comprehensive calculation analytics dashboard with performance metrics.
          * @public
@@ -402,12 +485,218 @@ sap.ui.define([
         },
 
         /**
+         * @function _executeStartMonitoring
+         * @description Executes monitoring start operation for selected tasks with progress tracking.
+         * @param {Array} aSelectedContexts - Selected monitoring task contexts
+         * @private
+         */
+        _executeStartMonitoring: function(aSelectedContexts) {
+            const aTaskIds = aSelectedContexts.map(ctx => ctx.getObject().taskId);
+            
+            // Show progress dialog
+            this._getOrCreateDialog("monitoringProgress", "a2a.network.agent10.ext.fragment.MonitoringProgress")
+                .then(function(oProgressDialog) {
+                    var oProgressModel = new JSONModel({
+                        totalTasks: aTaskIds.length,
+                        completedTasks: 0,
+                        currentTask: "",
+                        progress: 0,
+                        status: "Starting monitoring tasks..."
+                    });
+                    oProgressDialog.setModel(oProgressModel, "progress");
+                    oProgressDialog.open();
+                    
+                    this._startMonitoringTasks(aTaskIds, oProgressDialog);
+                }.bind(this));
+        },
+
+        /**
+         * @function _startMonitoringTasks
+         * @description Starts monitoring tasks with real-time progress updates.
+         * @param {Array} aTaskIds - Array of task IDs to start monitoring
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _startMonitoringTasks: function(aTaskIds, oProgressDialog) {
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/StartMonitoring", {
+                urlParameters: {
+                    taskIds: aTaskIds.join(',')
+                },
+                success: function(data) {
+                    MessageToast.show(this.getResourceBundle().getText("msg.monitoringStarted"));
+                    oProgressDialog.close();
+                    this._refreshMonitoringData();
+                    this._auditLogger.log("MONITORING_STARTED", { taskCount: aTaskIds.length, success: true });
+                }.bind(this),
+                error: function(error) {
+                    MessageBox.error(this.getResourceBundle().getText("error.startMonitoringFailed"));
+                    oProgressDialog.close();
+                    this._auditLogger.log("MONITORING_FAILED", { taskCount: aTaskIds.length, error: error.message });
+                }.bind(this)
+            });
+        },
+
+        /**
+         * @function _startRealtimeMetricsStream
+         * @description Starts real-time metrics streaming for dashboard.
+         * @param {sap.m.Dialog} oDialog - Dashboard dialog
+         * @private
+         */
+        _startRealtimeMetricsStream: function(oDialog) {
+            if (this._metricsEventSource) {
+                this._metricsEventSource.close();
+            }
+            
+            try {
+                this._metricsEventSource = new EventSource('/api/agent10/monitoring/metrics-stream');
+                
+                this._metricsEventSource.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        this._updateDashboardMetrics(data, oDialog);
+                    } catch (error) {
+                        console.error('Error parsing metrics data:', error);
+                    }
+                }.bind(this);
+                
+                this._metricsEventSource.onerror = function(error) {
+                    console.warn('Metrics stream error, falling back to polling:', error);
+                    this._startMetricsPolling(oDialog);
+                }.bind(this);
+                
+            } catch (error) {
+                console.warn('EventSource not available, using polling fallback');
+                this._startMetricsPolling(oDialog);
+            }
+        },
+
+        /**
+         * @function _startMetricsPolling
+         * @description Starts polling fallback for metrics updates.
+         * @param {sap.m.Dialog} oDialog - Dashboard dialog
+         * @private
+         */
+        _startMetricsPolling: function(oDialog) {
+            if (this._metricsPollingInterval) {
+                clearInterval(this._metricsPollingInterval);
+            }
+            
+            this._metricsPollingInterval = setInterval(() => {
+                this._fetchMetricsUpdate(oDialog);
+            }, 5000);
+        },
+
+        /**
+         * @function _fetchMetricsUpdate
+         * @description Fetches metrics update via polling.
+         * @param {sap.m.Dialog} oDialog - Dashboard dialog
+         * @private
+         */
+        _fetchMetricsUpdate: function(oDialog) {
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/GetRealtimeMetrics", {
+                success: function(data) {
+                    this._updateDashboardMetrics(data, oDialog);
+                }.bind(this),
+                error: function(error) {
+                    console.warn('Failed to fetch metrics update:', error);
+                }
+            });
+        },
+
+        /**
+         * @function _updateDashboardMetrics
+         * @description Updates dashboard with real-time metrics.
+         * @param {Object} data - Metrics data
+         * @param {sap.m.Dialog} oDialog - Dashboard dialog
+         * @private
+         */
+        _updateDashboardMetrics: function(data, oDialog) {
+            if (!oDialog || !oDialog.isOpen()) return;
+            
+            var oDashboardModel = oDialog.getModel("dashboard");
+            if (oDashboardModel) {
+                var oCurrentData = oDashboardModel.getData();
+                oCurrentData.realtimeMetrics = data;
+                oCurrentData.lastUpdated = new Date().toISOString();
+                oDashboardModel.setData(oCurrentData);
+            }
+        },
+
+        /**
+         * @function _loadAlertConfigurations
+         * @description Loads alert configuration data.
+         * @param {sap.m.Dialog} oDialog - Alert configuration dialog
+         * @private
+         */
+        _loadAlertConfigurations: function(oDialog) {
+            oDialog.setBusy(true);
+            
+            this._withErrorRecovery(function() {
+                return new Promise(function(resolve, reject) {
+                    var oModel = this.base.getView().getModel();
+                    SecurityUtils.secureCallFunction(oModel, "/GetAlertConfigurations", {
+                        success: function(data) {
+                            var oAlertModel = new JSONModel({
+                                configurations: data.configurations,
+                                thresholds: data.thresholds,
+                                notificationChannels: data.notificationChannels,
+                                alertTypes: data.alertTypes
+                            });
+                            oDialog.setModel(oAlertModel, "alerts");
+                            resolve(data);
+                        },
+                        error: function(error) {
+                            reject(new Error("Failed to load alert configurations"));
+                        }
+                    });
+                }.bind(this));
+            }.bind(this)).then(function(data) {
+                oDialog.setBusy(false);
+            }.bind(this)).catch(function(error) {
+                oDialog.setBusy(false);
+                MessageBox.error(error.message);
+            });
+        },
+
+        /**
+         * @function _refreshMonitoringData
+         * @description Refreshes monitoring task data in the table.
+         * @private
+         */
+        _refreshMonitoringData: function() {
+            const oBinding = this.base.getView().byId("fe::table::MonitoringTasks::LineItem").getBinding("rows");
+            oBinding.refresh();
+        },
+
+        /**
+         * @function _hasRole
+         * @description Checks if current user has specified role.
+         * @param {string} role - Role to check
+         * @returns {boolean} True if user has role
+         * @private
+         */
+        _hasRole: function(role) {
+            const user = sap.ushell?.Container?.getUser();
+            if (user && user.hasRole) {
+                return user.hasRole(role);
+            }
+            // Mock role validation for development/testing
+            const mockRoles = ["MonitoringAdmin", "MonitoringUser", "MonitoringOperator"];
+            return mockRoles.includes(role);
+        },
+
+        /**
          * @function _startRealtimeCalculationUpdates
          * @description Starts real-time updates for calculation progress and performance metrics.
          * @private
          */
         _startRealtimeCalculationUpdates: function() {
             this._initializeWebSocket();
+            this._initializeSecurity();
         },
 
         /**
@@ -1027,6 +1316,38 @@ sap.ui.define([
         },
         
         /**
+         * @function _initializeSecurity
+         * @description Initializes security features and audit logging.
+         * @private
+         */
+        _initializeSecurity: function() {
+            this._auditLogger = {
+                log: function(action, details) {
+                    var user = this._getCurrentUser();
+                    var timestamp = new Date().toISOString();
+                    var logEntry = {
+                        timestamp: timestamp,
+                        user: user,
+                        agent: "Agent10_Monitoring",
+                        action: action,
+                        details: details || {}
+                    };
+                    console.info("AUDIT: " + JSON.stringify(logEntry));
+                }.bind(this)
+            };
+        },
+
+        /**
+         * @function _getCurrentUser
+         * @description Gets current user ID for audit logging.
+         * @returns {string} User ID or "anonymous"
+         * @private
+         */
+        _getCurrentUser: function() {
+            return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
+        },
+
+        /**
          * @function _cleanupResources
          * @description Cleans up resources to prevent memory leaks.
          * @private
@@ -1038,10 +1359,21 @@ sap.ui.define([
                 this._ws = null;
             }
             
+            // Clean up EventSource connections
+            if (this._metricsEventSource) {
+                this._metricsEventSource.close();
+                this._metricsEventSource = null;
+            }
+            
             // Clean up polling intervals
             if (this._pollInterval) {
                 clearInterval(this._pollInterval);
                 this._pollInterval = null;
+            }
+            
+            if (this._metricsPollingInterval) {
+                clearInterval(this._metricsPollingInterval);
+                this._metricsPollingInterval = null;
             }
             
             // Clean up cached dialogs
