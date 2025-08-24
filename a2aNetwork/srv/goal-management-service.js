@@ -6,9 +6,18 @@ module.exports = (srv) => {
         
         const { Agents, Goals } = this.entities;
         
-        // A2A Backend Integration
+        // Constants
         const A2A_BASE_URL = process.env.A2A_SERVICE_URL || 'http://localhost:8000';
+        const PROGRESS_HISTORY_LIMIT = 10;
+        const ANALYTICS_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+        const MIN_SPECIFIC_LENGTH = 10;
+        const PREDICTION_MIN_CONFIDENCE = 0.3;
+        
         const axios = require('axios');
+        const LOG = cds.log('goal-management');
+        
+        // Cleanup tracking
+        let analyticsRefreshTimer;
         
         /**
          * Get comprehensive goal analytics
@@ -42,14 +51,16 @@ module.exports = (srv) => {
                 return analytics;
                 
             } catch (error) {
-                // Failed to fetch goal analytics
+                LOG.warn('Failed to fetch goal analytics from A2A network', { error: error.message });
                 
                 // Fallback to cached data
-                const cached = await srv.run(SELECT.from('SystemAnalytics').orderBy('timestamp desc'));
-                if (cached) {
-                    return JSON.parse(cached.analyticsData);
+                const cached = await srv.run(SELECT.from('SystemAnalytics').orderBy('timestamp desc').limit(1));
+                if (cached.length > 0 && cached[0].analyticsData) {
+                    LOG.info('Using cached analytics data as fallback');
+                    return JSON.parse(cached[0].analyticsData);
                 }
                 
+                LOG.error('No cached analytics data available');
                 throw new Error('Goal analytics service unavailable');
             }
         });
@@ -76,7 +87,7 @@ module.exports = (srv) => {
                 return agentGoals;
                 
             } catch (error) {
-                // Failed to fetch goals for agent
+                LOG.warn('Failed to fetch goals from A2A network', { agentId, error: error.message });
                 
                 // Fallback to CAP database
                 const agent = await srv.run(SELECT.one.from(Agents, a => {
@@ -90,7 +101,13 @@ module.exports = (srv) => {
                     });
                 }).where({ agentId }));
                 
-                return agent || { agent_id: agentId, goals: [], status: 'unknown' };
+                if (agent) {
+                    LOG.info('Using cached agent goals as fallback', { agentId });
+                    return agent;
+                } else {
+                    LOG.warn('No cached goals found for agent', { agentId });
+                    return { agent_id: agentId, goals: [], status: 'unknown' };
+                }
             }
         });
         
@@ -221,15 +238,21 @@ module.exports = (srv) => {
                 return metrics;
                 
             } catch (error) {
-                // Failed to fetch metrics for agent
+                LOG.warn('Failed to fetch metrics from A2A network', { agentId, error: error.message });
                 
                 // Return cached metrics
-                const cached = await srv.run(SELECT.from('AgentMetrics').where({ agent_agentId: agentId }).orderBy('timestamp desc').limit(10));
+                const cached = await srv.run(SELECT.from('AgentMetrics').where({ agent_agentId: agentId }).orderBy('timestamp desc').limit(PROGRESS_HISTORY_LIMIT));
                 
-                return cached.reduce((acc, metric) => {
-                    acc[metric.metricName] = metric.value;
-                    return acc;
-                }, {});
+                if (cached.length > 0) {
+                    LOG.info('Using cached metrics as fallback', { agentId, metricsCount: cached.length });
+                    return cached.reduce((acc, metric) => {
+                        acc[metric.metricName] = metric.value;
+                        return acc;
+                    }, {});
+                } else {
+                    LOG.warn('No cached metrics found for agent', { agentId });
+                    return {};
+                }
             }
         });
         
@@ -282,7 +305,7 @@ module.exports = (srv) => {
                 }
                 
             } catch (error) {
-                // Failed to sync agent goals
+                LOG.error('Failed to sync agent goals', { agentId, error: error.message });
             }
         };
 
@@ -372,7 +395,7 @@ module.exports = (srv) => {
                             });
                         } catch (notificationError) {
                             // Failed to send milestone notification - continue processing
-                            console.warn(`Failed to send milestone notification: ${notificationError.message}`);
+                            LOG.warn('Failed to send milestone notification', { goalId, error: notificationError.message });
                         }
                     }
                 }
@@ -384,7 +407,7 @@ module.exports = (srv) => {
                 }
 
             } catch (error) {
-                console.error(`Failed to detect milestones for goal ${goalId}: ${error.message}`);
+                LOG.error('Failed to detect milestones', { goalId, error: error.message });
             }
         };
 
@@ -446,7 +469,7 @@ module.exports = (srv) => {
                 }
 
             } catch (error) {
-                console.error(`Failed to check custom milestones for goal ${goalId}: ${error.message}`);
+                LOG.error('Failed to check custom milestones', { goalId, error: error.message });
             }
         };
 
@@ -459,7 +482,7 @@ module.exports = (srv) => {
                 const progressHistory = await srv.run(SELECT.from('GoalProgress')
                     .where({ goal_ID: goal.ID })
                     .orderBy('timestamp desc')
-                    .limit(10));
+                    .limit(PROGRESS_HISTORY_LIMIT));
 
                 if (progressHistory.length < 2) {
                     return; // Need at least 2 data points for predictions
@@ -542,11 +565,11 @@ module.exports = (srv) => {
                     });
                 } catch (networkError) {
                     // Failed to send predictions - continue processing
-                    console.warn(`Failed to send AI predictions to network: ${networkError.message}`);
+                    LOG.warn('Failed to send AI predictions to network', { goalId: goal.ID, error: networkError.message });
                 }
 
             } catch (error) {
-                console.error(`Failed to generate AI predictions for goal ${goal.ID}: ${error.message}`);
+                LOG.error('Failed to generate AI predictions', { goalId: goal.ID, error: error.message });
             }
         };
 
@@ -554,7 +577,7 @@ module.exports = (srv) => {
          * Calculate confidence level for predictions based on data quality
          */
         this._calculatePredictionConfidence = function(progressHistory) {
-            if (progressHistory.length < 3) return 0.3; // Low confidence with few data points
+            if (progressHistory.length < 3) return PREDICTION_MIN_CONFIDENCE; // Low confidence with few data points
             
             // Check for consistent progress pattern
             let consistentProgress = 0;
@@ -594,8 +617,8 @@ module.exports = (srv) => {
             }
 
             // SMART criteria validation
-            if (goalData.specific && goalData.specific.length < 10) {
-                errors.push('Specific description must be at least 10 characters');
+            if (goalData.specific && goalData.specific.length < MIN_SPECIFIC_LENGTH) {
+                errors.push(`Specific description must be at least ${MIN_SPECIFIC_LENGTH} characters`);
             }
             if (goalData.achievable && typeof goalData.achievable !== 'string') {
                 errors.push('Achievable criteria must be a string description');
@@ -633,11 +656,12 @@ module.exports = (srv) => {
          */
         this._handleServiceError = function(error, operation, context = {}) {
             const errorId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-            const logMessage = `[${errorId}] ${operation} failed: ${error.message}`;
             
             // Log detailed error for debugging
-            console.error(logMessage, {
-                error: error.stack,
+            LOG.error(`${operation} failed`, {
+                errorId: errorId,
+                error: error.message,
+                stack: error.stack,
                 context: context,
                 timestamp: new Date().toISOString()
             });
@@ -683,15 +707,23 @@ module.exports = (srv) => {
             return operationDefaults[operation] || 'An unexpected error occurred. Please try again or contact support.';
         };
 
-        // Set up real-time data refresh
-        setInterval(async () => {
+        // Set up real-time data refresh with cleanup
+        analyticsRefreshTimer = setInterval(async () => {
             try {
                 // Refresh system analytics every 5 minutes
                 await this.emit('read', 'GoalAnalytics', {});
             } catch (error) {
-                // Failed to refresh analytics
+                LOG.warn('Failed to refresh analytics automatically', { error: error.message });
             }
-        }, 5 * 60 * 1000);
+        }, ANALYTICS_REFRESH_INTERVAL);
+
+        // Service cleanup handler
+        this.on('shutdown', () => {
+            if (analyticsRefreshTimer) {
+                clearInterval(analyticsRefreshTimer);
+                LOG.info('Analytics refresh timer cleared on service shutdown');
+            }
+        });
 
     });
 };

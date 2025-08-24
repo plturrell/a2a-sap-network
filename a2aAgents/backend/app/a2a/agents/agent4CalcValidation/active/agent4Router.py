@@ -67,9 +67,9 @@ except ImportError:
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-def __init__(self, **kwargs): 
-        super().__init__()
-        pass
+        def __init__(self, **kwargs): 
+            super().__init__()
+            pass
     class MessagePart(SecureA2AAgent):
         
         # Security features provided by SecureA2AAgent:
@@ -79,9 +79,9 @@ def __init__(self, **kwargs):
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-def __init__(self, **kwargs): 
-        super().__init__()
-        pass
+        def __init__(self, **kwargs): 
+            super().__init__()
+            pass
     class MessageRole(SecureA2AAgent):
         
         # Security features provided by SecureA2AAgent:
@@ -91,7 +91,7 @@ def __init__(self, **kwargs):
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-AGENT = "agent"
+        AGENT = "agent"
         USER = "user"
 
 try:
@@ -113,11 +113,14 @@ except ImportError:
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-def __init__(self): 
-        super().__init__()
-        self._mappers = {}
+        def __init__(self): 
+            super().__init__()
+            self._mappers = {}
+            
         def register(self, content_type): 
-            def decorator(func): self._mappers[content_type] = func; return func
+            def decorator(func): 
+                self._mappers[content_type] = func
+                return func
             return decorator
 # Import trust components from a2aNetwork - Real implementation only
 import sys

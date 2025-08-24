@@ -925,7 +925,7 @@ sap.ui.define([
             `;
             
       // Inject or remove edit mode styles
-      const oStyleElement = document.getElementById('editModeStyles');
+      let oStyleElement = document.getElementById('editModeStyles');
       if (bEditMode && !oStyleElement) {
         oStyleElement = document.createElement('style');
         oStyleElement.id = 'editModeStyles';
@@ -1021,8 +1021,8 @@ sap.ui.define([
       const aChangeDescriptions = [];
       Object.keys(oChanges).forEach((sField) => {
         const oChange = oChanges[sField];
-        const sFromValue = oChange.from ? String(oChange.from) : '(empty)';
-        const sToValue = oChange.to ? String(oChange.to) : '(empty)';
+        let sFromValue = oChange.from ? String(oChange.from) : '(empty)';
+        let sToValue = oChange.to ? String(oChange.to) : '(empty)';
                 
         // Truncate long values for dialog display
         if (sFromValue.length > 50) {
@@ -1335,7 +1335,7 @@ sap.ui.define([
     },
         
     _preSaveValidation: function (oProjectData) {
-      const bValid = true;
+      let bValid = true;
       const aErrors = [];
       const aWarnings = [];
             
@@ -1474,7 +1474,7 @@ sap.ui.define([
     _performSave: function (oProjectData, oChanges, bForceOverwrite) {
       const that = this;
       const iTotalSteps = 5;
-      const iCurrentStep = 0;
+      let iCurrentStep = 0;
             
       // Step 1: Prepare data
       this._showSaveProgress('Preparing data for save...', Math.round((++iCurrentStep / iTotalSteps) * 100));
