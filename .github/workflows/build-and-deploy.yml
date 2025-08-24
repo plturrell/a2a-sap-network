@@ -196,18 +196,27 @@ jobs:
         echo "🧹 Cleaning up any existing problematic machines..."
         flyctl machines list --app a2a-platform || true
         
-        # Get machine IDs and destroy them individually
+        # Get machine IDs and destroy them forcefully
+        echo "🔧 Force cleaning all existing machines..."
         MACHINE_IDS=$(flyctl machines list --app a2a-platform --json | jq -r '.[].id' 2>/dev/null || echo "")
         if [ -n "$MACHINE_IDS" ]; then
           for MACHINE_ID in $MACHINE_IDS; do
-            echo "Destroying machine: $MACHINE_ID"
-            flyctl machines stop $MACHINE_ID --app a2a-platform --signal SIGKILL --timeout 5 || true
-            flyctl machines destroy $MACHINE_ID --app a2a-platform || true
+            echo "Force destroying machine: $MACHINE_ID"
+            # Try to stop first, but continue if it fails
+            flyctl machines stop $MACHINE_ID --app a2a-platform --signal SIGKILL --timeout 5 || echo "Failed to stop, will force destroy"
+            # Force destroy regardless of state
+            flyctl machines destroy $MACHINE_ID --app a2a-platform --force || echo "Failed to destroy $MACHINE_ID"
           done
         fi
         
-        # Wait a moment for cleanup
-        sleep 10
+        # Wait for cleanup to complete
+        echo "⏳ Waiting for machine cleanup..."
+        sleep 30
+        
+        # Verify cleanup
+        REMAINING=$(flyctl machines list --app a2a-platform --json | jq -r '.[].id' 2>/dev/null | wc -l || echo "0")
+        echo "🧹 Remaining machines: $REMAINING"
+        
         
         # Deploy to Fly.io with longer timeout for A2A platform startup (25 minutes for 18 agents)
         flyctl deploy --remote-only --wait-timeout 1500
