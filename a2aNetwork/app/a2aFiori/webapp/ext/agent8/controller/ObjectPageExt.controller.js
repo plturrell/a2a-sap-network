@@ -8,8 +8,9 @@ sap.ui.define([
     "sap/base/security/encodeURL",
     "sap/base/strings/escapeRegExp",
     "sap/base/security/sanitizeHTML",
-    "a2a/network/agent8/ext/utils/SecurityUtils"
-], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, encodeURL, escapeRegExp, sanitizeHTML, SecurityUtils) {
+    "a2a/network/agent8/ext/utils/SecurityUtils",
+    "a2a/network/agent8/ext/utils/AuthHandler"
+], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML, encodeURL, escapeRegExp, sanitizeHTML, SecurityUtils, AuthHandler) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent8.ext.controller.ObjectPageExt", {
@@ -18,6 +19,7 @@ sap.ui.define([
             onInit: function () {
                 this._extensionAPI = this.base.getExtensionAPI();
                 this._securityUtils = SecurityUtils;
+                this._authHandler = AuthHandler;
                 
                 // Initialize device model for responsive behavior
                 var oDeviceModel = new JSONModel(sap.ui.Device);
@@ -298,6 +300,12 @@ sap.ui.define([
         },
 
         _optimizeStorage: function(sDatasetName) {
+            // Check user permissions
+            if (!this._authHandler.hasPermission('DATASET_OPTIMIZE', sDatasetName)) {
+                MessageBox.error("Insufficient permissions to optimize dataset storage");
+                return;
+            }
+            
             this._extensionAPI.getView().setBusy(true);
             
             jQuery.ajax(this._securityUtils.createSecureAjaxConfig({
@@ -395,6 +403,12 @@ sap.ui.define([
             var oContext = this._extensionAPI.getBindingContext();
             var sDatasetName = oContext.getProperty("datasetName");
             
+            // Check user permissions
+            if (!this._authHandler.hasPermission('DATASET_VALIDATE', sDatasetName)) {
+                MessageBox.error("Insufficient permissions to validate dataset");
+                return;
+            }
+            
             this._extensionAPI.getView().setBusy(true);
             
             jQuery.ajax(this._securityUtils.createSecureAjaxConfig({
@@ -444,10 +458,9 @@ sap.ui.define([
         _exportValidationReport: function(validationData) {
             var sDatasetName = this._extensionAPI.getBindingContext().getProperty("datasetName");
             
-            jQuery.ajax({
-                url: "/a2a/agent8/v1/datasets/" + sDatasetName + "/validation-report",
+            jQuery.ajax(this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent8/v1/datasets/" + this._securityUtils.encodeURL(sDatasetName) + "/validation-report",
                 type: "POST",
-                contentType: "application/json",
                 data: JSON.stringify({
                     validationData: validationData,
                     format: "PDF"

@@ -464,8 +464,8 @@ class Agent12SecurityScanner {
 
         // Unsafe functions
         const unsafeFunctions = [
-            /eval\s*\(/gi,
-            /Function\s*\(/gi,
+            /\beval\s*\(/gi,
+            /\bnew\s+Function\s*\(/gi,
             /setTimeout\s*\(\s*["'][^"']*["']/gi,
             /setInterval\s*\(\s*["'][^"']*["']/gi
         ];

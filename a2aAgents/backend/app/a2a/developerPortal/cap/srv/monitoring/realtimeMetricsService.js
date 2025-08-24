@@ -36,7 +36,7 @@ class RealtimeMetricsService extends EventEmitter {
             perMessageDeflate: true
         });
 
-        this.wss.on('connection', (ws, req) => {
+        const handleWebSocketConnection = (ws, req) => {
             const clientId = req.headers['x-client-id'] || this._generateClientId();
             const client = { ws, id: clientId, subscriptions: new Set() };
             this.clients.add(client);
@@ -54,27 +54,32 @@ class RealtimeMetricsService extends EventEmitter {
             this._sendInitialState(client);
 
             // Handle client messages
-            ws.on('message', (message) => {
+            const handleWebSocketMessage = (message) => {
                 this._handleClientMessage(client, message);
-            });
+            };
+            ws.on('message', handleWebSocketMessage);
 
             // Handle disconnection
-            ws.on('close', () => {
+            const handleWebSocketClose = () => {
                 this.clients.delete(client);
                 // eslint-disable-next-line no-console
                 // eslint-disable-next-line no-console
                 console.log(`Real-time metrics client disconnected: ${clientId}`);
-            });
+            };
+            ws.on('close', handleWebSocketClose);
 
             // Heartbeat to keep connection alive
-            const heartbeat = setInterval(() => {
+            const handleHeartbeat = () => {
                 if (ws.readyState === WebSocket.OPEN) {
                     ws.ping();
                 } else {
                     clearInterval(heartbeat);
                 }
-            }, 30000);
-        });
+            };
+            const heartbeat = setInterval(handleHeartbeat, 30000);
+        };
+        
+        this.wss.on('connection', handleWebSocketConnection);
     }
 
     /**
@@ -82,24 +87,28 @@ class RealtimeMetricsService extends EventEmitter {
      */
     _initializeCollectors() {
         // Agent heartbeat collector
-        this.agentHeartbeatCollector = setInterval(() => {
+        const collectAgentHeartbeats = () => {
             this._collectAgentHeartbeats();
-        }, 1000); // Every second
+        };
+        this.agentHeartbeatCollector = setInterval(collectAgentHeartbeats, 1000); // Every second
 
         // Blockchain metrics collector
-        this.blockchainCollector = setInterval(() => {
+        const collectBlockchainMetrics = () => {
             this._collectBlockchainMetrics();
-        }, 2000); // Every 2 seconds
+        };
+        this.blockchainCollector = setInterval(collectBlockchainMetrics, 2000); // Every 2 seconds
 
         // Communication pattern collector
-        this.communicationCollector = setInterval(() => {
+        const collectCommunicationPatterns = () => {
             this._collectCommunicationPatterns();
-        }, 3000); // Every 3 seconds
+        };
+        this.communicationCollector = setInterval(collectCommunicationPatterns, 3000); // Every 3 seconds
 
         // Performance analytics collector
-        this.performanceCollector = setInterval(() => {
+        const collectPerformanceAnalytics = () => {
             this._collectPerformanceAnalytics();
-        }, 5000); // Every 5 seconds
+        };
+        this.performanceCollector = setInterval(collectPerformanceAnalytics, 5000); // Every 5 seconds
 
         // Removed business metrics collector - not real data
     }
@@ -109,41 +118,45 @@ class RealtimeMetricsService extends EventEmitter {
      */
     _startMetricStreams() {
         // Agent Status Stream
-        this.on('agent.status.change', (data) => {
+        const handleAgentStatusChange = (data) => {
             this._broadcastToSubscribers('agent_status', {
                 type: 'agent_status_update',
                 timestamp: new Date().toISOString(),
                 data
             });
-        });
+        };
+        this.on('agent.status.change', handleAgentStatusChange);
 
         // Blockchain Event Stream
-        this.on('blockchain.event', (data) => {
+        const handleBlockchainEvent = (data) => {
             this._broadcastToSubscribers('blockchain_events', {
                 type: 'blockchain_event',
                 timestamp: new Date().toISOString(),
                 data
             });
-        });
+        };
+        this.on('blockchain.event', handleBlockchainEvent);
 
         // Performance Anomaly Stream
-        this.on('anomaly.detected', (data) => {
+        const handleAnomalyDetected = (data) => {
             this._broadcastToSubscribers('anomalies', {
                 type: 'performance_anomaly',
                 timestamp: new Date().toISOString(),
                 severity: data.severity,
                 data
             });
-        });
+        };
+        this.on('anomaly.detected', handleAnomalyDetected);
 
         // Error Cascade Stream
-        this.on('error.cascade', (data) => {
+        const handleErrorCascade = (data) => {
             this._broadcastToSubscribers('errors', {
                 type: 'error_cascade',
                 timestamp: new Date().toISOString(),
                 data
             });
-        });
+        };
+        this.on('error.cascade', handleErrorCascade);
     }
 
     /**

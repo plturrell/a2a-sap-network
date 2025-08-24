@@ -1,19 +1,19 @@
 sap.ui.define([
     "sap/ui/core/mvc/ControllerExtension",
-    "sap/m/MessageToast",
-    "sap/m/MessageBox",
     "sap/ui/core/Fragment",
+    "sap/m/MessageBox",
+    "sap/m/MessageToast",
     "sap/ui/model/json/JSONModel",
     "a2a/network/agent12/ext/utils/SecurityUtils"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment, JSONModel, SecurityUtils) {
+], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, SecurityUtils) {
     "use strict";
 
     /**
      * @class a2a.network.agent12.ext.controller.ListReportExt
      * @extends sap.ui.core.mvc.ControllerExtension
-     * @description Controller extension for Agent 12 List Report - Catalog Manager Agent.
-     * Provides comprehensive service catalog management capabilities including resource discovery,
-     * metadata management, registry synchronization, and search indexing with enterprise-grade security.
+     * @description Controller extension for Agent 12 List Report - Performance Management.
+     * Provides comprehensive performance benchmarking, optimization, and tuning capabilities
+     * with enterprise-grade security, audit logging, and accessibility features.
      */
     return ControllerExtension.extend("a2a.network.agent12.ext.controller.ListReportExt", {
         
@@ -29,7 +29,8 @@ sap.ui.define([
                 this._initializeDeviceModel();
                 this._initializeDialogCache();
                 this._initializePerformanceOptimizations();
-                this._startRealtimeCatalogUpdates();
+                this._startRealtimeUpdates();
+                this._initializeSecurity();
             },
             
             /**
@@ -53,6 +54,130 @@ sap.ui.define([
             maxRetries: 3,
             retryDelay: 1000,
             exponentialBackoff: true
+        },
+
+        /**
+         * @function onStartBenchmark
+         * @description Starts performance benchmark for selected performance tasks with real-time monitoring.
+         * @public
+         */
+        onStartBenchmark: function() {
+            if (!this._hasRole("PerformanceAdmin")) {
+                MessageBox.error("Access denied. Performance Administrator role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "StartBenchmark", reason: "Insufficient permissions" });
+                return;
+            }
+
+            const oBinding = this.base.getView().byId("fe::table::PerformanceTasks::LineItem").getBinding("rows");
+            const aSelectedContexts = oBinding.getSelectedContexts();
+            
+            if (aSelectedContexts.length === 0) {
+                MessageToast.show(this.getResourceBundle().getText("msg.selectTasksFirst"));
+                return;
+            }
+
+            this._auditLogger.log("START_BENCHMARK", { taskCount: aSelectedContexts.length });
+            
+            MessageBox.confirm(
+                this.getResourceBundle().getText("msg.startBenchmarkConfirm", [aSelectedContexts.length]),
+                {
+                    onClose: function(oAction) {
+                        if (oAction === MessageBox.Action.OK) {
+                            this._executeBenchmark(aSelectedContexts);
+                        }
+                    }.bind(this)
+                }
+            );
+        },
+
+        /**
+         * @function onOptimizePerformance
+         * @description Opens performance optimization wizard for selected tasks with AI recommendations.
+         * @public
+         */
+        onOptimizePerformance: function() {
+            if (!this._hasRole("PerformanceAdmin")) {
+                MessageBox.error("Access denied. Performance Administrator role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "OptimizePerformance", reason: "Insufficient permissions" });
+                return;
+            }
+
+            const oBinding = this.base.getView().byId("fe::table::PerformanceTasks::LineItem").getBinding("rows");
+            const aSelectedContexts = oBinding.getSelectedContexts();
+            
+            if (aSelectedContexts.length === 0) {
+                MessageToast.show(this.getResourceBundle().getText("msg.selectTasksFirst"));
+                return;
+            }
+
+            this._auditLogger.log("OPTIMIZE_PERFORMANCE", { taskCount: aSelectedContexts.length });
+            
+            this._getOrCreateDialog("optimizePerformance", "a2a.network.agent12.ext.fragment.OptimizePerformance")
+                .then(function(oDialog) {
+                    var oOptimizeModel = new JSONModel({
+                        selectedTasks: aSelectedContexts.map(ctx => ctx.getObject()),
+                        optimizationStrategy: "BALANCED",
+                        targetMetric: "THROUGHPUT",
+                        autoApply: false,
+                        testFirst: true,
+                        rollbackEnabled: true,
+                        aiRecommendations: [],
+                        currentMetrics: {},
+                        targetThresholds: {
+                            responseTime: 100,
+                            throughput: 1000,
+                            cpuUsage: 70,
+                            memoryUsage: 80
+                        }
+                    });
+                    oDialog.setModel(oOptimizeModel, "optimize");
+                    oDialog.open();
+                    this._loadOptimizationRecommendations(aSelectedContexts, oDialog);
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Performance Optimization: " + error.message);
+                });
+        },
+
+        /**
+         * @function onTuneSettings
+         * @description Opens performance tuning settings interface with advanced configuration options.
+         * @public
+         */
+        onTuneSettings: function() {
+            if (!this._hasRole("PerformanceAdmin")) {
+                MessageBox.error("Access denied. Performance Administrator role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "TuneSettings", reason: "Insufficient permissions" });
+                return;
+            }
+
+            this._auditLogger.log("TUNE_SETTINGS", { action: "OpenTuningInterface" });
+            
+            this._getOrCreateDialog("tuneSettings", "a2a.network.agent12.ext.fragment.TuneSettings")
+                .then(function(oDialog) {
+                    var oTuneModel = new JSONModel({
+                        categories: [
+                            { key: "GENERAL", text: "General Settings" },
+                            { key: "CACHE", text: "Cache Configuration" },
+                            { key: "DATABASE", text: "Database Optimization" },
+                            { key: "NETWORK", text: "Network Settings" },
+                            { key: "MEMORY", text: "Memory Management" },
+                            { key: "THREADING", text: "Threading & Concurrency" },
+                            { key: "IO", text: "I/O Operations" }
+                        ],
+                        selectedCategory: "GENERAL",
+                        settings: {},
+                        profiles: [],
+                        currentProfile: "DEFAULT",
+                        unsavedChanges: false
+                    });
+                    oDialog.setModel(oTuneModel, "tune");
+                    oDialog.open();
+                    this._loadTuningSettings(oDialog);
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Tune Settings: " + error.message);
+                });
         },
 
         /**
@@ -129,28 +254,400 @@ sap.ui.define([
         
         /**
          * @function _performSearch
-         * @description Performs search operation for catalog entries.
+         * @description Performs search operation (placeholder for search functionality).
          * @param {string} sQuery - Search query
          * @private
          */
         _performSearch: function(sQuery) {
-            // Implement search logic for catalog entries and resources
+            // Implement search logic for performance tasks
         },
 
         /**
-         * @function onCatalogDashboard
-         * @description Opens comprehensive catalog analytics dashboard with usage metrics and discovery statistics.
-         * @public
+         * @function _executeBenchmark
+         * @description Executes performance benchmark for selected tasks with progress tracking.
+         * @param {Array} aSelectedContexts - Selected performance task contexts
+         * @private
          */
-        onCatalogDashboard: function() {
-            this._getOrCreateDialog("catalogDashboard", "a2a.network.agent12.ext.fragment.CatalogDashboard")
+        _executeBenchmark: function(aSelectedContexts) {
+            const aTaskIds = aSelectedContexts.map(ctx => ctx.getObject().taskId);
+            
+            // Show progress dialog
+            this._getOrCreateDialog("benchmarkProgress", "a2a.network.agent12.ext.fragment.BenchmarkProgress")
+                .then(function(oProgressDialog) {
+                    var oProgressModel = new JSONModel({
+                        totalTasks: aTaskIds.length,
+                        completedTasks: 0,
+                        currentTask: "",
+                        progress: 0,
+                        status: "Starting performance benchmark...",
+                        metrics: {
+                            responseTime: [],
+                            throughput: [],
+                            cpuUsage: [],
+                            memoryUsage: []
+                        },
+                        results: []
+                    });
+                    oProgressDialog.setModel(oProgressModel, "progress");
+                    oProgressDialog.open();
+                    
+                    this._runBenchmarks(aTaskIds, oProgressDialog);
+                }.bind(this));
+        },
+
+        /**
+         * @function _runBenchmarks
+         * @description Runs performance benchmarks with real-time progress updates.
+         * @param {Array} aTaskIds - Array of task IDs to benchmark
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _runBenchmarks: function(aTaskIds, oProgressDialog) {
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/RunPerformanceBenchmarks", {
+                urlParameters: {
+                    taskIds: aTaskIds.join(','),
+                    iterations: 10,
+                    warmupRuns: 3
+                },
+                success: function(data) {
+                    MessageToast.show(this.getResourceBundle().getText("msg.benchmarkStarted"));
+                    this._startBenchmarkMonitoring(data.benchmarkId, oProgressDialog);
+                    this._auditLogger.log("BENCHMARK_STARTED", { 
+                        taskCount: aTaskIds.length, 
+                        benchmarkId: data.benchmarkId,
+                        success: true 
+                    });
+                }.bind(this),
+                error: function(error) {
+                    MessageBox.error(this.getResourceBundle().getText("error.benchmarkFailed"));
+                    oProgressDialog.close();
+                    this._auditLogger.log("BENCHMARK_FAILED", { 
+                        taskCount: aTaskIds.length, 
+                        error: error.message 
+                    });
+                }.bind(this)
+            });
+        },
+
+        /**
+         * @function _startBenchmarkMonitoring
+         * @description Starts real-time monitoring of benchmark progress.
+         * @param {string} sBenchmarkId - Benchmark ID to monitor
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _startBenchmarkMonitoring: function(sBenchmarkId, oProgressDialog) {
+            if (this._benchmarkEventSource) {
+                this._benchmarkEventSource.close();
+            }
+            
+            try {
+                this._benchmarkEventSource = new EventSource('/api/agent12/performance/benchmark-stream/' + sBenchmarkId);
+                
+                this._benchmarkEventSource.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        this._updateBenchmarkProgress(data, oProgressDialog);
+                    } catch (error) {
+                        console.error('Error parsing benchmark progress data:', error);
+                    }
+                }.bind(this);
+                
+                this._benchmarkEventSource.onerror = function(error) {
+                    console.warn('Benchmark stream error, falling back to polling:', error);
+                    this._startBenchmarkPolling(sBenchmarkId, oProgressDialog);
+                }.bind(this);
+                
+            } catch (error) {
+                console.warn('EventSource not available, using polling fallback');
+                this._startBenchmarkPolling(sBenchmarkId, oProgressDialog);
+            }
+        },
+
+        /**
+         * @function _startBenchmarkPolling
+         * @description Starts polling fallback for benchmark progress updates.
+         * @param {string} sBenchmarkId - Benchmark ID to monitor
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _startBenchmarkPolling: function(sBenchmarkId, oProgressDialog) {
+            if (this._benchmarkPollingInterval) {
+                clearInterval(this._benchmarkPollingInterval);
+            }
+            
+            this._benchmarkPollingInterval = setInterval(() => {
+                this._fetchBenchmarkProgress(sBenchmarkId, oProgressDialog);
+            }, 2000);
+        },
+
+        /**
+         * @function _fetchBenchmarkProgress
+         * @description Fetches benchmark progress via polling.
+         * @param {string} sBenchmarkId - Benchmark ID to monitor
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _fetchBenchmarkProgress: function(sBenchmarkId, oProgressDialog) {
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/GetBenchmarkProgress", {
+                urlParameters: { benchmarkId: sBenchmarkId },
+                success: function(data) {
+                    this._updateBenchmarkProgress(data, oProgressDialog);
+                }.bind(this),
+                error: function(error) {
+                    console.warn('Failed to fetch benchmark progress:', error);
+                }
+            });
+        },
+
+        /**
+         * @function _updateBenchmarkProgress
+         * @description Updates benchmark progress display.
+         * @param {Object} data - Progress data
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _updateBenchmarkProgress: function(data, oProgressDialog) {
+            if (!oProgressDialog || !oProgressDialog.isOpen()) return;
+            
+            var oProgressModel = oProgressDialog.getModel("progress");
+            if (oProgressModel) {
+                var oCurrentData = oProgressModel.getData();
+                oCurrentData.completedTasks = data.completedTasks || oCurrentData.completedTasks;
+                oCurrentData.currentTask = data.currentTask || oCurrentData.currentTask;
+                oCurrentData.progress = Math.round((oCurrentData.completedTasks / oCurrentData.totalTasks) * 100);
+                oCurrentData.status = data.status || oCurrentData.status;
+                
+                if (data.metrics) {
+                    oCurrentData.metrics = data.metrics;
+                }
+                
+                if (data.results && data.results.length > 0) {
+                    oCurrentData.results = oCurrentData.results.concat(data.results);
+                }
+                
+                oProgressModel.setData(oCurrentData);
+                
+                // Check if all tasks are completed
+                if (oCurrentData.completedTasks >= oCurrentData.totalTasks) {
+                    this._completeBenchmark(oProgressDialog);
+                }
+            }
+        },
+
+        /**
+         * @function _completeBenchmark
+         * @description Handles completion of benchmark.
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _completeBenchmark: function(oProgressDialog) {
+            setTimeout(() => {
+                oProgressDialog.close();
+                MessageToast.show(this.getResourceBundle().getText("msg.benchmarkCompleted"));
+                this._refreshPerformanceData();
+                this._auditLogger.log("BENCHMARK_COMPLETED", { status: "SUCCESS" });
+                
+                // Show results summary
+                this._showBenchmarkSummary(oProgressDialog.getModel("progress").getData());
+            }, 2000);
+            
+            // Clean up event source
+            if (this._benchmarkEventSource) {
+                this._benchmarkEventSource.close();
+                this._benchmarkEventSource = null;
+            }
+            
+            if (this._benchmarkPollingInterval) {
+                clearInterval(this._benchmarkPollingInterval);
+                this._benchmarkPollingInterval = null;
+            }
+        },
+
+        /**
+         * @function _loadOptimizationRecommendations
+         * @description Loads AI-powered optimization recommendations.
+         * @param {Array} aSelectedContexts - Selected task contexts
+         * @param {sap.m.Dialog} oDialog - Optimization dialog
+         * @private
+         */
+        _loadOptimizationRecommendations: function(aSelectedContexts, oDialog) {
+            oDialog.setBusy(true);
+            
+            const oModel = this.base.getView().getModel();
+            const aTaskIds = aSelectedContexts.map(ctx => ctx.getObject().taskId);
+            
+            SecurityUtils.secureCallFunction(oModel, "/GetOptimizationRecommendations", {
+                urlParameters: {
+                    taskIds: aTaskIds.join(','),
+                    analysisDepth: "DEEP"
+                },
+                success: function(data) {
+                    var oOptimizeModel = oDialog.getModel("optimize");
+                    if (oOptimizeModel) {
+                        var oCurrentData = oOptimizeModel.getData();
+                        oCurrentData.aiRecommendations = data.recommendations || [];
+                        oCurrentData.currentMetrics = data.currentMetrics || {};
+                        oCurrentData.potentialImprovements = data.potentialImprovements || {};
+                        oCurrentData.riskAssessment = data.riskAssessment || {};
+                        oOptimizeModel.setData(oCurrentData);
+                    }
+                    oDialog.setBusy(false);
+                }.bind(this),
+                error: function(error) {
+                    oDialog.setBusy(false);
+                    MessageBox.error("Failed to load optimization recommendations: " + error.message);
+                }
+            });
+        },
+
+        /**
+         * @function _loadTuningSettings
+         * @description Loads performance tuning settings and profiles.
+         * @param {sap.m.Dialog} oDialog - Tuning settings dialog
+         * @private
+         */
+        _loadTuningSettings: function(oDialog) {
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/GetPerformanceTuningSettings", {
+                success: function(data) {
+                    var oTuneModel = oDialog.getModel("tune");
+                    if (oTuneModel) {
+                        var oCurrentData = oTuneModel.getData();
+                        oCurrentData.settings = data.settings || {};
+                        oCurrentData.profiles = data.profiles || [];
+                        oCurrentData.recommendations = data.recommendations || {};
+                        oCurrentData.benchmarks = data.benchmarks || {};
+                        oTuneModel.setData(oCurrentData);
+                    }
+                }.bind(this),
+                error: function(error) {
+                    MessageBox.error("Failed to load tuning settings: " + error.message);
+                }
+            });
+        },
+
+        /**
+         * @function _showBenchmarkSummary
+         * @description Shows benchmark results summary.
+         * @param {Object} benchmarkData - Benchmark results data
+         * @private
+         */
+        _showBenchmarkSummary: function(benchmarkData) {
+            this._getOrCreateDialog("benchmarkSummary", "a2a.network.agent12.ext.fragment.BenchmarkSummary")
                 .then(function(oDialog) {
+                    var oSummaryModel = new JSONModel(benchmarkData);
+                    oDialog.setModel(oSummaryModel, "summary");
                     oDialog.open();
-                    this._loadDashboardData(oDialog);
                 }.bind(this))
                 .catch(function(error) {
-                    MessageBox.error("Failed to open Catalog Dashboard: " + error.message);
+                    MessageBox.error("Failed to show benchmark summary: " + error.message);
                 });
+        },
+
+        /**
+         * @function _refreshPerformanceData
+         * @description Refreshes performance task data in the table.
+         * @private
+         */
+        _refreshPerformanceData: function() {
+            const oBinding = this.base.getView().byId("fe::table::PerformanceTasks::LineItem").getBinding("rows");
+            oBinding.refresh();
+        },
+
+        /**
+         * @function _startRealtimeUpdates
+         * @description Starts real-time updates for performance metrics.
+         * @private
+         */
+        _startRealtimeUpdates: function() {
+            this._initializeWebSocket();
+        },
+
+        /**
+         * @function _initializeWebSocket
+         * @description Initializes secure WebSocket connection for real-time updates.
+         * @private
+         */
+        _initializeWebSocket: function() {
+            if (this._ws) return;
+
+            // Validate WebSocket URL for security
+            if (!this._securityUtils.validateWebSocketUrl('ws://localhost:8012/performance/updates')) {
+                MessageBox.error("Invalid WebSocket URL");
+                return;
+            }
+
+            try {
+                this._ws = SecurityUtils.createSecureWebSocket('ws://localhost:8012/performance/updates', {
+                    onMessage: function(data) {
+                        this._handlePerformanceUpdate(data);
+                    }.bind(this)
+                });
+
+                this._ws.onclose = function() {
+                    var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                    var sMessage = oBundle.getText("msg.websocketDisconnected") || "Connection lost. Reconnecting...";
+                    MessageToast.show(sMessage);
+                    setTimeout(() => this._initializeWebSocket(), 5000);
+                }.bind(this);
+
+            } catch (error) {
+                console.warn("WebSocket connection failed, falling back to polling");
+                this._initializePolling();
+            }
+        },
+
+        /**
+         * @function _initializePolling
+         * @description Initializes polling fallback for real-time updates.
+         * @private
+         */
+        _initializePolling: function() {
+            this._pollInterval = setInterval(() => {
+                this._refreshPerformanceData();
+            }, 5000);
+        },
+
+        /**
+         * @function _handlePerformanceUpdate
+         * @description Handles real-time performance updates from WebSocket.
+         * @param {Object} data - Update data
+         * @private
+         */
+        _handlePerformanceUpdate: function(data) {
+            try {
+                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                
+                switch (data.type) {
+                    case 'BENCHMARK_STARTED':
+                        var sStartMsg = oBundle.getText("msg.benchmarkStarted") || "Benchmark started";
+                        MessageToast.show(sStartMsg);
+                        break;
+                    case 'BENCHMARK_COMPLETED':
+                        var sCompleteMsg = oBundle.getText("msg.benchmarkCompleted") || "Benchmark completed";
+                        MessageToast.show(sCompleteMsg);
+                        this._refreshPerformanceData();
+                        break;
+                    case 'OPTIMIZATION_APPLIED':
+                        var sOptMsg = oBundle.getText("msg.optimizationApplied") || "Optimization applied";
+                        MessageToast.show(sOptMsg);
+                        this._refreshPerformanceData();
+                        break;
+                    case 'PERFORMANCE_ALERT':
+                        var sAlertMsg = oBundle.getText("msg.performanceAlert") || "Performance alert";
+                        var safeDetails = SecurityUtils.escapeHTML(data.details || '');
+                        MessageToast.show(sAlertMsg + ": " + safeDetails);
+                        break;
+                }
+            } catch (error) {
+                console.error("Error processing performance update:", error);
+            }
         },
 
         /**
@@ -231,806 +728,98 @@ sap.ui.define([
                 oDialog.setContentHeight("90%");
             }
         },
-        
+
         /**
-         * @function _withErrorRecovery
-         * @description Wraps operation with error recovery.
-         * @param {Function} fnOperation - Operation to execute
-         * @param {Object} oOptions - Recovery options
-         * @returns {Promise} Promise with error recovery
+         * @function _initializeSecurity
+         * @description Initializes security features and audit logging.
          * @private
          */
-        _withErrorRecovery: function(fnOperation, oOptions) {
-            var that = this;
-            var oConfig = Object.assign({}, this._errorRecoveryConfig, oOptions);
-            
-            function attempt(retriesLeft, delay) {
-                return fnOperation().catch(function(error) {
-                    if (retriesLeft > 0) {
-                        var oBundle = that.base.getView().getModel("i18n").getResourceBundle();
-                        var sRetryMsg = oBundle.getText("recovery.retrying") || "Network error. Retrying...";
-                        MessageToast.show(sRetryMsg);
-                        
-                        return new Promise(function(resolve) {
-                            setTimeout(resolve, delay);
-                        }).then(function() {
-                            var nextDelay = oConfig.exponentialBackoff ? delay * 2 : delay;
-                            return attempt(retriesLeft - 1, nextDelay);
-                        });
-                    }
-                    throw error;
-                });
-            }
-            
-            return attempt(oConfig.maxRetries, oConfig.retryDelay);
-        },
-
-        /**
-         * @function onCreateCatalogEntry
-         * @description Opens dialog to create new catalog entry with resource metadata.
-         * @public
-         */
-        onCreateCatalogEntry: function() {
-            this._getOrCreateDialog("createCatalogEntry", "a2a.network.agent12.ext.fragment.CreateCatalogEntry")
-                .then(function(oDialog) {
-                    var oModel = new JSONModel({
-                        resourceName: "",
-                        description: "",
-                        catalogType: "SERVICE",
-                        resourceType: "REST_API",
-                        category: "",
-                        resourceUrl: "",
-                        version: "1.0.0",
-                        visibility: "PUBLIC",
-                        authenticationMethod: "NONE",
-                        keywords: "",
-                        tags: "",
-                        autoDiscovery: true,
-                        searchable: true
-                    });
-                    oDialog.setModel(oModel, "create");
-                    oDialog.open();
-                    this._loadCatalogOptions(oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Create Catalog Entry dialog: " + error.message);
-                });
-        },
-
-        /**
-         * @function onServiceDiscovery
-         * @description Opens service discovery interface for automatic resource detection.
-         * @public
-         */
-        onServiceDiscovery: function() {
-            this._getOrCreateDialog("serviceDiscovery", "a2a.network.agent12.ext.fragment.ServiceDiscovery")
-                .then(function(oDialog) {
-                    oDialog.open();
-                    this._initializeDiscovery(oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Service Discovery: " + error.message);
-                });
-        },
-
-        /**
-         * @function onRegistryManager
-         * @description Opens registry management interface for external catalog synchronization.
-         * @public
-         */
-        onRegistryManager: function() {
-            this._getOrCreateDialog("registryManager", "a2a.network.agent12.ext.fragment.RegistryManager")
-                .then(function(oDialog) {
-                    oDialog.open();
-                    this._loadRegistryData(oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Registry Manager: " + error.message);
-                });
-        },
-
-        /**
-         * @function onCategoryManager
-         * @description Opens category management interface for organizing catalog resources.
-         * @public
-         */
-        onCategoryManager: function() {
-            this._getOrCreateDialog("categoryManager", "a2a.network.agent12.ext.fragment.CategoryManager")
-                .then(function(oDialog) {
-                    oDialog.open();
-                    this._loadCategoryData(oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Category Manager: " + error.message);
-                });
-        },
-
-        /**
-         * @function onSearchManager
-         * @description Opens search index management interface for catalog search optimization.
-         * @public
-         */
-        onSearchManager: function() {
-            this._getOrCreateDialog("searchManager", "a2a.network.agent12.ext.fragment.SearchManager")
-                .then(function(oDialog) {
-                    oDialog.open();
-                    this._loadSearchIndexData(oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Search Manager: " + error.message);
-                });
-        },
-
-        /**
-         * @function onMetadataEditor
-         * @description Opens metadata editor for selected catalog entries.
-         * @public
-         */
-        onMetadataEditor: function() {
-            const oBinding = this.base.getView().byId("fe::table::CatalogEntries::LineItem").getBinding("rows");
-            const aSelectedContexts = oBinding.getSelectedContexts();
-            
-            if (aSelectedContexts.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("msg.selectEntriesFirst"));
-                return;
-            }
-
-            this._getOrCreateDialog("metadataEditor", "a2a.network.agent12.ext.fragment.MetadataEditor")
-                .then(function(oDialog) {
-                    oDialog.open();
-                    this._loadMetadataForEditing(aSelectedContexts[0], oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Metadata Editor: " + error.message);
-                });
-        },
-
-        /**
-         * @function onDiscoveryScanner
-         * @description Starts comprehensive resource discovery scan.
-         * @public
-         */
-        onDiscoveryScanner: function() {
-            MessageBox.confirm(
-                this.getResourceBundle().getText("msg.startDiscoveryScan"),
-                {
-                    onClose: function(oAction) {
-                        if (oAction === MessageBox.Action.OK) {
-                            this._startDiscoveryScan();
-                        }
-                    }.bind(this)
-                }
-            );
-        },
-
-        /**
-         * @function onBulkValidation
-         * @description Validates multiple catalog entries for consistency and compliance.
-         * @public
-         */
-        onBulkValidation: function() {
-            const oBinding = this.base.getView().byId("fe::table::CatalogEntries::LineItem").getBinding("rows");
-            const aSelectedContexts = oBinding.getSelectedContexts();
-            
-            if (aSelectedContexts.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("msg.selectEntriesFirst"));
-                return;
-            }
-
-            this._validateBulkEntries(aSelectedContexts);
-        },
-
-        /**
-         * @function onBulkPublishing
-         * @description Publishes multiple catalog entries to make them available for discovery.
-         * @public
-         */
-        onBulkPublishing: function() {
-            const oBinding = this.base.getView().byId("fe::table::CatalogEntries::LineItem").getBinding("rows");
-            const aSelectedContexts = oBinding.getSelectedContexts();
-            
-            if (aSelectedContexts.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("msg.selectEntriesFirst"));
-                return;
-            }
-
-            MessageBox.confirm(
-                this.getResourceBundle().getText("msg.publishEntriesConfirm", [aSelectedContexts.length]),
-                {
-                    onClose: function(oAction) {
-                        if (oAction === MessageBox.Action.OK) {
-                            this._publishBulkEntries(aSelectedContexts);
-                        }
-                    }.bind(this)
-                }
-            );
-        },
-
-        /**
-         * @function _startRealtimeCatalogUpdates
-         * @description Starts real-time updates for catalog changes and discovery events.
-         * @private
-         */
-        _startRealtimeCatalogUpdates: function() {
-            this._initializeWebSocket();
-        },
-
-        /**
-         * @function _initializeWebSocket
-         * @description Initializes secure WebSocket connection for real-time catalog updates.
-         * @private
-         */
-        _initializeWebSocket: function() {
-            if (this._ws) return;
-
-            // Validate WebSocket URL for security
-            if (!this._securityUtils.validateWebSocketUrl('wss://localhost:8012/catalog/updates')) {
-                MessageBox.error("Invalid WebSocket URL");
-                return;
-            }
-
-            try {
-                this._ws = SecurityUtils.createSecureWebSocket('wss://localhost:8012/catalog/updates', {
-                    onmessage: function(event) {
-                        try {
-                            const data = JSON.parse(event.data);
-                            this._handleCatalogUpdate(data);
-                        } catch (error) {
-                            console.error("Error parsing WebSocket message:", error);
-                        }
-                    }.bind(this),
-                    onerror: function(error) {
-                        console.warn("Secure WebSocket error:", error);
-                        this._initializePolling();
-                    }.bind(this)
-                });
-                
-                if (this._ws) {
-                    this._ws.onclose = function() {
-                        var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                        var sMessage = oBundle.getText("msg.websocketDisconnected") || "Connection lost. Reconnecting...";
-                        MessageToast.show(sMessage);
-                        setTimeout(() => this._initializeWebSocket(), 5000);
-                    }.bind(this);
-                }
-
-            } catch (error) {
-                console.warn("WebSocket connection failed, falling back to polling");
-                this._initializePolling();
-            }
-        },
-
-        /**
-         * @function _initializePolling
-         * @description Initializes polling fallback for real-time updates.
-         * @private
-         */
-        _initializePolling: function() {
-            this._pollInterval = setInterval(() => {
-                this._refreshCatalogData();
-            }, 10000);
-        },
-
-        /**
-         * @function _handleCatalogUpdate
-         * @description Handles real-time catalog updates from WebSocket.
-         * @param {Object} data - Update data
-         * @private
-         */
-        _handleCatalogUpdate: function(data) {
-            try {
-                // Sanitize incoming data
-                const sanitizedData = SecurityUtils.sanitizeCatalogData(JSON.stringify(data));
-                const parsedData = JSON.parse(sanitizedData);
-                
-                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                
-                switch (parsedData.type) {
-                    case 'RESOURCE_REGISTERED':
-                        var sRegisteredMsg = oBundle.getText("msg.resourceRegistered") || "Resource registered";
-                        MessageToast.show(sRegisteredMsg);
-                        this._refreshCatalogData();
-                        break;
-                    case 'DISCOVERY_COMPLETED':
-                        var sDiscoveryMsg = oBundle.getText("msg.discoveryCompleted") || "Discovery completed";
-                        MessageToast.show(sDiscoveryMsg);
-                        this._refreshCatalogData();
-                        break;
-                    case 'INDEX_UPDATED':
-                        var sIndexMsg = oBundle.getText("msg.searchIndexUpdated") || "Search index updated";
-                        MessageToast.show(sIndexMsg);
-                        break;
-                    case 'REGISTRY_SYNCED':
-                        var sSyncMsg = oBundle.getText("msg.registrySynced") || "Registry synchronized";
-                        MessageToast.show(sSyncMsg);
-                        this._refreshCatalogData();
-                        break;
-                    case 'METADATA_UPDATED':
-                        this._refreshCatalogData();
-                        break;
-                }
-            } catch (error) {
-                console.error("Error processing catalog update:", error);
-            }
-        },
-
-        /**
-         * @function _loadDashboardData
-         * @description Loads catalog dashboard data with statistics and growth metrics.
-         * @param {sap.m.Dialog} oDialog - Target dialog (optional)
-         * @private
-         */
-        _loadDashboardData: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["catalogDashboard"];
-            if (!oTargetDialog) return;
-            
-            oTargetDialog.setBusy(true);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/GetCatalogStatistics", {
-                        success: function(data) {
-                            resolve(data);
-                        },
-                        error: function(error) {
-                            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                            var sErrorMsg = oBundle.getText("error.loadingStatistics") || "Error loading statistics";
-                            reject(new Error(sErrorMsg));
-                        }.bind(this)
-                    });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
-                oTargetDialog.setBusy(false);
-                this._updateDashboardCharts(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
-                oTargetDialog.setBusy(false);
-                MessageBox.error(error.message);
-            });
-        },
-
-        /**
-         * @function _initializeDiscovery
-         * @description Initializes service discovery options and methods.
-         * @param {sap.m.Dialog} oDialog - Target dialog (optional)
-         * @private
-         */
-        _initializeDiscovery: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["serviceDiscovery"];
-            if (!oTargetDialog) return;
-            
-            oTargetDialog.setBusy(true);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/GetDiscoveryMethods", {
-                        success: function(data) {
-                            resolve(data);
-                        },
-                        error: function(error) {
-                            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                            var sErrorMsg = oBundle.getText("error.loadingDiscoveryMethods") || "Error loading discovery methods";
-                            reject(new Error(sErrorMsg));
-                        }.bind(this)
-                    });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
-                oTargetDialog.setBusy(false);
-                this._updateDiscoveryOptions(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
-                oTargetDialog.setBusy(false);
-                MessageBox.error(error.message);
-            });
-        },
-
-        /**
-         * @function _loadRegistryData
-         * @description Loads registry configurations and synchronization status.
-         * @param {sap.m.Dialog} oDialog - Target dialog (optional)
-         * @private
-         */
-        _loadRegistryData: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["registryManager"];
-            if (!oTargetDialog) return;
-            
-            oTargetDialog.setBusy(true);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/GetRegistryConfigurations", {
-                        success: function(data) {
-                            resolve(data);
-                        },
-                        error: function(error) {
-                            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                            var sErrorMsg = oBundle.getText("error.loadingRegistryData") || "Error loading registry data";
-                            reject(new Error(sErrorMsg));
-                        }.bind(this)
-                    });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
-                oTargetDialog.setBusy(false);
-                this._updateRegistryList(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
-                oTargetDialog.setBusy(false);
-                MessageBox.error(error.message);
-            });
-        },
-
-        _loadCategoryData: function() {
-            const oModel = this.getView().getModel();
-            
-            SecurityUtils.secureCallFunction(oModel, "/GetServiceCategories", {
-                success: function(data) {
-                    this._updateCategoryTree(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingCategoryData"));
+        _initializeSecurity: function() {
+            this._auditLogger = {
+                log: function(action, details) {
+                    var user = this._getCurrentUser();
+                    var timestamp = new Date().toISOString();
+                    var logEntry = {
+                        timestamp: timestamp,
+                        user: user,
+                        agent: "Agent12_Performance",
+                        action: action,
+                        details: details || {}
+                    };
+                    console.info("AUDIT: " + JSON.stringify(logEntry));
                 }.bind(this)
-            });
+            };
         },
 
-        _loadSearchIndexData: function() {
-            const oModel = this.getView().getModel();
-            
-            SecurityUtils.secureCallFunction(oModel, "/GetSearchIndexes", {
-                success: function(data) {
-                    this._updateSearchIndexList(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingSearchIndexData"));
-                }.bind(this)
-            });
+        /**
+         * @function _getCurrentUser
+         * @description Gets current user ID for audit logging.
+         * @returns {string} User ID or "anonymous"
+         * @private
+         */
+        _getCurrentUser: function() {
+            return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
         },
 
-        _loadMetadataForEditing: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sEntryId = oContext.getObject().entryId;
-            
-            SecurityUtils.secureCallFunction(oModel, "/GetMetadataProperties", {
-                urlParameters: {
-                    entryId: sEntryId
-                },
-                success: function(data) {
-                    this._displayMetadataEditor(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingMetadata"));
-                }.bind(this)
-            });
-        },
-
-        _startDiscoveryScan: function() {
-            const oModel = this.getView().getModel();
-            
-            MessageToast.show(this.getResourceBundle().getText("msg.discoveryScanStarted"));
-            
-            if (!SecurityUtils.checkCatalogAuth('StartResourceDiscovery', {})) {
-                return;
+        /**
+         * @function _hasRole
+         * @description Checks if current user has specified role.
+         * @param {string} role - Role to check
+         * @returns {boolean} True if user has role
+         * @private
+         */
+        _hasRole: function(role) {
+            const user = sap.ushell?.Container?.getUser();
+            if (user && user.hasRole) {
+                return user.hasRole(role);
             }
-
-            SecurityUtils.secureCallFunction(oModel, "/StartResourceDiscovery", {
-                success: function(data) {
-                    MessageToast.show(this.getResourceBundle().getText("msg.discoveryCompleted"));
-                    this._refreshCatalogData();
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.discoveryFailed"));
-                }.bind(this)
-            });
+            // Mock role validation for development/testing
+            const mockRoles = ["PerformanceAdmin", "PerformanceUser", "PerformanceOperator"];
+            return mockRoles.includes(role);
         },
 
-        _validateBulkEntries: function(aSelectedContexts) {
-            const oModel = this.getView().getModel();
-            const aEntryIds = aSelectedContexts.map(ctx => ctx.getObject().entryId);
-            
-            MessageToast.show(this.getResourceBundle().getText("msg.bulkValidationStarted", [aEntryIds.length]));
-            
-            if (!SecurityUtils.checkCatalogAuth('ValidateCatalogEntries', {})) {
-                return;
-            }
-
-            SecurityUtils.secureCallFunction(oModel, "/ValidateCatalogEntries", {
-                urlParameters: {
-                    entryIds: aEntryIds.join(',')
-                },
-                success: function(data) {
-                    MessageToast.show(this.getResourceBundle().getText("msg.bulkValidationCompleted"));
-                    this._refreshCatalogData();
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.validationFailed"));
-                }.bind(this)
-            });
-        },
-
-        _publishBulkEntries: function(aSelectedContexts) {
-            const oModel = this.getView().getModel();
-            const aEntryIds = aSelectedContexts.map(ctx => ctx.getObject().entryId);
-            
-            MessageToast.show(this.getResourceBundle().getText("msg.bulkPublishingStarted", [aEntryIds.length]));
-            
-            if (!SecurityUtils.checkCatalogAuth('PublishCatalogEntries', {})) {
-                return;
-            }
-
-            SecurityUtils.secureCallFunction(oModel, "/PublishCatalogEntries", {
-                urlParameters: {
-                    entryIds: aEntryIds.join(',')
-                },
-                success: function(data) {
-                    MessageToast.show(this.getResourceBundle().getText("msg.bulkPublishingCompleted"));
-                    this._refreshCatalogData();
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.publishingFailed"));
-                }.bind(this)
-            });
-        },
-
-        _refreshCatalogData: function() {
-            const oBinding = this.base.getView().byId("fe::table::CatalogEntries::LineItem").getBinding("rows");
-            oBinding.refresh();
-        },
-
-        /**
-         * @function _loadCatalogOptions
-         * @description Loads catalog configuration options for entry creation.
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _loadCatalogOptions: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["createCatalogEntry"];
-            if (!oTargetDialog) return;
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    SecurityUtils.secureCallFunction(oModel, "/GetCatalogOptions", {
-                        success: function(data) {
-                            var oCreateModel = oTargetDialog.getModel("create");
-                            var oCreateData = oCreateModel.getData();
-                            oCreateData.availableTypes = data.catalogTypes;
-                            oCreateData.resourceTypes = data.resourceTypes;
-                            oCreateData.categories = data.categories;
-                            oCreateData.authMethods = data.authenticationMethods;
-                            oCreateModel.setData(oCreateData);
-                            resolve(data);
-                        },
-                        error: function(error) {
-                            reject(new Error("Failed to load catalog options"));
-                        }
-                    });
-                }.bind(this));
-            }.bind(this)).catch(function(error) {
-                MessageBox.error(error.message);
-            });
-        },
-
-        /**
-         * @function _updateDashboardCharts
-         * @description Updates catalog dashboard charts with growth and distribution metrics.
-         * @param {Object} data - Dashboard data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _updateDashboardCharts: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["catalogDashboard"];
-            if (!oTargetDialog) return;
-            
-            this._createCatalogGrowthChart(data.catalogGrowth, oTargetDialog);
-            this._createResourceTypeChart(data.resourceTypes, oTargetDialog);
-            this._createCategoryDistributionChart(data.categoryDistribution, oTargetDialog);
-        },
-
-        /**
-         * @function _updateDiscoveryOptions
-         * @description Updates service discovery options and configurations.
-         * @param {Object} data - Discovery options data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _updateDiscoveryOptions: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["serviceDiscovery"];
-            if (!oTargetDialog) return;
-            
-            var oDiscoveryModel = new JSONModel({
-                methods: data.discoveryMethods,
-                scanTargets: data.scanTargets,
-                configurations: data.configurations,
-                scheduledScans: data.scheduledScans
-            });
-            oTargetDialog.setModel(oDiscoveryModel, "discovery");
-        },
-
-        /**
-         * @function _updateRegistryList
-         * @description Updates registry configuration list and status.
-         * @param {Object} data - Registry data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _updateRegistryList: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["registryManager"];
-            if (!oTargetDialog) return;
-            
-            var oRegistryModel = new JSONModel({
-                registries: data.registries,
-                syncStatus: data.syncStatus,
-                configurations: data.configurations,
-                healthStatus: data.healthStatus
-            });
-            oTargetDialog.setModel(oRegistryModel, "registry");
-        },
-
-        /**
-         * @function _updateCategoryTree
-         * @description Updates category tree structure for catalog organization.
-         * @param {Object} data - Category tree data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _updateCategoryTree: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["categoryManager"];
-            if (!oTargetDialog) return;
-            
-            var oCategoryModel = new JSONModel({
-                categoryTree: data.categories,
-                statistics: data.categoryStats,
-                serviceCount: data.serviceCount,
-                hierarchy: data.hierarchy
-            });
-            oTargetDialog.setModel(oCategoryModel, "category");
-        },
-
-        /**
-         * @function _updateSearchIndexList
-         * @description Updates search index configurations and performance metrics.
-         * @param {Object} data - Search index data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _updateSearchIndexList: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["searchManager"];
-            if (!oTargetDialog) return;
-            
-            var oSearchModel = new JSONModel({
-                indexes: data.searchIndexes,
-                performance: data.performance,
-                statistics: data.statistics,
-                configuration: data.configuration
-            });
-            oTargetDialog.setModel(oSearchModel, "search");
-        },
-
-        /**
-         * @function _displayMetadataEditor
-         * @description Displays metadata properties in editor for modification.
-         * @param {Object} data - Metadata data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _displayMetadataEditor: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["metadataEditor"];
-            if (!oTargetDialog) return;
-            
-            var oMetadataModel = new JSONModel({
-                properties: data.properties,
-                schema: data.schema,
-                validation: data.validation,
-                history: data.changeHistory
-            });
-            oTargetDialog.setModel(oMetadataModel, "metadata");
-        },
-
-        /**
-         * @function _createCatalogGrowthChart
-         * @description Creates catalog growth chart for dashboard visualization.
-         * @param {Object} data - Chart data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _createCatalogGrowthChart: function(data, oDialog) {
-            var oChartContainer = oDialog.byId("catalogGrowthChart");
-            if (!oChartContainer || !data.catalogGrowth) return;
-            
-            var oChartModel = new JSONModel({
-                chartData: data.catalogGrowth,
-                config: {
-                    title: this.getResourceBundle().getText("chart.catalogGrowth"),
-                    xAxisLabel: this.getResourceBundle().getText("chart.time"),
-                    yAxisLabel: this.getResourceBundle().getText("field.entryCount")
-                }
-            });
-            oChartContainer.setModel(oChartModel, "chart");
-        },
-        
-        /**
-         * @function _createResourceTypeChart
-         * @description Creates resource type distribution chart for dashboard.
-         * @param {Object} data - Chart data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _createResourceTypeChart: function(data, oDialog) {
-            var oChartContainer = oDialog.byId("resourceTypeChart");
-            if (!oChartContainer || !data.resourceTypes) return;
-            
-            var oChartModel = new JSONModel({
-                chartData: data.resourceTypes,
-                config: {
-                    title: this.getResourceBundle().getText("chart.resourceTypes"),
-                    showLegend: true,
-                    colorPalette: ["#5cbae6", "#b6d7a8", "#ffd93d", "#ff7b7b", "#c5a5d0"]
-                }
-            });
-            oChartContainer.setModel(oChartModel, "chart");
-        },
-        
-        /**
-         * @function _createCategoryDistributionChart
-         * @description Creates category distribution chart for analytics dashboard.
-         * @param {Object} data - Chart data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _createCategoryDistributionChart: function(data, oDialog) {
-            var oChartContainer = oDialog.byId("categoryDistributionChart");
-            if (!oChartContainer || !data.categoryDistribution) return;
-            
-            var oChartModel = new JSONModel({
-                chartData: data.categoryDistribution,
-                config: {
-                    title: this.getResourceBundle().getText("chart.categoryDistribution"),
-                    showDataLabels: true,
-                    enableDrillDown: true
-                }
-            });
-            oChartContainer.setModel(oChartModel, "chart");
-        },
-        
         /**
          * @function _cleanupResources
-         * @description Cleans up resources and connections on controller destruction.
+         * @description Cleans up resources to prevent memory leaks.
          * @private
          */
         _cleanupResources: function() {
-            // Close WebSocket connection
+            // Clean up WebSocket connections
             if (this._ws) {
                 this._ws.close();
                 this._ws = null;
             }
             
-            // Clear polling interval
+            // Clean up EventSource connections
+            if (this._benchmarkEventSource) {
+                this._benchmarkEventSource.close();
+                this._benchmarkEventSource = null;
+            }
+            
+            // Clean up polling intervals
             if (this._pollInterval) {
                 clearInterval(this._pollInterval);
                 this._pollInterval = null;
             }
             
-            // Clear cached dialogs
-            for (var sDialogId in this._dialogCache) {
-                var oDialog = this._dialogCache[sDialogId];
-                if (oDialog && oDialog.destroy) {
-                    oDialog.destroy();
-                }
+            if (this._benchmarkPollingInterval) {
+                clearInterval(this._benchmarkPollingInterval);
+                this._benchmarkPollingInterval = null;
             }
-            this._dialogCache = {};
             
-            // Clear throttled and debounced functions
-            if (this._throttledDashboardUpdate) {
-                this._throttledDashboardUpdate = null;
-            }
-            if (this._debouncedSearch) {
-                this._debouncedSearch = null;
-            }
+            // Clean up cached dialogs
+            Object.keys(this._dialogCache).forEach(function(key) {
+                if (this._dialogCache[key]) {
+                    this._dialogCache[key].destroy();
+                }
+            }.bind(this));
+            this._dialogCache = {};
         },
 
         /**
          * @function getResourceBundle
-         * @description Gets the i18n resource bundle for text translations.
-         * @returns {sap.ui.model.resource.ResourceModel} Resource bundle
+         * @description Gets the i18n resource bundle.
+         * @returns {sap.base.i18n.ResourceBundle} Resource bundle
          * @public
          */
         getResourceBundle: function() {

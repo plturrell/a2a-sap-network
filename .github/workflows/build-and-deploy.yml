@@ -186,6 +186,43 @@ jobs:
         echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main"
         echo "docker-compose -f docker-compose.production.yml up -d"
 
+  deploy-fly:
+    needs: [build, test, ui-test]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Fly.io
+      uses: superfly/flyctl-actions/setup-flyctl@master
+      
+    - name: Deploy to Fly.io
+      env:
+        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      run: |
+        echo "🚀 Deploying A2A Platform to Fly.io..."
+        
+        # Update fly.toml with the latest image
+        sed -i 's|image = ".*"|image = "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main"|' fly.toml
+        
+        # Deploy to Fly.io
+        flyctl deploy --remote-only --wait-timeout 300
+        
+        echo ""
+        echo "✅ A2A Platform deployed to Fly.io!"
+        echo ""
+        echo "🌐 Access Points:"
+        echo "   Launch Pad: https://a2a-platform.fly.dev:3000"
+        echo "   A2A Network API: https://a2a-platform.fly.dev:4004/api/v1"
+        echo "   Agent 0: https://a2a-platform.fly.dev:8000"
+        echo "   API Docs: https://a2a-platform.fly.dev:8000/docs"
+        echo ""
+        echo "📊 Monitor deployment:"
+        echo "   flyctl status"
+        echo "   flyctl logs"
+
   ui-test:
     needs: [build, test]
     runs-on: ubuntu-latest

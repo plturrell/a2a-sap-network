@@ -558,7 +558,9 @@ cds.on('bootstrap', async (app) => {
 
     // Agent status endpoints for tiles - migrated to CAP service
 
-    // Network overview endpoint - migrated to CAP service
+    // Network overview endpoint
+        try {
+            const [healthChecks, blockchainHealth, mcpHealth] = await Promise.all([
                 Promise.all(
                     Object.entries(AGENT_METADATA).map(async ([id, agent]) => {
                         const health = await checkAgentHealth(agent.port);
