@@ -20,9 +20,10 @@ readonly NC='\033[0m'
 
 # Configuration
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly LOG_DIR="$SCRIPT_DIR/logs"
-readonly PID_DIR="$SCRIPT_DIR/pids"
-readonly CONFIG_DIR="$SCRIPT_DIR/config"
+readonly ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+readonly LOG_DIR="${LOG_DIR:-$ROOT_DIR/logs}"
+readonly PID_DIR="${PID_DIR:-$ROOT_DIR/pids}"
+readonly CONFIG_DIR="${CONFIG_DIR:-$ROOT_DIR/config}"
 
 # Default ports
 readonly NETWORK_PORT=4004
@@ -305,7 +306,14 @@ show_banner() {
 check_service() {
     local port=$1
     local service_name=$2
-    if lsof -i :$port >/dev/null 2>&1; then
+    # Check if service is running (container-compatible)
+    if command -v lsof >/dev/null 2>&1 && lsof -i :$port >/dev/null 2>&1; then
+        log_success "$service_name is running on port $port"
+        return 0
+    elif command -v netstat >/dev/null 2>&1 && netstat -ln 2>/dev/null | grep ":$port " >/dev/null; then
+        log_success "$service_name is running on port $port"
+        return 0
+    elif command -v ss >/dev/null 2>&1 && ss -ln | grep ":$port " >/dev/null; then
         log_success "$service_name is running on port $port"
         return 0
     else
@@ -337,10 +345,10 @@ preflight_checks() {
     fi
     log_success "Python version check passed: $(python3 --version)"
     
-    # Check required directories
+    # Check required directories (container-compatible paths)
     for dir in "a2aNetwork" "a2aAgents"; do
-        if [ ! -d "$SCRIPT_DIR/$dir" ]; then
-            log_error "Required directory not found: $dir"
+        if [ ! -d "$ROOT_DIR/$dir" ]; then
+            log_error "Required directory not found: $ROOT_DIR/$dir"
             exit 1
         fi
     done
@@ -352,9 +360,9 @@ setup_environment() {
     log_header "Setting Up Environment"
     
     # Create .env if it doesn't exist
-    if [ ! -f "$SCRIPT_DIR/.env" ]; then
+    if [ ! -f "$ROOT_DIR/.env" ]; then
         log_info "Creating environment configuration..."
-        cat > "$SCRIPT_DIR/.env" << EOF
+        cat > "$ROOT_DIR/.env" << EOF
 # A2A System Environment Configuration
 NODE_ENV=development
 CDS_ENV=development
@@ -399,9 +407,9 @@ EOF
     fi
     
     # Source environment
-    if [ -f "$SCRIPT_DIR/.env" ]; then
+    if [ -f "$ROOT_DIR/.env" ]; then
         set -a
-        source "$SCRIPT_DIR/.env"
+        source "$ROOT_DIR/.env"
         set +a
         log_success "Environment variables loaded"
     fi
@@ -418,7 +426,7 @@ register_agents_on_blockchain() {
     fi
     
     # Create registration script
-    cat > "$SCRIPT_DIR/register_agents_temp.py" << 'EOF'
+    cat > "$ROOT_DIR/register_agents_temp.py" << 'EOF'
 #!/usr/bin/env python3
 import asyncio
 import json
@@ -575,8 +583,8 @@ if __name__ == "__main__":
 EOF
     
     # Run registration script
-    cd "$SCRIPT_DIR"
-    python3 "$SCRIPT_DIR/register_agents_temp.py" > "$LOG_DIR/agent-registration.log" 2>&1
+    cd "$ROOT_DIR"
+    python3 "$ROOT_DIR/register_agents_temp.py" > "$LOG_DIR/agent-registration.log" 2>&1
     
     if [ $? -eq 0 ]; then
         log_success "Agent registration completed"
@@ -585,7 +593,7 @@ EOF
     fi
     
     # Cleanup
-    rm -f "$SCRIPT_DIR/register_agents_temp.py"
+    rm -f "$ROOT_DIR/register_agents_temp.py"
 }
 
 # Start blockchain
@@ -604,7 +612,7 @@ start_blockchain() {
             log_success "Anvil blockchain started successfully"
             
             # Deploy contracts
-            cd "$SCRIPT_DIR/a2aNetwork"
+            cd "$ROOT_DIR/a2aNetwork"
             if [ -f "script/Deploy.s.sol" ]; then
                 log_info "Deploying smart contracts..."
                 # Run forge deployment with timeout
@@ -621,7 +629,7 @@ start_blockchain() {
                         ROUTER_ADDR=$(grep "MessageRouter deployed to:" "$LOG_DIR/contract-deploy.log" | awk '{print $NF}')
                         
                         # Create deployed contracts config
-                        cat > "$SCRIPT_DIR/a2aNetwork/deployed-contracts.json" << EOF
+                        cat > "$ROOT_DIR/a2aNetwork/deployed-contracts.json" << EOF
 {
   "contracts": {
     "AgentRegistry": { "address": "$REGISTRY_ADDR" },
@@ -703,11 +711,11 @@ EOF
                 fi
             fi
             # Export contract addresses if deployment succeeded
-            if [ -f "$SCRIPT_DIR/a2aNetwork/deployed-contracts.json" ]; then
+            if [ -f "$ROOT_DIR/a2aNetwork/deployed-contracts.json" ]; then
                 log_info "Loading deployed contract addresses..."
-                export A2A_AGENT_REGISTRY_ADDRESS=$(jq -r '.contracts.AgentRegistry.address // empty' "$SCRIPT_DIR/a2aNetwork/deployed-contracts.json")
-                export A2A_MESSAGE_ROUTER_ADDRESS=$(jq -r '.contracts.MessageRouter.address // empty' "$SCRIPT_DIR/a2aNetwork/deployed-contracts.json")
-                export A2A_ORD_REGISTRY_ADDRESS=$(jq -r '.contracts.ORDRegistry.address // empty' "$SCRIPT_DIR/a2aNetwork/deployed-contracts.json")
+                export A2A_AGENT_REGISTRY_ADDRESS=$(jq -r '.contracts.AgentRegistry.address // empty' "$ROOT_DIR/a2aNetwork/deployed-contracts.json")
+                export A2A_MESSAGE_ROUTER_ADDRESS=$(jq -r '.contracts.MessageRouter.address // empty' "$ROOT_DIR/a2aNetwork/deployed-contracts.json")
+                export A2A_ORD_REGISTRY_ADDRESS=$(jq -r '.contracts.ORDRegistry.address // empty' "$ROOT_DIR/a2aNetwork/deployed-contracts.json")
                 
                 # Use default addresses if not found in config
                 export A2A_AGENT_REGISTRY_ADDRESS=${A2A_AGENT_REGISTRY_ADDRESS:-"0x5FbDB2315678afecb367f032d93F642f64180aa3"}

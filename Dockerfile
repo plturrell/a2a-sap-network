@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy and install Python dependencies
-COPY a2aAgents/backend/requirements.txt ./
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy all application code
@@ -77,18 +77,29 @@ COPY --chown=a2auser:a2auser <<'EOF' /app/entrypoint.sh
 #!/bin/bash
 set -e
 
+# Set up environment for container
+export PYTHONPATH=/app
+export NODE_PATH=/app/node_modules
+export PATH=/app/node_modules/.bin:$PATH
+
+# Create required directories
+mkdir -p /app/logs /app/data /app/pids
+
 # Handle different commands
 case "${1}" in
     verify)
         echo "Running 18-step verification..."
+        cd /app
         exec /app/scripts/verify-18-steps.sh
         ;;
     ci-verify)
         echo "Running CI verification mode..."
+        cd /app
         exec /app/start.sh ci-verify
         ;;
     test)
         echo "Running test mode..."
+        cd /app
         exec /app/start.sh test
         ;;
     start)
@@ -101,9 +112,11 @@ case "${1}" in
             export ENABLE_BLOCKCHAIN=true
             export ENABLE_NETWORK=true
             export ENABLE_AGENTS=true
+            cd /app
             exec /app/start.sh complete
         else
             echo "Starting A2A system..."
+            cd /app
             exec /app/start.sh "$@"
         fi
         ;;
