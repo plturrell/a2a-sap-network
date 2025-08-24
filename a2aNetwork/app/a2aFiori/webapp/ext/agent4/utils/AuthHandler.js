@@ -1,12 +1,12 @@
 sap.ui.define([
-    "a2a/network/agent8/ext/utils/SecurityUtils",
-    "a2a/network/agent8/ext/utils/SecurityConfig"
-], function (SecurityUtils, SecurityConfig) {
+    "a2a/network/agent4/ext/utils/SecurityUtils"
+], function (SecurityUtils) {
     "use strict";
 
     /**
-     * Authentication and Authorization Handler for Agent 8
+     * Authentication and Authorization Handler for Agent 4
      * Manages user authentication, session handling, and access control
+     * for calculation validation operations
      */
     return {
         
@@ -37,37 +37,31 @@ sap.ui.define([
         authenticate: function(username, password, authMethod = 'BasicAuth') {
             const authenticateUser = (resolve, reject) => {
                 // Validate input parameters
-                const usernameValidation = SecurityUtils.validateInput(username, 'text', {
-                    required: true,
-                    minLength: 3,
-                    maxLength: 50
-                });
-                
-                if (!usernameValidation.isValid) {
+                if (!username || username.length < 3 || username.length > 50) {
                     SecurityUtils.auditLog('AUTHENTICATION_FAILED', {
                         reason: 'Invalid username format',
-                        username: SecurityUtils.sanitizeInput(username)
+                        username: SecurityUtils.escapeHTML(username)
                     });
                     reject(new Error('Invalid username format'));
                     return;
                 }
 
-                if (!password || password.length < SecurityConfig.authentication.passwordPolicy.minLength) {
+                if (!password || password.length < 8) {
                     SecurityUtils.auditLog('AUTHENTICATION_FAILED', {
                         reason: 'Password too short',
-                        username: SecurityUtils.sanitizeInput(username)
+                        username: SecurityUtils.escapeHTML(username)
                     });
                     reject(new Error('Password does not meet minimum requirements'));
                     return;
                 }
 
-                const sanitizedUsername = SecurityUtils.sanitizeInput(username);
+                const sanitizedUsername = SecurityUtils.escapeHTML(username);
                 
                 // Create authentication request
                 const authRequest = {
                     username: sanitizedUsername,
                     password: password, // Don't log password
-                    authMethod: SecurityUtils.sanitizeInput(authMethod),
+                    authMethod: SecurityUtils.escapeHTML(authMethod),
                     timestamp: new Date().toISOString(),
                     clientInfo: {
                         userAgent: navigator.userAgent,
@@ -77,13 +71,13 @@ sap.ui.define([
                 };
 
                 // Make authentication request to backend
-                jQuery.ajax({
-                    url: '/a2a/agent8/v1/auth/authenticate',
+                SecurityUtils.secureAjaxRequest({
+                    url: '/a2a/agent4/v1/auth/authenticate',
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(authRequest),
                     timeout: 10000, // 10 second timeout
-                    success: function handleAuthSuccess(response) {
+                    success: (response) => {
                         if (response.success && response.token) {
                             this._handleSuccessfulAuthentication(response, sanitizedUsername);
                             SecurityUtils.auditLog('AUTHENTICATION_SUCCESS', {
@@ -100,8 +94,8 @@ sap.ui.define([
                             reject(new Error('Authentication failed'));
                         }
                     },
-                    error: function handleAuthError(xhr) {
-                        const errorMsg = SecurityUtils.sanitizeErrorMessage(xhr.responseText);
+                    error: (xhr) => {
+                        const errorMsg = SecurityUtils.escapeHTML(xhr.responseText);
                         SecurityUtils.auditLog('AUTHENTICATION_ERROR', {
                             error: errorMsg,
                             username: sanitizedUsername
@@ -138,7 +132,7 @@ sap.ui.define([
         },
 
         /**
-         * Check if user has specific permission
+         * Check if user has specific permission for calculation operations
          * @param {string} permission - Permission to check
          * @param {string} resource - Resource identifier
          * @returns {boolean} True if authorized
@@ -158,8 +152,22 @@ sap.ui.define([
                 return false;
             }
 
-            // Check specific permission
-            const hasPermission = user.permissions.includes(permission) ||
+            // Define calculation-specific permission mappings
+            const permissionMap = {
+                'CREATE_TASK': ['calculation-validation-user', 'calculation-admin', 'admin'],
+                'START_VALIDATION': ['calculation-validation-user', 'calculation-admin', 'admin'],
+                'BATCH_VALIDATION': ['calculation-admin', 'admin'],
+                'FORMULA_BUILDER': ['calculation-validation-user', 'calculation-admin', 'admin'],
+                'RUN_BENCHMARK': ['calculation-admin', 'admin'],
+                'GENERATE_REPORT': ['calculation-validation-user', 'calculation-admin', 'admin'],
+                'OPTIMIZE_CALCULATIONS': ['calculation-admin', 'admin'],
+                'VIEW_RESULTS': ['calculation-validation-user', 'calculation-admin', 'admin'],
+                'ANALYTICS': ['calculation-admin', 'admin']
+            };
+
+            const allowedRoles = permissionMap[permission] || [];
+            const hasPermission = user.roles.some(role => allowedRoles.includes(role)) ||
+                                user.permissions.includes(permission) ||
                                 user.permissions.includes('admin') ||
                                 user.permissions.includes('*');
 
@@ -168,11 +176,42 @@ sap.ui.define([
                     username: user.username,
                     permission: permission,
                     resource: resource,
+                    userRoles: user.roles,
                     userPermissions: user.permissions
                 });
             }
 
             return hasPermission;
+        },
+
+        /**
+         * Validate calculation access for specific operations
+         * @param {string} operation - Operation type (FORMULA_VALIDATION, BATCH_PROCESSING, etc.)
+         * @param {Object} context - Operation context
+         * @returns {boolean} True if access is allowed
+         */
+        validateCalculationAccess: function(operation, context = {}) {
+            if (!this.isAuthenticated()) {
+                return false;
+            }
+
+            // Check operation-specific permissions
+            switch(operation) {
+                case 'FORMULA_VALIDATION':
+                    return this.hasPermission('START_VALIDATION') && 
+                           this._validateFormulaSecurityLevel(context.securityLevel);
+                case 'BATCH_PROCESSING':
+                    return this.hasPermission('BATCH_VALIDATION') &&
+                           this._validateBatchSize(context.batchSize);
+                case 'BENCHMARK_EXECUTION':
+                    return this.hasPermission('RUN_BENCHMARK');
+                case 'REPORT_GENERATION':
+                    return this.hasPermission('GENERATE_REPORT');
+                case 'CALCULATION_OPTIMIZATION':
+                    return this.hasPermission('OPTIMIZE_CALCULATIONS');
+                default:
+                    return false;
+            }
         },
 
         /**
@@ -242,19 +281,18 @@ sap.ui.define([
                     return;
                 }
 
-                jQuery.ajax({
-                    url: '/a2a/agent8/v1/auth/refresh',
+                SecurityUtils.secureAjaxRequest({
+                    url: '/a2a/agent4/v1/auth/refresh',
                     type: 'POST',
                     contentType: 'application/json',
                     headers: {
-                        'Authorization': 'Bearer ' + this._sessionToken,
-                        'X-CSRF-Token': SecurityUtils.getCSRFToken()
+                        'Authorization': 'Bearer ' + this._sessionToken
                     },
                     data: JSON.stringify({
                         sessionId: this._currentUser.sessionId,
                         refreshToken: this._currentUser.refreshToken
                     }),
-                    success: function handleRefreshSuccess(response) {
+                    success: (response) => {
                         if (response.success && response.token) {
                             this._sessionToken = response.token;
                             this._lastActivity = Date.now();
@@ -267,8 +305,8 @@ sap.ui.define([
                             reject(new Error('Token refresh failed'));
                         }
                     },
-                    error: function handleRefreshError(xhr) {
-                        const errorMsg = SecurityUtils.sanitizeErrorMessage(xhr.responseText);
+                    error: (xhr) => {
+                        const errorMsg = SecurityUtils.escapeHTML(xhr.responseText);
                         SecurityUtils.auditLog('TOKEN_REFRESH_FAILED', {
                             error: errorMsg,
                             sessionId: this._currentUser ? this._currentUser.sessionId : 'unknown'
@@ -293,7 +331,7 @@ sap.ui.define([
                 'Authorization': 'Bearer ' + this._sessionToken,
                 'X-User-ID': this._currentUser.userId,
                 'X-Session-ID': this._currentUser.sessionId,
-                'X-CSRF-Token': SecurityUtils.getCSRFToken()
+                'X-CSRF-Token': SecurityUtils._getCSRFToken()
             };
         },
 
@@ -306,17 +344,28 @@ sap.ui.define([
 
         // Private methods
 
+        _validateFormulaSecurityLevel: function(securityLevel) {
+            const user = this._currentUser;
+            if (securityLevel === 'HIGH' && !user.roles.includes('calculation-admin')) {
+                return false;
+            }
+            return true;
+        },
+
+        _validateBatchSize: function(batchSize) {
+            const user = this._currentUser;
+            const maxBatchSize = user.roles.includes('calculation-admin') ? 1000 : 100;
+            return batchSize <= maxBatchSize;
+        },
+
         _setupSessionMonitoring: function() {
             // Monitor user activity
-            const recordClickActivity = () => this.recordActivity();
-            const recordKeypressActivity = () => this.recordActivity();
-            const recordScrollActivity = () => this.recordActivity();
-            const recordMouseActivity = () => this.recordActivity();
+            const recordActivity = () => this.recordActivity();
             
-            document.addEventListener('click', recordClickActivity);
-            document.addEventListener('keypress', recordKeypressActivity);
-            document.addEventListener('scroll', recordScrollActivity);
-            document.addEventListener('mousemove', recordMouseActivity);
+            document.addEventListener('click', recordActivity);
+            document.addEventListener('keypress', recordActivity);
+            document.addEventListener('scroll', recordActivity);
+            document.addEventListener('mousemove', recordActivity);
 
             // Set up periodic session validation
             const performAuthCheck = () => {
@@ -330,7 +379,7 @@ sap.ui.define([
         _setupAuthenticationCheck: function() {
             // Intercept AJAX requests to add authentication headers
             const handleAjaxPrefilter = (options, originalOptions, jqXHR) => {
-                if (this.isAuthenticated() && options.url.startsWith('/a2a/agent8/')) {
+                if (this.isAuthenticated() && options.url.startsWith('/a2a/agent4/')) {
                     const authHeaders = this.getAuthHeaders();
                     options.headers = Object.assign(options.headers || {}, authHeaders);
                 }
@@ -354,16 +403,15 @@ sap.ui.define([
 
         _bindAuthenticationEvents: function() {
             // Listen for storage events (logout from other tabs)
-            const handleStorageEvent = (e) => {
-                if (e.key === 'a2a_agent8_logout' && e.newValue) {
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'a2a_agent4_logout' && e.newValue) {
                     this._clearSessionData();
                     location.reload();
                 }
-            };
-            window.addEventListener('storage', handleStorageEvent);
+            });
 
             // Handle page unload
-            const handleBeforeUnload = () => {
+            window.addEventListener('beforeunload', () => {
                 if (this._currentUser) {
                     SecurityUtils.auditLog('SESSION_ENDED', {
                         username: this._currentUser.username,
@@ -371,13 +419,12 @@ sap.ui.define([
                         reason: 'Page unload'
                     });
                 }
-            };
-            window.addEventListener('beforeunload', handleBeforeUnload);
+            });
         },
 
         _checkExistingSession: function() {
-            const storedToken = localStorage.getItem('a2a_agent8_token');
-            const storedUser = localStorage.getItem('a2a_agent8_user');
+            const storedToken = localStorage.getItem('a2a_agent4_token');
+            const storedUser = localStorage.getItem('a2a_agent4_user');
 
             if (storedToken && storedUser) {
                 try {
@@ -410,22 +457,22 @@ sap.ui.define([
             this._lastActivity = Date.now();
 
             // Store session data (encrypted in production)
-            localStorage.setItem('a2a_agent8_token', this._sessionToken);
-            localStorage.setItem('a2a_agent8_user', JSON.stringify(this._currentUser));
+            localStorage.setItem('a2a_agent4_token', this._sessionToken);
+            localStorage.setItem('a2a_agent4_user', JSON.stringify(this._currentUser));
         },
 
         _validateSession: function() {
-            jQuery.ajax({
-                url: '/a2a/agent8/v1/auth/validate',
+            SecurityUtils.secureAjaxRequest({
+                url: '/a2a/agent4/v1/auth/validate',
                 type: 'GET',
                 headers: this.getAuthHeaders(),
                 timeout: 5000,
-                success: function handleValidationSuccess(response) {
+                success: (response) => {
                     if (!response.valid) {
                         this.logout('Session invalidated by server');
                     }
                 },
-                error: function handleValidationError(xhr) {
+                error: (xhr) => {
                     if (xhr.status === 401) {
                         this.logout('Session validation failed');
                     }
@@ -439,7 +486,7 @@ sap.ui.define([
             }
 
             const sessionAge = Date.now() - this._currentUser.loginTime;
-            const maxSessionAge = SecurityConfig.sessionManagement.absoluteTimeout * 1000;
+            const maxSessionAge = 8 * 60 * 60 * 1000; // 8 hours
             
             return sessionAge > maxSessionAge;
         },
@@ -450,7 +497,7 @@ sap.ui.define([
             }
 
             const idleDuration = Date.now() - this._lastActivity;
-            const maxIdleDuration = SecurityConfig.sessionManagement.idleTimeout * 1000;
+            const maxIdleDuration = 30 * 60 * 1000; // 30 minutes
             
             return idleDuration > maxIdleDuration;
         },
@@ -460,8 +507,8 @@ sap.ui.define([
             this._sessionToken = null;
             this._lastActivity = null;
 
-            localStorage.removeItem('a2a_agent8_token');
-            localStorage.removeItem('a2a_agent8_user');
+            localStorage.removeItem('a2a_agent4_token');
+            localStorage.removeItem('a2a_agent4_user');
 
             // Clear any cached data
             if (sap.ui.getCore().getModel) {
@@ -472,13 +519,13 @@ sap.ui.define([
             }
 
             // Signal other tabs
-            localStorage.setItem('a2a_agent8_logout', Date.now());
-            localStorage.removeItem('a2a_agent8_logout');
+            localStorage.setItem('a2a_agent4_logout', Date.now());
+            localStorage.removeItem('a2a_agent4_logout');
         },
 
         _notifyBackendLogout: function() {
             if (this._sessionToken && this._currentUser) {
-                navigator.sendBeacon('/a2a/agent8/v1/auth/logout', JSON.stringify({
+                navigator.sendBeacon('/a2a/agent4/v1/auth/logout', JSON.stringify({
                     sessionId: this._currentUser.sessionId,
                     reason: 'User logout'
                 }));

@@ -1,0 +1,263 @@
+# Alertmanager Configuration for A2A Platform
+global:
+  smtp_smarthost: '${SMTP_HOST:-localhost:587}'
+  smtp_from: '${ALERT_FROM_EMAIL:-alerts@a2a-platform.com}'
+  smtp_auth_username: '${SMTP_USERNAME:-}'
+  smtp_auth_password: '${SMTP_PASSWORD:-}'
+  smtp_require_tls: true
+
+  # Default routing
+  resolve_timeout: 5m
+
+# Routing configuration
+route:
+  group_by: ['alertname', 'severity', 'service']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'default-receiver'
+  
+  routes:
+    # Critical alerts - immediate notification
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 30m
+      routes:
+        # Security vulnerabilities need immediate attention
+        - match:
+            alertname: A2ACriticalVulnerabilities
+          receiver: 'security-team'
+          group_wait: 0s
+          repeat_interval: 15m
+        
+        # Service down alerts
+        - match:
+            alertname: A2AServiceDown
+          receiver: 'ops-team'
+          group_wait: 0s
+          repeat_interval: 5m
+
+    # Warning alerts - standard notification
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      group_wait: 2m
+      group_interval: 10m
+      repeat_interval: 2h
+
+    # Info alerts - low priority
+    - match:
+        severity: info
+      receiver: 'info-alerts'
+      group_wait: 5m
+      group_interval: 30m
+      repeat_interval: 24h
+
+    # Business hours routing
+    - match_re:
+        service: 'a2a-.*'
+      receiver: 'business-hours'
+      active_time_intervals:
+        - 'business-hours'
+
+# Receivers configuration
+receivers:
+  - name: 'default-receiver'
+    email_configs:
+      - to: '${DEFAULT_EMAIL:-devops@a2a-platform.com}'
+        subject: '[A2A Platform] Alert: {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          Service: {{ .Labels.service }}
+          Started: {{ .StartsAt }}
+          
+          {{ if .Annotations.runbook_url }}
+          Runbook: {{ .Annotations.runbook_url }}
+          {{ end }}
+          {{ end }}
+        html: |
+          <!DOCTYPE html>
+          <html>
+          <body>
+            <h2>A2A Platform Alert</h2>
+            {{ range .Alerts }}
+            <div style="margin-bottom: 20px; padding: 15px; border-left: 4px solid 
+              {{ if eq .Labels.severity "critical" }}#dc3545{{ else if eq .Labels.severity "warning" }}#ffc107{{ else }}#17a2b8{{ end }};">
+              <h3>{{ .Annotations.summary }}</h3>
+              <p><strong>Description:</strong> {{ .Annotations.description }}</p>
+              <p><strong>Severity:</strong> <span style="color: 
+                {{ if eq .Labels.severity "critical" }}#dc3545{{ else if eq .Labels.severity "warning" }}#ffc107{{ else }}#17a2b8{{ end }};">
+                {{ .Labels.severity | upper }}</span></p>
+              <p><strong>Service:</strong> {{ .Labels.service }}</p>
+              <p><strong>Started:</strong> {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}</p>
+              {{ if .Annotations.runbook_url }}
+              <p><strong>Runbook:</strong> <a href="{{ .Annotations.runbook_url }}">{{ .Annotations.runbook_url }}</a></p>
+              {{ end }}
+            </div>
+            {{ end }}
+          </body>
+          </html>
+
+  - name: 'critical-alerts'
+    email_configs:
+      - to: '${CRITICAL_EMAIL:-critical-alerts@a2a-platform.com}'
+        subject: '[CRITICAL] A2A Platform Alert'
+        body: |
+          🚨 CRITICAL ALERT 🚨
+          
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Service: {{ .Labels.service }}
+          Started: {{ .StartsAt }}
+          
+          This requires immediate attention!
+          {{ if .Annotations.runbook_url }}
+          Runbook: {{ .Annotations.runbook_url }}
+          {{ end }}
+          {{ end }}
+    
+    # Slack integration for critical alerts
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#a2a-critical-alerts'
+        title: 'Critical A2A Platform Alert'
+        text: |
+          {{ range .Alerts }}
+          🚨 *{{ .Annotations.summary }}*
+          
+          *Service:* {{ .Labels.service }}
+          *Severity:* {{ .Labels.severity | upper }}
+          *Description:* {{ .Annotations.description }}
+          *Started:* {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}
+          
+          {{ if .Annotations.runbook_url }}
+          📖 <{{ .Annotations.runbook_url }}|Runbook>
+          {{ end }}
+          {{ end }}
+        color: 'danger'
+
+    # PagerDuty for critical alerts
+    pagerduty_configs:
+      - routing_key: '${PAGERDUTY_ROUTING_KEY}'
+        description: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+        severity: 'critical'
+        details:
+          service: '{{ range .Alerts }}{{ .Labels.service }}{{ end }}'
+          description: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+  - name: 'security-team'
+    email_configs:
+      - to: '${SECURITY_EMAIL:-security@a2a-platform.com}'
+        subject: '[SECURITY] Critical Vulnerabilities Detected'
+        body: |
+          🔒 SECURITY ALERT 🔒
+          
+          {{ range .Alerts }}
+          Critical security vulnerabilities have been detected:
+          
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Directory: {{ .Labels.directory }}
+          Started: {{ .StartsAt }}
+          
+          Immediate action required!
+          {{ if .Annotations.runbook_url }}
+          Security Runbook: {{ .Annotations.runbook_url }}
+          {{ end }}
+          {{ end }}
+
+  - name: 'ops-team'
+    email_configs:
+      - to: '${OPS_EMAIL:-ops@a2a-platform.com}'
+        subject: '[OPS] Service Availability Issue'
+        body: |
+          ⚠️ OPERATIONS ALERT ⚠️
+          
+          {{ range .Alerts }}
+          Service availability issue detected:
+          
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Service: {{ .Labels.service }}
+          Started: {{ .StartsAt }}
+          
+          {{ if .Annotations.runbook_url }}
+          Operations Runbook: {{ .Annotations.runbook_url }}
+          {{ end }}
+          {{ end }}
+
+  - name: 'warning-alerts'
+    email_configs:
+      - to: '${WARNING_EMAIL:-warnings@a2a-platform.com}'
+        subject: '[WARNING] A2A Platform Alert'
+        body: |
+          ⚠️ WARNING ALERT
+          
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Service: {{ .Labels.service }}
+          Started: {{ .StartsAt }}
+          {{ end }}
+
+  - name: 'info-alerts'
+    email_configs:
+      - to: '${INFO_EMAIL:-info@a2a-platform.com}'
+        subject: '[INFO] A2A Platform Notification'
+        body: |
+          ℹ️ INFORMATION
+          
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Service: {{ .Labels.service }}
+          Started: {{ .StartsAt }}
+          {{ end }}
+
+  - name: 'business-hours'
+    email_configs:
+      - to: '${BUSINESS_EMAIL:-business-hours@a2a-platform.com}'
+        subject: '[BUSINESS HOURS] A2A Platform Alert'
+        send_resolved: false
+        body: |
+          Business Hours Alert
+          
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Service: {{ .Labels.service }}
+          Started: {{ .StartsAt }}
+          {{ end }}
+
+# Inhibit rules - suppress alerts when others are firing
+inhibit_rules:
+  # If service is down, don't alert on high error rates
+  - source_match:
+      alertname: A2AServiceDown
+    target_match_re:
+      alertname: A2AHighErrorRate|A2AHighResponseTime
+    equal: ['service']
+
+  # If critical vulnerability found, don't spam with warnings
+  - source_match:
+      alertname: A2ACriticalVulnerabilities
+    target_match:
+      severity: warning
+    equal: ['directory']
+
+# Time intervals for business hours routing
+time_intervals:
+  - name: 'business-hours'
+    time_intervals:
+      - times:
+        - start_time: '09:00'
+          end_time: '17:00'
+        weekdays: ['monday:friday']
+        months: ['january:december']

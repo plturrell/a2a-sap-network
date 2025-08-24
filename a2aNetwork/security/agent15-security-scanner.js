@@ -159,7 +159,7 @@ class Agent15SecurityScanner {
             { pattern: /dangerouslySetInnerHTML/gi, type: 'XSS', message: 'Potential XSS via React dangerouslySetInnerHTML' }
         ];
         
-        xssPatterns.forEach(({ pattern, type, message }) => {
+        const processXSSPattern = ({ pattern, type, message }) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
                 const lineNumber = this.getLineNumber(content, match.index);
@@ -174,7 +174,8 @@ class Agent15SecurityScanner {
                     fix: 'Use proper output encoding and sanitization'
                 });
             }
-        });
+        };
+        xssPatterns.forEach(processXSSPattern);
         
         // CSRF vulnerabilities
         const csrfPatterns = [
@@ -185,7 +186,7 @@ class Agent15SecurityScanner {
             /fetch\s*\([^,]+,\s*\{[^}]*method\s*:\s*["'](POST|PUT|DELETE)["']/gi
         ];
         
-        csrfPatterns.forEach(pattern => {
+        const processCSRFPattern = (pattern) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
                 // Check if CSRF token is present nearby or using SecurityUtils
@@ -207,7 +208,8 @@ class Agent15SecurityScanner {
                     });
                 }
             }
-        });
+        };
+        csrfPatterns.forEach(processCSRFPattern);
         
         // Insecure connections
         const insecurePatterns = [
@@ -215,7 +217,7 @@ class Agent15SecurityScanner {
             { pattern: /ws:\/\//gi, type: 'INSECURE_WEBSOCKET', message: 'Insecure WebSocket connection' }
         ];
         
-        insecurePatterns.forEach(({ pattern, type, message }) => {
+        const processInsecurePattern = ({ pattern, type, message }) => {
             const matches = content.matchAll(pattern);
             for (const match of matches) {
                 const lineNumber = this.getLineNumber(content, match.index);
@@ -236,12 +238,13 @@ class Agent15SecurityScanner {
                     });
                 }
             }
-        });
+        };
+        insecurePatterns.forEach(processInsecurePattern);
     }
     
     checkOrchestratorVulnerabilities(content, filePath, lines) {
-        Object.entries(this.orchestratorPatterns).forEach(([vulnType, config]) => {
-            config.patterns.forEach(pattern => {
+        const processVulnerabilityType = ([vulnType, config]) => {
+            const processPattern = (pattern) => {
                 const matches = content.matchAll(pattern);
                 for (const match of matches) {
                     const lineNumber = this.getLineNumber(content, match.index);
@@ -263,8 +266,10 @@ class Agent15SecurityScanner {
                         fix: this.getOrchestratorFix(vulnType)
                     });
                 }
-            });
-        });
+            };
+            config.patterns.forEach(processPattern);
+        };
+        Object.entries(this.orchestratorPatterns).forEach(processVulnerabilityType);
     }
     
     isFalsePositive(code, vulnType, filePath) {
@@ -331,7 +336,7 @@ class Agent15SecurityScanner {
                 { pattern: /setText\s*\(\s*["'][^"']+["']\s*\)/gi, message: 'Hardcoded text in UI element' }
             ];
             
-            i18nPatterns.forEach(({ pattern, message }) => {
+            const processI18nPattern = ({ pattern, message }) => {
                 const matches = content.matchAll(pattern);
                 for (const match of matches) {
                     const lineNumber = this.getLineNumber(content, match.index);
@@ -346,7 +351,8 @@ class Agent15SecurityScanner {
                         fix: 'Use i18n resource bundle for all user-facing text'
                     });
                 }
-            });
+            };
+            i18nPatterns.forEach(processI18nPattern);
         }
         
         // Check for missing security headers in manifest
@@ -357,7 +363,7 @@ class Agent15SecurityScanner {
                 'X-Content-Type-Options'
             ];
             
-            requiredHeaders.forEach(header => {
+            const checkRequiredHeader = (header) => {
                 if (!content.includes(header)) {
                     this.addVulnerability({
                         type: 'SAP_SECURITY',
@@ -370,7 +376,8 @@ class Agent15SecurityScanner {
                         fix: `Add ${header} to manifest security configuration`
                     });
                 }
-            });
+            };
+            requiredHeaders.forEach(checkRequiredHeader);
         }
     }
     
@@ -395,7 +402,7 @@ class Agent15SecurityScanner {
     scanDirectory(dirPath) {
         const files = fs.readdirSync(dirPath);
         
-        files.forEach(file => {
+        const processFile = (file) => {
             const fullPath = path.join(dirPath, file);
             const stat = fs.statSync(fullPath);
             
@@ -404,7 +411,8 @@ class Agent15SecurityScanner {
             } else if (stat.isFile() && this.shouldScanFile(file)) {
                 this.scanFile(fullPath);
             }
-        });
+        };
+        files.forEach(processFile);
     }
     
     shouldScanFile(filename) {
@@ -414,11 +422,17 @@ class Agent15SecurityScanner {
     
     generateReport() {
         const scanDuration = (Date.now() - this.scanStartTime) / 1000;
-        const criticalCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.CRITICAL).length;
-        const highCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.HIGH).length;
-        const mediumCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.MEDIUM).length;
-        const lowCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.LOW).length;
-        const warningCount = this.vulnerabilities.filter(v => v.severity === this.severityLevels.WARNING).length;
+        const isCritical = (v) => v.severity === this.severityLevels.CRITICAL;
+        const isHigh = (v) => v.severity === this.severityLevels.HIGH;
+        const isMedium = (v) => v.severity === this.severityLevels.MEDIUM;
+        const isLow = (v) => v.severity === this.severityLevels.LOW;
+        const isWarning = (v) => v.severity === this.severityLevels.WARNING;
+        
+        const criticalCount = this.vulnerabilities.filter(isCritical).length;
+        const highCount = this.vulnerabilities.filter(isHigh).length;
+        const mediumCount = this.vulnerabilities.filter(isMedium).length;
+        const lowCount = this.vulnerabilities.filter(isLow).length;
+        const warningCount = this.vulnerabilities.filter(isWarning).length;
         
         console.log('\n' + '='.repeat(80));
         console.log('🔒 AGENT 15 ORCHESTRATOR SECURITY SCAN REPORT');
@@ -454,13 +468,15 @@ class Agent15SecurityScanner {
         if (orchestratorIssues.length > 0) {
             console.log(`\n🤖 ORCHESTRATOR-SPECIFIC SECURITY FINDINGS:`);
             const issueCounts = {};
-            orchestratorIssues.forEach(issue => {
+            const countIssueTypes = (issue) => {
                 issueCounts[issue.type] = (issueCounts[issue.type] || 0) + 1;
-            });
+            };
+            orchestratorIssues.forEach(countIssueTypes);
             
-            Object.entries(issueCounts).forEach(([type, count]) => {
+            const logIssueCount = ([type, count]) => {
                 console.log(`   ${type.replace('ORCHESTRATION_', '')}: ${count} issues`);
-            });
+            };
+            Object.entries(issueCounts).forEach(logIssueCount);
         }
         
         // List vulnerabilities by severity
@@ -470,20 +486,22 @@ class Agent15SecurityScanner {
             const severityOrder = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'WARNING'];
             let issueNumber = 1;
             
-            severityOrder.forEach(severity => {
+            const processSeverityLevel = (severity) => {
                 const sevVulns = this.vulnerabilities.filter(v => v.severity === severity);
                 if (sevVulns.length > 0) {
                     console.log(`${severity} (${sevVulns.length}):\n`);
-                    sevVulns.forEach(vuln => {
+                    const logVulnerability = (vuln) => {
                         console.log(`${issueNumber}. ${vuln.type} - ${vuln.file}:${vuln.line}`);
                         console.log(`   Description: ${vuln.message}`);
                         console.log(`   Impact: ${vuln.impact}`);
                         console.log(`   Code: ${vuln.code.substring(0, 60)}${vuln.code.length > 60 ? '...' : ''}`);
                         console.log(`   Fix: ${vuln.fix}\n`);
                         issueNumber++;
-                    });
+                    };
+                    sevVulns.forEach(logVulnerability);
                 }
-            });
+            };
+            severityOrder.forEach(processSeverityLevel);
         }
         
         // Orchestrator security recommendations

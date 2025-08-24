@@ -18,9 +18,9 @@ class SecurityValidator {
         console.log('🔒 Starting Security Validation for A2A Network...\n');
 
         this.validateEnvironmentVariables();
-        this.validateNoHardcodedCredentials();
-        this.validateNoConsoleStatements();
-        this.validateSSLConfiguration();
+        await this.validateNoHardcodedCredentials();
+        await this.validateNoConsoleStatements();
+        await this.validateSSLConfiguration();
         this.validateProductionReadiness();
 
         this.printResults();
@@ -55,7 +55,7 @@ class SecurityValidator {
         });
     }
 
-    validateNoHardcodedCredentials() {
+    async validateNoHardcodedCredentials() {
         console.log('🔍 Scanning for hardcoded credentials...');
 
         const patterns = [
@@ -67,21 +67,21 @@ class SecurityValidator {
             /0xAA0000000000000000000000000000000000000[0-9A-F]/g
         ];
 
-        this.scanFiles(['srv', 'app', 'scripts'], patterns, 'hardcoded credentials');
+        await this.scanFiles(['srv', 'app', 'scripts'], patterns, 'hardcoded credentials');
     }
 
-    validateNoConsoleStatements() {
+    async validateNoConsoleStatements() {
         console.log('🔇 Checking for console statements...');
 
         const patterns = [/console\.(log|error|warn|info)/g];
-        this.scanFiles(['srv', 'app'], patterns, 'console statements', 'warning');
+        await this.scanFiles(['srv', 'app'], patterns, 'console statements', 'warning');
     }
 
-    validateSSLConfiguration() {
+    async validateSSLConfiguration() {
         console.log('🔐 Validating SSL configuration...');
 
         const patterns = [/sslValidateCertificate.*[:=].*false/g];
-        this.scanFiles(['srv', 'scripts'], patterns, 'disabled SSL validation');
+        await this.scanFiles(['srv', 'scripts'], patterns, 'disabled SSL validation');
     }
 
     validateProductionReadiness() {
@@ -103,32 +103,32 @@ class SecurityValidator {
         }
     }
 
-    scanFiles(directories, patterns, issueType, severity = 'error') {
-        directories.forEach(dir => {
+    async scanFiles(directories, patterns, issueType, severity = 'error') {
+        for (const dir of directories) {
             const dirPath = path.join(this.projectRoot, dir);
             if (fs.existsSync(dirPath)) {
-                this.scanDirectory(dirPath, patterns, issueType, severity);
+                await this.scanDirectory(dirPath, patterns, issueType, severity);
             }
-        });
+        }
     }
 
-    scanDirectory(dirPath, patterns, issueType, severity) {
+    async scanDirectory(dirPath, patterns, issueType, severity) {
         const files = fs.readdirSync(dirPath, { withFileTypes: true });
 
-        files.forEach(file => {
+        for (const file of files) {
             const filePath = path.join(dirPath, file.name);
 
             if (file.isDirectory() && !file.name.includes('node_modules')) {
-                this.scanDirectory(filePath, patterns, issueType, severity);
+                await this.scanDirectory(filePath, patterns, issueType, severity);
             } else if (file.isFile() && (file.name.endsWith('.js') || file.name.endsWith('.json'))) {
-                this.scanFile(filePath, patterns, issueType, severity);
+                await this.scanFile(filePath, patterns, issueType, severity);
             }
-        });
+        }
     }
 
     async scanFile(filePath, patterns, issueType, severity) {
         try {
-            const content = await fs.readFile(filePath, 'utf8');
+            const content = fs.readFileSync(filePath, 'utf8');
             const lines = content.split('\n');
 
             patterns.forEach(pattern => {
@@ -179,10 +179,14 @@ class SecurityValidator {
 
 // Run validation if script is called directly
 if (require.main === module) {
-    const validator = new SecurityValidator();
-    const passed = validator.validate();
-    process.exit(passed ? 0 : 1);
+    (async () => {
+        const validator = new SecurityValidator();
+        const passed = await validator.validate();
+        process.exit(passed ? 0 : 1);
+    })().catch(error => {
+        console.error('Security validation failed:', error);
+        process.exit(1);
+    });
 }
 
 module.exports = SecurityValidator;
-})().catch(console.error);

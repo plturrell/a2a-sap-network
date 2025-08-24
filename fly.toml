@@ -33,10 +33,10 @@ kill_timeout = "5s"
     soft_limit = 20
     
   [[services.tcp_checks]]
-    interval = "15s"
-    timeout = "2s"
-    grace_period = "5s"
-    restart_limit = 6
+    interval = "30s"
+    timeout = "10s"
+    grace_period = "120s"
+    restart_limit = 3
 
 # Launch Pad / Frontend
 [[services]]

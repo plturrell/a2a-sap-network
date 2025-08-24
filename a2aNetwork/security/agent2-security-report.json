@@ -1,11 +1,11 @@
 {
   "agent": "Agent2-AIPreparation",
-  "timestamp": "2025-08-23T10:33:38.648Z",
+  "timestamp": "2025-08-24T02:46:21.843Z",
   "summary": {
     "filesScanned": 9,
-    "totalVulnerabilities": 34,
+    "totalVulnerabilities": 33,
     "critical": 0,
-    "high": 1,
+    "high": 0,
     "medium": 0,
     "low": 33,
     "warnings": 0
@@ -340,16 +340,6 @@
       "message": "Loading state accessibility: Consider announcing status changes",
       "impact": "Reduces accessibility for AI preparation interfaces",
       "fix": "Add appropriate ARIA labels and accessibility announcements"
-    },
-    {
-      "type": "SAP_SECURITY",
-      "severity": "HIGH",
-      "file": "../app/a2aFiori/webapp/ext/agent2/manifest.json",
-      "line": 1,
-      "code": "manifest.json",
-      "message": "Missing security header: Content-Security-Policy",
-      "impact": "Reduces AI preparation application security posture",
-      "fix": "Add Content-Security-Policy to manifest security configuration"
     }
   ],
   "recommendations": [

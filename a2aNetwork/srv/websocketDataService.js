@@ -171,27 +171,66 @@ class A2AWebSocketDataService extends EventEmitter {
 
             this.wsServer = new WebSocket.Server({ 
                 port: this.port,
-                path: '/realtime'
+                path: '/realtime',
+                // Enhanced security configuration
+                perMessageDeflate: false, // Disable compression to prevent attacks
+                maxPayload: 1024 * 1024, // 1MB max message size
+                clientTracking: true,
+                // Verify origin for security
+                verifyClient: (info) => {
+                    const origin = info.origin;
+                    const allowedOrigins = process.env.WEBSOCKET_ALLOWED_ORIGINS?.split(',') || [
+                        'http://localhost:4004',
+                        'http://localhost:8080',
+                        'https://*.sap.com',
+                        'https://*.ondemand.com'
+                    ];
+                    
+                    // Allow same-origin requests
+                    if (!origin) return true;
+                    
+                    // Check against allowed origins
+                    return allowedOrigins.some(allowed => {
+                        if (allowed.includes('*')) {
+                            const pattern = new RegExp(allowed.replace(/\*/g, '.*'));
+                            return pattern.test(origin);
+                        }
+                        return origin === allowed;
+                    });
+                }
             });
 
             const handleWebSocketConnection = (ws, req) => {
                 const clientId = this.generateClientId();
-                logger.info(`📡 Real-time client connected: ${clientId}`);
+                const clientIP = req.connection.remoteAddress;
+                const userAgent = req.headers['user-agent'];
+                
+                // Rate limiting for WebSocket connections
+                if (!this._checkConnectionRateLimit(clientIP)) {
+                    logger.warn(`WebSocket rate limit exceeded for IP: ${clientIP}`);
+                    ws.close(1008, 'Rate limit exceeded');
+                    return;
+                }
+                
+                logger.info(`📡 Real-time client connected: ${clientId} from IP: ${clientIP}`);
                 
                 this.clients.set(clientId, {
                     ws,
                     subscriptions: new Set(),
                     lastPing: Date.now(),
+                    connectionTime: Date.now(),
+                    messageCount: 0,
                     metadata: {
-                        userAgent: req.headers['user-agent'],
-                        ip: req.connection.remoteAddress
+                        userAgent: userAgent,
+                        ip: clientIP,
+                        connectionId: clientId
                     }
                 });
 
                 // Track this connection in the monitor
                 websocketMonitor.addConnection(clientId, {
-                    userAgent: req.headers['user-agent'],
-                    ip: req.connection.remoteAddress
+                    userAgent: userAgent,
+                    ip: clientIP
                 });
 
                 // Send initial data
@@ -199,10 +238,40 @@ class A2AWebSocketDataService extends EventEmitter {
 
                 const handleWebSocketMessage = (message) => {
                     try {
+                        const client = this.clients.get(clientId);
+                        if (!client) return;
+                        
+                        // Message rate limiting
+                        client.messageCount++;
+                        const now = Date.now();
+                        const connectionAge = now - client.connectionTime;
+                        const messageRate = client.messageCount / (connectionAge / 1000); // messages per second
+                        
+                        if (messageRate > 10) { // Max 10 messages per second
+                            logger.warn(`Message rate limit exceeded for client ${clientId}`);
+                            ws.close(1008, 'Message rate limit exceeded');
+                            return;
+                        }
+                        
+                        // Validate message size
+                        if (message.length > 8192) { // 8KB max message size
+                            logger.warn(`Message too large from client ${clientId}`);
+                            ws.close(1009, 'Message too large');
+                            return;
+                        }
+                        
                         const data = JSON.parse(message);
+                        
+                        // Validate message structure
+                        if (typeof data !== 'object' || !data.action) {
+                            logger.warn(`Invalid message structure from client ${clientId}`);
+                            return;
+                        }
+                        
                         this.handleClientMessage(clientId, data);
                     } catch (error) {
-                        logger.error('Invalid WebSocket message:', error);
+                        logger.error(`Invalid WebSocket message from ${clientId}:`, error);
+                        // Don't close connection for parse errors, just ignore message
                     }
                 };
                 ws.on('message', handleWebSocketMessage);
@@ -595,6 +664,33 @@ class A2AWebSocketDataService extends EventEmitter {
 
     generateClientId() {
         return `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+
+    // Rate limiting for WebSocket connections
+    _checkConnectionRateLimit(clientIP) {
+        const now = Date.now();
+        const windowMs = 60000; // 1 minute
+        const maxConnections = 20; // Max 20 connections per IP per minute
+        
+        if (!this.connectionAttempts) {
+            this.connectionAttempts = new Map();
+        }
+        
+        if (!this.connectionAttempts.has(clientIP)) {
+            this.connectionAttempts.set(clientIP, []);
+        }
+        
+        const attempts = this.connectionAttempts.get(clientIP);
+        // Remove attempts outside the time window
+        const validAttempts = attempts.filter(timestamp => now - timestamp < windowMs);
+        
+        if (validAttempts.length >= maxConnections) {
+            return false;
+        }
+        
+        validAttempts.push(now);
+        this.connectionAttempts.set(clientIP, validAttempts);
+        return true;
     }
 
     // Real analytics data from time-series database

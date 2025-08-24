@@ -1,1281 +1,714 @@
 sap.ui.define([
     "sap/ui/core/mvc/ControllerExtension",
-    "sap/m/MessageToast",
     "sap/m/MessageBox",
+    "sap/m/MessageToast",
     "sap/ui/core/Fragment",
     "sap/ui/model/json/JSONModel",
     "a2a/network/agent15/ext/utils/SecurityUtils"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment, JSONModel, SecurityUtils) {
+], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent15.ext.controller.ObjectPageExt", {
         
         override: {
             onInit: function () {
-                this._initializeCreateModel();
-            }
-        },
-        
-        _initializeCreateModel: function() {
-            var oCreateData = {
-                workflowName: "",
-                description: "",
-                workflowType: "",
-                priority: "medium",
-                version: "1.0.0",
-                orchestrationMode: "centralized",
-                executionStrategy: "sequential",
-                parallelization: false,
-                maxConcurrency: 4,
-                taskDistribution: "roundRobin",
-                loadBalancing: true,
-                failoverStrategy: "immediate",
-                retryPolicy: "exponential",
-                circuitBreaker: true,
-                triggerType: "manual",
-                schedule: "",
-                timeout: 300,
-                maxDuration: 3600,
-                checkpointEnabled: true,
-                rollbackEnabled: true,
-                compensationEnabled: false,
-                transactional: false,
-                agentSelectionMode: "automatic",
-                communicationProtocol: "websocket",
-                messageQueuing: true,
-                eventBus: true,
-                coordinationPattern: "masterSlave",
-                consensusAlgorithm: "raft",
-                conflictResolution: "priority",
-                dataConsistency: "eventual",
-                monitoringEnabled: true,
-                metricsCollection: true,
-                tracingEnabled: true,
-                loggingLevel: "info",
-                alertingEnabled: true,
-                healthCheckInterval: 30,
-                performanceThresholds: "",
-                anomalyDetection: false,
-                workflowNameState: "",
-                workflowNameStateText: "",
-                workflowTypeState: "",
-                workflowTypeStateText: "",
-                orchestrationModeState: "",
-                orchestrationModeStateText: "",
-                canCreate: false
-            };
-            var oCreateModel = new JSONModel(oCreateData);
-            this.getView().setModel(oCreateModel, "create");
-        },
-
-        // Create Workflow Action
-        onCreateWorkflow: function() {
-            var oView = this.getView();
+                this._extensionAPI = this.base.getExtensionAPI();
+                this._securityUtils = SecurityUtils;
+                this._initializeSecurity();
+                
+                // Initialize device model for responsive behavior
+                var oDeviceModel = new JSONModel(sap.ui.Device);
+                oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
+                this.base.getView().setModel(oDeviceModel, "device");
+                
+                // Initialize dialog cache
+                this._dialogCache = {};
+                
+                // Initialize real-time monitoring
+                this._initializeRealtimeMonitoring();
+            },
             
-            if (!this._oCreateDialog) {
-                Fragment.load({
-                    id: oView.getId(),
-                    name: "a2a.network.agent15.ext.fragment.WorkflowCreator",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._oCreateDialog = oDialog;
-                    oView.addDependent(this._oCreateDialog);
-                    this._resetCreateModel();
-                    this._oCreateDialog.open();
-                }.bind(this));
-            } else {
-                this._resetCreateModel();
-                this._oCreateDialog.open();
-            }
-        },
-        
-        // Create Dialog Lifecycle
-        onCreateWorkflowDialogAfterOpen: function() {
-            // Focus on first input field
-            var oWorkflowNameInput = this.getView().byId("workflowNameInput");
-            if (oWorkflowNameInput) {
-                oWorkflowNameInput.focus();
-            }
-            
-            // Start real-time validation
-            this._startCreateValidationInterval();
-        },
-        
-        onCreateWorkflowDialogAfterClose: function() {
-            this._stopCreateValidationInterval();
-        },
-        
-        _startCreateValidationInterval: function() {
-            if (this.createValidationInterval) {
-                clearInterval(this.createValidationInterval);
-            }
-            
-            this.createValidationInterval = setInterval(function() {
-                this._validateCreateForm();
-            }.bind(this), 1000);
-        },
-        
-        _stopCreateValidationInterval: function() {
-            if (this.createValidationInterval) {
-                clearInterval(this.createValidationInterval);
-                this.createValidationInterval = null;
-            }
-        },
-        
-        _validateCreateForm: function() {
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            var bCanCreate = true;
-            
-            // Workflow name validation
-            if (!oData.workflowName || oData.workflowName.trim().length < 3) {
-                oData.workflowNameState = "Error";
-                oData.workflowNameStateText = "Workflow name is required and must be at least 3 characters";
-                bCanCreate = false;
-            } else if (!SecurityUtils.isValidWorkflowName(oData.workflowName)) {
-                oData.workflowNameState = "Error";
-                oData.workflowNameStateText = "Workflow name contains invalid characters";
-                bCanCreate = false;
-            } else {
-                oData.workflowNameState = "Success";
-                oData.workflowNameStateText = "";
-            }
-            
-            // Workflow type validation
-            if (!oData.workflowType) {
-                oData.workflowTypeState = "Warning";
-                oData.workflowTypeStateText = "Please select a workflow type";
-                bCanCreate = false;
-            } else {
-                oData.workflowTypeState = "Success";
-                oData.workflowTypeStateText = "";
-            }
-            
-            // Orchestration mode validation
-            if (!oData.orchestrationMode) {
-                oData.orchestrationModeState = "Warning";
-                oData.orchestrationModeStateText = "Please select an orchestration mode";
-                bCanCreate = false;
-            } else {
-                oData.orchestrationModeState = "Success";
-                oData.orchestrationModeStateText = "";
-            }
-            
-            oData.canCreate = bCanCreate;
-            oCreateModel.setData(oData);
-        },
-        
-        _resetCreateModel: function() {
-            this._initializeCreateModel();
-        },
-        
-        // Field Change Handlers
-        onWorkflowNameChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.workflowName = SecurityUtils.sanitizeInput(sValue);
-            oCreateModel.setData(oData);
-        },
-        
-        onDescriptionChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.description = SecurityUtils.sanitizeInput(sValue);
-            oCreateModel.setData(oData);
-        },
-        
-        onWorkflowTypeChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.workflowType = sValue;
-            
-            // Auto-suggest based on workflow type
-            switch (sValue) {
-                case "parallel":
-                    oData.parallelization = true;
-                    oData.executionStrategy = "parallel";
-                    oData.maxConcurrency = 8;
-                    break;
-                case "eventDriven":
-                    oData.triggerType = "event";
-                    oData.eventBus = true;
-                    oData.communicationProtocol = "mqtt";
-                    break;
-                case "microservice":
-                    oData.orchestrationMode = "distributed";
-                    oData.communicationProtocol = "http";
-                    oData.coordinationPattern = "peer2peer";
-                    break;
-                case "serverless":
-                    oData.executionStrategy = "optimistic";
-                    oData.triggerType = "api";
-                    oData.scalingEnabled = true;
-                    break;
-                case "batch":
-                    oData.executionStrategy = "resilient";
-                    oData.checkpointEnabled = true;
-                    oData.rollbackEnabled = true;
-                    break;
-                case "streaming":
-                    oData.executionStrategy = "bestEffort";
-                    oData.communicationProtocol = "kafka";
-                    oData.eventBus = true;
-                    break;
-            }
-            
-            oCreateModel.setData(oData);
-        },
-        
-        onPriorityChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.priority = sValue;
-            
-            // Auto-adjust settings based on priority
-            switch (sValue) {
-                case "critical":
-                case "urgent":
-                    oData.failoverStrategy = "immediate";
-                    oData.retryPolicy = "immediate";
-                    oData.healthCheckInterval = 15;
-                    oData.alertingEnabled = true;
-                    break;
-                case "high":
-                    oData.failoverStrategy = "graceful";
-                    oData.healthCheckInterval = 20;
-                    break;
-                case "low":
-                    oData.healthCheckInterval = 60;
-                    oData.alertingEnabled = false;
-                    break;
-            }
-            
-            oCreateModel.setData(oData);
-        },
-        
-        onVersionChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.version = SecurityUtils.sanitizeInput(sValue);
-            oCreateModel.setData(oData);
-        },
-        
-        onOrchestrationModeChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.orchestrationMode = sValue;
-            
-            // Auto-adjust settings based on orchestration mode
-            switch (sValue) {
-                case "distributed":
-                    oData.consensusAlgorithm = "raft";
-                    oData.coordinationPattern = "peer2peer";
-                    oData.conflictResolution = "voting";
-                    oData.dataConsistency = "eventual";
-                    break;
-                case "federated":
-                    oData.consensusAlgorithm = "paxos";
-                    oData.coordinationPattern = "publish";
-                    oData.conflictResolution = "priority";
-                    break;
-                case "autonomous":
-                    oData.consensusAlgorithm = "gossip";
-                    oData.coordinationPattern = "scatter";
-                    oData.agentSelectionMode = "capability";
-                    break;
-                case "centralized":
-                    oData.consensusAlgorithm = "none";
-                    oData.coordinationPattern = "masterSlave";
-                    oData.conflictResolution = "priority";
-                    oData.dataConsistency = "strong";
-                    break;
-            }
-            
-            oCreateModel.setData(oData);
-        },
-        
-        onExecutionStrategyChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.executionStrategy = sValue;
-            
-            // Auto-adjust settings based on execution strategy
-            switch (sValue) {
-                case "parallel":
-                    oData.parallelization = true;
-                    oData.maxConcurrency = Math.max(oData.maxConcurrency, 4);
-                    break;
-                case "failfast":
-                    oData.retryPolicy = "none";
-                    oData.failoverStrategy = "disabled";
-                    break;
-                case "resilient":
-                    oData.retryPolicy = "exponential";
-                    oData.circuitBreaker = true;
-                    oData.rollbackEnabled = true;
-                    break;
-                case "guaranteedDelivery":
-                    oData.retryPolicy = "exponential";
-                    oData.checkpointEnabled = true;
-                    oData.transactional = true;
-                    break;
-            }
-            
-            oCreateModel.setData(oData);
-        },
-        
-        // Continue with remaining change handlers
-        onParallelizationChange: function(oEvent) {
-            var bValue = oEvent.getParameter("state");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.parallelization = bValue;
-            if (bValue && oData.maxConcurrency < 2) {
-                oData.maxConcurrency = 4;
-            }
-            oCreateModel.setData(oData);
-        },
-        
-        onMaxConcurrencyChange: function(oEvent) {
-            var iValue = oEvent.getParameter("value");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.maxConcurrency = iValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onTaskDistributionChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.taskDistribution = sValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onLoadBalancingChange: function(oEvent) {
-            var bValue = oEvent.getParameter("state");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.loadBalancing = bValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onFailoverStrategyChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.failoverStrategy = sValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onRetryPolicyChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.retryPolicy = sValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onCircuitBreakerChange: function(oEvent) {
-            var bValue = oEvent.getParameter("state");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.circuitBreaker = bValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onTriggerTypeChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.triggerType = sValue;
-            
-            // Auto-enable/disable schedule field based on trigger type
-            if (sValue === "scheduled") {
-                // Focus schedule input if available
-                var oScheduleInput = this.getView().byId("scheduleInput");
-                if (oScheduleInput) {
-                    setTimeout(function() { oScheduleInput.focus(); }, 100);
+            onExit: function() {
+                this._cleanupResources();
+                if (this.base.onExit) {
+                    this.base.onExit.apply(this, arguments);
                 }
             }
-            
-            oCreateModel.setData(oData);
         },
-        
-        onScheduleChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.schedule = SecurityUtils.sanitizeInput(sValue);
-            oCreateModel.setData(oData);
-        },
-        
-        onTimeoutChange: function(oEvent) {
-            var iValue = oEvent.getParameter("value");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.timeout = iValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onMaxDurationChange: function(oEvent) {
-            var iValue = oEvent.getParameter("value");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.maxDuration = iValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onCheckpointEnabledChange: function(oEvent) {
-            var bValue = oEvent.getParameter("state");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.checkpointEnabled = bValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onRollbackEnabledChange: function(oEvent) {
-            var bValue = oEvent.getParameter("state");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.rollbackEnabled = bValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onCompensationEnabledChange: function(oEvent) {
-            var bValue = oEvent.getParameter("state");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.compensationEnabled = bValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onTransactionalChange: function(oEvent) {
-            var bValue = oEvent.getParameter("state");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.transactional = bValue;
-            
-            // Auto-enable related settings when transactional is enabled
-            if (bValue) {
-                oData.rollbackEnabled = true;
-                oData.checkpointEnabled = true;
-            }
-            
-            oCreateModel.setData(oData);
-        },
-        
-        onAgentSelectionModeChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.agentSelectionMode = sValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onCommunicationProtocolChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.communicationProtocol = sValue;
-            
-            // Auto-adjust settings based on protocol
-            switch (sValue) {
-                case "mqtt":
-                case "amqp":
-                case "kafka":
-                    oData.messageQueuing = true;
-                    oData.eventBus = true;
-                    break;
-                case "websocket":
-                    oData.eventBus = true;
-                    break;
-                case "http":
-                    oData.messageQueuing = false;
-                    break;
-            }
-            
-            oCreateModel.setData(oData);
-        },
-        
-        onMessageQueuingChange: function(oEvent) {
-            var bValue = oEvent.getParameter("state");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.messageQueuing = bValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onEventBusChange: function(oEvent) {
-            var bValue = oEvent.getParameter("state");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.eventBus = bValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onCoordinationPatternChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.coordinationPattern = sValue;
-            
-            // Auto-adjust consensus algorithm based on pattern
-            switch (sValue) {
-                case "peer2peer":
-                    oData.consensusAlgorithm = "gossip";
-                    break;
-                case "masterSlave":
-                    oData.consensusAlgorithm = "none";
-                    break;
-                case "publish":
-                    oData.consensusAlgorithm = "raft";
-                    break;
-            }
-            
-            oCreateModel.setData(oData);
-        },
-        
-        onConsensusAlgorithmChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.consensusAlgorithm = sValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onConflictResolutionChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.conflictResolution = sValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onDataConsistencyChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.dataConsistency = sValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onMonitoringEnabledChange: function(oEvent) {
-            var bValue = oEvent.getParameter("state");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.monitoringEnabled = bValue;
-            
-            // Auto-disable related monitoring features when disabled
-            if (!bValue) {
-                oData.metricsCollection = false;
-                oData.tracingEnabled = false;
-                oData.alertingEnabled = false;
-                oData.anomalyDetection = false;
-            }
-            
-            oCreateModel.setData(oData);
-        },
-        
-        onMetricsCollectionChange: function(oEvent) {
-            var bValue = oEvent.getParameter("state");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.metricsCollection = bValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onTracingEnabledChange: function(oEvent) {
-            var bValue = oEvent.getParameter("state");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.tracingEnabled = bValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onLoggingLevelChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.loggingLevel = sValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onAlertingEnabledChange: function(oEvent) {
-            var bValue = oEvent.getParameter("state");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.alertingEnabled = bValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onHealthCheckIntervalChange: function(oEvent) {
-            var iValue = oEvent.getParameter("value");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.healthCheckInterval = iValue;
-            oCreateModel.setData(oData);
-        },
-        
-        onPerformanceThresholdsChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.performanceThresholds = SecurityUtils.sanitizeInput(sValue);
-            oCreateModel.setData(oData);
-        },
-        
-        onAnomalyDetectionChange: function(oEvent) {
-            var bValue = oEvent.getParameter("state");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            oData.anomalyDetection = bValue;
-            oCreateModel.setData(oData);
-        },
-        
-        // Dialog Action Handlers
-        onConfirmCreateWorkflow: function() {
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            if (!oData.canCreate) {
-                MessageToast.show(this._getResourceBundle().getText("msg.fixValidationErrors"));
+
+        /**
+         * @function onRollbackDeployment
+         * @description Initiates rollback of deployment to previous version.
+         * @public
+         */
+        onRollbackDeployment: function() {
+            if (!this._hasRole("DeploymentAdmin")) {
+                MessageBox.error("Access denied. Deployment Administrator role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "RollbackDeployment", reason: "Insufficient permissions" });
                 return;
             }
-            
-            MessageBox.confirm(this._getResourceBundle().getText("msg.confirmWorkflowCreation"), {
-                title: this._getResourceBundle().getText("title.confirmWorkflowCreation"),
-                onOK: function() {
-                    this._createWorkflow(oData);
-                }.bind(this)
-            });
-        },
-        
-        onCancelCreateWorkflow: function() {
-            if (this._oCreateDialog) {
-                this._oCreateDialog.close();
-            }
-        },
-        
-        _createWorkflow: function(oData) {
-            // Simulate workflow creation
-            MessageToast.show(this._getResourceBundle().getText("msg.workflowCreationStarted"));
-            
-            setTimeout(function() {
-                MessageToast.show(this._getResourceBundle().getText("msg.workflowCreated", [oData.workflowName]));
-                if (this._oCreateDialog) {
-                    this._oCreateDialog.close();
-                }
-            }.bind(this), 2000);
-        },
-        
-        // Execute Workflow Action
-        onExecuteWorkflow: function() {
+
             const oContext = this.base.getView().getBindingContext();
             const oData = oContext.getObject();
+            const sTaskId = oData.taskId;
+            const sTaskName = oData.taskName;
             
-            if (oData.status === 'running') {
-                MessageToast.show(this.getResourceBundle().getText("error.workflowAlreadyRunning"));
+            // Check if rollback is possible
+            if (!oData.previousVersion) {
+                MessageBox.warning(this.getResourceBundle().getText("msg.noPreviousVersion"));
                 return;
             }
-
-            if (oData.status === 'completed') {
-                MessageBox.confirm(
-                    this.getResourceBundle().getText("msg.restartWorkflowConfirm"),
-                    {
-                        onClose: function(oAction) {
-                            if (oAction === MessageBox.Action.OK) {
-                                this._executeWorkflow(oContext);
-                            }
-                        }.bind(this)
-                    }
-                );
-            } else {
-                this._executeWorkflow(oContext);
-            }
-        },
-
-        // Pause Workflow Action
-        onPauseWorkflow: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
             
-            if (oData.status !== 'running') {
-                MessageToast.show(this.getResourceBundle().getText("error.cannotPauseWorkflow"));
-                return;
-            }
-
-            this._pauseWorkflow(oContext);
-        },
-
-        // Resume Workflow Action
-        onResumeWorkflow: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
+            this._auditLogger.log("ROLLBACK_DEPLOYMENT_REQUESTED", { taskId: sTaskId, taskName: sTaskName });
             
-            if (oData.status !== 'paused') {
-                MessageToast.show(this.getResourceBundle().getText("error.cannotResumeWorkflow"));
-                return;
-            }
-
-            this._resumeWorkflow(oContext);
-        },
-
-        // Stop Workflow Action
-        onStopWorkflow: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
-            
-            if (oData.status !== 'running' && oData.status !== 'paused') {
-                MessageToast.show(this.getResourceBundle().getText("error.cannotStopWorkflow"));
-                return;
-            }
-
             MessageBox.confirm(
-                this.getResourceBundle().getText("msg.stopWorkflowConfirm"),
+                this.getResourceBundle().getText("msg.rollbackConfirm", [sTaskName, oData.previousVersion]),
                 {
-                    icon: MessageBox.Icon.WARNING,
+                    title: this.getResourceBundle().getText("title.confirmRollback"),
+                    emphasizedAction: MessageBox.Action.CANCEL,
+                    initialFocus: MessageBox.Action.CANCEL,
                     onClose: function(oAction) {
                         if (oAction === MessageBox.Action.OK) {
-                            this._stopWorkflow(oContext);
+                            this._executeRollback(sTaskId, sTaskName, oData);
+                        } else {
+                            this._auditLogger.log("ROLLBACK_CANCELLED", { taskId: sTaskId, taskName: sTaskName });
                         }
                     }.bind(this)
                 }
             );
         },
 
-        // Clone Workflow Action
-        onCloneWorkflow: function() {
-            const oContext = this.base.getView().getBindingContext();
-            
-            if (!this._cloneWorkflowDialog) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent15.ext.fragment.CloneWorkflow",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._cloneWorkflowDialog = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._initializeCloneDialog(oContext);
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._initializeCloneDialog(oContext);
-                this._cloneWorkflowDialog.open();
-            }
-        },
-
-        // Configure Agents Action
-        onConfigureAgents: function() {
-            const oContext = this.base.getView().getBindingContext();
-            
-            if (!this._agentConfigDialog) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent15.ext.fragment.AgentConfiguration",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._agentConfigDialog = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._loadAgentConfiguration(oContext);
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._loadAgentConfiguration(oContext);
-                this._agentConfigDialog.open();
-            }
-        },
-
-        // Monitor Execution Action
-        onMonitorExecution: function() {
-            const oContext = this.base.getView().getBindingContext();
-            
-            if (!this._executionMonitor) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent15.ext.fragment.ExecutionMonitor",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._executionMonitor = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._loadExecutionData(oContext);
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._loadExecutionData(oContext);
-                this._executionMonitor.open();
-            }
-        },
-
-        // Optimize Performance Action
-        onOptimizePerformance: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
-            
-            if (oData.status === 'running') {
-                MessageToast.show(this.getResourceBundle().getText("error.cannotOptimizeRunningWorkflow"));
+        /**
+         * @function onValidateDeployment
+         * @description Validates deployment integrity and configuration.
+         * @public
+         */
+        onValidateDeployment: function() {
+            if (!this._hasRole("DeploymentUser")) {
+                MessageBox.error("Access denied. Deployment User role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "ValidateDeployment", reason: "Insufficient permissions" });
                 return;
             }
 
-            if (!this._performanceOptimizer) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent15.ext.fragment.PerformanceOptimizer",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._performanceOptimizer = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._analyzeWorkflowPerformance(oContext);
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._analyzeWorkflowPerformance(oContext);
-                this._performanceOptimizer.open();
-            }
-        },
-
-        // Schedule Workflow Action
-        onScheduleWorkflow: function() {
-            const oContext = this.base.getView().getBindingContext();
-            
-            if (!this._schedulerDialog) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent15.ext.fragment.WorkflowScheduler",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._schedulerDialog = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._loadScheduleOptions(oContext);
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._loadScheduleOptions(oContext);
-                this._schedulerDialog.open();
-            }
-        },
-
-        // View Coordination Pattern Action
-        onViewCoordinationPattern: function() {
-            const oContext = this.base.getView().getBindingContext();
-            
-            if (!this._coordinationViewer) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent15.ext.fragment.CoordinationViewer",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._coordinationViewer = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._loadCoordinationPattern(oContext);
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._loadCoordinationPattern(oContext);
-                this._coordinationViewer.open();
-            }
-        },
-
-        // Export Workflow Action
-        onExportWorkflow: function() {
             const oContext = this.base.getView().getBindingContext();
             const oData = oContext.getObject();
+            const sTaskId = oData.taskId;
+            const sTaskName = oData.taskName;
             
-            if (!this._exportDialog) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent15.ext.fragment.ExportWorkflow",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._exportDialog = oDialog;
-                    this.getView().addDependent(oDialog);
+            this._auditLogger.log("VALIDATE_DEPLOYMENT", { taskId: sTaskId, taskName: sTaskName });
+            
+            this._getOrCreateDialog("validateDeployment", "a2a.network.agent15.ext.fragment.ValidateDeployment")
+                .then(function(oDialog) {
+                    var oValidationModel = new JSONModel({
+                        taskId: sTaskId,
+                        taskName: sTaskName,
+                        deploymentId: oData.deploymentId,
+                        environment: oData.environment,
+                        validationType: "COMPREHENSIVE",
+                        validationChecks: {
+                            configurationValidation: true,
+                            dependencyValidation: true,
+                            securityValidation: true,
+                            performanceValidation: true,
+                            compatibilityValidation: true,
+                            integrationValidation: true
+                        },
+                        validationScope: "ALL",
+                        includeTests: true,
+                        generateReport: true,
+                        validationResults: {
+                            status: "NOT_STARTED",
+                            progress: 0,
+                            checksCompleted: 0,
+                            totalChecks: 0,
+                            errors: 0,
+                            warnings: 0,
+                            passed: 0,
+                            details: []
+                        }
+                    });
+                    oDialog.setModel(oValidationModel, "validation");
                     oDialog.open();
-                }.bind(this));
-            } else {
-                this._exportDialog.open();
-            }
-        },
-
-        // Real-time monitoring initialization
-        onAfterRendering: function() {
-            this._initializeWorkflowMonitoring();
-        },
-
-        _initializeWorkflowMonitoring: function() {
-            const oContext = this.base.getView().getBindingContext();
-            if (!oContext) return;
-
-            const workflowId = oContext.getObject().workflowId;
-            
-            // Subscribe to workflow updates for this specific workflow
-            if (this._eventSource) {
-                this._eventSource.close();
-            }
-
-            try {
-                this._eventSource = SecurityUtils.createSecureEventSource(`https://localhost:8015/orchestrator/workflow/${workflowId}/stream`, {
-                    'workflow-progress': (event) => {
-                        const data = JSON.parse(event.data);
-                        this._updateWorkflowProgress(data);
-                    },
-                    'step-completed': (event) => {
-                        const data = JSON.parse(event.data);
-                        this._handleStepCompleted(data);
-                    },
-                    'agent-status': (event) => {
-                        const data = JSON.parse(event.data);
-                        this._updateAgentStatus(data);
-                    },
-                    'coordination-event': (event) => {
-                        const data = JSON.parse(event.data);
-                        this._handleCoordinationEvent(data);
-                    },
-                    'performance-alert': (event) => {
-                        const data = JSON.parse(event.data);
-                        this._handlePerformanceAlert(data);
-                    }
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Validate Deployment dialog: " + error.message);
                 });
-                
-                // Event handlers configured in createSecureEventSource
+        },
 
-            } catch (error) {
-                console.warn("Server-Sent Events not available, using polling");
-                this._initializePolling(workflowId);
+        /**
+         * @function onViewLogs
+         * @description Opens deployment logs viewer with filtering and search capabilities.
+         * @public
+         */
+        onViewLogs: function() {
+            if (!this._hasRole("DeploymentUser")) {
+                MessageBox.error("Access denied. Deployment User role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "ViewLogs", reason: "Insufficient permissions" });
+                return;
             }
-        },
 
-        _initializePolling: function(workflowId) {
-            this._pollInterval = setInterval(() => {
-                this._refreshWorkflowData();
-            }, 2000);
-        },
-
-        _executeWorkflow: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sWorkflowId = oContext.getObject().workflowId;
+            const oContext = this.base.getView().getBindingContext();
+            const oData = oContext.getObject();
+            const sTaskId = oData.taskId;
+            const sTaskName = oData.taskName;
             
-            MessageToast.show(this.getResourceBundle().getText("msg.workflowStarting"));
+            this._auditLogger.log("VIEW_LOGS", { taskId: sTaskId, taskName: sTaskName });
             
-            SecurityUtils.secureCallFunction(oModel, "/ExecuteWorkflow", {
-                urlParameters: {
-                    workflowId: sWorkflowId
-                },
-                success: function(data) {
-                    MessageToast.show(this.getResourceBundle().getText("msg.workflowStarted"));
-                    this._refreshWorkflowData();
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.workflowExecutionFailed"));
-                }.bind(this)
-            });
+            this._getOrCreateDialog("viewLogs", "a2a.network.agent15.ext.fragment.ViewLogs")
+                .then(function(oDialog) {
+                    var oLogModel = new JSONModel({
+                        taskId: sTaskId,
+                        taskName: sTaskName,
+                        deploymentId: oData.deploymentId,
+                        logLevel: "ALL",
+                        timeRange: "LAST_HOUR",
+                        startTime: new Date(Date.now() - 60 * 60 * 1000),
+                        endTime: new Date(),
+                        searchQuery: "",
+                        autoRefresh: true,
+                        refreshInterval: 10000,
+                        maxLines: 1000,
+                        logSources: [
+                            { key: "DEPLOYMENT", text: "Deployment Engine", selected: true },
+                            { key: "APPLICATION", text: "Application", selected: true },
+                            { key: "SYSTEM", text: "System", selected: false },
+                            { key: "SECURITY", text: "Security", selected: false },
+                            { key: "NETWORK", text: "Network", selected: false }
+                        ],
+                        logLevels: [
+                            { key: "ALL", text: "All Levels" },
+                            { key: "ERROR", text: "Errors Only" },
+                            { key: "WARN", text: "Warnings & Errors" },
+                            { key: "INFO", text: "Info & Above" },
+                            { key: "DEBUG", text: "Debug & Above" }
+                        ],
+                        logs: [],
+                        filteredLogs: []
+                    });
+                    oDialog.setModel(oLogModel, "logs");
+                    oDialog.open();
+                    this._loadDeploymentLogs(sTaskId, oDialog);
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Logs Viewer: " + error.message);
+                });
         },
 
-        _pauseWorkflow: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sWorkflowId = oContext.getObject().workflowId;
-            
-            SecurityUtils.secureCallFunction(oModel, "/PauseWorkflow", {
-                urlParameters: {
-                    workflowId: sWorkflowId
-                },
-                success: function(data) {
-                    MessageToast.show(this.getResourceBundle().getText("msg.workflowPaused"));
-                    this._refreshWorkflowData();
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.workflowPauseFailed"));
-                }.bind(this)
-            });
-        },
-
-        _resumeWorkflow: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sWorkflowId = oContext.getObject().workflowId;
-            
-            SecurityUtils.secureCallFunction(oModel, "/ResumeWorkflow", {
-                urlParameters: {
-                    workflowId: sWorkflowId
-                },
-                success: function(data) {
-                    MessageToast.show(this.getResourceBundle().getText("msg.workflowResumed"));
-                    this._refreshWorkflowData();
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.workflowResumeFailed"));
-                }.bind(this)
-            });
-        },
-
-        _stopWorkflow: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sWorkflowId = oContext.getObject().workflowId;
-            
-            oModel.callFunction("/StopWorkflow", {
-                urlParameters: {
-                    workflowId: sWorkflowId
-                },
-                success: function(data) {
-                    MessageToast.show(this.getResourceBundle().getText("msg.workflowStopped"));
-                    this._refreshWorkflowData();
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.workflowStopFailed"));
-                }.bind(this)
-            });
-        },
-
-        _initializeCloneDialog: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sWorkflowId = oContext.getObject().workflowId;
-            
-            oModel.callFunction("/GetWorkflowTemplate", {
-                urlParameters: {
-                    workflowId: sWorkflowId
-                },
-                success: function(data) {
-                    this._setupCloneDialog(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingWorkflowTemplate"));
-                }.bind(this)
-            });
-        },
-
-        _loadAgentConfiguration: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sWorkflowId = oContext.getObject().workflowId;
-            
-            oModel.callFunction("/GetWorkflowAgents", {
-                urlParameters: {
-                    workflowId: sWorkflowId
-                },
-                success: function(data) {
-                    this._displayAgentConfiguration(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingAgentConfiguration"));
-                }.bind(this)
-            });
-        },
-
-        _loadExecutionData: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sWorkflowId = oContext.getObject().workflowId;
-            
-            oModel.callFunction("/GetExecutionMetrics", {
-                urlParameters: {
-                    workflowId: sWorkflowId
-                },
-                success: function(data) {
-                    this._displayExecutionMonitor(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingExecutionData"));
-                }.bind(this)
-            });
-        },
-
-        _analyzeWorkflowPerformance: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sWorkflowId = oContext.getObject().workflowId;
-            
-            oModel.callFunction("/AnalyzeWorkflowPerformance", {
-                urlParameters: {
-                    workflowId: sWorkflowId
-                },
-                success: function(data) {
-                    this._displayPerformanceAnalysis(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.performanceAnalysisFailed"));
-                }.bind(this)
-            });
-        },
-
-        _loadScheduleOptions: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sWorkflowId = oContext.getObject().workflowId;
-            
-            oModel.callFunction("/GetScheduleOptions", {
-                urlParameters: {
-                    workflowId: sWorkflowId
-                },
-                success: function(data) {
-                    this._displayScheduleOptions(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingScheduleOptions"));
-                }.bind(this)
-            });
-        },
-
-        _loadCoordinationPattern: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sWorkflowId = oContext.getObject().workflowId;
-            
-            oModel.callFunction("/GetCoordinationPattern", {
-                urlParameters: {
-                    workflowId: sWorkflowId
-                },
-                success: function(data) {
-                    this._displayCoordinationPattern(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingCoordinationPattern"));
-                }.bind(this)
-            });
-        },
-
-        _updateWorkflowProgress: function(data) {
-            // Update workflow progress indicators
-            const oProgressIndicator = this.getView().byId("workflowProgress");
-            if (oProgressIndicator) {
-                oProgressIndicator.setPercentValue(data.completionRate);
-                oProgressIndicator.setDisplayValue(`${data.completedSteps}/${data.totalSteps} steps`);
+        /**
+         * @function onPromoteToProduction
+         * @description Promotes deployment to production environment.
+         * @public
+         */
+        onPromoteToProduction: function() {
+            if (!this._hasRole("DeploymentAdmin")) {
+                MessageBox.error("Access denied. Deployment Administrator role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "PromoteToProduction", reason: "Insufficient permissions" });
+                return;
             }
+
+            const oContext = this.base.getView().getBindingContext();
+            const oData = oContext.getObject();
+            const sTaskId = oData.taskId;
+            const sTaskName = oData.taskName;
+            
+            // Check if promotion is allowed
+            if (oData.environment === "PRODUCTION") {
+                MessageBox.warning(this.getResourceBundle().getText("msg.alreadyInProduction"));
+                return;
+            }
+            
+            if (oData.status !== "DEPLOYED") {
+                MessageBox.warning(this.getResourceBundle().getText("msg.deploymentNotReady"));
+                return;
+            }
+            
+            this._auditLogger.log("PROMOTE_TO_PRODUCTION_REQUESTED", { taskId: sTaskId, taskName: sTaskName });
+            
+            this._getOrCreateDialog("promoteToProduction", "a2a.network.agent15.ext.fragment.PromoteToProduction")
+                .then(function(oDialog) {
+                    var oPromoteModel = new JSONModel({
+                        taskId: sTaskId,
+                        taskName: sTaskName,
+                        currentEnvironment: oData.environment,
+                        targetEnvironment: "PRODUCTION",
+                        promotionStrategy: "BLUE_GREEN",
+                        approvalRequired: true,
+                        prePromotionChecks: {
+                            validationRequired: true,
+                            loadTestRequired: true,
+                            securityScanRequired: true,
+                            backupRequired: true
+                        },
+                        promotionOptions: {
+                            schedulePromotion: false,
+                            scheduledTime: new Date(),
+                            maintenanceWindow: false,
+                            rollbackPlan: true,
+                            monitoringEnabled: true,
+                            alertingEnabled: true
+                        },
+                        approvers: [],
+                        requiredApprovals: 2,
+                        promotionPlan: {
+                            steps: [],
+                            estimatedDuration: 0,
+                            rollbackTime: 0
+                        }
+                    });
+                    oDialog.setModel(oPromoteModel, "promote");
+                    oDialog.open();
+                    this._loadPromotionPlan(sTaskId, oDialog);
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Promote to Production dialog: " + error.message);
+                });
         },
 
-        _handleStepCompleted: function(data) {
-            MessageToast.show(this.getResourceBundle().getText("msg.stepCompleted", [data.stepName]));
-            this._refreshWorkflowData();
+        /**
+         * @function _executeRollback
+         * @description Executes deployment rollback with audit logging.
+         * @param {string} sTaskId - Task ID
+         * @param {string} sTaskName - Task name
+         * @param {Object} oData - Deployment data
+         * @private
+         */
+        _executeRollback: function(sTaskId, sTaskName, oData) {
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/RollbackDeployment", {
+                urlParameters: {
+                    taskId: sTaskId,
+                    deploymentId: oData.deploymentId,
+                    targetVersion: oData.previousVersion,
+                    createBackup: true,
+                    validateRollback: true
+                },
+                success: function(data) {
+                    MessageToast.show(this.getResourceBundle().getText("msg.rollbackInitiated"));
+                    this._auditLogger.log("ROLLBACK_INITIATED", { 
+                        taskId: sTaskId, 
+                        taskName: sTaskName,
+                        targetVersion: oData.previousVersion,
+                        rollbackId: data.rollbackId,
+                        success: true 
+                    });
+                    
+                    // Start monitoring rollback progress
+                    this._startRollbackMonitoring(data.rollbackId);
+                }.bind(this),
+                error: function(error) {
+                    MessageBox.error(this.getResourceBundle().getText("error.rollbackFailed"));
+                    this._auditLogger.log("ROLLBACK_FAILED", { 
+                        taskId: sTaskId, 
+                        taskName: sTaskName,
+                        error: error.message 
+                    });
+                }.bind(this)
+            });
         },
 
-        _updateAgentStatus: function(data) {
-            // Update agent status indicators
-        },
-
-        _handleCoordinationEvent: function(data) {
-            // Handle coordination events
-        },
-
-        _handlePerformanceAlert: function(data) {
-            MessageBox.warning(
-                data.message,
-                {
-                    title: this.getResourceBundle().getText("msg.performanceAlert")
+        /**
+         * @function _loadDeploymentLogs
+         * @description Loads deployment logs with filtering.
+         * @param {string} sTaskId - Task ID
+         * @param {sap.m.Dialog} oDialog - Logs dialog
+         * @private
+         */
+        _loadDeploymentLogs: function(sTaskId, oDialog) {
+            oDialog.setBusy(true);
+            
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/GetDeploymentLogs", {
+                urlParameters: {
+                    taskId: sTaskId,
+                    maxLines: 1000,
+                    logLevel: "ALL",
+                    includeMetadata: true
+                },
+                success: function(data) {
+                    var oLogModel = oDialog.getModel("logs");
+                    if (oLogModel) {
+                        var oCurrentData = oLogModel.getData();
+                        oCurrentData.logs = data.logs || [];
+                        oCurrentData.filteredLogs = data.logs || [];
+                        oCurrentData.totalLines = data.totalLines || 0;
+                        oCurrentData.logSummary = data.summary || {};
+                        oLogModel.setData(oCurrentData);
+                    }
+                    oDialog.setBusy(false);
+                    
+                    // Start auto-refresh if enabled
+                    if (oCurrentData.autoRefresh) {
+                        this._startLogAutoRefresh(sTaskId, oDialog);
+                    }
+                }.bind(this),
+                error: function(error) {
+                    oDialog.setBusy(false);
+                    MessageBox.error("Failed to load deployment logs: " + error.message);
                 }
-            );
+            });
         },
 
-        _refreshWorkflowData: function() {
+        /**
+         * @function _loadPromotionPlan
+         * @description Loads promotion plan and requirements.
+         * @param {string} sTaskId - Task ID
+         * @param {sap.m.Dialog} oDialog - Promotion dialog
+         * @private
+         */
+        _loadPromotionPlan: function(sTaskId, oDialog) {
+            oDialog.setBusy(true);
+            
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/GetPromotionPlan", {
+                urlParameters: {
+                    taskId: sTaskId,
+                    targetEnvironment: "PRODUCTION"
+                },
+                success: function(data) {
+                    var oPromoteModel = oDialog.getModel("promote");
+                    if (oPromoteModel) {
+                        var oCurrentData = oPromoteModel.getData();
+                        oCurrentData.promotionPlan = data.plan || {};
+                        oCurrentData.approvers = data.approvers || [];
+                        oCurrentData.requirements = data.requirements || {};
+                        oCurrentData.riskAssessment = data.riskAssessment || {};
+                        oPromoteModel.setData(oCurrentData);
+                    }
+                    oDialog.setBusy(false);
+                }.bind(this),
+                error: function(error) {
+                    oDialog.setBusy(false);
+                    MessageBox.error("Failed to load promotion plan: " + error.message);
+                }
+            });
+        },
+
+        /**
+         * @function _startRollbackMonitoring
+         * @description Starts monitoring rollback progress.
+         * @param {string} sRollbackId - Rollback ID to monitor
+         * @private
+         */
+        _startRollbackMonitoring: function(sRollbackId) {
+            // Update context to show rollback in progress
             const oContext = this.base.getView().getBindingContext();
             if (oContext) {
                 oContext.refresh();
             }
         },
 
-        _setupCloneDialog: function(data) {
-            // Setup clone dialog with workflow template
+        /**
+         * @function _startLogAutoRefresh
+         * @description Starts auto-refresh for deployment logs.
+         * @param {string} sTaskId - Task ID
+         * @param {sap.m.Dialog} oDialog - Logs dialog
+         * @private
+         */
+        _startLogAutoRefresh: function(sTaskId, oDialog) {
+            if (this._logRefreshInterval) {
+                clearInterval(this._logRefreshInterval);
+            }
+            
+            var oLogData = oDialog.getModel("logs").getData();
+            this._logRefreshInterval = setInterval(() => {
+                if (oDialog.isOpen() && oLogData.autoRefresh) {
+                    this._loadDeploymentLogs(sTaskId, oDialog);
+                } else {
+                    clearInterval(this._logRefreshInterval);
+                }
+            }, oLogData.refreshInterval || 10000);
         },
 
-        _displayAgentConfiguration: function(data) {
-            // Display agent configuration options
+        /**
+         * @function _initializeRealtimeMonitoring
+         * @description Initializes real-time monitoring for deployment operations.
+         * @private
+         */
+        _initializeRealtimeMonitoring: function() {
+            // WebSocket for real-time deployment updates
+            this._initializeDeploymentWebSocket();
         },
 
-        _displayExecutionMonitor: function(data) {
-            // Display execution monitoring data
+        /**
+         * @function _initializeDeploymentWebSocket
+         * @description Initializes WebSocket for deployment updates.
+         * @private
+         */
+        _initializeDeploymentWebSocket: function() {
+            if (this._deploymentWs) return;
+
+            try {
+                this._deploymentWs = SecurityUtils.createSecureWebSocket('ws://localhost:8015/deployment/task-updates', {
+                    onMessage: function(data) {
+                        this._handleDeploymentTaskUpdate(data);
+                    }.bind(this)
+                });
+
+                this._deploymentWs.onclose = function() {
+                    console.info("Deployment WebSocket closed, will reconnect...");
+                    setTimeout(() => this._initializeDeploymentWebSocket(), 5000);
+                }.bind(this);
+
+            } catch (error) {
+                console.warn("Deployment WebSocket not available");
+            }
         },
 
-        _displayPerformanceAnalysis: function(data) {
-            // Display performance analysis results
+        /**
+         * @function _handleDeploymentTaskUpdate
+         * @description Handles real-time deployment task updates.
+         * @param {Object} data - Update data
+         * @private
+         */
+        _handleDeploymentTaskUpdate: function(data) {
+            const oContext = this.base.getView().getBindingContext();
+            if (!oContext) return;
+            
+            const oCurrentData = oContext.getObject();
+            
+            // Check if update is for current task
+            if (data.taskId === oCurrentData.taskId) {
+                switch (data.type) {
+                    case 'STATUS_UPDATE':
+                        // Refresh the binding to get latest status
+                        oContext.refresh();
+                        break;
+                    case 'VALIDATION_COMPLETED':
+                        MessageToast.show("Deployment validation completed");
+                        this._updateValidationResults(data);
+                        break;
+                    case 'ROLLBACK_PROGRESS':
+                        this._updateRollbackProgress(data);
+                        break;
+                    case 'LOGS_UPDATED':
+                        this._refreshLogsIfOpen(data.taskId);
+                        break;
+                    case 'PROMOTION_APPROVED':
+                        MessageToast.show("Promotion to production approved");
+                        oContext.refresh();
+                        break;
+                }
+            }
         },
 
-        _displayScheduleOptions: function(data) {
-            // Display scheduling options
+        /**
+         * @function _updateValidationResults
+         * @description Updates validation results in open dialog.
+         * @param {Object} data - Validation data
+         * @private
+         */
+        _updateValidationResults: function(data) {
+            if (this._dialogCache.validateDeployment && this._dialogCache.validateDeployment.isOpen()) {
+                const oValidationModel = this._dialogCache.validateDeployment.getModel("validation");
+                if (oValidationModel) {
+                    const oCurrentData = oValidationModel.getData();
+                    oCurrentData.validationResults = data.results;
+                    oValidationModel.setData(oCurrentData);
+                }
+            }
         },
 
-        _displayCoordinationPattern: function(data) {
-            // Display coordination pattern visualization
+        /**
+         * @function _updateRollbackProgress
+         * @description Updates rollback progress display.
+         * @param {Object} data - Rollback progress data
+         * @private
+         */
+        _updateRollbackProgress: function(data) {
+            // Show rollback progress notifications
+            if (data.status === "COMPLETED") {
+                MessageToast.show("Rollback completed successfully");
+            } else if (data.status === "FAILED") {
+                MessageBox.error("Rollback failed: " + data.message);
+            } else {
+                MessageToast.show("Rollback in progress: " + data.currentStep);
+            }
         },
 
+        /**
+         * @function _refreshLogsIfOpen
+         * @description Refreshes logs if logs dialog is open.
+         * @param {string} sTaskId - Task ID
+         * @private
+         */
+        _refreshLogsIfOpen: function(sTaskId) {
+            if (this._dialogCache.viewLogs && this._dialogCache.viewLogs.isOpen()) {
+                this._loadDeploymentLogs(sTaskId, this._dialogCache.viewLogs);
+            }
+        },
+
+        /**
+         * @function _getOrCreateDialog
+         * @description Gets cached dialog or creates new one with accessibility and responsive features.
+         * @param {string} sDialogId - Dialog identifier
+         * @param {string} sFragmentName - Fragment name
+         * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog
+         * @private
+         */
+        _getOrCreateDialog: function(sDialogId, sFragmentName) {
+            var that = this;
+            
+            if (this._dialogCache && this._dialogCache[sDialogId]) {
+                return Promise.resolve(this._dialogCache[sDialogId]);
+            }
+            
+            if (!this._dialogCache) {
+                this._dialogCache = {};
+            }
+            
+            return Fragment.load({
+                id: this.base.getView().getId(),
+                name: sFragmentName,
+                controller: this
+            }).then(function(oDialog) {
+                that._dialogCache[sDialogId] = oDialog;
+                that.base.getView().addDependent(oDialog);
+                
+                // Enable accessibility
+                that._enableDialogAccessibility(oDialog);
+                
+                // Optimize for mobile
+                that._optimizeDialogForDevice(oDialog);
+                
+                return oDialog;
+            });
+        },
+        
+        /**
+         * @function _enableDialogAccessibility
+         * @description Adds accessibility features to dialog.
+         * @param {sap.m.Dialog} oDialog - Dialog to enhance
+         * @private
+         */
+        _enableDialogAccessibility: function(oDialog) {
+            oDialog.addEventDelegate({
+                onAfterRendering: function() {
+                    var $dialog = oDialog.$();
+                    
+                    // Set tabindex for focusable elements
+                    $dialog.find("input, button, select, textarea").attr("tabindex", "0");
+                    
+                    // Handle escape key
+                    $dialog.on("keydown", function(e) {
+                        if (e.key === "Escape") {
+                            oDialog.close();
+                        }
+                    });
+                    
+                    // Focus first input on open
+                    setTimeout(function() {
+                        $dialog.find("input:visible:first").focus();
+                    }, 100);
+                }
+            });
+        },
+        
+        /**
+         * @function _optimizeDialogForDevice
+         * @description Optimizes dialog for current device.
+         * @param {sap.m.Dialog} oDialog - Dialog to optimize
+         * @private
+         */
+        _optimizeDialogForDevice: function(oDialog) {
+            if (sap.ui.Device.system.phone) {
+                oDialog.setStretch(true);
+                oDialog.setContentWidth("100%");
+                oDialog.setContentHeight("100%");
+            } else if (sap.ui.Device.system.tablet) {
+                oDialog.setContentWidth("95%");
+                oDialog.setContentHeight("90%");
+            }
+        },
+
+        /**
+         * @function _initializeSecurity
+         * @description Initializes security features and audit logging.
+         * @private
+         */
+        _initializeSecurity: function() {
+            this._auditLogger = {
+                log: function(action, details) {
+                    var user = this._getCurrentUser();
+                    var timestamp = new Date().toISOString();
+                    var logEntry = {
+                        timestamp: timestamp,
+                        user: user,
+                        agent: "Agent15_Deployment",
+                        action: action,
+                        details: details || {}
+                    };
+                    console.info("AUDIT: " + JSON.stringify(logEntry));
+                }.bind(this)
+            };
+        },
+
+        /**
+         * @function _getCurrentUser
+         * @description Gets current user ID for audit logging.
+         * @returns {string} User ID or "anonymous"
+         * @private
+         */
+        _getCurrentUser: function() {
+            return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
+        },
+
+        /**
+         * @function _hasRole
+         * @description Checks if current user has specified role.
+         * @param {string} role - Role to check
+         * @returns {boolean} True if user has role
+         * @private
+         */
+        _hasRole: function(role) {
+            const user = sap.ushell?.Container?.getUser();
+            if (user && user.hasRole) {
+                return user.hasRole(role);
+            }
+            // Mock role validation for development/testing
+            const mockRoles = ["DeploymentAdmin", "DeploymentUser", "DeploymentOperator"];
+            return mockRoles.includes(role);
+        },
+
+        /**
+         * @function _cleanupResources
+         * @description Cleans up resources to prevent memory leaks.
+         * @private
+         */
+        _cleanupResources: function() {
+            // Clean up WebSocket connections
+            if (this._deploymentWs) {
+                this._deploymentWs.close();
+                this._deploymentWs = null;
+            }
+            
+            // Clean up intervals
+            if (this._logRefreshInterval) {
+                clearInterval(this._logRefreshInterval);
+                this._logRefreshInterval = null;
+            }
+            
+            // Clean up cached dialogs
+            if (this._dialogCache) {
+                Object.keys(this._dialogCache).forEach(function(key) {
+                    if (this._dialogCache[key]) {
+                        this._dialogCache[key].destroy();
+                    }
+                }.bind(this));
+                this._dialogCache = {};
+            }
+        },
+
+        /**
+         * @function getResourceBundle
+         * @description Gets the i18n resource bundle.
+         * @returns {sap.base.i18n.ResourceBundle} Resource bundle
+         * @public
+         */
         getResourceBundle: function() {
-            return this.getView().getModel("i18n").getResourceBundle();
-        },
-
-        onExit: function() {
-            // Clean up create dialog
-            if (this._oCreateDialog) {
-                this._oCreateDialog.destroy();
-                this._oCreateDialog = null;
-            }
-            
-            this._stopCreateValidationInterval();
-            
-            // Clean up other dialogs
-            if (this._cloneWorkflowDialog) {
-                this._cloneWorkflowDialog.destroy();
-            }
-            if (this._agentConfigDialog) {
-                this._agentConfigDialog.destroy();
-            }
-            if (this._executionMonitor) {
-                this._executionMonitor.destroy();
-            }
-            if (this._performanceOptimizer) {
-                this._performanceOptimizer.destroy();
-            }
-            if (this._schedulerDialog) {
-                this._schedulerDialog.destroy();
-            }
-            if (this._coordinationViewer) {
-                this._coordinationViewer.destroy();
-            }
-            if (this._exportDialog) {
-                this._exportDialog.destroy();
-            }
-            
-            // Clean up monitoring
-            if (this._eventSource) {
-                this._eventSource.close();
-            }
-            if (this._pollInterval) {
-                clearInterval(this._pollInterval);
-            }
+            return this.base.getView().getModel("i18n").getResourceBundle();
         }
     });
 });

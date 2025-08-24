@@ -57,32 +57,66 @@ let logFlushInterval = null; // Track log flush interval for cleanup
 // Initialize i18n middleware
 i18nMiddleware.init();
 
-// Helper function to check topic access based on user roles
+// Rate limiting storage for WebSocket connections
+const wsConnectionAttempts = new Map();
+
+// Helper function to check WebSocket rate limiting
+function _checkWebSocketRateLimit(clientIP) {
+    const now = Date.now();
+    const windowMs = 60000; // 1 minute
+    const maxConnections = 10; // Max 10 connections per IP per minute
+    
+    if (!wsConnectionAttempts.has(clientIP)) {
+        wsConnectionAttempts.set(clientIP, []);
+    }
+    
+    const attempts = wsConnectionAttempts.get(clientIP);
+    // Remove attempts outside the time window
+    const validAttempts = attempts.filter(timestamp => now - timestamp < windowMs);
+    
+    if (validAttempts.length >= maxConnections) {
+        return false;
+    }
+    
+    validAttempts.push(now);
+    wsConnectionAttempts.set(clientIP, validAttempts);
+    return true;
+}
+
+// Helper function to check topic access based on user roles with enhanced security
 function hasTopicAccess(user, topic) {
     if (!user || !user.roles) return false;
     
     const roles = user.sapRoles || user.roles || [];
     
-    // Admin can access all topics
-    if (roles.includes('Admin')) return true;
+    // Admin can access all topics except system-critical ones
+    if (roles.includes('Admin')) {
+        // Even admins can't access these ultra-sensitive topics
+        const restrictedTopics = ['system.secrets', 'auth.tokens', 'security.keys'];
+        return !restrictedTopics.includes(topic);
+    }
     
-    // Topic-based access control
+    // Enhanced topic-based access control with more granular permissions
     const topicPermissions = {
-        'agent.events': ['authenticated-user'],
-        'service.events': ['authenticated-user'],
-        'workflow.events': ['authenticated-user', 'WorkflowManager'],
-        'network.events': ['authenticated-user'],
-        'admin.events': ['Admin'],
-        'monitoring.alerts': ['Admin', 'AgentManager', 'ServiceManager'],
-        'system.health': ['Admin'],
-        'blockchain.events': ['authenticated-user'],
-        'performance.metrics': ['authenticated-user']
+        'agent.events': ['authenticated-user', 'AgentUser', 'AgentManager'],
+        'service.events': ['authenticated-user', 'ServiceUser', 'ServiceManager'],
+        'workflow.events': ['authenticated-user', 'WorkflowManager', 'WorkflowUser'],
+        'network.events': ['authenticated-user', 'NetworkOperator'],
+        'admin.events': ['Admin', 'SystemAdmin'],
+        'monitoring.alerts': ['Admin', 'AgentManager', 'ServiceManager', 'MonitoringUser'],
+        'system.health': ['Admin', 'SystemAdmin', 'MonitoringUser'],
+        'blockchain.events': ['authenticated-user', 'BlockchainUser'],
+        'performance.metrics': ['authenticated-user', 'MonitoringUser'],
+        'security.events': ['Admin', 'SecurityAdmin'],
+        'audit.logs': ['Admin', 'AuditUser', 'SecurityAdmin'],
+        'system.diagnostics': ['Admin', 'SystemAdmin'],
+        'configuration.changes': ['Admin', 'ConfigManager']
     };
     
     const allowedRoles = topicPermissions[topic];
     if (!allowedRoles) {
-        // Default: allow all authenticated users for unknown topics
-        return roles.includes('authenticated-user');
+        // SECURITY FIX: Deny access to unknown topics by default for security
+        return false;
     }
     
     return allowedRoles.some(role => roles.includes(role));
@@ -585,10 +619,18 @@ cds.on('listening', async (info) => {
         // Make io available globally for CDS services
         cds.io = io;
         
-        // WebSocket authentication middleware
+        // WebSocket authentication middleware with enhanced security
         io.use(async (socket, next) => {
             try {
                 const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.substring(7);
+                const clientIP = socket.handshake.address;
+                const userAgent = socket.handshake.headers['user-agent'];
+                
+                // Rate limiting for WebSocket connections
+                if (!_checkWebSocketRateLimit(clientIP)) {
+                    log.warn(`WebSocket connection rate limit exceeded for IP: ${clientIP}`);
+                    return next(new Error('Connection rate limit exceeded'));
+                }
                 
                 if (!token) {
                     // SECURITY FIX: Only allow development bypass in development environment
@@ -597,13 +639,24 @@ cds.on('listening', async (info) => {
                         socket.user = { id: 'dev-user', roles: ['authenticated-user'], isDevelopment: true };
                         return next();
                     } else {
+                        log.warn(`WebSocket authentication failed - no token provided from IP: ${clientIP}`);
                         return next(new Error('Authentication token required'));
                     }
                 }
                 
+                // Validate token format before processing
+                if (!token.match(/^[A-Za-z0-9\-\._~\+\/]+=*$/)) {
+                    log.warn(`WebSocket authentication failed - invalid token format from IP: ${clientIP}`);
+                    return next(new Error('Invalid token format'));
+                }
+                
                 // Use the same JWT validation as HTTP requests
                 const { validateJWT } = require('./middleware/auth');
-                const mockReq = { headers: { authorization: `Bearer ${token}` } };
+                const mockReq = { 
+                    headers: { authorization: `Bearer ${token}` },
+                    ip: clientIP,
+                    get: (header) => socket.handshake.headers[header.toLowerCase()]
+                };
                 const mockRes = {
                     status: () => mockRes,
                     json: (data) => { throw new Error(data.error || 'Authentication failed'); }
@@ -611,12 +664,23 @@ cds.on('listening', async (info) => {
                 
                 validateJWT(mockReq, mockRes, (error) => {
                     if (error) {
+                        log.warn(`WebSocket authentication failed for IP: ${clientIP}, error: ${error.message}`);
                         return next(error);
                     }
-                    socket.user = mockReq.user;
+                    
+                    // Add security context
+                    socket.user = {
+                        ...mockReq.user,
+                        connectionTime: new Date().toISOString(),
+                        ipAddress: clientIP,
+                        userAgent: userAgent
+                    };
+                    
+                    log.info(`WebSocket authentication successful for user: ${socket.user.id} from IP: ${clientIP}`);
                     next();
                 });
             } catch (error) {
+                log.error(`WebSocket authentication error: ${error.message}`);
                 next(new Error('WebSocket authentication failed: ' + error.message));
             }
         });
@@ -634,24 +698,52 @@ cds.on('listening', async (info) => {
                 socket.join(`user:${socket.user.id}`);
             }
             
-            // Handle subscription management
+            // Handle subscription management with enhanced validation
             socket.on('subscribe', (topics) => {
-                if (!Array.isArray(topics)) {
-                    socket.emit('error', { message: 'Topics must be an array' });
-                    return;
-                }
-                
-                topics.forEach(topic => {
-                    // Validate topic access based on user roles
-                    if (hasTopicAccess(socket.user, topic)) {
+                try {
+                    // Input validation
+                    if (!Array.isArray(topics)) {
+                        socket.emit('error', { message: 'Topics must be an array' });
+                        return;
+                    }
+                    
+                    if (topics.length > 50) {
+                        socket.emit('error', { message: 'Too many topics requested (max 50)' });
+                        return;
+                    }
+                    
+                    const validTopics = topics.filter(topic => {
+                        // Validate topic format
+                        if (typeof topic !== 'string' || topic.length > 100) {
+                            return false;
+                        }
+                        
+                        // Sanitize topic name
+                        if (!/^[a-zA-Z0-9._-]+$/.test(topic)) {
+                            return false;
+                        }
+                        
+                        // Check access permissions
+                        return hasTopicAccess(socket.user, topic);
+                    });
+                    
+                    validTopics.forEach(topic => {
                         socket.join(`topic:${topic}`);
                         log.debug(`User ${socket.user.id} subscribed to topic: ${topic}`);
-                    } else {
-                        socket.emit('error', { message: `Access denied to topic: ${topic}` });
-                    }
-                });
-                
-                socket.emit('subscribed', { topics: topics.filter(t => hasTopicAccess(socket.user, t)) });
+                    });
+                    
+                    // Audit log subscription activity
+                    log.info(`User ${socket.user.id} subscribed to ${validTopics.length} topics`, {
+                        userId: socket.user.id,
+                        topics: validTopics,
+                        ipAddress: socket.user.ipAddress
+                    });
+                    
+                    socket.emit('subscribed', { topics: validTopics });
+                } catch (error) {
+                    log.error('Error handling subscription:', error);
+                    socket.emit('error', { message: 'Subscription failed' });
+                }
             });
             
             socket.on('unsubscribe', (topics) => {

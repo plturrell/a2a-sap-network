@@ -19,6 +19,20 @@
             }
         }
     },
+    "sap.cloud": {
+        "public": true,
+        "service": "a2a.network.agent2.service",
+        "security": {
+            "headers": {
+                "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; object-src 'none'; base-uri 'self'",
+                "X-Frame-Options": "SAMEORIGIN",
+                "X-Content-Type-Options": "nosniff",
+                "X-XSS-Protection": "1; mode=block",
+                "Referrer-Policy": "strict-origin-when-cross-origin",
+                "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
+            }
+        }
+    },
     "sap.ui5": {
         "dependencies": {
             "minUI5Version": "1.120.0",

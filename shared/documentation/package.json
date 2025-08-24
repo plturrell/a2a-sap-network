@@ -1,0 +1,46 @@
+{
+  "name": "@a2a/documentation-generator",
+  "version": "1.0.0",
+  "description": "Automated documentation generation for A2A Platform",
+  "main": "doc-generator.js",
+  "bin": {
+    "a2a-docs": "./doc-generator.js",
+    "a2a-docs-py": "./generate-docs.py"
+  },
+  "scripts": {
+    "generate": "node doc-generator.js",
+    "generate:python": "python generate-docs.py",
+    "generate:all": "npm run generate && npm run generate:python",
+    "dev": "node doc-generator.js --watch",
+    "clean": "rm -rf docs/generated docs/python",
+    "install:deps": "npm install"
+  },
+  "keywords": [
+    "documentation",
+    "generator",
+    "a2a-platform",
+    "api-docs",
+    "code-analysis"
+  ],
+  "author": "A2A Platform Team",
+  "license": "MIT",
+  "dependencies": {
+    "glob": "^8.0.0",
+    "js-yaml": "^4.1.0",
+    "markdown-it": "^13.0.0",
+    "commander": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0",
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "python": ">=3.8.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/a2a-platform/a2a.git",
+    "directory": "shared/documentation"
+  }
+}

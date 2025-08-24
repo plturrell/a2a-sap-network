@@ -1,254 +1,498 @@
 sap.ui.define([
     "sap/ui/core/mvc/ControllerExtension",
-    "sap/m/MessageToast",
-    "sap/m/MessageBox",
     "sap/ui/core/Fragment",
+    "sap/m/MessageBox",
+    "sap/m/MessageToast",
+    "sap/ui/model/json/JSONModel",
     "a2a/network/agent15/ext/utils/SecurityUtils"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment, SecurityUtils) {
+], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, SecurityUtils) {
     "use strict";
 
+    /**
+     * @class a2a.network.agent15.ext.controller.ListReportExt
+     * @extends sap.ui.core.mvc.ControllerExtension
+     * @description Controller extension for Agent 15 List Report - Deployment Management Agent.
+     * Provides comprehensive deployment orchestration, pipeline configuration, and status monitoring
+     * with enterprise-grade security, audit logging, and accessibility features.
+     */
     return ControllerExtension.extend("a2a.network.agent15.ext.controller.ListReportExt", {
         
-        // Orchestration Dashboard Action
-        onOrchestrationDashboard: function() {
-            if (!this._orchestrationDashboard) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent15.ext.fragment.OrchestrationDashboard",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._orchestrationDashboard = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._loadOrchestrationData();
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._loadOrchestrationData();
-                this._orchestrationDashboard.open();
+        override: {
+            /**
+             * @function onInit
+             * @description Initializes the controller extension with security utilities, device model, dialog caching, and real-time updates.
+             * @override
+             */
+            onInit: function () {
+                this._extensionAPI = this.base.getExtensionAPI();
+                this._securityUtils = SecurityUtils;
+                this._initializeDeviceModel();
+                this._initializeDialogCache();
+                this._initializePerformanceOptimizations();
+                this._startRealtimeUpdates();
+                this._initializeSecurity();
+            },
+            
+            /**
+             * @function onExit
+             * @description Cleanup resources on controller destruction.
+             * @override
+             */
+            onExit: function() {
+                this._cleanupResources();
+                if (this.base.onExit) {
+                    this.base.onExit.apply(this, arguments);
+                }
             }
         },
-
-        // Create New Workflow
-        onCreateWorkflow: function() {
-            if (!this._workflowCreator) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent15.ext.fragment.WorkflowCreator",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._workflowCreator = oDialog;
-                    this.getView().addDependent(oDialog);
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._workflowCreator.open();
-            }
+        
+        // Dialog caching for performance
+        _dialogCache: {},
+        
+        // Error recovery configuration
+        _errorRecoveryConfig: {
+            maxRetries: 3,
+            retryDelay: 1000,
+            exponentialBackoff: true
         },
 
-        // Start Workflow Action
-        onStartWorkflow: function() {
-            const oBinding = this.base.getView().byId("fe::table::Workflows::LineItem").getBinding("rows");
+        /**
+         * @function onDeployPackage
+         * @description Deploys selected packages to target environments.
+         * @public
+         */
+        onDeployPackage: function() {
+            if (!this._hasRole("DeploymentAdmin")) {
+                MessageBox.error("Access denied. Deployment Administrator role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "DeployPackage", reason: "Insufficient permissions" });
+                return;
+            }
+
+            const oBinding = this.base.getView().byId("fe::table::DeploymentTasks::LineItem").getBinding("rows");
             const aSelectedContexts = oBinding.getSelectedContexts();
             
             if (aSelectedContexts.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("msg.selectWorkflowsFirst"));
+                MessageToast.show(this.getResourceBundle().getText("msg.selectTasksFirst"));
                 return;
             }
 
-            const aSelectedWorkflows = aSelectedContexts.map(ctx => ctx.getObject());
-            const aPendingWorkflows = aSelectedWorkflows.filter(wf => wf.status === 'pending');
+            // Filter deployable packages
+            const aDeployablePackages = aSelectedContexts.filter(ctx => {
+                const oData = ctx.getObject();
+                return oData.status === "READY" || oData.status === "VALIDATED";
+            });
+
+            if (aDeployablePackages.length === 0) {
+                MessageBox.warning(this.getResourceBundle().getText("msg.noDeployablePackages"));
+                return;
+            }
+
+            this._auditLogger.log("DEPLOY_PACKAGE", { packageCount: aDeployablePackages.length });
             
-            if (aPendingWorkflows.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("error.noExecutableWorkflows"));
-                return;
-            }
-
             MessageBox.confirm(
-                this.getResourceBundle().getText("msg.startWorkflowConfirm", [aPendingWorkflows.length]),
+                this.getResourceBundle().getText("msg.deployPackageConfirm", [aDeployablePackages.length]),
                 {
                     onClose: function(oAction) {
                         if (oAction === MessageBox.Action.OK) {
-                            this._executeWorkflows(aPendingWorkflows);
+                            this._executePackageDeployment(aDeployablePackages);
                         }
                     }.bind(this)
                 }
             );
         },
 
-        // Pause Workflow Action
-        onPauseWorkflow: function() {
-            const oBinding = this.base.getView().byId("fe::table::Workflows::LineItem").getBinding("rows");
-            const aSelectedContexts = oBinding.getSelectedContexts();
-            
-            if (aSelectedContexts.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("msg.selectWorkflowsFirst"));
+        /**
+         * @function onConfigurePipeline
+         * @description Opens deployment pipeline configuration interface.
+         * @public
+         */
+        onConfigurePipeline: function() {
+            if (!this._hasRole("DeploymentAdmin")) {
+                MessageBox.error("Access denied. Deployment Administrator role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "ConfigurePipeline", reason: "Insufficient permissions" });
                 return;
             }
 
-            const aRunningWorkflows = aSelectedContexts
-                .map(ctx => ctx.getObject())
-                .filter(wf => wf.status === 'running');
+            this._auditLogger.log("CONFIGURE_PIPELINE", { action: "OpenPipelineConfiguration" });
             
-            if (aRunningWorkflows.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("error.noPausableWorkflows"));
-                return;
-            }
-
-            this._pauseWorkflows(aRunningWorkflows);
-        },
-
-        // Stop Workflow Action
-        onStopWorkflow: function() {
-            const oBinding = this.base.getView().byId("fe::table::Workflows::LineItem").getBinding("rows");
-            const aSelectedContexts = oBinding.getSelectedContexts();
-            
-            if (aSelectedContexts.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("msg.selectWorkflowsFirst"));
-                return;
-            }
-
-            const aActiveWorkflows = aSelectedContexts
-                .map(ctx => ctx.getObject())
-                .filter(wf => wf.status === 'running' || wf.status === 'paused');
-            
-            if (aActiveWorkflows.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("error.noStoppableWorkflows"));
-                return;
-            }
-
-            MessageBox.confirm(
-                this.getResourceBundle().getText("msg.stopWorkflowConfirm", [aActiveWorkflows.length]),
-                {
-                    icon: MessageBox.Icon.WARNING,
-                    onClose: function(oAction) {
-                        if (oAction === MessageBox.Action.OK) {
-                            this._stopWorkflows(aActiveWorkflows);
+            this._getOrCreateDialog("configurePipeline", "a2a.network.agent15.ext.fragment.ConfigurePipeline")
+                .then(function(oDialog) {
+                    var oPipelineModel = new JSONModel({
+                        pipelines: [],
+                        environments: [
+                            { key: "DEV", text: "Development", order: 1 },
+                            { key: "TEST", text: "Testing", order: 2 },
+                            { key: "STAGING", text: "Staging", order: 3 },
+                            { key: "PROD", text: "Production", order: 4 }
+                        ],
+                        deploymentStrategies: [
+                            { key: "BLUE_GREEN", text: "Blue-Green Deployment" },
+                            { key: "ROLLING", text: "Rolling Deployment" },
+                            { key: "CANARY", text: "Canary Deployment" },
+                            { key: "RECREATE", text: "Recreate Deployment" }
+                        ],
+                        selectedStrategy: "ROLLING",
+                        approvalRequired: true,
+                        automatedTesting: true,
+                        rollbackEnabled: true,
+                        notificationSettings: {
+                            onSuccess: true,
+                            onFailure: true,
+                            onStart: false
+                        },
+                        stages: [],
+                        triggers: {
+                            manual: true,
+                            scheduled: false,
+                            webhook: false,
+                            scmTrigger: false
                         }
-                    }.bind(this)
+                    });
+                    oDialog.setModel(oPipelineModel, "pipeline");
+                    oDialog.open();
+                    this._loadPipelineConfigurations(oDialog);
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Pipeline Configuration: " + error.message);
+                });
+        },
+
+        /**
+         * @function onViewDeploymentStatus
+         * @description Opens deployment status monitoring dashboard.
+         * @public
+         */
+        onViewDeploymentStatus: function() {
+            if (!this._hasRole("DeploymentUser")) {
+                MessageBox.error("Access denied. Deployment User role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "ViewDeploymentStatus", reason: "Insufficient permissions" });
+                return;
+            }
+
+            this._auditLogger.log("VIEW_DEPLOYMENT_STATUS", { action: "OpenStatusDashboard" });
+            
+            this._getOrCreateDialog("viewDeploymentStatus", "a2a.network.agent15.ext.fragment.ViewDeploymentStatus")
+                .then(function(oDialog) {
+                    var oStatusModel = new JSONModel({
+                        statusFilter: "ALL",
+                        environmentFilter: "ALL",
+                        timeRange: "LAST_24_HOURS",
+                        startDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
+                        endDate: new Date(),
+                        autoRefresh: true,
+                        refreshInterval: 30000,
+                        deployments: [],
+                        statistics: {
+                            running: 0,
+                            successful: 0,
+                            failed: 0,
+                            pending: 0,
+                            rollback: 0
+                        },
+                        environmentStatus: {
+                            dev: "HEALTHY",
+                            test: "HEALTHY",
+                            staging: "WARNING",
+                            production: "HEALTHY"
+                        },
+                        performanceMetrics: {
+                            deploymentFrequency: 0,
+                            successRate: 0,
+                            averageDeployTime: 0,
+                            meanTimeToRecovery: 0
+                        }
+                    });
+                    oDialog.setModel(oStatusModel, "status");
+                    oDialog.open();
+                    this._loadDeploymentStatus(oDialog);
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Deployment Status: " + error.message);
+                });
+        },
+
+        /**
+         * @function _executePackageDeployment
+         * @description Executes deployment for selected packages.
+         * @param {Array} aSelectedContexts - Selected deployment task contexts
+         * @private
+         */
+        _executePackageDeployment: function(aSelectedContexts) {
+            const aTaskIds = aSelectedContexts.map(ctx => ctx.getObject().taskId);
+            
+            // Show progress dialog
+            this._getOrCreateDialog("deploymentProgress", "a2a.network.agent15.ext.fragment.DeploymentProgress")
+                .then(function(oProgressDialog) {
+                    var oProgressModel = new JSONModel({
+                        totalPackages: aTaskIds.length,
+                        completedPackages: 0,
+                        currentPackage: "",
+                        progress: 0,
+                        status: "Starting deployment...",
+                        currentStage: "PREPARATION",
+                        stages: [
+                            { name: "PREPARATION", status: "ACTIVE", progress: 0 },
+                            { name: "VALIDATION", status: "PENDING", progress: 0 },
+                            { name: "DEPLOYMENT", status: "PENDING", progress: 0 },
+                            { name: "TESTING", status: "PENDING", progress: 0 },
+                            { name: "FINALIZATION", status: "PENDING", progress: 0 }
+                        ],
+                        deploymentResults: []
+                    });
+                    oProgressDialog.setModel(oProgressModel, "progress");
+                    oProgressDialog.open();
+                    
+                    this._runPackageDeployment(aTaskIds, oProgressDialog);
+                }.bind(this));
+        },
+
+        /**
+         * @function _runPackageDeployment
+         * @description Runs package deployment with real-time progress updates.
+         * @param {Array} aTaskIds - Array of task IDs to deploy
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _runPackageDeployment: function(aTaskIds, oProgressDialog) {
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/DeployPackages", {
+                urlParameters: {
+                    taskIds: aTaskIds.join(','),
+                    strategy: "ROLLING",
+                    validateFirst: true,
+                    enableRollback: true,
+                    testAfterDeploy: true
+                },
+                success: function(data) {
+                    MessageToast.show(this.getResourceBundle().getText("msg.deploymentStarted"));
+                    this._startDeploymentMonitoring(data.deploymentId, oProgressDialog);
+                    this._auditLogger.log("DEPLOYMENT_STARTED", { 
+                        taskCount: aTaskIds.length, 
+                        deploymentId: data.deploymentId,
+                        success: true 
+                    });
+                }.bind(this),
+                error: function(error) {
+                    MessageBox.error(this.getResourceBundle().getText("error.deploymentFailed"));
+                    oProgressDialog.close();
+                    this._auditLogger.log("DEPLOYMENT_FAILED", { 
+                        taskCount: aTaskIds.length, 
+                        error: error.message 
+                    });
+                }.bind(this)
+            });
+        },
+
+        /**
+         * @function _startDeploymentMonitoring
+         * @description Starts real-time monitoring of deployment progress.
+         * @param {string} sDeploymentId - Deployment ID to monitor
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _startDeploymentMonitoring: function(sDeploymentId, oProgressDialog) {
+            if (this._deploymentEventSource) {
+                this._deploymentEventSource.close();
+            }
+            
+            try {
+                this._deploymentEventSource = new EventSource('/api/agent15/deployment/stream/' + sDeploymentId);
+                
+                this._deploymentEventSource.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        this._updateDeploymentProgress(data, oProgressDialog);
+                    } catch (error) {
+                        console.error('Error parsing deployment progress data:', error);
+                    }
+                }.bind(this);
+                
+                this._deploymentEventSource.onerror = function(error) {
+                    console.warn('Deployment stream error, falling back to polling:', error);
+                    this._startDeploymentPolling(sDeploymentId, oProgressDialog);
+                }.bind(this);
+                
+            } catch (error) {
+                console.warn('EventSource not available, using polling fallback');
+                this._startDeploymentPolling(sDeploymentId, oProgressDialog);
+            }
+        },
+
+        /**
+         * @function _loadPipelineConfigurations
+         * @description Loads pipeline configurations and templates.
+         * @param {sap.m.Dialog} oDialog - Pipeline configuration dialog
+         * @private
+         */
+        _loadPipelineConfigurations: function(oDialog) {
+            oDialog.setBusy(true);
+            
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/GetPipelineConfigurations", {
+                success: function(data) {
+                    var oPipelineModel = oDialog.getModel("pipeline");
+                    if (oPipelineModel) {
+                        var oCurrentData = oPipelineModel.getData();
+                        oCurrentData.pipelines = data.pipelines || [];
+                        oCurrentData.templates = data.templates || [];
+                        oCurrentData.integrations = data.integrations || [];
+                        oCurrentData.approvalWorkflows = data.approvalWorkflows || [];
+                        oPipelineModel.setData(oCurrentData);
+                    }
+                    oDialog.setBusy(false);
+                }.bind(this),
+                error: function(error) {
+                    oDialog.setBusy(false);
+                    MessageBox.error("Failed to load pipeline configurations: " + error.message);
                 }
-            );
+            });
         },
 
-        // Agent Coordinator Action
-        onAgentCoordinator: function() {
-            if (!this._agentCoordinator) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent15.ext.fragment.AgentCoordinator",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._agentCoordinator = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._loadAgentNetworkData();
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._loadAgentNetworkData();
-                this._agentCoordinator.open();
+        /**
+         * @function _loadDeploymentStatus
+         * @description Loads deployment status information.
+         * @param {sap.m.Dialog} oDialog - Status dialog
+         * @private
+         */
+        _loadDeploymentStatus: function(oDialog) {
+            oDialog.setBusy(true);
+            
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/GetDeploymentStatus", {
+                success: function(data) {
+                    var oStatusModel = oDialog.getModel("status");
+                    if (oStatusModel) {
+                        var oCurrentData = oStatusModel.getData();
+                        oCurrentData.deployments = data.deployments || [];
+                        oCurrentData.statistics = data.statistics || {};
+                        oCurrentData.environmentStatus = data.environmentStatus || {};
+                        oCurrentData.performanceMetrics = data.performanceMetrics || {};
+                        oCurrentData.alerts = data.alerts || [];
+                        oStatusModel.setData(oCurrentData);
+                    }
+                    oDialog.setBusy(false);
+                    
+                    // Start auto-refresh if enabled
+                    if (oCurrentData.autoRefresh) {
+                        this._startStatusAutoRefresh(oDialog);
+                    }
+                }.bind(this),
+                error: function(error) {
+                    oDialog.setBusy(false);
+                    MessageBox.error("Failed to load deployment status: " + error.message);
+                }
+            });
+        },
+
+        /**
+         * @function _updateDeploymentProgress
+         * @description Updates deployment progress display.
+         * @param {Object} data - Progress data
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _updateDeploymentProgress: function(data, oProgressDialog) {
+            if (!oProgressDialog || !oProgressDialog.isOpen()) return;
+            
+            var oProgressModel = oProgressDialog.getModel("progress");
+            if (oProgressModel) {
+                var oCurrentData = oProgressModel.getData();
+                oCurrentData.completedPackages = data.completedPackages || oCurrentData.completedPackages;
+                oCurrentData.currentPackage = data.currentPackage || oCurrentData.currentPackage;
+                oCurrentData.progress = Math.round((oCurrentData.completedPackages / oCurrentData.totalPackages) * 100);
+                oCurrentData.status = data.status || oCurrentData.status;
+                oCurrentData.currentStage = data.currentStage || oCurrentData.currentStage;
+                
+                // Update stages
+                if (data.stages) {
+                    oCurrentData.stages = data.stages;
+                }
+                
+                if (data.deploymentResults && data.deploymentResults.length > 0) {
+                    oCurrentData.deploymentResults = oCurrentData.deploymentResults.concat(data.deploymentResults);
+                }
+                
+                oProgressModel.setData(oCurrentData);
+                
+                // Check if all packages are deployed
+                if (oCurrentData.completedPackages >= oCurrentData.totalPackages) {
+                    this._completeDeployment(oProgressDialog);
+                }
             }
         },
 
-        // Performance Analyzer Action
-        onPerformanceAnalyzer: function() {
-            if (!this._performanceAnalyzer) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent15.ext.fragment.PerformanceAnalyzer",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._performanceAnalyzer = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._analyzeSystemPerformance();
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._analyzeSystemPerformance();
-                this._performanceAnalyzer.open();
+        /**
+         * @function _completeDeployment
+         * @description Handles completion of deployment operation.
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _completeDeployment: function(oProgressDialog) {
+            setTimeout(() => {
+                oProgressDialog.close();
+                MessageToast.show(this.getResourceBundle().getText("msg.deploymentCompleted"));
+                this._refreshDeploymentData();
+                this._auditLogger.log("DEPLOYMENT_COMPLETED", { status: "SUCCESS" });
+            }, 2000);
+            
+            // Clean up event source
+            if (this._deploymentEventSource) {
+                this._deploymentEventSource.close();
+                this._deploymentEventSource = null;
             }
         },
 
-        // Pipeline Manager Action
-        onPipelineManager: function() {
-            if (!this._pipelineManager) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent15.ext.fragment.PipelineManager",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._pipelineManager = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._loadPipelineData();
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._loadPipelineData();
-                this._pipelineManager.open();
+        /**
+         * @function _refreshDeploymentData
+         * @description Refreshes deployment task data in the table.
+         * @private
+         */
+        _refreshDeploymentData: function() {
+            const oBinding = this.base.getView().byId("fe::table::DeploymentTasks::LineItem").getBinding("rows");
+            if (oBinding) {
+                oBinding.refresh();
             }
         },
 
-        // Queue Manager Action
-        onQueueManager: function() {
-            if (!this._queueManager) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent15.ext.fragment.QueueManager",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._queueManager = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._loadQueueData();
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._loadQueueData();
-                this._queueManager.open();
-            }
-        },
-
-        // Event Stream Viewer Action
-        onEventStreamViewer: function() {
-            if (!this._eventStreamViewer) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent15.ext.fragment.EventStreamViewer",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._eventStreamViewer = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._loadEventStream();
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._loadEventStream();
-                this._eventStreamViewer.open();
-            }
-        },
-
-        // Real-time Updates via WebSocket
-        onAfterRendering: function() {
+        /**
+         * @function _startRealtimeUpdates
+         * @description Starts real-time updates for deployment events.
+         * @private
+         */
+        _startRealtimeUpdates: function() {
             this._initializeWebSocket();
         },
 
+        /**
+         * @function _initializeWebSocket
+         * @description Initializes secure WebSocket connection for real-time deployment updates.
+         * @private
+         */
         _initializeWebSocket: function() {
             if (this._ws) return;
 
+            // Validate WebSocket URL for security
+            if (!this._securityUtils.validateWebSocketUrl('ws://localhost:8015/deployment/updates')) {
+                MessageBox.error("Invalid WebSocket URL");
+                return;
+            }
+
             try {
-                this._ws = SecurityUtils.createSecureWebSocket('wss://localhost:8015/orchestrator/updates', {
-                    onmessage: function(event) {
-                        const data = JSON.parse(event.data);
-                        this._handleOrchestrationUpdate(data);
-                    }.bind(this),
-                    onerror: function(error) {
-                        console.warn("Secure WebSocket error:", error);
-                        this._initializePolling();
+                this._ws = SecurityUtils.createSecureWebSocket('ws://localhost:8015/deployment/updates', {
+                    onMessage: function(data) {
+                        this._handleDeploymentUpdate(data);
                     }.bind(this)
                 });
                 
-                if (this._ws) {
-                    this._ws.onclose = function() {
-                        setTimeout(() => this._initializeWebSocket(), 5000);
-                    }.bind(this);
-                }
+                this._ws.onclose = function() {
+                    var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                    var sMessage = oBundle.getText("msg.websocketDisconnected") || "Connection lost. Reconnecting...";
+                    MessageToast.show(sMessage);
+                    setTimeout(() => this._initializeWebSocket(), 5000);
+                }.bind(this);
 
             } catch (error) {
                 console.warn("WebSocket connection failed, falling back to polling");
@@ -256,234 +500,314 @@ sap.ui.define([
             }
         },
 
+        /**
+         * @function _initializePolling
+         * @description Initializes polling fallback for real-time updates.
+         * @private
+         */
         _initializePolling: function() {
             this._pollInterval = setInterval(() => {
-                this._refreshWorkflowData();
-            }, 3000);
+                this._refreshDeploymentData();
+            }, 5000);
         },
 
-        _handleOrchestrationUpdate: function(data) {
-            const oModel = this.getView().getModel();
+        /**
+         * @function _handleDeploymentUpdate
+         * @description Handles real-time deployment updates from WebSocket.
+         * @param {Object} data - Update data
+         * @private
+         */
+        _handleDeploymentUpdate: function(data) {
+            try {
+                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                
+                switch (data.type) {
+                    case 'DEPLOYMENT_STARTED':
+                        var sDeploymentStarted = oBundle.getText("msg.deploymentStarted") || "Deployment started";
+                        MessageToast.show(sDeploymentStarted);
+                        break;
+                    case 'DEPLOYMENT_PROGRESS':
+                        this._updateDeploymentProgress(data);
+                        break;
+                    case 'DEPLOYMENT_COMPLETED':
+                        var sDeploymentCompleted = oBundle.getText("msg.deploymentCompleted") || "Deployment completed";
+                        MessageToast.show(sDeploymentCompleted);
+                        this._refreshDeploymentData();
+                        break;
+                    case 'DEPLOYMENT_FAILED':
+                        var sDeploymentFailed = oBundle.getText("error.deploymentFailed") || "Deployment failed";
+                        MessageBox.error(sDeploymentFailed + ": " + data.message);
+                        break;
+                    case 'ROLLBACK_INITIATED':
+                        var sRollbackInitiated = oBundle.getText("msg.rollbackInitiated") || "Rollback initiated";
+                        MessageToast.show(sRollbackInitiated);
+                        this._refreshDeploymentData();
+                        break;
+                    case 'ENVIRONMENT_WARNING':
+                        var sEnvironmentWarning = oBundle.getText("msg.environmentWarning") || "Environment warning";
+                        MessageBox.warning(sEnvironmentWarning + ": " + data.message);
+                        break;
+                    case 'PIPELINE_UPDATED':
+                        var sPipelineUpdated = oBundle.getText("msg.pipelineUpdated") || "Pipeline configuration updated";
+                        MessageToast.show(sPipelineUpdated);
+                        break;
+                }
+            } catch (error) {
+                console.error("Error processing deployment update:", error);
+            }
+        },
+        
+        /**
+         * @function _initializeDeviceModel
+         * @description Sets up device model for responsive design.
+         * @private
+         */
+        _initializeDeviceModel: function() {
+            var oDeviceModel = new sap.ui.model.json.JSONModel(sap.ui.Device);
+            this.base.getView().setModel(oDeviceModel, "device");
+        },
+        
+        /**
+         * @function _initializeDialogCache
+         * @description Initializes dialog cache for performance.
+         * @private
+         */
+        _initializeDialogCache: function() {
+            this._dialogCache = {};
+        },
+        
+        /**
+         * @function _initializePerformanceOptimizations
+         * @description Sets up performance optimization features.
+         * @private
+         */
+        _initializePerformanceOptimizations: function() {
+            // Throttle deployment data updates
+            this._throttledDeploymentUpdate = this._throttle(this._refreshDeploymentData.bind(this), 1000);
+            // Debounce search operations
+            this._debouncedSearch = this._debounce(this._performSearch.bind(this), 300);
+        },
+        
+        /**
+         * @function _performSearch
+         * @description Performs search operation for deployment tasks.
+         * @param {string} sQuery - Search query
+         * @private
+         */
+        _performSearch: function(sQuery) {
+            // Implement search logic for deployment tasks
+        },
+        
+        /**
+         * @function _throttle
+         * @description Creates a throttled function.
+         * @param {Function} fn - Function to throttle
+         * @param {number} limit - Time limit in milliseconds
+         * @returns {Function} Throttled function
+         * @private
+         */
+        _throttle: function(fn, limit) {
+            var inThrottle;
+            return function() {
+                var args = arguments;
+                var context = this;
+                if (!inThrottle) {
+                    fn.apply(context, args);
+                    inThrottle = true;
+                    setTimeout(function() { inThrottle = false; }, limit);
+                }
+            };
+        },
+        
+        /**
+         * @function _debounce
+         * @description Creates a debounced function.
+         * @param {Function} fn - Function to debounce
+         * @param {number} delay - Delay in milliseconds
+         * @returns {Function} Debounced function
+         * @private
+         */
+        _debounce: function(fn, delay) {
+            var timeoutId;
+            return function() {
+                var context = this;
+                var args = arguments;
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(function() {
+                    fn.apply(context, args);
+                }, delay);
+            };
+        },
+
+        /**
+         * @function _getOrCreateDialog
+         * @description Gets cached dialog or creates new one with accessibility and responsive features.
+         * @param {string} sDialogId - Dialog identifier
+         * @param {string} sFragmentName - Fragment name
+         * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog
+         * @private
+         */
+        _getOrCreateDialog: function(sDialogId, sFragmentName) {
+            var that = this;
             
-            switch (data.type) {
-                case 'WORKFLOW_STARTED':
-                    MessageToast.show(this.getResourceBundle().getText("msg.workflowStarted"));
-                    this._refreshWorkflowData();
-                    break;
-                case 'WORKFLOW_COMPLETED':
-                    MessageToast.show(this.getResourceBundle().getText("msg.workflowCompleted"));
-                    this._refreshWorkflowData();
-                    break;
-                case 'WORKFLOW_FAILED':
-                    MessageToast.show(this.getResourceBundle().getText("msg.workflowFailed"));
-                    this._refreshWorkflowData();
-                    break;
-                case 'AGENT_STATUS_CHANGED':
-                    this._updateAgentStatus(data);
-                    break;
-                case 'SYSTEM_ALERT':
-                    this._handleSystemAlert(data);
-                    break;
-                case 'PERFORMANCE_THRESHOLD':
-                    MessageToast.show(this.getResourceBundle().getText("msg.thresholdExceeded"));
-                    break;
-                case 'COORDINATION_EVENT':
-                    this._updateCoordinationStatus(data);
-                    break;
+            if (this._dialogCache[sDialogId]) {
+                return Promise.resolve(this._dialogCache[sDialogId]);
+            }
+            
+            return Fragment.load({
+                id: this.base.getView().getId(),
+                name: sFragmentName,
+                controller: this
+            }).then(function(oDialog) {
+                that._dialogCache[sDialogId] = oDialog;
+                that.base.getView().addDependent(oDialog);
+                
+                // Enable accessibility
+                that._enableDialogAccessibility(oDialog);
+                
+                // Optimize for mobile
+                that._optimizeDialogForDevice(oDialog);
+                
+                return oDialog;
+            });
+        },
+        
+        /**
+         * @function _enableDialogAccessibility
+         * @description Adds accessibility features to dialog.
+         * @param {sap.m.Dialog} oDialog - Dialog to enhance
+         * @private
+         */
+        _enableDialogAccessibility: function(oDialog) {
+            oDialog.addEventDelegate({
+                onAfterRendering: function() {
+                    var $dialog = oDialog.$();
+                    
+                    // Set tabindex for focusable elements
+                    $dialog.find("input, button, select, textarea").attr("tabindex", "0");
+                    
+                    // Handle escape key
+                    $dialog.on("keydown", function(e) {
+                        if (e.key === "Escape") {
+                            oDialog.close();
+                        }
+                    });
+                    
+                    // Focus first input on open
+                    setTimeout(function() {
+                        $dialog.find("input:visible:first").focus();
+                    }, 100);
+                }
+            });
+        },
+        
+        /**
+         * @function _optimizeDialogForDevice
+         * @description Optimizes dialog for current device.
+         * @param {sap.m.Dialog} oDialog - Dialog to optimize
+         * @private
+         */
+        _optimizeDialogForDevice: function(oDialog) {
+            if (sap.ui.Device.system.phone) {
+                oDialog.setStretch(true);
+                oDialog.setContentWidth("100%");
+                oDialog.setContentHeight("100%");
+            } else if (sap.ui.Device.system.tablet) {
+                oDialog.setContentWidth("95%");
+                oDialog.setContentHeight("90%");
             }
         },
 
-        _loadOrchestrationData: function() {
-            const oModel = this.getView().getModel();
-            
-            SecurityUtils.secureCallFunction(oModel, "/GetOrchestrationMetrics", {
-                success: function(data) {
-                    this._updateOrchestrationDashboard(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingData"));
+        /**
+         * @function _initializeSecurity
+         * @description Initializes security features and audit logging.
+         * @private
+         */
+        _initializeSecurity: function() {
+            this._auditLogger = {
+                log: function(action, details) {
+                    var user = this._getCurrentUser();
+                    var timestamp = new Date().toISOString();
+                    var logEntry = {
+                        timestamp: timestamp,
+                        user: user,
+                        agent: "Agent15_Deployment",
+                        action: action,
+                        details: details || {}
+                    };
+                    console.info("AUDIT: " + JSON.stringify(logEntry));
                 }.bind(this)
-            });
+            };
         },
 
-        _executeWorkflows: function(aWorkflows) {
-            const oModel = this.getView().getModel();
-            const aWorkflowIds = aWorkflows.map(wf => wf.workflowId);
-            
-            MessageToast.show(this.getResourceBundle().getText("msg.workflowsStarting"));
-            
-            SecurityUtils.secureCallFunction(oModel, "/ExecuteWorkflows", {
-                urlParameters: {
-                    workflowIds: aWorkflowIds.join(',')
-                },
-                success: function(data) {
-                    MessageToast.show(this.getResourceBundle().getText("msg.workflowsStarted"));
-                    this._refreshWorkflowData();
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.workflowExecutionFailed"));
-                }.bind(this)
-            });
+        /**
+         * @function _getCurrentUser
+         * @description Gets current user ID for audit logging.
+         * @returns {string} User ID or "anonymous"
+         * @private
+         */
+        _getCurrentUser: function() {
+            return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
         },
 
-        _pauseWorkflows: function(aWorkflows) {
-            const oModel = this.getView().getModel();
-            const aWorkflowIds = aWorkflows.map(wf => wf.workflowId);
-            
-            SecurityUtils.secureCallFunction(oModel, "/PauseWorkflows", {
-                urlParameters: {
-                    workflowIds: aWorkflowIds.join(',')
-                },
-                success: function(data) {
-                    MessageToast.show(this.getResourceBundle().getText("msg.workflowsPaused"));
-                    this._refreshWorkflowData();
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.workflowPauseFailed"));
-                }.bind(this)
-            });
+        /**
+         * @function _hasRole
+         * @description Checks if current user has specified role.
+         * @param {string} role - Role to check
+         * @returns {boolean} True if user has role
+         * @private
+         */
+        _hasRole: function(role) {
+            const user = sap.ushell?.Container?.getUser();
+            if (user && user.hasRole) {
+                return user.hasRole(role);
+            }
+            // Mock role validation for development/testing
+            const mockRoles = ["DeploymentAdmin", "DeploymentUser", "DeploymentOperator"];
+            return mockRoles.includes(role);
         },
 
-        _stopWorkflows: function(aWorkflows) {
-            const oModel = this.getView().getModel();
-            const aWorkflowIds = aWorkflows.map(wf => wf.workflowId);
-            
-            SecurityUtils.secureCallFunction(oModel, "/StopWorkflows", {
-                urlParameters: {
-                    workflowIds: aWorkflowIds.join(',')
-                },
-                success: function(data) {
-                    MessageToast.show(this.getResourceBundle().getText("msg.workflowsStopped"));
-                    this._refreshWorkflowData();
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.workflowStopFailed"));
-                }.bind(this)
-            });
-        },
-
-        _loadAgentNetworkData: function() {
-            const oModel = this.getView().getModel();
-            
-            SecurityUtils.secureCallFunction(oModel, "/GetAgentNetworkStatus", {
-                success: function(data) {
-                    this._updateAgentCoordinator(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingAgentData"));
-                }.bind(this)
-            });
-        },
-
-        _analyzeSystemPerformance: function() {
-            const oModel = this.getView().getModel();
-            
-            SecurityUtils.secureCallFunction(oModel, "/AnalyzeSystemPerformance", {
-                success: function(data) {
-                    this._displayPerformanceAnalysis(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.performanceAnalysisFailed"));
-                }.bind(this)
-            });
-        },
-
-        _loadPipelineData: function() {
-            const oModel = this.getView().getModel();
-            
-            SecurityUtils.secureCallFunction(oModel, "/GetPipelineDefinitions", {
-                success: function(data) {
-                    this._updatePipelineManager(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingPipelineData"));
-                }.bind(this)
-            });
-        },
-
-        _loadQueueData: function() {
-            const oModel = this.getView().getModel();
-            
-            SecurityUtils.secureCallFunction(oModel, "/GetTaskQueues", {
-                success: function(data) {
-                    this._updateQueueManager(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingQueueData"));
-                }.bind(this)
-            });
-        },
-
-        _loadEventStream: function() {
-            const oModel = this.getView().getModel();
-            
-            SecurityUtils.secureCallFunction(oModel, "/GetOrchestrationEvents", {
-                success: function(data) {
-                    this._updateEventStream(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingEventData"));
-                }.bind(this)
-            });
-        },
-
-        _refreshWorkflowData: function() {
-            const oBinding = this.base.getView().byId("fe::table::Workflows::LineItem").getBinding("rows");
-            oBinding.refresh();
-        },
-
-        _updateAgentStatus: function(data) {
-            // Update agent status in real-time
-        },
-
-        _handleSystemAlert: function(data) {
-            MessageBox.warning(
-                data.message,
-                {
-                    title: this.getResourceBundle().getText("msg.systemAlert")
-                }
-            );
-        },
-
-        _updateCoordinationStatus: function(data) {
-            // Update coordination status indicators
-        },
-
-        _updateOrchestrationDashboard: function(data) {
-            // Update dashboard with orchestration metrics
-        },
-
-        _updateAgentCoordinator: function(data) {
-            // Update agent coordinator with network status
-        },
-
-        _displayPerformanceAnalysis: function(data) {
-            // Display performance analysis results
-        },
-
-        _updatePipelineManager: function(data) {
-            // Update pipeline manager with pipeline data
-        },
-
-        _updateQueueManager: function(data) {
-            // Update queue manager with queue data
-        },
-
-        _updateEventStream: function(data) {
-            // Update event stream viewer with events
-        },
-
-        getResourceBundle: function() {
-            return this.getView().getModel("i18n").getResourceBundle();
-        },
-
-        onExit: function() {
+        /**
+         * @function _cleanupResources
+         * @description Cleans up resources to prevent memory leaks.
+         * @private
+         */
+        _cleanupResources: function() {
+            // Clean up WebSocket connections
             if (this._ws) {
                 this._ws.close();
+                this._ws = null;
             }
+            
+            // Clean up EventSource connections
+            if (this._deploymentEventSource) {
+                this._deploymentEventSource.close();
+                this._deploymentEventSource = null;
+            }
+            
+            // Clean up polling intervals
             if (this._pollInterval) {
                 clearInterval(this._pollInterval);
+                this._pollInterval = null;
             }
+            
+            // Clean up cached dialogs
+            Object.keys(this._dialogCache).forEach(function(key) {
+                if (this._dialogCache[key]) {
+                    this._dialogCache[key].destroy();
+                }
+            }.bind(this));
+            this._dialogCache = {};
+        },
+
+        /**
+         * @function getResourceBundle
+         * @description Gets the i18n resource bundle.
+         * @returns {sap.base.i18n.ResourceBundle} Resource bundle
+         * @public
+         */
+        getResourceBundle: function() {
+            return this.base.getView().getModel("i18n").getResourceBundle();
         }
     });
 });

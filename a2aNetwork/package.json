@@ -36,7 +36,9 @@
     "health:startup": "node scripts/startup-health-check.js",
     "health:check": "curl -f ${HEALTH_CHECK_URL:-http://localhost:4004}/health || exit 1",
     "performance:profile": "node --prof srv/server.js",
-    "docs:generate": "jsdoc -c jsdoc.config.json",
+    "docs:generate": "../shared/documentation/generate-all-docs.sh . ./docs",
+    "docs:auto": "npm run docs:generate && npm run docs:serve",
+    "docs:jsdoc": "jsdoc -c jsdoc.config.json",
     "monitoring:setup": "node scripts/setup-monitoring.js",
     
     "// === Internationalization ===": "",
