@@ -271,14 +271,42 @@ jobs:
           -e ENABLE_ALL_AGENTS=true \
           -e A2A_NETWORK_ENABLED=true \
           -e FRONTEND_ENABLED=true \
+          -e A2A_SERVICE_URL=http://localhost:4004 \
+          -e A2A_SERVICE_HOST=localhost \
+          -e A2A_BASE_URL=http://localhost:8000 \
+          -e A2A_AGENT_BASE_URL=http://localhost:8000 \
+          -e A2A_IN_CONTAINER=true \
+          -e SKIP_VENV_CREATION=true \
           --memory=6g \
           --cpus=4 \
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main \
           start complete
         
         # Wait for all services to initialize
-        echo "⏳ Waiting for complete A2A platform to start (60 seconds)..."
-        sleep 60
+        echo "⏳ Waiting for complete A2A platform to start (120 seconds for 18 agents)..."
+        sleep 120
+        
+        # Check container is still running
+        if ! docker ps | grep -q a2a-full-test; then
+          echo "❌ Container stopped unexpectedly"
+          docker logs a2a-full-test --tail=50
+          exit 1
+        fi
+        
+        # Wait for main agent service to be ready
+        echo "🔄 Waiting for Agent 0 to respond..."
+        for i in {1..30}; do
+          if curl -f -s http://localhost:8000/health > /dev/null 2>&1; then
+            echo "✅ Agent 0 is ready"
+            break
+          fi
+          if [ $i -eq 30 ]; then
+            echo "❌ Agent 0 didn't start within 30 attempts"
+            docker logs a2a-full-test --tail=100
+            exit 1
+          fi
+          sleep 2
+        done
         
         echo "🔍 Testing Complete A2A Platform Components..."
         echo "=============================================="
