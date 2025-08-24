@@ -1,0 +1,408 @@
+{
+  "_version": "1.60.0",
+  "sap.app": {
+    "id": "a2a.network.security.dashboard",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "title": "{{securityDashboardTitle}}",
+    "description": "{{securityDashboardDescription}}",
+    "applicationVersion": {
+      "version": "1.0.0"
+    },
+    "dataSources": {
+      "mainService": {
+        "uri": "/security/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "4.0"
+        }
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "Security-display": {
+          "semanticObject": "Security",
+          "action": "display",
+          "title": "{{securityDashboardTitle}}",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "sap-icon://shield",
+      "favIcon": "sap-icon://shield"
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.fe.templates": {},
+        "sap.f": {},
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.uxap": {},
+        "sap.viz": {},
+        "sap.suite.ui.commons": {},
+        "sap.suite.ui.microchart": {}
+      }
+    },
+    "models": {
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      },
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "uri": "i18n/i18n.properties"
+      }
+    },
+    "routing": {
+      "config": {
+        "flexibleColumnLayout": {
+          "defaultTwoColumnLayoutType": "TwoColumnsMidExpanded",
+          "defaultThreeColumnLayoutType": "ThreeColumnsMidExpanded"
+        },
+        "routerClass": "sap.f.routing.Router"
+      },
+      "routes": [
+        {
+          "pattern": "",
+          "name": "SecurityDashboardMain",
+          "target": "SecurityDashboardMain"
+        },
+        {
+          "pattern": "SecurityAlerts",
+          "name": "SecurityAlertsList",
+          "target": "SecurityAlertsList"
+        },
+        {
+          "pattern": "SecurityAlerts({key})",
+          "name": "SecurityAlertsObjectPage",
+          "target": [
+            "SecurityAlertsList",
+            "SecurityAlertsObjectPage"
+          ]
+        },
+        {
+          "pattern": "SecurityEvents",
+          "name": "SecurityEventsList",
+          "target": "SecurityEventsList"
+        },
+        {
+          "pattern": "SecurityMetrics",
+          "name": "SecurityMetricsList",
+          "target": "SecurityMetricsList"
+        },
+        {
+          "pattern": "BlockedIPs",
+          "name": "BlockedIPsList",
+          "target": "BlockedIPsList"
+        },
+        {
+          "pattern": "BlockedIPs({key})",
+          "name": "BlockedIPsObjectPage",
+          "target": [
+            "BlockedIPsList",
+            "BlockedIPsObjectPage"
+          ]
+        }
+      ],
+      "targets": {
+        "SecurityDashboardMain": {
+          "type": "Component",
+          "id": "SecurityDashboardMain",
+          "name": "sap.fe.templates.OverviewPage",
+          "options": {
+            "settings": {
+              "entitySet": "SecurityDashboard",
+              "variantManagement": "Page",
+              "content": {
+                "header": {
+                  "kpi": [
+                    {
+                      "model": "",
+                      "entitySet": "SecurityDashboard",
+                      "qualifier": "OverallRisk"
+                    },
+                    {
+                      "model": "",
+                      "entitySet": "SecurityDashboard", 
+                      "qualifier": "ComplianceScore"
+                    },
+                    {
+                      "model": "",
+                      "entitySet": "SecurityDashboard",
+                      "qualifier": "SystemHealth"
+                    },
+                    {
+                      "model": "",
+                      "entitySet": "SecurityDashboard",
+                      "qualifier": "ActiveAlerts"
+                    }
+                  ]
+                },
+                "body": {
+                  "cards": [
+                    {
+                      "model": "",
+                      "template": "sap.ovp.cards.charts.analytical",
+                      "settings": {
+                        "title": "Security Events by Type",
+                        "subTitle": "Last 7 Days",
+                        "entitySet": "SecurityEvents",
+                        "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#SecurityEventsByType",
+                        "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#SecurityEventsByType",
+                        "dataPointAnnotationPath": "com.sap.vocabularies.UI.v1.DataPoint#EventCount",
+                        "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification"
+                      }
+                    },
+                    {
+                      "model": "",
+                      "template": "sap.ovp.cards.list",
+                      "settings": {
+                        "title": "Critical Security Alerts",
+                        "subTitle": "Require Immediate Action",
+                        "entitySet": "SecurityAlerts",
+                        "listType": "condensed",
+                        "listFlavor": "standard",
+                        "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#CriticalAlerts"
+                      }
+                    },
+                    {
+                      "model": "",
+                      "template": "sap.ovp.cards.charts.analytical",
+                      "settings": {
+                        "title": "Compliance Trends",
+                        "subTitle": "Monthly Overview",
+                        "entitySet": "SecurityMetrics",
+                        "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#ComplianceTrend"
+                      }
+                    },
+                    {
+                      "model": "",
+                      "template": "sap.ovp.cards.table",
+                      "settings": {
+                        "title": "Recently Blocked IPs",
+                        "subTitle": "Last 24 Hours",
+                        "entitySet": "BlockedIPs",
+                        "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#RecentBlocks"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "SecurityAlertsList": {
+          "type": "Component",
+          "id": "SecurityAlertsList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "contextPath": "/SecurityAlerts",
+              "variantManagement": "Page",
+              "initialLoad": true,
+              "controlConfiguration": {
+                "@com.sap.vocabularies.UI.v1.LineItem": {
+                  "tableSettings": {
+                    "type": "ResponsiveTable",
+                    "selectionMode": "Multiple"
+                  },
+                  "actions": {
+                    "AcknowledgeAlert": {
+                      "press": "a2a.network.security.dashboard.ext.controller.AlertActions.onAcknowledgeAlert",
+                      "visible": true,
+                      "enabled": "{= ${status} === 'ACTIVE'}",
+                      "requiresSelection": true,
+                      "text": "Acknowledge"
+                    },
+                    "ResolveAlert": {
+                      "press": "a2a.network.security.dashboard.ext.controller.AlertActions.onResolveAlert",
+                      "visible": true,
+                      "enabled": "{= ${status} !== 'RESOLVED'}",
+                      "requiresSelection": true,
+                      "text": "Resolve"
+                    },
+                    "EscalateAlert": {
+                      "press": "a2a.network.security.dashboard.ext.controller.AlertActions.onEscalateAlert",
+                      "visible": true,
+                      "enabled": "{= ${priority} > 1}",
+                      "requiresSelection": true,
+                      "text": "Escalate"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "SecurityAlertsObjectPage": {
+          "type": "Component",
+          "id": "SecurityAlertsObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "contextPath": "/SecurityAlerts",
+              "editableHeaderContent": false,
+              "content": {
+                "header": {
+                  "actions": {
+                    "AcknowledgeAction": {
+                      "press": "a2a.network.security.dashboard.ext.controller.AlertActions.onAcknowledgeAlert",
+                      "visible": "{= ${status} === 'ACTIVE'}",
+                      "enabled": true,
+                      "text": "Acknowledge Alert"
+                    },
+                    "ResolveAction": {
+                      "press": "a2a.network.security.dashboard.ext.controller.AlertActions.onResolveAlert",
+                      "visible": "{= ${status} !== 'RESOLVED'}",
+                      "enabled": true,
+                      "text": "Resolve Alert"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "SecurityEventsList": {
+          "type": "Component",
+          "id": "SecurityEventsList",
+          "name": "sap.fe.templates.AnalyticalListPage",
+          "options": {
+            "settings": {
+              "contextPath": "/SecurityEvents",
+              "variantManagement": "Page",
+              "initialLoad": "Enabled",
+              "controlConfiguration": {
+                "@com.sap.vocabularies.UI.v1.Chart": {
+                  "chartSettings": {
+                    "showDataLabel": true
+                  }
+                },
+                "@com.sap.vocabularies.UI.v1.LineItem": {
+                  "tableSettings": {
+                    "type": "AnalyticalTable",
+                    "selectAll": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "SecurityMetricsList": {
+          "type": "Component",
+          "id": "SecurityMetricsList", 
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "contextPath": "/SecurityMetrics",
+              "variantManagement": "Page",
+              "initialLoad": true
+            }
+          }
+        },
+        "BlockedIPsList": {
+          "type": "Component",
+          "id": "BlockedIPsList",
+          "name": "sap.fe.templates.ListReport", 
+          "options": {
+            "settings": {
+              "contextPath": "/BlockedIPs",
+              "variantManagement": "Page",
+              "initialLoad": true,
+              "controlConfiguration": {
+                "@com.sap.vocabularies.UI.v1.LineItem": {
+                  "tableSettings": {
+                    "type": "ResponsiveTable",
+                    "selectionMode": "Multiple"
+                  },
+                  "actions": {
+                    "UnblockIP": {
+                      "press": "a2a.network.security.dashboard.ext.controller.IPActions.onUnblockIP",
+                      "visible": true,
+                      "enabled": "{= ${isActive} === true}",
+                      "requiresSelection": true,
+                      "text": "Unblock IP"
+                    },
+                    "ExtendBlock": {
+                      "press": "a2a.network.security.dashboard.ext.controller.IPActions.onExtendBlock",
+                      "visible": true,
+                      "enabled": "{= ${isActive} === true && ${blockType} !== 'PERMANENT'}",
+                      "requiresSelection": true,
+                      "text": "Extend Block"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "BlockedIPsObjectPage": {
+          "type": "Component",
+          "id": "BlockedIPsObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "contextPath": "/BlockedIPs",
+              "editableHeaderContent": false
+            }
+          }
+        }
+      }
+    }
+  },
+  "sap.fiori": {
+    "registrationIds": ["F1234"],
+    "archeType": "transactional"
+  },
+  "sap.fe": {
+    "type": "default"
+  },
+  "sap.platform.cf": {
+    "oAuthScopes": [
+      "$XSAPPNAME.security.admin",
+      "$XSAPPNAME.security.analyst",
+      "$XSAPPNAME.security.viewer"
+    ]
+  },
+  "sap.security": {
+    "headers": {
+      "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://ui5.sap.com; style-src 'self' 'unsafe-inline' https://ui5.sap.com; img-src 'self' data: https:; connect-src 'self' wss:; font-src 'self' https://ui5.sap.com data:;",
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "SAMEORIGIN",
+      "X-XSS-Protection": "1; mode=block",
+      "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
+    },
+    "csrf": {
+      "token": true
+    },
+    "cors": {
+      "allowedOrigins": ["https://*.ondemand.com"],
+      "allowedMethods": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+      "allowedHeaders": ["Content-Type", "Authorization", "X-CSRF-Token"],
+      "exposeHeaders": ["X-CSRF-Token"],
+      "maxAge": 3600
+    }
+  }
+}

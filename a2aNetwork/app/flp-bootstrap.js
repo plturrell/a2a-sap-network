@@ -190,13 +190,15 @@
             });
         }).catch(function(oError) {
             console.error("Failed to bootstrap FLP:", oError);
-            // Fallback error handling
-            jQuery("#content").html(
-                '<div class="sapUiErrorPage">' +
-                '<h1>Failed to load SAP Fiori Launchpad</h1>' +
-                '<p>Error: ' + (oError.message || oError) + '</p>' +
-                '</div>'
-            );
+            // SAP Standard error handling
+            sap.ui.require(["sap/m/MessageBox"], function(MessageBox) {
+                MessageBox.error("Failed to load SAP Fiori Launchpad", {
+                    title: "System Error",
+                    details: oError.message || oError.toString(),
+                    actions: [MessageBox.Action.OK],
+                    emphasizedAction: MessageBox.Action.OK
+                });
+            });
         });
     });
 })();

@@ -42,7 +42,7 @@ sap.ui.define([
          * @public
          */
         onRollbackDeployment: function() {
-            if (!this._hasRole("DeploymentAdmin")) {
+            if (!this._securityUtils.hasRole("DeploymentAdmin")) {
                 MessageBox.error("Access denied. Deployment Administrator role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "RollbackDeployment", reason: "Insufficient permissions" });
                 return;
@@ -84,7 +84,7 @@ sap.ui.define([
          * @public
          */
         onValidateDeployment: function() {
-            if (!this._hasRole("DeploymentUser")) {
+            if (!this._securityUtils.hasRole("DeploymentUser")) {
                 MessageBox.error("Access denied. Deployment User role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ValidateDeployment", reason: "Insufficient permissions" });
                 return;
@@ -141,7 +141,7 @@ sap.ui.define([
          * @public
          */
         onViewLogs: function() {
-            if (!this._hasRole("DeploymentUser")) {
+            if (!this._securityUtils.hasRole("DeploymentUser")) {
                 MessageBox.error("Access denied. Deployment User role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ViewLogs", reason: "Insufficient permissions" });
                 return;
@@ -200,7 +200,7 @@ sap.ui.define([
          * @public
          */
         onPromoteToProduction: function() {
-            if (!this._hasRole("DeploymentAdmin")) {
+            if (!this._securityUtils.hasRole("DeploymentAdmin")) {
                 MessageBox.error("Access denied. Deployment Administrator role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "PromoteToProduction", reason: "Insufficient permissions" });
                 return;
@@ -655,22 +655,6 @@ sap.ui.define([
             return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
         },
 
-        /**
-         * @function _hasRole
-         * @description Checks if current user has specified role.
-         * @param {string} role - Role to check
-         * @returns {boolean} True if user has role
-         * @private
-         */
-        _hasRole: function(role) {
-            const user = sap.ushell?.Container?.getUser();
-            if (user && user.hasRole) {
-                return user.hasRole(role);
-            }
-            // Mock role validation for development/testing
-            const mockRoles = ["DeploymentAdmin", "DeploymentUser", "DeploymentOperator"];
-            return mockRoles.includes(role);
-        },
 
         /**
          * @function _cleanupResources

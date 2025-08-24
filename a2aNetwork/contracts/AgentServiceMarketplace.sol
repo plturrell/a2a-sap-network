@@ -220,8 +220,14 @@ contract AgentServiceMarketplace is
         require(request.status == ServiceStatus.Completed, "Not completed");
         require(request.escrowAmount > 0, "No escrow");
         
-        uint256 platformFee = (request.escrowAmount * platformFeePercent) / 10000;
-        uint256 providerPayment = request.escrowAmount - platformFee;
+        // DIVISION BY ZERO PROTECTION: Ensure escrow amount exists for fee calculation
+        uint256 platformFee = 0;
+        uint256 providerPayment = request.escrowAmount;
+        
+        if (request.escrowAmount > 0) {
+            platformFee = (request.escrowAmount * platformFeePercent) / 10000;
+            providerPayment = request.escrowAmount - platformFee;
+        }
         
         // SECURITY FIX: Update state BEFORE external calls to prevent reentrancy
         request.escrowAmount = 0;

@@ -442,6 +442,7 @@ contract BusinessDataCloudA2A is AccessControl, ReentrancyGuard {
         }
         
         activeAgents = activeCounts;
+        // SECURITY FIX: Division by zero protection
         avgTrustScore = totalAgents > 0 ? totalTrust / totalAgents : 0;
         
         // Count trust relationships (simplified)

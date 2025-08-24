@@ -4,7 +4,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A2A Network - Agent Management Platform</title>
+    <title>SAP Fiori Launchpad</title>
 
     <!-- Production Launchpad Configuration with All 16 Agents -->
     <script>
@@ -511,75 +511,33 @@
         data-sap-ui-xx-waitForTheme="true"
         data-sap-ui-xx-supportedLanguages="en,de,fr,es,it,pt,zh,ja,ko"
         data-sap-ui-resourceroots='{
-            "a2a.network.fiori": "./a2aFiori/webapp",
-            "a2a.network.agent": "./a2aAgent/webapp",
-            "a2a.network.launchpad": "./"
+            "sap.ushell": "https://ui5.sap.com/1.120.0/resources/sap/ushell"
         }'>
     </script>
 
-    <!-- Deployment Validation -->
-    <script src="./config/deployment-validation.js"></script>
-    
-    <!-- Fiori Launchpad Enterprise Bootstrap -->
+    <!-- SAP Standard Fiori Launchpad Bootstrap -->
     <script 
         id="sap-ushell-bootstrap" 
-        src="./flp-bootstrap.js"
-        data-sap-ui-config='{"deployment-type": "enterprise"}'></script>
-    
-    <!-- Initialize Deployment Validation -->
-    <script>
-        // Initialize deployment validation
-        sap.ui.require(["a2a/network/launchpad/config/deployment-validation"], function(DeploymentValidation) {
-            DeploymentValidation.initializeValidation();
-        });
-    </script>
+        src="https://ui5.sap.com/1.120.0/resources/sap/ushell/bootstrap/cdm.js"
+        data-sap-ui-config='{"xx-bootTask": "renderShell"}'></script>
 
     <!-- SAP Compliance CSS -->
     <link rel="stylesheet" type="text/css" href="css/launchpad-sap-compliance.css">
     <link rel="stylesheet" type="text/css" href="css/sap-standard-compliance.css">
     
-    <!-- Production Styles -->
+    <!-- SAP Standard Styles Only -->
     <style>
-        /* Enhanced tile styling for agent status indicators */
-        .sapUshellDynamicTile {
-            transition: all 0.3s ease;
-        }
-        
-        .sapUshellDynamicTile:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        
-        /* Agent status colors */
+        /* SAP Standard Tile Status Indicators */
         .agent-status-healthy .sapMGT {
-            border-left: 4px solid #107e3e !important;
+            border-left: var(--sapContent_ForegroundBorderWidth, 0.25rem) solid var(--sapPositiveColor, #107e3e);
         }
         
         .agent-status-warning .sapMGT {
-            border-left: 4px solid #df6e0c !important;
+            border-left: var(--sapContent_ForegroundBorderWidth, 0.25rem) solid var(--sapCriticalColor, #df6e0c);
         }
         
         .agent-status-error .sapMGT {
-            border-left: 4px solid #bb0000 !important;
-        }
-        
-        /* Responsive grid adjustments */
-        @media (min-width: 1920px) {
-            .sapUshellTileContainer {
-                max-width: 1800px;
-                margin: 0 auto;
-            }
-        }
-        
-        /* Dark theme enhancements */
-        [data-sap-ui-theme="sap_horizon_dark"] .sapUshellTile {
-            background-color: #1d2d3e;
-        }
-        
-        /* Accessibility improvements */
-        .sapUshellTile:focus {
-            outline: 3px solid #0070f2;
-            outline-offset: 2px;
+            border-left: var(--sapContent_ForegroundBorderWidth, 0.25rem) solid var(--sapNegativeColor, #bb0000);
         }
     </style>
 </head>
@@ -587,9 +545,9 @@
 <body class="sapUiBody" id="content">
     <!-- Shell will be rendered here -->
     <noscript>
-        <div style="text-align: center; padding: 50px;">
+        <div class="sapUiErrorPage">
             <h1>JavaScript Required</h1>
-            <p>The A2A Network Agent Management Platform requires JavaScript to be enabled.</p>
+            <p>SAP Fiori Launchpad requires JavaScript to be enabled in your browser.</p>
         </div>
     </noscript>
 </body>

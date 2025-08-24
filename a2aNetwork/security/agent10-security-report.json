@@ -1,9 +1,9 @@
 {
   "summary": {
-    "total": 561,
+    "total": 567,
     "critical": 0,
-    "high": 230,
-    "medium": 331,
+    "high": 232,
+    "medium": 335,
     "low": 0
   },
   "byType": {
@@ -1335,7 +1335,7 @@
         "subtype": "httpEndpoints",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 264,
+        "line": 281,
         "code": "if (url.startsWith('http://')) {",
         "message": "Insecure HTTP endpoint usage",
         "fix": "Use HTTPS for all external endpoints"
@@ -1345,7 +1345,7 @@
         "subtype": "httpEndpoints",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 265,
+        "line": 282,
         "code": "secureUrl = url.replace('http://', 'https://');",
         "message": "Insecure HTTP endpoint usage",
         "fix": "Use HTTPS for all external endpoints"
@@ -1355,7 +1355,7 @@
         "subtype": "unencryptedWebSocket",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 222,
+        "line": 228,
         "code": "if (url.startsWith('ws://')) {",
         "message": "WebSocket connection without encryption",
         "fix": "Use wss:// instead of ws://"
@@ -1365,7 +1365,7 @@
         "subtype": "unencryptedWebSocket",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 223,
+        "line": 229,
         "code": "secureUrl = url.replace('ws://', 'wss://');",
         "message": "WebSocket connection without encryption",
         "fix": "Use wss:// instead of ws://"
@@ -1375,7 +1375,7 @@
         "subtype": "hardcodedURLs",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 222,
+        "line": 228,
         "code": "if (url.startsWith('ws://')) {",
         "message": "Hardcoded URLs should be configurable",
         "fix": "Review and fix the security issue"
@@ -1385,7 +1385,7 @@
         "subtype": "hardcodedURLs",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 223,
+        "line": 229,
         "code": "secureUrl = url.replace('ws://', 'wss://');",
         "message": "Hardcoded URLs should be configurable",
         "fix": "Review and fix the security issue"
@@ -1395,7 +1395,7 @@
         "subtype": "hardcodedURLs",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 264,
+        "line": 281,
         "code": "if (url.startsWith('http://')) {",
         "message": "Hardcoded URLs should be configurable",
         "fix": "Review and fix the security issue"
@@ -1405,7 +1405,7 @@
         "subtype": "hardcodedURLs",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 265,
+        "line": 282,
         "code": "secureUrl = url.replace('http://', 'https://');",
         "message": "Hardcoded URLs should be configurable",
         "fix": "Review and fix the security issue"
@@ -3487,7 +3487,47 @@
         "subtype": "missingErrorBoundaries",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 296,
+        "line": 221,
+        "code": "if (!this.hasRole(\"CalculationManager\") && !this.hasRole(\"Admin\")) {",
+        "message": "Security issue: errorHandling - missingErrorBoundaries",
+        "fix": "Review and fix the security issue"
+      },
+      {
+        "type": "errorHandling",
+        "subtype": "missingErrorBoundaries",
+        "severity": "MEDIUM",
+        "file": "utils/SecurityUtils.js",
+        "line": 223,
+        "code": "throw new Error(\"Access denied: WebSocket connection requires CalculationManager role\");",
+        "message": "Security issue: errorHandling - missingErrorBoundaries",
+        "fix": "Review and fix the security issue"
+      },
+      {
+        "type": "errorHandling",
+        "subtype": "missingErrorBoundaries",
+        "severity": "MEDIUM",
+        "file": "utils/SecurityUtils.js",
+        "line": 274,
+        "code": "if (!this.hasRole(\"CalculationManager\") && !this.hasRole(\"Admin\")) {",
+        "message": "Security issue: errorHandling - missingErrorBoundaries",
+        "fix": "Review and fix the security issue"
+      },
+      {
+        "type": "errorHandling",
+        "subtype": "missingErrorBoundaries",
+        "severity": "MEDIUM",
+        "file": "utils/SecurityUtils.js",
+        "line": 276,
+        "code": "throw new Error(\"Access denied: EventSource connection requires CalculationManager role\");",
+        "message": "Security issue: errorHandling - missingErrorBoundaries",
+        "fix": "Review and fix the security issue"
+      },
+      {
+        "type": "errorHandling",
+        "subtype": "missingErrorBoundaries",
+        "severity": "MEDIUM",
+        "file": "utils/SecurityUtils.js",
+        "line": 323,
         "code": "* Check user authorization for calculation operations",
         "message": "Security issue: errorHandling - missingErrorBoundaries",
         "fix": "Review and fix the security issue"
@@ -3497,7 +3537,7 @@
         "subtype": "missingErrorBoundaries",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 300,
+        "line": 327,
         "code": "checkCalculationAuth: function(operation) {",
         "message": "Security issue: errorHandling - missingErrorBoundaries",
         "fix": "Review and fix the security issue"
@@ -3507,7 +3547,7 @@
         "subtype": "missingErrorBoundaries",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 319,
+        "line": 346,
         "code": "* Sanitize calculation result for display",
         "message": "Security issue: errorHandling - missingErrorBoundaries",
         "fix": "Review and fix the security issue"
@@ -3517,7 +3557,7 @@
         "subtype": "missingErrorBoundaries",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 320,
+        "line": 347,
         "code": "* @param {any} result - Calculation result",
         "message": "Security issue: errorHandling - missingErrorBoundaries",
         "fix": "Review and fix the security issue"
@@ -3589,7 +3629,7 @@
         "subtype": "memoryLeaks",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 230,
+        "line": 241,
         "code": "ws.addEventListener('open', function() {",
         "message": "Security issue: resources - memoryLeaks",
         "fix": "Review and fix the security issue"
@@ -3599,7 +3639,7 @@
         "subtype": "memoryLeaks",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 234,
+        "line": 245,
         "code": "ws.addEventListener('error', function(error) {",
         "message": "Security issue: resources - memoryLeaks",
         "fix": "Review and fix the security issue"
@@ -3609,7 +3649,7 @@
         "subtype": "memoryLeaks",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 238,
+        "line": 249,
         "code": "ws.addEventListener('message', function(event) {",
         "message": "Security issue: resources - memoryLeaks",
         "fix": "Review and fix the security issue"
@@ -3619,7 +3659,7 @@
         "subtype": "memoryLeaks",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 272,
+        "line": 299,
         "code": "const originalAddEventListener = eventSource.addEventListener;",
         "message": "Security issue: resources - memoryLeaks",
         "fix": "Review and fix the security issue"
@@ -3629,7 +3669,7 @@
         "subtype": "memoryLeaks",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 273,
+        "line": 300,
         "code": "eventSource.addEventListener = function(type, listener, options) {",
         "message": "Security issue: resources - memoryLeaks",
         "fix": "Review and fix the security issue"
@@ -3639,8 +3679,8 @@
         "subtype": "unclosedConnections",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 227,
-        "code": "const ws = new WebSocket(secureUrl);",
+        "line": 238,
+        "code": "const ws = new WebSocket(authenticatedUrl);",
         "message": "Security issue: resources - unclosedConnections",
         "fix": "Review and fix the security issue"
       },
@@ -3649,8 +3689,8 @@
         "subtype": "unclosedConnections",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 269,
-        "code": "const eventSource = new EventSource(secureUrl);",
+        "line": 293,
+        "code": "const eventSource = new EventSource(secureUrl, {",
         "message": "Security issue: resources - unclosedConnections",
         "fix": "Review and fix the security issue"
       }
@@ -4341,7 +4381,7 @@
         "subtype": "missingSecurityUtil",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 329,
+        "line": 356,
         "code": "return this.escapeHTML(result);",
         "message": "Security issue: sapFiori - missingSecurityUtil",
         "fix": "Review and fix the security issue"
@@ -4351,7 +4391,7 @@
         "subtype": "missingSecurityUtil",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 334,
+        "line": 361,
         "code": "return this.escapeHTML(JSON.stringify(result, null, 2));",
         "message": "Security issue: sapFiori - missingSecurityUtil",
         "fix": "Review and fix the security issue"
@@ -4361,7 +4401,7 @@
         "subtype": "missingSecurityUtil",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 340,
+        "line": 367,
         "code": "return this.escapeHTML(String(result));",
         "message": "Security issue: sapFiori - missingSecurityUtil",
         "fix": "Review and fix the security issue"
@@ -5075,7 +5115,27 @@
         "subtype": "missingWebSocketAuth",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 224,
+        "line": 220,
+        "code": "// SECURITY: Validate authentication before creating WebSocket",
+        "message": "WebSocket missing authentication",
+        "fix": "Add authentication token to WebSocket connection"
+      },
+      {
+        "type": "webSocketSecurity",
+        "subtype": "missingWebSocketAuth",
+        "severity": "HIGH",
+        "file": "utils/SecurityUtils.js",
+        "line": 223,
+        "code": "throw new Error(\"Access denied: WebSocket connection requires CalculationManager role\");",
+        "message": "WebSocket missing authentication",
+        "fix": "Add authentication token to WebSocket connection"
+      },
+      {
+        "type": "webSocketSecurity",
+        "subtype": "missingWebSocketAuth",
+        "severity": "HIGH",
+        "file": "utils/SecurityUtils.js",
+        "line": 230,
         "code": "Log.warning(\"WebSocket URL upgraded to secure protocol\", secureUrl);",
         "message": "WebSocket missing authentication",
         "fix": "Add authentication token to WebSocket connection"
@@ -5085,8 +5145,8 @@
         "subtype": "missingWebSocketAuth",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 227,
-        "code": "const ws = new WebSocket(secureUrl);",
+        "line": 238,
+        "code": "const ws = new WebSocket(authenticatedUrl);",
         "message": "WebSocket missing authentication",
         "fix": "Add authentication token to WebSocket connection"
       },
@@ -5095,7 +5155,7 @@
         "subtype": "missingWebSocketAuth",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 231,
+        "line": 242,
         "code": "Log.info(\"Secure WebSocket connection established\", secureUrl);",
         "message": "WebSocket missing authentication",
         "fix": "Add authentication token to WebSocket connection"
@@ -5105,7 +5165,7 @@
         "subtype": "missingWebSocketAuth",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 235,
+        "line": 246,
         "code": "Log.error(\"WebSocket error\", error);",
         "message": "WebSocket missing authentication",
         "fix": "Add authentication token to WebSocket connection"
@@ -5115,7 +5175,7 @@
         "subtype": "missingWebSocketAuth",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 246,
+        "line": 257,
         "code": "Log.error(\"Invalid WebSocket message format\", event.data);",
         "message": "WebSocket missing authentication",
         "fix": "Add authentication token to WebSocket connection"
@@ -5229,7 +5289,7 @@
         "subtype": "missingEventValidation",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 230,
+        "line": 241,
         "code": "ws.addEventListener('open', function() {",
         "message": "Server-sent events not validated",
         "fix": "Validate all server-sent event data"
@@ -5239,7 +5299,7 @@
         "subtype": "missingEventValidation",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 234,
+        "line": 245,
         "code": "ws.addEventListener('error', function(error) {",
         "message": "Server-sent events not validated",
         "fix": "Validate all server-sent event data"
@@ -5249,7 +5309,7 @@
         "subtype": "missingEventValidation",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 238,
+        "line": 249,
         "code": "ws.addEventListener('message', function(event) {",
         "message": "Server-sent events not validated",
         "fix": "Validate all server-sent event data"
@@ -5259,7 +5319,7 @@
         "subtype": "missingEventValidation",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 272,
+        "line": 299,
         "code": "const originalAddEventListener = eventSource.addEventListener;",
         "message": "Server-sent events not validated",
         "fix": "Validate all server-sent event data"
@@ -5269,7 +5329,7 @@
         "subtype": "missingEventValidation",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 273,
+        "line": 300,
         "code": "eventSource.addEventListener = function(type, listener, options) {",
         "message": "Server-sent events not validated",
         "fix": "Validate all server-sent event data"
@@ -10812,7 +10872,7 @@
         "subtype": "httpEndpoints",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 264,
+        "line": 281,
         "code": "if (url.startsWith('http://')) {",
         "message": "Insecure HTTP endpoint usage",
         "fix": "Use HTTPS for all external endpoints"
@@ -10822,7 +10882,7 @@
         "subtype": "httpEndpoints",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 265,
+        "line": 282,
         "code": "secureUrl = url.replace('http://', 'https://');",
         "message": "Insecure HTTP endpoint usage",
         "fix": "Use HTTPS for all external endpoints"
@@ -10832,7 +10892,7 @@
         "subtype": "unencryptedWebSocket",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 222,
+        "line": 228,
         "code": "if (url.startsWith('ws://')) {",
         "message": "WebSocket connection without encryption",
         "fix": "Use wss:// instead of ws://"
@@ -10842,7 +10902,7 @@
         "subtype": "unencryptedWebSocket",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 223,
+        "line": 229,
         "code": "secureUrl = url.replace('ws://', 'wss://');",
         "message": "WebSocket connection without encryption",
         "fix": "Use wss:// instead of ws://"
@@ -10852,7 +10912,7 @@
         "subtype": "hardcodedURLs",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 222,
+        "line": 228,
         "code": "if (url.startsWith('ws://')) {",
         "message": "Hardcoded URLs should be configurable",
         "fix": "Review and fix the security issue"
@@ -10862,7 +10922,7 @@
         "subtype": "hardcodedURLs",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 223,
+        "line": 229,
         "code": "secureUrl = url.replace('ws://', 'wss://');",
         "message": "Hardcoded URLs should be configurable",
         "fix": "Review and fix the security issue"
@@ -10872,7 +10932,7 @@
         "subtype": "hardcodedURLs",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 264,
+        "line": 281,
         "code": "if (url.startsWith('http://')) {",
         "message": "Hardcoded URLs should be configurable",
         "fix": "Review and fix the security issue"
@@ -10882,7 +10942,7 @@
         "subtype": "hardcodedURLs",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 265,
+        "line": 282,
         "code": "secureUrl = url.replace('http://', 'https://');",
         "message": "Hardcoded URLs should be configurable",
         "fix": "Review and fix the security issue"
@@ -10902,7 +10962,47 @@
         "subtype": "missingErrorBoundaries",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 296,
+        "line": 221,
+        "code": "if (!this.hasRole(\"CalculationManager\") && !this.hasRole(\"Admin\")) {",
+        "message": "Security issue: errorHandling - missingErrorBoundaries",
+        "fix": "Review and fix the security issue"
+      },
+      {
+        "type": "errorHandling",
+        "subtype": "missingErrorBoundaries",
+        "severity": "MEDIUM",
+        "file": "utils/SecurityUtils.js",
+        "line": 223,
+        "code": "throw new Error(\"Access denied: WebSocket connection requires CalculationManager role\");",
+        "message": "Security issue: errorHandling - missingErrorBoundaries",
+        "fix": "Review and fix the security issue"
+      },
+      {
+        "type": "errorHandling",
+        "subtype": "missingErrorBoundaries",
+        "severity": "MEDIUM",
+        "file": "utils/SecurityUtils.js",
+        "line": 274,
+        "code": "if (!this.hasRole(\"CalculationManager\") && !this.hasRole(\"Admin\")) {",
+        "message": "Security issue: errorHandling - missingErrorBoundaries",
+        "fix": "Review and fix the security issue"
+      },
+      {
+        "type": "errorHandling",
+        "subtype": "missingErrorBoundaries",
+        "severity": "MEDIUM",
+        "file": "utils/SecurityUtils.js",
+        "line": 276,
+        "code": "throw new Error(\"Access denied: EventSource connection requires CalculationManager role\");",
+        "message": "Security issue: errorHandling - missingErrorBoundaries",
+        "fix": "Review and fix the security issue"
+      },
+      {
+        "type": "errorHandling",
+        "subtype": "missingErrorBoundaries",
+        "severity": "MEDIUM",
+        "file": "utils/SecurityUtils.js",
+        "line": 323,
         "code": "* Check user authorization for calculation operations",
         "message": "Security issue: errorHandling - missingErrorBoundaries",
         "fix": "Review and fix the security issue"
@@ -10912,7 +11012,7 @@
         "subtype": "missingErrorBoundaries",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 300,
+        "line": 327,
         "code": "checkCalculationAuth: function(operation) {",
         "message": "Security issue: errorHandling - missingErrorBoundaries",
         "fix": "Review and fix the security issue"
@@ -10922,7 +11022,7 @@
         "subtype": "missingErrorBoundaries",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 319,
+        "line": 346,
         "code": "* Sanitize calculation result for display",
         "message": "Security issue: errorHandling - missingErrorBoundaries",
         "fix": "Review and fix the security issue"
@@ -10932,7 +11032,7 @@
         "subtype": "missingErrorBoundaries",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 320,
+        "line": 347,
         "code": "* @param {any} result - Calculation result",
         "message": "Security issue: errorHandling - missingErrorBoundaries",
         "fix": "Review and fix the security issue"
@@ -10942,7 +11042,7 @@
         "subtype": "memoryLeaks",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 230,
+        "line": 241,
         "code": "ws.addEventListener('open', function() {",
         "message": "Security issue: resources - memoryLeaks",
         "fix": "Review and fix the security issue"
@@ -10952,7 +11052,7 @@
         "subtype": "memoryLeaks",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 234,
+        "line": 245,
         "code": "ws.addEventListener('error', function(error) {",
         "message": "Security issue: resources - memoryLeaks",
         "fix": "Review and fix the security issue"
@@ -10962,7 +11062,7 @@
         "subtype": "memoryLeaks",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 238,
+        "line": 249,
         "code": "ws.addEventListener('message', function(event) {",
         "message": "Security issue: resources - memoryLeaks",
         "fix": "Review and fix the security issue"
@@ -10972,7 +11072,7 @@
         "subtype": "memoryLeaks",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 272,
+        "line": 299,
         "code": "const originalAddEventListener = eventSource.addEventListener;",
         "message": "Security issue: resources - memoryLeaks",
         "fix": "Review and fix the security issue"
@@ -10982,7 +11082,7 @@
         "subtype": "memoryLeaks",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 273,
+        "line": 300,
         "code": "eventSource.addEventListener = function(type, listener, options) {",
         "message": "Security issue: resources - memoryLeaks",
         "fix": "Review and fix the security issue"
@@ -10992,8 +11092,8 @@
         "subtype": "unclosedConnections",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 227,
-        "code": "const ws = new WebSocket(secureUrl);",
+        "line": 238,
+        "code": "const ws = new WebSocket(authenticatedUrl);",
         "message": "Security issue: resources - unclosedConnections",
         "fix": "Review and fix the security issue"
       },
@@ -11002,8 +11102,8 @@
         "subtype": "unclosedConnections",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 269,
-        "code": "const eventSource = new EventSource(secureUrl);",
+        "line": 293,
+        "code": "const eventSource = new EventSource(secureUrl, {",
         "message": "Security issue: resources - unclosedConnections",
         "fix": "Review and fix the security issue"
       },
@@ -11032,7 +11132,7 @@
         "subtype": "missingSecurityUtil",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 329,
+        "line": 356,
         "code": "return this.escapeHTML(result);",
         "message": "Security issue: sapFiori - missingSecurityUtil",
         "fix": "Review and fix the security issue"
@@ -11042,7 +11142,7 @@
         "subtype": "missingSecurityUtil",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 334,
+        "line": 361,
         "code": "return this.escapeHTML(JSON.stringify(result, null, 2));",
         "message": "Security issue: sapFiori - missingSecurityUtil",
         "fix": "Review and fix the security issue"
@@ -11052,7 +11152,7 @@
         "subtype": "missingSecurityUtil",
         "severity": "MEDIUM",
         "file": "utils/SecurityUtils.js",
-        "line": 340,
+        "line": 367,
         "code": "return this.escapeHTML(String(result));",
         "message": "Security issue: sapFiori - missingSecurityUtil",
         "fix": "Review and fix the security issue"
@@ -11162,7 +11262,27 @@
         "subtype": "missingWebSocketAuth",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 224,
+        "line": 220,
+        "code": "// SECURITY: Validate authentication before creating WebSocket",
+        "message": "WebSocket missing authentication",
+        "fix": "Add authentication token to WebSocket connection"
+      },
+      {
+        "type": "webSocketSecurity",
+        "subtype": "missingWebSocketAuth",
+        "severity": "HIGH",
+        "file": "utils/SecurityUtils.js",
+        "line": 223,
+        "code": "throw new Error(\"Access denied: WebSocket connection requires CalculationManager role\");",
+        "message": "WebSocket missing authentication",
+        "fix": "Add authentication token to WebSocket connection"
+      },
+      {
+        "type": "webSocketSecurity",
+        "subtype": "missingWebSocketAuth",
+        "severity": "HIGH",
+        "file": "utils/SecurityUtils.js",
+        "line": 230,
         "code": "Log.warning(\"WebSocket URL upgraded to secure protocol\", secureUrl);",
         "message": "WebSocket missing authentication",
         "fix": "Add authentication token to WebSocket connection"
@@ -11172,8 +11292,8 @@
         "subtype": "missingWebSocketAuth",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 227,
-        "code": "const ws = new WebSocket(secureUrl);",
+        "line": 238,
+        "code": "const ws = new WebSocket(authenticatedUrl);",
         "message": "WebSocket missing authentication",
         "fix": "Add authentication token to WebSocket connection"
       },
@@ -11182,7 +11302,7 @@
         "subtype": "missingWebSocketAuth",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 231,
+        "line": 242,
         "code": "Log.info(\"Secure WebSocket connection established\", secureUrl);",
         "message": "WebSocket missing authentication",
         "fix": "Add authentication token to WebSocket connection"
@@ -11192,7 +11312,7 @@
         "subtype": "missingWebSocketAuth",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 235,
+        "line": 246,
         "code": "Log.error(\"WebSocket error\", error);",
         "message": "WebSocket missing authentication",
         "fix": "Add authentication token to WebSocket connection"
@@ -11202,7 +11322,7 @@
         "subtype": "missingWebSocketAuth",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 246,
+        "line": 257,
         "code": "Log.error(\"Invalid WebSocket message format\", event.data);",
         "message": "WebSocket missing authentication",
         "fix": "Add authentication token to WebSocket connection"
@@ -11212,7 +11332,7 @@
         "subtype": "missingEventValidation",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 230,
+        "line": 241,
         "code": "ws.addEventListener('open', function() {",
         "message": "Server-sent events not validated",
         "fix": "Validate all server-sent event data"
@@ -11222,7 +11342,7 @@
         "subtype": "missingEventValidation",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 234,
+        "line": 245,
         "code": "ws.addEventListener('error', function(error) {",
         "message": "Server-sent events not validated",
         "fix": "Validate all server-sent event data"
@@ -11232,7 +11352,7 @@
         "subtype": "missingEventValidation",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 238,
+        "line": 249,
         "code": "ws.addEventListener('message', function(event) {",
         "message": "Server-sent events not validated",
         "fix": "Validate all server-sent event data"
@@ -11242,7 +11362,7 @@
         "subtype": "missingEventValidation",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 272,
+        "line": 299,
         "code": "const originalAddEventListener = eventSource.addEventListener;",
         "message": "Server-sent events not validated",
         "fix": "Validate all server-sent event data"
@@ -11252,7 +11372,7 @@
         "subtype": "missingEventValidation",
         "severity": "HIGH",
         "file": "utils/SecurityUtils.js",
-        "line": 273,
+        "line": 300,
         "code": "eventSource.addEventListener = function(type, listener, options) {",
         "message": "Server-sent events not validated",
         "fix": "Validate all server-sent event data"
@@ -16422,7 +16542,7 @@
       "subtype": "httpEndpoints",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 264,
+      "line": 281,
       "code": "if (url.startsWith('http://')) {",
       "message": "Insecure HTTP endpoint usage",
       "fix": "Use HTTPS for all external endpoints"
@@ -16432,7 +16552,7 @@
       "subtype": "httpEndpoints",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 265,
+      "line": 282,
       "code": "secureUrl = url.replace('http://', 'https://');",
       "message": "Insecure HTTP endpoint usage",
       "fix": "Use HTTPS for all external endpoints"
@@ -16442,7 +16562,7 @@
       "subtype": "unencryptedWebSocket",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 222,
+      "line": 228,
       "code": "if (url.startsWith('ws://')) {",
       "message": "WebSocket connection without encryption",
       "fix": "Use wss:// instead of ws://"
@@ -16452,7 +16572,7 @@
       "subtype": "unencryptedWebSocket",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 223,
+      "line": 229,
       "code": "secureUrl = url.replace('ws://', 'wss://');",
       "message": "WebSocket connection without encryption",
       "fix": "Use wss:// instead of ws://"
@@ -16462,7 +16582,7 @@
       "subtype": "hardcodedURLs",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 222,
+      "line": 228,
       "code": "if (url.startsWith('ws://')) {",
       "message": "Hardcoded URLs should be configurable",
       "fix": "Review and fix the security issue"
@@ -16472,7 +16592,7 @@
       "subtype": "hardcodedURLs",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 223,
+      "line": 229,
       "code": "secureUrl = url.replace('ws://', 'wss://');",
       "message": "Hardcoded URLs should be configurable",
       "fix": "Review and fix the security issue"
@@ -16482,7 +16602,7 @@
       "subtype": "hardcodedURLs",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 264,
+      "line": 281,
       "code": "if (url.startsWith('http://')) {",
       "message": "Hardcoded URLs should be configurable",
       "fix": "Review and fix the security issue"
@@ -16492,7 +16612,7 @@
       "subtype": "hardcodedURLs",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 265,
+      "line": 282,
       "code": "secureUrl = url.replace('http://', 'https://');",
       "message": "Hardcoded URLs should be configurable",
       "fix": "Review and fix the security issue"
@@ -16512,7 +16632,47 @@
       "subtype": "missingErrorBoundaries",
       "severity": "MEDIUM",
       "file": "utils/SecurityUtils.js",
-      "line": 296,
+      "line": 221,
+      "code": "if (!this.hasRole(\"CalculationManager\") && !this.hasRole(\"Admin\")) {",
+      "message": "Security issue: errorHandling - missingErrorBoundaries",
+      "fix": "Review and fix the security issue"
+    },
+    {
+      "type": "errorHandling",
+      "subtype": "missingErrorBoundaries",
+      "severity": "MEDIUM",
+      "file": "utils/SecurityUtils.js",
+      "line": 223,
+      "code": "throw new Error(\"Access denied: WebSocket connection requires CalculationManager role\");",
+      "message": "Security issue: errorHandling - missingErrorBoundaries",
+      "fix": "Review and fix the security issue"
+    },
+    {
+      "type": "errorHandling",
+      "subtype": "missingErrorBoundaries",
+      "severity": "MEDIUM",
+      "file": "utils/SecurityUtils.js",
+      "line": 274,
+      "code": "if (!this.hasRole(\"CalculationManager\") && !this.hasRole(\"Admin\")) {",
+      "message": "Security issue: errorHandling - missingErrorBoundaries",
+      "fix": "Review and fix the security issue"
+    },
+    {
+      "type": "errorHandling",
+      "subtype": "missingErrorBoundaries",
+      "severity": "MEDIUM",
+      "file": "utils/SecurityUtils.js",
+      "line": 276,
+      "code": "throw new Error(\"Access denied: EventSource connection requires CalculationManager role\");",
+      "message": "Security issue: errorHandling - missingErrorBoundaries",
+      "fix": "Review and fix the security issue"
+    },
+    {
+      "type": "errorHandling",
+      "subtype": "missingErrorBoundaries",
+      "severity": "MEDIUM",
+      "file": "utils/SecurityUtils.js",
+      "line": 323,
       "code": "* Check user authorization for calculation operations",
       "message": "Security issue: errorHandling - missingErrorBoundaries",
       "fix": "Review and fix the security issue"
@@ -16522,7 +16682,7 @@
       "subtype": "missingErrorBoundaries",
       "severity": "MEDIUM",
       "file": "utils/SecurityUtils.js",
-      "line": 300,
+      "line": 327,
       "code": "checkCalculationAuth: function(operation) {",
       "message": "Security issue: errorHandling - missingErrorBoundaries",
       "fix": "Review and fix the security issue"
@@ -16532,7 +16692,7 @@
       "subtype": "missingErrorBoundaries",
       "severity": "MEDIUM",
       "file": "utils/SecurityUtils.js",
-      "line": 319,
+      "line": 346,
       "code": "* Sanitize calculation result for display",
       "message": "Security issue: errorHandling - missingErrorBoundaries",
       "fix": "Review and fix the security issue"
@@ -16542,7 +16702,7 @@
       "subtype": "missingErrorBoundaries",
       "severity": "MEDIUM",
       "file": "utils/SecurityUtils.js",
-      "line": 320,
+      "line": 347,
       "code": "* @param {any} result - Calculation result",
       "message": "Security issue: errorHandling - missingErrorBoundaries",
       "fix": "Review and fix the security issue"
@@ -16552,7 +16712,7 @@
       "subtype": "memoryLeaks",
       "severity": "MEDIUM",
       "file": "utils/SecurityUtils.js",
-      "line": 230,
+      "line": 241,
       "code": "ws.addEventListener('open', function() {",
       "message": "Security issue: resources - memoryLeaks",
       "fix": "Review and fix the security issue"
@@ -16562,7 +16722,7 @@
       "subtype": "memoryLeaks",
       "severity": "MEDIUM",
       "file": "utils/SecurityUtils.js",
-      "line": 234,
+      "line": 245,
       "code": "ws.addEventListener('error', function(error) {",
       "message": "Security issue: resources - memoryLeaks",
       "fix": "Review and fix the security issue"
@@ -16572,7 +16732,7 @@
       "subtype": "memoryLeaks",
       "severity": "MEDIUM",
       "file": "utils/SecurityUtils.js",
-      "line": 238,
+      "line": 249,
       "code": "ws.addEventListener('message', function(event) {",
       "message": "Security issue: resources - memoryLeaks",
       "fix": "Review and fix the security issue"
@@ -16582,7 +16742,7 @@
       "subtype": "memoryLeaks",
       "severity": "MEDIUM",
       "file": "utils/SecurityUtils.js",
-      "line": 272,
+      "line": 299,
       "code": "const originalAddEventListener = eventSource.addEventListener;",
       "message": "Security issue: resources - memoryLeaks",
       "fix": "Review and fix the security issue"
@@ -16592,7 +16752,7 @@
       "subtype": "memoryLeaks",
       "severity": "MEDIUM",
       "file": "utils/SecurityUtils.js",
-      "line": 273,
+      "line": 300,
       "code": "eventSource.addEventListener = function(type, listener, options) {",
       "message": "Security issue: resources - memoryLeaks",
       "fix": "Review and fix the security issue"
@@ -16602,8 +16762,8 @@
       "subtype": "unclosedConnections",
       "severity": "MEDIUM",
       "file": "utils/SecurityUtils.js",
-      "line": 227,
-      "code": "const ws = new WebSocket(secureUrl);",
+      "line": 238,
+      "code": "const ws = new WebSocket(authenticatedUrl);",
       "message": "Security issue: resources - unclosedConnections",
       "fix": "Review and fix the security issue"
     },
@@ -16612,8 +16772,8 @@
       "subtype": "unclosedConnections",
       "severity": "MEDIUM",
       "file": "utils/SecurityUtils.js",
-      "line": 269,
-      "code": "const eventSource = new EventSource(secureUrl);",
+      "line": 293,
+      "code": "const eventSource = new EventSource(secureUrl, {",
       "message": "Security issue: resources - unclosedConnections",
       "fix": "Review and fix the security issue"
     },
@@ -16642,7 +16802,7 @@
       "subtype": "missingSecurityUtil",
       "severity": "MEDIUM",
       "file": "utils/SecurityUtils.js",
-      "line": 329,
+      "line": 356,
       "code": "return this.escapeHTML(result);",
       "message": "Security issue: sapFiori - missingSecurityUtil",
       "fix": "Review and fix the security issue"
@@ -16652,7 +16812,7 @@
       "subtype": "missingSecurityUtil",
       "severity": "MEDIUM",
       "file": "utils/SecurityUtils.js",
-      "line": 334,
+      "line": 361,
       "code": "return this.escapeHTML(JSON.stringify(result, null, 2));",
       "message": "Security issue: sapFiori - missingSecurityUtil",
       "fix": "Review and fix the security issue"
@@ -16662,7 +16822,7 @@
       "subtype": "missingSecurityUtil",
       "severity": "MEDIUM",
       "file": "utils/SecurityUtils.js",
-      "line": 340,
+      "line": 367,
       "code": "return this.escapeHTML(String(result));",
       "message": "Security issue: sapFiori - missingSecurityUtil",
       "fix": "Review and fix the security issue"
@@ -16772,7 +16932,27 @@
       "subtype": "missingWebSocketAuth",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 224,
+      "line": 220,
+      "code": "// SECURITY: Validate authentication before creating WebSocket",
+      "message": "WebSocket missing authentication",
+      "fix": "Add authentication token to WebSocket connection"
+    },
+    {
+      "type": "webSocketSecurity",
+      "subtype": "missingWebSocketAuth",
+      "severity": "HIGH",
+      "file": "utils/SecurityUtils.js",
+      "line": 223,
+      "code": "throw new Error(\"Access denied: WebSocket connection requires CalculationManager role\");",
+      "message": "WebSocket missing authentication",
+      "fix": "Add authentication token to WebSocket connection"
+    },
+    {
+      "type": "webSocketSecurity",
+      "subtype": "missingWebSocketAuth",
+      "severity": "HIGH",
+      "file": "utils/SecurityUtils.js",
+      "line": 230,
       "code": "Log.warning(\"WebSocket URL upgraded to secure protocol\", secureUrl);",
       "message": "WebSocket missing authentication",
       "fix": "Add authentication token to WebSocket connection"
@@ -16782,8 +16962,8 @@
       "subtype": "missingWebSocketAuth",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 227,
-      "code": "const ws = new WebSocket(secureUrl);",
+      "line": 238,
+      "code": "const ws = new WebSocket(authenticatedUrl);",
       "message": "WebSocket missing authentication",
       "fix": "Add authentication token to WebSocket connection"
     },
@@ -16792,7 +16972,7 @@
       "subtype": "missingWebSocketAuth",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 231,
+      "line": 242,
       "code": "Log.info(\"Secure WebSocket connection established\", secureUrl);",
       "message": "WebSocket missing authentication",
       "fix": "Add authentication token to WebSocket connection"
@@ -16802,7 +16982,7 @@
       "subtype": "missingWebSocketAuth",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 235,
+      "line": 246,
       "code": "Log.error(\"WebSocket error\", error);",
       "message": "WebSocket missing authentication",
       "fix": "Add authentication token to WebSocket connection"
@@ -16812,7 +16992,7 @@
       "subtype": "missingWebSocketAuth",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 246,
+      "line": 257,
       "code": "Log.error(\"Invalid WebSocket message format\", event.data);",
       "message": "WebSocket missing authentication",
       "fix": "Add authentication token to WebSocket connection"
@@ -16822,7 +17002,7 @@
       "subtype": "missingEventValidation",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 230,
+      "line": 241,
       "code": "ws.addEventListener('open', function() {",
       "message": "Server-sent events not validated",
       "fix": "Validate all server-sent event data"
@@ -16832,7 +17012,7 @@
       "subtype": "missingEventValidation",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 234,
+      "line": 245,
       "code": "ws.addEventListener('error', function(error) {",
       "message": "Server-sent events not validated",
       "fix": "Validate all server-sent event data"
@@ -16842,7 +17022,7 @@
       "subtype": "missingEventValidation",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 238,
+      "line": 249,
       "code": "ws.addEventListener('message', function(event) {",
       "message": "Server-sent events not validated",
       "fix": "Validate all server-sent event data"
@@ -16852,7 +17032,7 @@
       "subtype": "missingEventValidation",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 272,
+      "line": 299,
       "code": "const originalAddEventListener = eventSource.addEventListener;",
       "message": "Server-sent events not validated",
       "fix": "Validate all server-sent event data"
@@ -16862,7 +17042,7 @@
       "subtype": "missingEventValidation",
       "severity": "HIGH",
       "file": "utils/SecurityUtils.js",
-      "line": 273,
+      "line": 300,
       "code": "eventSource.addEventListener = function(type, listener, options) {",
       "message": "Server-sent events not validated",
       "fix": "Validate all server-sent event data"

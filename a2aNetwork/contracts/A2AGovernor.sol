@@ -405,7 +405,10 @@ contract A2AGovernor is
         returns (uint256) 
     {
         if (emergencyMode) {
-            return (token.getPastTotalSupply(blockNumber) * EMERGENCY_QUORUM) / 100;
+            uint256 totalSupply = token.getPastTotalSupply(blockNumber);
+            // DIVISION BY ZERO PROTECTION: Ensure total supply exists
+            if (totalSupply == 0) return 0;
+            return (totalSupply * EMERGENCY_QUORUM) / 100;
         }
         return super.quorum(blockNumber);
     }

@@ -62,7 +62,7 @@ sap.ui.define([
          * @public
          */
         onDeployPackage: function() {
-            if (!this._hasRole("DeploymentAdmin")) {
+            if (!this._securityUtils.hasRole("DeploymentAdmin")) {
                 MessageBox.error("Access denied. Deployment Administrator role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "DeployPackage", reason: "Insufficient permissions" });
                 return;
@@ -107,7 +107,7 @@ sap.ui.define([
          * @public
          */
         onConfigurePipeline: function() {
-            if (!this._hasRole("DeploymentAdmin")) {
+            if (!this._securityUtils.hasRole("DeploymentAdmin")) {
                 MessageBox.error("Access denied. Deployment Administrator role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ConfigurePipeline", reason: "Insufficient permissions" });
                 return;
@@ -163,7 +163,7 @@ sap.ui.define([
          * @public
          */
         onViewDeploymentStatus: function() {
-            if (!this._hasRole("DeploymentUser")) {
+            if (!this._securityUtils.hasRole("DeploymentUser")) {
                 MessageBox.error("Access denied. Deployment User role required.");
                 this._auditLogger.log("ACCESS_DENIED", { action: "ViewDeploymentStatus", reason: "Insufficient permissions" });
                 return;
@@ -750,22 +750,6 @@ sap.ui.define([
             return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
         },
 
-        /**
-         * @function _hasRole
-         * @description Checks if current user has specified role.
-         * @param {string} role - Role to check
-         * @returns {boolean} True if user has role
-         * @private
-         */
-        _hasRole: function(role) {
-            const user = sap.ushell?.Container?.getUser();
-            if (user && user.hasRole) {
-                return user.hasRole(role);
-            }
-            // Mock role validation for development/testing
-            const mockRoles = ["DeploymentAdmin", "DeploymentUser", "DeploymentOperator"];
-            return mockRoles.includes(role);
-        },
 
         /**
          * @function _cleanupResources

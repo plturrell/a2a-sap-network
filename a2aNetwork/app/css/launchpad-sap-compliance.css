@@ -52,28 +52,28 @@
     outline-offset: 0.125rem;
 }
 
-/* Responsive Design - SAP Breakpoints */
-@media (max-width: 37.4375em) {
+/* SAP Standard Responsive Design - Official Breakpoints */
+@media (max-width: 599px) {
     .sapUshellTile {
-        margin: 0.25rem;
-        min-height: 6rem;
-        width: calc(50% - 0.5rem);
+        margin: var(--sapContent_MarginSize, 0.5rem);
+        min-height: var(--sapElement_Height, 2.75rem);
+        width: calc(100% - var(--sapContent_MarginSize, 1rem));
     }
 }
 
-@media (min-width: 37.5em) and (max-width: 63.9375em) {
+@media (min-width: 600px) and (max-width: 1023px) {
     .sapUshellTile {
-        margin: 0.5rem;
-        min-height: 8rem;
-        width: calc(33.333% - 1rem);
+        margin: var(--sapContent_MarginSize, 0.5rem);
+        min-height: var(--sapElement_Height, 2.75rem);
+        width: calc(50% - var(--sapContent_MarginSize, 1rem));
     }
 }
 
-@media (min-width: 64em) {
+@media (min-width: 1024px) {
     .sapUshellTile {
-        margin: 0.5rem;
-        min-height: 10rem;
-        width: calc(25% - 1rem);
+        margin: var(--sapContent_MarginSize, 0.5rem);
+        min-height: var(--sapElement_Height, 2.75rem);
+        width: calc(25% - var(--sapContent_MarginSize, 1rem));
     }
 }
 

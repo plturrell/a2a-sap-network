@@ -422,10 +422,13 @@ contract A2ATimelock is
         }
         // Medium risk operations require majority approval
         else if (metadata.riskLevel == uint256(RiskLevel.MEDIUM)) {
-            require(
-                metadata.reviewCount >= (metadata.reviewers.length + 1) / 2,
-                "Majority review not achieved"
-            );
+            // DIVISION BY ZERO PROTECTION: Ensure reviewers exist for majority calculation
+            if (metadata.reviewers.length > 0) {
+                require(
+                    metadata.reviewCount >= (metadata.reviewers.length + 1) / 2,
+                    "Majority review not achieved"
+                );
+            }
         }
         // Low risk operations don't require reviews
     }

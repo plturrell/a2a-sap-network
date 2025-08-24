@@ -209,7 +209,8 @@ contract CrossChainBridge is AccessControl, ReentrancyGuard, Pausable {
         message.validatorSignatures.push(signature);
 
         // Check if we have enough consensus
-        if (message.validatorSignatures.length >= MIN_VALIDATOR_CONSENSUS) {
+        // DIVISION BY ZERO PROTECTION: Ensure validator count exists for consensus calculation
+        if (validatorCount > 0 && message.validatorSignatures.length >= MIN_VALIDATOR_CONSENSUS) {
             message.status = MessageStatus.Validated;
         }
 

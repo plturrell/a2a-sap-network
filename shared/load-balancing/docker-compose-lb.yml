@@ -1,0 +1,409 @@
+# Load Balancing Infrastructure for A2A Platform
+# Comprehensive setup with multiple load balancer options and service discovery
+
+version: '3.8'
+
+services:
+  # NGINX Load Balancer
+  nginx-lb:
+    image: nginx:alpine
+    container_name: a2a-nginx-lb
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Monitoring
+    volumes:
+      - ./nginx-load-balancer.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
+      - nginx-cache:/var/cache/nginx
+      - nginx-logs:/var/log/nginx
+    environment:
+      - NGINX_WORKER_PROCESSES=auto
+      - NGINX_WORKER_CONNECTIONS=1024
+    networks:
+      - a2a-lb-network
+      - a2a-backend-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - nginx
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    depends_on:
+      - service-discovery
+
+  # HAProxy Load Balancer (Alternative to NGINX)
+  haproxy-lb:
+    image: haproxy:2.8-alpine
+    container_name: a2a-haproxy-lb
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8404:8404"  # Stats
+      - "6380:6380"  # Redis proxy
+    volumes:
+      - ./haproxy-config.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./haproxy/certs:/etc/ssl/certs:ro
+      - ./haproxy/errors:/etc/haproxy/errors:ro
+      - ./haproxy/lua:/etc/haproxy:ro
+      - haproxy-logs:/var/log/haproxy
+    environment:
+      - HAPROXY_STATS_PASSWORD=${HAPROXY_STATS_PASSWORD:-admin123}
+    networks:
+      - a2a-lb-network
+      - a2a-backend-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "haproxy", "-c", "-f", "/usr/local/etc/haproxy/haproxy.cfg"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - haproxy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    depends_on:
+      - service-discovery
+
+  # Service Discovery and Registry
+  service-discovery:
+    build:
+      context: .
+      dockerfile: Dockerfile.service-discovery
+    container_name: a2a-service-discovery
+    ports:
+      - "8500:8500"  # Service registry API
+      - "8600:8600"  # DNS interface
+    volumes:
+      - service-discovery-data:/data
+      - ./service-discovery:/app:ro
+    environment:
+      - NODE_ENV=production
+      - REGISTRY_TYPE=memory
+      - HEALTH_CHECK_INTERVAL=30000
+      - DISCOVERY_INTERVAL=60000
+      - LOG_LEVEL=info
+    networks:
+      - a2a-lb-network
+      - a2a-backend-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8500/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: ["node", "/app/service-discovery.js"]
+
+  # Consul Service Discovery (Alternative)
+  consul:
+    image: consul:1.16
+    container_name: a2a-consul
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    volumes:
+      - consul-data:/consul/data
+      - ./consul/config:/consul/config:ro
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    networks:
+      - a2a-lb-network
+      - a2a-backend-network
+    restart: unless-stopped
+    command: >
+      consul agent -server -bootstrap-expect=1 -ui -client=0.0.0.0
+      -bind='{{ GetInterfaceIP "eth0" }}'
+      -data-dir=/consul/data
+      -config-dir=/consul/config
+    profiles:
+      - consul
+
+  # etcd Service Discovery (Alternative)
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.9
+    container_name: a2a-etcd
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    volumes:
+      - etcd-data:/etcd-data
+    environment:
+      - ETCD_NAME=node1
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd:2380
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+      - ETCD_INITIAL_CLUSTER=node1=http://etcd:2380
+      - ETCD_INITIAL_CLUSTER_STATE=new
+      - ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster
+    networks:
+      - a2a-lb-network
+    restart: unless-stopped
+    profiles:
+      - etcd
+
+  # Traefik Load Balancer with Service Discovery
+  traefik:
+    image: traefik:v3.0
+    container_name: a2a-traefik
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Dashboard
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+      - ./traefik/certs:/etc/traefik/certs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-data:/data
+    environment:
+      - TRAEFIK_API_DASHBOARD=true
+      - TRAEFIK_API_INSECURE=false
+      - TRAEFIK_PROVIDERS_DOCKER=true
+      - TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT=false
+    networks:
+      - a2a-lb-network
+      - a2a-backend-network
+    restart: unless-stopped
+    profiles:
+      - traefik
+
+  # Envoy Proxy (Advanced L7 proxy)
+  envoy:
+    image: envoyproxy/envoy:v1.27-latest
+    container_name: a2a-envoy
+    ports:
+      - "80:10000"
+      - "443:10001"
+      - "9901:9901"  # Admin interface
+    volumes:
+      - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro
+      - ./envoy/certs:/etc/envoy/certs:ro
+    networks:
+      - a2a-lb-network
+      - a2a-backend-network
+    restart: unless-stopped
+    profiles:
+      - envoy
+
+  # Load Balancer Health Monitor
+  lb-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile.lb-monitor
+    container_name: a2a-lb-monitor
+    environment:
+      - MONITOR_INTERVAL=30000
+      - ALERT_WEBHOOK_URL=${ALERT_WEBHOOK_URL}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+    volumes:
+      - ./monitoring:/app:ro
+    networks:
+      - a2a-lb-network
+      - a2a-backend-network
+    restart: unless-stopped
+    depends_on:
+      - service-discovery
+    profiles:
+      - monitoring
+
+  # Backend Service Simulators (for testing)
+  a2a-network-1:
+    image: nginx:alpine
+    container_name: a2a-network-sim-1
+    ports:
+      - "4001:80"
+    volumes:
+      - ./test-services/network-1:/usr/share/nginx/html:ro
+    environment:
+      - NGINX_PORT=80
+    networks:
+      - a2a-backend-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.a2a-network.loadbalancer.server.port=80"
+      - "traefik.http.routers.a2a-network.rule=PathPrefix(`/api/`)"
+    profiles:
+      - testing
+
+  a2a-network-2:
+    image: nginx:alpine
+    container_name: a2a-network-sim-2
+    ports:
+      - "4002:80"
+    volumes:
+      - ./test-services/network-2:/usr/share/nginx/html:ro
+    networks:
+      - a2a-backend-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.a2a-network.loadbalancer.server.port=80"
+    profiles:
+      - testing
+
+  a2a-agents-1:
+    image: nginx:alpine
+    container_name: a2a-agents-sim-1
+    ports:
+      - "8001:80"
+    volumes:
+      - ./test-services/agents-1:/usr/share/nginx/html:ro
+    networks:
+      - a2a-backend-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.a2a-agents.loadbalancer.server.port=80"
+      - "traefik.http.routers.a2a-agents.rule=PathPrefix(`/agents/`)"
+    profiles:
+      - testing
+
+  # SSL Certificate Management
+  certbot:
+    image: certbot/certbot
+    container_name: a2a-certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - ./nginx/html:/var/www/html
+    environment:
+      - CERTBOT_EMAIL=${CERTBOT_EMAIL:-admin@a2a-platform.com}
+      - CERTBOT_DOMAIN=${CERTBOT_DOMAIN:-a2a-platform.local}
+    command: >
+      sh -c "
+      certbot certonly --webroot --webroot-path=/var/www/html 
+      --email $$CERTBOT_EMAIL --agree-tos --no-eff-email 
+      --staging -d $$CERTBOT_DOMAIN || true;
+      trap exit TERM; 
+      while :; do certbot renew; sleep 12h & wait $!; done;"
+    networks:
+      - a2a-lb-network
+    profiles:
+      - ssl
+
+  # Prometheus for Load Balancer Metrics
+  prometheus-lb:
+    image: prom/prometheus:latest
+    container_name: a2a-prometheus-lb
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus-lb.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus-lb-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    networks:
+      - a2a-lb-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Grafana for Load Balancer Dashboards
+  grafana-lb:
+    image: grafana/grafana:latest
+    container_name: a2a-grafana-lb
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-lb-data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    networks:
+      - a2a-lb-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+networks:
+  a2a-lb-network:
+    driver: bridge
+    name: a2a-lb-network
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+  
+  a2a-backend-network:
+    driver: bridge
+    name: a2a-backend-network
+    ipam:
+      config:
+        - subnet: 172.22.0.0/16
+
+volumes:
+  nginx-cache:
+    driver: local
+  nginx-logs:
+    driver: local
+  haproxy-logs:
+    driver: local
+  service-discovery-data:
+    driver: local
+  consul-data:
+    driver: local
+  etcd-data:
+    driver: local
+  traefik-data:
+    driver: local
+  certbot-etc:
+    driver: local
+  certbot-var:
+    driver: local
+  prometheus-lb-data:
+    driver: local
+  grafana-lb-data:
+    driver: local
+
+# Usage Examples:
+#
+# NGINX Load Balancer:
+# docker-compose -f docker-compose-lb.yml --profile nginx --profile monitoring up -d
+#
+# HAProxy Load Balancer:
+# docker-compose -f docker-compose-lb.yml --profile haproxy --profile monitoring up -d
+#
+# Traefik with auto-discovery:
+# docker-compose -f docker-compose-lb.yml --profile traefik up -d
+#
+# Full testing environment:
+# docker-compose -f docker-compose-lb.yml --profile nginx --profile testing --profile monitoring up -d
+#
+# With SSL certificates:
+# docker-compose -f docker-compose-lb.yml --profile nginx --profile ssl up -d
+#
+# Consul-based service discovery:
+# docker-compose -f docker-compose-lb.yml --profile nginx --profile consul --profile monitoring up -d
