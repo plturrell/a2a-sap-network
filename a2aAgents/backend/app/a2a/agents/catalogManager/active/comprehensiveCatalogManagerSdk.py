@@ -516,10 +516,6 @@ class ComprehensiveCatalogManagerSDK(SecureA2AAgent, BlockchainQueueMixin):
             version="3.0.0",
             base_url=base_url
         )
-        # Initialize security features
-        self._init_security_features()
-        self._init_rate_limiting()
-        self._init_input_validation()
         
         
         # Initialize blockchain queue capabilities
@@ -538,6 +534,7 @@ class ComprehensiveCatalogManagerSDK(SecureA2AAgent, BlockchainQueueMixin):
         
         # Catalog storage and indexing
         self.catalog_items = {}  # In-memory catalog cache
+        self.catalog_entries = {}  # Alias for catalog_items
         self.relationship_graph = nx.Graph() if NETWORKX_AVAILABLE else None
         self.metadata_index = {}  # Fast metadata lookup
         

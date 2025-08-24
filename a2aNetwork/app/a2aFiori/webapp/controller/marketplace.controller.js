@@ -97,7 +97,7 @@ sap.ui.define([
                 this._restoreCart();
                 this.hideLoading();
             }).catch(error => {
-                console.error("Failed to load marketplace data:", error);
+                // console.error("Failed to load marketplace data:", error);
                 // Load fallback categories only
                 this.oMarketplaceModel.setProperty("/categories", this._getFallbackCategories());
                 this.hideLoading();
@@ -371,7 +371,7 @@ sap.ui.define([
                 }
             }).catch(error => {
                 this.hideLoading();
-                console.error("Checkout failed:", error);
+                // console.error("Checkout failed:", error);
                 MessageBox.error(this.getResourceBundle().getText("marketplace.checkout.error"));
             });
         },

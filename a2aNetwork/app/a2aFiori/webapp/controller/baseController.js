@@ -434,7 +434,7 @@ sap.ui.define([
                     this.oUIModel.setProperty("/securityInitialized", true);
                 }
             } catch (error) {
-                console.warn("Failed to fetch CSRF token:", error);
+                // console.warn("Failed to fetch CSRF token:", error);
                 // Continue without CSRF in development
                 this.oUIModel.setProperty("/securityInitialized", true);
             }
@@ -569,7 +569,7 @@ sap.ui.define([
          * @since 1.0.0
          */
         async _handleSecureResponse(response) {
-            const correlationId = response.headers.get("X-Correlation-ID");
+            const _correlationId = response.headers.get("X-Correlation-ID");
 
             if (!response.ok) {
                 let errorData;
@@ -581,7 +581,7 @@ sap.ui.define([
 
                 // Log security-related errors
                 if (response.status === 403 || response.status === 401) {
-                    console.warn(`[SECURITY] ${response.status} response for correlation ID: ${correlationId}`);
+                    // console.warn(`[SECURITY] ${response.status} response for correlation ID: ${correlationId}`);
                 }
 
                 throw new Error(errorData.error || `HTTP ${response.status}`);
@@ -592,7 +592,7 @@ sap.ui.define([
                 return data;
             } catch (error) {
                 // Handle non-JSON responses
-                return await response.text();
+                return response.text();
             }
         },
 
@@ -609,10 +609,10 @@ sap.ui.define([
          * @since 1.0.0
          */
         _handleRequestError(error, sUrl, sMethod) {
-            const correlationId = this.oUIModel.getProperty("/correlationId");
+            const _correlationId = this.oUIModel.getProperty("/correlationId");
 
             // Log error with correlation ID
-            console.error(`[REQUEST ERROR] ${sMethod} ${sUrl} - Correlation ID: ${correlationId}`, error);
+            // console.error(`[REQUEST ERROR] ${sMethod} ${sUrl} - Correlation ID: ${correlationId}`, error);
 
             // Return sanitized error message
             const sanitizedMessage = error.message.replace(/</g, "&lt;").replace(/>/g, "&gt;");
