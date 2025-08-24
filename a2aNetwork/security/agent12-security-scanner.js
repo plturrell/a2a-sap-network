@@ -216,17 +216,18 @@ class Agent12SecurityScanner {
             'catalog/stream', 'CatalogUtils'
         ];
         
-        return agent12Indicators.some(indicator => 
+        const checkAgent12Indicator = (indicator) => 
             content.toLowerCase().includes(indicator.toLowerCase()) ||
-            filePath.toLowerCase().includes(indicator.toLowerCase())
-        );
+            filePath.toLowerCase().includes(indicator.toLowerCase());
+        
+        return agent12Indicators.some(checkAgent12Indicator);
     }
 
     scanCatalogSQLInjection(content, filePath) {
-        this.catalogSecurityPatterns.sqlInjection.forEach(pattern => {
+        const checkSQLInjectionPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const processSQLInjectionMatch = (match) => {
                     this.vulnerabilities.push({
                         type: 'CATALOG_SQL_INJECTION',
                         severity: 'CRITICAL',
@@ -237,16 +238,18 @@ class Agent12SecurityScanner {
                         impact: 'Could allow unauthorized access to catalog database',
                         recommendation: 'Use parameterized queries and SecurityUtils.validateSQL()'
                     });
-                });
+                };
+                matches.forEach(processSQLInjectionMatch);
             }
-        });
+        };
+        this.catalogSecurityPatterns.sqlInjection.forEach(checkSQLInjectionPattern);
     }
 
     scanCatalogXSS(content, filePath) {
-        this.catalogSecurityPatterns.catalogXSS.forEach(pattern => {
+        const checkCatalogXSSPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const processCatalogXSSMatch = (match) => {
                     this.vulnerabilities.push({
                         type: 'CATALOG_XSS',
                         severity: 'HIGH',
@@ -257,9 +260,11 @@ class Agent12SecurityScanner {
                         impact: 'Could allow script injection through catalog entries',
                         recommendation: 'Use SecurityUtils.escapeHTML() for catalog data display'
                     });
-                });
+                };
+                matches.forEach(processCatalogXSSMatch);
             }
-        });
+        };
+        this.catalogSecurityPatterns.catalogXSS.forEach(checkCatalogXSSPattern);
     }
 
     scanInsecureConnections(content, filePath) {

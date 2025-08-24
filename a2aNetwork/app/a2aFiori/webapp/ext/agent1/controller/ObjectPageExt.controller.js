@@ -541,7 +541,7 @@ sap.ui.define([
                 
                 // Announce test result to screen readers
                 sap.ui.getCore().announceForAccessibility("Script test completed successfully. Result: " + result);
-                MessageBox.information("Script test successful!\n\nInput: " + testValue + "\nOutput: " + result);
+                MessageBox.information("Script test successful!\n\nInput: Sample Value\nOutput: " + result);
                 
             } catch (oError) {
                 // Announce test error to screen readers

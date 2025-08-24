@@ -397,8 +397,8 @@ sap.ui.define([
             
             this._extensionAPI.getView().setBusy(true);
             
-            jQuery.ajax({
-                url: "/a2a/agent8/v1/datasets/" + sDatasetName + "/validate",
+            jQuery.ajax(this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent8/v1/datasets/" + this._securityUtils.encodeURL(sDatasetName) + "/validate",
                 type: "POST",
                 success: function(data) {
                     this._extensionAPI.getView().setBusy(false);

@@ -1,945 +1,523 @@
 sap.ui.define([
     "sap/ui/core/mvc/ControllerExtension",
-    "sap/m/MessageToast",
     "sap/m/MessageBox",
+    "sap/m/MessageToast",
     "sap/ui/core/Fragment",
     "sap/ui/model/json/JSONModel",
     "a2a/network/agent11/ext/utils/SecurityUtils"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment, JSONModel, SecurityUtils) {
+], function (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, SecurityUtils) {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent11.ext.controller.ObjectPageExt", {
-
+        
         override: {
             onInit: function () {
-                this._initializeCreateModel();
-            }
-        },
-
-        _initializeCreateModel: function() {
-            var oCreateData = {
-                queryName: "",
-                description: "",
-                queryType: "",
-                databaseType: "",
-                priority: "medium",
-                complexity: "moderate",
-                queryNameState: "",
-                queryNameStateText: "",
-                queryTypeState: "",
-                queryTypeStateText: "",
-                databaseTypeState: "",
-                databaseTypeStateText: "",
-                sqlStatement: "",
-                queryLanguage: "sql",
-                dialectVersion: "",
-                estimatedCost: "",
-                indexUsage: "auto",
-                connectionString: "",
-                schemaName: "",
-                databaseVersion: "",
-                connectionPool: 10,
-                timeoutSettings: 30,
-                transactionMode: "auto",
-                isolationLevel: "read_committed",
-                autoCommit: true,
-                dataClassification: "internal"
-            };
-            var oCreateModel = new JSONModel(oCreateData);
-            this.getView().setModel(oCreateModel, "create");
-        },
-
-        onCreateSQLQuery: function() {
-            var oView = this.getView();
-            
-            if (!this._oCreateDialog) {
-                Fragment.load({
-                    id: oView.getId(),
-                    name: "a2a.network.agent11.ext.fragment.CreateSQLQuery",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._oCreateDialog = oDialog;
-                    oView.addDependent(this._oCreateDialog);
-                    this._oCreateDialog.open();
-                }.bind(this));
-            } else {
-                this._oCreateDialog.open();
-            }
-        },
-
-        onQueryNameChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            if (!sValue || sValue.length < 3) {
-                oData.queryNameState = "Error";
-                oData.queryNameStateText = "Query name must be at least 3 characters";
-            } else if (sValue.length > 100) {
-                oData.queryNameState = "Error";
-                oData.queryNameStateText = "Query name must not exceed 100 characters";
-            } else {
-                oData.queryNameState = "Success";
-                oData.queryNameStateText = "Valid query name";
-            }
-            
-            oCreateModel.setData(oData);
-        },
-
-        onQueryTypeChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            if (sValue) {
-                oData.queryTypeState = "Success";
-                oData.queryTypeStateText = "Query type selected";
+                this._extensionAPI = this.base.getExtensionAPI();
+                this._securityUtils = SecurityUtils;
+                this._initializeSecurity();
                 
-                // Smart suggestions based on query type
-                switch (sValue) {
-                    case "select":
-                        oData.transactionMode = "read_only";
-                        oData.autoCommit = true;
-                        oData.isolationLevel = "read_committed";
-                        break;
-                    case "insert":
-                    case "update":
-                    case "delete":
-                        oData.transactionMode = "read_write";
-                        oData.autoCommit = false;
-                        oData.isolationLevel = "repeatable_read";
-                        break;
-                    case "create":
-                    case "alter":
-                    case "drop":
-                        oData.transactionMode = "manual";
-                        oData.autoCommit = false;
-                        oData.isolationLevel = "serializable";
-                        break;
-                    case "procedure":
-                    case "function":
-                        oData.complexity = "complex";
-                        oData.timeoutSettings = 60;
-                        break;
-                }
-            } else {
-                oData.queryTypeState = "Error";
-                oData.queryTypeStateText = "Please select a query type";
-            }
-            
-            oCreateModel.setData(oData);
-        },
-
-        onDatabaseTypeChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            if (sValue) {
-                oData.databaseTypeState = "Success";
-                oData.databaseTypeStateText = "Database type selected";
+                // Initialize device model for responsive behavior
+                var oDeviceModel = new JSONModel(sap.ui.Device);
+                oDeviceModel.setDefaultBindingMode(sap.ui.model.BindingMode.OneWay);
+                this.base.getView().setModel(oDeviceModel, "device");
                 
-                // Set dialect version based on database type
-                switch (sValue) {
-                    case "mysql":
-                        oData.dialectVersion = "MySQL 8.0";
-                        oData.queryLanguage = "mysql";
-                        break;
-                    case "postgresql":
-                        oData.dialectVersion = "PostgreSQL 14";
-                        oData.queryLanguage = "postgresql";
-                        break;
-                    case "oracle":
-                        oData.dialectVersion = "Oracle 19c";
-                        oData.queryLanguage = "plsql";
-                        break;
-                    case "sqlserver":
-                        oData.dialectVersion = "SQL Server 2019";
-                        oData.queryLanguage = "tsql";
-                        break;
-                    case "hana":
-                        oData.dialectVersion = "HANA 2.0";
-                        oData.queryLanguage = "sql";
-                        oData.connectionPool = 20;
-                        break;
-                    default:
-                        oData.queryLanguage = "sql";
+                // Initialize dialog cache
+                this._dialogCache = {};
+            },
+            
+            onExit: function() {
+                this._cleanupResources();
+                if (this.base.onExit) {
+                    this.base.onExit.apply(this, arguments);
                 }
-            } else {
-                oData.databaseTypeState = "Error";
-                oData.databaseTypeStateText = "Please select a database type";
             }
-            
-            oCreateModel.setData(oData);
         },
 
-        onSQLStatementChange: function(oEvent) {
-            var sValue = oEvent.getParameter("value");
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            // Basic SQL validation
-            if (sValue && sValue.trim().length > 0) {
-                // Validate SQL with SecurityUtils
-                var validation = SecurityUtils.validateSQL(sValue);
-                if (!validation.isValid) {
-                    MessageToast.show("SQL validation warning: " + validation.errors.join(", "));
-                }
-                
-                // Estimate complexity based on SQL content
-                var upperSQL = sValue.toUpperCase();
-                if (upperSQL.includes("JOIN") && upperSQL.includes("SUBQUERY")) {
-                    oData.complexity = "very_complex";
-                } else if (upperSQL.includes("JOIN") || upperSQL.includes("UNION")) {
-                    oData.complexity = "complex";
-                } else if (upperSQL.includes("WHERE") || upperSQL.includes("GROUP BY")) {
-                    oData.complexity = "moderate";
-                } else {
-                    oData.complexity = "simple";
-                }
-                
-                // Estimate cost (simplified)
-                oData.estimatedCost = this._estimateQueryCost(sValue);
+        /**
+         * @function onViewAudit
+         * @description Opens audit trail viewer with comprehensive compliance audit history.
+         * @public
+         */
+        onViewAudit: function() {
+            if (!this._hasRole("ComplianceUser")) {
+                MessageBox.error("Access denied. Compliance User role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "ViewAudit", reason: "Insufficient permissions" });
+                return;
             }
+
+            const oContext = this.base.getView().getBindingContext();
+            const sTaskId = oContext.getObject().taskId;
+            const sTaskName = oContext.getObject().taskName;
             
-            oCreateModel.setData(oData);
+            this._auditLogger.log("VIEW_AUDIT", { taskId: sTaskId, taskName: sTaskName });
+            
+            this._getOrCreateDialog("viewAudit", "a2a.network.agent11.ext.fragment.ViewAudit")
+                .then(function(oDialog) {
+                    var oAuditModel = new JSONModel({
+                        taskId: sTaskId,
+                        taskName: sTaskName,
+                        dateRange: "LAST_30_DAYS",
+                        startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+                        endDate: new Date(),
+                        auditLevel: "ALL",
+                        actionFilter: "",
+                        userFilter: "",
+                        autoRefresh: false,
+                        refreshInterval: 30000
+                    });
+                    oDialog.setModel(oAuditModel, "audit");
+                    oDialog.open();
+                    this._loadAuditTrail(sTaskId, oDialog);
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Audit Trail: " + error.message);
+                });
         },
 
-        onQueryLanguageChange: function(oEvent) {
-            var sValue = oEvent.getParameter("selectedItem").getKey();
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
-            
-            // Update code editor type based on language
-            var oCodeEditor = this.getView().byId("sqlEditor");
-            if (oCodeEditor) {
-                oCodeEditor.setType(sValue === "nosql" ? "javascript" : "sql");
+        /**
+         * @function onExportComplianceReport
+         * @description Exports comprehensive compliance report with detailed analysis and charts.
+         * @public
+         */
+        onExportComplianceReport: function() {
+            if (!this._hasRole("ComplianceUser")) {
+                MessageBox.error("Access denied. Compliance User role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "ExportComplianceReport", reason: "Insufficient permissions" });
+                return;
             }
+
+            const oContext = this.base.getView().getBindingContext();
+            const sTaskId = oContext.getObject().taskId;
+            const sTaskName = oContext.getObject().taskName;
             
-            oCreateModel.setData(oData);
+            this._auditLogger.log("EXPORT_COMPLIANCE_REPORT", { taskId: sTaskId, taskName: sTaskName });
+            
+            this._getOrCreateDialog("exportCompliance", "a2a.network.agent11.ext.fragment.ExportComplianceReport")
+                .then(function(oDialog) {
+                    var oExportModel = new JSONModel({
+                        taskId: sTaskId,
+                        taskName: sTaskName,
+                        reportType: "FULL_COMPLIANCE",
+                        format: "PDF",
+                        includeExecutiveSummary: true,
+                        includeDetailedFindings: true,
+                        includeRecommendations: true,
+                        includeAuditTrail: true,
+                        includeCharts: true,
+                        includeRiskMatrix: true,
+                        includeActionPlan: true,
+                        includeAppendices: true,
+                        confidentialityLevel: "INTERNAL",
+                        distributionList: [],
+                        customSections: []
+                    });
+                    oDialog.setModel(oExportModel, "export");
+                    oDialog.open();
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Export Compliance Report: " + error.message);
+                });
         },
 
-        _estimateQueryCost: function(sql) {
-            // Simplified cost estimation
-            var cost = 10;
-            var upperSQL = sql.toUpperCase();
+        /**
+         * @function onScheduleCompliance
+         * @description Opens compliance scheduling interface for automated compliance checks.
+         * @public
+         */
+        onScheduleCompliance: function() {
+            if (!this._hasRole("ComplianceAdmin")) {
+                MessageBox.error("Access denied. Compliance Administrator role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "ScheduleCompliance", reason: "Insufficient permissions" });
+                return;
+            }
+
+            const oContext = this.base.getView().getBindingContext();
+            const sTaskId = oContext.getObject().taskId;
+            const sTaskName = oContext.getObject().taskName;
             
-            if (upperSQL.includes("JOIN")) cost += 20;
-            if (upperSQL.includes("SUBQUERY") || upperSQL.includes("IN (")) cost += 30;
-            if (upperSQL.includes("ORDER BY")) cost += 10;
-            if (upperSQL.includes("GROUP BY")) cost += 15;
-            if (upperSQL.includes("DISTINCT")) cost += 10;
-            if (upperSQL.includes("UNION")) cost += 25;
+            this._auditLogger.log("SCHEDULE_COMPLIANCE", { taskId: sTaskId, taskName: sTaskName });
             
-            return cost.toString();
+            this._getOrCreateDialog("scheduleCompliance", "a2a.network.agent11.ext.fragment.ScheduleCompliance")
+                .then(function(oDialog) {
+                    var oScheduleModel = new JSONModel({
+                        taskId: sTaskId,
+                        taskName: sTaskName,
+                        scheduleType: "RECURRING",
+                        frequency: "WEEKLY",
+                        startDate: new Date(),
+                        endDate: null,
+                        timeOfDay: "09:00",
+                        timezone: "UTC",
+                        workdaysOnly: true,
+                        notifyOnCompletion: true,
+                        notifyOnFailure: true,
+                        escalateFailures: true,
+                        retryAttempts: 3,
+                        retryInterval: 60,
+                        enabled: true,
+                        description: "",
+                        customCronExpression: "",
+                        notificationRecipients: [],
+                        escalationPolicy: []
+                    });
+                    oDialog.setModel(oScheduleModel, "schedule");
+                    oDialog.open();
+                    this._loadScheduleOptions(oDialog);
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Schedule Compliance: " + error.message);
+                });
         },
 
-        onCancelCreateSQLQuery: function() {
-            this._oCreateDialog.close();
-            this._resetCreateModel();
-        },
+        /**
+         * @function onReviewViolations
+         * @description Opens violations review interface with detailed analysis and remediation options.
+         * @public
+         */
+        onReviewViolations: function() {
+            if (!this._hasRole("ComplianceUser")) {
+                MessageBox.error("Access denied. Compliance User role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "ReviewViolations", reason: "Insufficient permissions" });
+                return;
+            }
 
-        onConfirmCreateSQLQuery: function() {
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
+            const oContext = this.base.getView().getBindingContext();
+            const oData = oContext.getObject();
+            const sTaskId = oData.taskId;
+            const sTaskName = oData.taskName;
             
-            // Final validation
-            if (!this._validateCreateData(oData)) {
+            // Check if there are violations to review
+            if (!oData.violationCount || oData.violationCount === 0) {
+                MessageToast.show(this.getResourceBundle().getText("msg.noViolationsToReview"));
                 return;
             }
             
-            this._oCreateDialog.setBusy(true);
+            this._auditLogger.log("REVIEW_VIOLATIONS", { 
+                taskId: sTaskId, 
+                taskName: sTaskName, 
+                violationCount: oData.violationCount 
+            });
             
-            // Sanitize data for security
-            var oSanitizedData = {
-                queryName: SecurityUtils.sanitizeSQLParameter(oData.queryName),
-                description: SecurityUtils.sanitizeSQLParameter(oData.description),
-                queryType: oData.queryType,
-                databaseType: oData.databaseType,
-                priority: oData.priority,
-                complexity: oData.complexity,
-                sqlStatement: oData.sqlStatement, // Already validated by SecurityUtils
-                queryLanguage: oData.queryLanguage,
-                dialectVersion: oData.dialectVersion,
-                estimatedCost: oData.estimatedCost,
-                indexUsage: oData.indexUsage,
-                connectionString: oData.connectionString,
-                schemaName: oData.schemaName,
-                databaseVersion: oData.databaseVersion,
-                connectionPool: parseInt(oData.connectionPool) || 10,
-                timeoutSettings: parseInt(oData.timeoutSettings) || 30,
-                transactionMode: oData.transactionMode,
-                isolationLevel: oData.isolationLevel,
-                autoCommit: !!oData.autoCommit,
-                dataClassification: oData.dataClassification
-            };
+            this._getOrCreateDialog("reviewViolations", "a2a.network.agent11.ext.fragment.ReviewViolations")
+                .then(function(oDialog) {
+                    var oViolationsModel = new JSONModel({
+                        taskId: sTaskId,
+                        taskName: sTaskName,
+                        violationCount: oData.violationCount,
+                        severityFilter: "ALL",
+                        statusFilter: "OPEN",
+                        categoryFilter: "ALL",
+                        sortBy: "SEVERITY",
+                        sortOrder: "DESC",
+                        groupBy: "CATEGORY",
+                        showResolved: false,
+                        autoRefresh: true,
+                        refreshInterval: 60000
+                    });
+                    oDialog.setModel(oViolationsModel, "violations");
+                    oDialog.open();
+                    this._loadViolationsData(sTaskId, oDialog);
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Review Violations: " + error.message);
+                });
+        },
+
+        /**
+         * @function _loadAuditTrail
+         * @description Loads audit trail data for a specific compliance task.
+         * @param {string} sTaskId - Task ID
+         * @param {sap.m.Dialog} oDialog - Audit dialog
+         * @private
+         */
+        _loadAuditTrail: function(sTaskId, oDialog) {
+            oDialog.setBusy(true);
             
-            SecurityUtils.secureCallFunction(this.getView().getModel(), "/CreateSQLQuery", {
-                urlParameters: oSanitizedData,
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/GetComplianceAuditTrail", {
+                urlParameters: {
+                    taskId: sTaskId,
+                    limit: 100,
+                    includeSystemEvents: true
+                },
                 success: function(data) {
-                    this._oCreateDialog.setBusy(false);
-                    this._oCreateDialog.close();
-                    MessageToast.show(this.getResourceBundle().getText("msg.queryCreated"));
-                    this._refreshQueryData();
-                    this._resetCreateModel();
+                    var oAuditModel = oDialog.getModel("audit");
+                    if (oAuditModel) {
+                        var oCurrentData = oAuditModel.getData();
+                        oCurrentData.auditEntries = data.auditEntries || [];
+                        oCurrentData.totalCount = data.totalCount || 0;
+                        oCurrentData.summaryStats = data.summaryStats || {};
+                        oCurrentData.lastUpdated = new Date().toISOString();
+                        oAuditModel.setData(oCurrentData);
+                    }
+                    oDialog.setBusy(false);
                 }.bind(this),
                 error: function(error) {
-                    this._oCreateDialog.setBusy(false);
-                    var errorMsg = SecurityUtils.escapeHTML(error.message || "Unknown error");
-                    MessageBox.error(this.getResourceBundle().getText("error.createQueryFailed") + ": " + errorMsg);
-                }.bind(this)
+                    oDialog.setBusy(false);
+                    MessageBox.error("Failed to load audit trail: " + error.message);
+                }
             });
         },
 
-        _validateCreateData: function(oData) {
-            if (!oData.queryName || oData.queryName.length < 3) {
-                MessageBox.error(this.getResourceBundle().getText("validation.queryNameRequired"));
-                return false;
-            }
+        /**
+         * @function _loadScheduleOptions
+         * @description Loads scheduling options and existing schedules.
+         * @param {sap.m.Dialog} oDialog - Schedule dialog
+         * @private
+         */
+        _loadScheduleOptions: function(oDialog) {
+            const oModel = this.base.getView().getModel();
+            const oScheduleData = oDialog.getModel("schedule").getData();
             
-            if (!oData.queryType) {
-                MessageBox.error(this.getResourceBundle().getText("validation.queryTypeRequired"));
-                return false;
-            }
-            
-            if (!oData.databaseType) {
-                MessageBox.error(this.getResourceBundle().getText("validation.databaseTypeRequired"));
-                return false;
-            }
-            
-            if (!oData.sqlStatement || oData.sqlStatement.trim() === "") {
-                MessageBox.error(this.getResourceBundle().getText("validation.sqlStatementRequired"));
-                return false;
-            }
-            
-            // Validate SQL with SecurityUtils
-            var validation = SecurityUtils.validateSQL(oData.sqlStatement);
-            if (!validation.isValid) {
-                MessageBox.error(this.getResourceBundle().getText("error.sqlValidationFailed", [validation.errors.join(", ")]));
-                return false;
-            }
-            
-            return true;
+            SecurityUtils.secureCallFunction(oModel, "/GetScheduleOptions", {
+                urlParameters: { taskId: oScheduleData.taskId },
+                success: function(data) {
+                    var oScheduleModel = oDialog.getModel("schedule");
+                    if (oScheduleModel) {
+                        var oCurrentData = oScheduleModel.getData();
+                        oCurrentData.availableTimezones = data.timezones || [];
+                        oCurrentData.notificationChannels = data.notificationChannels || [];
+                        oCurrentData.escalationPolicies = data.escalationPolicies || [];
+                        oCurrentData.existingSchedules = data.existingSchedules || [];
+                        oScheduleModel.setData(oCurrentData);
+                    }
+                }.bind(this),
+                error: function(error) {
+                    MessageBox.error("Failed to load schedule options: " + error.message);
+                }
+            });
         },
 
-        _resetCreateModel: function() {
-            var oCreateModel = this.getView().getModel("create");
-            var oData = oCreateModel.getData();
+        /**
+         * @function _loadViolationsData
+         * @description Loads violations data with detailed analysis.
+         * @param {string} sTaskId - Task ID
+         * @param {sap.m.Dialog} oDialog - Violations dialog
+         * @private
+         */
+        _loadViolationsData: function(sTaskId, oDialog) {
+            oDialog.setBusy(true);
             
-            oData.queryName = "";
-            oData.description = "";
-            oData.queryType = "";
-            oData.databaseType = "";
-            oData.priority = "medium";
-            oData.complexity = "moderate";
-            oData.queryNameState = "";
-            oData.queryNameStateText = "";
-            oData.queryTypeState = "";
-            oData.queryTypeStateText = "";
-            oData.databaseTypeState = "";
-            oData.databaseTypeStateText = "";
-            oData.sqlStatement = "";
+            const oModel = this.base.getView().getModel();
             
-            oCreateModel.setData(oData);
+            SecurityUtils.secureCallFunction(oModel, "/GetComplianceViolations", {
+                urlParameters: {
+                    taskId: sTaskId,
+                    includeDetails: true,
+                    includeRecommendations: true
+                },
+                success: function(data) {
+                    var oViolationsModel = oDialog.getModel("violations");
+                    if (oViolationsModel) {
+                        var oCurrentData = oViolationsModel.getData();
+                        oCurrentData.violations = data.violations || [];
+                        oCurrentData.summaryStats = data.summaryStats || {};
+                        oCurrentData.riskMatrix = data.riskMatrix || {};
+                        oCurrentData.trendAnalysis = data.trendAnalysis || {};
+                        oCurrentData.remediationSuggestions = data.remediationSuggestions || [];
+                        oCurrentData.lastUpdated = new Date().toISOString();
+                        oViolationsModel.setData(oCurrentData);
+                    }
+                    oDialog.setBusy(false);
+                    
+                    // Start auto-refresh if enabled
+                    if (oCurrentData.autoRefresh) {
+                        this._startViolationsAutoRefresh(sTaskId, oDialog);
+                    }
+                }.bind(this),
+                error: function(error) {
+                    oDialog.setBusy(false);
+                    MessageBox.error("Failed to load violations data: " + error.message);
+                }
+            });
+        },
+
+        /**
+         * @function _startViolationsAutoRefresh
+         * @description Starts auto-refresh for violations data.
+         * @param {string} sTaskId - Task ID
+         * @param {sap.m.Dialog} oDialog - Violations dialog
+         * @private
+         */
+        _startViolationsAutoRefresh: function(sTaskId, oDialog) {
+            if (this._violationsRefreshInterval) {
+                clearInterval(this._violationsRefreshInterval);
+            }
+            
+            var oViolationsData = oDialog.getModel("violations").getData();
+            this._violationsRefreshInterval = setInterval(() => {
+                if (oDialog.isOpen()) {
+                    this._loadViolationsData(sTaskId, oDialog);
+                } else {
+                    clearInterval(this._violationsRefreshInterval);
+                }
+            }, oViolationsData.refreshInterval || 60000);
+        },
+
+        /**
+         * @function _getOrCreateDialog
+         * @description Gets cached dialog or creates new one with accessibility and responsive features.
+         * @param {string} sDialogId - Dialog identifier
+         * @param {string} sFragmentName - Fragment name
+         * @returns {Promise<sap.m.Dialog>} Promise resolving to dialog
+         * @private
+         */
+        _getOrCreateDialog: function(sDialogId, sFragmentName) {
+            var that = this;
+            
+            if (this._dialogCache && this._dialogCache[sDialogId]) {
+                return Promise.resolve(this._dialogCache[sDialogId]);
+            }
+            
+            if (!this._dialogCache) {
+                this._dialogCache = {};
+            }
+            
+            return Fragment.load({
+                id: this.base.getView().getId(),
+                name: sFragmentName,
+                controller: this
+            }).then(function(oDialog) {
+                that._dialogCache[sDialogId] = oDialog;
+                that.base.getView().addDependent(oDialog);
+                
+                // Enable accessibility
+                that._enableDialogAccessibility(oDialog);
+                
+                // Optimize for mobile
+                that._optimizeDialogForDevice(oDialog);
+                
+                return oDialog;
+            });
         },
         
-
-        // Enhanced Execute Query Action with comprehensive security
-        onExecuteQuery: function() {
-            const userId = SecurityUtils._getCurrentUser();
-            
-            // Check rate limits first
-            SecurityUtils.checkRateLimit(userId, 'execute').then(function(allowed) {
-                if (!allowed) {
-                    MessageToast.show(this.getResourceBundle().getText("error.rateLimitExceeded"));
-                    return;
-                }
-                
-                SecurityUtils.checkSQLAuth('execute', 'query').then(function(authorized) {
-                    if (!authorized) {
-                        MessageToast.show(this.getResourceBundle().getText("error.notAuthorized"));
-                        return;
-                    }
+        /**
+         * @function _enableDialogAccessibility
+         * @description Adds accessibility features to dialog.
+         * @param {sap.m.Dialog} oDialog - Dialog to enhance
+         * @private
+         */
+        _enableDialogAccessibility: function(oDialog) {
+            oDialog.addEventDelegate({
+                onAfterRendering: function() {
+                    var $dialog = oDialog.$();
                     
-                    const oContext = this.base.getView().getBindingContext();
-                    const oData = oContext.getObject();
+                    // Set tabindex for focusable elements
+                    $dialog.find("input, button, select, textarea").attr("tabindex", "0");
                     
-                    if (oData.executionStatus === 'executing') {
-                        MessageToast.show(this.getResourceBundle().getText("msg.queryAlreadyExecuting"));
-                        return;
-                    }
-
-                    if (!oData.sqlStatement || oData.sqlStatement.trim() === '') {
-                        MessageToast.show(this.getResourceBundle().getText("error.noSQLStatement"));
-                        return;
-                    }
-                    
-                    // Enhanced SQL validation with comprehensive security checks
-                    const validation = SecurityUtils.validateSQL(oData.sqlStatement, {}, {
-                        minSecurityScore: 70,
-                        allowedOperations: this._getAllowedOperationsForUser(userId),
-                        complexityLimits: {
-                            maxJoins: 8,
-                            maxSubqueries: 4,
-                            maxComplexity: 40
+                    // Handle escape key
+                    $dialog.on("keydown", function(e) {
+                        if (e.key === "Escape") {
+                            oDialog.close();
                         }
                     });
                     
-                    if (!validation.isValid) {
-                        MessageBox.error(
-                            this.getResourceBundle().getText("error.sqlValidationFailed", [validation.errors.join(', ')]) +
-                            (validation.detectedPatterns.length > 0 ? 
-                                "\\nSecurity issues: " + validation.detectedPatterns.join(', ') : "")
-                        );
-                        
-                        // Audit log security validation failure
-                        SecurityUtils.auditLog('SQL_VALIDATION_FAILED', {
-                            queryId: oData.queryId,
-                            queryHash: validation.queryHash,
-                            securityScore: validation.securityScore,
-                            riskLevel: validation.riskLevel,
-                            errors: validation.errors,
-                            detectedPatterns: validation.detectedPatterns
-                        }, 'SECURITY_VIOLATION');
-                        
-                        return;
-                    }
-                    
-                    // Check query complexity with enhanced limits
-                    const complexity = SecurityUtils.validateQueryComplexity(oData.sqlStatement, {
-                        maxJoins: 10,
-                        maxSubqueries: 5,
-                        maxComplexity: 50,
-                        maxQueryLength: 5000
-                    });
-                    
-                    if (!complexity.isValid) {
-                        MessageBox.error(
-                            this.getResourceBundle().getText("error.queryTooComplex", [complexity.issues.join(', ')]) +
-                            "\\nComplexity Score: " + complexity.complexity + 
-                            "\\nEstimated Execution Time: " + complexity.estimatedExecutionTime + "ms"
-                        );
-                        
-                        // Audit log complexity validation failure
-                        SecurityUtils.auditLog('COMPLEXITY_VALIDATION_FAILED', {
-                            queryId: oData.queryId,
-                            complexityScore: complexity.complexity,
-                            riskLevel: complexity.riskLevel,
-                            issues: complexity.issues
-                        }, 'COMPLEXITY_EXCEEDED');
-                        
-                        return;
-                    }
-
-                    // Show enhanced confirmation dialog with security information
-                    const confirmMessage = this.getResourceBundle().getText("msg.executeQueryConfirm") +
-                        "\\n\\nSecurity Score: " + validation.securityScore + "/100" +
-                        "\\nRisk Level: " + validation.riskLevel +
-                        "\\nComplexity: " + complexity.riskLevel +
-                        "\\nEstimated Time: " + complexity.estimatedExecutionTime + "ms";
-
-                    MessageBox.confirm(confirmMessage, {
-                        title: this.getResourceBundle().getText("dialog.executeQueryConfirm"),
-                        onClose: function(oAction) {
-                            if (oAction === MessageBox.Action.OK) {
-                                this._executeQuerySecure(oContext, validation, complexity);
-                            }
-                        }.bind(this)
-                    });
-                }.bind(this));
-            }.bind(this));
-        },
-
-        // Validate Query Action
-        onValidateQuery: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
-            
-            if (!oData.sqlStatement || oData.sqlStatement.trim() === '') {
-                MessageToast.show(this.getResourceBundle().getText("error.noSQLStatement"));
-                return;
-            }
-
-            this._validateQuery(oContext);
-        },
-
-        // Optimize Query Action
-        onOptimizeQuery: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
-            
-            if (!oData.sqlStatement || oData.sqlStatement.trim() === '') {
-                MessageToast.show(this.getResourceBundle().getText("error.noSQLToOptimize"));
-                return;
-            }
-
-            if (!this._queryOptimizer) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent11.ext.fragment.QueryOptimizer",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._queryOptimizer = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._loadOptimizationData(oContext);
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._loadOptimizationData(oContext);
-                this._queryOptimizer.open();
-            }
-        },
-
-        // Explain Plan Action
-        onExplainPlan: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
-            
-            if (!oData.sqlStatement || oData.sqlStatement.trim() === '') {
-                MessageToast.show(this.getResourceBundle().getText("error.noSQLStatement"));
-                return;
-            }
-
-            if (!this._explainPlanDialog) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent11.ext.fragment.ExplainPlan",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._explainPlanDialog = oDialog;
-                    this.getView().addDependent(oDialog);
-                    this._generateExplainPlan(oContext);
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._generateExplainPlan(oContext);
-                this._explainPlanDialog.open();
-            }
-        },
-
-        // Format Query Action
-        onFormatQuery: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
-            
-            if (!oData.sqlStatement || oData.sqlStatement.trim() === '') {
-                MessageToast.show(this.getResourceBundle().getText("error.noSQLToFormat"));
-                return;
-            }
-
-            this._formatQuery(oContext);
-        },
-
-        // Save as Template Action
-        onSaveAsTemplate: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
-            
-            if (!oData.sqlStatement || oData.sqlStatement.trim() === '') {
-                MessageToast.show(this.getResourceBundle().getText("error.noSQLToSave"));
-                return;
-            }
-
-            if (!this._saveTemplateDialog) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent11.ext.fragment.SaveTemplate",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._saveTemplateDialog = oDialog;
-                    this.getView().addDependent(oDialog);
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._saveTemplateDialog.open();
-            }
-        },
-
-        // Export Results Action
-        onExportResults: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
-            
-            if (oData.executionStatus !== 'completed' || !oData.rowsReturned || oData.rowsReturned === 0) {
-                MessageToast.show(this.getResourceBundle().getText("error.noResultsToExport"));
-                return;
-            }
-
-            if (!this._exportResultsDialog) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent11.ext.fragment.ExportResults",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._exportResultsDialog = oDialog;
-                    this.getView().addDependent(oDialog);
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._exportResultsDialog.open();
-            }
-        },
-
-        // Schedule Query Action
-        onScheduleQuery: function() {
-            const oContext = this.base.getView().getBindingContext();
-            const oData = oContext.getObject();
-            
-            if (!oData.sqlStatement || oData.sqlStatement.trim() === '') {
-                MessageToast.show(this.getResourceBundle().getText("error.noSQLToSchedule"));
-                return;
-            }
-
-            if (!this._scheduleQueryDialog) {
-                Fragment.load({
-                    id: this.getView().getId(),
-                    name: "a2a.network.agent11.ext.fragment.ScheduleQuery",
-                    controller: this
-                }).then(function(oDialog) {
-                    this._scheduleQueryDialog = oDialog;
-                    this.getView().addDependent(oDialog);
-                    oDialog.open();
-                }.bind(this));
-            } else {
-                this._scheduleQueryDialog.open();
-            }
-        },
-
-        // Real-time monitoring initialization
-        onAfterRendering: function() {
-            this._initializeQueryMonitoring();
-        },
-
-        _initializeQueryMonitoring: function() {
-            const oContext = this.base.getView().getBindingContext();
-            if (!oContext) return;
-
-            const queryId = oContext.getObject().queryId;
-            
-            // Subscribe to query execution updates for this specific query
-            if (this._eventSource) {
-                this._eventSource.close();
-            }
-
-            try {
-                const sanitizedQueryId = SecurityUtils.sanitizeSQLParameter(queryId);
-                this._eventSource = SecurityUtils.createSecureEventSource(`http://localhost:8011/sql/${sanitizedQueryId}/stream`);
-                
-                this._eventSource.addEventListener('query-progress', (event) => {
-                    this._updateQueryProgress(event.data);
-                });
-
-                this._eventSource.addEventListener('query-completed', (event) => {
-                    this._handleQueryCompleted(event.data);
-                });
-
-                this._eventSource.addEventListener('query-error', (event) => {
-                    this._handleQueryError(event.data);
-                });
-
-                this._eventSource.addEventListener('optimization-update', (event) => {
-                    this._handleOptimizationUpdate(event.data);
-                });
-
-            } catch (error) {
-                console.warn("Server-Sent Events not available, using polling");
-                this._initializePolling(queryId);
-            }
-        },
-
-        _initializePolling: function(queryId) {
-            this._pollInterval = setInterval(() => {
-                this._refreshQueryData();
-            }, 2000);
-        },
-
-        _executeQuery: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sQueryId = SecurityUtils.sanitizeSQLParameter(oContext.getObject().queryId);
-            
-            MessageToast.show(this.getResourceBundle().getText("msg.queryExecutionStarted"));
-            
-            SecurityUtils.secureCallFunction(oModel, "/ExecuteQuery", {
-                urlParameters: {
-                    queryId: sQueryId
-                },
-                success: function(data) {
-                    MessageToast.show(this.getResourceBundle().getText("msg.queryExecuted"));
-                    this._refreshQueryData();
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.queryExecutionFailed", [SecurityUtils.escapeHTML(error.message)]));
-                }.bind(this)
-            });
-        },
-
-        _validateQuery: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sQueryId = SecurityUtils.sanitizeSQLParameter(oContext.getObject().queryId);
-            
-            MessageToast.show(this.getResourceBundle().getText("msg.queryValidationStarted"));
-            
-            SecurityUtils.secureCallFunction(oModel, "/ValidateQuery", {
-                urlParameters: {
-                    queryId: sQueryId
-                },
-                success: function(data) {
-                    MessageToast.show(this.getResourceBundle().getText("msg.queryValidated"));
-                    this._refreshQueryData();
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.validationFailed"));
-                }.bind(this)
-            });
-        },
-
-        _formatQuery: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sQueryId = SecurityUtils.sanitizeSQLParameter(oContext.getObject().queryId);
-            
-            SecurityUtils.secureCallFunction(oModel, "/FormatQuery", {
-                urlParameters: {
-                    queryId: sQueryId
-                },
-                success: function(data) {
-                    MessageToast.show(this.getResourceBundle().getText("msg.queryFormatted"));
-                    this._refreshQueryData();
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.formattingFailed"));
-                }.bind(this)
-            });
-        },
-
-        _loadOptimizationData: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sQueryId = SecurityUtils.sanitizeSQLParameter(oContext.getObject().queryId);
-            
-            SecurityUtils.secureCallFunction(oModel, "/GetOptimizationSuggestions", {
-                urlParameters: {
-                    queryId: sQueryId
-                },
-                success: function(data) {
-                    this._displayOptimizationSuggestions(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.loadingOptimizationData"));
-                }.bind(this)
-            });
-        },
-
-        _generateExplainPlan: function(oContext) {
-            const oModel = this.getView().getModel();
-            const sQueryId = SecurityUtils.sanitizeSQLParameter(oContext.getObject().queryId);
-            
-            SecurityUtils.secureCallFunction(oModel, "/GenerateExplainPlan", {
-                urlParameters: {
-                    queryId: sQueryId
-                },
-                success: function(data) {
-                    this._displayExplainPlan(data);
-                }.bind(this),
-                error: function(error) {
-                    MessageToast.show(this.getResourceBundle().getText("error.generatingExplainPlan"));
-                }.bind(this)
-            });
-        },
-
-        _updateQueryProgress: function(data) {
-            // Update progress indicators for query execution
-            const oProgressIndicator = this.getView().byId("queryProgress");
-            if (oProgressIndicator) {
-                oProgressIndicator.setPercentValue(data.progress);
-                oProgressIndicator.setDisplayValue(`${data.progress}% - ${data.currentStep}`);
-            }
-        },
-
-        _handleQueryCompleted: function(data) {
-            MessageToast.show(this.getResourceBundle().getText("msg.queryExecuted"));
-            this._refreshQueryData();
-            
-            // Show execution metrics if available
-            if (data.executionTime) {
-                MessageToast.show(this.getResourceBundle().getText("msg.executionCompleted", [data.executionTime]));
-            }
-        },
-
-        _handleQueryError: function(data) {
-            MessageBox.error(this.getResourceBundle().getText("error.queryExecutionFailed", [SecurityUtils.escapeHTML(data.error)]));
-            this._refreshQueryData();
-        },
-
-        _handleOptimizationUpdate: function(data) {
-            MessageToast.show(this.getResourceBundle().getText("msg.optimizationUpdate", [data.improvement]));
-            this._refreshQueryData();
-        },
-
-        _refreshQueryData: function() {
-            const oContext = this.base.getView().getBindingContext();
-            if (oContext) {
-                oContext.refresh();
-            }
-        },
-
-        _displayOptimizationSuggestions: function(data) {
-            // Display optimization suggestions in dialog
-        },
-
-        _displayExplainPlan: function(data) {
-            // Display query execution plan
-        },
-
-        getResourceBundle: function() {
-            return this.getView().getModel("i18n").getResourceBundle();
-        },
-
-        onExit: function() {
-            if (this._eventSource) {
-                this._eventSource.close();
-            }
-            if (this._pollInterval) {
-                clearInterval(this._pollInterval);
-            }
-        },
-
-        /**
-         * Get allowed SQL operations for user based on role/permissions
-         * @private
-         */
-        _getAllowedOperationsForUser: function(userId) {
-            // In a real implementation, this would check user roles/permissions
-            // For now, return a default safe set
-            return ['SELECT', 'COUNT', 'SHOW', 'DESCRIBE', 'EXPLAIN'];
-        },
-
-        /**
-         * Enhanced secure query execution with comprehensive monitoring
-         * @private
-         */
-        _executeQuerySecure: function(oContext, validation, complexity) {
-            const oModel = this.getView().getModel();
-            const oData = oContext.getObject();
-            const sQueryId = SecurityUtils.sanitizeSQLParameter(oData.queryId);
-            const startTime = Date.now();
-            
-            // Pre-execution audit log
-            SecurityUtils.auditLog('QUERY_EXECUTION_STARTED', {
-                queryId: sQueryId,
-                queryHash: validation.queryHash,
-                queryType: this._detectQueryType(oData.sqlStatement),
-                securityScore: validation.securityScore,
-                riskLevel: validation.riskLevel,
-                complexityScore: complexity.complexity,
-                estimatedExecutionTime: complexity.estimatedExecutionTime,
-                tables: this._extractTableNames(oData.sqlStatement)
-            }, 'INITIATED');
-            
-            MessageToast.show(this.getResourceBundle().getText("msg.queryExecutionStarted"));
-            
-            SecurityUtils.secureCallFunction(oModel, "/ExecuteQuery", {
-                urlParameters: {
-                    queryId: sQueryId,
-                    securityScore: validation.securityScore,
-                    complexityScore: complexity.complexity,
-                    validationResult: JSON.stringify({
-                        isValid: validation.isValid,
-                        riskLevel: validation.riskLevel,
-                        queryHash: validation.queryHash
-                    })
-                },
-                success: function(data) {
-                    const executionTime = Date.now() - startTime;
-                    MessageToast.show(this.getResourceBundle().getText("msg.queryExecuted"));
-                    
-                    // Success audit log with execution metrics
-                    SecurityUtils.auditLog('QUERY_EXECUTION_COMPLETED', {
-                        queryId: sQueryId,
-                        executionTime: executionTime,
-                        rowsReturned: data.rowsReturned || 0,
-                        executionResult: 'SUCCESS'
-                    }, 'SUCCESS');
-                    
-                    this._refreshQueryData();
-                }.bind(this),
-                error: function(error) {
-                    const executionTime = Date.now() - startTime;
-                    const sanitizedError = SecurityUtils.escapeHTML(error.message || 'Unknown error');
-                    
-                    // Error audit log
-                    SecurityUtils.auditLog('QUERY_EXECUTION_FAILED', {
-                        queryId: sQueryId,
-                        executionTime: executionTime,
-                        errorMessage: sanitizedError,
-                        errorType: this._classifyError(error)
-                    }, 'FAILURE');
-                    
-                    MessageToast.show(this.getResourceBundle().getText("error.queryExecutionFailed", [sanitizedError]));
-                }.bind(this)
-            });
-        },
-
-        /**
-         * Detect query type from SQL statement
-         * @private
-         */
-        _detectQueryType: function(sql) {
-            const lowerSQL = sql.toLowerCase().trim();
-            if (lowerSQL.startsWith('select')) return 'SELECT';
-            if (lowerSQL.startsWith('insert')) return 'INSERT';
-            if (lowerSQL.startsWith('update')) return 'UPDATE';
-            if (lowerSQL.startsWith('delete')) return 'DELETE';
-            if (lowerSQL.startsWith('create')) return 'CREATE';
-            if (lowerSQL.startsWith('alter')) return 'ALTER';
-            if (lowerSQL.startsWith('drop')) return 'DROP';
-            if (lowerSQL.startsWith('show')) return 'SHOW';
-            if (lowerSQL.startsWith('describe')) return 'DESCRIBE';
-            return 'UNKNOWN';
-        },
-
-        /**
-         * Extract table names from SQL statement
-         * @private
-         */
-        _extractTableNames: function(sql) {
-            const tables = [];
-            const patterns = [
-                /from\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi,
-                /join\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi,
-                /into\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi,
-                /update\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi
-            ];
-            
-            patterns.forEach(pattern => {
-                let match;
-                while ((match = pattern.exec(sql)) !== null) {
-                    const tableName = match[1];
-                    if (!tables.includes(tableName)) {
-                        tables.push(tableName);
-                    }
+                    // Focus first input on open
+                    setTimeout(function() {
+                        $dialog.find("input:visible:first").focus();
+                    }, 100);
                 }
             });
-            
-            return tables;
+        },
+        
+        /**
+         * @function _optimizeDialogForDevice
+         * @description Optimizes dialog for current device.
+         * @param {sap.m.Dialog} oDialog - Dialog to optimize
+         * @private
+         */
+        _optimizeDialogForDevice: function(oDialog) {
+            if (sap.ui.Device.system.phone) {
+                oDialog.setStretch(true);
+                oDialog.setContentWidth("100%");
+                oDialog.setContentHeight("100%");
+            } else if (sap.ui.Device.system.tablet) {
+                oDialog.setContentWidth("95%");
+                oDialog.setContentHeight("90%");
+            }
         },
 
         /**
-         * Classify error type for better audit logging
+         * @function _initializeSecurity
+         * @description Initializes security features and audit logging.
          * @private
          */
-        _classifyError: function(error) {
-            if (!error || !error.message) return 'UNKNOWN_ERROR';
+        _initializeSecurity: function() {
+            this._auditLogger = {
+                log: function(action, details) {
+                    var user = this._getCurrentUser();
+                    var timestamp = new Date().toISOString();
+                    var logEntry = {
+                        timestamp: timestamp,
+                        user: user,
+                        agent: "Agent11_Compliance",
+                        action: action,
+                        details: details || {}
+                    };
+                    console.info("AUDIT: " + JSON.stringify(logEntry));
+                }.bind(this)
+            };
+        },
+
+        /**
+         * @function _getCurrentUser
+         * @description Gets current user ID for audit logging.
+         * @returns {string} User ID or "anonymous"
+         * @private
+         */
+        _getCurrentUser: function() {
+            return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
+        },
+
+        /**
+         * @function _hasRole
+         * @description Checks if current user has specified role.
+         * @param {string} role - Role to check
+         * @returns {boolean} True if user has role
+         * @private
+         */
+        _hasRole: function(role) {
+            const user = sap.ushell?.Container?.getUser();
+            if (user && user.hasRole) {
+                return user.hasRole(role);
+            }
+            // Mock role validation for development/testing
+            const mockRoles = ["ComplianceAdmin", "ComplianceUser", "ComplianceOperator"];
+            return mockRoles.includes(role);
+        },
+
+        /**
+         * @function _cleanupResources
+         * @description Cleans up resources to prevent memory leaks.
+         * @private
+         */
+        _cleanupResources: function() {
+            // Clean up intervals
+            if (this._violationsRefreshInterval) {
+                clearInterval(this._violationsRefreshInterval);
+                this._violationsRefreshInterval = null;
+            }
             
-            const errorMsg = error.message.toLowerCase();
-            
-            if (errorMsg.includes('timeout')) return 'TIMEOUT_ERROR';
-            if (errorMsg.includes('permission') || errorMsg.includes('denied')) return 'PERMISSION_ERROR';
-            if (errorMsg.includes('syntax')) return 'SYNTAX_ERROR';
-            if (errorMsg.includes('table') && errorMsg.includes('not found')) return 'TABLE_NOT_FOUND';
-            if (errorMsg.includes('column') && errorMsg.includes('not found')) return 'COLUMN_NOT_FOUND';
-            if (errorMsg.includes('connection')) return 'CONNECTION_ERROR';
-            if (errorMsg.includes('resource')) return 'RESOURCE_ERROR';
-            
-            return 'EXECUTION_ERROR';
+            // Clean up cached dialogs
+            if (this._dialogCache) {
+                Object.keys(this._dialogCache).forEach(function(key) {
+                    if (this._dialogCache[key]) {
+                        this._dialogCache[key].destroy();
+                    }
+                }.bind(this));
+                this._dialogCache = {};
+            }
+        },
+
+        /**
+         * @function getResourceBundle
+         * @description Gets the i18n resource bundle.
+         * @returns {sap.base.i18n.ResourceBundle} Resource bundle
+         * @public
+         */
+        getResourceBundle: function() {
+            return this.base.getView().getModel("i18n").getResourceBundle();
         }
     });
 });
