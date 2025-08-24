@@ -2,13 +2,12 @@
 app = "a2a-platform"
 primary_region = "ord"
 kill_signal = "SIGINT"
-kill_timeout = "5s"
+kill_timeout = "30s"
 
 [build]
   image = "ghcr.io/plturrell/a2a-sap-network:main"
 
 [env]
-  PORT = "8080"
   A2A_ENVIRONMENT = "production"
   ENABLE_ALL_AGENTS = "true"
   A2A_NETWORK_ENABLED = "true"
@@ -20,9 +19,10 @@ kill_timeout = "5s"
   A2A_IN_CONTAINER = "true"
   SKIP_VENV_CREATION = "true"
 
+# Main Agent Service (Agent 0) - Primary endpoint
 [[services]]
   protocol = "tcp"
-  internal_port = 8080
+  internal_port = 8000
   processes = ["app"]
 
   [[services.ports]]
@@ -41,38 +41,8 @@ kill_timeout = "5s"
   [[services.tcp_checks]]
     interval = "30s"
     timeout = "10s"
-    grace_period = "120s"
+    grace_period = "180s"
     restart_limit = 3
-
-# Launch Pad / Frontend
-[[services]]
-  protocol = "tcp"
-  internal_port = 3000
-  processes = ["app"]
-  
-  [[services.ports]]
-    port = 3000
-    handlers = ["http"]
-
-# A2A Network API
-[[services]]
-  protocol = "tcp"
-  internal_port = 4004
-  processes = ["app"]
-  
-  [[services.ports]]
-    port = 4004
-    handlers = ["http"]
-
-# Agent Services (8000-8017)
-[[services]]
-  protocol = "tcp"
-  internal_port = 8000
-  processes = ["app"]
-  
-  [[services.ports]]
-    port = 8000
-    handlers = ["http"]
 
 [[vm]]
   cpu_kind = "shared"
