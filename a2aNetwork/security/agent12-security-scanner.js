@@ -268,10 +268,10 @@ class Agent12SecurityScanner {
     }
 
     scanInsecureConnections(content, filePath) {
-        this.catalogSecurityPatterns.insecureConnections.forEach(pattern => {
+        const checkInsecureConnectionPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const processInsecureConnectionMatch = (match) => {
                     this.vulnerabilities.push({
                         type: 'INSECURE_CATALOG_CONNECTION',
                         severity: 'HIGH',
@@ -282,16 +282,18 @@ class Agent12SecurityScanner {
                         impact: 'Catalog update communications not encrypted',
                         recommendation: 'Use WSS/HTTPS for secure catalog communications'
                     });
-                });
+                };
+                matches.forEach(processInsecureConnectionMatch);
             }
-        });
+        };
+        this.catalogSecurityPatterns.insecureConnections.forEach(checkInsecureConnectionPattern);
     }
 
     scanCSRFProtection(content, filePath) {
-        this.catalogSecurityPatterns.csrfMissing.forEach(pattern => {
+        const checkCSRFPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const processCSRFMatch = (match) => {
                     // Check if CSRF token is present in the context
                     const functionStart = content.indexOf(match);
                     const functionBlock = content.substring(functionStart, functionStart + 500);
@@ -310,16 +312,18 @@ class Agent12SecurityScanner {
                             recommendation: 'Use SecurityUtils.secureCallFunction() for catalog operations'
                         });
                     }
-                });
+                };
+                matches.forEach(processCSRFMatch);
             }
-        });
+        };
+        this.catalogSecurityPatterns.csrfMissing.forEach(checkCSRFPattern);
     }
 
     scanURLValidation(content, filePath) {
-        this.catalogSecurityPatterns.urlValidation.forEach(pattern => {
+        const checkURLValidationPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const processURLValidationMatch = (match) => {
                     this.vulnerabilities.push({
                         type: 'CATALOG_URL_VALIDATION',
                         severity: 'MEDIUM',
@@ -330,16 +334,18 @@ class Agent12SecurityScanner {
                         impact: 'Could allow malicious URLs in catalog entries',
                         recommendation: 'Implement SecurityUtils.validateResourceURL() for all URLs'
                     });
-                });
+                };
+                matches.forEach(processURLValidationMatch);
             }
-        });
+        };
+        this.catalogSecurityPatterns.urlValidation.forEach(checkURLValidationPattern);
     }
 
     scanMetadataInjection(content, filePath) {
-        this.catalogSecurityPatterns.metadataInjection.forEach(pattern => {
+        const checkMetadataInjectionPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const processMetadataInjectionMatch = (match) => {
                     this.vulnerabilities.push({
                         type: 'CATALOG_METADATA_INJECTION',
                         severity: 'HIGH',
@@ -350,16 +356,18 @@ class Agent12SecurityScanner {
                         impact: 'Could allow arbitrary code execution via metadata',
                         recommendation: 'Sanitize metadata with SecurityUtils.sanitizeCatalogData()'
                     });
-                });
+                };
+                matches.forEach(processMetadataInjectionMatch);
             }
-        });
+        };
+        this.catalogSecurityPatterns.metadataInjection.forEach(checkMetadataInjectionPattern);
     }
 
     scanDiscoveryRisks(content, filePath) {
-        this.catalogSecurityPatterns.discoveryRisks.forEach(pattern => {
+        const checkDiscoveryRisksPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const processDiscoveryRisksMatch = (match) => {
                     this.vulnerabilities.push({
                         type: 'CATALOG_DISCOVERY_RISK',
                         severity: 'MEDIUM',
@@ -370,16 +378,18 @@ class Agent12SecurityScanner {
                         impact: 'Could expose system to malicious resources',
                         recommendation: 'Validate discovered resources with SecurityUtils.validateDiscoveredResource()'
                     });
-                });
+                };
+                matches.forEach(processDiscoveryRisksMatch);
             }
-        });
+        };
+        this.catalogSecurityPatterns.discoveryRisks.forEach(checkDiscoveryRisksPattern);
     }
 
     scanSearchInjection(content, filePath) {
-        this.catalogSecurityPatterns.searchInjection.forEach(pattern => {
+        const checkSearchInjectionPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const processSearchInjectionMatch = (match) => {
                     this.vulnerabilities.push({
                         type: 'CATALOG_SEARCH_INJECTION',
                         severity: 'MEDIUM',
@@ -390,16 +400,18 @@ class Agent12SecurityScanner {
                         impact: 'Could allow search result manipulation',
                         recommendation: 'Use SecurityUtils.sanitizeSearchQuery() for search inputs'
                     });
-                });
+                };
+                matches.forEach(processSearchInjectionMatch);
             }
-        });
+        };
+        this.catalogSecurityPatterns.searchInjection.forEach(checkSearchInjectionPattern);
     }
 
     scanRegistrySync(content, filePath) {
-        this.catalogSecurityPatterns.registrySync.forEach(pattern => {
+        const checkRegistrySyncPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const processRegistrySyncMatch = (match) => {
                     this.vulnerabilities.push({
                         type: 'CATALOG_REGISTRY_SYNC',
                         severity: 'MEDIUM',
@@ -410,16 +422,18 @@ class Agent12SecurityScanner {
                         impact: 'Registry sync operations not secure',
                         recommendation: 'Implement secure registry synchronization with validation'
                     });
-                });
+                };
+                matches.forEach(processRegistrySyncMatch);
             }
-        });
+        };
+        this.catalogSecurityPatterns.registrySync.forEach(checkRegistrySyncPattern);
     }
 
     scanCatalogDataSecurity(content, filePath) {
-        this.catalogSecurityPatterns.catalogDataSecurity.forEach(pattern => {
+        const checkCatalogDataSecurityPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const processCatalogDataSecurityMatch = (match) => {
                     this.vulnerabilities.push({
                         type: 'CATALOG_DATA_SECURITY',
                         severity: 'HIGH',
@@ -430,9 +444,11 @@ class Agent12SecurityScanner {
                         impact: 'Could allow code injection through catalog import/export',
                         recommendation: 'Sanitize catalog data with SecurityUtils.sanitizeCatalogData()'
                     });
-                });
+                };
+                matches.forEach(processCatalogDataSecurityMatch);
             }
-        });
+        };
+        this.catalogSecurityPatterns.catalogDataSecurity.forEach(checkCatalogDataSecurityPattern);
     }
 
     scanGeneralSecurity(content, filePath) {
@@ -444,10 +460,10 @@ class Agent12SecurityScanner {
             /token\s*[=:]\s*["'][^"']+["']/gi
         ];
 
-        credentialPatterns.forEach(pattern => {
+        const checkCredentialPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const processCredentialMatch = (match) => {
                     this.vulnerabilities.push({
                         type: 'HARDCODED_CREDENTIALS',
                         severity: 'CRITICAL',
@@ -458,9 +474,11 @@ class Agent12SecurityScanner {
                         impact: 'Credentials exposed in source code',
                         recommendation: 'Use secure credential management system'
                     });
-                });
+                };
+                matches.forEach(processCredentialMatch);
             }
-        });
+        };
+        credentialPatterns.forEach(checkCredentialPattern);
 
         // Unsafe functions
         const unsafeFunctions = [
@@ -470,10 +488,10 @@ class Agent12SecurityScanner {
             /setInterval\s*\(\s*["'][^"']*["']/gi
         ];
 
-        unsafeFunctions.forEach(pattern => {
+        const checkUnsafeFunctionPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const processUnsafeFunctionMatch = (match) => {
                     this.vulnerabilities.push({
                         type: 'UNSAFE_FUNCTION',
                         severity: 'HIGH',
@@ -484,18 +502,20 @@ class Agent12SecurityScanner {
                         impact: 'Could allow code injection',
                         recommendation: 'Avoid eval() and similar functions'
                     });
-                });
+                };
+                matches.forEach(processUnsafeFunctionMatch);
             }
-        });
+        };
+        unsafeFunctions.forEach(checkUnsafeFunctionPattern);
     }
 
     scanInputValidation(content, filePath) {
         // Check for catalog-specific input validation
-        this.catalogPatterns.forEach(pattern => {
+        const checkCatalogPattern = (pattern) => {
             const regex = new RegExp(`${pattern}\\s*[=:]\\s*.*input`, 'gi');
             const matches = content.match(regex);
             if (matches && !content.includes('SecurityUtils.validate') && !content.includes('CatalogUtils.validate')) {
-                matches.forEach(match => {
+                const processValidationMatch = (match) => {
                     this.warnings.push({
                         type: 'MISSING_CATALOG_VALIDATION',
                         severity: 'MEDIUM',
@@ -505,15 +525,18 @@ class Agent12SecurityScanner {
                         code: match.trim(),
                         recommendation: 'Add SecurityUtils.validateCatalogField() validation'
                     });
-                });
+                };
+                matches.forEach(processValidationMatch);
             }
-        });
+        };
+        this.catalogPatterns.forEach(checkCatalogPattern);
     }
 
     scanAuthenticationChecks(content, filePath) {
-        const sensitiveOps = this.sensitiveOperations.filter(op => content.includes(op));
+        const checkSensitiveOp = (op) => content.includes(op);
+        const sensitiveOps = this.sensitiveOperations.filter(checkSensitiveOp);
         
-        sensitiveOps.forEach(op => {
+        const processSensitiveOp = (op) => {
             if (!content.includes('checkAuth') && !content.includes('isAuthenticated') && 
                 !content.includes('SecurityUtils.checkCatalogAuth')) {
                 this.warnings.push({
@@ -524,7 +547,8 @@ class Agent12SecurityScanner {
                     recommendation: 'Add SecurityUtils.checkCatalogAuth() before operations'
                 });
             }
-        });
+        };
+        sensitiveOps.forEach(processSensitiveOp);
     }
 
     scanErrorHandling(content, filePath) {
@@ -534,10 +558,10 @@ class Agent12SecurityScanner {
             /error[^}]*console\.log/gi
         ];
 
-        errorPatterns.forEach(pattern => {
+        const checkErrorPattern = (pattern) => {
             const matches = content.match(pattern);
             if (matches) {
-                matches.forEach(match => {
+                const processErrorMatch = (match) => {
                     this.warnings.push({
                         type: 'POOR_ERROR_HANDLING',
                         severity: 'LOW',
@@ -547,9 +571,11 @@ class Agent12SecurityScanner {
                         code: match.trim(),
                         recommendation: 'Implement proper error handling with SecurityUtils.logSecureError()'
                     });
-                });
+                };
+                matches.forEach(processErrorMatch);
             }
-        });
+        };
+        errorPatterns.forEach(checkErrorPattern);
     }
 
     getLineNumber(content, searchString) {
@@ -609,29 +635,32 @@ class Agent12SecurityScanner {
             'INSECURE_CONNECTION': this.vulnerabilities.filter(v => v.type.includes('INSECURE')).length
         };
 
-        Object.entries(catalogIssues).forEach(([type, count]) => {
+        const logCatalogIssue = ([type, count]) => {
             if (count > 0) {
                 console.log(`   ${type.replace('_', ' ')}: ${count} issues`);
             }
-        });
+        };
+        Object.entries(catalogIssues).forEach(logCatalogIssue);
 
         // Detailed vulnerabilities
         if (this.vulnerabilities.length > 0) {
             console.log(`\n🚨 VULNERABILITIES FOUND:`);
             
-            ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].forEach(severity => {
+            const processSeverityLevel = (severity) => {
                 const issues = this.vulnerabilities.filter(v => v.severity === severity);
                 if (issues.length > 0) {
                     console.log(`\n${severity} (${issues.length}):`);
-                    issues.forEach((vuln, index) => {
+                    const logVulnerability = (vuln, index) => {
                         console.log(`\n${index + 1}. ${vuln.type} - ${vuln.file}:${vuln.line || 'N/A'}`);
                         console.log(`   Description: ${vuln.description}`);
                         console.log(`   Impact: ${vuln.impact}`);
                         console.log(`   Code: ${vuln.code}`);
                         console.log(`   Fix: ${vuln.recommendation}`);
-                    });
+                    };
+                    issues.forEach(logVulnerability);
                 }
-            });
+            };
+            ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].forEach(processSeverityLevel);
         }
 
         // Recommendations

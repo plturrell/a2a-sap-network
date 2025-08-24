@@ -881,7 +881,6 @@ entity AIPreparationTasks : cuid, managed {
     @Common.Label: 'Validation Strategy'
     validationStrategy : String(20) enum { KFOLD; HOLDOUT; } default 'KFOLD';
     
-        };
     @Common.Label: 'Random Seed'
     randomSeed      : Integer default 42;
     

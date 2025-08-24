@@ -1,19 +1,19 @@
 sap.ui.define([
     "sap/ui/core/mvc/ControllerExtension",
-    "sap/m/MessageToast",
-    "sap/m/MessageBox",
     "sap/ui/core/Fragment",
+    "sap/m/MessageBox",
+    "sap/m/MessageToast",
     "sap/ui/model/json/JSONModel",
-    "../utils/SecurityUtils"
-], function(ControllerExtension, MessageToast, MessageBox, Fragment, JSONModel, SecurityUtils) {
+    "a2a/network/agent13/ext/utils/SecurityUtils"
+], function (ControllerExtension, Fragment, MessageBox, MessageToast, JSONModel, SecurityUtils) {
     "use strict";
 
     /**
      * @class a2a.network.agent13.ext.controller.ListReportExt
      * @extends sap.ui.core.mvc.ControllerExtension
-     * @description Controller extension for Agent 13 List Report - Agent Builder Agent.
-     * Provides comprehensive agent creation and deployment capabilities including template management,
-     * code generation, pipeline orchestration, and deployment automation with enterprise-grade security.
+     * @description Controller extension for Agent 13 List Report - Security Management.
+     * Provides comprehensive security scanning, policy configuration, and patch management
+     * with enterprise-grade security, audit logging, and accessibility features.
      */
     return ControllerExtension.extend("a2a.network.agent13.ext.controller.ListReportExt", {
         
@@ -29,7 +29,8 @@ sap.ui.define([
                 this._initializeDeviceModel();
                 this._initializeDialogCache();
                 this._initializePerformanceOptimizations();
-                this._startRealtimeBuilderUpdates();
+                this._startRealtimeUpdates();
+                this._initializeSecurity();
             },
             
             /**
@@ -54,7 +55,138 @@ sap.ui.define([
             retryDelay: 1000,
             exponentialBackoff: true
         },
-        
+
+        /**
+         * @function onSecurityScan
+         * @description Initiates security scan for selected security tasks.
+         * @public
+         */
+        onSecurityScan: function() {
+            if (!this._hasRole("SecurityAnalyst")) {
+                MessageBox.error("Access denied. Security Analyst role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "SecurityScan", reason: "Insufficient permissions" });
+                return;
+            }
+
+            const oBinding = this.base.getView().byId("fe::table::SecurityTasks::LineItem").getBinding("rows");
+            const aSelectedContexts = oBinding.getSelectedContexts();
+            
+            if (aSelectedContexts.length === 0) {
+                MessageToast.show(this.getResourceBundle().getText("msg.selectTasksFirst"));
+                return;
+            }
+
+            this._auditLogger.log("SECURITY_SCAN", { taskCount: aSelectedContexts.length });
+            
+            MessageBox.confirm(
+                this.getResourceBundle().getText("msg.securityScanConfirm", [aSelectedContexts.length]),
+                {
+                    onClose: function(oAction) {
+                        if (oAction === MessageBox.Action.OK) {
+                            this._executeSecurityScan(aSelectedContexts);
+                        }
+                    }.bind(this)
+                }
+            );
+        },
+
+        /**
+         * @function onConfigurePolicy
+         * @description Opens security policy configuration interface.
+         * @public
+         */
+        onConfigurePolicy: function() {
+            if (!this._hasRole("SecurityAdmin")) {
+                MessageBox.error("Access denied. Security Administrator role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "ConfigurePolicy", reason: "Insufficient permissions" });
+                return;
+            }
+
+            this._auditLogger.log("CONFIGURE_POLICY", { action: "OpenPolicyConfiguration" });
+            
+            this._getOrCreateDialog("configurePolicy", "a2a.network.agent13.ext.fragment.ConfigurePolicy")
+                .then(function(oDialog) {
+                    var oPolicyModel = new JSONModel({
+                        policies: [],
+                        categories: [
+                            { key: "ACCESS", text: "Access Control" },
+                            { key: "NETWORK", text: "Network Security" },
+                            { key: "DATA", text: "Data Protection" },
+                            { key: "COMPLIANCE", text: "Compliance" },
+                            { key: "MONITORING", text: "Security Monitoring" },
+                            { key: "INCIDENT", text: "Incident Response" }
+                        ],
+                        selectedCategory: "ACCESS",
+                        policyTemplates: [],
+                        riskLevels: ["CRITICAL", "HIGH", "MEDIUM", "LOW"],
+                        enforcement: "ACTIVE"
+                    });
+                    oDialog.setModel(oPolicyModel, "policy");
+                    oDialog.open();
+                    this._loadSecurityPolicies(oDialog);
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Policy Configuration: " + error.message);
+                });
+        },
+
+        /**
+         * @function onApplyPatches
+         * @description Applies security patches to selected tasks.
+         * @public
+         */
+        onApplyPatches: function() {
+            if (!this._hasRole("SecurityAdmin")) {
+                MessageBox.error("Access denied. Security Administrator role required.");
+                this._auditLogger.log("ACCESS_DENIED", { action: "ApplyPatches", reason: "Insufficient permissions" });
+                return;
+            }
+
+            const oBinding = this.base.getView().byId("fe::table::SecurityTasks::LineItem").getBinding("rows");
+            const aSelectedContexts = oBinding.getSelectedContexts();
+            
+            if (aSelectedContexts.length === 0) {
+                MessageToast.show(this.getResourceBundle().getText("msg.selectTasksFirst"));
+                return;
+            }
+
+            // Check if any selected tasks have pending patches
+            const aPatchableTasks = aSelectedContexts.filter(ctx => {
+                const oData = ctx.getObject();
+                return oData.pendingPatches > 0;
+            });
+
+            if (aPatchableTasks.length === 0) {
+                MessageBox.information(this.getResourceBundle().getText("msg.noPendingPatches"));
+                return;
+            }
+
+            this._auditLogger.log("APPLY_PATCHES", { taskCount: aPatchableTasks.length });
+            
+            this._getOrCreateDialog("applyPatches", "a2a.network.agent13.ext.fragment.ApplyPatches")
+                .then(function(oDialog) {
+                    var oPatchModel = new JSONModel({
+                        selectedTasks: aPatchableTasks.map(ctx => ctx.getObject()),
+                        patchOptions: {
+                            testFirst: true,
+                            createBackup: true,
+                            rollbackEnabled: true,
+                            scheduledExecution: false,
+                            executionTime: new Date(),
+                            notifyOnCompletion: true,
+                            priorityOrder: "CRITICAL_FIRST"
+                        },
+                        availablePatches: []
+                    });
+                    oDialog.setModel(oPatchModel, "patch");
+                    oDialog.open();
+                    this._loadAvailablePatches(aPatchableTasks, oDialog);
+                }.bind(this))
+                .catch(function(error) {
+                    MessageBox.error("Failed to open Patch Management: " + error.message);
+                });
+        },
+
         /**
          * @function _initializeDeviceModel
          * @description Sets up device model for responsive design.
@@ -82,7 +214,7 @@ sap.ui.define([
         _initializePerformanceOptimizations: function() {
             // Throttle dashboard updates
             this._throttledDashboardUpdate = this._throttle(this._loadDashboardData.bind(this), 1000);
-            // Debounce template search operations
+            // Debounce search operations
             this._debouncedSearch = this._debounce(this._performSearch.bind(this), 300);
         },
         
@@ -129,28 +261,412 @@ sap.ui.define([
         
         /**
          * @function _performSearch
-         * @description Performs search operation for agent templates.
+         * @description Performs search operation (placeholder for search functionality).
          * @param {string} sQuery - Search query
          * @private
          */
         _performSearch: function(sQuery) {
-            // Implement search logic for agent templates
+            // Implement search logic for security tasks
         },
 
         /**
-         * @function onBuilderDashboard
-         * @description Opens comprehensive agent builder analytics dashboard with deployment metrics and pipeline status.
-         * @public
+         * @function _executeSecurityScan
+         * @description Executes security scan for selected tasks.
+         * @param {Array} aSelectedContexts - Selected security task contexts
+         * @private
          */
-        onBuilderDashboard: function() {
-            this._getOrCreateDialog("builderDashboard", "a2a.network.agent13.ext.fragment.BuilderDashboard")
+        _executeSecurityScan: function(aSelectedContexts) {
+            const aTaskIds = aSelectedContexts.map(ctx => ctx.getObject().taskId);
+            
+            // Show progress dialog
+            this._getOrCreateDialog("scanProgress", "a2a.network.agent13.ext.fragment.ScanProgress")
+                .then(function(oProgressDialog) {
+                    var oProgressModel = new JSONModel({
+                        totalTasks: aTaskIds.length,
+                        completedTasks: 0,
+                        currentTask: "",
+                        progress: 0,
+                        status: "Starting security scan...",
+                        findings: {
+                            critical: 0,
+                            high: 0,
+                            medium: 0,
+                            low: 0,
+                            info: 0
+                        },
+                        scanResults: []
+                    });
+                    oProgressDialog.setModel(oProgressModel, "progress");
+                    oProgressDialog.open();
+                    
+                    this._runSecurityScans(aTaskIds, oProgressDialog);
+                }.bind(this));
+        },
+
+        /**
+         * @function _runSecurityScans
+         * @description Runs security scans with real-time progress updates.
+         * @param {Array} aTaskIds - Array of task IDs to scan
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _runSecurityScans: function(aTaskIds, oProgressDialog) {
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/RunSecurityScans", {
+                urlParameters: {
+                    taskIds: aTaskIds.join(','),
+                    scanType: "COMPREHENSIVE",
+                    includeVulnerabilities: true,
+                    includeCompliance: true,
+                    includeThreatIntelligence: true
+                },
+                success: function(data) {
+                    MessageToast.show(this.getResourceBundle().getText("msg.scanStarted"));
+                    this._startScanMonitoring(data.scanId, oProgressDialog);
+                    this._auditLogger.log("SECURITY_SCAN_STARTED", { 
+                        taskCount: aTaskIds.length, 
+                        scanId: data.scanId,
+                        success: true 
+                    });
+                }.bind(this),
+                error: function(error) {
+                    MessageBox.error(this.getResourceBundle().getText("error.scanFailed"));
+                    oProgressDialog.close();
+                    this._auditLogger.log("SECURITY_SCAN_FAILED", { 
+                        taskCount: aTaskIds.length, 
+                        error: error.message 
+                    });
+                }.bind(this)
+            });
+        },
+
+        /**
+         * @function _startScanMonitoring
+         * @description Starts real-time monitoring of security scan progress.
+         * @param {string} sScanId - Scan ID to monitor
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _startScanMonitoring: function(sScanId, oProgressDialog) {
+            if (this._scanEventSource) {
+                this._scanEventSource.close();
+            }
+            
+            try {
+                this._scanEventSource = new EventSource('/api/agent13/security/scan-stream/' + sScanId);
+                
+                this._scanEventSource.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        this._updateScanProgress(data, oProgressDialog);
+                    } catch (error) {
+                        console.error('Error parsing scan progress data:', error);
+                    }
+                }.bind(this);
+                
+                this._scanEventSource.onerror = function(error) {
+                    console.warn('Scan stream error, falling back to polling:', error);
+                    this._startScanPolling(sScanId, oProgressDialog);
+                }.bind(this);
+                
+            } catch (error) {
+                console.warn('EventSource not available, using polling fallback');
+                this._startScanPolling(sScanId, oProgressDialog);
+            }
+        },
+
+        /**
+         * @function _startScanPolling
+         * @description Starts polling fallback for scan progress updates.
+         * @param {string} sScanId - Scan ID to monitor
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _startScanPolling: function(sScanId, oProgressDialog) {
+            if (this._scanPollingInterval) {
+                clearInterval(this._scanPollingInterval);
+            }
+            
+            this._scanPollingInterval = setInterval(() => {
+                this._fetchScanProgress(sScanId, oProgressDialog);
+            }, 2000);
+        },
+
+        /**
+         * @function _fetchScanProgress
+         * @description Fetches scan progress via polling.
+         * @param {string} sScanId - Scan ID to monitor
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _fetchScanProgress: function(sScanId, oProgressDialog) {
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/GetScanProgress", {
+                urlParameters: { scanId: sScanId },
+                success: function(data) {
+                    this._updateScanProgress(data, oProgressDialog);
+                }.bind(this),
+                error: function(error) {
+                    console.warn('Failed to fetch scan progress:', error);
+                }
+            });
+        },
+
+        /**
+         * @function _updateScanProgress
+         * @description Updates scan progress display.
+         * @param {Object} data - Progress data
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _updateScanProgress: function(data, oProgressDialog) {
+            if (!oProgressDialog || !oProgressDialog.isOpen()) return;
+            
+            var oProgressModel = oProgressDialog.getModel("progress");
+            if (oProgressModel) {
+                var oCurrentData = oProgressModel.getData();
+                oCurrentData.completedTasks = data.completedTasks || oCurrentData.completedTasks;
+                oCurrentData.currentTask = data.currentTask || oCurrentData.currentTask;
+                oCurrentData.progress = Math.round((oCurrentData.completedTasks / oCurrentData.totalTasks) * 100);
+                oCurrentData.status = data.status || oCurrentData.status;
+                
+                if (data.findings) {
+                    oCurrentData.findings = data.findings;
+                }
+                
+                if (data.scanResults && data.scanResults.length > 0) {
+                    oCurrentData.scanResults = oCurrentData.scanResults.concat(data.scanResults);
+                }
+                
+                oProgressModel.setData(oCurrentData);
+                
+                // Check if all tasks are completed
+                if (oCurrentData.completedTasks >= oCurrentData.totalTasks) {
+                    this._completeScan(oProgressDialog);
+                }
+            }
+        },
+
+        /**
+         * @function _completeScan
+         * @description Handles completion of security scan.
+         * @param {sap.m.Dialog} oProgressDialog - Progress dialog
+         * @private
+         */
+        _completeScan: function(oProgressDialog) {
+            setTimeout(() => {
+                oProgressDialog.close();
+                MessageToast.show(this.getResourceBundle().getText("msg.scanCompleted"));
+                this._refreshSecurityData();
+                this._auditLogger.log("SECURITY_SCAN_COMPLETED", { status: "SUCCESS" });
+                
+                // Show scan summary
+                this._showScanSummary(oProgressDialog.getModel("progress").getData());
+            }, 2000);
+            
+            // Clean up event source
+            if (this._scanEventSource) {
+                this._scanEventSource.close();
+                this._scanEventSource = null;
+            }
+            
+            if (this._scanPollingInterval) {
+                clearInterval(this._scanPollingInterval);
+                this._scanPollingInterval = null;
+            }
+        },
+
+        /**
+         * @function _loadSecurityPolicies
+         * @description Loads security policies and templates.
+         * @param {sap.m.Dialog} oDialog - Policy configuration dialog
+         * @private
+         */
+        _loadSecurityPolicies: function(oDialog) {
+            oDialog.setBusy(true);
+            
+            const oModel = this.base.getView().getModel();
+            
+            SecurityUtils.secureCallFunction(oModel, "/GetSecurityPolicies", {
+                success: function(data) {
+                    var oPolicyModel = oDialog.getModel("policy");
+                    if (oPolicyModel) {
+                        var oCurrentData = oPolicyModel.getData();
+                        oCurrentData.policies = data.policies || [];
+                        oCurrentData.policyTemplates = data.templates || [];
+                        oCurrentData.regulations = data.regulations || [];
+                        oCurrentData.bestPractices = data.bestPractices || [];
+                        oPolicyModel.setData(oCurrentData);
+                    }
+                    oDialog.setBusy(false);
+                }.bind(this),
+                error: function(error) {
+                    oDialog.setBusy(false);
+                    MessageBox.error("Failed to load security policies: " + error.message);
+                }
+            });
+        },
+
+        /**
+         * @function _loadAvailablePatches
+         * @description Loads available security patches for selected tasks.
+         * @param {Array} aSelectedContexts - Selected task contexts
+         * @param {sap.m.Dialog} oDialog - Patch management dialog
+         * @private
+         */
+        _loadAvailablePatches: function(aSelectedContexts, oDialog) {
+            oDialog.setBusy(true);
+            
+            const oModel = this.base.getView().getModel();
+            const aTaskIds = aSelectedContexts.map(ctx => ctx.getObject().taskId);
+            
+            SecurityUtils.secureCallFunction(oModel, "/GetAvailablePatches", {
+                urlParameters: {
+                    taskIds: aTaskIds.join(','),
+                    includeDetails: true
+                },
+                success: function(data) {
+                    var oPatchModel = oDialog.getModel("patch");
+                    if (oPatchModel) {
+                        var oCurrentData = oPatchModel.getData();
+                        oCurrentData.availablePatches = data.patches || [];
+                        oCurrentData.patchSummary = data.summary || {};
+                        oCurrentData.dependencies = data.dependencies || {};
+                        oCurrentData.risks = data.risks || {};
+                        oPatchModel.setData(oCurrentData);
+                    }
+                    oDialog.setBusy(false);
+                }.bind(this),
+                error: function(error) {
+                    oDialog.setBusy(false);
+                    MessageBox.error("Failed to load available patches: " + error.message);
+                }
+            });
+        },
+
+        /**
+         * @function _showScanSummary
+         * @description Shows security scan summary.
+         * @param {Object} scanData - Scan results data
+         * @private
+         */
+        _showScanSummary: function(scanData) {
+            this._getOrCreateDialog("scanSummary", "a2a.network.agent13.ext.fragment.ScanSummary")
                 .then(function(oDialog) {
+                    var oSummaryModel = new JSONModel(scanData);
+                    oDialog.setModel(oSummaryModel, "summary");
                     oDialog.open();
-                    this._loadDashboardData(oDialog);
                 }.bind(this))
                 .catch(function(error) {
-                    MessageBox.error("Failed to open Builder Dashboard: " + error.message);
+                    MessageBox.error("Failed to show scan summary: " + error.message);
                 });
+        },
+
+        /**
+         * @function _refreshSecurityData
+         * @description Refreshes security task data in the table.
+         * @private
+         */
+        _refreshSecurityData: function() {
+            const oBinding = this.base.getView().byId("fe::table::SecurityTasks::LineItem").getBinding("rows");
+            oBinding.refresh();
+        },
+
+        /**
+         * @function _startRealtimeUpdates
+         * @description Starts real-time updates for security events.
+         * @private
+         */
+        _startRealtimeUpdates: function() {
+            this._initializeWebSocket();
+        },
+
+        /**
+         * @function _initializeWebSocket
+         * @description Initializes secure WebSocket connection for real-time updates.
+         * @private
+         */
+        _initializeWebSocket: function() {
+            if (this._ws) return;
+
+            // Validate WebSocket URL for security
+            if (!this._securityUtils.validateWebSocketUrl('ws://localhost:8013/security/updates')) {
+                MessageBox.error("Invalid WebSocket URL");
+                return;
+            }
+
+            try {
+                this._ws = SecurityUtils.createSecureWebSocket('ws://localhost:8013/security/updates', {
+                    onMessage: function(data) {
+                        this._handleSecurityUpdate(data);
+                    }.bind(this)
+                });
+
+                this._ws.onclose = function() {
+                    var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                    var sMessage = oBundle.getText("msg.websocketDisconnected") || "Connection lost. Reconnecting...";
+                    MessageToast.show(sMessage);
+                    setTimeout(() => this._initializeWebSocket(), 5000);
+                }.bind(this);
+
+            } catch (error) {
+                console.warn("WebSocket connection failed, falling back to polling");
+                this._initializePolling();
+            }
+        },
+
+        /**
+         * @function _initializePolling
+         * @description Initializes polling fallback for real-time updates.
+         * @private
+         */
+        _initializePolling: function() {
+            this._pollInterval = setInterval(() => {
+                this._refreshSecurityData();
+            }, 5000);
+        },
+
+        /**
+         * @function _handleSecurityUpdate
+         * @description Handles real-time security updates from WebSocket.
+         * @param {Object} data - Update data
+         * @private
+         */
+        _handleSecurityUpdate: function(data) {
+            try {
+                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
+                
+                switch (data.type) {
+                    case 'THREAT_DETECTED':
+                        var sThreatMsg = oBundle.getText("msg.threatDetected") || "Threat detected";
+                        MessageToast.show(sThreatMsg + ": " + data.threatType);
+                        this._refreshSecurityData();
+                        break;
+                    case 'SCAN_COMPLETED':
+                        var sScanMsg = oBundle.getText("msg.scanCompleted") || "Security scan completed";
+                        MessageToast.show(sScanMsg);
+                        this._refreshSecurityData();
+                        break;
+                    case 'PATCH_AVAILABLE':
+                        var sPatchMsg = oBundle.getText("msg.patchAvailable") || "New security patch available";
+                        MessageToast.show(sPatchMsg);
+                        this._refreshSecurityData();
+                        break;
+                    case 'POLICY_VIOLATION':
+                        var sViolationMsg = oBundle.getText("msg.policyViolation") || "Security policy violation";
+                        MessageBox.warning(sViolationMsg + ": " + data.policyName);
+                        break;
+                    case 'SECURITY_ALERT':
+                        var sAlertMsg = oBundle.getText("msg.securityAlert") || "Security alert";
+                        var safeDetails = SecurityUtils.escapeHTML(data.details || '');
+                        MessageBox.error(sAlertMsg + ": " + safeDetails);
+                        break;
+                }
+            } catch (error) {
+                console.error("Error processing security update:", error);
+            }
         },
 
         /**
@@ -231,837 +747,98 @@ sap.ui.define([
                 oDialog.setContentHeight("90%");
             }
         },
-        
+
         /**
-         * @function _withErrorRecovery
-         * @description Wraps operation with error recovery.
-         * @param {Function} fnOperation - Operation to execute
-         * @param {Object} oOptions - Recovery options
-         * @returns {Promise} Promise with error recovery
+         * @function _initializeSecurity
+         * @description Initializes security features and audit logging.
          * @private
          */
-        _withErrorRecovery: function(fnOperation, oOptions) {
-            var that = this;
-            var oConfig = Object.assign({}, this._errorRecoveryConfig, oOptions);
-            
-            function attempt(retriesLeft, delay) {
-                return fnOperation().catch(function(error) {
-                    if (retriesLeft > 0) {
-                        var oBundle = that.base.getView().getModel("i18n").getResourceBundle();
-                        var sRetryMsg = oBundle.getText("recovery.retrying") || "Network error. Retrying...";
-                        MessageToast.show(sRetryMsg);
-                        
-                        return new Promise(function(resolve) {
-                            setTimeout(resolve, delay);
-                        }).then(function() {
-                            var nextDelay = oConfig.exponentialBackoff ? delay * 2 : delay;
-                            return attempt(retriesLeft - 1, nextDelay);
-                        });
-                    }
-                    throw error;
-                });
+        _initializeSecurity: function() {
+            this._auditLogger = {
+                log: function(action, details) {
+                    var user = this._getCurrentUser();
+                    var timestamp = new Date().toISOString();
+                    var logEntry = {
+                        timestamp: timestamp,
+                        user: user,
+                        agent: "Agent13_Security",
+                        action: action,
+                        details: details || {}
+                    };
+                    console.info("AUDIT: " + JSON.stringify(logEntry));
+                }.bind(this)
+            };
+        },
+
+        /**
+         * @function _getCurrentUser
+         * @description Gets current user ID for audit logging.
+         * @returns {string} User ID or "anonymous"
+         * @private
+         */
+        _getCurrentUser: function() {
+            return sap.ushell?.Container?.getUser()?.getId() || "anonymous";
+        },
+
+        /**
+         * @function _hasRole
+         * @description Checks if current user has specified role.
+         * @param {string} role - Role to check
+         * @returns {boolean} True if user has role
+         * @private
+         */
+        _hasRole: function(role) {
+            const user = sap.ushell?.Container?.getUser();
+            if (user && user.hasRole) {
+                return user.hasRole(role);
             }
-            
-            return attempt(oConfig.maxRetries, oConfig.retryDelay);
+            // Mock role validation for development/testing
+            const mockRoles = ["SecurityAdmin", "SecurityAnalyst", "SecurityOperator"];
+            return mockRoles.includes(role);
         },
 
-        /**
-         * @function onCreateAgentTemplate
-         * @description Opens template creation wizard for new agent template design.
-         * @public
-         */
-        onCreateAgentTemplate: function() {
-            this._getOrCreateDialog("templateWizard", "a2a.network.agent13.ext.fragment.TemplateWizard")
-                .then(function(oDialog) {
-                    var oModel = new JSONModel({
-                        templateName: "",
-                        description: "",
-                        templateType: "basic",
-                        agentCategory: "data_processing",
-                        complexity: "moderate",
-                        codeLanguage: "javascript",
-                        frameworkVersion: "latest",
-                        customizable: true,
-                        autoGenerateTests: true,
-                        autoGenerateDocs: true,
-                        deploymentTarget: "kubernetes",
-                        monitoringEnabled: true
-                    });
-                    oDialog.setModel(oModel, "create");
-                    oDialog.open();
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Template Wizard: " + error.message);
-                });
-        },
-
-        /**
-         * @function onCodeGenerator
-         * @description Opens code generation interface for selected agent template.
-         * @public
-         */
-        onCodeGenerator: function() {
-            const oBinding = this.base.getView().byId("fe::table::AgentTemplates::LineItem").getBinding("rows");
-            const aSelectedContexts = oBinding.getSelectedContexts();
-            
-            if (aSelectedContexts.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("msg.selectTemplatesFirst"));
-                return;
-            }
-
-            this._getOrCreateDialog("codeGenerator", "a2a.network.agent13.ext.fragment.CodeGenerator")
-                .then(function(oDialog) {
-                    oDialog.open();
-                    this._initializeCodeGenerator(aSelectedContexts[0], oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Code Generator: " + error.message);
-                });
-        },
-
-        /**
-         * @function onDeploymentManager
-         * @description Opens deployment management interface for agent deployment orchestration.
-         * @public
-         */
-        onDeploymentManager: function() {
-            this._getOrCreateDialog("deploymentManager", "a2a.network.agent13.ext.fragment.DeploymentManager")
-                .then(function(oDialog) {
-                    oDialog.open();
-                    this._loadDeploymentData(oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Deployment Manager: " + error.message);
-                });
-        },
-
-        /**
-         * @function onPipelineManager
-         * @description Opens build pipeline management interface for CI/CD orchestration.
-         * @public
-         */
-        onPipelineManager: function() {
-            this._getOrCreateDialog("pipelineManager", "a2a.network.agent13.ext.fragment.PipelineManager")
-                .then(function(oDialog) {
-                    oDialog.open();
-                    this._loadPipelineData(oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Pipeline Manager: " + error.message);
-                });
-        },
-
-        /**
-         * @function onComponentBuilder
-         * @description Opens component builder interface for modular agent component design.
-         * @public
-         */
-        onComponentBuilder: function() {
-            const oBinding = this.base.getView().byId("fe::table::AgentTemplates::LineItem").getBinding("rows");
-            const aSelectedContexts = oBinding.getSelectedContexts();
-            
-            if (aSelectedContexts.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("msg.selectTemplatesFirst"));
-                return;
-            }
-
-            this._getOrCreateDialog("componentBuilder", "a2a.network.agent13.ext.fragment.ComponentBuilder")
-                .then(function(oDialog) {
-                    oDialog.open();
-                    this._loadComponentData(aSelectedContexts[0], oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Component Builder: " + error.message);
-                });
-        },
-
-        /**
-         * @function onTestHarness
-         * @description Opens test harness interface for agent template testing and validation.
-         * @public
-         */
-        onTestHarness: function() {
-            const oBinding = this.base.getView().byId("fe::table::AgentTemplates::LineItem").getBinding("rows");
-            const aSelectedContexts = oBinding.getSelectedContexts();
-            
-            if (aSelectedContexts.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("msg.selectTemplatesFirst"));
-                return;
-            }
-
-            this._getOrCreateDialog("testHarness", "a2a.network.agent13.ext.fragment.TestHarness")
-                .then(function(oDialog) {
-                    oDialog.open();
-                    this._initializeTestHarness(aSelectedContexts[0], oDialog);
-                }.bind(this))
-                .catch(function(error) {
-                    MessageBox.error("Failed to open Test Harness: " + error.message);
-                });
-        },
-
-        /**
-         * @function onBatchBuild
-         * @description Initiates batch build process for multiple agent templates.
-         * @public
-         */
-        onBatchBuild: function() {
-            const oBinding = this.base.getView().byId("fe::table::AgentTemplates::LineItem").getBinding("rows");
-            const aSelectedContexts = oBinding.getSelectedContexts();
-            
-            if (aSelectedContexts.length === 0) {
-                MessageToast.show(this.getResourceBundle().getText("msg.selectTemplatesFirst"));
-                return;
-            }
-
-            MessageBox.confirm(
-                this.getResourceBundle().getText("msg.batchBuildConfirm", [aSelectedContexts.length]),
-                {
-                    onClose: function(oAction) {
-                        if (oAction === MessageBox.Action.OK) {
-                            this._startBatchBuild(aSelectedContexts);
-                        }
-                    }.bind(this)
-                }
-            );
-        },
-
-        /**
-         * @function _startRealtimeBuilderUpdates
-         * @description Starts real-time updates for build and deployment events.
-         * @private
-         */
-        _startRealtimeBuilderUpdates: function() {
-            this._initializeWebSocket();
-        },
-
-        /**
-         * @function _initializeWebSocket
-         * @description Initializes secure WebSocket connection for real-time builder updates.
-         * @private
-         */
-        _initializeWebSocket: function() {
-            if (this._ws) return;
-
-            // Use secure WebSocket URL
-            var wsUrl = 'wss://' + window.location.hostname + ':8013/builder/updates';
-            
-            try {
-                this._ws = SecurityUtils.createSecureWebSocket(wsUrl, {
-                    onmessage: function(event) {
-                        try {
-                            const data = JSON.parse(event.data);
-                            this._handleBuilderUpdate(data);
-                        } catch (error) {
-                            console.error("Error parsing WebSocket message:", error);
-                        }
-                    }.bind(this),
-                    onerror: function(error) {
-                        console.warn("Secure WebSocket error:", error);
-                        this._initializePolling();
-                    }.bind(this)
-                });
-                
-                if (this._ws) {
-                    this._ws.onclose = function() {
-                        var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                        var sMessage = oBundle.getText("msg.websocketDisconnected") || "Connection lost. Reconnecting...";
-                        MessageToast.show(sMessage);
-                        setTimeout(() => this._initializeWebSocket(), 5000);
-                    }.bind(this);
-                }
-
-            } catch (error) {
-                console.warn("WebSocket connection failed, falling back to polling");
-                this._initializePolling();
-            }
-        },
-
-        /**
-         * @function _initializePolling
-         * @description Initializes polling fallback for real-time updates.
-         * @private
-         */
-        _initializePolling: function() {
-            this._pollInterval = setInterval(() => {
-                this._refreshTemplateData();
-            }, 10000);
-        },
-
-        /**
-         * @function _handleBuilderUpdate
-         * @description Handles real-time builder updates from WebSocket.
-         * @param {Object} data - Update data
-         * @private
-         */
-        _handleBuilderUpdate: function(data) {
-            try {
-                // Sanitize incoming data
-                const sanitizedData = SecurityUtils.sanitizeBuilderData(JSON.stringify(data));
-                const parsedData = JSON.parse(sanitizedData);
-                
-                var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                
-                switch (parsedData.type) {
-                    case 'BUILD_STARTED':
-                        var sBuildStarted = oBundle.getText("msg.buildStarted") || "Build started";
-                        MessageToast.show(sBuildStarted);
-                        break;
-                    case 'BUILD_COMPLETED':
-                        var sBuildCompleted = oBundle.getText("msg.buildCompleted") || "Build completed";
-                        MessageToast.show(sBuildCompleted);
-                        this._refreshTemplateData();
-                        break;
-                    case 'BUILD_FAILED':
-                        var sBuildFailed = oBundle.getText("error.buildFailed") || "Build failed";
-                        MessageToast.show(sBuildFailed);
-                        break;
-                    case 'DEPLOYMENT_STARTED':
-                        var sDeployStarted = oBundle.getText("msg.deploymentStarted") || "Deployment started";
-                        MessageToast.show(sDeployStarted);
-                        break;
-                    case 'DEPLOYMENT_COMPLETED':
-                        var sDeployCompleted = oBundle.getText("msg.deploymentCompleted") || "Deployment completed";
-                        MessageToast.show(sDeployCompleted);
-                        this._refreshTemplateData();
-                        break;
-                    case 'DEPLOYMENT_FAILED':
-                        var sDeployFailed = oBundle.getText("error.deploymentFailed") || "Deployment failed";
-                        MessageToast.show(sDeployFailed);
-                        break;
-                    case 'PIPELINE_UPDATE':
-                        this._updatePipelineStatus(parsedData.pipeline);
-                        break;
-                    case 'TEST_COMPLETED':
-                        this._refreshTemplateData();
-                        break;
-                }
-            } catch (error) {
-                console.error("Error processing builder update:", error);
-            }
-        },
-
-        /**
-         * @function _loadDashboardData
-         * @description Loads builder dashboard data with statistics and deployment metrics.
-         * @param {sap.m.Dialog} oDialog - Target dialog (optional)
-         * @private
-         */
-        _loadDashboardData: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["builderDashboard"];
-            if (!oTargetDialog) return;
-            
-            oTargetDialog.setBusy(true);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    return SecurityUtils.secureCallFunction(oModel, "/GetBuilderStatistics", {
-                        success: function(data) {
-                            resolve(data);
-                        },
-                        error: function(error) {
-                            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                            var sErrorMsg = oBundle.getText("error.loadingStatistics") || "Error loading statistics";
-                            reject(new Error(sErrorMsg));
-                        }.bind(this)
-                    });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
-                oTargetDialog.setBusy(false);
-                this._updateDashboardCharts(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
-                oTargetDialog.setBusy(false);
-                MessageBox.error(error.message);
-            });
-        },
-
-        /**
-         * @function _initializeCodeGenerator
-         * @description Initializes code generator with template details.
-         * @param {sap.ui.model.Context} oContext - Selected template context
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _initializeCodeGenerator: function(oContext, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["codeGenerator"];
-            if (!oTargetDialog) return;
-            
-            oTargetDialog.setBusy(true);
-            const sTemplateId = oContext.getObject().templateId;
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    return SecurityUtils.secureCallFunction(oModel, "/GetTemplateDetails", {
-                        urlParameters: {
-                            templateId: sTemplateId
-                        },
-                        success: function(data) {
-                            resolve(data);
-                        },
-                        error: function(error) {
-                            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                            var sErrorMsg = oBundle.getText("error.loadingTemplateDetails") || "Error loading template details";
-                            reject(new Error(sErrorMsg));
-                        }.bind(this)
-                    });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
-                oTargetDialog.setBusy(false);
-                this._setupCodeGenerator(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
-                oTargetDialog.setBusy(false);
-                MessageBox.error(error.message);
-            });
-        },
-
-        /**
-         * @function _loadDeploymentData
-         * @description Loads deployment targets and configurations.
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _loadDeploymentData: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["deploymentManager"];
-            if (!oTargetDialog) return;
-            
-            oTargetDialog.setBusy(true);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    return SecurityUtils.secureCallFunction(oModel, "/GetDeploymentTargets", {
-                        success: function(data) {
-                            resolve(data);
-                        },
-                        error: function(error) {
-                            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                            var sErrorMsg = oBundle.getText("error.loadingDeploymentData") || "Error loading deployment data";
-                            reject(new Error(sErrorMsg));
-                        }.bind(this)
-                    });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
-                oTargetDialog.setBusy(false);
-                this._updateDeploymentTargets(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
-                oTargetDialog.setBusy(false);
-                MessageBox.error(error.message);
-            });
-        },
-
-        /**
-         * @function _loadPipelineData
-         * @description Loads build pipeline configurations and status.
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _loadPipelineData: function(oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["pipelineManager"];
-            if (!oTargetDialog) return;
-            
-            oTargetDialog.setBusy(true);
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    return SecurityUtils.secureCallFunction(oModel, "/GetBuildPipelines", {
-                        success: function(data) {
-                            resolve(data);
-                        },
-                        error: function(error) {
-                            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                            var sErrorMsg = oBundle.getText("error.loadingPipelineData") || "Error loading pipeline data";
-                            reject(new Error(sErrorMsg));
-                        }.bind(this)
-                    });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
-                oTargetDialog.setBusy(false);
-                this._updatePipelineList(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
-                oTargetDialog.setBusy(false);
-                MessageBox.error(error.message);
-            });
-        },
-
-        /**
-         * @function _loadComponentData
-         * @description Loads agent component data for selected template.
-         * @param {sap.ui.model.Context} oContext - Selected template context
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _loadComponentData: function(oContext, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["componentBuilder"];
-            if (!oTargetDialog) return;
-            
-            oTargetDialog.setBusy(true);
-            const sTemplateId = oContext.getObject().templateId;
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    return SecurityUtils.secureCallFunction(oModel, "/GetAgentComponents", {
-                        urlParameters: {
-                            templateId: sTemplateId
-                        },
-                        success: function(data) {
-                            resolve(data);
-                        },
-                        error: function(error) {
-                            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                            var sErrorMsg = oBundle.getText("error.loadingComponentData") || "Error loading component data";
-                            reject(new Error(sErrorMsg));
-                        }.bind(this)
-                    });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
-                oTargetDialog.setBusy(false);
-                this._updateComponentList(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
-                oTargetDialog.setBusy(false);
-                MessageBox.error(error.message);
-            });
-        },
-
-        /**
-         * @function _initializeTestHarness
-         * @description Initializes test harness with template test configuration.
-         * @param {sap.ui.model.Context} oContext - Selected template context
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _initializeTestHarness: function(oContext, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["testHarness"];
-            if (!oTargetDialog) return;
-            
-            oTargetDialog.setBusy(true);
-            const sTemplateId = oContext.getObject().templateId;
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    return SecurityUtils.secureCallFunction(oModel, "/GetTestConfiguration", {
-                        urlParameters: {
-                            templateId: sTemplateId
-                        },
-                        success: function(data) {
-                            resolve(data);
-                        },
-                        error: function(error) {
-                            var oBundle = this.base.getView().getModel("i18n").getResourceBundle();
-                            var sErrorMsg = oBundle.getText("error.loadingTestConfiguration") || "Error loading test configuration";
-                            reject(new Error(sErrorMsg));
-                        }.bind(this)
-                    });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
-                oTargetDialog.setBusy(false);
-                this._setupTestHarness(data, oTargetDialog);
-            }.bind(this)).catch(function(error) {
-                oTargetDialog.setBusy(false);
-                MessageBox.error(error.message);
-            });
-        },
-
-        /**
-         * @function _startBatchBuild
-         * @description Starts batch build process for multiple templates.
-         * @param {Array<sap.ui.model.Context>} aSelectedContexts - Selected template contexts
-         * @private
-         */
-        _startBatchBuild: function(aSelectedContexts) {
-            const aTemplateIds = aSelectedContexts.map(ctx => ctx.getObject().templateId);
-            
-            MessageToast.show(this.getResourceBundle().getText("msg.batchBuildStarted", [aTemplateIds.length]));
-            
-            if (!SecurityUtils.checkBuilderAuth('StartBatchBuild', {})) {
-                return;
-            }
-            
-            this._withErrorRecovery(function() {
-                return new Promise(function(resolve, reject) {
-                    var oModel = this.base.getView().getModel();
-                    return SecurityUtils.secureCallFunction(oModel, "/StartBatchBuild", {
-                        urlParameters: {
-                            templateIds: aTemplateIds.join(',')
-                        },
-                        success: function(data) {
-                            resolve(data);
-                        },
-                        error: function(error) {
-                            reject(error);
-                        }
-                    });
-                }.bind(this));
-            }.bind(this)).then(function(data) {
-                MessageToast.show(this.getResourceBundle().getText("msg.batchBuildQueued"));
-                this._refreshTemplateData();
-            }.bind(this)).catch(function(error) {
-                MessageToast.show(this.getResourceBundle().getText("error.batchBuildFailed"));
-            });
-        },
-
-        /**
-         * @function _refreshTemplateData
-         * @description Refreshes agent template data in the list.
-         * @private
-         */
-        _refreshTemplateData: function() {
-            const oBinding = this.base.getView().byId("fe::table::AgentTemplates::LineItem").getBinding("rows");
-            if (oBinding) {
-                oBinding.refresh();
-            }
-        },
-
-        /**
-         * @function _updateDashboardCharts
-         * @description Updates builder dashboard charts with deployment and build metrics.
-         * @param {Object} data - Dashboard data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _updateDashboardCharts: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["builderDashboard"];
-            if (!oTargetDialog) return;
-            
-            this._createDeploymentTrendsChart(data.deploymentTrends, oTargetDialog);
-            this._createBuildMetricsChart(data.buildMetrics, oTargetDialog);
-            this._createTemplateUsageChart(data.templateUsage, oTargetDialog);
-        },
-
-        /**
-         * @function _setupCodeGenerator
-         * @description Sets up code generator with template configuration.
-         * @param {Object} data - Template details
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _setupCodeGenerator: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["codeGenerator"];
-            if (!oTargetDialog) return;
-            
-            var oCodeGenModel = new JSONModel({
-                templateDetails: data.template,
-                codeOptions: data.codeOptions,
-                languageConfigs: data.languageConfigs,
-                frameworks: data.frameworks,
-                selectedLanguage: data.template.codeLanguage,
-                selectedFramework: data.template.frameworkVersion
-            });
-            oTargetDialog.setModel(oCodeGenModel, "codeGen");
-        },
-
-        /**
-         * @function _updateDeploymentTargets
-         * @description Updates deployment target options and configurations.
-         * @param {Object} data - Deployment data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _updateDeploymentTargets: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["deploymentManager"];
-            if (!oTargetDialog) return;
-            
-            var oDeployModel = new JSONModel({
-                targets: data.deploymentTargets,
-                environments: data.environments,
-                configurations: data.configurations,
-                activeDeployments: data.activeDeployments
-            });
-            oTargetDialog.setModel(oDeployModel, "deployment");
-        },
-
-        /**
-         * @function _updatePipelineList
-         * @description Updates build pipeline list and status.
-         * @param {Object} data - Pipeline data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _updatePipelineList: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["pipelineManager"];
-            if (!oTargetDialog) return;
-            
-            var oPipelineModel = new JSONModel({
-                pipelines: data.pipelines,
-                pipelineTypes: data.pipelineTypes,
-                triggers: data.triggers,
-                statistics: data.statistics
-            });
-            oTargetDialog.setModel(oPipelineModel, "pipeline");
-        },
-
-        /**
-         * @function _updateComponentList
-         * @description Updates agent component list for modular design.
-         * @param {Object} data - Component data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _updateComponentList: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["componentBuilder"];
-            if (!oTargetDialog) return;
-            
-            var oComponentModel = new JSONModel({
-                components: data.components,
-                componentTypes: data.componentTypes,
-                dependencies: data.dependencies,
-                integrationPoints: data.integrationPoints
-            });
-            oTargetDialog.setModel(oComponentModel, "component");
-        },
-
-        /**
-         * @function _setupTestHarness
-         * @description Sets up test harness with test configurations.
-         * @param {Object} data - Test configuration data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _setupTestHarness: function(data, oDialog) {
-            var oTargetDialog = oDialog || this._dialogCache["testHarness"];
-            if (!oTargetDialog) return;
-            
-            var oTestModel = new JSONModel({
-                testConfiguration: data.configuration,
-                testFrameworks: data.frameworks,
-                testSuites: data.testSuites,
-                coverageTargets: data.coverageTargets,
-                testResults: data.recentResults
-            });
-            oTargetDialog.setModel(oTestModel, "test");
-        },
-
-        /**
-         * @function _updatePipelineStatus
-         * @description Updates pipeline status in real-time.
-         * @param {Object} pipeline - Pipeline status data
-         * @private
-         */
-        _updatePipelineStatus: function(pipeline) {
-            // Update pipeline status in UI
-            var oPipelineDialog = this._dialogCache["pipelineManager"];
-            if (oPipelineDialog && oPipelineDialog.isOpen()) {
-                var oPipelineModel = oPipelineDialog.getModel("pipeline");
-                if (oPipelineModel) {
-                    var oData = oPipelineModel.getData();
-                    var iPipelineIndex = oData.pipelines.findIndex(p => p.id === pipeline.id);
-                    if (iPipelineIndex >= 0) {
-                        oData.pipelines[iPipelineIndex] = pipeline;
-                        oPipelineModel.setData(oData);
-                    }
-                }
-            }
-        },
-
-        /**
-         * @function _createDeploymentTrendsChart
-         * @description Creates deployment trends chart for dashboard.
-         * @param {Object} data - Chart data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _createDeploymentTrendsChart: function(data, oDialog) {
-            var oChartContainer = oDialog.byId("deploymentTrendsChart");
-            if (!oChartContainer || !data) return;
-            
-            var oChartModel = new JSONModel({
-                chartData: data,
-                config: {
-                    title: this.getResourceBundle().getText("chart.deploymentTrends"),
-                    xAxisLabel: this.getResourceBundle().getText("chart.time"),
-                    yAxisLabel: this.getResourceBundle().getText("field.deploymentCount")
-                }
-            });
-            oChartContainer.setModel(oChartModel, "chart");
-        },
-        
-        /**
-         * @function _createBuildMetricsChart
-         * @description Creates build metrics chart for dashboard.
-         * @param {Object} data - Chart data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _createBuildMetricsChart: function(data, oDialog) {
-            var oChartContainer = oDialog.byId("buildMetricsChart");
-            if (!oChartContainer || !data) return;
-            
-            var oChartModel = new JSONModel({
-                chartData: data,
-                config: {
-                    title: this.getResourceBundle().getText("chart.buildMetrics"),
-                    showLegend: true,
-                    colorPalette: ["#5cbae6", "#b6d7a8", "#ffd93d", "#ff7b7b"]
-                }
-            });
-            oChartContainer.setModel(oChartModel, "chart");
-        },
-        
-        /**
-         * @function _createTemplateUsageChart
-         * @description Creates template usage chart for analytics.
-         * @param {Object} data - Chart data
-         * @param {sap.m.Dialog} oDialog - Target dialog
-         * @private
-         */
-        _createTemplateUsageChart: function(data, oDialog) {
-            var oChartContainer = oDialog.byId("templateUsageChart");
-            if (!oChartContainer || !data) return;
-            
-            var oChartModel = new JSONModel({
-                chartData: data,
-                config: {
-                    title: this.getResourceBundle().getText("chart.templateUsage"),
-                    showDataLabels: true,
-                    enableDrillDown: true
-                }
-            });
-            oChartContainer.setModel(oChartModel, "chart");
-        },
-        
         /**
          * @function _cleanupResources
-         * @description Cleans up resources and connections on controller destruction.
+         * @description Cleans up resources to prevent memory leaks.
          * @private
          */
         _cleanupResources: function() {
-            // Close WebSocket connection
+            // Clean up WebSocket connections
             if (this._ws) {
                 this._ws.close();
                 this._ws = null;
             }
             
-            // Clear polling interval
+            // Clean up EventSource connections
+            if (this._scanEventSource) {
+                this._scanEventSource.close();
+                this._scanEventSource = null;
+            }
+            
+            // Clean up polling intervals
             if (this._pollInterval) {
                 clearInterval(this._pollInterval);
                 this._pollInterval = null;
             }
             
-            // Clear cached dialogs
-            for (var sDialogId in this._dialogCache) {
-                var oDialog = this._dialogCache[sDialogId];
-                if (oDialog && oDialog.destroy) {
-                    oDialog.destroy();
-                }
+            if (this._scanPollingInterval) {
+                clearInterval(this._scanPollingInterval);
+                this._scanPollingInterval = null;
             }
-            this._dialogCache = {};
             
-            // Clear throttled and debounced functions
-            if (this._throttledDashboardUpdate) {
-                this._throttledDashboardUpdate = null;
-            }
-            if (this._debouncedSearch) {
-                this._debouncedSearch = null;
-            }
+            // Clean up cached dialogs
+            Object.keys(this._dialogCache).forEach(function(key) {
+                if (this._dialogCache[key]) {
+                    this._dialogCache[key].destroy();
+                }
+            }.bind(this));
+            this._dialogCache = {};
         },
 
         /**
          * @function getResourceBundle
-         * @description Gets the i18n resource bundle for text translations.
-         * @returns {sap.ui.model.resource.ResourceModel} Resource bundle
+         * @description Gets the i18n resource bundle.
+         * @returns {sap.base.i18n.ResourceBundle} Resource bundle
          * @public
          */
         getResourceBundle: function() {

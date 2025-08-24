@@ -89,8 +89,20 @@ case "${1}" in
         exec /app/start.sh test
         ;;
     start)
-        echo "Starting A2A system..."
-        exec /app/start.sh "${@:2}"
+        # Handle start with different modes
+        if [ "${2}" = "complete" ]; then
+            echo "Starting complete A2A platform with all services..."
+            export ENABLE_ALL_AGENTS=true
+            export A2A_NETWORK_ENABLED=true
+            export FRONTEND_ENABLED=true
+            export ENABLE_BLOCKCHAIN=true
+            export ENABLE_NETWORK=true
+            export ENABLE_AGENTS=true
+            exec /app/start.sh complete
+        else
+            echo "Starting A2A system..."
+            exec /app/start.sh "${@:2}"
+        fi
         ;;
     *)
         # Default: run the command as-is

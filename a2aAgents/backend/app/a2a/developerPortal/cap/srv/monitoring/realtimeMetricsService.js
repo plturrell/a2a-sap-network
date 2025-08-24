@@ -449,9 +449,10 @@ class RealtimeMetricsService extends EventEmitter {
         const anomalies = this.anomalyDetector.detect(analytics.systemPerformance);
         if (anomalies.length > 0) {
             analytics.anomalies = anomalies;
-            anomalies.forEach(anomaly => {
+            const emitAnomaly = (anomaly) => {
                 this.emit('anomaly.detected', anomaly);
-            });
+            };
+            anomalies.forEach(emitAnomaly);
         }
 
         this._broadcastToSubscribers('performance', {
@@ -526,9 +527,10 @@ class RealtimeMetricsService extends EventEmitter {
             
             switch (data.type) {
                 case 'subscribe':
-                    data.channels.forEach(channel => {
+                    const addSubscription = (channel) => {
                         client.subscriptions.add(channel);
-                    });
+                    };
+                    data.channels.forEach(addSubscription);
                     this._sendToClient(client, {
                         type: 'subscription_confirmed',
                         channels: data.channels
@@ -536,9 +538,10 @@ class RealtimeMetricsService extends EventEmitter {
                     break;
                     
                 case 'unsubscribe':
-                    data.channels.forEach(channel => {
+                    const removeSubscription = (channel) => {
                         client.subscriptions.delete(channel);
-                    });
+                    };
+                    data.channels.forEach(removeSubscription);
                     break;
                     
                 case 'ping':
@@ -554,11 +557,12 @@ class RealtimeMetricsService extends EventEmitter {
      * Broadcast message to all subscribers of a channel
      */
     _broadcastToSubscribers(channel, message) {
-        this.clients.forEach(client => {
+        const checkAndSendToClient = (client) => {
             if (client.subscriptions.has(channel) || client.subscriptions.has('all')) {
                 this._sendToClient(client, message);
             }
-        });
+        };
+        this.clients.forEach(checkAndSendToClient);
     }
 
     /**
@@ -587,9 +591,10 @@ class RealtimeMetricsService extends EventEmitter {
         clearInterval(this.performanceCollector);
         // Business collector removed
         
-        this.clients.forEach(client => {
+        const closeClient = (client) => {
             client.ws.close();
-        });
+        };
+        this.clients.forEach(closeClient);
         
         if (this.wss) {
             this.wss.close();

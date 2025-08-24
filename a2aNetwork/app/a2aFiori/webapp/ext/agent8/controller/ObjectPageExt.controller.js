@@ -547,13 +547,21 @@ sap.ui.define([
             var oModel = this._oStoreDialog.getModel("store");
             var oData = oModel.getData();
             
+            // Validate and sanitize input data
+            const sanitizedData = this._sanitizeStoreData(oData);
+            const validation = this._validateStoreData(sanitizedData);
+            if (!validation.isValid) {
+                MessageBox.error(validation.message);
+                return;
+            }
+            
             this._oStoreDialog.setBusy(true);
             
-            jQuery.ajax({
-                url: "/a2a/agent8/v1/datasets/" + oData.datasetName + "/store",
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent8/v1/datasets/" + encodeURIComponent(sanitizedData.datasetName) + "/store",
                 type: "POST",
                 contentType: "application/json",
-                data: JSON.stringify(oData),
+                data: JSON.stringify(sanitizedData),
                 success: function(data) {
                     this._oStoreDialog.setBusy(false);
                     this._oStoreDialog.close();
@@ -569,13 +577,24 @@ sap.ui.define([
                     );
                     
                     this._extensionAPI.refresh();
+                    this._securityUtils.auditLog("DATA_STORED", { 
+                        dataset: oData.datasetName,
+                        recordsStored: safeRecordsStored,
+                        storageSize: data.storageSize
+                    });
                 }.bind(this),
                 error: function(xhr) {
                     this._oStoreDialog.setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     MessageBox.error("Store operation failed: " + errorMsg);
+                    this._securityUtils.auditLog("DATA_STORE_FAILED", { 
+                        dataset: oData.datasetName,
+                        error: errorMsg
+                    });
                 }.bind(this)
             });
+            
+            jQuery.ajax(ajaxConfig);
         },
 
         onExecuteRetrieveData: function() {
@@ -584,8 +603,8 @@ sap.ui.define([
             
             this._oRetrieveDialog.setBusy(true);
             
-            jQuery.ajax({
-                url: "/a2a/agent8/v1/datasets/" + oData.datasetName + "/retrieve",
+            const ajaxConfig = this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent8/v1/datasets/" + encodeURIComponent(oData.datasetName) + "/retrieve",
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(oData),
@@ -594,13 +613,23 @@ sap.ui.define([
                     this._oRetrieveDialog.close();
                     
                     this._showRetrievedData(data);
+                    this._securityUtils.auditLog("DATA_RETRIEVED", { 
+                        dataset: oData.datasetName,
+                        recordsRetrieved: data.recordCount || 0
+                    });
                 }.bind(this),
                 error: function(xhr) {
                     this._oRetrieveDialog.setBusy(false);
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     MessageBox.error("Retrieve operation failed: " + errorMsg);
+                    this._securityUtils.auditLog("DATA_RETRIEVE_FAILED", { 
+                        dataset: oData.datasetName,
+                        error: errorMsg
+                    });
                 }.bind(this)
             });
+            
+            jQuery.ajax(ajaxConfig);
         },
 
         _showRetrievedData: function(retrievedData) {
@@ -632,8 +661,8 @@ sap.ui.define([
             
             this._oVersionDialog.setBusy(true);
             
-            jQuery.ajax({
-                url: "/a2a/agent8/v1/datasets/" + oData.datasetName + "/versions",
+            jQuery.ajax(this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent8/v1/datasets/" + this._securityUtils.encodeURL(oData.datasetName) + "/versions",
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(oData),
@@ -658,7 +687,7 @@ sap.ui.define([
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     MessageBox.error("Version creation failed: " + errorMsg);
                 }.bind(this)
-            });
+            }));
         },
 
         onConfirmCompress: function() {
@@ -667,8 +696,8 @@ sap.ui.define([
             
             this._oCompressDialog.setBusy(true);
             
-            jQuery.ajax({
-                url: "/a2a/agent8/v1/datasets/" + oData.datasetName + "/compress",
+            jQuery.ajax(this._securityUtils.createSecureAjaxConfig({
+                url: "/a2a/agent8/v1/datasets/" + this._securityUtils.encodeURL(oData.datasetName) + "/compress",
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(oData),
@@ -693,7 +722,7 @@ sap.ui.define([
                     const errorMsg = this._securityUtils.sanitizeErrorMessage(xhr.responseText);
                     MessageBox.error("Compression failed: " + errorMsg);
                 }.bind(this)
-            });
+            }));
         },
 
         onConfirmBackup: function() {
@@ -842,6 +871,12 @@ sap.ui.define([
         
         // Create Data Task Dialog Methods
         onCreateDataTask: function() {
+            // Check user permissions
+            if (!this._authHandler.hasPermission('CREATE_DATA_TASK')) {
+                MessageBox.error("Insufficient permissions to create data tasks");
+                return;
+            }
+            
             var oView = this.base.getView();
             
             if (!this._oCreateDialog) {
