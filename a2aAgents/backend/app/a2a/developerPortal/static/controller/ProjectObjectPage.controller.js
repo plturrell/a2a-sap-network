@@ -1561,8 +1561,8 @@ sap.ui.define([
       this.getModel('view').setProperty('/busy', false);
       this.getModel('view').setProperty('/saveProgress', null);
             
-      const sErrorMessage = 'Failed to save changes';
-      const sErrorDetails = '';
+      let sErrorMessage = 'Failed to save changes';
+      let sErrorDetails = '';
             
       // Parse error response
       try {
@@ -1616,7 +1616,7 @@ sap.ui.define([
         
     _logChangeHistory: function (oChanges) {
       // Store change history for audit purposes
-      const aChangeHistory = this.getModel('view').getProperty('/changeHistory') || [];
+      let aChangeHistory = this.getModel('view').getProperty('/changeHistory') || [];
             
       Object.keys(oChanges).forEach((sField) => {
         aChangeHistory.push({
@@ -1721,7 +1721,7 @@ sap.ui.define([
       const aRolePermissions = oEditabilityConfig.rolePermissions[sUserRole] || [];
             
       // Get status-based restrictions
-      const aStatusRestrictions = oEditabilityConfig.statusRestrictions[sProjectStatus];
+      let aStatusRestrictions = oEditabilityConfig.statusRestrictions[sProjectStatus];
       if (aStatusRestrictions === 'ALL') {
         aStatusRestrictions = aRolePermissions;
       } else if (!aStatusRestrictions) {
@@ -1957,7 +1957,7 @@ sap.ui.define([
         
     onTestFieldEditability: function () {
       const oConfig = this.getModel('view').getProperty('/fieldEditability');
-      const sMessage = `Current Role: ${  oConfig.userRole  }\n`;
+      let sMessage = `Current Role: ${  oConfig.userRole  }\n`;
       sMessage += `Project Status: ${  oConfig.projectStatus  }\n`;
       sMessage += `Editable Fields: ${  Object.keys(oConfig.editableFields).filter((field) => {
         return oConfig.editableFields[field];
@@ -2245,7 +2245,7 @@ sap.ui.define([
     _updateCurrentSection: function (sSectionId) {
       // Find matching anchor item and update current section
       const aItems = this.getModel('view').getProperty('/anchorBarItems');
-      const sCurrentSection = null;
+      let sCurrentSection = null;
             
       aItems.forEach((oItem, iIndex) => {
         if (sSectionId && sSectionId.indexOf(oItem.key) !== -1) {

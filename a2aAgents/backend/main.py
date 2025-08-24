@@ -492,9 +492,13 @@ app.add_middleware(RateLimitingMiddleware)
 app.add_middleware(SecurityEventMiddleware)
 
 # Add request signing middleware (optional signing by default)
-from app.api.middleware.requestSigning # A2A Protocol: Use blockchain messaging instead of requestsigningMiddleware, APIKeyPermissionMiddleware
-app.add_middleware(APIKeyPermissionMiddleware)  # Check permissions for signed requests
-app.add_middleware(RequestSigningMiddleware, enforce_signing=False)  # Optional signing
+try:
+    from app.api.middleware.requestSigning import RequestSigningMiddleware, APIKeyPermissionMiddleware
+    # A2A Protocol: Use blockchain messaging instead of request signing
+    app.add_middleware(APIKeyPermissionMiddleware)  # Check permissions for signed requests
+    app.add_middleware(RequestSigningMiddleware, enforce_signing=False)  # Optional signing
+except ImportError as e:
+    logger.warning(f"Request signing middleware not available: {e}")
 
 # Add global exception handler for secure error handling (disabled in development for debugging)
 if not (os.getenv("ENVIRONMENT", "development") == "development"):

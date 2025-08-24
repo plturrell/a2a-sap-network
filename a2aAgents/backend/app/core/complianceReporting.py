@@ -403,7 +403,8 @@ class EnhancedComplianceReporter:
     async def delete_report(self, request_id: str, requested_by: str) -> bool:
         """Delete a compliance report"""
         
-        request = self.report_                if not request:
+        request = self.report_requests.get(request_id)
+        if not request:
             return False
         
         # Check permissions (only creator or admin can delete)
